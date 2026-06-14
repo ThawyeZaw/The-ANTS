@@ -1,36 +1,106 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<div align="center">
 
-## Getting Started
+# 🎓 Focus Point
 
-First, run the development server:
+### The Academic Productivity Ecosystem for Myanmar Students
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+*Timetables · Flashcards · Classrooms · Grade Calculators · Exam Countdowns*
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4-38bdf8?logo=tailwindcss)](https://tailwindcss.com/)
+[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ecf8e?logo=supabase)](https://supabase.com/)
+[![Status](https://img.shields.io/badge/Status-MVP%20Phase%201-amber)](.)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+</div>
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## What is Focus Point?
 
-To learn more about Next.js, take a look at the following resources:
+**Focus Point** is a curriculum-focused productivity and learning platform built specifically for Myanmar students pursuing international qualifications. Unlike generic study apps, Focus Point is wired directly into exam board criteria — so your timetables, flashcards, and grade calculators understand the difference between a CAIE IGCSE and an Edexcel IAL.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Whether you're targeting A* in IGCSE or A Levels, IELTS band 7+, or an OSSD diploma, Focus Point keeps your study life organised in one place.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Supported Qualifications
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Exam Board | Qualifications |
+|---|---|
+| 🎓 **Cambridge CAIE** | IGCSE, A Levels  |
+| 📘 **Pearson Edexcel** | IGCSE, International A Level (IAL) |
+| 🍁 **OSSD** | Ontario Secondary School Diploma |
+| 🌍 **IELTS** | Academic & General Training |
+| 📝 **SAT** | College Board SAT (Math + Reading/Writing) |
+| 💬 **Duolingo** | Duolingo English Test (DET) |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## Features
+
+### 📅 Smart Timetable
+- Manage your weekly self-study sessions, classes schedule and works with drag-and-drop time blocks. 
+- Colour-code events by subject or event type (study session, class, school, gym, exam, break). 
+- Events can be either a to-do or just an event, repeatable daily or weekly, have can have start and end time or all days or only have end time/day, such as assignments or homeworks.
+- Events should be able to modified or deleted after creation. 
+- Timetable have daily, weekly and monthly views .
+
+### ⌛ Pomodoro Timer
+- Launch a built-in Pomodoro timer directly from any study block or from study tools via dashboard, with customisable work/break intervals + choices of background music for the vibe. 
+- Every completed session is automatically logged to your productivity history.
+
+### 📈 Lesson Tracker
+- Select one or many from a **library of subject and curriculum templates** created by contributors.
+- Create your own templates or modify selected ones.
+- Set confidence levels for each topic within every unit across each subject or curriculum.
+
+### 📋 Course Manager
+- Browse the library to select additional subjects or curriculums.
+- Modify, manage, and remove your selected curriculums and subjects.
+
+### 🃏 Flashcard Decks with Spaced Repetition 
+- Create, edit and/or share your own flashcards or select ready made decks from **the library** categorized with category and subjec. 
+- Study cards with a smooth flip animation and rate each card (Again / Hard / Good / Easy). 
+- The spaced-repetition algorithm schedules your next review automatically so you never forget what you've learn.
+
+### 📚 Curriculum Editor & Resource Library 
+- Verified **Contributors** can build and maintain global curriculum and exam templates'.
+- They can also create and edit syllabus or specification based notes by writing on their own or copy and pasting after creating with AI and notes can include svg for graphs, Latex for equations and images
+- All materials go through a gatekeeper approval workflow before becoming publicly visible and selectable by students and teachers.
+- **Students** can select from the templates or customize their own.
+
+### 🏫 Virtual Classrooms & Assignments
+- **Teachers** create virtual classrooms, link them to one or more curriculums, and share an invite code with students. 
+- Issue assignments with deadlines and priorities. Monitor each student's progress within your classroom only.
+- **Students** can join classrooms with an invite code, view and complete assigned tasks, and access related resources.
+
+### ⏳ Exam Countdown 
+Visual urgency indicators help you prioritise revision time across multiple subjects.
+- Set countdowns for every upcoming exam and see exactly how many days, hours, and minutes remain. 
+- Could be selected from library of specific subjects, curriculum and exam series.
+
+### 🧮 Grade Calculator
+Stop guessing your predicted grades. 
+- Enter your raw marks across paper components and the calculator converts them to the correct grade using official boundary tables for IGCSE, A Level, IAL, and OSSD percentage scales. Supports weighted multi-component calculations.
+
+---
+
+## User Roles
+
+| Role | Who | What they can do |
+|---|---|---|
+| **Student** | Primary users | Dashboard, Timetable, Lesson tracker and course manager, Study tools including Flashcards and Pomodoro timer, Grade Calculator, Exam Countdown, join Classrooms |
+| **Teacher** | Paid tier | Everything above + create & manage Classrooms, issue Assignments, monitor student progress |
+| **Contributor** | Verified experts | Everything above + Curriculum, exam datetime and Notes Editor / creator to the shared global library of templates |
+
+> You select your role when you first sign up. One email can be used for multiple roles.
+
+---
+
+<div align="center">
+
+Built with ❤️ for Myanmar students by Myanmar students
+
+
+</div>
