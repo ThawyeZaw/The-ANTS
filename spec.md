@@ -19,12 +19,12 @@ Developers are strictly confined to their designated workspace paths. You are pr
 
 | Developer | Feature Ownership | Assigned Paths |
 |---|---|---|
-| `@Phuupwint_p` | Smart Timetable, Pomodoro Timer | `src/components/timetable/`, `src/components/pomodoro/`, `src/hooks/usePomodoro.ts`, `src/hooks/useTimetable.ts`, `src/context/TimerContext.tsx`, `src/constants/timetable.ts`, `src/constants/pomodoro.ts`, `src/actions/timetable.ts` |
-| `@bmk_tg` & `@KelvinChaint` | Lesson Tracker, Course Manager, Curriculum & Notes Editor, Classrooms | `src/components/lessons/`, `src/components/courses/`, `src/components/classrooms/`, `src/components/editor/`, `src/actions/classrooms.ts`, `src/actions/editor.ts` |
-| `@Neon_Aung` | Grade Calculator, Exam Countdown | `src/components/calculator/`, `src/components/countdown/`, `src/hooks/useCountdown.ts`, `src/constants/gradeBoundaries.ts`, `src/lib/srs/` *(read-only reference)* |
-| `@zyytbh` | Public Home Page, Login & Signup | `src/app/page.tsx`, `src/app/(auth)/`, `src/components/auth/` |
-| `minkhit` | Flashcard Creator & Library | `src/components/flashcards/`, `src/hooks/useFlashcardSRS.ts`, `src/actions/flashcards.ts` |
-| **PM (you)** | Shared Infrastructure | `src/lib/`, `src/types/`, `src/context/AuthContext.tsx`, `src/context/PersonaContext.tsx`, `src/components/ui/`, `src/components/layout/`, `src/hooks/useAuth.ts`, `src/hooks/useRole.ts`, `src/constants/qualifications.ts`, `middleware.ts`, `supabase/`, `src/app/(app)/layout.tsx`, `src/app/(app)/dashboard/` |
+| Phuu Pwint Paing | Smart Timetable, Pomodoro Timer | `src/components/timetable/`, `src/components/pomodoro/`, `src/hooks/usePomodoro.ts`, `src/hooks/useTimetable.ts`, `src/context/TimerContext.tsx`, `src/constants/timetable.ts`, `src/constants/pomodoro.ts`, `src/actions/timetable.ts` |
+| Bhone Myat Kaung & Aung Bhone Chaint | Lesson Tracker, Course Manager, Curriculum & Notes Editor, Classrooms | `src/components/lessons/`, `src/components/courses/`, `src/components/classrooms/`, `src/components/editor/`, `src/actions/classrooms.ts`, `src/actions/editor.ts` |
+| Aung Khant Thaw | Grade Calculator, Exam Countdown | `src/components/calculator/`, `src/components/countdown/`, `src/hooks/useCountdown.ts`, `src/constants/gradeBoundaries.ts`, `src/lib/srs/` *(read-only reference)* |
+| Zyy Lin Htet | Public Home Page, Login & Signup | `src/app/page.tsx`, `src/app/(auth)/`, `src/components/auth/`, `src/app/not-found.tsx` |
+| Min Khit Paing | Flashcard Creator & Library | `src/components/flashcards/`, `src/hooks/useFlashcardSRS.ts`, `src/actions/flashcards.ts` |
+| Thaw Ye Zaw ( PM ) | Shared Infrastructure | `src/lib/`, `src/types/`, `src/context/AuthContext.tsx`, `src/context/PersonaContext.tsx`, `src/components/ui/`, `src/components/layout/`, `src/hooks/useAuth.ts`, `src/hooks/useRole.ts`, `src/constants/qualifications.ts`, `middleware.ts`, `supabase/`, `src/app/(app)/layout.tsx`, `src/app/(app)/dashboard/` |
 
 ## 4. Vibe-Coding Guardrails (Non-Negotiable)
 To prevent "Schema Chaos" and integration breakdowns when using Gemini Code Assist, the following rules apply to all team members:
@@ -59,115 +59,115 @@ This directory tree is the **absolute source of truth** for file placement. AI A
 
 ```text
 focus-point/                        # Project root
-├── middleware.ts                   # 🔒 PM — Route protection (redirects unauthenticated users)
-├── supabase/                       # 🔒 PM — Supabase CLI local config
+├── middleware.ts                   # 🔒 TYZ — Route protection (redirects unauthenticated users)
+├── supabase/                       # 🔒 TYZ — Supabase CLI local config
 │   ├── config.toml
 │   ├── seed.sql                    # Dev seed data
 │   └── migrations/                 # SQL migration files (version-controlled schema changes)
 │
 ├── public/
-│   ├── sounds/                     # 🔒 @Phuupwint_p — Pomodoro background music (mp3/ogg)
-│   └── icons/                      # 🔒 PM — Exam board logos & app icons
+│   ├── sounds/                     # 🔒 PPP — Pomodoro background music (mp3/ogg)
+│   └── icons/                      # 🔒 TYZ — Exam board logos & app icons
 │
 └── src/
     ├── app/                        # Next.js 16 App Router (Server Components by default)
-    │   ├── layout.tsx              # 🔒 PM — Root layout (providers, global fonts, metadata)
-    │   ├── page.tsx                # 🔒 @zyytbh — Public landing / home page
-    │   ├── not-found.tsx           # 🔒 PM — Global 404 page
+    │   ├── layout.tsx              # 🔒 TYZ — Root layout (providers, global fonts, metadata)
+    │   ├── page.tsx                # 🔒 ZLH — Public landing / home page
+    │   ├── not-found.tsx           # 🔒 ZLH — Global 404 page
     │   │
-    │   ├── (auth)/                 # 🔒 @zyytbh — Auth route group (no shell/sidebar)
+    │   ├── (auth)/                 # 🔒 ZLH — Auth route group (no shell/sidebar)
     │   │   ├── login/
     │   │   │   └── page.tsx        # Login page
     │   │   └── signup/
     │   │       └── page.tsx        # Signup / role selection page
     │   │
     │   └── (app)/                  # Authenticated shell (Route Group — requires login)
-    │       ├── layout.tsx          # 🔒 PM — App shell (Sidebar + TopNav wraps all authed routes)
-    │       ├── loading.tsx         # 🔒 PM — Global skeleton loader
+    │       ├── layout.tsx          # 🔒 TYZ — App shell (Sidebar + TopNav wraps all authed routes)
+    │       ├── loading.tsx         # 🔒 TYZ — Global skeleton loader
     │       ├── dashboard/
-    │       │   └── page.tsx        # 🔒 PM — Role-based dashboard (Student / Teacher / Contributor)
+    │       │   └── page.tsx        # 🔒 TYZ — Role-based dashboard (Student / Teacher / Contributor)
     │       │
     │       ├── timetable/
-    │       │   └── page.tsx        # 🔒 @Phuupwint_p — Smart Timetable
+    │       │   └── page.tsx        # 🔒 PPP — Smart Timetable
     │       │
     │       ├── pomodoro/
-    │       │   └── page.tsx        # 🔒 @Phuupwint_p — Pomodoro Timer
+    │       │   └── page.tsx        # 🔒 PPP — Pomodoro Timer
     │       │
     │       ├── flashcards/
-    │       │   ├── page.tsx        # 🔒 minkhit — Deck library (browse & create)
+    │       │   ├── page.tsx        # 🔒 MKP — Deck library (browse & create)
     │       │   └── [deckId]/
-    │       │       └── page.tsx    # 🔒 minkhit — Active study session for a deck
+    │       │       └── page.tsx    # 🔒 MKP — Active study session for a deck
     │       │
     │       ├── classrooms/
-    │       │   ├── page.tsx        # 🔒 @bmk_tg & @KelvinChaint — Classroom list
+    │       │   ├── page.tsx        # 🔒 BMK & ABC — Classroom list
     │       │   └── [id]/
-    │       │       └── page.tsx    # 🔒 @bmk_tg & @KelvinChaint — Individual classroom view
+    │       │       └── page.tsx    # 🔒 BMK & ABC — Individual classroom view
     │       │
     │       ├── calculator/
-    │       │   └── page.tsx        # 🔒 @Neon_Aung — Grade Calculator
+    │       │   └── page.tsx        # 🔒 AKT — Grade Calculator
     │       │
     │       ├── countdown/
-    │       │   └── page.tsx        # 🔒 @Neon_Aung — Exam Countdown manager
+    │       │   └── page.tsx        # 🔒 @AKT — Exam Countdown manager
     │       │
     │       ├── editor/
-    │       │   ├── page.tsx        # 🔒 @bmk_tg & @KelvinChaint — Curriculum & Notes editor
+    │       │   ├── page.tsx        # 🔒 BMK & ABC — Curriculum & Notes editor
     │       │   └── review/
-    │       │       └── page.tsx    # 🔒 PM — Gatekeeper approval queue
+    │       │       └── page.tsx    # 🔒 TYZ — Gatekeeper approval queue
     │       │
     │       ├── lessons/
-    │       │   └── page.tsx        # 🔒 @bmk_tg & @KelvinChaint — Lesson Tracker
+    │       │   └── page.tsx        # 🔒 BMK & ABC — Lesson Tracker
     │       │
     │       └── courses/
-    │           └── page.tsx        # 🔒 @bmk_tg & @KelvinChaint — Course Manager
+    │           └── page.tsx        # 🔒 BMK & ABC — Course Manager
     │
     ├── components/                 # UI components ('use client' where interactive)
-    │   ├── ui/                     # 🔒 PM — Shared atomic components
+    │   ├── ui/                     # 🔒 TYZ — Shared atomic components
     │   │   ├── Button.tsx
     │   │   ├── Modal.tsx
     │   │   ├── Input.tsx
     │   │   ├── Badge.tsx
     │   │   └── ProgressBar.tsx
-    │   ├── layout/                 # 🔒 PM — Global shell components
+    │   ├── layout/                 # 🔒 TYZ — Global shell components
     │   │   ├── Sidebar.tsx
     │   │   ├── TopNav.tsx
     │   │   └── AuthModal.tsx
-    │   ├── auth/                   # 🔒 @zyytbh — Login & signup form components
-    │   ├── timetable/              # 🔒 @Phuupwint_p
-    │   ├── pomodoro/               # 🔒 @Phuupwint_p
-    │   ├── lessons/                # 🔒 @bmk_tg & @KelvinChaint
-    │   ├── courses/                # 🔒 @bmk_tg & @KelvinChaint
-    │   ├── classrooms/             # 🔒 @bmk_tg & @KelvinChaint
-    │   ├── editor/                 # 🔒 @bmk_tg & @KelvinChaint
-    │   ├── calculator/             # 🔒 @Neon_Aung
-    │   ├── countdown/              # 🔒 @Neon_Aung
-    │   └── flashcards/             # 🔒 minkhit
+    │   ├── auth/                   # 🔒 ZLH — Login & signup form components
+    │   ├── timetable/              # 🔒 PPP
+    │   ├── pomodoro/               # 🔒 PPP
+    │   ├── lessons/                # 🔒 BMK & ABC
+    │   ├── courses/                # 🔒 BMK & ABC
+    │   ├── classrooms/             # 🔒 BMK & ABC
+    │   ├── editor/                 # 🔒 BMK & ABC
+    │   ├── calculator/             # 🔒 AKT
+    │   ├── countdown/              # 🔒 AKT
+    │   └── flashcards/             # 🔒 MKP
     │
     ├── hooks/                      # Custom React Hooks (logic only — no JSX)
-    │   ├── useAuth.ts              # 🔒 PM — Supabase auth session wrapper
-    │   ├── useRole.ts              # 🔒 PM — Read current persona from context
-    │   ├── usePomodoro.ts          # 🔒 @Phuupwint_p — Timer state machine
-    │   ├── useTimetable.ts         # 🔒 @Phuupwint_p — Drag-and-drop & view switching
-    │   ├── useFlashcardSRS.ts      # 🔒 minkhit — SRS review scheduling interface
-    │   └── useCountdown.ts         # 🔒 @Neon_Aung — Exam date diff & urgency calc
+    │   ├── useAuth.ts              # 🔒 TYZ — Supabase auth session wrapper
+    │   ├── useRole.ts              # 🔒 TYZ — Read current persona from context
+    │   ├── usePomodoro.ts          # 🔒 PPP — Timer state machine
+    │   ├── useTimetable.ts         # 🔒 PPP — Drag-and-drop & view switching
+    │   ├── useFlashcardSRS.ts      # 🔒 MKP — SRS review scheduling interface
+    │   └── useCountdown.ts         # 🔒 AKT — Exam date diff & urgency calc
     │
     ├── context/                    # Global React Context Providers
-    │   ├── AuthContext.tsx         # 🔒 PM — Supabase session (required by all authed pages)
-    │   ├── PersonaContext.tsx      # 🔒 PM — User Role State (Student / Teacher / Contributor)
-    │   └── TimerContext.tsx        # 🔒 @Phuupwint_p — Global Pomodoro state (survives navigation)
+    │   ├── AuthContext.tsx         # 🔒 TYZ — Supabase session (required by all authed pages)
+    │   ├── PersonaContext.tsx      # 🔒 TYZ — User Role State (Student / Teacher / Contributor)
+    │   └── TimerContext.tsx        # 🔒 PPP — Global Pomodoro state (survives navigation)
     │
     ├── actions/                    # Next.js Server Actions ('use server' — server-side mutations)
-    │   ├── timetable.ts            # 🔒 @Phuupwint_p
-    │   ├── flashcards.ts           # 🔒 minkhit
-    │   ├── classrooms.ts           # 🔒 @bmk_tg & @KelvinChaint
-    │   └── editor.ts               # 🔒 PM — Contributor submit & gatekeeper approve/reject
+    │   ├── timetable.ts            # 🔒 PPP
+    │   ├── flashcards.ts           # 🔒 MKP
+    │   ├── classrooms.ts           # 🔒 BMK & ABC
+    │   └── editor.ts               # 🔒 TYZ — Contributor submit & gatekeeper approve/reject
     │
     ├── constants/                  # Static reference data (no logic — pure data)
-    │   ├── qualifications.ts       # 🔒 PM — Exam boards, subjects, series (CAIE, Edexcel, OSSD…)
-    │   ├── gradeBoundaries.ts      # 🔒 @Neon_Aung — Official IGCSE/A-Level/IAL/OSSD boundary tables
-    │   ├── timetable.ts            # 🔒 @Phuupwint_p — Event type colours & repeat options
-    │   └── pomodoro.ts             # 🔒 @Phuupwint_p — Default intervals & music track manifest
+    │   ├── qualifications.ts       # 🔒 TYZ — Exam boards, subjects, series (CAIE, Edexcel, OSSD…)
+    │   ├── gradeBoundaries.ts      # 🔒 AKT — Official IGCSE/A-Level/IAL/OSSD boundary tables
+    │   ├── timetable.ts            # 🔒 PPP — Event type colours & repeat options
+    │   └── pomodoro.ts             # 🔒 PPP — Default intervals & music track manifest
     │
-    ├── lib/                        # Infrastructure clients & utilities (🔒 PM)
+    ├── lib/                        # Infrastructure clients & utilities (🔒 TYZ)
     │   ├── supabase/
     │   │   ├── client.ts           # Browser-side Supabase client (singleton)
     │   │   └── server.ts           # Server-side Supabase client (for RSC & Server Actions)
@@ -177,7 +177,7 @@ focus-point/                        # Project root
     │   │   └── algorithm.ts        # SM-2 / FSRS spaced repetition core algorithm
     │   └── utils.ts                # General helpers (cn, date formatting, grade conversion)
     │
-    └── types/                      # TypeScript Definitions (🔒 PM)
+    └── types/                      # TypeScript Definitions (🔒 TYZ)
         ├── index.ts                # Shared app-wide types & interfaces
         └── supabase.ts             # Supabase CLI auto-generated DB types (prod transition)
 ```
@@ -195,4 +195,4 @@ To maintain ecosystem stability, AI coding assistants must adhere to the followi
 5. **Constants Are Not Components:** Grade boundaries, colour maps, and qualification lists go in `src/constants/` — never inside components or mockDatabase.
 6. **Server Actions Live in `src/actions/`:** Never define a `'use server'` function inside a component file. Place it in the appropriate `src/actions/*.ts` file.
 7. **Styling Consistency:** Use Tailwind CSS v4 utility classes only. No hardcoded `px`/`py` values. Use `lucide-react` for all icons.
-8. **Respect 🔒 Ownership:** Do not create, edit, or delete files marked with another developer's lock. If a shared file needs changing, notify the PM.
+8. **Respect 🔒 Ownership:** Do not create, edit, or delete files marked with another developer's lock. If a shared file needs changing, notify the Project Manager.
