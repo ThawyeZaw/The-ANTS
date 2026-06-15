@@ -27,13 +27,13 @@ Privacy and access boundaries are strictly enforced. There are **four roles**, s
 ## 3. Directory Isolation Boundaries
 Developers are strictly confined to their designated workspace paths. You are prohibited from editing files outside your assigned directories. The **Project Manager (PM)** owns all shared infrastructure.
 
-| Developer      | Feature Ownership                                                                                                       | Assigned Paths                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| ----------------| -------------------------------------------------------------------------------------------------------------------------| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `PPP`          | **Smart Timetable, Pomodoro Timer**                                                                                     | `src/components/timetable/`, `src/components/pomodoro/`, `src/hooks/usePomodoro.ts`, `src/hooks/useTimetable.ts`, `src/context/TimerContext.tsx`, `src/constants/timetable.ts`, `src/constants/pomodoro.ts`, `src/actions/timetable.ts`                                                                                                                                                                                                                                                               |
-| `BMK` & `ABC`  | **Lesson Tracker, Course Manager, Curriculum & Notes Editor, Exam Data Editor, Classrooms**                            | `src/components/lessons/`, `src/components/courses/`, `src/components/classrooms/`, `src/components/editor/`, `src/actions/classrooms.ts`, `src/actions/editor.ts`                                                                                                                                                                                                                                                                                                                                    |
-| `ZLH`          | **Flashcard Creator & Library, Exam Countdown**                                                                         | `src/components/flashcards/`, `src/components/countdown/`, `src/hooks/useFlashcardSRS.ts`, `src/hooks/useCountdown.ts`, `src/actions/flashcards.ts`                                                                                                                                                                                                                                                                                                                                                   |
-| `AKT`          | **Grade Calculator, Clubs**                                                                                             | `src/components/calculator/`, `src/components/clubs/`, `src/hooks/useClub.ts`, `src/actions/clubs.ts`, `src/constants/gradeBoundaries.ts`                                                                                                                                                                                                                                                                                                                                                             |
-| **PM (`TYZ`)** | Shared Infrastructure, Public Home Page, Login & Signup, Role Landing Pages, NavBar, Contributor Profiles, Review Queue | `src/lib/`, `src/types/`, `src/context/AuthContext.tsx`, `src/context/PersonaContext.tsx`, `src/components/ui/`, `src/components/layout/`, `src/components/auth/`, `src/components/profile/`, `src/hooks/useAuth.ts`, `src/hooks/useRole.ts`, `src/constants/qualifications.ts`, `middleware.ts`, `supabase/`, `src/app/(app)/layout.tsx`, `src/app/(app)/student/`, `src/app/(app)/teacher/`, `src/app/(app)/contributor/`, `src/app/(app)/main-contributor/`, `src/app/page.tsx`, `src/app/(auth)/` |
+| Developer | Feature Ownership |
+|---|---|
+| `PPP` | Smart Timetable, Pomodoro Timer |
+| `BMK` & `ABC` | Lesson Tracker, Course Manager, Curriculum & Notes Editor, Classrooms |
+| `ZLH` | Flashcard Creator & Library, Exam Countdown, Exam Data Editor |
+| `AKT` | Grade Calculator, Clubs |
+| **PM (`TYZ`)** | Shared Infrastructure, Public Home Page, Login & Signup, Role Landing Pages, NavBar, Contributor Profiles, Review Queue |
 
 ---
 
@@ -161,7 +161,7 @@ the-ants/                                 # Project root
     │       ├── editor/
     │       │   ├── page.tsx              # 🔒 BMK & ABC — Curriculum & Notes editor (Contributor+)
     │       │   └── exam/
-    │       │       └── page.tsx          # 🔒 BMK & ABC — Exam Data editor (Contributor+)
+    │       │       └── page.tsx          # 🔒 ZLH — Exam Data editor (Contributor+)
     │       │
     │       ├── review/
     │       │   └── page.tsx              # 🔒 PM — Gatekeeper / Review Queue (Main Contributor only)
@@ -188,7 +188,8 @@ the-ants/                                 # Project root
     │   ├── courses/                      # 🔒 BMK & ABC
     │   ├── classrooms/                   # 🔒 BMK & ABC
     │   ├── clubs/                        # 🔒 AKT
-    │   ├── editor/                       # 🔒 BMK & ABC
+    │   ├── editor/                       # 🔒 BMK & ABC (Curriculum & Notes only)
+    │   ├── exam-editor/                  # 🔒 ZLH (Exam Data editor components)
     │   ├── calculator/                   # 🔒 AKT
     │   ├── countdown/                    # 🔒 ZLH
     │   └── flashcards/                   # 🔒 ZLH
@@ -212,7 +213,8 @@ the-ants/                                 # Project root
     │   ├── flashcards.ts                 # 🔒 ZLH
     │   ├── classrooms.ts                 # 🔒 BMK & ABC
     │   ├── clubs.ts                      # 🔒 AKT — Club CRUD, join/leave, messaging
-    │   └── editor.ts                     # 🔒 BMK & ABC — Contributor submit; PM adds review approve/reject logic
+    │   ├── editor.ts                     # 🔒 BMK & ABC — Curriculum & Notes submissions; PM adds review approve/reject logic
+    │   └── exam-editor.ts                # 🔒 ZLH — Exam data CRUD & submission to review queue
     │
     ├── constants/                        # Static reference data (no logic — pure data)
     │   ├── qualifications.ts             # 🔒 PM — Exam boards, subjects, series (CAIE, Edexcel, OSSD…)
