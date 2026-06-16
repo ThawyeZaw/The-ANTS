@@ -62,17 +62,17 @@
 
 /* ── Dark Theme ───────────────────────────────────────────────────────────── */
 [data-theme="dark"] {
-  --background: #0a0e1a;
-  --background-secondary: #111827;
-  --background-card: #1e2433;
-  --background-elevated: #252d3d;
+  --background: #141923;
+  --background-secondary: #1c2333;
+  --background-card: #232d3f;
+  --background-elevated: #2a3450;
 
   --foreground: #f1f5f9;
   --foreground-secondary: #94a3b8;
-  --foreground-muted: #64748b;
+  --foreground-muted: #718096;
 
-  --border: #2a3244;
-  --border-hover: #3b4a63;
+  --border: #2e3d55;
+  --border-hover: #3d5070;
 
   --primary: #818cf8;
   --primary-hover: #6366f1;

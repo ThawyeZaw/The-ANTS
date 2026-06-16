@@ -53,12 +53,12 @@ export default function MainContributorLandingPage() {
   return (
     <div className="space-y-8 animate-fade-in">
       {/* Welcome Card */}
-      <div className="bg-gradient-to-br from-amber-500 to-orange-400 rounded-2xl p-8 text-white relative overflow-hidden">
+      <div className="bg-gradient-to-br from-primary to-accent rounded-2xl p-8 text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="relative z-10">
-          <p className="text-amber-100 text-sm font-medium">Welcome back</p>
+          <p className="text-white/70 text-sm font-medium">Welcome back</p>
           <h1 className="text-3xl font-bold mt-1">{firstName} 👋</h1>
-          <p className="text-amber-100 mt-2 max-w-md">
+          <p className="text-white/70 mt-2 max-w-md">
             You have pending reviews waiting. Here&apos;s your gatekeeper overview.
           </p>
         </div>
@@ -85,7 +85,7 @@ export default function MainContributorLandingPage() {
         {STATS.map((stat) => (
           <div
             key={stat.label}
-            className="bg-background-card border border-border rounded-xl p-5 hover:shadow-md transition-all duration-200"
+            className="bg-background-card border border-border rounded-xl p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
           >
             <div className={cn('inline-flex p-2 rounded-lg mb-3', stat.color)}>
               {stat.icon}

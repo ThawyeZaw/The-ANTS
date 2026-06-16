@@ -40,7 +40,7 @@ export default function RootLayout({
       className={`${inter.variable} h-full`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col antialiased">
+      <body className="min-h-full flex flex-col antialiased" suppressHydrationWarning>
         <ThemeProvider>
           <AuthProvider>
             {children}

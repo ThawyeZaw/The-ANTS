@@ -31,6 +31,7 @@ import {
   Calculator,
   MessageSquare,
   Bug,
+  Settings,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
@@ -282,7 +283,12 @@ export default function NavBar() {
               <div ref={userMenuRef} className="relative">
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-xl hover:bg-background-secondary transition-all duration-200 cursor-pointer"
+                  className={cn(
+                    'flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-xl transition-all duration-200 cursor-pointer',
+                    isUserMenuOpen
+                      ? 'bg-primary/10 ring-2 ring-primary/30'
+                      : 'hover:bg-background-secondary'
+                  )}
                 >
                   <div className="h-7 w-7 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-xs font-bold">
                     {getInitials(user.profile.name)}
@@ -309,9 +315,17 @@ export default function NavBar() {
                         </div>
                       )}
                     </div>
+                    <Link
+                      href="/settings"
+                      onClick={() => setIsUserMenuOpen(false)}
+                      className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-foreground-secondary hover:text-foreground hover:bg-background-secondary transition-colors cursor-pointer"
+                    >
+                      <Settings className="h-4 w-4" />
+                      Settings
+                    </Link>
                     <button
                       onClick={handleLogout}
-                      className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-error hover:bg-error/10 transition-colors cursor-pointer"
+                      className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-error hover:bg-error/10 transition-colors cursor-pointer mt-1"
                     >
                       <LogOut className="h-4 w-4" />
                       Sign Out

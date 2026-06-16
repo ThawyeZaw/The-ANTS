@@ -168,7 +168,7 @@ function AnimatedSection({
       style={{
         opacity: isInView ? 1 : 0,
         transform: isInView ? 'translateY(0)' : 'translateY(30px)',
-        transition: `opacity 0.7s ease ${delay}ms, transform 0.7s ease ${delay}ms`,
+        transition: `opacity 0.7s ease ${delay}ms, transform 0.4s ease ${delay}ms`,
       }}
     >
       {children}
