@@ -11,7 +11,7 @@
 ---
 
 ## 2. User Roles & Permissions
-Privacy and access boundaries are strictly enforced. There are **four roles**, selected at signup (one email can hold multiple roles).
+Privacy and access boundaries are strictly enforced. There are **four roles**, selected at signup (one email can only hold one role, but users can upgrade or downgrade their role later).
 
 | Role | Who | What they can access |
 |---|---|---|
@@ -59,14 +59,15 @@ Before starting a generation session in VS Code, every developer **must** paste 
 ## 6. Database Schema Map (PostgreSQL)
 *(Note: Full types are generated via Supabase CLI in `types/supabase.ts`)*
 
-- `profiles`: [User metadata, role statuses (`student | teacher | contributor | main_contributor`), and public Contributor profile fields (name, title, avatar, bio, social links)]
+- `profiles`: [User metadata, role assignment (`student | teacher | contributor | main_contributor`), and basic fields (name, avatar)]
+- `contributor_profiles`: [Public Contributor profile fields (title, bio, social links, verification docs)]
 - `curriculums`: [Global templates — IGCSE, SAT, etc.]
-- `user_curriculums`: [Junction table mapping students to multiple curriculums]
-- `topics` & `student_topics`: [Syllabus breakdown and localised confidence levels]
-- `classrooms`: [Mapping class ID, teacher ID, and curriculum ID]
+- `user_curriculums` & `user_subjects`: [Junction tables mapping students to selected curriculums and specific subjects]
+- `topics` & `topic_progress`: [Syllabus breakdown and localised confidence levels]
+- `classrooms` & `classroom_curriculums`: [Mapping class to teacher, and junction table supporting multiple curriculums per classroom]
 - `timetable_events`: [JSONB scheduling arrays]
-- `flashcards` & `card_reviews`: [Spaced-repetition logic]
-- `clubs`: [Club ID, creator (Contributor) ID, subject/curriculum link, join mode (invite/approval)]
+- `decks`, `cards` & `card_reviews`: [Flashcard deck organization and spaced-repetition logic]
+- `clubs`, `club_subjects` & `club_curriculums`: [Club core data and junction tables linking clubs to specific subjects and curriculums]
 - `club_members`: [Junction table mapping users to clubs, with membership status (pending/approved)]
 - `club_messages`: [Chat messages within a club, with timestamp and sender ID]
 - `club_announcements`: [Pinned announcements posted by club leaders]

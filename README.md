@@ -114,7 +114,7 @@ Stop guessing your predicted grades.
 | **Contributor** | Verified experts | Everything above + Curriculum & Notes Editor, Exam Data Editor, create & lead Clubs, publicly visible Contributor Profile |
 | **Main Contributor** | Senior verified experts | Everything above + Gatekeeper Review Queue — approve, reject, or request revisions on Contributor submissions before they go live to all users |
 
-> You select your role when you first sign up. One email can be used for multiple roles.
+> You select your role when you first sign up. One email can only have one role, but you can upgrade or downgrade your role later.
 
 ---
 
