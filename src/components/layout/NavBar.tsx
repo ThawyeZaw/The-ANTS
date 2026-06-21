@@ -121,6 +121,21 @@ const NAV_GROUPS: NavGroupDef[] = [
   },
 ];
 
+// Helper to build nav groups with dynamic profile link
+function getNavGroups(username?: string): NavGroupDef[] {
+  if (!username) return NAV_GROUPS;
+  return NAV_GROUPS.map((group) => {
+    if (group.label !== 'Profile') return group;
+    return {
+      ...group,
+      items: group.items.map((item) => ({
+        ...item,
+        href: `/profile/${username}`,
+      })),
+    };
+  });
+}
+
 // ── Dropdown Component ───────────────────────────────────────────────────────
 
 function NavDropdown({
@@ -219,8 +234,8 @@ export default function NavBar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isUserMenuOpen]);
 
-  // Filter nav groups by current role
-  const visibleGroups = NAV_GROUPS.filter(
+  // Filter nav groups by current role, with dynamic profile link
+  const visibleGroups = getNavGroups(user?.profile?.username).filter(
     (group) => role && group.allowedRoles.includes(role)
   );
 

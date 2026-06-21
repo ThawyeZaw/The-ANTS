@@ -2,17 +2,15 @@
 
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTS — Settings Page
-// Lets users personalise their appearance: theme mode + color preset.
-// Also shows read-only account info.
+// Lets users edit their profile, change their role, and personalise appearance.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { Check, Sun, Moon, Palette, User, Mail, Shield, ArrowLeft } from 'lucide-react';
+import { Check, Sun, Moon, Palette, User, Shield, ArrowLeft, UserCog } from 'lucide-react';
 import { useTheme, COLOR_PRESETS, type ThemeColor } from '@/context/ThemeContext';
-import { useAuth } from '@/hooks/useAuth';
-import { RoleBadge } from '@/components/ui/Badge';
-import { cn, getInitials } from '@/lib/utils';
-import { useRole } from '@/hooks/useRole';
+import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
+import ProfileEditor from '@/components/settings/ProfileEditor';
+import RoleSwitcher from '@/components/settings/RoleSwitcher';
 
 // ── Section Wrapper ───────────────────────────────────────────────────────────
 
@@ -150,53 +148,6 @@ function ColorPalettePicker() {
   );
 }
 
-// ── Account Info ──────────────────────────────────────────────────────────────
-
-function AccountInfo() {
-  const { user } = useAuth();
-  const { role } = useRole();
-
-  if (!user) return null;
-
-  const fields = [
-    { label: 'Display Name', value: user.profile.name, icon: <User className="h-4 w-4" /> },
-    { label: 'Email', value: user.email, icon: <Mail className="h-4 w-4" /> },
-  ];
-
-  return (
-    <div className="space-y-4">
-      {/* Avatar row */}
-      <div className="flex items-center gap-4 pb-4 border-b border-border">
-        <div className="h-14 w-14 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-lg font-bold shadow-md">
-          {getInitials(user.profile.name)}
-        </div>
-        <div>
-          <p className="font-semibold text-foreground">{user.profile.name}</p>
-          {role && <RoleBadge role={role} />}
-        </div>
-      </div>
-
-      {/* Fields */}
-      {fields.map((field) => (
-        <div key={field.label} className="flex items-center gap-3 py-3 border-b border-border last:border-0">
-          <div className="text-foreground-muted shrink-0">{field.icon}</div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs text-foreground-muted mb-0.5">{field.label}</p>
-            <p className="text-sm font-medium text-foreground truncate">{field.value}</p>
-          </div>
-          <span className="text-xs text-foreground-muted bg-background-secondary px-2 py-0.5 rounded-md">
-            Read-only
-          </span>
-        </div>
-      ))}
-
-      <p className="text-xs text-foreground-muted pt-1">
-        To update your name or email, contact your administrator.
-      </p>
-    </div>
-  );
-}
-
 // ── Main Settings Page ────────────────────────────────────────────────────────
 
 export default function SettingsPage() {
@@ -223,6 +174,24 @@ export default function SettingsPage() {
         </p>
       </div>
 
+      {/* Profile Section */}
+      <SettingsSection
+        title="Profile"
+        description="Your public profile information"
+        icon={<User className="h-4 w-4" />}
+      >
+        <ProfileEditor />
+      </SettingsSection>
+
+      {/* Role Management Section */}
+      <SettingsSection
+        title="Role Management"
+        description="Switch your role to access different features"
+        icon={<UserCog className="h-4 w-4" />}
+      >
+        <RoleSwitcher />
+      </SettingsSection>
+
       {/* Appearance Section */}
       <SettingsSection
         title="Appearance"
@@ -231,15 +200,6 @@ export default function SettingsPage() {
       >
         <ThemeModeToggle />
         <ColorPalettePicker />
-      </SettingsSection>
-
-      {/* Account Section */}
-      <SettingsSection
-        title="Account"
-        description="Your profile and role information"
-        icon={<Shield className="h-4 w-4" />}
-      >
-        <AccountInfo />
       </SettingsSection>
     </div>
   );

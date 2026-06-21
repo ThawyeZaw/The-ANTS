@@ -14,8 +14,8 @@ import {
   useCallback,
   type ReactNode,
 } from 'react';
-import { AuthUser, UserRole } from '@/types';
-import { mockLogin, mockSignup, isSignupError } from '@/lib/mock/database';
+import { AuthUser, Profile, UserRole } from '@/types';
+import { mockLogin, mockSignup, isSignupError, mockUpdateProfile, mockUpdateRole } from '@/lib/mock/database';
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -29,6 +29,10 @@ interface AuthContextValue {
     role: UserRole
   ) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
+  updateProfile: (
+    data: Partial<Pick<Profile, 'name' | 'bio' | 'title' | 'socialLinks' | 'avatar'>>
+  ) => Promise<{ success: boolean; error?: string }>;
+  updateRole: (newRole: UserRole) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -98,6 +102,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(SESSION_KEY);
   }, []);
 
+  const updateProfile = useCallback(
+    async (
+      data: Partial<Pick<Profile, 'name' | 'bio' | 'title' | 'socialLinks' | 'avatar'>>
+    ): Promise<{ success: boolean; error?: string }> => {
+      if (!user) return { success: false, error: 'Not authenticated.' };
+
+      // Simulate network delay
+      await new Promise((resolve) => setTimeout(resolve, 600));
+
+      const result = mockUpdateProfile(user.id, data);
+      if (!result.success) return { success: false, error: result.error };
+
+      const updatedUser: AuthUser = {
+        ...user,
+        profile: result.profile,
+      };
+      setUser(updatedUser);
+      localStorage.setItem(SESSION_KEY, JSON.stringify(updatedUser));
+      return { success: true };
+    },
+    [user]
+  );
+
+  const updateUserRole = useCallback(
+    async (newRole: UserRole): Promise<{ success: boolean; error?: string }> => {
+      if (!user) return { success: false, error: 'Not authenticated.' };
+
+      // Simulate network delay
+      await new Promise((resolve) => setTimeout(resolve, 600));
+
+      const result = mockUpdateRole(user.id, newRole);
+      if (!result.success) return { success: false, error: result.error };
+
+      const updatedUser: AuthUser = {
+        ...user,
+        profile: result.profile,
+      };
+      setUser(updatedUser);
+      localStorage.setItem(SESSION_KEY, JSON.stringify(updatedUser));
+      return { success: true };
+    },
+    [user]
+  );
+
   return (
     <AuthContext.Provider
       value={{
@@ -107,6 +155,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         signup,
         logout,
+        updateProfile,
+        updateRole: updateUserRole,
       }}
     >
       {children}
