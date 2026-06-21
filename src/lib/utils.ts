@@ -104,3 +104,15 @@ export function checkPasswordStrength(password: string): {
     color: colors[cappedScore],
   };
 }
+
+/**
+ * Generate a URL-safe username slug from a full name.
+ * "Aye Chan Thu" → "ayechanthu", "U Kyaw Min" → "ukyawmin"
+ */
+export function generateUsername(name: string): string {
+  const slug = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '')
+    .trim();
+  return slug || `user${Date.now()}`;
+}

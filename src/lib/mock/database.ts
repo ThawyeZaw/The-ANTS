@@ -11,6 +11,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { Profile, AuthUser, UserRole } from '@/types';
+import { generateUsername } from '@/lib/utils';
 
 // ── Mock User Profiles ──────────────────────────────────────────────────────
 
@@ -19,6 +20,7 @@ const mockProfiles: Profile[] = [
     id: 'user-student-001',
     email: 'thiri@theants.edu',
     name: 'Thiri Aung',
+    username: 'thiriaung',
     avatar: '',
     role: 'student',
     bio: 'IGCSE student aiming for straight A*s. Love physics and maths!',
@@ -26,9 +28,21 @@ const mockProfiles: Profile[] = [
     createdAt: '2026-01-15T08:00:00Z',
   },
   {
+    id: 'user-student-002',
+    email: 'min.htet@theants.edu',
+    name: 'Min Htet Naing',
+    username: 'minhtetnaing',
+    avatar: '',
+    role: 'student',
+    bio: 'A Level Biology student preparing for medical school entrance.',
+    title: 'A Level Student',
+    createdAt: '2026-02-10T08:00:00Z',
+  },
+  {
     id: 'user-teacher-001',
     email: 'u.kyaw@theants.edu',
     name: 'U Kyaw Min',
+    username: 'ukyawmin',
     avatar: '',
     role: 'teacher',
     bio: 'Experienced A Level Chemistry teacher with 10+ years of tutoring Myanmar students.',
@@ -36,9 +50,21 @@ const mockProfiles: Profile[] = [
     createdAt: '2025-09-01T08:00:00Z',
   },
   {
+    id: 'user-teacher-002',
+    email: 'daw.su@theants.edu',
+    name: 'Daw Su Myat',
+    username: 'dawsumyat',
+    avatar: '',
+    role: 'teacher',
+    bio: 'IGCSE Mathematics specialist. Cambridge-certified trainer.',
+    title: 'IGCSE Maths Teacher',
+    createdAt: '2025-11-15T08:00:00Z',
+  },
+  {
     id: 'user-contributor-001',
     email: 'aye.chan@theants.edu',
     name: 'Aye Chan Thu',
+    username: 'ayechanthu',
     avatar: '',
     role: 'contributor',
     bio: 'Cambridge-trained educator building curriculum resources for Myanmar students.',
@@ -50,9 +76,24 @@ const mockProfiles: Profile[] = [
     createdAt: '2025-06-20T08:00:00Z',
   },
   {
+    id: 'user-contributor-002',
+    email: 'ko.zaw@theants.edu',
+    name: 'Ko Zaw Win',
+    username: 'kozawwin',
+    avatar: '',
+    role: 'contributor',
+    bio: 'Former IGCSE examiner. Building free exam prep resources for Myanmar students.',
+    title: 'Exam Resource Creator',
+    socialLinks: {
+      linkedin: 'https://linkedin.com/in/kozawwin',
+    },
+    createdAt: '2025-08-05T08:00:00Z',
+  },
+  {
     id: 'user-main-contributor-001',
     email: 'daw.hla@theants.edu',
     name: 'Daw Hla Myint',
+    username: 'dawhlamyint',
     avatar: '',
     role: 'main_contributor',
     bio: 'Senior gatekeeper and lead reviewer. 15 years in international education.',
@@ -69,8 +110,11 @@ const mockProfiles: Profile[] = [
 
 const mockPasswords: Record<string, string> = {
   'thiri@theants.edu': 'student123',
+  'min.htet@theants.edu': 'student123',
   'u.kyaw@theants.edu': 'teacher123',
+  'daw.su@theants.edu': 'teacher123',
   'aye.chan@theants.edu': 'contributor123',
+  'ko.zaw@theants.edu': 'contributor123',
   'daw.hla@theants.edu': 'maincontributor123',
 };
 
@@ -120,6 +164,7 @@ export function mockSignup(
     id: `user-${role}-${Date.now()}`,
     email: normalizedEmail,
     name,
+    username: generateUsername(name),
     avatar: '',
     role,
     createdAt: new Date().toISOString(),
@@ -158,6 +203,49 @@ export function getProfilesByRole(role: UserRole): Profile[] {
   return mockProfiles.filter((p) => p.role === role);
 }
 
+/** Get a profile by username slug */
+export function getProfileByUsername(username: string): Profile | undefined {
+  return mockProfiles.find((p) => p.username === username.toLowerCase());
+}
+
+/**
+ * Update a user's profile data in the mock store.
+ * In production, this calls supabase.from('profiles').update().
+ */
+export function mockUpdateProfile(
+  userId: string,
+  data: Partial<Pick<Profile, 'name' | 'bio' | 'title' | 'socialLinks' | 'avatar'>>
+): { success: true; profile: Profile } | { success: false; error: string } {
+  const profile = mockProfiles.find((p) => p.id === userId);
+  if (!profile) return { success: false, error: 'User not found.' };
+
+  if (data.name !== undefined) {
+    profile.name = data.name;
+    profile.username = generateUsername(data.name);
+  }
+  if (data.bio !== undefined) profile.bio = data.bio;
+  if (data.title !== undefined) profile.title = data.title;
+  if (data.socialLinks !== undefined) profile.socialLinks = data.socialLinks;
+  if (data.avatar !== undefined) profile.avatar = data.avatar;
+
+  return { success: true, profile: { ...profile } };
+}
+
+/**
+ * Change a user's role in the mock store.
+ * In production, this calls supabase.from('profiles').update({ role }).
+ */
+export function mockUpdateRole(
+  userId: string,
+  newRole: UserRole
+): { success: true; profile: Profile } | { success: false; error: string } {
+  const profile = mockProfiles.find((p) => p.id === userId);
+  if (!profile) return { success: false, error: 'User not found.' };
+
+  profile.role = newRole;
+  return { success: true, profile: { ...profile } };
+}
+
 // ── Type Guard ───────────────────────────────────────────────────────────────
 
 /** Check if a signup result is an error */
@@ -165,6 +253,104 @@ export function isSignupError(
   result: AuthUser | { error: string }
 ): result is { error: string } {
   return 'error' in result;
+}
+
+// ── Contributor Invite Flow ──────────────────────────────────────────────────
+// TODO: Replace with Supabase email invite + OTP when backend is connected.
+
+/** Mock OTP code for testing */
+const MOCK_OTP_CODE = '123456';
+
+/**
+ * Step 1: Invite a user by creating a skeleton profile.
+ * In production, this sends an invite email with an OTP.
+ */
+export function mockInviteUser(
+  email: string,
+  name: string,
+  role: UserRole
+): { success: true; userId: string } | { success: false; error: string } {
+  const normalizedEmail = email.toLowerCase().trim();
+
+  // Check if email already exists
+  const existing = mockProfiles.find((p) => p.email === normalizedEmail);
+  if (existing) {
+    return { success: false, error: 'A user with this email already exists.' };
+  }
+
+  const userId = `user-${role}-${Date.now()}`;
+  const newProfile: Profile = {
+    id: userId,
+    email: normalizedEmail,
+    name,
+    username: generateUsername(name),
+    avatar: '',
+    role,
+    createdAt: new Date().toISOString(),
+  };
+
+  mockProfiles.push(newProfile);
+  return { success: true, userId };
+}
+
+/**
+ * Step 2: Verify OTP code.
+ * In production, this validates against a Supabase-issued OTP.
+ */
+export function mockVerifyOtp(_email: string, otp: string): boolean {
+  return otp === MOCK_OTP_CODE;
+}
+
+/**
+ * Step 3: Complete the invited user's profile with password and details.
+ * In production, this updates the profile row and creates a contributor_profiles row.
+ */
+export function mockCompleteProfile(
+  userId: string,
+  data: {
+    password: string;
+    title?: string;
+    bio?: string;
+    website_url?: string;
+    facebook_url?: string;
+    linkedin_url?: string;
+    github_url?: string;
+  }
+): { success: true } | { success: false; error: string } {
+  const profile = mockProfiles.find((p) => p.id === userId);
+  if (!profile) {
+    return { success: false, error: 'User not found.' };
+  }
+
+  // Update profile fields
+  if (data.title) profile.title = data.title;
+  if (data.bio) profile.bio = data.bio;
+  if (data.website_url || data.linkedin_url || data.github_url) {
+    profile.socialLinks = {
+      website: data.website_url || undefined,
+      linkedin: data.linkedin_url || undefined,
+      github: data.github_url || undefined,
+    };
+  }
+
+  // Store password
+  mockPasswords[profile.email] = data.password;
+
+  // Add contributor profile entry if role is contributor or main_contributor
+  if (profile.role === 'contributor' || profile.role === 'main_contributor') {
+    mockContributorProfiles.push({
+      id: userId,
+      title: data.title || null,
+      bio: data.bio || null,
+      website_url: data.website_url || null,
+      facebook_url: data.facebook_url || null,
+      linkedin_url: data.linkedin_url || null,
+      github_url: data.github_url || null,
+      verification_documents_url: null,
+    });
+  }
+
+  return { success: true };
 }
 
 // ── Mock Additional Profiles Data ────────────────────────────────────────────
@@ -176,7 +362,16 @@ export const mockTeacherProfiles = [
   { id: 'user-teacher-001', institution_name: 'Yangon International School', is_verified_teacher: true }
 ];
 
-export const mockContributorProfiles = [
+export const mockContributorProfiles: Array<{
+  id: string;
+  title: string | null;
+  bio: string | null;
+  website_url: string | null;
+  facebook_url: string | null;
+  linkedin_url: string | null;
+  github_url: string | null;
+  verification_documents_url: string | null;
+}> = [
   { id: 'user-contributor-001', title: 'Curriculum Developer', bio: 'Expert in science.', website_url: 'https://example.com', facebook_url: null, linkedin_url: 'https://linkedin.com/in/ayechanthu', github_url: 'https://github.com/ayechanthu', verification_documents_url: null },
   { id: 'user-main-contributor-001', title: 'Head of Content', bio: 'Senior reviewer.', website_url: 'https://dawhlamyint.com', facebook_url: null, linkedin_url: 'https://linkedin.com/in/dawhlamyint', github_url: null, verification_documents_url: null }
 ];

@@ -88,7 +88,7 @@ This directory tree is the **absolute source of truth** for file placement. AI A
 
 ```text
 the-ants/                                 # Project root
-├── middleware.ts                         # 🔒 PM — Route protection + post-login role redirect
+├── middleware.ts                         # 🔒 PM — Route protection + post-login redirect to /dashboard
 ├── supabase/                             # 🔒 PM — Supabase CLI local config
 │   ├── config.toml
 │   ├── seed.sql                          # Dev seed data
@@ -101,6 +101,7 @@ the-ants/                                 # Project root
 └── src/
     ├── app/                              # Next.js 16 App Router (Server Components by default)
     │   ├── layout.tsx                    # 🔒 PM — Root layout (providers, global fonts, metadata)
+    │   ├── globals.css                   # 🔒 PM — Global Tailwind CSS v4 styles & design tokens
     │   ├── page.tsx                      # 🔒 PM (TYZ) — Public landing / home page
     │   ├── not-found.tsx                 # 🔒 PM — Global 404 page
     │   │
@@ -114,15 +115,9 @@ the-ants/                                 # Project root
     │       ├── layout.tsx                # 🔒 PM — App shell (NavBar wraps all authed routes)
     │       ├── loading.tsx               # 🔒 PM — Global skeleton loader
     │       │
-    │       │   # ── Role Landing Pages (replaces dashboard) ──────────────────────────
-    │       ├── student/
-    │       │   └── page.tsx              # 🔒 PM — Student landing page (today snapshot, quick links)
-    │       ├── teacher/
-    │       │   └── page.tsx              # 🔒 PM — Teacher landing page (classroom summary, assignments)
-    │       ├── contributor/
-    │       │   └── page.tsx              # 🔒 PM — Contributor landing page (my submissions, club activity)
-    │       ├── main-contributor/
-    │       │   └── page.tsx              # 🔒 PM — Main Contributor landing (pending reviews count, activity)
+    │       │   # ── Unified Dashboard (role-aware, single entry point) ────────────────
+    │       ├── dashboard/
+    │       │   └── page.tsx              # 🔒 PM — Unified role-aware dashboard (renders role-specific stats & quick links)
     │       │
     │       │   # ── Feature Pages ────────────────────────────────────────────────────
     │       ├── timetable/
@@ -158,6 +153,9 @@ the-ants/                                 # Project root
     │       ├── calculator/
     │       │   └── page.tsx              # 🔒 AKT — Grade Calculator
     │       │
+    │       ├── settings/
+    │       │   └── page.tsx              # 🔒 PM — User settings (profile editor, role switcher)
+    │       │
     │       │   # ── Contributor & Main Contributor Only ──────────────────────────────
     │       ├── editor/
     │       │   ├── page.tsx              # 🔒 BMK & ABC — Curriculum & Notes editor (Contributor+)
@@ -166,6 +164,10 @@ the-ants/                                 # Project root
     │       │
     │       ├── review/
     │       │   └── page.tsx              # 🔒 PM — Gatekeeper / Review Queue (Main Contributor only)
+    │       │
+    │       ├── main-contributor/
+    │       │   └── add-contributor/
+    │       │       └── page.tsx          # 🔒 PM — Add Contributor invite flow (Main Contributor only)
     │       │
     │       └── profile/
     │           └── [username]/
@@ -182,7 +184,19 @@ the-ants/                                 # Project root
     │   │   ├── NavBar.tsx                # Creative floating glassmorphism nav with grouped dropdowns
     │   │   └── AuthModal.tsx
     │   ├── auth/                         # 🔒 PM (TYZ) — Login & signup form components
+    │   ├── settings/                     # 🔒 PM — Settings page components
+    │   │   ├── ProfileEditor.tsx          # Inline editable profile form
+    │   │   └── RoleSwitcher.tsx           # Role change with confirmation dialog
     │   ├── profile/                      # 🔒 PM — Contributor public profile components
+    │   │   ├── ProfileHero.tsx            # Hero banner with avatar, bio, social links
+    │   │   ├── ProfileStats.tsx           # Stat cards (published count, views)
+    │   │   └── ProfileActivity.tsx        # Timeline activity feed
+    │   ├── contributor-manager/          # 🔒 PM — Add-contributor invite flow components
+    │   │   ├── InviteStep.tsx
+    │   │   ├── VerifyStep.tsx
+    │   │   ├── ProfileStep.tsx
+    │   │   ├── SuccessStep.tsx
+    │   │   └── StepProgress.tsx
     │   ├── timetable/                    # 🔒 PPP
     │   ├── pomodoro/                     # 🔒 PPP
     │   ├── lessons/                      # 🔒 BMK & ABC
@@ -196,8 +210,10 @@ the-ants/                                 # Project root
     │   └── flashcards/                   # 🔒 ZLH
     │
     ├── hooks/                            # Custom React Hooks (logic only — no JSX)
-    │   ├── useAuth.ts                    # 🔒 PM — Supabase auth session wrapper
+    │   ├── useAuth.ts                    # 🔒 PM — Supabase auth session wrapper (includes updateProfile, updateRole)
     │   ├── useRole.ts                    # 🔒 PM — Read current persona from context (returns isStudent, isTeacher, isContributor, isMainContributor)
+    │   ├── useProfile.ts                 # 🔒 PM — Public profile data fetcher by username
+    │   ├── useContributorManager.ts      # 🔒 PM — Multi-step contributor invite flow state machine
     │   ├── usePomodoro.ts                # 🔒 PPP — Timer state machine
     │   ├── useTimetable.ts               # 🔒 PPP — Drag-and-drop & view switching
     │   ├── useFlashcardSRS.ts            # 🔒 ZLH — SRS review scheduling interface
@@ -264,14 +280,16 @@ The authenticated app shell uses a **single NavBar** component (`src/components/
 > Classroom pages adapt their content by role: Students see a join/browse view; Teachers see a manage/create view.
 
 ### Post-Login Redirect (middleware.ts)
-After a successful login, `middleware.ts` reads the session role and redirects:
+After a successful login, `middleware.ts` redirects all roles to the unified dashboard:
 
 | Role | Redirects to |
 |---|---|
-| `student` | `/student` |
-| `teacher` | `/teacher` |
-| `contributor` | `/contributor` |
-| `main_contributor` | `/main-contributor` |
+| `student` | `/dashboard` |
+| `teacher` | `/dashboard` |
+| `contributor` | `/dashboard` |
+| `main_contributor` | `/dashboard` |
+
+The dashboard page itself uses `useRole()` to render role-appropriate stats, quick links, and widgets.
 
 ---
 
@@ -287,4 +305,4 @@ To maintain ecosystem stability, AI coding assistants must adhere to the followi
 6. **Server Actions Live in `src/actions/`:** Never define a `'use server'` function inside a component file. Place it in the appropriate `src/actions/*.ts` file.
 7. **Styling Consistency:** Use Tailwind CSS v4 utility classes only. No hardcoded `px`/`py` values. Use `lucide-react` for all icons.
 8. **Respect 🔒 Ownership:** Do not create, edit, or delete files marked with another developer's lock. If a shared file needs changing, notify the PM.
-9. **No Dashboard Directory:** There is no `/dashboard` route. Role landing pages live at `/student`, `/teacher`, `/contributor`, and `/main-contributor` respectively.
+9. **No Dashboard Directory:** The primary role landing pages live at `/student`, `/teacher`, `/contributor`, and `/main-contributor` respectively. The `/dashboard` route currently serves as a common entry point that may redirect or display role-specific content.

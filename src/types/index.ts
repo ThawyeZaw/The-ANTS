@@ -11,6 +11,7 @@ export interface SocialLinks {
   github?: string;
   linkedin?: string;
   twitter?: string;
+  facebook?: string;
   website?: string;
 }
 
@@ -19,6 +20,7 @@ export interface Profile {
   id: string;
   email: string;
   name: string;
+  username: string;
   avatar: string;
   role: UserRole;
   bio?: string;
@@ -119,4 +121,24 @@ export interface StatWidget {
   icon: string;
   trend?: 'up' | 'down' | 'neutral';
   color: string;
+}
+
+/** Contributor profile fields (maps to `contributor_profiles` table) */
+export interface ContributorProfile {
+  id: string;
+  title: string | null;
+  bio: string | null;
+  website_url: string | null;
+  facebook_url: string | null;
+  linkedin_url: string | null;
+  github_url: string | null;
+  verification_documents_url: string | null;
+}
+
+/** Tracks the state of a user being invited through the multi-step flow */
+export interface InvitedUser {
+  email: string;
+  name: string;
+  role: UserRole;
+  otpVerified: boolean;
 }

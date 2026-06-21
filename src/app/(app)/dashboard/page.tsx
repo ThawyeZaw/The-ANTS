@@ -24,6 +24,7 @@ import {
   CheckSquare,
   Pencil,
   UserCircle,
+  UserPlus,
   Star,
   Send,
   ShieldCheck,
@@ -97,6 +98,7 @@ const CONTRIBUTOR_STATS = [
 // --- MAIN CONTRIBUTOR DATA ---
 const MAIN_CONTRIBUTOR_QUICK_LINKS = [
   { title: 'Review Queue', description: 'Approve submissions', href: '/review', icon: <ShieldCheck className="h-5 w-5" />, gradient: 'from-amber-500 to-orange-400' },
+  { title: 'Add User', description: 'Invite new members', href: '/main-contributor/add-contributor', icon: <UserPlus className="h-5 w-5" />, gradient: 'from-pink-500 to-rose-400' },
   { title: 'Curriculum Editor', description: 'Build resources', href: '/editor', icon: <Pencil className="h-5 w-5" />, gradient: 'from-violet-500 to-purple-400' },
   { title: 'Exam Data Editor', description: 'Edit exam data', href: '/editor/exam', icon: <FileText className="h-5 w-5" />, gradient: 'from-indigo-500 to-violet-400' },
   { title: 'My Profile', description: 'Public profile', href: '/profile/me', icon: <UserCircle className="h-5 w-5" />, gradient: 'from-pink-500 to-rose-400' },
