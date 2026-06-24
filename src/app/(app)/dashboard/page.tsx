@@ -24,7 +24,6 @@ import {
   CheckSquare,
   Pencil,
   UserCircle,
-  UserPlus,
   Star,
   Send,
   ShieldCheck,
@@ -98,7 +97,6 @@ const CONTRIBUTOR_STATS = [
 // --- MAIN CONTRIBUTOR DATA ---
 const MAIN_CONTRIBUTOR_QUICK_LINKS = [
   { title: 'Review Queue', description: 'Approve submissions', href: '/review', icon: <ShieldCheck className="h-5 w-5" />, gradient: 'from-amber-500 to-orange-400' },
-  { title: 'Add User', description: 'Invite new members', href: '/main-contributor/add-contributor', icon: <UserPlus className="h-5 w-5" />, gradient: 'from-pink-500 to-rose-400' },
   { title: 'Curriculum Editor', description: 'Build resources', href: '/editor', icon: <Pencil className="h-5 w-5" />, gradient: 'from-violet-500 to-purple-400' },
   { title: 'Exam Data Editor', description: 'Edit exam data', href: '/editor/exam', icon: <FileText className="h-5 w-5" />, gradient: 'from-indigo-500 to-violet-400' },
   { title: 'My Profile', description: 'Public profile', href: '/profile/me', icon: <UserCircle className="h-5 w-5" />, gradient: 'from-pink-500 to-rose-400' },
@@ -143,9 +141,9 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in" data-scroll-behavior="smooth">
       {/* Welcome Card */}
-      <div className="bg-gradient-to-br from-primary to-accent rounded-2xl p-8 text-white relative overflow-hidden">
+      <div className="bg-linear-to-br from-primary to-accent rounded-2xl p-8 text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="relative z-10">
           <p className="text-white/70 text-sm font-medium">Welcome back</p>
@@ -200,7 +198,7 @@ export default function DashboardPage() {
               href={link.href}
               className="group flex items-center gap-4 bg-background-card border border-border rounded-xl p-4 hover:border-border-hover hover:shadow-md transition-all duration-200"
             >
-              <div className={cn('p-2.5 rounded-xl bg-gradient-to-br text-white shrink-0', link.gradient)}>
+              <div className={cn('p-2.5 rounded-xl bg-linear-to-br text-white shrink-0', link.gradient)}>
                 {link.icon}
               </div>
               <div className="min-w-0">

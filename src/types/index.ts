@@ -142,3 +142,77 @@ export interface InvitedUser {
   role: UserRole;
   otpVerified: boolean;
 }
+
+// -----------------------------------------------------------------------------
+// Clubs
+// -----------------------------------------------------------------------------
+
+export type ClubJoinMode = 'open' | 'invite_link' | 'approval_based';
+export type ClubMemberRole = 'leader' | 'member';
+export type ClubMembershipStatus = 'active' | 'pending' | 'rejected';
+export type ClubJoinRequestStatus = 'pending' | 'approved' | 'rejected';
+
+export interface Club {
+  id: string;
+  name: string;
+  description: string | null;
+  created_by: string;
+  join_mode: ClubJoinMode;
+  invite_code: string | null;
+  created_at: string;
+}
+
+export interface ClubMember {
+  id: string;
+  club_id: string;
+  user_id: string;
+  role: ClubMemberRole;
+  membership_status: ClubMembershipStatus;
+  joined_at: string | null;
+}
+
+export interface ClubMessage {
+  id: string;
+  club_id: string;
+  sender_id: string;
+  message: string;
+  created_at: string;
+}
+
+export interface ClubAnnouncement {
+  id: string;
+  club_id: string;
+  created_by: string;
+  title: string | null;
+  content: string | null;
+  created_at: string;
+}
+
+export interface ClubLink {
+  id: string;
+  club_id: string;
+  title: string | null;
+  url: string | null;
+  shared_by: string;
+  created_at: string;
+}
+
+export interface ClubJoinRequest {
+  id: string;
+  club_id: string;
+  user_id: string;
+  status: ClubJoinRequestStatus;
+  requested_at: string;
+}
+
+export interface ClubCurriculum {
+  id: string;
+  club_id: string;
+  curriculum_id: string;
+}
+
+export interface ClubSubject {
+  id: string;
+  club_id: string;
+  subject_id: string;
+}

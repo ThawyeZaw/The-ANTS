@@ -10,7 +10,20 @@
 //     Always import from '@/lib/mock/database'.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { Profile, AuthUser, UserRole } from '@/types';
+import {
+  Profile,
+  AuthUser,
+  UserRole,
+  Club,
+  ClubAnnouncement,
+  ClubCurriculum,
+  ClubJoinMode,
+  ClubJoinRequest,
+  ClubLink,
+  ClubMember,
+  ClubMessage,
+  ClubSubject,
+} from '@/types';
 import { generateUsername } from '@/lib/utils';
 
 // ── Mock User Profiles ──────────────────────────────────────────────────────
@@ -428,24 +441,58 @@ export const mockAssignmentSubmissions = [
 ];
 
 // ── Mock Clubs ──────────────────────────────────────────────────────────────
-export const mockClubs = [
-  { id: 'club-1', name: 'Science Enthusiasts', description: 'For students who love science.', created_by: 'user-contributor-001', join_mode: 'open', invite_code: 'SCI101', created_at: '2025-10-01T00:00:00Z' }
+export const mockClubs: Club[] = [
+  {
+    id: 'club-1',
+    name: 'Science Enthusiasts',
+    description: 'For students who love science, experiments, and exam-smart explanations.',
+    created_by: 'user-contributor-001',
+    join_mode: 'open',
+    invite_code: null,
+    created_at: '2025-10-01T00:00:00Z',
+  },
+  {
+    id: 'club-2',
+    name: 'A Level Chemistry Circle',
+    description: 'Weekly problem solving, revision prompts, and resource drops for serious Chemistry learners.',
+    created_by: 'user-contributor-002',
+    join_mode: 'approval_based',
+    invite_code: null,
+    created_at: '2026-02-14T00:00:00Z',
+  },
+  {
+    id: 'club-3',
+    name: 'Exam Sprint Studio',
+    description: 'Invite-only sprint room for mock exam accountability and focused revision planning.',
+    created_by: 'user-main-contributor-001',
+    join_mode: 'invite_link',
+    invite_code: 'SPRINT26',
+    created_at: '2026-04-05T00:00:00Z',
+  },
 ];
 
-export const mockClubMembers = [
-  { id: 'clm-1', club_id: 'club-1', user_id: 'user-student-001', role: 'member', membership_status: 'active', joined_at: '2026-01-15T00:00:00Z' }
+export const mockClubMembers: ClubMember[] = [
+  { id: 'clm-1', club_id: 'club-1', user_id: 'user-contributor-001', role: 'leader', membership_status: 'active', joined_at: '2025-10-01T00:00:00Z' },
+  { id: 'clm-2', club_id: 'club-1', user_id: 'user-student-001', role: 'member', membership_status: 'active', joined_at: '2026-01-15T00:00:00Z' },
+  { id: 'clm-3', club_id: 'club-1', user_id: 'user-teacher-001', role: 'member', membership_status: 'active', joined_at: '2026-03-10T00:00:00Z' },
+  { id: 'clm-4', club_id: 'club-2', user_id: 'user-contributor-002', role: 'leader', membership_status: 'active', joined_at: '2026-02-14T00:00:00Z' },
+  { id: 'clm-5', club_id: 'club-3', user_id: 'user-main-contributor-001', role: 'leader', membership_status: 'active', joined_at: '2026-04-05T00:00:00Z' },
 ];
 
-export const mockClubMessages = [
-  { id: 'cmsg-1', club_id: 'club-1', sender_id: 'user-student-001', message: 'Hi everyone!', created_at: '2026-06-10T10:00:00Z' }
+export const mockClubMessages: ClubMessage[] = [
+  { id: 'cmsg-1', club_id: 'club-1', sender_id: 'user-student-001', message: 'Hi everyone! Anyone revising forces this week?', created_at: '2026-06-10T10:00:00Z' },
+  { id: 'cmsg-2', club_id: 'club-1', sender_id: 'user-contributor-001', message: 'Yes. I will drop a compact question set later today.', created_at: '2026-06-10T10:12:00Z' },
+  { id: 'cmsg-3', club_id: 'club-2', sender_id: 'user-contributor-002', message: 'Welcome to the Chemistry Circle. Post your hardest equilibrium question here.', created_at: '2026-06-12T09:30:00Z' },
 ];
 
-export const mockClubAnnouncements = [
-  { id: 'cann-1', club_id: 'club-1', created_by: 'user-contributor-001', title: 'Science Fair', content: 'Don\'t forget about the upcoming fair.', created_at: '2026-06-01T00:00:00Z' }
+export const mockClubAnnouncements: ClubAnnouncement[] = [
+  { id: 'cann-1', club_id: 'club-1', created_by: 'user-contributor-001', title: 'Science Fair', content: 'Bring one idea and one question to this month\'s science fair prep session.', created_at: '2026-06-01T00:00:00Z' },
+  { id: 'cann-2', club_id: 'club-3', created_by: 'user-main-contributor-001', title: 'Sprint Rules', content: 'Share goals before each sprint and check in after your timer ends.', created_at: '2026-06-05T00:00:00Z' },
 ];
 
-export const mockClubLinks = [
-  { id: 'clink-1', club_id: 'club-1', title: 'Physics Simulations', url: 'https://phet.colorado.edu/', shared_by: 'user-contributor-001', created_at: '2026-05-01T00:00:00Z' }
+export const mockClubLinks: ClubLink[] = [
+  { id: 'clink-1', club_id: 'club-1', title: 'Physics Simulations', url: 'https://phet.colorado.edu/', shared_by: 'user-contributor-001', created_at: '2026-05-01T00:00:00Z' },
+  { id: 'clink-2', club_id: 'club-2', title: 'Chemguide', url: 'https://www.chemguide.co.uk/', shared_by: 'user-contributor-002', created_at: '2026-05-22T00:00:00Z' },
 ];
 
 // ── Mock Timetable & Pomodoro ───────────────────────────────────────────────
@@ -568,10 +615,10 @@ export const mockClassroomProgress = [
 
 // ── Club Join Requests ──────────────────────────────────────────────────────
 
-export const mockClubJoinRequests = [
+export const mockClubJoinRequests: ClubJoinRequest[] = [
   {
     id: 'req-1',
-    club_id: 'club-1',
+    club_id: 'club-2',
     user_id: 'user-student-001',
     status: 'pending',
     requested_at: '2026-06-15T12:00:00Z',
@@ -580,11 +627,34 @@ export const mockClubJoinRequests = [
 
 // ── Club Curriculum Links ───────────────────────────────────────────────────
 
-export const mockClubCurriculums = [
+export const mockClubCurriculums: ClubCurriculum[] = [
   {
     id: 'club-curr-1',
     club_id: 'club-1',
     curriculum_id: 'curr-1',
+  },
+  {
+    id: 'club-curr-2',
+    club_id: 'club-2',
+    curriculum_id: 'curr-1',
+  },
+  {
+    id: 'club-curr-3',
+    club_id: 'club-3',
+    curriculum_id: 'curr-1',
+  },
+];
+
+export const mockClubSubjects: ClubSubject[] = [
+  {
+    id: 'club-subj-1',
+    club_id: 'club-1',
+    subject_id: 'subj-1',
+  },
+  {
+    id: 'club-subj-2',
+    club_id: 'club-2',
+    subject_id: 'subj-1',
   },
 ];
 
@@ -658,6 +728,220 @@ export const getClub = (id: string) =>
 
 export const getClubMembers = (clubId: string) =>
   mockClubMembers.filter(m => m.club_id === clubId);
+
+export const getClubMessages = (clubId: string) =>
+  mockClubMessages.filter(m => m.club_id === clubId);
+
+export const getClubAnnouncements = (clubId: string) =>
+  mockClubAnnouncements.filter(a => a.club_id === clubId);
+
+export const getClubLinks = (clubId: string) =>
+  mockClubLinks.filter(l => l.club_id === clubId);
+
+export const getClubJoinRequests = (clubId: string) =>
+  mockClubJoinRequests.filter(r => r.club_id === clubId);
+
+export const getClubCurriculumLinks = (clubId: string) =>
+  mockClubCurriculums.filter(c => c.club_id === clubId);
+
+export const getClubSubjectLinks = (clubId: string) =>
+  mockClubSubjects.filter(s => s.club_id === clubId);
+
+export const getUserClubMembership = (clubId: string, userId: string) =>
+  mockClubMembers.find(m => m.club_id === clubId && m.user_id === userId);
+
+export const getUserClubJoinRequest = (clubId: string, userId: string) =>
+  mockClubJoinRequests.find(r => r.club_id === clubId && r.user_id === userId && r.status === 'pending');
+
+export function createClub(data: {
+  name: string;
+  description?: string;
+  created_by: string;
+  join_mode: ClubJoinMode;
+  invite_code?: string;
+  curriculum_ids?: string[];
+  subject_ids?: string[];
+}): Club {
+  const now = new Date().toISOString();
+  const club: Club = {
+    id: `club-${Date.now()}`,
+    name: data.name,
+    description: data.description || null,
+    created_by: data.created_by,
+    join_mode: data.join_mode,
+    invite_code: data.join_mode === 'invite_link' ? (data.invite_code || generateInviteCode(data.name)) : null,
+    created_at: now,
+  };
+
+  mockClubs.unshift(club);
+  mockClubMembers.push({
+    id: `clm-${Date.now()}`,
+    club_id: club.id,
+    user_id: data.created_by,
+    role: 'leader',
+    membership_status: 'active',
+    joined_at: now,
+  });
+
+  data.curriculum_ids?.forEach((curriculumId, index) => {
+    mockClubCurriculums.push({
+      id: `club-curr-${Date.now()}-${index}`,
+      club_id: club.id,
+      curriculum_id: curriculumId,
+    });
+  });
+
+  data.subject_ids?.forEach((subjectId, index) => {
+    mockClubSubjects.push({
+      id: `club-subj-${Date.now()}-${index}`,
+      club_id: club.id,
+      subject_id: subjectId,
+    });
+  });
+
+  return club;
+}
+
+export function joinOpenClub(clubId: string, userId: string): { success: true } | { success: false; error: string } {
+  const club = getClub(clubId);
+  if (!club) return { success: false, error: 'Club not found.' };
+  if (club.join_mode !== 'open') return { success: false, error: 'This club is not open join.' };
+  return addActiveClubMember(clubId, userId);
+}
+
+export function joinClubByInviteCode(
+  clubId: string,
+  userId: string,
+  inviteCode: string
+): { success: true } | { success: false; error: string } {
+  const club = getClub(clubId);
+  if (!club) return { success: false, error: 'Club not found.' };
+  if (club.join_mode !== 'invite_link') return { success: false, error: 'This club does not use invite links.' };
+  if (club.invite_code?.toLowerCase() !== inviteCode.trim().toLowerCase()) {
+    return { success: false, error: 'Invite code does not match this club.' };
+  }
+  return addActiveClubMember(clubId, userId);
+}
+
+export function requestClubJoin(clubId: string, userId: string): { success: true } | { success: false; error: string } {
+  const club = getClub(clubId);
+  if (!club) return { success: false, error: 'Club not found.' };
+  if (club.join_mode !== 'approval_based') return { success: false, error: 'This club does not require approval.' };
+  if (getUserClubMembership(clubId, userId)?.membership_status === 'active') {
+    return { success: false, error: 'You are already a member.' };
+  }
+  if (getUserClubJoinRequest(clubId, userId)) {
+    return { success: false, error: 'Your request is already pending.' };
+  }
+
+  mockClubJoinRequests.push({
+    id: `req-${Date.now()}`,
+    club_id: clubId,
+    user_id: userId,
+    status: 'pending',
+    requested_at: new Date().toISOString(),
+  });
+  return { success: true };
+}
+
+export function reviewClubJoinRequest(
+  requestId: string,
+  status: 'approved' | 'rejected'
+): { success: true } | { success: false; error: string } {
+  const request = mockClubJoinRequests.find(r => r.id === requestId);
+  if (!request) return { success: false, error: 'Join request not found.' };
+
+  request.status = status;
+  if (status === 'approved') {
+    addActiveClubMember(request.club_id, request.user_id);
+  }
+  return { success: true };
+}
+
+export function leaveClub(clubId: string, userId: string): { success: true } | { success: false; error: string } {
+  const memberIndex = mockClubMembers.findIndex(m => m.club_id === clubId && m.user_id === userId && m.membership_status === 'active');
+  if (memberIndex < 0) return { success: false, error: 'You are not an active member of this club.' };
+
+  const member = mockClubMembers[memberIndex];
+  const activeLeaders = mockClubMembers.filter(m => m.club_id === clubId && m.role === 'leader' && m.membership_status === 'active');
+  if (member.role === 'leader' && activeLeaders.length === 1) {
+    return { success: false, error: 'The sole leader cannot leave this club.' };
+  }
+
+  mockClubMembers.splice(memberIndex, 1);
+  return { success: true };
+}
+
+export function sendClubMessage(clubId: string, senderId: string, message: string): ClubMessage {
+  const newMessage: ClubMessage = {
+    id: `cmsg-${Date.now()}`,
+    club_id: clubId,
+    sender_id: senderId,
+    message,
+    created_at: new Date().toISOString(),
+  };
+  mockClubMessages.push(newMessage);
+  return newMessage;
+}
+
+export function createClubAnnouncement(
+  clubId: string,
+  createdBy: string,
+  title: string,
+  content: string
+): ClubAnnouncement {
+  const announcement: ClubAnnouncement = {
+    id: `cann-${Date.now()}`,
+    club_id: clubId,
+    created_by: createdBy,
+    title,
+    content,
+    created_at: new Date().toISOString(),
+  };
+  mockClubAnnouncements.unshift(announcement);
+  return announcement;
+}
+
+export function shareClubLink(clubId: string, sharedBy: string, title: string, url: string): ClubLink {
+  const link: ClubLink = {
+    id: `clink-${Date.now()}`,
+    club_id: clubId,
+    title,
+    url,
+    shared_by: sharedBy,
+    created_at: new Date().toISOString(),
+  };
+  mockClubLinks.unshift(link);
+  return link;
+}
+
+function addActiveClubMember(clubId: string, userId: string): { success: true } | { success: false; error: string } {
+  const existing = getUserClubMembership(clubId, userId);
+  if (existing?.membership_status === 'active') {
+    return { success: false, error: 'You are already a member.' };
+  }
+
+  if (existing) {
+    existing.membership_status = 'active';
+    existing.joined_at = new Date().toISOString();
+    return { success: true };
+  }
+
+  mockClubMembers.push({
+    id: `clm-${Date.now()}`,
+    club_id: clubId,
+    user_id: userId,
+    role: 'member',
+    membership_status: 'active',
+    joined_at: new Date().toISOString(),
+  });
+  return { success: true };
+}
+
+function generateInviteCode(name: string): string {
+  const prefix = name.replace(/[^a-zA-Z]/g, '').slice(0, 6).toUpperCase() || 'CLUB';
+  return `${prefix}${Math.floor(100 + Math.random() * 900)}`;
+}
 
 export const getDeck = (id: string) =>
   mockDecks.find(d => d.id === id);

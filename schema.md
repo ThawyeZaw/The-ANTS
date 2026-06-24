@@ -234,6 +234,26 @@
 | `membership_status` | `text` |  Nullable |
 | `joined_at` | `timestamp` |  Nullable |
 
+## Table `club_curriculums`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `club_id` | `uuid` |  |
+| `curriculum_id` | `uuid` |  |
+
+## Table `club_subjects`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `club_id` | `uuid` |  |
+| `subject_id` | `uuid` |  |
+
 ## Table `club_messages`
 
 ### Columns
