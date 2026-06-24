@@ -143,7 +143,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8 animate-fade-in">
       {/* Welcome Card */}
-      <div className="bg-gradient-to-br from-primary to-accent rounded-2xl p-8 text-white relative overflow-hidden">
+      <div className="bg-linear-to-br from-primary to-accent rounded-2xl p-8 text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="relative z-10">
           <p className="text-white/70 text-sm font-medium">Welcome back</p>
@@ -198,7 +198,7 @@ export default function DashboardPage() {
               href={link.href}
               className="group flex items-center gap-4 bg-background-card border border-border rounded-xl p-4 hover:border-border-hover hover:shadow-md transition-all duration-200"
             >
-              <div className={cn('p-2.5 rounded-xl bg-gradient-to-br text-white shrink-0', link.gradient)}>
+              <div className={cn('p-2.5 rounded-xl bg-linear-to-br text-white shrink-0', link.gradient)}>
                 {link.icon}
               </div>
               <div className="min-w-0">

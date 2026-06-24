@@ -5,7 +5,7 @@
 // Lets users edit their profile, change their role, and personalise appearance.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { Check, Sun, Moon, Palette, User, Shield, ArrowLeft, UserCog } from 'lucide-react';
+import { Check, Sun, Moon, Palette, User, ArrowLeft, UserCog } from 'lucide-react';
 import { useTheme, COLOR_PRESETS, type ThemeColor } from '@/context/ThemeContext';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
@@ -109,7 +109,7 @@ function ColorPalettePicker() {
               {/* Gradient swatch */}
               <div
                 className={cn(
-                  'w-10 h-10 rounded-full bg-gradient-to-br shadow-sm transition-transform duration-200',
+                  'w-10 h-10 rounded-full bg-linear-to-br shadow-sm transition-transform duration-200',
                   preset.gradient
                 )}
               />
@@ -139,7 +139,7 @@ function ColorPalettePicker() {
           </button>
           <span className="text-sm text-primary font-medium">Link style</span>
           <div className="flex items-center gap-1.5">
-            <div className={cn('w-3 h-3 rounded-full bg-gradient-to-br', COLOR_PRESETS[themeColor].gradient)} />
+            <div className={cn('w-3 h-3 rounded-full bg-linear-to-br', COLOR_PRESETS[themeColor].gradient)} />
             <span className="text-xs text-foreground-muted">{COLOR_PRESETS[themeColor].label} accent active</span>
           </div>
         </div>
