@@ -222,7 +222,7 @@ export interface ClubSubject {
 // -----------------------------------------------------------------------------
 
 /** Rating a user gives to a flashcard during review (maps to SM-2 quality scores) */
-export type SRSRating = 'again' | 'hard' | 'good' | 'easy';
+export type SRSRating = 'again' | 'good' | 'easy';
 
 /** A flashcard deck (maps to `decks` table) */
 export interface Deck {
@@ -265,8 +265,10 @@ export interface StudySessionState {
   dueCards: FlashCard[];
   currentIndex: number;
   isFlipped: boolean;
+  hasFlipped: boolean;
   sessionComplete: boolean;
-  ratings: Record<SRSRating, number>;
+  cardRatings: Record<string, SRSRating>;
+  pendingReviews: Record<string, { interval_days: number; ease_factor: number; next_review_date: string; last_rating: SRSRating }>;
 }
 
 /** A single card parsed from raw AI output (used in the AI import preview) */

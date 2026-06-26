@@ -25,9 +25,8 @@ const MIN_INTERVAL = 1; // days
 /** Quality score mapping for SM-2 */
 const QUALITY_MAP: Record<SRSRating, number> = {
   again: 1,
-  hard:  2,
-  good:  3,
-  easy:  4,
+  good: 3,
+  easy: 4,
 };
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -66,10 +65,6 @@ export function computeNextReview(
     // Again (1): full reset — start over from day 1
     newInterval = MIN_INTERVAL;
     newEaseFactor = Math.max(MIN_EASE_FACTOR, currentEaseFactor - 0.2);
-  } else if (quality === 2) {
-    // Hard (2): slight interval growth, penalise ease factor
-    newInterval = Math.max(MIN_INTERVAL, Math.round(currentInterval * 1.2));
-    newEaseFactor = Math.max(MIN_EASE_FACTOR, currentEaseFactor - 0.15);
   } else if (quality === 3) {
     // Good (3): standard SM-2 interval progression
     if (currentInterval === 1) {
@@ -177,9 +172,9 @@ export function parseAIOutput(raw: string): ParsedAICard[] {
             item !== null &&
             ('front' in item || 'question' in item || 'q' in item)
           )
-          .map((item: Record<string, string>) => ({
-            front: (item.front || item.question || item.q || '').trim(),
-            back: (item.back || item.answer || item.a || '').trim(),
+          .map((item: any) => ({
+            front: (item.front || item.question || item.q || '').toString().trim(),
+            back: (item.back || item.answer || item.a || '').toString().trim(),
             confirmed: true,
           }))
           .filter((c: ParsedAICard) => c.front && c.back);
@@ -191,7 +186,7 @@ export function parseAIOutput(raw: string): ParsedAICard[] {
   }
 
   // ── Try Q: / A: format ───────────────────────────────────────────────────
-  const qaPattern = /Q:\s*(.+?)\s*\n\s*A:\s*(.+?)(?=\n\s*Q:|\n\s*\d+\.|$)/gis;
+  const qaPattern = /Q:\s*([\s\S]+?)\s*\n\s*A:\s*([\s\S]+?)(?=\n\s*Q:|\n\s*\d+\.|$)/gi;
   const qaMatches = [...trimmed.matchAll(qaPattern)];
   if (qaMatches.length > 0) {
     return qaMatches
@@ -204,7 +199,7 @@ export function parseAIOutput(raw: string): ParsedAICard[] {
   }
 
   // ── Try numbered Front: / Back: format ───────────────────────────────────
-  const frontBackPattern = /(?:\d+\.)?\s*Front:\s*(.+?)\s*\n\s*Back:\s*(.+?)(?=\n\s*(?:\d+\.)?\s*Front:|\n\s*\d+\.|$)/gis;
+  const frontBackPattern = /(?:\d+\.)?\s*Front:\s*([\s\S]+?)\s*\n\s*Back:\s*([\s\S]+?)(?=\n\s*(?:\d+\.)?\s*Front:|\n\s*\d+\.|$)/gi;
   const fbMatches = [...trimmed.matchAll(frontBackPattern)];
   if (fbMatches.length > 0) {
     return fbMatches

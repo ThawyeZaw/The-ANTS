@@ -30,6 +30,7 @@ import {
   CheckCircle,
   XCircle,
   AlertTriangle,
+  UserPlus,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
@@ -96,6 +97,7 @@ const CONTRIBUTOR_STATS = [
 
 // --- MAIN CONTRIBUTOR DATA ---
 const MAIN_CONTRIBUTOR_QUICK_LINKS = [
+  { title: 'Add New User', description: 'Create accounts', href: '/add-user', icon: <UserPlus className="h-5 w-5" />, gradient: 'from-fuchsia-500 to-pink-400' },
   { title: 'Review Queue', description: 'Approve submissions', href: '/review', icon: <ShieldCheck className="h-5 w-5" />, gradient: 'from-amber-500 to-orange-400' },
   { title: 'Curriculum Editor', description: 'Build resources', href: '/editor', icon: <Pencil className="h-5 w-5" />, gradient: 'from-violet-500 to-purple-400' },
   { title: 'Exam Data Editor', description: 'Edit exam data', href: '/editor/exam', icon: <FileText className="h-5 w-5" />, gradient: 'from-indigo-500 to-violet-400' },

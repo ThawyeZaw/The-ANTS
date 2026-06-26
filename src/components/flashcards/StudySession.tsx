@@ -6,7 +6,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useCallback } from 'react';
-import { ArrowLeft, RotateCcw, Keyboard } from 'lucide-react';
+import { ArrowLeft, RotateCcw, Keyboard, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useFlashcardSRS } from '@/hooks/useFlashcardSRS';
 import SessionSummary from './SessionSummary';
 import type { SRSRating } from '@/types';
@@ -19,16 +19,16 @@ interface StudySessionProps {
 }
 
 const RATING_BUTTONS: { rating: SRSRating; label: string; shortcut: string; color: string; hoverColor: string; emoji: string }[] = [
-  { rating: 'again', label: 'Again',  shortcut: '1', color: 'border-red-400 text-red-500',    hoverColor: 'hover:bg-red-50',     emoji: '🔴' },
-  { rating: 'hard',  label: 'Hard',   shortcut: '2', color: 'border-orange-400 text-orange-500', hoverColor: 'hover:bg-orange-50', emoji: '🟠' },
-  { rating: 'good',  label: 'Good',   shortcut: '3', color: 'border-green-400 text-green-500',  hoverColor: 'hover:bg-green-50',   emoji: '🟢' },
-  { rating: 'easy',  label: 'Easy',   shortcut: '4', color: 'border-blue-400 text-blue-500',    hoverColor: 'hover:bg-blue-50',    emoji: '🔵' },
+  { rating: 'again', label: 'Needs Review', shortcut: '1', color: 'border-red-400 text-red-500', hoverColor: 'hover:bg-red-50', emoji: '🔄' },
+  { rating: 'good', label: 'Got It', shortcut: '2', color: 'border-green-400 text-green-500', hoverColor: 'hover:bg-green-50', emoji: '👍' },
+  { rating: 'easy', label: 'Nailed It', shortcut: '3', color: 'border-blue-400 text-blue-500', hoverColor: 'hover:bg-blue-50', emoji: '⭐' },
 ];
 
 export default function StudySession({ deckId, deckName, userId, onBack }: StudySessionProps) {
   const {
     currentCard,
     isFlipped,
+    hasFlipped,
     sessionComplete,
     ratings,
     totalCards,
@@ -37,6 +37,8 @@ export default function StudySession({ deckId, deckName, userId, onBack }: Study
     flip,
     rate,
     restartSession,
+    goBack,
+    goNext,
     loadDeck,
   } = useFlashcardSRS();
 
@@ -48,17 +50,18 @@ export default function StudySession({ deckId, deckName, userId, onBack }: Study
   // Keyboard shortcuts
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (sessionComplete) return;
-    if (e.code === 'Space' && !isFlipped) {
+    if (e.code === 'Space') {
       e.preventDefault();
       flip();
     }
-    if (isFlipped) {
+    if (hasFlipped) {
       if (e.key === '1') rate('again');
-      if (e.key === '2') rate('hard');
-      if (e.key === '3') rate('good');
-      if (e.key === '4') rate('easy');
+      if (e.key === '2') rate('good');
+      if (e.key === '3') rate('easy');
     }
-  }, [isFlipped, sessionComplete, flip, rate]);
+    if (e.key === 'ArrowLeft') goBack();
+    if (e.key === 'ArrowRight') goNext();
+  }, [hasFlipped, sessionComplete, flip, rate, goBack, goNext]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -145,9 +148,9 @@ export default function StudySession({ deckId, deckName, userId, onBack }: Study
       {/* Flashcard 3D flip */}
       <div
         id="flashcard-container"
-        className="flex-1 cursor-pointer"
-        onClick={!isFlipped ? flip : undefined}
-        style={{ perspective: '1200px', minHeight: '240px', maxHeight: '400px' }}
+        className="flex-1 cursor-pointer h-full"
+        onClick={flip}
+        style={{ perspective: '1200px' }}
       >
         <div
           className="relative h-full w-full transition-transform duration-600"
@@ -195,13 +198,13 @@ export default function StudySession({ deckId, deckName, userId, onBack }: Study
       </div>
 
       {/* Rating buttons */}
-      <div className="space-y-3">
-        {isFlipped ? (
+      <div className="space-y-3 min-h-[90px] flex flex-col justify-end">
+        {hasFlipped && (
           <>
             <p className="text-center text-xs text-[var(--foreground-muted)]">
               How well did you remember this?
             </p>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {RATING_BUTTONS.map(btn => (
                 <button
                   key={btn.rating}
@@ -218,15 +221,25 @@ export default function StudySession({ deckId, deckName, userId, onBack }: Study
               ))}
             </div>
           </>
-        ) : (
-          <button
-            id="flip-card-btn"
-            onClick={flip}
-            className="w-full rounded-xl bg-[var(--primary)] py-3.5 text-sm font-semibold text-white hover:bg-[var(--primary-hover)] transition-all shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-glow)]"
-          >
-            Reveal Answer
-          </button>
         )}
+      </div>
+
+      {/* Navigation Controls */}
+      <div className="flex items-center justify-between mt-2 border-t border-[var(--border)] pt-4">
+        <button
+          onClick={goBack}
+          disabled={reviewedCount === 0}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-[var(--foreground-muted)] hover:bg-[var(--background-secondary)] disabled:opacity-30 transition-colors"
+        >
+          <ChevronLeft size={16} /> Previous Card
+        </button>
+        <button
+          onClick={goNext}
+          disabled={reviewedCount >= totalCards - 1}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-[var(--foreground-muted)] hover:bg-[var(--background-secondary)] disabled:opacity-30 transition-colors"
+        >
+          Next Card <ChevronRight size={16} />
+        </button>
       </div>
     </div>
   );
