@@ -28,6 +28,8 @@ import {
   CardReview,
   SRSRating,
   ParsedAICard,
+  Exam,
+  ExamCountdown,
 } from '@/types';
 import { generateUsername } from '@/lib/utils';
 
@@ -606,12 +608,12 @@ export let mockCardReviews: CardReview[] = [
 ];
 
 // ── Mock Exams & Grades ─────────────────────────────────────────────────────
-export const mockExams = [
-  { id: 'exam-1', curriculum_id: 'curr-1', title: 'IGCSE Physics Paper 2', exam_series: 'May/June 2026', exam_date: '2026-05-15T09:00:00Z', created_at: '2025-12-01T00:00:00Z' }
+export const mockExams: Exam[] = [
+  { id: 'exam-1', curriculum_id: 'curr-1', title: 'IGCSE Physics Paper 2', exam_series: 'May/June 2027', exam_date: '2027-05-15T09:00:00Z', created_at: '2025-12-01T00:00:00Z' }
 ];
 
-export const mockExamCountdowns = [
-  { id: 'ec-1', user_id: 'user-student-001', exam_id: 'exam-1', custom_title: 'Physics Finals!', target_date: '2026-05-15T09:00:00Z', priority_indicator: 'high', created_at: '2026-01-01T00:00:00Z' }
+export let mockExamCountdowns: ExamCountdown[] = [
+  { id: 'ec-1', user_id: 'user-student-001', exam_id: 'exam-1', custom_title: 'Physics Finals!', target_date: '2027-05-15T09:00:00Z', priority_indicator: 'high', qualification_group: 'IGCSE', created_at: '2026-01-01T00:00:00Z' }
 ];
 
 export const mockGradeBoundaries = [
@@ -1257,4 +1259,25 @@ export function upsertCardReview(
   };
   mockCardReviews.push(newReview);
   return newReview;
+}
+
+// ── Exam & Countdown Helpers ──────────────────────────────────────────────────
+
+export const getExams = (): Exam[] => [...mockExams];
+
+export function createExamCountdown(data: Omit<ExamCountdown, 'id' | 'created_at'>): ExamCountdown {
+  const countdown: ExamCountdown = {
+    ...data,
+    id: `ec-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    created_at: new Date().toISOString(),
+  };
+  mockExamCountdowns.unshift(countdown);
+  return countdown;
+}
+
+export function deleteExamCountdown(id: string): { success: true } | { success: false; error: string } {
+  const idx = mockExamCountdowns.findIndex(c => c.id === id);
+  if (idx < 0) return { success: false, error: 'Countdown not found.' };
+  mockExamCountdowns.splice(idx, 1);
+  return { success: true };
 }

@@ -276,3 +276,28 @@ export interface ParsedAICard {
   /** Whether the user has confirmed/edited this card in the preview */
   confirmed: boolean;
 }
+
+// -----------------------------------------------------------------------------
+// Exams & Countdowns
+// -----------------------------------------------------------------------------
+
+export interface Exam {
+  id: string;
+  curriculum_id: string;
+  title: string | null;
+  exam_series: string | null;
+  exam_date: string | null;
+  created_at: string;
+}
+
+export interface ExamCountdown {
+  id: string;
+  user_id: string;
+  exam_id: string | null;
+  custom_title: string | null;
+  target_date: string | null;
+  priority_indicator: 'high' | 'medium' | 'low' | string | null;
+  /** Group to display this countdown under (e.g. 'IGCSE', 'A LEVEL'). Falls back to 'Custom' if missing. */
+  qualification_group?: string;
+  created_at: string;
+}
