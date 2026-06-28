@@ -23,6 +23,7 @@ import {
   ClubMember,
   ClubMessage,
   ClubSubject,
+  ClubFeature,
   Deck,
   FlashCard,
   CardReview,
@@ -30,6 +31,12 @@ import {
   ParsedAICard,
   Exam,
   ExamCountdown,
+  RoleUpgradeRequest,
+  UpgradeRequestStatus,
+  ProjectEntry,
+  ActivityEntry,
+  AchievementEntry,
+  DEFAULT_CLUB_FEATURES,
 } from '@/types';
 import { generateUsername } from '@/lib/utils';
 
@@ -45,6 +52,34 @@ const mockProfiles: Profile[] = [
     role: 'student',
     bio: 'IGCSE student aiming for straight A*s. Love physics and maths!',
     title: 'IGCSE Student',
+    isPublic: true,
+    projects: [
+      {
+        title: 'Physics Experiment Simulator',
+        description: 'A web-based physics lab simulator built for IGCSE students.',
+        role: 'Lead Developer',
+        technologies: ['React', 'Three.js', 'TypeScript'],
+        links: { github: 'https://github.com/thiriaung/phys-sim' },
+      },
+    ],
+    activities: [
+      {
+        name: 'Science Olympiad',
+        organization: 'Myanmar Science Society',
+        role: 'Team Member',
+        start_date: '2025-09-01',
+        end_date: '2026-03-01',
+        description: 'Participated in national-level science competition.',
+      },
+    ],
+    achievements: [
+      {
+        title: 'IGCSE Outstanding Achievement Award',
+        description: 'Awarded for top marks in Physics and Mathematics.',
+        date: '2025-08-15',
+        issuer: 'Cambridge Assessment',
+      },
+    ],
     createdAt: '2026-01-15T08:00:00Z',
   },
   {
@@ -56,6 +91,18 @@ const mockProfiles: Profile[] = [
     role: 'student',
     bio: 'A Level Biology student preparing for medical school entrance.',
     title: 'A Level Student',
+    isPublic: true,
+    projects: [
+      {
+        title: 'Cell Biology Study Guide',
+        description: 'Interactive study guide with diagrams and quizzes.',
+        role: 'Creator',
+        technologies: ['HTML', 'CSS', 'JavaScript'],
+        links: { live: 'https://minhtet-biology.netlify.app' },
+      },
+    ],
+    activities: [],
+    achievements: [],
     createdAt: '2026-02-10T08:00:00Z',
   },
   {
@@ -67,6 +114,25 @@ const mockProfiles: Profile[] = [
     role: 'teacher',
     bio: 'Experienced A Level Chemistry teacher with 10+ years of tutoring Myanmar students.',
     title: 'A Level Chemistry Teacher',
+    isPublic: true,
+    projects: [
+      {
+        title: 'Chemistry Revision Portal',
+        description: 'Comprehensive revision resources for A Level Chemistry.',
+        role: 'Author',
+        technologies: ['Next.js', 'Tailwind CSS'],
+        links: { website: 'https://chemistry-revise.com' },
+      },
+    ],
+    activities: [],
+    achievements: [
+      {
+        title: 'Best Teacher Award 2025',
+        description: 'Recognized for excellence in online teaching.',
+        date: '2025-12-01',
+        issuer: 'Myanmar Online Education Association',
+      },
+    ],
     createdAt: '2025-09-01T08:00:00Z',
   },
   {
@@ -78,6 +144,10 @@ const mockProfiles: Profile[] = [
     role: 'teacher',
     bio: 'IGCSE Mathematics specialist. Cambridge-certified trainer.',
     title: 'IGCSE Maths Teacher',
+    isPublic: false,
+    projects: [],
+    activities: [],
+    achievements: [],
     createdAt: '2025-11-15T08:00:00Z',
   },
   {
@@ -89,10 +159,36 @@ const mockProfiles: Profile[] = [
     role: 'contributor',
     bio: 'Cambridge-trained educator building curriculum resources for Myanmar students.',
     title: 'Curriculum Developer',
+    isPublic: true,
     socialLinks: {
       github: 'https://github.com/ayechanthu',
       linkedin: 'https://linkedin.com/in/ayechanthu',
     },
+    projects: [
+      {
+        title: 'IGCSE Physics Curriculum',
+        description: 'Full curriculum template with lesson plans and assessments.',
+        role: 'Lead Developer',
+        technologies: ['Markdown', 'LaTeX'],
+      },
+    ],
+    activities: [
+      {
+        name: 'Education Summit 2025',
+        organization: 'Myanmar Education Forum',
+        role: 'Speaker',
+        start_date: '2025-11-01',
+        end_date: '2025-11-03',
+        description: 'Presented on digital curriculum development.',
+      },
+    ],
+    achievements: [
+      {
+        title: 'Published Curriculum Author',
+        description: 'Authored 3 IGCSE curriculum templates on The ANTS.',
+        date: '2025-06-20',
+      },
+    ],
     createdAt: '2025-06-20T08:00:00Z',
   },
   {
@@ -104,9 +200,13 @@ const mockProfiles: Profile[] = [
     role: 'contributor',
     bio: 'Former IGCSE examiner. Building free exam prep resources for Myanmar students.',
     title: 'Exam Resource Creator',
+    isPublic: true,
     socialLinks: {
       linkedin: 'https://linkedin.com/in/kozawwin',
     },
+    projects: [],
+    activities: [],
+    achievements: [],
     createdAt: '2025-08-05T08:00:00Z',
   },
   {
@@ -118,10 +218,35 @@ const mockProfiles: Profile[] = [
     role: 'main_contributor',
     bio: 'Senior gatekeeper and lead reviewer. 15 years in international education.',
     title: 'Head of Content',
+    isPublic: true,
     socialLinks: {
       linkedin: 'https://linkedin.com/in/dawhlamyint',
       website: 'https://dawhlamyint.com',
     },
+    projects: [
+      {
+        title: 'Gatekeeper Review System',
+        description: 'Designed the review workflow for curriculum submissions.',
+        role: 'Project Lead',
+        technologies: ['System Design', 'PostgreSQL'],
+      },
+    ],
+    activities: [
+      {
+        name: 'International Education Conference',
+        organization: 'Cambridge University Press',
+        role: 'Panelist',
+        start_date: '2026-02-15',
+        end_date: '2026-02-16',
+      },
+    ],
+    achievements: [
+      {
+        title: '15 Years in Education',
+        description: 'Recognized for contributions to Myanmar\'s education sector.',
+        date: '2025-03-10',
+      },
+    ],
     createdAt: '2025-03-10T08:00:00Z',
   },
 ];
@@ -137,6 +262,33 @@ const mockPasswords: Record<string, string> = {
   'ko.zaw@theants.edu': 'contributor123',
   'daw.hla@theants.edu': 'maincontributor123',
 };
+
+// ── Role Upgrade Requests ────────────────────────────────────────────────────
+
+export const mockRoleUpgradeRequests: RoleUpgradeRequest[] = [
+  {
+    id: 'upg-1',
+    user_id: 'user-student-001',
+    current_role: 'student',
+    requested_role: 'teacher',
+    reason: 'I have started tutoring and need to create classrooms.',
+    status: 'pending',
+    reviewer_id: null,
+    created_at: '2026-06-20T08:00:00Z',
+    reviewed_at: null,
+  },
+  {
+    id: 'upg-2',
+    user_id: 'user-student-002',
+    current_role: 'student',
+    requested_role: 'contributor',
+    reason: 'I want to contribute curriculum resources for Biology.',
+    status: 'approved',
+    reviewer_id: 'user-main-contributor-001',
+    created_at: '2026-06-15T08:00:00Z',
+    reviewed_at: '2026-06-18T10:00:00Z',
+  },
+];
 
 // ── Auth Functions ───────────────────────────────────────────────────────────
 
@@ -163,15 +315,14 @@ export function mockLogin(email: string, password: string): AuthUser | null {
 }
 
 /**
- * Register a new user with email, password, name, and role.
- * Returns the created AuthUser. In production, this would create a
- * Supabase auth user + profile row.
+ * Register a new user with email, password, and name.
+ * In Phase 2 redesign, signup defaults to 'student' role only.
+ * Other roles require main contributor approval.
  */
 export function mockSignup(
   email: string,
   password: string,
-  name: string,
-  role: UserRole
+  name: string
 ): AuthUser | { error: string } {
   const normalizedEmail = email.toLowerCase().trim();
 
@@ -181,12 +332,12 @@ export function mockSignup(
   }
 
   const newProfile: Profile = {
-    id: `user-${role}-${Date.now()}`,
+    id: `user-student-${Date.now()}`,
     email: normalizedEmail,
     name,
     username: generateUsername(name),
     avatar: '',
-    role,
+    role: 'student', // Signups are always 'student' initially
     createdAt: new Date().toISOString(),
   };
 
@@ -229,12 +380,24 @@ export function getProfileByUsername(username: string): Profile | undefined {
 }
 
 /**
+ * Get all public profiles (isPublic === true).
+ * Optionally filter by role(s).
+ */
+export function getPublicProfiles(roles?: UserRole[]): Profile[] {
+  let filtered = mockProfiles.filter((p) => p.isPublic === true);
+  if (roles && roles.length > 0) {
+    filtered = filtered.filter((p) => roles.includes(p.role));
+  }
+  return filtered;
+}
+
+/**
  * Update a user's profile data in the mock store.
  * In production, this calls supabase.from('profiles').update().
  */
 export function mockUpdateProfile(
   userId: string,
-  data: Partial<Pick<Profile, 'name' | 'bio' | 'title' | 'socialLinks' | 'avatar'>>
+  data: Partial<Pick<Profile, 'name' | 'bio' | 'title' | 'socialLinks' | 'avatar' | 'isPublic' | 'projects' | 'activities' | 'achievements'>>
 ): { success: true; profile: Profile } | { success: false; error: string } {
   const profile = mockProfiles.find((p) => p.id === userId);
   if (!profile) return { success: false, error: 'User not found.' };
@@ -247,13 +410,20 @@ export function mockUpdateProfile(
   if (data.title !== undefined) profile.title = data.title;
   if (data.socialLinks !== undefined) profile.socialLinks = data.socialLinks;
   if (data.avatar !== undefined) profile.avatar = data.avatar;
+  if (data.isPublic !== undefined) profile.isPublic = data.isPublic;
+  if (data.projects !== undefined) profile.projects = data.projects;
+  if (data.activities !== undefined) profile.activities = data.activities;
+  if (data.achievements !== undefined) profile.achievements = data.achievements;
 
   return { success: true, profile: { ...profile } };
 }
 
+// ── Role Management ──────────────────────────────────────────────────────────
+
 /**
- * Change a user's role in the mock store.
- * In production, this calls supabase.from('profiles').update({ role }).
+ * Legacy direct role update — kept for backward compatibility.
+ * In the new system, this should be used only for testing.
+ * It directly changes the role without going through the approval flow.
  */
 export function mockUpdateRole(
   userId: string,
@@ -262,8 +432,164 @@ export function mockUpdateRole(
   const profile = mockProfiles.find((p) => p.id === userId);
   if (!profile) return { success: false, error: 'User not found.' };
 
+  const roleHierarchy: Record<UserRole, number> = {
+    student: 0,
+    teacher: 1,
+    contributor: 2,
+    main_contributor: 3,
+  };
+
+  const currentLevel = roleHierarchy[profile.role];
+  const requestedLevel = roleHierarchy[newRole];
+
+  if (requestedLevel <= currentLevel) {
+    return { success: false, error: 'Can only upgrade to a higher role. Downgrades are not permitted.' };
+  }
+
   profile.role = newRole;
   return { success: true, profile: { ...profile } };
+}
+
+
+/**
+ * Request a role upgrade. Only upgrades are allowed (e.g. student → teacher).
+ * A main_contributor must approve the request before the role changes.
+ */
+export function mockRequestRoleUpgrade(
+  userId: string,
+  requestedRole: UserRole,
+  reason?: string
+): { success: true; request: RoleUpgradeRequest } | { success: false; error: string } {
+  const profile = mockProfiles.find((p) => p.id === userId);
+  if (!profile) return { success: false, error: 'User not found.' };
+
+  const roleHierarchy: Record<UserRole, number> = {
+    student: 0,
+    teacher: 1,
+    contributor: 2,
+    main_contributor: 3,
+  };
+
+  const currentLevel = roleHierarchy[profile.role];
+  const requestedLevel = roleHierarchy[requestedRole];
+
+  if (requestedLevel <= currentLevel) {
+    return { success: false, error: 'You can only upgrade to a higher role. Downgrades are not permitted.' };
+  }
+
+  // Check for existing pending request
+  const existing = mockRoleUpgradeRequests.find(
+    (r) => r.user_id === userId && r.requested_role === requestedRole && r.status === 'pending'
+  );
+  if (existing) {
+    return { success: false, error: 'You already have a pending upgrade request for this role.' };
+  }
+
+  const request: RoleUpgradeRequest = {
+    id: `upg-${Date.now()}`,
+    user_id: userId,
+    current_role: profile.role,
+    requested_role: requestedRole,
+    reason: reason || null,
+    status: 'pending',
+    reviewer_id: null,
+    created_at: new Date().toISOString(),
+    reviewed_at: null,
+  };
+
+  mockRoleUpgradeRequests.push(request);
+  return { success: true, request };
+}
+
+/**
+ * Approve or reject a role upgrade request.
+ * Only main_contributors can perform this action.
+ */
+export function mockReviewRoleUpgrade(
+  requestId: string,
+  reviewerId: string,
+  status: 'approved' | 'rejected',
+  feedback?: string
+): { success: true } | { success: false; error: string } {
+  const reviewer = mockProfiles.find((p) => p.id === reviewerId);
+  if (!reviewer || reviewer.role !== 'main_contributor') {
+    return { success: false, error: 'Only main contributors can review upgrade requests.' };
+  }
+
+  const request = mockRoleUpgradeRequests.find((r) => r.id === requestId);
+  if (!request) return { success: false, error: 'Upgrade request not found.' };
+  if (request.status !== 'pending') return { success: false, error: 'This request has already been reviewed.' };
+
+  request.status = status;
+  request.reviewer_id = reviewerId;
+  request.reviewed_at = new Date().toISOString();
+
+  if (status === 'approved') {
+    const profile = mockProfiles.find((p) => p.id === request.user_id);
+    if (profile) {
+      profile.role = request.requested_role;
+    }
+  }
+
+  return { success: true };
+}
+
+/**
+ * Main contributor can directly promote a user without a prior request.
+ */
+export function mockDirectPromote(
+  userId: string,
+  reviewerId: string,
+  newRole: UserRole
+): { success: true } | { success: false; error: string } {
+  const reviewer = mockProfiles.find((p) => p.id === reviewerId);
+  if (!reviewer || reviewer.role !== 'main_contributor') {
+    return { success: false, error: 'Only main contributors can promote users.' };
+  }
+
+  const profile = mockProfiles.find((p) => p.id === userId);
+  if (!profile) return { success: false, error: 'User not found.' };
+
+  const roleHierarchy: Record<UserRole, number> = {
+    student: 0,
+    teacher: 1,
+    contributor: 2,
+    main_contributor: 3,
+  };
+
+  const currentLevel = roleHierarchy[profile.role];
+  const requestedLevel = roleHierarchy[newRole];
+
+  if (requestedLevel <= currentLevel) {
+    return { success: false, error: 'Can only promote to a higher role.' };
+  }
+
+  profile.role = newRole;
+
+  // Record the promotion as an approved request
+  mockRoleUpgradeRequests.push({
+    id: `upg-${Date.now()}`,
+    user_id: userId,
+    current_role: profile.role,
+    requested_role: newRole,
+    reason: 'Direct promotion by main contributor',
+    status: 'approved',
+    reviewer_id: reviewerId,
+    created_at: new Date().toISOString(),
+    reviewed_at: new Date().toISOString(),
+  });
+
+  return { success: true };
+}
+
+/** Get all pending upgrade requests (for main contributor dashboard) */
+export function getPendingUpgradeRequests(): RoleUpgradeRequest[] {
+  return mockRoleUpgradeRequests.filter((r) => r.status === 'pending');
+}
+
+/** Get all upgrade requests for a specific user */
+export function getUserUpgradeRequests(userId: string): RoleUpgradeRequest[] {
+  return mockRoleUpgradeRequests.filter((r) => r.user_id === userId);
 }
 
 // ── Type Guard ───────────────────────────────────────────────────────────────
@@ -392,9 +718,9 @@ export const mockContributorProfiles: Array<{
   github_url: string | null;
   verification_documents_url: string | null;
 }> = [
-  { id: 'user-contributor-001', title: 'Curriculum Developer', bio: 'Expert in science.', website_url: 'https://example.com', facebook_url: null, linkedin_url: 'https://linkedin.com/in/ayechanthu', github_url: 'https://github.com/ayechanthu', verification_documents_url: null },
-  { id: 'user-main-contributor-001', title: 'Head of Content', bio: 'Senior reviewer.', website_url: 'https://dawhlamyint.com', facebook_url: null, linkedin_url: 'https://linkedin.com/in/dawhlamyint', github_url: null, verification_documents_url: null }
-];
+    { id: 'user-contributor-001', title: 'Curriculum Developer', bio: 'Expert in science.', website_url: 'https://example.com', facebook_url: null, linkedin_url: 'https://linkedin.com/in/ayechanthu', github_url: 'https://github.com/ayechanthu', verification_documents_url: null },
+    { id: 'user-main-contributor-001', title: 'Head of Content', bio: 'Senior reviewer.', website_url: 'https://dawhlamyint.com', facebook_url: null, linkedin_url: 'https://linkedin.com/in/dawhlamyint', github_url: null, verification_documents_url: null }
+  ];
 
 // ── Mock Curriculums & Topics ────────────────────────────────────────────────
 export const mockCurriculums = [
@@ -456,6 +782,7 @@ export const mockClubs: Club[] = [
     created_by: 'user-contributor-001',
     join_mode: 'open',
     invite_code: null,
+    enabled_features: ['chat', 'announcements', 'links', 'members', 'projects', 'activity_timeline'],
     created_at: '2025-10-01T00:00:00Z',
   },
   {
@@ -465,6 +792,7 @@ export const mockClubs: Club[] = [
     created_by: 'user-contributor-002',
     join_mode: 'approval_based',
     invite_code: null,
+    enabled_features: ['chat', 'announcements', 'links', 'members', 'leaderboard'],
     created_at: '2026-02-14T00:00:00Z',
   },
   {
@@ -474,6 +802,7 @@ export const mockClubs: Club[] = [
     created_by: 'user-main-contributor-001',
     join_mode: 'invite_link',
     invite_code: 'SPRINT26',
+    enabled_features: ['chat', 'members', 'activity_timeline'],
     created_at: '2026-04-05T00:00:00Z',
   },
 ];
@@ -502,6 +831,29 @@ export const mockClubLinks: ClubLink[] = [
   { id: 'clink-2', club_id: 'club-2', title: 'Chemguide', url: 'https://www.chemguide.co.uk/', shared_by: 'user-contributor-002', created_at: '2026-05-22T00:00:00Z' },
 ];
 
+// ── Club Feature Management ─────────────────────────────────────────────────
+
+/**
+ * Update the enabled features for a club.
+ * Only the club creator/leader can modify this.
+ */
+export function mockUpdateClubFeatures(
+  clubId: string,
+  userId: string,
+  features: ClubFeature[]
+): { success: true; club: Club } | { success: false; error: string } {
+  const club = mockClubs.find((c) => c.id === clubId);
+  if (!club) return { success: false, error: 'Club not found.' };
+
+  const member = mockClubMembers.find(
+    (m) => m.club_id === clubId && m.user_id === userId && m.role === 'leader'
+  );
+  if (!member) return { success: false, error: 'Only the club leader can manage features.' };
+
+  club.enabled_features = features;
+  return { success: true, club: { ...club } };
+}
+
 // ── Mock Timetable & Pomodoro ───────────────────────────────────────────────
 export const mockTimetableEvents = [
   { id: 'te-1', user_id: 'user-student-001', title: 'Physics Revision', event_type: 'study', start_time: '2026-06-18T14:00:00Z', end_time: '2026-06-18T16:00:00Z', all_day: false, is_recurring: false, recurrence_pattern: null, color_code: '#3b82f6', metadata: {}, created_at: '2026-06-10T00:00:00Z' }
@@ -512,7 +864,7 @@ export const mockPomodoroSessions = [
 ];
 
 // ── Mock Flashcards ─────────────────────────────────────────────────────────
-export let mockDecks: Deck[] = [
+export const mockDecks: Deck[] = [
   {
     id: 'deck-1',
     owner_id: 'user-student-001',
@@ -601,7 +953,7 @@ export let mockCards: FlashCard[] = [
 export let mockCardReviews: CardReview[] = [
   // student-001 has reviewed some deck-1 cards
   { id: 'cr-1', card_id: 'card-1', user_id: 'user-student-001', interval_days: 4, ease_factor: 2.6, next_review_date: '2026-06-29T00:00:00Z', last_rating: 'good' },
-  { id: 'cr-2', card_id: 'card-2', user_id: 'user-student-001', interval_days: 1, ease_factor: 2.18, next_review_date: '2026-06-25T00:00:00Z', last_rating: 'hard' },
+  { id: 'cr-2', card_id: 'card-2', user_id: 'user-student-001', interval_days: 1, ease_factor: 2.18, next_review_date: '2026-06-25T00:00:00Z', last_rating: 'again' },
   { id: 'cr-3', card_id: 'card-3', user_id: 'user-student-001', interval_days: 7, ease_factor: 2.65, next_review_date: '2026-07-01T00:00:00Z', last_rating: 'easy' },
   { id: 'cr-4', card_id: 'card-15', user_id: 'user-student-001', interval_days: 1, ease_factor: 2.5, next_review_date: '2026-06-25T00:00:00Z', last_rating: 'again' },
   { id: 'cr-5', card_id: 'card-16', user_id: 'user-student-001', interval_days: 3, ease_factor: 2.5, next_review_date: '2026-06-27T00:00:00Z', last_rating: 'good' },
@@ -815,6 +1167,9 @@ export const getAssignmentsByClassroom = (classroomId: string) =>
 export const getClub = (id: string) =>
   mockClubs.find(c => c.id === id);
 
+export const getClubs = () =>
+  [...mockClubs];
+
 export const getClubMembers = (clubId: string) =>
   mockClubMembers.filter(m => m.club_id === clubId);
 
@@ -850,6 +1205,7 @@ export function createClub(data: {
   invite_code?: string;
   curriculum_ids?: string[];
   subject_ids?: string[];
+  enabled_features?: ClubFeature[];
 }): Club {
   const now = new Date().toISOString();
   const club: Club = {
@@ -859,6 +1215,7 @@ export function createClub(data: {
     created_by: data.created_by,
     join_mode: data.join_mode,
     invite_code: data.join_mode === 'invite_link' ? (data.invite_code || generateInviteCode(data.name)) : null,
+    enabled_features: data.enabled_features || DEFAULT_CLUB_FEATURES,
     created_at: now,
   };
 

@@ -22,15 +22,21 @@ export default function DeckLibrary({ userId }: DeckLibraryProps) {
   const [activeTab, setActiveTab] = useState<'my-decks' | 'library'>('my-decks');
   const [searchQuery, setSearchQuery] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [decks, setDecks] = useState<Deck[]>(() => [
-    ...getDecksByUser(userId),
-    ...getPublicDecks(),
-  ]);
+
+  // Helper to fetch and deduplicate decks
+  const getUniqueDecks = () => {
+    const allDecks = [...getDecksByUser(userId), ...getPublicDecks()];
+    // Deduplicate by deck id
+    const uniqueMap = new Map(allDecks.map(deck => [deck.id, deck]));
+    return Array.from(uniqueMap.values());
+  };
+
+  const [decks, setDecks] = useState<Deck[]>(getUniqueDecks);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   // Refresh local list from DB
   const refreshDecks = () => {
-    setDecks([...getDecksByUser(userId), ...getPublicDecks()]);
+    setDecks(getUniqueDecks());
   };
 
   const showToast = (message: string, type: 'success' | 'error') => {
@@ -96,11 +102,10 @@ export default function DeckLibrary({ userId }: DeckLibraryProps) {
       {/* Toast Notification */}
       {toast && (
         <div
-          className={`fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold shadow-lg transition-all duration-300 animate-slide-in-right ${
-            toast.type === 'success'
+          className={`fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold shadow-lg transition-all duration-300 animate-slide-in-right ${toast.type === 'success'
               ? 'bg-green-500 text-white'
               : 'bg-red-500 text-white'
-          }`}
+            }`}
         >
           <span>{toast.message}</span>
         </div>
@@ -142,11 +147,10 @@ export default function DeckLibrary({ userId }: DeckLibraryProps) {
           <button
             id="tab-my-decks"
             onClick={() => setActiveTab('my-decks')}
-            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
-              activeTab === 'my-decks'
+            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all ${activeTab === 'my-decks'
                 ? 'bg-[var(--background-card)] text-[var(--primary)] shadow-[var(--shadow-sm)]'
                 : 'text-[var(--foreground-secondary)] hover:text-[var(--foreground)]'
-            }`}
+              }`}
           >
             <Layers size={15} />
             My Decks
@@ -157,11 +161,10 @@ export default function DeckLibrary({ userId }: DeckLibraryProps) {
           <button
             id="tab-library"
             onClick={() => setActiveTab('library')}
-            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
-              activeTab === 'library'
+            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all ${activeTab === 'library'
                 ? 'bg-[var(--background-card)] text-[var(--primary)] shadow-[var(--shadow-sm)]'
                 : 'text-[var(--foreground-secondary)] hover:text-[var(--foreground)]'
-            }`}
+              }`}
           >
             <Globe size={15} />
             Library
@@ -211,8 +214,8 @@ export default function DeckLibrary({ userId }: DeckLibraryProps) {
             {searchQuery
               ? `No decks matching "${searchQuery}" in this view. Try another search query.`
               : activeTab === 'my-decks'
-              ? "You haven't created or cloned any flashcard decks yet."
-              : 'No public decks are currently shared in the library.'}
+                ? "You haven't created or cloned any flashcard decks yet."
+                : 'No public decks are currently shared in the library.'}
           </p>
           {activeTab === 'my-decks' && !searchQuery && (
             <button

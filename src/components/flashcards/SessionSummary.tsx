@@ -20,10 +20,9 @@ interface SessionSummaryProps {
 }
 
 const RATING_CONFIG: Record<SRSRating, { label: string; color: string; bg: string; emoji: string }> = {
-  again: { label: 'Again',  color: 'text-red-500',    bg: 'bg-red-500/10',    emoji: '🔴' },
-  hard:  { label: 'Hard',   color: 'text-orange-500', bg: 'bg-orange-500/10', emoji: '🟠' },
-  good:  { label: 'Good',   color: 'text-green-500',  bg: 'bg-green-500/10',  emoji: '🟢' },
-  easy:  { label: 'Easy',   color: 'text-blue-500',   bg: 'bg-blue-500/10',   emoji: '🔵' },
+  again: { label: 'Needs Review', color: 'text-red-500',    bg: 'bg-red-500/10',    emoji: '🔄' },
+  good:  { label: 'Got It',       color: 'text-green-500',  bg: 'bg-green-500/10',  emoji: '👍' },
+  easy:  { label: 'Nailed It',    color: 'text-blue-500',   bg: 'bg-blue-500/10',   emoji: '⭐' },
 };
 
 export default function SessionSummary({
