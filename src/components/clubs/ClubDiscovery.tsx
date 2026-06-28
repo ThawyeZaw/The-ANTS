@@ -148,7 +148,7 @@ export default function ClubDiscovery() {
                     <Users className="h-3.5 w-3.5" />
                     {members.length} members
                   </span>
-                  <span>Led by {leader?.full_name || 'Contributor'}</span>
+                  <span>Led by {leader?.name || 'Contributor'}</span>
                   <span>{formatDate(club.created_at)}</span>
                 </div>
 

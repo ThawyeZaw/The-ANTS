@@ -43,31 +43,20 @@ import { RoleBadge } from '@/components/ui/Badge';
 import { cn, getInitials } from '@/lib/utils';
 import { ROLE_METADATA, type Profile } from '@/types';
 
-interface ContributorProfileData {
-  id: string;
-  title: string | null;
-  bio: string | null;
-  website_url: string | null;
-  facebook_url: string | null;
-  linkedin_url: string | null;
-  github_url: string | null;
-}
-
 interface ProfileHeroProps {
   profile: Profile;
-  contributorProfile?: ContributorProfileData | null;
   isOwnProfile: boolean;
 }
 
-export default function ProfileHero({ profile, contributorProfile, isOwnProfile }: ProfileHeroProps) {
+export default function ProfileHero({ profile, isOwnProfile }: ProfileHeroProps) {
   const roleMeta = ROLE_METADATA[profile.role];
 
-  const socialLinks = contributorProfile ? [
-    { key: 'website', icon: <Globe className="h-4 w-4" />, url: contributorProfile.website_url, label: 'Website' },
-    { key: 'linkedin', icon: <LinkedinIcon className="h-4 w-4" />, url: contributorProfile.linkedin_url, label: 'LinkedIn' },
-    { key: 'github', icon: <GithubIcon className="h-4 w-4" />, url: contributorProfile.github_url, label: 'GitHub' },
-    { key: 'facebook', icon: <FacebookIcon className="h-4 w-4" />, url: contributorProfile.facebook_url, label: 'Facebook' },
-  ].filter((link) => link.url) : [];
+  const socialLinks = [
+    { key: 'website', icon: <Globe className="h-4 w-4" />, url: profile.socialLinks?.website, label: 'Website' },
+    { key: 'linkedin', icon: <LinkedinIcon className="h-4 w-4" />, url: profile.socialLinks?.linkedin, label: 'LinkedIn' },
+    { key: 'github', icon: <GithubIcon className="h-4 w-4" />, url: profile.socialLinks?.github, label: 'GitHub' },
+    { key: 'facebook', icon: <FacebookIcon className="h-4 w-4" />, url: profile.socialLinks?.facebook, label: 'Facebook' },
+  ].filter((link) => link.url);
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-border bg-background-card">
@@ -93,18 +82,18 @@ export default function ProfileHero({ profile, contributorProfile, isOwnProfile 
           {/* Avatar */}
           <div className="shrink-0">
             <div className="h-24 w-24 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-3xl font-bold shadow-xl ring-4 ring-background-card">
-              {getInitials(profile.full_name)}
+              {getInitials(profile.name)}
             </div>
           </div>
 
           {/* Name + Meta */}
           <div className="flex-1 min-w-0 pb-1">
             <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-2xl font-bold text-foreground">{profile.full_name}</h1>
+              <h1 className="text-2xl font-bold text-foreground">{profile.name}</h1>
               <RoleBadge role={profile.role} />
             </div>
-            {contributorProfile?.title && (
-              <p className="text-sm text-foreground-secondary mt-1">{contributorProfile.title}</p>
+            {profile.title && (
+              <p className="text-sm text-foreground-secondary mt-1">{profile.title}</p>
             )}
             <p className="text-xs text-foreground-muted mt-0.5">@{profile.username}</p>
           </div>
@@ -122,9 +111,9 @@ export default function ProfileHero({ profile, contributorProfile, isOwnProfile 
         </div>
 
         {/* Bio */}
-        {contributorProfile?.bio && (
+        {profile.bio && (
           <p className="mt-4 text-sm text-foreground-secondary leading-relaxed max-w-2xl">
-            {contributorProfile.bio}
+            {profile.bio}
           </p>
         )}
 
@@ -134,7 +123,7 @@ export default function ProfileHero({ profile, contributorProfile, isOwnProfile 
             {socialLinks.map((link) => (
               <a
                 key={link.key}
-                href={link.url || undefined}
+                href={link.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-background-secondary border border-border text-xs font-medium text-foreground-secondary hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all duration-200 group"

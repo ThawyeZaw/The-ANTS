@@ -112,15 +112,6 @@ export default function StudySession({ deckId, deckName, userId, onBack }: Study
 
   if (!currentCard) return null;
 
-  const getFontSizeClass = (text: string) => {
-    const len = text.length;
-    if (len < 40) return 'text-2xl sm:text-3xl';
-    if (len < 80) return 'text-xl sm:text-2xl';
-    if (len < 150) return 'text-lg sm:text-xl';
-    if (len < 250) return 'text-base sm:text-lg';
-    return 'text-sm sm:text-base';
-  };
-
   return (
     <div className="flex h-full flex-col gap-5 p-4 sm:p-6">
       {/* Top bar */}
@@ -157,12 +148,12 @@ export default function StudySession({ deckId, deckName, userId, onBack }: Study
       {/* Flashcard 3D flip */}
       <div
         id="flashcard-container"
-        className="flex-1 flex flex-col min-h-[300px] sm:min-h-[350px] cursor-pointer"
+        className="flex-1 cursor-pointer h-full"
         onClick={flip}
         style={{ perspective: '1200px' }}
       >
         <div
-          className="relative flex-1 w-full transition-transform duration-600"
+          className="relative h-full w-full transition-transform duration-600"
           style={{
             transformStyle: 'preserve-3d',
             transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
@@ -171,19 +162,17 @@ export default function StudySession({ deckId, deckName, userId, onBack }: Study
         >
           {/* Front face */}
           <div
-            className="absolute inset-0 flex flex-col items-center rounded-2xl border border-[var(--border)] bg-[var(--background-card)] p-6 sm:p-8 shadow-[var(--shadow-lg)] overflow-hidden"
+            className="absolute inset-0 flex flex-col items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--background-card)] p-8 shadow-[var(--shadow-lg)]"
             style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
           >
-            <p className="mb-4 text-xs font-bold uppercase tracking-widest text-[var(--primary)] shrink-0">
+            <p className="mb-4 text-xs font-bold uppercase tracking-widest text-[var(--primary)]">
               Question
             </p>
-            <div className="flex-1 flex items-center justify-center w-full overflow-y-auto pb-6">
-              <p className={`text-center font-semibold text-[var(--foreground)] leading-relaxed whitespace-pre-wrap w-full ${getFontSizeClass(currentCard.front_text)}`}>
-                {currentCard.front_text}
-              </p>
-            </div>
+            <p className="text-center text-xl font-semibold text-[var(--foreground)] leading-relaxed whitespace-pre-wrap">
+              {currentCard.front_text}
+            </p>
             {!isFlipped && (
-              <p className="absolute bottom-5 text-xs text-[var(--foreground-muted)] flex items-center gap-1.5 shrink-0 bg-[var(--background-card)] px-2 rounded">
+              <p className="absolute bottom-5 text-xs text-[var(--foreground-muted)] flex items-center gap-1.5">
                 <Keyboard size={11} /> Press <kbd className="rounded border border-[var(--border)] px-1.5 py-0.5 text-xs font-mono">Space</kbd> or click to flip
               </p>
             )}
@@ -191,21 +180,19 @@ export default function StudySession({ deckId, deckName, userId, onBack }: Study
 
           {/* Back face */}
           <div
-            className="absolute inset-0 flex flex-col items-center rounded-2xl border border-[var(--primary)] bg-gradient-to-br from-[var(--primary-light)] to-[var(--background-card)] p-6 sm:p-8 shadow-[var(--shadow-lg)] overflow-hidden"
+            className="absolute inset-0 flex flex-col items-center justify-center rounded-2xl border border-[var(--primary)] bg-gradient-to-br from-[var(--primary-light)] to-[var(--background-card)] p-8 shadow-[var(--shadow-lg)]"
             style={{
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden',
               transform: 'rotateY(180deg)',
             }}
           >
-            <p className="mb-4 text-xs font-bold uppercase tracking-widest text-[var(--accent)] shrink-0">
+            <p className="mb-4 text-xs font-bold uppercase tracking-widest text-[var(--accent)]">
               Answer
             </p>
-            <div className="flex-1 flex items-center justify-center w-full overflow-y-auto">
-              <p className={`text-center font-semibold text-[var(--foreground)] leading-relaxed whitespace-pre-wrap w-full ${getFontSizeClass(currentCard.back_text)}`}>
-                {currentCard.back_text}
-              </p>
-            </div>
+            <p className="text-center text-xl font-semibold text-[var(--foreground)] leading-relaxed whitespace-pre-wrap">
+              {currentCard.back_text}
+            </p>
           </div>
         </div>
       </div>

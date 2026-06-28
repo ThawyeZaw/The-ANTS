@@ -39,72 +39,90 @@ const mockProfiles: Profile[] = [
   {
     id: 'user-student-001',
     email: 'thiri@theants.edu',
-    full_name: 'Thiri Aung',
+    name: 'Thiri Aung',
     username: 'thiriaung',
-    avatar_url: null,
+    avatar: '',
     role: 'student',
-    created_at: '2026-01-15T08:00:00Z',
-    updated_at: '2026-01-15T08:00:00Z',
+    bio: 'IGCSE student aiming for straight A*s. Love physics and maths!',
+    title: 'IGCSE Student',
+    createdAt: '2026-01-15T08:00:00Z',
   },
   {
     id: 'user-student-002',
     email: 'min.htet@theants.edu',
-    full_name: 'Min Htet Naing',
+    name: 'Min Htet Naing',
     username: 'minhtetnaing',
-    avatar_url: null,
+    avatar: '',
     role: 'student',
-    created_at: '2026-02-10T08:00:00Z',
-    updated_at: '2026-02-10T08:00:00Z',
+    bio: 'A Level Biology student preparing for medical school entrance.',
+    title: 'A Level Student',
+    createdAt: '2026-02-10T08:00:00Z',
   },
   {
     id: 'user-teacher-001',
     email: 'u.kyaw@theants.edu',
-    full_name: 'U Kyaw Min',
+    name: 'U Kyaw Min',
     username: 'ukyawmin',
-    avatar_url: null,
+    avatar: '',
     role: 'teacher',
-    created_at: '2025-09-01T08:00:00Z',
-    updated_at: '2025-09-01T08:00:00Z',
+    bio: 'Experienced A Level Chemistry teacher with 10+ years of tutoring Myanmar students.',
+    title: 'A Level Chemistry Teacher',
+    createdAt: '2025-09-01T08:00:00Z',
   },
   {
     id: 'user-teacher-002',
     email: 'daw.su@theants.edu',
-    full_name: 'Daw Su Myat',
+    name: 'Daw Su Myat',
     username: 'dawsumyat',
-    avatar_url: null,
+    avatar: '',
     role: 'teacher',
-    created_at: '2025-11-15T08:00:00Z',
-    updated_at: '2025-11-15T08:00:00Z',
+    bio: 'IGCSE Mathematics specialist. Cambridge-certified trainer.',
+    title: 'IGCSE Maths Teacher',
+    createdAt: '2025-11-15T08:00:00Z',
   },
   {
     id: 'user-contributor-001',
     email: 'aye.chan@theants.edu',
-    full_name: 'Aye Chan Thu',
+    name: 'Aye Chan Thu',
     username: 'ayechanthu',
-    avatar_url: null,
+    avatar: '',
     role: 'contributor',
-    created_at: '2025-06-20T08:00:00Z',
-    updated_at: '2025-06-20T08:00:00Z',
+    bio: 'Cambridge-trained educator building curriculum resources for Myanmar students.',
+    title: 'Curriculum Developer',
+    socialLinks: {
+      github: 'https://github.com/ayechanthu',
+      linkedin: 'https://linkedin.com/in/ayechanthu',
+    },
+    createdAt: '2025-06-20T08:00:00Z',
   },
   {
     id: 'user-contributor-002',
     email: 'ko.zaw@theants.edu',
-    full_name: 'Ko Zaw Win',
+    name: 'Ko Zaw Win',
     username: 'kozawwin',
-    avatar_url: null,
+    avatar: '',
     role: 'contributor',
-    created_at: '2025-08-05T08:00:00Z',
-    updated_at: '2025-08-05T08:00:00Z',
+    bio: 'Former IGCSE examiner. Building free exam prep resources for Myanmar students.',
+    title: 'Exam Resource Creator',
+    socialLinks: {
+      linkedin: 'https://linkedin.com/in/kozawwin',
+    },
+    createdAt: '2025-08-05T08:00:00Z',
   },
   {
     id: 'user-main-contributor-001',
     email: 'daw.hla@theants.edu',
-    full_name: 'Daw Hla Myint',
+    name: 'Daw Hla Myint',
     username: 'dawhlamyint',
-    avatar_url: null,
+    avatar: '',
     role: 'main_contributor',
-    created_at: '2025-03-10T08:00:00Z',
-    updated_at: '2025-03-10T08:00:00Z',
+    bio: 'Senior gatekeeper and lead reviewer. 15 years in international education.',
+    title: 'Head of Content',
+    socialLinks: {
+      linkedin: 'https://linkedin.com/in/dawhlamyint',
+      website: 'https://dawhlamyint.com',
+    },
+    createdAt: '2025-03-10T08:00:00Z',
   },
 ];
 
@@ -165,12 +183,11 @@ export function mockSignup(
   const newProfile: Profile = {
     id: `user-${role}-${Date.now()}`,
     email: normalizedEmail,
-    full_name: name,
+    name,
     username: generateUsername(name),
-    avatar_url: null,
+    avatar: '',
     role,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
   };
 
   // Add to in-memory stores
@@ -217,16 +234,19 @@ export function getProfileByUsername(username: string): Profile | undefined {
  */
 export function mockUpdateProfile(
   userId: string,
-  data: Partial<Pick<Profile, 'full_name' | 'avatar_url'>>
+  data: Partial<Pick<Profile, 'name' | 'bio' | 'title' | 'socialLinks' | 'avatar'>>
 ): { success: true; profile: Profile } | { success: false; error: string } {
   const profile = mockProfiles.find((p) => p.id === userId);
   if (!profile) return { success: false, error: 'User not found.' };
 
-  if (data.full_name !== undefined) {
-    profile.full_name = data.full_name;
-    profile.username = generateUsername(data.full_name);
+  if (data.name !== undefined) {
+    profile.name = data.name;
+    profile.username = generateUsername(data.name);
   }
-  if (data.avatar_url !== undefined) profile.avatar_url = data.avatar_url;
+  if (data.bio !== undefined) profile.bio = data.bio;
+  if (data.title !== undefined) profile.title = data.title;
+  if (data.socialLinks !== undefined) profile.socialLinks = data.socialLinks;
+  if (data.avatar !== undefined) profile.avatar = data.avatar;
 
   return { success: true, profile: { ...profile } };
 }
@@ -282,12 +302,11 @@ export function mockInviteUser(
   const newProfile: Profile = {
     id: userId,
     email: normalizedEmail,
-    full_name: name,
+    name,
     username: generateUsername(name),
-    avatar_url: null,
+    avatar: '',
     role,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
   };
 
   mockProfiles.push(newProfile);
@@ -323,8 +342,16 @@ export function mockCompleteProfile(
     return { success: false, error: 'User not found.' };
   }
 
-  // Note: bio, title, etc. should now be updated via a separate mockUpdateContributorProfile call.
-  // We'll update the mockContributorProfiles array directly here for the invite flow.
+  // Update profile fields
+  if (data.title) profile.title = data.title;
+  if (data.bio) profile.bio = data.bio;
+  if (data.website_url || data.linkedin_url || data.github_url) {
+    profile.socialLinks = {
+      website: data.website_url || undefined,
+      linkedin: data.linkedin_url || undefined,
+      github: data.github_url || undefined,
+    };
+  }
 
   // Store password
   mockPasswords[profile.email] = data.password;

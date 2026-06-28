@@ -61,8 +61,7 @@ export function formatRelativeTime(dateStr: string): string {
 /**
  * Generate initials from a full name (e.g. "Thiri Aung" → "TA").
  */
-export function getInitials(name?: string | null): string {
-  if (!name) return '';
+export function getInitials(name: string): string {
   return name
     .split(' ')
     .map((part) => part[0])

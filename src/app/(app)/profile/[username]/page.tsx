@@ -109,7 +109,7 @@ export default function ProfilePage() {
 
       {/* Stats (contributor/main_contributor only) */}
       {isContributor && stats && (
-        <ProfileStats stats={stats} memberSince={profile.created_at} />
+        <ProfileStats stats={stats} memberSince={profile.createdAt} />
       )}
 
       {/* Activity Feed (contributor/main_contributor only) */}
@@ -121,7 +121,7 @@ export default function ProfilePage() {
           <p className="text-sm text-foreground-muted">
             {isOwnProfile
               ? 'Upgrade to a Contributor role to unlock your public profile with stats and activity feed.'
-              : `${profile.full_name} has a ${profile.role === 'student' ? 'student' : 'teacher'} profile. Contributor stats are only available for contributor roles.`}
+              : `${profile.name} has a ${profile.role === 'student' ? 'student' : 'teacher'} profile. Contributor stats are only available for contributor roles.`}
           </p>
         </div>
       )}

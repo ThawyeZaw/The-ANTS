@@ -74,7 +74,7 @@ export default function DeckPage() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl min-h-[500px] flex flex-col rounded-3xl border border-[var(--border)] bg-[var(--background-card)] shadow-[var(--shadow-md)] overflow-hidden">
+    <div className="mx-auto max-w-3xl rounded-3xl border border-[var(--border)] bg-[var(--background-card)] shadow-[var(--shadow-md)] overflow-hidden">
       {mode === 'edit' ? (
         <DeckEditView
           deck={deck}

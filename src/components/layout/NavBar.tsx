@@ -219,31 +219,7 @@ export default function NavBar() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [isVisible, setIsVisible] = useState(true);
-  const lastScrollY = useRef(0);
   const userMenuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      
-      // Hide when scrolling down past a small threshold
-      if (currentScrollY > lastScrollY.current && currentScrollY > 60) {
-        setIsVisible(false);
-        // Auto-close dropdowns when navbar hides
-        setOpenDropdown(null);
-        setIsUserMenuOpen(false);
-        setIsMobileOpen(false);
-      } else {
-        setIsVisible(true);
-      }
-      
-      lastScrollY.current = currentScrollY;
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   // Close user menu on outside click
   useEffect(() => {
@@ -270,12 +246,7 @@ export default function NavBar() {
   };
 
   return (
-    <header 
-      className={cn(
-        "sticky top-0 z-50 w-full transition-transform duration-300 ease-in-out",
-        isVisible ? "translate-y-0" : "-translate-y-full"
-      )}
-    >
+    <header className="sticky top-0 z-50 w-full">
       {/* Floating NavBar Container */}
       <div className="mx-auto max-w-7xl px-4 pt-3">
         <nav className="glass rounded-2xl px-4 py-2 flex items-center justify-between animate-glow">
@@ -335,10 +306,10 @@ export default function NavBar() {
                   )}
                 >
                   <div className="h-7 w-7 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-xs font-bold">
-                    {getInitials(user.profile.full_name)}
+                    {getInitials(user.profile.name)}
                   </div>
                   <span className="text-sm font-medium text-foreground hidden lg:inline">
-                    {user.profile.full_name.split(' ')[0]}
+                    {user.profile.name.split(' ')[0]}
                   </span>
                   <ChevronDown
                     className={cn(
@@ -351,7 +322,7 @@ export default function NavBar() {
                 {isUserMenuOpen && (
                   <div className="absolute top-full right-0 mt-2 w-64 glass rounded-xl p-3 animate-slide-down z-50">
                     <div className="pb-3 mb-3 border-b border-border">
-                      <p className="font-semibold text-sm text-foreground">{user.profile.full_name}</p>
+                      <p className="font-semibold text-sm text-foreground">{user.profile.name}</p>
                       <p className="text-xs text-foreground-muted mt-0.5">{user.email}</p>
                       {role && (
                         <div className="mt-2">
