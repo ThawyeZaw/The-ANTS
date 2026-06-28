@@ -110,7 +110,7 @@ export default function ClubDetail({ clubId }: { clubId: string }) {
               ))}
             </div>
             <div className="mt-4 flex flex-wrap gap-4 text-sm text-foreground-muted">
-              <span>Led by {leader?.name || 'Contributor'}</span>
+              <span>Led by {leader?.full_name || 'Contributor'}</span>
               <span>{activeMembers.length} active members</span>
               <span>Created {formatDate(club.created_at)}</span>
             </div>
@@ -253,11 +253,11 @@ function ChatTab({
           return (
             <div key={`${clubId}-${item.id}`} className="flex gap-3">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                {getInitials(profile?.name || 'User')}
+                {getInitials(profile?.full_name || 'User')}
               </div>
               <div className="min-w-0 flex-1 rounded-xl bg-background-secondary px-4 py-3">
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-semibold text-foreground">{profile?.name || 'Unknown user'}</p>
+                  <p className="font-semibold text-foreground">{profile?.full_name || 'Unknown user'}</p>
                   <p className="text-xs text-foreground-muted">{formatRelativeTime(item.created_at)}</p>
                 </div>
                 <p className="mt-1 text-sm text-foreground-secondary">{item.message}</p>
@@ -340,7 +340,7 @@ function AnnouncementsTab({
             </div>
             <h2 className="mt-3 text-lg font-bold text-foreground">{item.title}</h2>
             <p className="mt-2 text-sm text-foreground-secondary">{item.content}</p>
-            <p className="mt-4 text-xs text-foreground-muted">Posted by {profile?.name || 'Club leader'}</p>
+            <p className="mt-4 text-xs text-foreground-muted">Posted by {profile?.full_name || 'Club leader'}</p>
           </article>
         );
       })}
@@ -405,7 +405,7 @@ function LinksTab({
                 </div>
                 <ExternalLink className="h-4 w-4 shrink-0 text-foreground-muted" />
               </div>
-              <p className="mt-4 text-xs text-foreground-muted">Shared by {profile?.name || 'Member'} on {formatDate(item.created_at)}</p>
+              <p className="mt-4 text-xs text-foreground-muted">Shared by {profile?.full_name || 'Member'} on {formatDate(item.created_at)}</p>
             </a>
           );
         })}
@@ -428,11 +428,11 @@ function MembersTab({
         return (
           <article key={member.id} className="flex items-center gap-3 rounded-xl border border-border bg-background-card p-4">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
-              {getInitials(profile?.name || 'User')}
+              {getInitials(profile?.full_name || 'User')}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate font-semibold text-foreground">{profile?.name || 'Unknown user'}</p>
-              <p className="text-xs text-foreground-muted">{profile?.title || profile?.role}</p>
+              <p className="truncate font-semibold text-foreground">{profile?.full_name || 'Unknown user'}</p>
+              <p className="text-xs text-foreground-muted">{profile?.role}</p>
             </div>
             <Badge variant={member.role === 'leader' ? 'warning' : 'default'}>{member.role}</Badge>
           </article>
@@ -469,10 +469,10 @@ function RequestsTab({
           <article key={request.id} className="flex flex-col gap-4 rounded-xl border border-border bg-background-card p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
-                {getInitials(profile?.name || 'User')}
+                {getInitials(profile?.full_name || 'User')}
               </div>
               <div>
-                <p className="font-semibold text-foreground">{profile?.name || 'Unknown user'}</p>
+                <p className="font-semibold text-foreground">{profile?.full_name || 'Unknown user'}</p>
                 <p className="text-xs text-foreground-muted">Requested {formatRelativeTime(request.requested_at)}</p>
               </div>
             </div>

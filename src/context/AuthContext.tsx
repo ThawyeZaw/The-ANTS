@@ -30,7 +30,7 @@ interface AuthContextValue {
   ) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   updateProfile: (
-    data: Partial<Pick<Profile, 'name' | 'bio' | 'title' | 'socialLinks' | 'avatar'>>
+    data: Partial<Pick<Profile, 'full_name' | 'avatar_url'>>
   ) => Promise<{ success: boolean; error?: string }>;
   updateRole: (newRole: UserRole) => Promise<{ success: boolean; error?: string }>;
 }
@@ -48,8 +48,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const stored = localStorage.getItem(SESSION_KEY);
       if (stored) {
-        const parsed = JSON.parse(stored) as AuthUser;
-        setUser(parsed);
+        const parsed = JSON.parse(stored) as any; // Use any to gracefully handle schema changes
+        if (parsed?.profile) {
+          if (!parsed.profile.full_name && parsed.profile.name) {
+            parsed.profile.full_name = parsed.profile.name;
+            localStorage.setItem(SESSION_KEY, JSON.stringify(parsed));
+          }
+        }
+        setUser(parsed as AuthUser);
       }
     } catch {
       localStorage.removeItem(SESSION_KEY);
@@ -104,7 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const updateProfile = useCallback(
     async (
-      data: Partial<Pick<Profile, 'name' | 'bio' | 'title' | 'socialLinks' | 'avatar'>>
+      data: Partial<Pick<Profile, 'full_name' | 'avatar_url'>>
     ): Promise<{ success: boolean; error?: string }> => {
       if (!user) return { success: false, error: 'Not authenticated.' };
 

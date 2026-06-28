@@ -122,7 +122,7 @@ export default function DashboardPage() {
   if (!user) return null; // Or a loading skeleton
 
   const role = user.profile.role;
-  const firstName = user.profile.name.split(' ')[0];
+  const firstName = user.profile.full_name.split(' ')[0];
 
   let quickLinks = STUDENT_QUICK_LINKS;
   let stats = STUDENT_STATS;

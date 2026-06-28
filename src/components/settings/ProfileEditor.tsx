@@ -53,10 +53,7 @@ import { cn, getInitials } from '@/lib/utils';
 import type { SocialLinks } from '@/types';
 
 interface ProfileFormData {
-  name: string;
-  bio: string;
-  title: string;
-  socialLinks: SocialLinks;
+  full_name: string;
 }
 
 export default function ProfileEditor() {
@@ -68,27 +65,18 @@ export default function ProfileEditor() {
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<ProfileFormData>({
-    name: '',
-    bio: '',
-    title: '',
-    socialLinks: {},
+    full_name: '',
   });
 
   const [originalData, setOriginalData] = useState<ProfileFormData>({
-    name: '',
-    bio: '',
-    title: '',
-    socialLinks: {},
+    full_name: '',
   });
 
   // Sync form data when user changes
   useEffect(() => {
     if (user) {
       const data: ProfileFormData = {
-        name: user.profile.name,
-        bio: user.profile.bio || '',
-        title: user.profile.title || '',
-        socialLinks: { ...user.profile.socialLinks },
+        full_name: user.profile.full_name,
       };
       setFormData(data);
       setOriginalData(data);
@@ -104,10 +92,7 @@ export default function ProfileEditor() {
     setSaveSuccess(false);
 
     const result = await updateProfile({
-      name: formData.name.trim(),
-      bio: formData.bio.trim() || undefined,
-      title: formData.title.trim() || undefined,
-      socialLinks: formData.socialLinks,
+      full_name: formData.full_name.trim(),
     });
 
     setIsSaving(false);
@@ -135,11 +120,11 @@ export default function ProfileEditor() {
       <div className="flex items-center gap-4 pb-5 border-b border-border">
         <div className="relative group">
           <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-xl font-bold shadow-lg ring-2 ring-primary/20">
-            {getInitials(user.profile.name)}
+            {getInitials(user.profile.full_name)}
           </div>
         </div>
         <div className="flex-1">
-          <p className="font-semibold text-lg text-foreground">{user.profile.name}</p>
+          <p className="font-semibold text-lg text-foreground">{user.profile.full_name}</p>
           <p className="text-sm text-foreground-muted">@{user.profile.username}</p>
           <div className="mt-1.5">{role && <RoleBadge role={role} />}</div>
         </div>
@@ -161,13 +146,13 @@ export default function ProfileEditor() {
           {isEditing ? (
             <input
               type="text"
-              value={formData.name}
-              onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+              value={formData.full_name}
+              onChange={(e) => setFormData((prev) => ({ ...prev, full_name: e.target.value }))}
               className="w-full px-3 py-2 rounded-lg bg-background-secondary border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
               placeholder="Your display name"
             />
           ) : (
-            <p className="text-sm font-medium text-foreground">{formData.name}</p>
+            <p className="text-sm font-medium text-foreground">{formData.full_name}</p>
           )}
         </FieldRow>
 
@@ -181,117 +166,6 @@ export default function ProfileEditor() {
           </div>
         </FieldRow>
 
-        {/* Title */}
-        <FieldRow icon={<Briefcase className="h-4 w-4" />} label="Title">
-          {isEditing ? (
-            <input
-              type="text"
-              value={formData.title}
-              onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
-              className="w-full px-3 py-2 rounded-lg bg-background-secondary border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
-              placeholder="e.g. Curriculum Developer"
-            />
-          ) : (
-            <p className="text-sm text-foreground-secondary">
-              {formData.title || <span className="italic text-foreground-muted">No title set</span>}
-            </p>
-          )}
-        </FieldRow>
-
-        {/* Bio */}
-        <FieldRow icon={<FileText className="h-4 w-4" />} label="Bio">
-          {isEditing ? (
-            <textarea
-              value={formData.bio}
-              onChange={(e) => setFormData((prev) => ({ ...prev, bio: e.target.value }))}
-              rows={3}
-              className="w-full px-3 py-2 rounded-lg bg-background-secondary border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all resize-none"
-              placeholder="Tell others about yourself..."
-            />
-          ) : (
-            <p className="text-sm text-foreground-secondary">
-              {formData.bio || <span className="italic text-foreground-muted">No bio set</span>}
-            </p>
-          )}
-        </FieldRow>
-
-        {/* Social Links Section */}
-        {isEditing && (
-          <div className="pt-3 border-t border-border">
-            <p className="text-xs font-medium text-foreground-muted uppercase tracking-wider mb-3">Social Links</p>
-            <div className="space-y-3">
-              <SocialInput
-                icon={<Globe className="h-4 w-4" />}
-                label="Website"
-                value={formData.socialLinks.website || ''}
-                onChange={(v) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    socialLinks: { ...prev.socialLinks, website: v || undefined },
-                  }))
-                }
-                placeholder="https://yoursite.com"
-              />
-              <SocialInput
-                icon={<LinkedinIcon className="h-4 w-4" />}
-                label="LinkedIn"
-                value={formData.socialLinks.linkedin || ''}
-                onChange={(v) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    socialLinks: { ...prev.socialLinks, linkedin: v || undefined },
-                  }))
-                }
-                placeholder="https://linkedin.com/in/username"
-              />
-              <SocialInput
-                icon={<GithubIcon className="h-4 w-4" />}
-                label="GitHub"
-                value={formData.socialLinks.github || ''}
-                onChange={(v) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    socialLinks: { ...prev.socialLinks, github: v || undefined },
-                  }))
-                }
-                placeholder="https://github.com/username"
-              />
-              <SocialInput
-                icon={<FacebookIcon className="h-4 w-4" />}
-                label="Facebook"
-                value={formData.socialLinks.facebook || ''}
-                onChange={(v) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    socialLinks: { ...prev.socialLinks, facebook: v || undefined },
-                  }))
-                }
-                placeholder="https://facebook.com/username"
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Non-editing social links display */}
-        {!isEditing && user.profile.socialLinks && Object.values(user.profile.socialLinks).some(Boolean) && (
-          <div className="pt-3 border-t border-border">
-            <p className="text-xs font-medium text-foreground-muted uppercase tracking-wider mb-3">Social Links</p>
-            <div className="flex flex-wrap gap-2">
-              {user.profile.socialLinks.website && (
-                <SocialChip icon={<Globe className="h-3.5 w-3.5" />} href={user.profile.socialLinks.website} label="Website" />
-              )}
-              {user.profile.socialLinks.linkedin && (
-                <SocialChip icon={<LinkedinIcon className="h-3.5 w-3.5" />} href={user.profile.socialLinks.linkedin} label="LinkedIn" />
-              )}
-              {user.profile.socialLinks.github && (
-                <SocialChip icon={<GithubIcon className="h-3.5 w-3.5" />} href={user.profile.socialLinks.github} label="GitHub" />
-              )}
-              {user.profile.socialLinks.facebook && (
-                <SocialChip icon={<FacebookIcon className="h-3.5 w-3.5" />} href={user.profile.socialLinks.facebook} label="Facebook" />
-              )}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Action Buttons */}

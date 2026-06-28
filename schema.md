@@ -6,6 +6,7 @@
 |------|------|-------------|
 | `id` | `uuid` | Primary |
 | `email` | `text` |  Unique |
+| `username` | `text` |  Unique |
 | `full_name` | `text` |  |
 | `avatar_url` | `text` |  Nullable |
 | `created_at` | `timestamp` |  Nullable |
@@ -420,4 +421,74 @@
 | `weight` | `numeric` |  Nullable |
 | `predicted_grade` | `text` |  Nullable |
 | `created_at` | `timestamp` |  Nullable |
+
+## Table `notes`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `curriculum_id` | `uuid` |  |
+| `contributor_id` | `uuid` |  |
+| `title` | `text` |  |
+| `content` | `text` |  Nullable |
+| `status` | `text` |  Nullable |
+| `is_public` | `bool` |  Nullable |
+| `created_at` | `timestamp` |  Nullable |
+| `updated_at` | `timestamp` |  Nullable |
+
+## Table `classroom_progress`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `classroom_id` | `uuid` |  |
+| `student_id` | `uuid` |  |
+| `curriculum_completion` | `numeric` |  Nullable |
+| `assignments_completed` | `int4` |  Nullable |
+| `assignments_total` | `int4` |  Nullable |
+| `average_confidence_level` | `numeric` |  Nullable |
+| `last_active_at` | `timestamp` |  Nullable |
+
+## Table `club_join_requests`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `club_id` | `uuid` |  |
+| `user_id` | `uuid` |  |
+| `status` | `text` |  Nullable |
+| `requested_at` | `timestamp` |  Nullable |
+
+## Table `notifications`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `user_id` | `uuid` |  |
+| `title` | `text` |  |
+| `message` | `text` |  Nullable |
+| `type` | `text` |  Nullable |
+| `is_read` | `bool` |  Nullable |
+| `created_at` | `timestamp` |  Nullable |
+
+## Table `activity_feed`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `user_id` | `uuid` |  |
+| `activity_type` | `text` |  |
+| `description` | `text` |  Nullable |
+| `created_at` | `timestamp` |  Nullable |
+
 

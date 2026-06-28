@@ -19,14 +19,12 @@ export interface SocialLinks {
 export interface Profile {
   id: string;
   email: string;
-  name: string;
   username: string;
-  avatar: string;
+  full_name: string;
+  avatar_url: string | null;
   role: UserRole;
-  bio?: string;
-  title?: string;
-  socialLinks?: SocialLinks;
-  createdAt: string;
+  created_at: string;
+  updated_at: string | null;
 }
 
 /** Authenticated user object returned by auth operations */

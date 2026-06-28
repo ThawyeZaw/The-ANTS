@@ -47,11 +47,11 @@ export default function UsersTable({ users }: UsersTableProps) {
     }
 
     // Filter by search
-    if (search.trim()) {
+      if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter(
         (u) =>
-          u.name.toLowerCase().includes(q) ||
+          u.full_name.toLowerCase().includes(q) ||
           u.email.toLowerCase().includes(q)
       );
     }
@@ -142,17 +142,12 @@ export default function UsersTable({ users }: UsersTableProps) {
                           AVATAR_GRADIENTS[user.role]
                         )}
                       >
-                        {getInitials(user.name)}
+                        {getInitials(user.full_name)}
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-foreground truncate">
-                          {user.name}
+                          {user.full_name}
                         </p>
-                        {user.title && (
-                          <p className="text-xs text-foreground-muted truncate">
-                            {user.title}
-                          </p>
-                        )}
                       </div>
                     </div>
                   </td>
@@ -183,7 +178,7 @@ export default function UsersTable({ users }: UsersTableProps) {
                   </td>
                   <td className="px-5 py-3.5">
                     <p className="text-sm text-foreground-muted">
-                      {formatDate(user.createdAt)}
+                      {formatDate(user.created_at)}
                     </p>
                   </td>
                 </tr>
@@ -216,11 +211,11 @@ export default function UsersTable({ users }: UsersTableProps) {
                     AVATAR_GRADIENTS[user.role]
                   )}
                 >
-                  {getInitials(user.name)}
+                  {getInitials(user.full_name)}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="font-medium text-foreground truncate">{user.name}</p>
+                    <p className="font-medium text-foreground truncate">{user.full_name}</p>
                     <span
                       className={cn(
                         'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold shrink-0',
@@ -235,7 +230,7 @@ export default function UsersTable({ users }: UsersTableProps) {
                   </div>
                   <p className="text-sm text-foreground-muted truncate">{user.email}</p>
                   <p className="text-xs text-foreground-muted mt-1">
-                    Joined {formatDate(user.createdAt)}
+                    Joined {formatDate(user.created_at)}
                   </p>
                 </div>
               </div>
