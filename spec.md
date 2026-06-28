@@ -11,16 +11,21 @@
 ---
 
 ## 2. User Roles & Permissions
-Privacy and access boundaries are strictly enforced. There are **four roles**, selected at signup (one email can only hold one role, but users can upgrade or downgrade their role later).
+Privacy and access boundaries are strictly enforced. There are **four roles**. At signup, users can **only select `student`**. Other roles must be assigned by a `main_contributor` through role upgrade approval.
 
 | Role | Who | What they can access |
 |---|---|---|
-| **Student** | Primary users | All personal study tools (Timetable, Pomodoro, Flashcards, Lesson Tracker, Course Manager, Exam Countdown, Grade Calculator), Classrooms (join), Clubs (join) |
-| **Teacher** | Paid tier | Everything Student gets + create & manage Classrooms, issue Assignments, monitor student progress within their classrooms, Clubs (join & participate) |
+| **Student** | Primary users | All personal study tools (Timetable, Pomodoro, Flashcards, Lesson Tracker, Course Manager, Exam Countdown, Grade Calculator), Classrooms (join), Clubs (join), public profile page |
+| **Teacher** | Paid tier | Everything Student gets + create & manage Classrooms, issue Assignments, monitor student progress within their classrooms, Clubs (join & participate), public profile page |
 | **Contributor** | Verified experts | Everything Teacher gets + Curriculum & Notes Editor, Exam Data Editor, lead Clubs, publicly visible Contributor Profile |
-| **Main Contributor** | Senior verified experts | Everything Contributor gets + Gatekeeper Review Queue (approve, reject, or request revisions on Contributor submissions before they go public) |
+| **Main Contributor** | Senior verified experts | Everything Contributor gets + Gatekeeper Review Queue (approve, reject, or request revisions on Contributor submissions before they go public), approve/reject role upgrade requests, direct user promotion |
 
-> **Note:** `main_contributor` is a **separate top-level role** — not a flag or sub-role. It is stored as an enum value in the `profiles.role` column.
+### Role Management Rules
+- **Signup defaults to `student`.** No other role is selectable at registration.
+- **Upgrade only.** Roles can only be upgraded (student → teacher → contributor → main_contributor). Downgrades are not permitted.
+- **Upgrade request flow:** Users submit a role upgrade request. A `main_contributor` reviews and approves/rejects it.
+- **Direct promotion:** Main contributors can also directly promote users without a prior request.
+- **One account, one role.** An email can only hold a single role at any time.
 
 ---
 
@@ -33,7 +38,7 @@ Developers are strictly confined to their designated workspace paths. You are pr
 | `BMK` & `ABC` | Lesson Tracker, Course Manager, Curriculum & Notes Editor, Classrooms |
 | `ZLH` | Flashcard Creator & Library, Exam Countdown, Exam Data Editor |
 | `AKT` | Grade Calculator, Clubs |
-| **PM (`TYZ`)** | Shared Infrastructure, Public Home Page, Login & Signup, Role Landing Pages, NavBar, Contributor Profiles, Review Queue |
+| **PM (`TYZ`)** | Shared Infrastructure, Public Home Page, Login & Signup, Role Landing Pages, NavBar, Contributor Profiles, Review Queue, Explore Pages, Public Profiles, Role Upgrade System |
 
 ---
 
@@ -59,7 +64,7 @@ Before starting a generation session in VS Code, every developer **must** paste 
 ## 6. Database Schema Map (PostgreSQL)
 *(Note: Full types are generated via Supabase CLI in `types/supabase.ts`)*
 
-- `profiles`: [User metadata, role assignment (`student | teacher | contributor | main_contributor`), and basic fields (name, avatar)]
+- `profiles`: [User metadata, role assignment (`student | teacher | contributor | main_contributor`), `is_public` (profile visibility toggle), `projects` (JSONB portfolio), `activities` (JSONB CCA entries), `achievements` (JSONB), and basic fields (name, avatar)]
 - `contributor_profiles`: [Public Contributor profile fields (title, bio, social links, verification docs)]
 - `curriculums`: [Global templates — IGCSE, SAT, etc.]
 - `user_curriculums` & `user_subjects`: [Junction tables mapping students to selected curriculums and specific subjects]
@@ -73,6 +78,7 @@ Before starting a generation session in VS Code, every developer **must** paste 
 - `club_announcements`: [Pinned announcements posted by club leaders]
 - `club_links`: [Resource links shared within a club]
 - `editor_submissions`: [Curriculum, notes, and exam data submissions from Contributors; includes `status` field (`draft | pending_review | approved | rejected`) updated by Main Contributors via the Review Queue]
+- `role_upgrade_requests`: [Tracks upgrade requests from users. Fields: `user_id`, `current_role`, `requested_role`, `reason`, `status` (`pending | approved | rejected`), `reviewer_id`, timestamps]
 
 > **Migration note:** The `profiles.role` column uses a PostgreSQL enum. The `main_contributor` value must be added via migration:
 > ```sql
@@ -102,14 +108,27 @@ the-ants/                                 # Project root
     ├── app/                              # Next.js 16 App Router (Server Components by default)
     │   ├── layout.tsx                    # 🔒 PM — Root layout (providers, global fonts, metadata)
     │   ├── globals.css                   # 🔒 PM — Global Tailwind CSS v4 styles & design tokens
-    │   ├── page.tsx                      # 🔒 PM (TYZ) — Public landing / home page
+    │   ├── page.tsx                      # 🔒 PM (TYZ) — Public landing / home page (includes Explore section)
     │   ├── not-found.tsx                 # 🔒 PM — Global 404 page
     │   │
     │   ├── (auth)/                       # 🔒 PM (TYZ) — Auth route group (no shell/nav bar)
     │   │   ├── login/
     │   │   │   └── page.tsx              # Login page
     │   │   └── signup/
-    │   │       └── page.tsx              # Signup / role selection page (4 roles)
+    │   │       └── page.tsx              # Signup page (defaults to student role only)
+    │   │
+    │   ├── (public)/                     # Public routes (no auth required)
+    │   │   ├── explore/
+    │   │   │   ├── clubs/
+    │   │   │   │   └── page.tsx          # 🔒 PM — Public club discovery (browse all clubs)
+    │   │   │   └── profiles/
+    │   │   │       └── page.tsx          # 🔒 PM — Public profile listing (with role filters)
+    │   │   ├── clubs/
+    │   │   │   └── [id]/
+    │   │   │       └── page.tsx          # 🔒 PM — Public club detail view
+    │   │   └── profile/
+    │   │       └── [username]/
+    │   │           └── page.tsx          # 🔒 PM — Public profile page (all roles: student, teacher, contributor, main_contributor)
     │   │
     │   └── (app)/                        # Authenticated shell (Route Group — requires login)
     │       ├── layout.tsx                # 🔒 PM — App shell (NavBar wraps all authed routes)
@@ -117,7 +136,7 @@ the-ants/                                 # Project root
     │       │
     │       │   # ── Unified Dashboard (role-aware, single entry point) ────────────────
     │       ├── dashboard/
-    │       │   └── page.tsx              # 🔒 PM — Unified role-aware dashboard (renders role-specific stats & quick links)
+    │       │   └── page.tsx              # 🔒 PM — Unified role-aware dashboard
     │       │
     │       │   # ── Feature Pages ────────────────────────────────────────────────────
     │       ├── timetable/
@@ -138,14 +157,14 @@ the-ants/                                 # Project root
     │       │   └── page.tsx              # 🔒 BMK & ABC — Course Manager
     │       │
     │       ├── classrooms/
-    │       │   ├── page.tsx              # 🔒 BMK & ABC — Classroom list (join view for Students; manage view for Teachers)
+    │       │   ├── page.tsx              # 🔒 BMK & ABC — Classroom list
     │       │   └── [id]/
     │       │       └── page.tsx          # 🔒 BMK & ABC — Individual classroom view
     │       │
     │       ├── clubs/
-    │       │   ├── page.tsx              # 🔒 AKT — Club Discovery page (public listing)
+    │       │   ├── page.tsx              # 🔒 AKT — Club Discovery page (authenticated)
     │       │   └── [id]/
-    │       │       └── page.tsx          # 🔒 AKT — Individual club view (chat, announcements, links, members)
+    │       │       └── page.tsx          # 🔒 AKT — Individual club view (with feature toggle support)
     │       │
     │       ├── countdown/
     │       │   └── page.tsx              # 🔒 ZLH — Exam Countdown manager
@@ -154,7 +173,7 @@ the-ants/                                 # Project root
     │       │   └── page.tsx              # 🔒 AKT — Grade Calculator
     │       │
     │       ├── settings/
-    │       │   └── page.tsx              # 🔒 PM — User settings (profile editor, role switcher)
+    │       │   └── page.tsx              # 🔒 PM — User settings (profile editor, role upgrade request, visibility toggle)
     │       │
     │       │   # ── Contributor & Main Contributor Only ──────────────────────────────
     │       ├── editor/
@@ -166,12 +185,14 @@ the-ants/                                 # Project root
     │       │   └── page.tsx              # 🔒 PM — Gatekeeper / Review Queue (Main Contributor only)
     │       │
     │       ├── main-contributor/
-    │       │   └── add-contributor/
-    │       │       └── page.tsx          # 🔒 PM — Add Contributor invite flow (Main Contributor only)
+    │       │   ├── add-contributor/
+    │       │   │   └── page.tsx          # 🔒 PM — Add Contributor invite flow (Main Contributor only)
+    │       │   └── role-upgrades/
+    │       │       └── page.tsx          # 🔒 PM — Role upgrade request review (Main Contributor only)
     │       │
     │       └── profile/
     │           └── [username]/
-    │               └── page.tsx          # 🔒 PM — Contributor public profile page (publicly accessible)
+    │               └── page.tsx          # 🔒 PM — Authenticated user profile view/edit page
     │
     ├── components/                       # UI components ('use client' where interactive)
     │   ├── ui/                           # 🔒 PM — Shared atomic components
@@ -185,18 +206,24 @@ the-ants/                                 # Project root
     │   │   └── AuthModal.tsx
     │   ├── auth/                         # 🔒 PM (TYZ) — Login & signup form components
     │   ├── settings/                     # 🔒 PM — Settings page components
-    │   │   ├── ProfileEditor.tsx          # Inline editable profile form
-    │   │   └── RoleSwitcher.tsx           # Role change with confirmation dialog
-    │   ├── profile/                      # 🔒 PM — Contributor public profile components
-    │   │   ├── ProfileHero.tsx            # Hero banner with avatar, bio, social links
-    │   │   ├── ProfileStats.tsx           # Stat cards (published count, views)
-    │   │   └── ProfileActivity.tsx        # Timeline activity feed
+    │   │   ├── ProfileEditor.tsx          # Inline editable profile form (includes projects, activities, achievements)
+    │   │   ├── RoleUpgradeForm.tsx         # Role upgrade request form
+    │   │   └── ProfileVisibilityToggle.tsx # Public/private profile toggle
+    │   ├── profile/                      # 🔒 PM — Public profile components
+    │   │   ├── ProfileHero.tsx            # Hero banner with avatar, bio, role badge
+    │   │   ├── ProfileProjects.tsx        # Project showcase grid
+    │   │   ├── ProfileActivities.tsx      # CCA/activities timeline
+    │   │   ├── ProfileAchievements.tsx    # Achievements & awards
+    │   │   └── ProfileStats.tsx           # Stat cards (published count, views)
     │   ├── contributor-manager/          # 🔒 PM — Add-contributor invite flow components
     │   │   ├── InviteStep.tsx
     │   │   ├── VerifyStep.tsx
     │   │   ├── ProfileStep.tsx
     │   │   ├── SuccessStep.tsx
     │   │   └── StepProgress.tsx
+    │   ├── explore/                      # 🔒 PM — Public explore page components
+    │   │   ├── ClubCard.tsx              # Club listing card
+    │   │   └── ProfileCard.tsx           # Public profile listing card
     │   ├── timetable/                    # 🔒 PPP
     │   ├── pomodoro/                     # 🔒 PPP
     │   ├── lessons/                      # 🔒 BMK & ABC
@@ -210,7 +237,7 @@ the-ants/                                 # Project root
     │   └── flashcards/                   # 🔒 ZLH
     │
     ├── hooks/                            # Custom React Hooks (logic only — no JSX)
-    │   ├── useAuth.ts                    # 🔒 PM — Supabase auth session wrapper (includes updateProfile, updateRole)
+    │   ├── useAuth.ts                    # 🔒 PM — Supabase auth session wrapper (includes updateProfile, requestRoleUpgrade)
     │   ├── useRole.ts                    # 🔒 PM — Read current persona from context (returns isStudent, isTeacher, isContributor, isMainContributor)
     │   ├── useProfile.ts                 # 🔒 PM — Public profile data fetcher by username
     │   ├── useContributorManager.ts      # 🔒 PM — Multi-step contributor invite flow state machine
@@ -229,9 +256,10 @@ the-ants/                                 # Project root
     │   ├── timetable.ts                  # 🔒 PPP
     │   ├── flashcards.ts                 # 🔒 ZLH
     │   ├── classrooms.ts                 # 🔒 BMK & ABC
-    │   ├── clubs.ts                      # 🔒 AKT — Club CRUD, join/leave, messaging
+    │   ├── clubs.ts                      # 🔒 AKT — Club CRUD, join/leave, messaging, feature toggles
     │   ├── editor.ts                     # 🔒 BMK & ABC — Curriculum & Notes submissions; PM adds review approve/reject logic
-    │   └── exam-editor.ts                # 🔒 ZLH — Exam data CRUD & submission to review queue
+    │   ├── exam-editor.ts                # 🔒 ZLH — Exam data CRUD & submission to review queue
+    │   └── roles.ts                      # 🔒 PM — Role upgrade request & approval actions
     │
     ├── constants/                        # Static reference data (no logic — pure data)
     │   ├── qualifications.ts             # 🔒 PM — Exam boards, subjects, series (CAIE, Edexcel, OSSD…)
@@ -250,7 +278,7 @@ the-ants/                                 # Project root
     │   └── utils.ts                      # General helpers (cn, date formatting, grade conversion)
     │
     └── types/                            # TypeScript Definitions (🔒 PM)
-        ├── index.ts                      # Shared app-wide types & interfaces (includes UserRole = 'student' | 'teacher' | 'contributor' | 'main_contributor')
+        ├── index.ts                      # Shared app-wide types & interfaces (includes UserRole, Profile, Club, ClubFeature, RoleUpgradeRequest, ProjectEntry, ActivityEntry, AchievementEntry)
         └── supabase.ts                   # Supabase CLI auto-generated DB types (prod transition)
 ```
 
@@ -263,21 +291,25 @@ The authenticated app shell uses a **single NavBar** component (`src/components/
 ### Design
 - **Style:** Creative floating pill-shaped bar with glassmorphism (frosted blur background, subtle glow borders)
 - **Interaction:** Grouped dropdown menus on click/hover
-- **Behaviour:** Role-aware — nav links render only for the roles that can access them
+- **Behaviour:** Role-aware — nav links render only for the roles that can access them. The public home page also includes "Clubs" and "Profiles" links for unauthenticated visitors.
 
 ### Nav Groups & Role Visibility
 
 | Group | Links | Student | Teacher | Contributor | Main Contributor |
-|---|---|:---:|:---:|:---:|:---:|
+|---|---|---|---|:---:|:---:|:---:|
 | **Plan** | Timetable, Exam Countdown, Grade Calculator | ✅ | ✅ | ✅ | ✅ |
 | **Study Tools** | Flashcards, Pomodoro Timer | ✅ | ✅ | ✅ | ✅ |
 | **Learn** | Lesson Tracker, Course Manager | ✅ | ✅ | ✅ | ✅ |
 | **Community** | Classrooms, Clubs | ✅ | ✅ | ✅ | ✅ |
 | **Editor** | Curriculum & Notes Editor, Exam Data Editor | ❌ | ❌ | ✅ | ✅ |
-| **Review** | Gatekeeper / Review Queue | ❌ | ❌ | ❌ | ✅ |
-| **Profile** | My Contributor Profile | ❌ | ❌ | ✅ | ✅ |
+| **Review** | Gatekeeper / Review Queue, Role Upgrade Requests | ❌ | ❌ | ❌ | ✅ |
+| **Profile** | My Public Profile | ✅ | ✅ | ✅ | ✅ |
 
 > Classroom pages adapt their content by role: Students see a join/browse view; Teachers see a manage/create view.
+
+### Public Nav Links (visible on the home page without login)
+- Clubs → `/explore/clubs`
+- Profiles → `/explore/profiles`
 
 ### Post-Login Redirect (middleware.ts)
 After a successful login, `middleware.ts` redirects all roles to the unified dashboard:
@@ -305,4 +337,5 @@ To maintain ecosystem stability, AI coding assistants must adhere to the followi
 6. **Server Actions Live in `src/actions/`:** Never define a `'use server'` function inside a component file. Place it in the appropriate `src/actions/*.ts` file.
 7. **Styling Consistency:** Use Tailwind CSS v4 utility classes only. No hardcoded `px`/`py` values. Use `lucide-react` for all icons.
 8. **Respect 🔒 Ownership:** Do not create, edit, or delete files marked with another developer's lock. If a shared file needs changing, notify the PM.
-9. **No Dashboard Directory:** The primary role landing pages live at `/student`, `/teacher`, `/contributor`, and `/main-contributor` respectively. The `/dashboard` route currently serves as a common entry point that may redirect or display role-specific content.
+9. **Role Upgrade Constraint:** Users always sign up as `student`. Role upgrades require `main_contributor` approval. No downgrades are permitted.
+10. **Public Profile Fields:** All profiles now support `isPublic`, `projects`, `activities`, and `achievements` fields. Club pages support `enabled_features` toggling.

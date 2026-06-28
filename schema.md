@@ -11,6 +11,14 @@
 | `created_at` | `timestamp` |  Nullable |
 | `updated_at` | `timestamp` |  Nullable |
 | `role` | `user_role` |  Nullable |
+| `is_public` | `bool` |  Nullable |
+| `projects` | `jsonb` |  Nullable |
+| `activities` | `jsonb` |  Nullable |
+| `achievements` | `jsonb` |  Nullable |
+
+> **`projects` JSONB structure:** Array of `{ title, description, role, technologies: string[], links: { github?, live?, other? }, media: string[] }`
+> **`activities` JSONB structure:** Array of `{ name, organization, role, start_date, end_date?, description, verification_link? }`
+> **`achievements` JSONB structure:** Array of `{ title, description, date?, issuer?, link? }`
 
 ## Table `student_profiles`
 
@@ -219,7 +227,10 @@
 | `created_by` | `uuid` |  |
 | `join_mode` | `text` |  Nullable |
 | `invite_code` | `text` |  Nullable |
+| `enabled_features` | `jsonb` |  Nullable |
 | `created_at` | `timestamp` |  Nullable |
+
+> **`enabled_features` JSONB structure:** Array of strings from: `"chat"`, `"announcements"`, `"links"`, `"members"`, `"projects"`, `"activity_timeline"`, `"leaderboard"`. Default: `["chat", "announcements", "links", "members"]`
 
 ## Table `club_members`
 
@@ -421,3 +432,21 @@
 | `predicted_grade` | `text` |  Nullable |
 | `created_at` | `timestamp` |  Nullable |
 
+## Table `role_upgrade_requests`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `user_id` | `uuid` |  |
+| `current_role` | `user_role` |  |
+| `requested_role` | `user_role` |  |
+| `reason` | `text` | Nullable |
+| `status` | `text` | Nullable |
+| `reviewer_id` | `uuid` | Nullable |
+| `created_at` | `timestamp` | Nullable |
+| `reviewed_at` | `timestamp` | Nullable |
+
+> **`status` values:** `"pending"`, `"approved"`, `"rejected"`
+> **Rule:** Roles can only be upgraded (student → teacher → contributor → main_contributor). Downgrades are not permitted. Only a `main_contributor` can approve or reject upgrade requests.

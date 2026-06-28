@@ -6,7 +6,7 @@
 
 *Ace with us!*
 
-*Timetables · Flashcards · Classrooms · Clubs · Grade Calculators · Exam Countdowns*
+*Timetables · Flashcards · Classrooms · Clubs · Grade Calculators · Exam Countdowns · Public Profiles*
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://www.typescriptlang.org/)
@@ -80,19 +80,44 @@ Whether you're targeting A* in IGCSE or A Levels, IELTS band 7+, or an OSSD dipl
 ### 🐜 Clubs (Community Spaces)
 - **Contributors** can create and lead Clubs — community spaces focused on CCA activities, IGCSE/A Level subjects, or other projects.
 - Each club can be linked to one or more subjects or curriculums.
-- A club leader (the Contributor who creates the club) can choose between an **invite-link** or **approval-based** join model.
+- Club leaders can select which features to enable: chat, announcements, links, members directory, projects showcase, activity timeline, and leaderboard.
+- A club leader can choose between an **invite-link** or **approval-based** join model.
 - **Students and Teachers** can discover clubs on a public Club Discovery page and request to join or use an invite link.
-- Inside a club, members have access to:
-  - 💬 **Chat** — real-time messaging within the club
-  - 📢 **Announcements** — pinned posts made by the club leader
-  - 🔗 **Link Sharing** — resource drops and external references
-  - 👥 **Member Directory** — see who is part of the club
+- Inside a club, members have access to only the features the leader has enabled.
 - Members can leave a club at any time.
 - A single Contributor can create and manage multiple clubs.
 
-### 👤 Contributor Public Profiles
-- Every **Contributor** has a publicly visible profile accessible to anyone, including non-logged-in visitors.
-- Public profiles display: name, title/status, avatar, bio, social links, and a list of their published curriculum/notes contributions.
+### 👤 Public Profiles (All Roles)
+- Every user — **Student, Teacher, Contributor, and Main Contributor** — has a publicly visible profile page (if they choose to make it public).
+- Public profiles are accessible to anyone, including non-logged-in visitors, at `theants.org/profile/username`.
+- Users can toggle their profile visibility (public/private) in settings.
+- Profiles include:
+  - **Bio & Role Badge:** Name, role, title, and a short bio
+  - **Project Showcase:** A grid of completed works with descriptions, technologies used, and links
+  - **Activities & CCA:** Timeline of extracurricular activities, clubs, and events
+  - **Achievements:** Awards, certifications, and recognitions
+- Shareable via direct link — perfect for university applications and CVs.
+
+### 🏠 Explore Pages
+- **Explore Clubs** (`/explore/clubs`): Browse all clubs with search, see member counts, join modes, and enabled features — no login required.
+- **Explore Profiles** (`/explore/profiles`): Discover community members with role-based filters (All / Students / Teachers / Contributors / Main Contributors), search, and portfolio previews — no login required.
+
+### 🔄 Role System
+- **Signup defaults to `student`.** Users can only select `student` at registration.
+- **Upgrade-only policy:** Roles can only be upgraded (student → teacher → contributor → main_contributor). Downgrades are not permitted.
+- **Upgrade requests:** Users submit a role upgrade request with a reason. A **Main Contributor** reviews and approves/rejects it.
+- **Direct promotion:** Main Contributors can directly promote users without a prior request.
+- **One account, one role.** An email can only hold a single role at any time.
+
+### 🎯 Club Feature Toggles
+Club leaders can enable or disable specific features for their club:
+- 💬 **Chat** — Real-time messaging
+- 📢 **Announcements** — Pinned posts by the leader
+- 🔗 **Links** — Resource sharing
+- 👥 **Members** — Member directory
+- 📂 **Projects** — Project showcase from members
+- 📅 **Activity Timeline** — Upcoming events and deadlines
+- 🏆 **Leaderboard** — Member rankings
 
 ### ⏳ Exam Countdown 
 Visual urgency indicators help you prioritise revision time across multiple subjects.
@@ -109,12 +134,12 @@ Stop guessing your predicted grades.
 
 | Role | Who | What they can do |
 |---|---|---|
-| **Student** | Primary users | Timetable, Pomodoro Timer, Flashcard Decks, Lesson Tracker, Course Manager, Exam Countdown, Grade Calculator, join Classrooms, join Clubs |
-| **Teacher** | Paid tier | Everything above + create & manage Classrooms, issue Assignments, monitor student progress, Clubs (join & participate) |
-| **Contributor** | Verified experts | Everything above + Curriculum & Notes Editor, Exam Data Editor, create & lead Clubs, publicly visible Contributor Profile |
-| **Main Contributor** | Senior verified experts | Everything above + Gatekeeper Review Queue — approve, reject, or request revisions on Contributor submissions before they go live to all users |
+| **Student** | Primary users | Timetable, Pomodoro Timer, Flashcard Decks, Lesson Tracker, Course Manager, Exam Countdown, Grade Calculator, join Classrooms, join Clubs, public profile page |
+| **Teacher** | Paid tier | Everything above + create & manage Classrooms, issue Assignments, monitor student progress, Clubs (join & participate), public profile page |
+| **Contributor** | Verified experts | Everything above + Curriculum & Notes Editor, Exam Data Editor, create & lead Clubs, publicly visible Profile |
+| **Main Contributor** | Senior verified experts | Everything above + Gatekeeper Review Queue — approve, reject, or request revisions on Contributor submissions, approve role upgrade requests, promote users directly |
 
-> You select your role when you first sign up. One email can only have one role, but you can upgrade or downgrade your role later.
+> **Important:** You can only sign up as a **Student**. Other roles require a Main Contributor to approve a role upgrade request. Roles can only be upgraded, never downgraded.
 
 ---
 

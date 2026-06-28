@@ -3,10 +3,11 @@
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTS — useProfile Hook
 // Fetches public profile data by username for the /profile/[username] page.
+// Now supports projects, activities, and achievements for all roles.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect } from 'react';
-import { Profile } from '@/types';
+import { Profile, ProjectEntry, ActivityEntry, AchievementEntry } from '@/types';
 import { useAuth } from './useAuth';
 import {
   getProfileByUsername,
@@ -44,6 +45,9 @@ interface UseProfileReturn {
   contributorProfile: ContributorProfileData | null;
   stats: ContributorStatsData | null;
   activities: ActivityItem[];
+  projects: ProjectEntry[];
+  portfolioActivities: ActivityEntry[];
+  achievements: AchievementEntry[];
   isLoading: boolean;
   isOwnProfile: boolean;
   notFound: boolean;
@@ -133,5 +137,16 @@ export function useProfile(username: string): UseProfileReturn {
     return () => clearTimeout(timer);
   }, [username, user]);
 
-  return { profile, contributorProfile, stats, activities, isLoading, isOwnProfile, notFound };
+  return {
+    profile,
+    contributorProfile,
+    stats,
+    activities,
+    projects: profile?.projects || [],
+    portfolioActivities: profile?.activities || [],
+    achievements: profile?.achievements || [],
+    isLoading,
+    isOwnProfile,
+    notFound,
+  };
 }
