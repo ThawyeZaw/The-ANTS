@@ -450,3 +450,42 @@
 
 > **`status` values:** `"pending"`, `"approved"`, `"rejected"`
 > **Rule:** Roles can only be upgraded (student → teacher → contributor → main_contributor). Downgrades are not permitted. Only a `main_contributor` can approve or reject upgrade requests.
+
+## Table `notes`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `title` | `text` |  |
+| `summary` | `text` | Nullable |
+| `curriculum_id` | `uuid` | Nullable |
+| `subject_id` | `uuid` | Nullable |
+| `topic_id` | `uuid` | Nullable |
+| `syllabus_point` | `text` | Nullable |
+| `is_syllabus_based` | `bool` | Default: false |
+| `tags` | `text[]` | Nullable |
+| `blocks` | `jsonb` | |
+| `contributor_id` | `uuid` | |
+| `status` | `text` | Default: 'draft' |
+| `visibility` | `text` | Default: 'private' |
+| `reviewer_feedback` | `text` | Nullable |
+| `reviewer_id` | `uuid` | Nullable |
+| `created_at` | `timestamp` | |
+| `updated_at` | `timestamp` | |
+
+> **`blocks` JSONB structure:** Array of `NoteBlock` objects (`{ type, id, ... }` representing headings, paragraphs, latex, svgs, animations, etc).
+> **`status` values:** `"draft"`, `"pending_review"`, `"approved"`, `"rejected"`
+> **`visibility` values:** `"private"`, `"link"`, `"public"`. When approved, a note automatically becomes `"public"`.
+
+## Table `user_saved_notes`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `user_id` | `uuid` | |
+| `note_id` | `uuid` | |
+| `saved_at` | `timestamp` | |

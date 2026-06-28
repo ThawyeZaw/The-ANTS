@@ -349,3 +349,199 @@ export interface ParsedAICard {
   /** Whether the user has confirmed/edited this card in the preview */
   confirmed: boolean;
 }
+
+// -----------------------------------------------------------------------------
+// Notes
+// -----------------------------------------------------------------------------
+
+/** Status lifecycle for a note */
+export type NoteStatus = 'draft' | 'pending_review' | 'approved' | 'rejected';
+
+/** AI Generator style preference */
+export type NoteStyle = 'concise' | 'detailed' | 'eli5' | 'academic';
+
+// ── Note Block Types ──────────────────────────────────────────────────────────
+
+export interface HeadingBlock {
+  type: 'heading';
+  id: string;
+  level: 1 | 2 | 3;
+  text: string;
+}
+
+export interface ParagraphBlock {
+  type: 'paragraph';
+  id: string;
+  /** Supports basic markdown-like markers: **bold**, *italic*, [text](url) */
+  text: string;
+}
+
+export interface LatexBlock {
+  type: 'latex';
+  id: string;
+  /** The LaTeX source string, e.g. "E = mc^2" */
+  expression: string;
+  /** Display (block) vs inline rendering */
+  display: boolean;
+}
+
+export interface SvgBlock {
+  type: 'svg';
+  id: string;
+  /** Raw sanitized SVG markup */
+  markup: string;
+  /** Optional caption shown below */
+  caption?: string;
+}
+
+/** One of our predefined animation templates */
+export type AnimationTemplate =
+  | 'pendulum'
+  | 'wave_motion'
+  | 'projectile'
+  | 'cell_division'
+  | 'lens_refraction'
+  | 'circuit_dc'
+  | 'dna_helix'
+  | 'gas_particles'
+  | 'titration'
+  | 'spring_oscillation';
+
+export interface AnimationBlock {
+  type: 'animation';
+  id: string;
+  template: AnimationTemplate;
+  /** Template-specific configuration key-value pairs */
+  config?: Record<string, string | number | boolean>;
+  caption?: string;
+}
+
+export interface ImageBlock {
+  type: 'image';
+  id: string;
+  /** Public URL to the image (small — max ~500kb recommended) */
+  url: string;
+  alt?: string;
+  caption?: string;
+}
+
+export interface LinkBlock {
+  type: 'link';
+  id: string;
+  url: string;
+  label: string;
+  description?: string;
+}
+
+export interface CodeBlock {
+  type: 'code';
+  id: string;
+  language: string;
+  code: string;
+  caption?: string;
+}
+
+export interface TableBlock {
+  type: 'table';
+  id: string;
+  /** First row is treated as headers */
+  rows: string[][];
+}
+
+export interface DividerBlock {
+  type: 'divider';
+  id: string;
+}
+
+/** Union of all block types */
+export type NoteBlock =
+  | HeadingBlock
+  | ParagraphBlock
+  | LatexBlock
+  | SvgBlock
+  | AnimationBlock
+  | ImageBlock
+  | LinkBlock
+  | CodeBlock
+  | TableBlock
+  | DividerBlock;
+
+// ── Note Entity ───────────────────────────────────────────────────────────────
+
+export interface Note {
+  id: string;
+  title: string;
+  /** Short blurb shown on note cards */
+  summary?: string;
+  /** FK to curriculums.id — nullable for general notes */
+  curriculum_id: string | null;
+  /** FK to subjects.id — nullable */
+  subject_id: string | null;
+  /** FK to topics.id — nullable */
+  topic_id: string | null;
+  /** Free-text syllabus point, e.g. "1.5.3 — Newton's Third Law" */
+  syllabus_point?: string;
+  /** Whether this note is tied to a specific syllabus/spec point */
+  is_syllabus_based: boolean;
+  /** Free-form searchable tags */
+  tags: string[];
+  /** Ordered array of content blocks */
+  blocks: NoteBlock[];
+  contributor_id: string;
+  status: NoteStatus;
+  visibility: 'private' | 'link' | 'public';
+  /** Reviewer feedback (for rejected/revision-requested notes) */
+  reviewer_feedback?: string;
+  reviewer_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Junction table: which notes a user has saved to their dashboard */
+export interface UserSavedNote {
+  id: string;
+  user_id: string;
+  note_id: string;
+  saved_at: string;
+}
+
+// ── Editor State (client-side only, not persisted) ────────────────────────────
+
+export interface NoteEditorState {
+  noteId: string | null;
+  title: string;
+  summary: string;
+  curriculumId: string | null;
+  subjectId: string | null;
+  topicId: string | null;
+  syllabusPoint: string;
+  isSyllabusBased: boolean;
+  tags: string[];
+  blocks: NoteBlock[];
+  isDirty: boolean;
+  isSaving: boolean;
+  status: NoteStatus;
+  visibility: 'private' | 'link' | 'public';
+}
+
+// ── AI Prompt Context ─────────────────────────────────────────────────────────
+
+export interface AIPromptContext {
+  curriculum: string;       // e.g. "IGCSE"
+  examBoard: string;        // e.g. "CAIE"
+  subject: string;          // e.g. "Physics"
+  topic: string;            // e.g. "Forces and Motion"
+  syllabusPoint?: string;   // e.g. "1.5.3 — Newton's Third Law"
+  style: NoteStyle;
+  additionalContext?: string;
+}
+
+// ── Library Filters (client-side) ─────────────────────────────────────────────
+
+export interface NoteFilters {
+  search: string;
+  curriculumId: string | null;
+  subjectId: string | null;
+  isSyllabusBased: boolean | null;
+  tags: string[];
+}

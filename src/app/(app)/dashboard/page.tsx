@@ -31,9 +31,13 @@ import {
   XCircle,
   AlertTriangle,
   UserPlus,
+  Library,
+  Bookmark,
+  BookMarked,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
+import { useSavedNotes, useContributorNotes } from '@/hooks/useNotes';
 
 // --- STUDENT DATA ---
 const STUDENT_QUICK_LINKS = [
@@ -43,6 +47,7 @@ const STUDENT_QUICK_LINKS = [
   { title: 'Lessons', description: 'Track confidence', href: '/lessons', icon: <ClipboardCheck className="h-5 w-5" />, gradient: 'from-emerald-500 to-teal-400' },
   { title: 'Courses', description: 'Manage subjects', href: '/courses', icon: <BookOpen className="h-5 w-5" />, gradient: 'from-orange-500 to-amber-400' },
   { title: 'Classrooms', description: 'Join a class', href: '/classrooms', icon: <GraduationCap className="h-5 w-5" />, gradient: 'from-sky-500 to-blue-400' },
+  { title: 'Notes Library', description: 'Browse study notes', href: '/library', icon: <Library className="h-5 w-5" />, gradient: 'from-violet-500 to-indigo-400' },
   { title: 'Clubs', description: 'Community spaces', href: '/clubs', icon: <MessageSquare className="h-5 w-5" />, gradient: 'from-indigo-500 to-violet-400' },
   { title: 'Countdown', description: 'Exam timers', href: '/countdown', icon: <Clock className="h-5 w-5" />, gradient: 'from-red-500 to-rose-400' },
   { title: 'Calculator', description: 'Grade prediction', href: '/calculator', icon: <Calculator className="h-5 w-5" />, gradient: 'from-teal-500 to-emerald-400' },
@@ -64,6 +69,7 @@ const TEACHER_QUICK_LINKS = [
   { title: 'Flashcards', description: 'Study decks', href: '/flashcards', icon: <Layers className="h-5 w-5" />, gradient: 'from-violet-500 to-purple-400' },
   { title: 'Lessons', description: 'Track progress', href: '/lessons', icon: <ClipboardCheck className="h-5 w-5" />, gradient: 'from-orange-500 to-amber-400' },
   { title: 'Courses', description: 'Manage curricula', href: '/courses', icon: <BookOpen className="h-5 w-5" />, gradient: 'from-sky-500 to-blue-400' },
+  { title: 'Notes Library', description: 'Browse study notes', href: '/library', icon: <Library className="h-5 w-5" />, gradient: 'from-violet-500 to-indigo-400' },
   { title: 'Clubs', description: 'Join communities', href: '/clubs', icon: <MessageSquare className="h-5 w-5" />, gradient: 'from-indigo-500 to-violet-400' },
   { title: 'Countdown', description: 'Exam timers', href: '/countdown', icon: <Clock className="h-5 w-5" />, gradient: 'from-red-500 to-rose-400' },
   { title: 'Calculator', description: 'Grade prediction', href: '/calculator', icon: <Calculator className="h-5 w-5" />, gradient: 'from-teal-500 to-emerald-400' },
@@ -79,8 +85,10 @@ const TEACHER_STATS = [
 
 // --- CONTRIBUTOR DATA ---
 const CONTRIBUTOR_QUICK_LINKS = [
-  { title: 'Curriculum Editor', description: 'Build resources', href: '/editor', icon: <Pencil className="h-5 w-5" />, gradient: 'from-violet-500 to-purple-400' },
-  { title: 'Exam Data Editor', description: 'Edit exam data', href: '/editor/exam', icon: <FileText className="h-5 w-5" />, gradient: 'from-indigo-500 to-violet-400' },
+  { title: 'Notes Editor', description: 'Create study notes', href: '/editor/notes', icon: <Library className="h-5 w-5" />, gradient: 'from-violet-500 to-purple-400' },
+  { title: 'Curriculum Editor', description: 'Build resources', href: '/editor', icon: <Pencil className="h-5 w-5" />, gradient: 'from-indigo-500 to-violet-400' },
+  { title: 'Exam Data Editor', description: 'Edit exam data', href: '/editor/exam', icon: <FileText className="h-5 w-5" />, gradient: 'from-blue-500 to-indigo-400' },
+  { title: 'Notes Library', description: 'Browse all notes', href: '/library', icon: <BookOpen className="h-5 w-5" />, gradient: 'from-sky-500 to-blue-400' },
   { title: 'My Profile', description: 'Public profile', href: '/profile/me', icon: <UserCircle className="h-5 w-5" />, gradient: 'from-pink-500 to-rose-400' },
   { title: 'Clubs', description: 'Lead communities', href: '/clubs', icon: <MessageSquare className="h-5 w-5" />, gradient: 'from-sky-500 to-blue-400' },
   { title: 'Classrooms', description: 'Join a class', href: '/classrooms', icon: <GraduationCap className="h-5 w-5" />, gradient: 'from-emerald-500 to-teal-400' },
@@ -99,10 +107,12 @@ const CONTRIBUTOR_STATS = [
 
 // --- MAIN CONTRIBUTOR DATA ---
 const MAIN_CONTRIBUTOR_QUICK_LINKS = [
-  { title: 'Add New User', description: 'Create accounts', href: '/add-user', icon: <UserPlus className="h-5 w-5" />, gradient: 'from-fuchsia-500 to-pink-400' },
+  { title: 'Notes Editor', description: 'Create study notes', href: '/editor/notes', icon: <Library className="h-5 w-5" />, gradient: 'from-violet-500 to-purple-400' },
   { title: 'Review Queue', description: 'Approve submissions', href: '/review', icon: <ShieldCheck className="h-5 w-5" />, gradient: 'from-amber-500 to-orange-400' },
-  { title: 'Curriculum Editor', description: 'Build resources', href: '/editor', icon: <Pencil className="h-5 w-5" />, gradient: 'from-violet-500 to-purple-400' },
-  { title: 'Exam Data Editor', description: 'Edit exam data', href: '/editor/exam', icon: <FileText className="h-5 w-5" />, gradient: 'from-indigo-500 to-violet-400' },
+  { title: 'Add New User', description: 'Create accounts', href: '/add-user', icon: <UserPlus className="h-5 w-5" />, gradient: 'from-fuchsia-500 to-pink-400' },
+  { title: 'Curriculum Editor', description: 'Build resources', href: '/editor', icon: <Pencil className="h-5 w-5" />, gradient: 'from-indigo-500 to-violet-400' },
+  { title: 'Exam Data Editor', description: 'Edit exam data', href: '/editor/exam', icon: <FileText className="h-5 w-5" />, gradient: 'from-blue-500 to-indigo-400' },
+  { title: 'Notes Library', description: 'Browse all notes', href: '/library', icon: <BookOpen className="h-5 w-5" />, gradient: 'from-sky-500 to-blue-400' },
   { title: 'My Profile', description: 'Public profile', href: '/profile/me', icon: <UserCircle className="h-5 w-5" />, gradient: 'from-pink-500 to-rose-400' },
   { title: 'Clubs', description: 'Lead communities', href: '/clubs', icon: <MessageSquare className="h-5 w-5" />, gradient: 'from-sky-500 to-blue-400' },
   { title: 'Classrooms', description: 'Join a class', href: '/classrooms', icon: <GraduationCap className="h-5 w-5" />, gradient: 'from-emerald-500 to-teal-400' },
@@ -121,10 +131,16 @@ const MAIN_CONTRIBUTOR_STATS = [
 export default function DashboardPage() {
   const { user } = useAuth();
 
-  if (!user) return null; // Or a loading skeleton
+  if (!user) return null;
 
   const role = user.profile.role;
   const firstName = user.profile.name.split(' ')[0];
+
+  // Notes data
+  const { savedNotes } = useSavedNotes(user.id);
+  const { notes: contributorNotes } = useContributorNotes(
+    (role === 'contributor' || role === 'main_contributor') ? user.id : undefined
+  );
 
   let quickLinks = STUDENT_QUICK_LINKS;
   let stats = STUDENT_STATS;
@@ -190,6 +206,83 @@ export default function DashboardPage() {
             <p className="text-sm text-foreground-muted mt-0.5">{stat.label}</p>
           </div>
         ))}
+      </div>
+
+      {/* ── My Notes Widget (all roles) ── */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+            <BookMarked className="h-5 w-5 text-violet-500" />
+            My Notes
+          </h2>
+          <Link href="/library" className="text-sm text-primary hover:text-primary/80 transition-colors flex items-center gap-1">
+            <Library className="h-4 w-4" />
+            Browse Library
+          </Link>
+        </div>
+
+        {/* Saved notes for students/teachers */}
+        {(role === 'student' || role === 'teacher') && (
+          savedNotes.length === 0 ? (
+            <div className="bg-background-card border border-dashed border-border rounded-xl p-6 text-center">
+              <Bookmark className="h-8 w-8 text-foreground-muted mx-auto mb-2" />
+              <p className="text-sm font-medium text-foreground">No saved notes yet</p>
+              <p className="text-xs text-foreground-muted mt-1">Browse the library and save notes to see them here.</p>
+              <Link href="/library" className="inline-flex items-center gap-1.5 mt-3 text-xs text-primary hover:text-primary/80 transition-colors">
+                <Library className="h-3.5 w-3.5" /> Explore Notes
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {savedNotes.slice(0, 3).map((note) => (
+                <Link key={note.id} href={`/library/${note.id}`}
+                  className="group flex flex-col gap-1.5 bg-background-card border border-border rounded-xl p-4 hover:border-primary/40 hover:shadow-md transition-all duration-200">
+                  <div className="flex items-center gap-1.5">
+                    <BookMarked className="h-3.5 w-3.5 text-violet-500 shrink-0" />
+                  </div>
+                  <p className="font-medium text-foreground text-sm line-clamp-2 group-hover:text-primary transition-colors">{note.title}</p>
+                  <p className="text-xs text-foreground-muted line-clamp-1">{note.summary}</p>
+                </Link>
+              ))}
+              {savedNotes.length > 3 && (
+                <Link href="/library" className="flex items-center justify-center gap-2 bg-background-secondary border border-dashed border-border rounded-xl p-4 text-sm text-foreground-muted hover:text-foreground transition-colors">
+                  +{savedNotes.length - 3} more notes
+                </Link>
+              )}
+            </div>
+          )
+        )}
+
+        {/* Contributor notes (my drafts / pending) */}
+        {(role === 'contributor' || role === 'main_contributor') && (
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {contributorNotes.slice(0, 3).map((note) => (
+                <Link key={note.id}
+                  href={note.status === 'draft' || note.status === 'rejected' ? `/editor/notes?id=${note.id}` : `/library/${note.id}`}
+                  className="group flex flex-col gap-1.5 bg-background-card border border-border rounded-xl p-4 hover:border-primary/40 hover:shadow-md transition-all duration-200">
+                  <div className="flex items-center gap-1.5">
+                    <span className={cn('text-xs font-medium px-2 py-0.5 rounded-full', {
+                      'bg-emerald-500/10 text-emerald-600': note.status === 'approved',
+                      'bg-amber-500/10 text-amber-600': note.status === 'pending_review',
+                      'bg-slate-500/10 text-slate-500': note.status === 'draft',
+                      'bg-red-500/10 text-red-600': note.status === 'rejected',
+                    })}>
+                      {note.status === 'pending_review' ? 'Pending' : note.status.charAt(0).toUpperCase() + note.status.slice(1)}
+                    </span>
+                  </div>
+                  <p className="font-medium text-foreground text-sm line-clamp-2 group-hover:text-primary transition-colors">{note.title}</p>
+                  <p className="text-xs text-foreground-muted">{note.blocks.length} blocks</p>
+                </Link>
+              ))}
+              <Link href="/editor/notes"
+                className="flex flex-col items-center justify-center gap-2 bg-background-secondary border border-dashed border-border rounded-xl p-4 text-sm text-foreground-muted hover:text-primary hover:border-primary/30 transition-all">
+                <Library className="h-5 w-5" />
+                Create New Note
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Quick Links */}

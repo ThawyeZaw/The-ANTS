@@ -79,6 +79,8 @@ Before starting a generation session in VS Code, every developer **must** paste 
 - `club_links`: [Resource links shared within a club]
 - `editor_submissions`: [Curriculum, notes, and exam data submissions from Contributors; includes `status` field (`draft | pending_review | approved | rejected`) updated by Main Contributors via the Review Queue]
 - `role_upgrade_requests`: [Tracks upgrade requests from users. Fields: `user_id`, `current_role`, `requested_role`, `reason`, `status` (`pending | approved | rejected`), `reviewer_id`, timestamps]
+- `notes`: [Core notes content. Fields: `id`, `title`, `summary`, `curriculum_id`, `subject_id`, `topic_id`, `syllabus_point`, `is_syllabus_based`, `tags` (array), `contributor_id`, `status`, `visibility`, `reviewer_id`, `reviewer_feedback`, `created_at`, `updated_at`, `blocks` (JSONB NoteBlock array)]
+- `user_saved_notes`: [Junction table for bookmarking. Fields: `id`, `user_id`, `note_id`, `saved_at`]
 
 > **Migration note:** The `profiles.role` column uses a PostgreSQL enum. The `main_contributor` value must be added via migration:
 > ```sql
@@ -156,6 +158,13 @@ the-ants/                                 # Project root
     │       ├── courses/
     │       │   └── page.tsx              # 🔒 BMK & ABC — Course Manager
     │       │
+    │       ├── library/
+    │       │   ├── page.tsx              # Notes Library (All Roles)
+    │       │   ├── saved/
+    │       │   │   └── page.tsx          # Selected Notes catalog (All Roles)
+    │       │   └── [noteId]/
+    │       │       └── page.tsx          # Standalone note viewer (All Roles)
+    │       │
     │       ├── classrooms/
     │       │   ├── page.tsx              # 🔒 BMK & ABC — Classroom list
     │       │   └── [id]/
@@ -177,7 +186,9 @@ the-ants/                                 # Project root
     │       │
     │       │   # ── Contributor & Main Contributor Only ──────────────────────────────
     │       ├── editor/
-    │       │   ├── page.tsx              # 🔒 BMK & ABC — Curriculum & Notes editor (Contributor+)
+    │       │   ├── page.tsx              # 🔒 BMK & ABC — Curriculum editor (Contributor+)
+    │       │   ├── notes/
+    │       │   │   └── page.tsx          # Split-screen Notes Editor workspace (All Roles — for personal notes, only Contributors can submit to library)
     │       │   └── exam/
     │       │       └── page.tsx          # 🔒 ZLH — Exam Data editor (Contributor+)
     │       │
@@ -234,7 +245,20 @@ the-ants/                                 # Project root
     │   ├── exam-editor/                  # 🔒 ZLH (Exam Data editor components)
     │   ├── calculator/                   # 🔒 AKT
     │   ├── countdown/                    # 🔒 ZLH
-    │   └── flashcards/                   # 🔒 ZLH
+    │   ├── flashcards/                   # 🔒 ZLH
+    │   └── notes/                        # Notes features (library, preview, editor, AI wizard, reader drawer)
+    │       ├── AIPromptGenerator.tsx
+    │       ├── AnimationBlock.tsx
+    │       ├── BlockEditor.tsx
+    │       ├── BlockPreview.tsx
+    │       ├── NoteCard.tsx
+    │       ├── NoteFilters.tsx
+    │       ├── NoteReaderModal.tsx
+    │       ├── NoteSubmitModal.tsx
+    │       ├── NoteViewer.tsx
+    │       ├── NotesEditor.tsx
+    │       ├── NotesLibrary.tsx
+    │       └── SavedNotesLibrary.tsx
     │
     ├── hooks/                            # Custom React Hooks (logic only — no JSX)
     │   ├── useAuth.ts                    # 🔒 PM — Supabase auth session wrapper (includes updateProfile, requestRoleUpgrade)
@@ -245,7 +269,8 @@ the-ants/                                 # Project root
     │   ├── useTimetable.ts               # 🔒 PPP — Drag-and-drop & view switching
     │   ├── useFlashcardSRS.ts            # 🔒 ZLH — SRS review scheduling interface
     │   ├── useClub.ts                    # 🔒 AKT — Club state & membership actions
-    │   └── useCountdown.ts               # 🔒 ZLH — Exam date diff & urgency calc
+    │   ├── useCountdown.ts               # 🔒 ZLH — Exam date diff & urgency calc
+    │   └── useNotes.ts                   # Custom hook for Notes Library, saving, and Editor state machine
     │
     ├── context/                          # Global React Context Providers
     │   ├── AuthContext.tsx               # 🔒 PM — Supabase session (required by all authed pages)
@@ -259,7 +284,8 @@ the-ants/                                 # Project root
     │   ├── clubs.ts                      # 🔒 AKT — Club CRUD, join/leave, messaging, feature toggles
     │   ├── editor.ts                     # 🔒 BMK & ABC — Curriculum & Notes submissions; PM adds review approve/reject logic
     │   ├── exam-editor.ts                # 🔒 ZLH — Exam data CRUD & submission to review queue
-    │   └── roles.ts                      # 🔒 PM — Role upgrade request & approval actions
+    │   ├── roles.ts                      # 🔒 PM — Role upgrade request & approval actions
+    │   └── notes.ts                      # Server actions for Notes feature (save/unsave/submit/review)
     │
     ├── constants/                        # Static reference data (no logic — pure data)
     │   ├── qualifications.ts             # 🔒 PM — Exam boards, subjects, series (CAIE, Edexcel, OSSD…)
@@ -299,9 +325,9 @@ The authenticated app shell uses a **single NavBar** component (`src/components/
 |---|---|---|---|:---:|:---:|:---:|
 | **Plan** | Timetable, Exam Countdown, Grade Calculator | ✅ | ✅ | ✅ | ✅ |
 | **Study Tools** | Flashcards, Pomodoro Timer | ✅ | ✅ | ✅ | ✅ |
-| **Learn** | Lesson Tracker, Course Manager | ✅ | ✅ | ✅ | ✅ |
+| **Learn** | Lesson Tracker, Course Manager, Notes Library, Notes Editor, Selected Notes | ✅ | ✅ | ✅ | ✅ |
 | **Community** | Classrooms, Clubs | ✅ | ✅ | ✅ | ✅ |
-| **Editor** | Curriculum & Notes Editor, Exam Data Editor | ❌ | ❌ | ✅ | ✅ |
+| **Editor** | Curriculum Editor, Exam Data Editor | ❌ | ❌ | ✅ | ✅ |
 | **Review** | Gatekeeper / Review Queue, Role Upgrade Requests | ❌ | ❌ | ❌ | ✅ |
 | **Profile** | My Public Profile | ✅ | ✅ | ✅ | ✅ |
 

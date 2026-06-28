@@ -33,6 +33,8 @@ import {
   Bug,
   Settings,
   UserPlus,
+  Library,
+  Bookmark,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
@@ -84,6 +86,8 @@ const NAV_GROUPS: NavGroupDef[] = [
     items: [
       { label: 'Lesson Tracker', href: '/lessons', icon: <ClipboardCheck className="h-4 w-4" />, description: 'Track topic confidence' },
       { label: 'Course Manager', href: '/courses', icon: <BookOpen className="h-4 w-4" />, description: 'Manage your subjects' },
+      { label: 'Notes Library', href: '/library', icon: <Library className="h-4 w-4" />, description: 'Browse study notes' },
+      { label: 'My Notes', href: '/my-notes', icon: <Bookmark className="h-4 w-4" />, description: 'Your created and saved notes' },
     ],
   },
   {
@@ -101,6 +105,7 @@ const NAV_GROUPS: NavGroupDef[] = [
     allowedRoles: ['contributor', 'main_contributor'],
     items: [
       { label: 'Curriculum & Notes', href: '/editor', icon: <FileText className="h-4 w-4" />, description: 'Build curriculum resources' },
+      { label: 'Notes Editor', href: '/editor/notes', icon: <Library className="h-4 w-4" />, description: 'Create & edit study notes' },
       { label: 'Exam Data', href: '/editor/exam', icon: <ClipboardCheck className="h-4 w-4" />, description: 'Edit exam data & boundaries' },
     ],
   },

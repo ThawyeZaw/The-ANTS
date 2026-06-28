@@ -66,11 +66,17 @@ Whether you're targeting A* in IGCSE or A Levels, IELTS band 7+, or an OSSD dipl
 - Study cards with a smooth flip animation and rate each card (Again / Hard / Good / Easy). 
 - The spaced-repetition algorithm schedules your next review automatically so you never forget what you've learnt.
 
-### 📚 Curriculum Editor & Resource Library 
-- Verified **Contributors** can build and maintain global curriculum and exam templates.
-- They can also create and edit syllabus or specification based notes by writing on their own or copy and pasting after creating with AI and notes can include svg for graphs, Latex for equations and images.
-- All materials go through a gatekeeper approval workflow before becoming publicly visible and selectable by students and teachers.
-- **Students** can select from the templates or customize their own.
+### 📚 Notes Library & Curriculum Editor 
+- **Notes Library (`/library`)**: Browse, search, and filter approved study notes by qualification, subject, topic, difficulty, tags, and specification points.
+- **Selected Notes (`/library/saved`)**: A dedicated user page listing all bookmarked/saved study notes with instant search, client-side filters, and quick access.
+- **Inline Note Reader**: Read notes instantly directly inside the library using a slide-out drawer overlay. Renders:
+  - 🧮 *LaTeX Equations*: Rendered dynamically using KaTeX.
+  - 🧬 *Interactive Animations*: WebGL/Canvas-based simulations (Pendulum, Gas Particles, DNA Double Helix, Waves, mass-spring).
+  - 🗺️ *SVG Diagrams*: Pure vector graphics sanitized with DOMPurify.
+- **Split-Screen Editor (`/editor/notes`)**: Available to all users for creating personal shareable notes, with a drag-and-drop block builder (headings, paragraphs, LaTeX, code, links, images, tables, animations, SVGs, dividers) on the left and a live real-time rendering preview on the right. Note visibility can be set to Private, Shared Link, or Public (Only Contributors can submit notes for Public Library review).
+- **AI Prompt Generator Wizard**: A 4-step wizard for all users. Specify context (curriculum, topic, style, requirements), copy the auto-generated prompt, paste the raw AI output, and parse/import it directly into editor blocks.
+- **Gatekeeper Review Queue**: All notes go through a mandatory review workflow where Main Contributors approve or reject submissions before going public.
+
 
 ### 🏫 Virtual Classrooms & Assignments
 - **Teachers** create virtual classrooms, link them to one or more curriculums, and share an invite code with students. 
@@ -134,9 +140,9 @@ Stop guessing your predicted grades.
 
 | Role | Who | What they can do |
 |---|---|---|
-| **Student** | Primary users | Timetable, Pomodoro Timer, Flashcard Decks, Lesson Tracker, Course Manager, Exam Countdown, Grade Calculator, join Classrooms, join Clubs, public profile page |
+| **Student** | Primary users | Timetable, Pomodoro Timer, Flashcard Decks, Lesson Tracker, Course Manager, Exam Countdown, Grade Calculator, join Classrooms, join Clubs, public profile page, Notes Editor (personal) |
 | **Teacher** | Paid tier | Everything above + create & manage Classrooms, issue Assignments, monitor student progress, Clubs (join & participate), public profile page |
-| **Contributor** | Verified experts | Everything above + Curriculum & Notes Editor, Exam Data Editor, create & lead Clubs, publicly visible Profile |
+| **Contributor** | Verified experts | Everything above + Curriculum Editor, Notes Editor (submit to library), Exam Data Editor, create & lead Clubs, publicly visible Profile |
 | **Main Contributor** | Senior verified experts | Everything above + Gatekeeper Review Queue — approve, reject, or request revisions on Contributor submissions, approve role upgrade requests, promote users directly |
 
 > **Important:** You can only sign up as a **Student**. Other roles require a Main Contributor to approve a role upgrade request. Roles can only be upgraded, never downgraded.
