@@ -3,6 +3,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTS — Public Home / Landing Page
 // Showcases features, supported qualifications, roles, and CTAs.
+// Now includes Explore Clubs & Explore Profiles sections.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useRef, useState } from 'react';
@@ -25,6 +26,9 @@ import {
   Moon,
   Sparkles,
   ChevronDown,
+  Compass,
+  UserCheck,
+  Home,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { useTheme } from '@/context/ThemeContext';
@@ -85,12 +89,12 @@ const FEATURES = [
 ];
 
 const QUALIFICATIONS = [
-  { name: 'Cambridge CAIE', sub: 'IGCSE & A Levels', emoji: '🎓' },
-  { name: 'Pearson Edexcel', sub: 'IGCSE & IAL', emoji: '📘' },
-  { name: 'OSSD', sub: 'Ontario Diploma', emoji: '🍁' },
-  { name: 'IELTS', sub: 'Academic & General', emoji: '🌍' },
-  { name: 'SAT', sub: 'Math + Reading/Writing', emoji: '📝' },
-  { name: 'Duolingo', sub: 'English Test (DET)', emoji: '💬' },
+  { name: 'Cambridge CAIE', sub: 'IGCSE & A Levels', emoji: '\u{1F393}' },
+  { name: 'Pearson Edexcel', sub: 'IGCSE & IAL', emoji: '\u{1F4D8}' },
+  { name: 'OSSD', sub: 'Ontario Diploma', emoji: '\u{1F341}' },
+  { name: 'IELTS', sub: 'Academic & General', emoji: '\u{1F30D}' },
+  { name: 'SAT', sub: 'Math + Reading/Writing', emoji: '\u{1F4DD}' },
+  { name: 'Duolingo', sub: 'English Test (DET)', emoji: '\u{1F4AC}' },
 ];
 
 const ROLES = [
@@ -121,6 +125,27 @@ const ROLES = [
     icon: <Shield className="h-7 w-7" />,
     gradient: 'from-amber-500 to-orange-400',
     color: 'text-amber-500',
+  },
+];
+
+// ── Explore Cards ────────────────────────────────────────────────────────────
+
+const EXPLORE_CARDS = [
+  {
+    title: 'Explore Clubs',
+    description: 'Discover community spaces for subjects, CCAs, and projects. Browse clubs and see what members are building.',
+    icon: <MessageSquare className="h-8 w-8" />,
+    href: '/explore/clubs',
+    gradient: 'from-sky-500 to-blue-400',
+    color: 'text-sky-500',
+  },
+  {
+    title: 'Explore Profiles',
+    description: 'Browse student portfolios, projects, CCA activities, and verified educators & contributors. View achievements and credentials.',
+    icon: <Users className="h-8 w-8" />,
+    href: '/explore/profiles',
+    gradient: 'from-violet-500 to-purple-400',
+    color: 'text-violet-500',
   },
 ];
 
@@ -189,7 +214,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-7xl px-4 pt-3">
           <nav className="glass rounded-2xl px-6 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-xl">🐜</span>
+              <Home className="h-5 w-5 text-primary" />
               <span className="font-bold text-lg bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 The ANTS
               </span>
@@ -226,15 +251,13 @@ export default function HomePage() {
       </header>
 
       {/* ─── Hero Section ─── */}
-      <section className="relative pt-20 pb-32 px-4 overflow-hidden">
-        {/* Background Effects */}
+      <section className="relative pt-20 pb-24 px-4 overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-20 left-1/4 w-96 h-96 bg-primary/8 rounded-full blur-3xl animate-float" />
           <div className="absolute bottom-10 right-1/4 w-80 h-80 bg-accent/8 rounded-full blur-3xl animate-float delay-700" />
         </div>
 
         <div className="relative max-w-4xl mx-auto text-center">
-          {/* Badge */}
           <AnimatedSection>
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-6">
               <Sparkles className="h-4 w-4" />
@@ -242,7 +265,6 @@ export default function HomePage() {
             </div>
           </AnimatedSection>
 
-          {/* Headline */}
           <AnimatedSection delay={100}>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground leading-tight tracking-tight">
               The Academic{' '}
@@ -253,20 +275,18 @@ export default function HomePage() {
             </h1>
           </AnimatedSection>
 
-          {/* Subheadline */}
           <AnimatedSection delay={200}>
             <p className="mt-6 text-lg sm:text-xl text-foreground-secondary max-w-2xl mx-auto leading-relaxed">
               Timetables, flashcards, classrooms, clubs, grade calculators, and exam countdowns —
-              all wired into your exam board criteria. <strong className="text-foreground">Ace with us! 🐜</strong>
+              all wired into your exam board criteria. <strong className="text-foreground">Ace with us! {'\u{1F41C}'}</strong>
             </p>
           </AnimatedSection>
 
-          {/* CTA Buttons */}
           <AnimatedSection delay={300}>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/signup">
                 <Button size="lg" iconRight={<ArrowRight className="h-5 w-5" />}>
-                  Get Started — It&apos;s Free
+                  Get Started &mdash; It{"'"}s Free
                 </Button>
               </Link>
               <Link href="/login">
@@ -277,12 +297,59 @@ export default function HomePage() {
             </div>
           </AnimatedSection>
 
-          {/* Scroll hint */}
           <AnimatedSection delay={500}>
             <div className="mt-16 flex justify-center">
               <ChevronDown className="h-6 w-6 text-foreground-muted animate-float" />
             </div>
           </AnimatedSection>
+        </div>
+      </section>
+
+      {/* ─── Explore Section ─── */}
+      <section className="py-20 px-4 bg-background-secondary" id="explore">
+        <div className="max-w-6xl mx-auto">
+          <AnimatedSection>
+            <div className="text-center mb-14">
+              <p className="text-sm font-semibold text-primary uppercase tracking-wider mb-2">Discover</p>
+              <h2 className="text-3xl sm:text-4xl font-bold text-foreground">
+                Explore{' '}
+                <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  Clubs & Profiles
+                </span>
+              </h2>
+              <p className="mt-4 text-foreground-secondary max-w-xl mx-auto">
+                Browse community clubs, view student portfolios, and discover verified educators &mdash; no login required.
+              </p>
+            </div>
+          </AnimatedSection>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            {EXPLORE_CARDS.map((card, i) => (
+              <AnimatedSection key={card.title} delay={i * 100}>
+                <Link href={card.href} className="block group">
+                  <div className="relative bg-background-card border border-border rounded-2xl p-8 hover:border-border-hover hover:shadow-lg transition-all duration-300 h-full">
+                    <div
+                      className={cn(
+                        'inline-flex p-3 rounded-xl bg-gradient-to-br text-white mb-5',
+                        card.gradient
+                      )}
+                    >
+                      {card.icon}
+                    </div>
+                    <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors">
+                      {card.title}
+                    </h3>
+                    <p className="text-foreground-secondary leading-relaxed text-sm">
+                      {card.description}
+                    </p>
+                    <div className="mt-4 flex items-center gap-1 text-sm font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                      View <ArrowRight className="h-4 w-4" />
+                    </div>
+                  </div>
+                </Link>
+              </AnimatedSection>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -306,7 +373,6 @@ export default function HomePage() {
             {FEATURES.map((feature, i) => (
               <AnimatedSection key={feature.title} delay={i * 80}>
                 <div className="group relative bg-background-card border border-border rounded-2xl p-6 hover:border-border-hover hover:shadow-lg transition-all duration-300 h-full">
-                  {/* Icon */}
                   <div
                     className={cn(
                       'inline-flex p-3 rounded-xl bg-gradient-to-br text-white mb-4',
@@ -321,7 +387,6 @@ export default function HomePage() {
                   <p className="text-sm text-foreground-secondary leading-relaxed">
                     {feature.description}
                   </p>
-                  {/* Hover glow */}
                   <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                 </div>
               </AnimatedSection>
@@ -402,7 +467,6 @@ export default function HomePage() {
         <div className="max-w-3xl mx-auto">
           <AnimatedSection>
             <div className="relative bg-gradient-to-br from-primary to-accent rounded-3xl p-12 text-center text-white overflow-hidden">
-              {/* Background decoration */}
               <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
                 <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
@@ -419,7 +483,7 @@ export default function HomePage() {
                     iconRight={<ArrowRight className="h-5 w-5" />}
                     className="bg-white text-primary hover:bg-white/90 border-none"
                   >
-                    Get Started — It&apos;s Free
+                    Get Started &mdash; It{"'"}s Free
                   </Button>
                 </Link>
               </div>
@@ -433,23 +497,26 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-2">
-              <span className="text-xl">🐜</span>
+              <Home className="h-5 w-5 text-primary" />
               <span className="font-bold text-lg bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 The ANTS
               </span>
             </div>
             <div className="flex items-center gap-6 text-sm text-foreground-muted">
+              <a href="#explore" className="hover:text-foreground transition-colors">Explore</a>
               <a href="#features" className="hover:text-foreground transition-colors">Features</a>
+              <Link href="/explore/clubs" className="hover:text-foreground transition-colors">Clubs</Link>
+              <Link href="/explore/profiles" className="hover:text-foreground transition-colors">Profiles</Link>
               <Link href="/login" className="hover:text-foreground transition-colors">Sign In</Link>
               <Link href="/signup" className="hover:text-foreground transition-colors">Sign Up</Link>
             </div>
             <p className="text-xs text-foreground-muted">
-              Built with ❤️ for Myanmar students
+              Built with {'\u2764\uFE0F'} for Myanmar students
             </p>
           </div>
           <div className="mt-6 pt-6 border-t border-border text-center">
             <p className="text-xs text-foreground-muted">
-              © {new Date().getFullYear()} The ANTS. Ace with us! 🐜
+              &copy; {new Date().getFullYear()} The ANTS. Ace with us! {'\u{1F41C}'}
             </p>
           </div>
         </div>

@@ -10,7 +10,7 @@ import { useTheme, COLOR_PRESETS, type ThemeColor } from '@/context/ThemeContext
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import ProfileEditor from '@/components/settings/ProfileEditor';
-import RoleSwitcher from '@/components/settings/RoleSwitcher';
+import RoleUpgradeForm from '@/components/settings/RoleUpgradeForm';
 
 // ── Section Wrapper ───────────────────────────────────────────────────────────
 
@@ -189,7 +189,7 @@ export default function SettingsPage() {
         description="Switch your role to access different features"
         icon={<UserCog className="h-4 w-4" />}
       >
-        <RoleSwitcher />
+        <RoleUpgradeForm />
       </SettingsSection>
 
       {/* Appearance Section */}

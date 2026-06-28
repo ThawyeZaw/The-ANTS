@@ -58,7 +58,7 @@ export default function AIPromptGenerator({
           <ol className="list-decimal list-inside space-y-0.5 text-xs leading-relaxed">
             <li>Copy the prompt below using the button</li>
             <li>Paste it into Gemini, ChatGPT, or any AI assistant</li>
-            <li>Copy the AI's response and paste it in the next step</li>
+            <li>Copy the AI&apos;s response and paste it in the next step</li>
           </ol>
         </div>
       </div>

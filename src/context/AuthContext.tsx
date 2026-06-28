@@ -80,12 +80,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: string,
       password: string,
       name: string,
-      role: UserRole
+      _role: UserRole
     ): Promise<{ success: boolean; error?: string }> => {
       // Simulate network delay
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      const result = mockSignup(email, password, name, role);
+      // All signups default to 'student' role; other roles require MC approval
+      const result = mockSignup(email, password, name);
       if (isSignupError(result)) {
         return { success: false, error: result.error };
       }

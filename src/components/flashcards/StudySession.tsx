@@ -148,7 +148,7 @@ export default function StudySession({ deckId, deckName, userId, onBack }: Study
       {/* Flashcard 3D flip */}
       <div
         id="flashcard-container"
-        className="flex-1 cursor-pointer h-full"
+        className="flex-1 cursor-pointer h-full h-[300px]"
         onClick={flip}
         style={{ perspective: '1200px' }}
       >
