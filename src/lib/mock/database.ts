@@ -978,7 +978,7 @@ export const mockExams: Exam[] = [
   { id: 'exam-1', curriculum_id: 'curr-1', title: 'IGCSE Physics Paper 2', exam_series: 'May/June 2027', exam_date: '2027-05-15T09:00:00Z', created_at: '2025-12-01T00:00:00Z' }
 ];
 
-export let mockExamCountdowns: ExamCountdown[] = [
+export const mockExamCountdowns: ExamCountdown[] = [
   { id: 'ec-1', user_id: 'user-student-001', exam_id: 'exam-1', custom_title: 'Physics Finals!', target_date: '2027-05-15T09:00:00Z', priority_indicator: 'high', qualification_group: 'IGCSE', created_at: '2026-01-01T00:00:00Z' }
 ];
 
@@ -1412,6 +1412,38 @@ export const getCardsByDeck = (deckId: string): FlashCard[] =>
 export const getExam = (id: string) =>
   mockExams.find(e => e.id === id);
 
+export const getExams = (): Exam[] =>
+  [...mockExams];
+
+export const createExamCountdown = (data: {
+  user_id: string;
+  exam_id: string | null;
+  custom_title: string | null;
+  target_date: string | null;
+  priority_indicator: string;
+  qualification_group: string;
+}): ExamCountdown => {
+  const countdown: ExamCountdown = {
+    id: `ec-${Date.now()}`,
+    user_id: data.user_id,
+    exam_id: data.exam_id,
+    custom_title: data.custom_title,
+    target_date: data.target_date,
+    priority_indicator: data.priority_indicator,
+    qualification_group: data.qualification_group,
+    created_at: new Date().toISOString(),
+  };
+  mockExamCountdowns.push(countdown);
+  return countdown;
+};
+
+export const deleteExamCountdown = (id: string): { success: boolean } => {
+  const idx = mockExamCountdowns.findIndex(c => c.id === id);
+  if (idx < 0) return { success: false };
+  mockExamCountdowns.splice(idx, 1);
+  return { success: true };
+};
+
 export const getUserTimetable = (userId: string) =>
   mockTimetableEvents.filter(e => e.user_id === userId);
 
@@ -1638,6 +1670,267 @@ export const getExams = (): Exam[] => [...mockExams];
 
 export function createExamCountdown(data: Omit<ExamCountdown, 'id' | 'created_at'>): ExamCountdown {
   const countdown: ExamCountdown = {
+    ...data,
+    id: `ec-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    created_at: new Date().toISOString(),
+  };
+  mockExamCountdowns.unshift(countdown);
+  return countdown;
+}
+
+export function deleteExamCountdown(id: string): { success: true } | { success: false; error: string } {
+  const idx = mockExamCountdowns.findIndex(c => c.id === id);
+  if (idx < 0) return { success: false, error: 'Countdown not found.' };
+  mockExamCountdowns.splice(idx, 1);
+  return { success: true };
+}
+
+
+export const mockNotes: Note[] = [
+  {
+    id: 'note-001',
+    title: "Newton's Laws of Motion — Complete Guide",
+    summary: "A thorough walkthrough of all three of Newton's laws with equations, examples, and interactive animations.",
+    curriculum_id: 'curr-1',
+    subject_id: 'subj-1',
+    topic_id: 'top-1',
+    syllabus_point: "1.5 — Newton's Laws of Motion",
+    is_syllabus_based: true,
+    tags: ['forces', 'newton', 'motion', 'physics'],
+    contributor_id: 'user-contributor-001',
+    status: 'approved',
+    visibility: 'public',
+    reviewer_id: 'user-main-contributor-001',
+    created_at: '2026-05-10T08:00:00Z',
+    updated_at: '2026-05-11T10:00:00Z',
+    blocks: [
+      { type: 'heading', id: 'b1', level: 1, text: "Newton's Laws of Motion" },
+      { type: 'paragraph', id: 'b2', text: "Newton's three laws form the foundation of classical mechanics. Understanding them is essential for any IGCSE Physics student." },
+      { type: 'heading', id: 'b3', level: 2, text: 'First Law — Inertia' },
+      { type: 'paragraph', id: 'b4', text: '**An object remains at rest or in uniform motion unless acted upon by a resultant force.**' },
+      { type: 'latex', id: 'b5', expression: '\\sum F = 0 \\implies a = 0', display: true },
+      { type: 'animation', id: 'b6', template: 'pendulum', caption: 'A pendulum in the absence of friction continues indefinitely — illustrating inertia.' },
+      { type: 'heading', id: 'b7', level: 2, text: 'Second Law — F = ma' },
+      { type: 'latex', id: 'b8', expression: 'F = ma', display: true },
+      { type: 'paragraph', id: 'b9', text: 'The acceleration of an object is directly proportional to the net force and inversely proportional to its mass.' },
+      { type: 'heading', id: 'b10', level: 2, text: 'Third Law — Action & Reaction' },
+      { type: 'paragraph', id: 'b11', text: '**For every action there is an equal and opposite reaction.** The forces act on *different* objects.' },
+      { type: 'divider', id: 'b12' },
+      { type: 'link', id: 'b13', url: 'https://phet.colorado.edu/en/simulations/forces-and-motion-basics', label: 'PhET: Forces and Motion', description: 'Interactive simulation to explore Newton\u2019s laws visually.' },
+    ],
+  },
+  {
+    id: 'note-002',
+    title: 'Kinetic Theory of Gases',
+    summary: 'Explains the behaviour of ideal gases using the kinetic molecular model, including PV = nRT derivation.',
+    curriculum_id: 'curr-1',
+    subject_id: 'subj-1',
+    topic_id: null,
+    syllabus_point: '2.2 — Ideal Gases',
+    is_syllabus_based: true,
+    tags: ['gases', 'kinetic theory', 'thermodynamics'],
+    contributor_id: 'user-contributor-001',
+    status: 'approved',
+    visibility: 'public',
+    reviewer_id: 'user-main-contributor-001',
+    created_at: '2026-05-20T09:00:00Z',
+    updated_at: '2026-05-21T11:00:00Z',
+    blocks: [
+      { type: 'heading', id: 'c1', level: 1, text: 'Kinetic Theory of Gases' },
+      { type: 'paragraph', id: 'c2', text: 'The kinetic theory models gas behaviour by treating molecules as **point masses** in constant random motion.' },
+      { type: 'animation', id: 'c3', template: 'gas_particles', caption: 'Gas molecules in random motion — increase temperature to see them speed up.' },
+      { type: 'heading', id: 'c4', level: 2, text: 'The Ideal Gas Law' },
+      { type: 'latex', id: 'c5', expression: 'PV = nRT', display: true },
+      {
+        type: 'table', id: 'c6', rows: [
+          ['Symbol', 'Quantity', 'Unit'],
+          ['P', 'Pressure', 'Pa'],
+          ['V', 'Volume', 'm³'],
+          ['n', 'Amount of substance', 'mol'],
+          ['R', 'Molar gas constant (8.314)', 'J mol⁻¹ K⁻¹'],
+          ['T', 'Temperature', 'K'],
+        ]
+      },
+      { type: 'divider', id: 'c7' },
+      { type: 'heading', id: 'c8', level: 2, text: 'Assumptions of an Ideal Gas' },
+      { type: 'paragraph', id: 'c9', text: '1. Molecules have negligible volume compared to the container.\n2. No intermolecular forces (except during collisions).\n3. Collisions are perfectly elastic.\n4. Average kinetic energy is proportional to absolute temperature.' },
+    ],
+  },
+  {
+    id: 'note-003',
+    title: 'DNA Structure & Replication',
+    summary: 'A visual guide to the double helix model, base pairing rules, and semi-conservative replication.',
+    curriculum_id: null,
+    subject_id: null,
+    topic_id: null,
+    is_syllabus_based: false,
+    tags: ['biology', 'DNA', 'genetics', 'replication'],
+    contributor_id: 'user-main-contributor-001',
+    status: 'approved',
+    visibility: 'public',
+    reviewer_id: 'user-contributor-001',
+    created_at: '2026-06-01T07:00:00Z',
+    updated_at: '2026-06-02T09:00:00Z',
+    blocks: [
+      { type: 'heading', id: 'd1', level: 1, text: 'DNA Structure & Replication' },
+      { type: 'animation', id: 'd2', template: 'dna_helix', caption: 'The DNA double helix — rotate to explore the structure.' },
+      { type: 'heading', id: 'd3', level: 2, text: 'Base Pairing Rules' },
+      {
+        type: 'table', id: 'd4', rows: [
+          ['Base', 'Pairs With', 'Bond Type'],
+          ['Adenine (A)', 'Thymine (T)', '2 hydrogen bonds'],
+          ['Guanine (G)', 'Cytosine (C)', '3 hydrogen bonds'],
+        ]
+      },
+      { type: 'heading', id: 'd5', level: 2, text: 'Semi-Conservative Replication' },
+      { type: 'paragraph', id: 'd6', text: 'Each new DNA molecule retains one original strand and one newly synthesised strand — proven by the **Meselson-Stahl experiment** (1958).' },
+      { type: 'divider', id: 'd7' },
+      { type: 'link', id: 'd8', url: 'https://www.khanacademy.org/science/ap-biology/gene-expression-and-regulation/replication/a/dna-replication-review', label: 'Khan Academy — DNA Replication', description: 'Review article with diagrams and practice questions.' },
+    ],
+  },
+  {
+    id: 'note-004',
+    title: 'Organic Chemistry — Functional Groups',
+    summary: 'Reference sheet covering the key functional groups in A-Level Chemistry with IUPAC naming rules.',
+    curriculum_id: null,
+    subject_id: null,
+    topic_id: null,
+    is_syllabus_based: false,
+    tags: ['chemistry', 'organic', 'functional groups', 'A-Level'],
+    contributor_id: 'user-contributor-001',
+    status: 'pending_review',
+    visibility: 'private',
+    created_at: '2026-06-15T12:00:00Z',
+    updated_at: '2026-06-15T12:00:00Z',
+    blocks: [
+      { type: 'heading', id: 'e1', level: 1, text: 'Organic Chemistry — Functional Groups' },
+      { type: 'paragraph', id: 'e2', text: 'A **functional group** is an atom or group of atoms responsible for the characteristic reactions of a compound.' },
+      {
+        type: 'table', id: 'e3', rows: [
+          ['Class', 'Functional Group', 'Example'],
+          ['Alkane', '-CH₃ / -CH₂-', 'Methane (CH₄)'],
+          ['Alkene', '-C=C-', 'Ethene (C₂H₄)'],
+          ['Alcohol', '-OH', 'Ethanol (C₂H₅OH)'],
+          ['Aldehyde', '-CHO', 'Ethanal'],
+          ['Ketone', '-C=O-', 'Propanone'],
+          ['Carboxylic acid', '-COOH', 'Ethanoic acid'],
+          ['Amine', '-NH₂', 'Methylamine'],
+          ['Ester', '-COO-', 'Ethyl ethanoate'],
+        ]
+      },
+      { type: 'heading', id: 'e4', level: 2, text: 'Addition Reactions (Alkenes)' },
+      { type: 'paragraph', id: 'e5', text: 'Alkenes undergo *addition reactions* across the C=C double bond. Reagents include H₂ (hydrogenation), HBr (hydrohalogenation), and Br₂ (bromine water test).' },
+    ],
+  },
+  {
+    id: 'note-005',
+    title: 'Quadratic Equations & Discriminant',
+    summary: 'Solving quadratics by factorisation, completing the square, and the quadratic formula. Includes the discriminant condition.',
+    curriculum_id: null,
+    subject_id: null,
+    topic_id: null,
+    is_syllabus_based: false,
+    tags: ['mathematics', 'algebra', 'quadratics', 'IGCSE'],
+    contributor_id: 'user-contributor-001',
+    status: 'approved',
+    visibility: 'public',
+    reviewer_id: 'user-main-contributor-001',
+    created_at: '2026-06-05T10:00:00Z',
+    updated_at: '2026-06-06T08:00:00Z',
+    blocks: [
+      { type: 'heading', id: 'f1', level: 1, text: 'Quadratic Equations' },
+      { type: 'paragraph', id: 'f2', text: 'A quadratic equation has the general form:' },
+      { type: 'latex', id: 'f3', expression: 'ax^2 + bx + c = 0', display: true },
+      { type: 'heading', id: 'f4', level: 2, text: 'The Quadratic Formula' },
+      { type: 'latex', id: 'f5', expression: 'x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}', display: true },
+      { type: 'heading', id: 'f6', level: 2, text: 'The Discriminant' },
+      { type: 'latex', id: 'f7', expression: '\\Delta = b^2 - 4ac', display: true },
+      {
+        type: 'table', id: 'f8', rows: [
+          ['Discriminant', 'Nature of Roots'],
+          ['Δ > 0', 'Two distinct real roots'],
+          ['Δ = 0', 'One repeated real root'],
+          ['Δ < 0', 'No real roots (complex)'],
+        ]
+      },
+    ],
+  },
+];
+
+export const mockUserSavedNotes: UserSavedNote[] = [
+  { id: 'usn-001', user_id: 'user-student-001', note_id: 'note-001', saved_at: '2026-06-10T09:00:00Z' },
+  { id: 'usn-002', user_id: 'user-student-001', note_id: 'note-005', saved_at: '2026-06-12T14:00:00Z' },
+];
+
+// ── Notes Queries ────────────────────────────────────────────────────────────
+
+/** Get all approved (public) notes, with optional filters */
+export function getNotes(filters?: {
+  curriculumId?: string;
+  subjectId?: string;
+  topicId?: string;
+  isSyllabusBased?: boolean;
+  search?: string;
+  tags?: string[];
+}): Note[] {
+  let result = mockNotes.filter((n) => n.status === 'approved');
+
+  if (filters?.curriculumId) {
+    const target = filters.curriculumId;
+    result = result.filter((n) => n.curriculum_id === target);
+  }
+  if (filters?.subjectId) {
+    const target = filters.subjectId;
+    result = result.filter((n) => n.subject_id === target);
+  }
+  if (filters?.topicId) {
+    const target = filters.topicId;
+    result = result.filter((n) => n.topic_id === target);
+  }
+  if (filters?.isSyllabusBased !== undefined) {
+    const target = filters.isSyllabusBased;
+    result = result.filter((n) => n.is_syllabus_based === target);
+  }
+  if (filters?.search) {
+    const q = filters.search.toLowerCase();
+    result = result.filter(
+      (n) =>
+        n.title.toLowerCase().includes(q) ||
+        (n.summary ?? '').toLowerCase().includes(q) ||
+        n.tags.some((t) => t.toLowerCase().includes(q))
+    );
+  }
+  if (filters?.tags && filters.tags.length > 0) {
+    const targetTags = filters.tags;
+    result = result.filter((n) =>
+      targetTags.some((tag) => n.tags.includes(tag))
+    );
+  }
+
+  return result;
+}
+
+/** Get a single note by ID (any status) */
+export function getNoteById(noteId: string): Note | undefined {
+  return mockNotes.find((n) => n.id === noteId);
+}
+
+/** Get all notes created by a specific contributor (all statuses) */
+export function getNotesByContributor(contributorId: string): Note[] {
+  return mockNotes.filter((n) => n.contributor_id === contributorId);
+}
+
+/** Get all notes pending review (for main contributor review queue) */
+export function getPendingNotes(): Note[] {
+  return mockNotes.filter((n) => n.status === 'pending_review');
+}
+
+/** Create a new note draft */
+export function createNote(
+  contributorId: string,
+  data: Omit<Note, 'id' | 'contributor_id' | 'status' | 'created_at' | 'updated_at'>
+): Note {
+  const note: Note = {
     ...data,
     id: `ec-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     created_at: new Date().toISOString(),

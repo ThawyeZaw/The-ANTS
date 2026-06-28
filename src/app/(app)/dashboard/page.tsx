@@ -262,12 +262,13 @@ export default function DashboardPage() {
                   href={note.status === 'draft' || note.status === 'rejected' ? `/editor/notes?id=${note.id}` : `/library/${note.id}`}
                   className="group flex flex-col gap-1.5 bg-background-card border border-border rounded-xl p-4 hover:border-primary/40 hover:shadow-md transition-all duration-200">
                   <div className="flex items-center gap-1.5">
-                    <span className={cn('text-xs font-medium px-2 py-0.5 rounded-full', {
-                      'bg-emerald-500/10 text-emerald-600': note.status === 'approved',
-                      'bg-amber-500/10 text-amber-600': note.status === 'pending_review',
-                      'bg-slate-500/10 text-slate-500': note.status === 'draft',
-                      'bg-red-500/10 text-red-600': note.status === 'rejected',
-                    })}>
+                    <span className={cn(
+                      'text-xs font-medium px-2 py-0.5 rounded-full',
+                      note.status === 'approved' && 'bg-emerald-500/10 text-emerald-600',
+                      note.status === 'pending_review' && 'bg-amber-500/10 text-amber-600',
+                      note.status === 'draft' && 'bg-slate-500/10 text-slate-500',
+                      note.status === 'rejected' && 'bg-red-500/10 text-red-600',
+                    )}>
                       {note.status === 'pending_review' ? 'Pending' : note.status.charAt(0).toUpperCase() + note.status.slice(1)}
                     </span>
                   </div>

@@ -112,12 +112,12 @@ export function useProfile(username: string): UseProfileReturn {
           }));
 
         const submissionActivities: ActivityItem[] = mockEditorSubmissions
-          .filter((s) => s.contributor_id === foundProfile.id && s.status === 'approved')
+          .filter((s) => s.contributor_id === foundProfile.id && s.status === 'approved' && s.reviewed_at !== null)
           .map((s) => ({
             id: s.id,
-            activity_type: 'submission_approved',
+            activity_type: 'submission_approved' as const,
             description: `Submission approved for ${s.submission_type}`,
-            created_at: s.reviewed_at,
+            created_at: s.reviewed_at as string,
           }));
 
         setActivities(

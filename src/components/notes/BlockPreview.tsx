@@ -23,8 +23,8 @@ function InlineText({ text }: { text: string }) {
   let key = 0;
 
   const patterns = [
-    { re: /\*\*(.+?)\*\*/s,  render: (m: string) => <strong key={key++} className="font-semibold">{m}</strong> },
-    { re: /\*(.+?)\*/s,      render: (m: string) => <em key={key++} className="italic">{m}</em> },
+    { re: /\*\*([\s\S]+?)\*\*/,  render: (m: string) => <strong key={key++} className="font-semibold">{m}</strong> },
+    { re: /\*([\s\S]+?)\*/,      render: (m: string) => <em key={key++} className="italic">{m}</em> },
     { re: /\[(.+?)\]\((.+?)\)/, render: (_m: string, label: string, href: string) => (
       <a key={key++} href={href} target="_blank" rel="noopener noreferrer"
         className="text-primary underline hover:text-primary/80 transition-colors">

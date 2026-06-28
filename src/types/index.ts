@@ -289,6 +289,30 @@ export interface RoleUpgradeRequest {
 }
 
 // -----------------------------------------------------------------------------
+// Exams & Countdowns
+// -----------------------------------------------------------------------------
+
+export interface Exam {
+  id: string;
+  curriculum_id: string | null;
+  title: string;
+  exam_series: string | null;
+  exam_date: string;
+  created_at: string;
+}
+
+export interface ExamCountdown {
+  id: string;
+  user_id: string;
+  exam_id: string | null;
+  custom_title: string | null;
+  target_date: string | null;
+  priority_indicator: string;
+  qualification_group: string;
+  created_at: string;
+}
+
+// -----------------------------------------------------------------------------
 // Flashcards & Spaced Repetition
 // -----------------------------------------------------------------------------
 
