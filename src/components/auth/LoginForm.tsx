@@ -8,7 +8,7 @@
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, ArrowLeft, Home } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { isValidEmail, getRoleLandingPath } from '@/lib/utils';
 import Button from '@/components/ui/Button';
@@ -69,9 +69,19 @@ export default function LoginForm() {
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="bg-background-card border border-border rounded-2xl p-8 shadow-lg animate-fade-in-up">
+        {/* Back to Home */}
+        <Link
+          href="/"
+          className="group inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-foreground-secondary hover:text-primary hover:bg-background-secondary transition-all mb-6 w-fit"
+        >
+          <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
+          <Home className="h-3.5 w-3.5" />
+          Back to Home
+        </Link>
+
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="text-4xl mb-3">🐜</div>
+          <div className="text-4xl mb-3">{'\u{1F41C}'}</div>
           <h1 className="text-2xl font-bold text-foreground">Welcome back</h1>
           <p className="text-sm text-foreground-muted mt-1">
             Sign in to continue to The ANTS
@@ -146,7 +156,7 @@ export default function LoginForm() {
 
         {/* Footer */}
         <p className="text-center text-sm text-foreground-muted mt-6">
-          Don&apos;t have an account?{' '}
+          Don&#39;t have an account?{' '}
           <Link
             href="/signup"
             className="text-primary font-medium hover:underline"

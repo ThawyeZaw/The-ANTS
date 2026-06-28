@@ -32,6 +32,7 @@ import {
   MessageSquare,
   Bug,
   Settings,
+  UserPlus,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
@@ -109,14 +110,16 @@ const NAV_GROUPS: NavGroupDef[] = [
     allowedRoles: ['main_contributor'],
     items: [
       { label: 'Review Queue', href: '/review', icon: <ShieldCheck className="h-4 w-4" />, description: 'Approve or reject submissions' },
+      { label: 'Role Upgrades', href: '/main-contributor/role-upgrades', icon: <UserCircle className="h-4 w-4" />, description: 'Review role upgrade requests' },
+      { label: 'Add User', href: '/main-contributor/add-contributor', icon: <UserPlus className="h-4 w-4" />, description: 'Invite new contributor' },
     ],
   },
   {
     label: 'Profile',
     icon: <UserCircle className="h-4 w-4" />,
-    allowedRoles: ['contributor', 'main_contributor'],
+    allowedRoles: ['student', 'teacher', 'contributor', 'main_contributor'],
     items: [
-      { label: 'My Profile', href: '/profile/me', icon: <UserCircle className="h-4 w-4" />, description: 'Your public contributor profile' },
+      { label: 'My Profile', href: '/profile/me', icon: <UserCircle className="h-4 w-4" />, description: 'Your public profile' },
     ],
   },
 ];
@@ -255,7 +258,7 @@ export default function NavBar() {
             href={role ? '/dashboard' : '/'}
             className="flex items-center gap-2 shrink-0"
           >
-            <span className="text-xl">🐜</span>
+            <span className="text-xl">{'\u{1F41C}'}</span>
             <span className="font-bold text-lg bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               The ANTS
             </span>
@@ -330,6 +333,14 @@ export default function NavBar() {
                         </div>
                       )}
                     </div>
+                    <Link
+                      href={`/profile/${user.profile.username}`}
+                      onClick={() => setIsUserMenuOpen(false)}
+                      className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-foreground-secondary hover:text-foreground hover:bg-background-secondary transition-colors cursor-pointer"
+                    >
+                      <UserCircle className="h-4 w-4" />
+                      My Profile
+                    </Link>
                     <Link
                       href="/settings"
                       onClick={() => setIsUserMenuOpen(false)}

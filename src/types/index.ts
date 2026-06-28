@@ -15,6 +15,41 @@ export interface SocialLinks {
   website?: string;
 }
 
+/** A single project entry in a user's portfolio */
+export interface ProjectEntry {
+  title: string;
+  description: string;
+  role?: string;
+  technologies?: string[];
+  links?: {
+    github?: string;
+    live?: string;
+    website?: string;
+    other?: string;
+  };
+  media?: string[];
+}
+
+/** A single CCA / activity entry */
+export interface ActivityEntry {
+  name: string;
+  organization: string;
+  role: string;
+  start_date: string;
+  end_date?: string;
+  description?: string;
+  verification_link?: string;
+}
+
+/** A single achievement or award entry */
+export interface AchievementEntry {
+  title: string;
+  description?: string;
+  date?: string;
+  issuer?: string;
+  link?: string;
+}
+
 /** User profile stored in the `profiles` table */
 export interface Profile {
   id: string;
@@ -26,6 +61,10 @@ export interface Profile {
   bio?: string;
   title?: string;
   socialLinks?: SocialLinks;
+  isPublic?: boolean;
+  projects?: ProjectEntry[];
+  activities?: ActivityEntry[];
+  achievements?: AchievementEntry[];
   createdAt: string;
 }
 
@@ -152,6 +191,19 @@ export type ClubMemberRole = 'leader' | 'member';
 export type ClubMembershipStatus = 'active' | 'pending' | 'rejected';
 export type ClubJoinRequestStatus = 'pending' | 'approved' | 'rejected';
 
+/** Available features that a club can enable or disable */
+export type ClubFeature =
+  | 'chat'
+  | 'announcements'
+  | 'links'
+  | 'members'
+  | 'projects'
+  | 'activity_timeline'
+  | 'leaderboard';
+
+/** Default features enabled for a new club */
+export const DEFAULT_CLUB_FEATURES: ClubFeature[] = ['chat', 'announcements', 'links', 'members'];
+
 export interface Club {
   id: string;
   name: string;
@@ -159,6 +211,7 @@ export interface Club {
   created_by: string;
   join_mode: ClubJoinMode;
   invite_code: string | null;
+  enabled_features?: ClubFeature[];
   created_at: string;
 }
 
@@ -215,6 +268,24 @@ export interface ClubSubject {
   id: string;
   club_id: string;
   subject_id: string;
+}
+
+// -----------------------------------------------------------------------------
+// Role Upgrade Requests
+// -----------------------------------------------------------------------------
+
+export type UpgradeRequestStatus = 'pending' | 'approved' | 'rejected';
+
+export interface RoleUpgradeRequest {
+  id: string;
+  user_id: string;
+  current_role: UserRole;
+  requested_role: UserRole;
+  reason: string | null;
+  status: UpgradeRequestStatus;
+  reviewer_id: string | null;
+  created_at: string;
+  reviewed_at: string | null;
 }
 
 // -----------------------------------------------------------------------------

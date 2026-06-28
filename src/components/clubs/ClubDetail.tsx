@@ -4,12 +4,15 @@ import { FormEvent, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
   ArrowLeft,
+  CalendarDays,
   Check,
   ExternalLink,
+  FolderGit2,
   Link as LinkIcon,
   Megaphone,
   MessageSquare,
   Send,
+  Trophy,
   UserCheck,
   Users,
   X,
@@ -17,11 +20,24 @@ import {
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import { ClubFeature } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 import { useClub } from '@/hooks/useClub';
 import { cn, formatDate, formatRelativeTime, getInitials } from '@/lib/utils';
 
-type TabKey = 'chat' | 'announcements' | 'links' | 'members' | 'requests';
+type TabKey = 'chat' | 'announcements' | 'links' | 'members' | 'requests' | 'projects' | 'activity_timeline' | 'leaderboard';
+
+/** Map tab keys to their required club feature */
+const TAB_FEATURE_MAP: Record<TabKey, string> = {
+  chat: 'chat',
+  announcements: 'announcements',
+  links: 'links',
+  members: 'members',
+  requests: 'members', // requests is under members feature
+  projects: 'projects',
+  activity_timeline: 'activity_timeline',
+  leaderboard: 'leaderboard',
+};
 
 const tabs: Array<{ key: TabKey; label: string; icon: React.ReactNode }> = [
   { key: 'chat', label: 'Chat', icon: <MessageSquare className="h-4 w-4" /> },
@@ -29,7 +45,20 @@ const tabs: Array<{ key: TabKey; label: string; icon: React.ReactNode }> = [
   { key: 'links', label: 'Links', icon: <LinkIcon className="h-4 w-4" /> },
   { key: 'members', label: 'Members', icon: <Users className="h-4 w-4" /> },
   { key: 'requests', label: 'Requests', icon: <UserCheck className="h-4 w-4" /> },
+  { key: 'projects', label: 'Projects', icon: <FolderGit2 className="h-4 w-4" /> },
+  { key: 'activity_timeline', label: 'Activity', icon: <CalendarDays className="h-4 w-4" /> },
+  { key: 'leaderboard', label: 'Leaderboard', icon: <Trophy className="h-4 w-4" /> },
 ];
+
+const FEATURE_NAMES: Record<string, string> = {
+  chat: 'Chat',
+  announcements: 'Announcements',
+  links: 'Links',
+  members: 'Members',
+  projects: 'Projects',
+  activity_timeline: 'Activity Timeline',
+  leaderboard: 'Leaderboard',
+};
 
 export default function ClubDetail({ clubId }: { clubId: string }) {
   const { user } = useAuth();
@@ -46,7 +75,15 @@ export default function ClubDetail({ clubId }: { clubId: string }) {
   const pendingRequest = user ? clubStore.getUserClubJoinRequest(clubId, user.id) : undefined;
   const joinRequests = clubStore.getClubJoinRequests(clubId).filter((request) => request.status === 'pending');
 
-  const visibleTabs = tabs.filter((tab) => tab.key !== 'requests' || isLeader);
+  // Filter tabs based on enabled features
+  const enabledFeatures = (club?.enabled_features || ['chat', 'announcements', 'links', 'members']) as ClubFeature[];
+  const visibleTabs = tabs.filter((tab) => {
+    // Requests is always visible to leaders
+    if (tab.key === 'requests') return isLeader;
+    // Check if the feature is enabled
+    const requiredFeature = TAB_FEATURE_MAP[tab.key] as ClubFeature;
+    return enabledFeatures.includes(requiredFeature);
+  });
 
   const topicTags = useMemo(() => {
     if (!club) return [];
