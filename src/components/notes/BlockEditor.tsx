@@ -159,26 +159,28 @@ function TableEditor({ block, onChange }: { block: Extract<NoteBlock, { type: 't
     <div className="space-y-2">
       <div className="overflow-x-auto">
         <table className="text-xs border-collapse">
-          {rows.map((row, ri) => (
-            <tr key={ri} className="group">
-              {row.map((cell, ci) => (
-                <td key={ci} className="p-1">
-                  <input type="text" value={cell}
-                    onChange={(e) => updateCell(ri, ci, e.target.value)}
-                    className={cn(
-                      'w-24 px-2 py-1 rounded border text-foreground bg-background-secondary focus:outline-none focus:border-primary/60 transition-all',
-                      ri === 0 ? 'font-semibold border-primary/30' : 'border-border'
-                    )}
-                  />
+          <tbody>
+            {rows.map((row, ri) => (
+              <tr key={ri} className="group">
+                {row.map((cell, ci) => (
+                  <td key={ci} className="p-1">
+                    <input type="text" value={cell}
+                      onChange={(e) => updateCell(ri, ci, e.target.value)}
+                      className={cn(
+                        'w-24 px-2 py-1 rounded border text-foreground bg-background-secondary focus:outline-none focus:border-primary/60 transition-all',
+                        ri === 0 ? 'font-semibold border-primary/30' : 'border-border'
+                      )}
+                    />
+                  </td>
+                ))}
+                <td className="p-1">
+                  <button onClick={() => removeRow(ri)} className="p-1 text-foreground-muted hover:text-error opacity-0 group-hover:opacity-100 transition-all cursor-pointer">
+                    <Trash2 className="h-3 w-3" />
+                  </button>
                 </td>
-              ))}
-              <td className="p-1">
-                <button onClick={() => removeRow(ri)} className="p-1 text-foreground-muted hover:text-error opacity-0 group-hover:opacity-100 transition-all cursor-pointer">
-                  <Trash2 className="h-3 w-3" />
-                </button>
-              </td>
-            </tr>
-          ))}
+              </tr>
+            ))}
+          </tbody>
         </table>
       </div>
       <div className="flex gap-2">
@@ -190,19 +192,65 @@ function TableEditor({ block, onChange }: { block: Extract<NoteBlock, { type: 't
 }
 
 function AnimationEditor({ block, onChange }: { block: Extract<NoteBlock, { type: 'animation' }>; onChange: (u: Partial<typeof block>) => void }) {
+  const [mode, setMode] = useState<'template' | 'script'>(block.script ? 'script' : 'template');
+
   return (
     <div className="space-y-2">
-      <select value={block.template}
-        onChange={(e) => onChange({ template: e.target.value as AnimationTemplate })}
-        className="w-full px-3 py-2 rounded-lg bg-background-secondary border border-border text-sm text-foreground focus:outline-none focus:border-primary/60 cursor-pointer">
-        {(Object.entries(ANIMATION_TEMPLATES) as [AnimationTemplate, { label: string; subject: string }][]).map(([key, info]) => (
-          <option key={key} value={key}>{info.subject} — {info.label}</option>
-        ))}
-      </select>
-      <input type="text" value={block.caption ?? ''} placeholder="Caption (optional)"
-        onChange={(e) => onChange({ caption: e.target.value })}
-        className="w-full px-3 py-2 rounded-lg bg-background-secondary border border-border text-sm focus:outline-none focus:border-primary/60"
-      />
+      {/* Mode toggle */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => setMode('template')}
+          className={cn(
+            'flex-1 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer border',
+            mode === 'template'
+              ? 'border-primary bg-primary/10 text-primary'
+              : 'border-border bg-background-secondary text-foreground-muted'
+          )}
+        >
+          Template
+        </button>
+        <button
+          onClick={() => { setMode('script'); onChange({ template: undefined }); }}
+          className={cn(
+            'flex-1 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer border',
+            mode === 'script'
+              ? 'border-purple-500 bg-purple-500/10 text-purple-500'
+              : 'border-border bg-background-secondary text-foreground-muted'
+          )}
+        >
+          Custom Script
+        </button>
+      </div>
+
+      {mode === 'template' ? (
+        <>
+          <select value={block.template ?? 'pendulum'}
+            onChange={(e) => onChange({ template: e.target.value as AnimationTemplate })}
+            className="w-full px-3 py-2 rounded-lg bg-background-secondary border border-border text-sm text-foreground focus:outline-none focus:border-primary/60 cursor-pointer">
+            {(Object.entries(ANIMATION_TEMPLATES) as [AnimationTemplate, { label: string; subject: string }][]).map(([key, info]) => (
+              <option key={key} value={key}>{info.subject} — {info.label}</option>
+            ))}
+          </select>
+          <input type="text" value={block.caption ?? ''} placeholder="Caption (optional)"
+            onChange={(e) => onChange({ caption: e.target.value })}
+            className="w-full px-3 py-2 rounded-lg bg-background-secondary border border-border text-sm focus:outline-none focus:border-primary/60"
+          />
+        </>
+      ) : (
+        <>
+          <textarea value={block.script ?? ''} rows={6}
+            placeholder="// Paste or write JavaScript canvas animation code here
+// Available: canvas, ctx, width, height variables
+// Use requestAnimationFrame for animation loops"
+            onChange={(e) => onChange({ script: e.target.value })}
+            className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-xs text-slate-200 font-mono focus:outline-none focus:border-purple-500/60 resize-y"
+          />
+          <input type="text" value={block.caption ?? ''} placeholder="Caption (optional)"
+            onChange={(e) => onChange({ caption: e.target.value })}
+            className="w-full px-3 py-2 rounded-lg bg-background-secondary border border-border text-sm focus:outline-none focus:border-primary/60"
+          />
+        </>
+      )}
     </div>
   );
 }

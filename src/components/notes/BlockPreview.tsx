@@ -5,7 +5,7 @@
 // Renders a single NoteBlock. Used in both the viewer and the editor preview pane.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ExternalLink } from 'lucide-react';
 import type { NoteBlock } from '@/types';
 import AnimationBlockComponent from './AnimationBlock';
@@ -129,6 +129,51 @@ function SvgRenderer({ markup, caption }: { markup: string; caption?: string }) 
   );
 }
 
+// ── Mermaid renderer ──────────────────────────────────────────────────────────
+
+let mermaidIdCounter = 0;
+
+function MermaidRenderer({ code, caption }: { code: string; caption?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [svgCode, setSvgCode] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    import('mermaid').then(({ default: mermaid }) => {
+      mermaid.initialize({ startOnLoad: false, theme: 'dark' });
+      const id = `mermaid-svg-${++mermaidIdCounter}`;
+      mermaid.render(id, code).then(({ svg }) => {
+        if (isMounted) {
+          setSvgCode(svg);
+        }
+      }).catch((err) => {
+        console.error('Mermaid rendering failed', err);
+      });
+    });
+    return () => { isMounted = false; };
+  }, [code]);
+
+  return (
+    <div className="my-4 flex flex-col items-center gap-2">
+      {svgCode ? (
+        <div
+          ref={ref}
+          className="w-full max-w-full overflow-hidden rounded-xl border border-border bg-background-secondary p-4 flex justify-center [&_svg]:max-w-full [&_svg]:h-auto"
+          dangerouslySetInnerHTML={{ __html: svgCode }}
+        />
+      ) : (
+        <div
+          ref={ref}
+          className="w-full max-w-full overflow-hidden rounded-xl border border-border bg-background-secondary p-4 flex justify-center items-center"
+        >
+          <span className="text-xs text-foreground-muted">Rendering flowchart...</span>
+        </div>
+      )}
+      {caption && <p className="text-xs text-foreground-muted italic text-center">{caption}</p>}
+    </div>
+  );
+}
+
 // ── Table renderer ────────────────────────────────────────────────────────────
 
 function TableRenderer({ rows }: { rows: string[][] }) {
@@ -196,7 +241,7 @@ export default function BlockPreview({ block }: BlockPreviewProps) {
       return <SvgRenderer markup={block.markup} caption={block.caption} />;
 
     case 'animation':
-      return <AnimationBlockComponent template={block.template} config={block.config} caption={block.caption} />;
+      return <AnimationBlockComponent template={block.template} config={block.config} script={block.script} caption={block.caption} />;
 
     case 'image':
       return (
@@ -231,6 +276,9 @@ export default function BlockPreview({ block }: BlockPreviewProps) {
       );
 
     case 'code':
+      if (block.language === 'mermaid') {
+        return <MermaidRenderer code={block.code} caption={block.caption} />;
+      }
       return (
         <div className="my-4">
           <div className="flex items-center justify-between px-4 py-2 bg-slate-800 rounded-t-xl border border-slate-700">

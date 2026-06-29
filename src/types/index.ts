@@ -462,9 +462,12 @@ export type AnimationTemplate =
 export interface AnimationBlock {
   type: 'animation';
   id: string;
-  template: AnimationTemplate;
+  /** One of our predefined animation templates (optional if script is provided) */
+  template?: AnimationTemplate;
   /** Template-specific configuration key-value pairs */
   config?: Record<string, string | number | boolean>;
+  /** Custom JavaScript code for user/AI-generated animations (runs in a sandboxed canvas) */
+  script?: string;
   caption?: string;
 }
 
@@ -578,6 +581,8 @@ export interface NoteEditorState {
 
 // ── AI Prompt Context ─────────────────────────────────────────────────────────
 
+export type PromptType = 'generate' | 'convert';
+
 export interface AIPromptContext {
   curriculum: string;       // e.g. "IGCSE"
   examBoard: string;        // e.g. "CAIE"
@@ -586,6 +591,9 @@ export interface AIPromptContext {
   syllabusPoint?: string;   // e.g. "1.5.3 — Newton's Third Law"
   style: NoteStyle;
   additionalContext?: string;
+  promptType: PromptType;
+  /** Raw content of existing note to convert (only used when promptType === 'convert') */
+  userNoteContent?: string;
 }
 
 // ── Library Filters (client-side) ─────────────────────────────────────────────

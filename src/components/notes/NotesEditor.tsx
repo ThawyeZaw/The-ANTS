@@ -10,7 +10,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   Save, Send, Sparkles, Eye, Edit3, ArrowLeft, BookOpen, Share2,
-  CheckCircle, AlertCircle, Clock, Plus, Tag, X, Trash2,
+  CheckCircle, AlertCircle, Clock, Plus, Tag, X, Trash2, ChevronDown, ChevronUp,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { NoteBlock } from '@/types';
@@ -43,6 +43,7 @@ export default function NotesEditor() {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error'>('idle');
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'submitting' | 'done' | 'error'>('idle');
   const [tagInput, setTagInput] = useState('');
+  const [showMetadata, setShowMetadata] = useState(true);
 
   const filteredSubjects = state.curriculumId
     ? mockSubjects.filter((s) => s.curriculum_id === state.curriculumId)
@@ -250,87 +251,99 @@ export default function NotesEditor() {
             viewMode === 'split' ? 'w-1/2' : 'w-full'
           )}>
             {/* Metadata section */}
-            <div className="p-4 border-b border-border bg-background-secondary space-y-3 shrink-0">
-              <p className="text-xs font-semibold text-foreground-muted uppercase tracking-wider">Note Metadata</p>
-
-              {/* Summary */}
-              <input type="text" value={state.summary}
-                onChange={(e) => setField('summary', e.target.value)}
-                disabled={isReadOnly}
-                placeholder="Short summary (shown on library cards)…"
-                className="w-full px-3 py-2 rounded-xl bg-background-card border border-border text-sm text-foreground placeholder-foreground-muted focus:outline-none focus:border-primary/60 transition-all disabled:opacity-60"
-              />
-
-              {/* Curriculum & Subject */}
-              <div className="grid grid-cols-2 gap-2">
-                <select value={state.curriculumId ?? ''}
-                  onChange={(e) => setField('curriculumId', e.target.value || null)}
-                  disabled={isReadOnly}
-                  className="px-3 py-2 rounded-xl bg-background-card border border-border text-sm text-foreground focus:outline-none focus:border-primary/60 cursor-pointer disabled:opacity-60">
-                  <option value="">No Curriculum</option>
-                  {mockCurriculums.map((c) => <option key={c.id} value={c.id}>{c.qualification} — {c.exam_board}</option>)}
-                </select>
-                <select value={state.subjectId ?? ''}
-                  onChange={(e) => setField('subjectId', e.target.value || null)}
-                  disabled={isReadOnly || !state.curriculumId}
-                  className="px-3 py-2 rounded-xl bg-background-card border border-border text-sm text-foreground focus:outline-none focus:border-primary/60 cursor-pointer disabled:opacity-60">
-                  <option value="">No Subject</option>
-                  {filteredSubjects.map((s) => <option key={s.id} value={s.id}>{s.title}</option>)}
-                </select>
-              </div>
-
-              {/* Topic */}
-              <div>
-                <select value={state.topicId ?? ''}
-                  onChange={(e) => setField('topicId', e.target.value || null)}
-                  disabled={isReadOnly || !state.subjectId}
-                  className="w-full px-3 py-2 rounded-xl bg-background-card border border-border text-sm text-foreground focus:outline-none focus:border-primary/60 cursor-pointer disabled:opacity-60">
-                  <option value="">No Topic</option>
-                  {filteredTopics.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
-                </select>
-              </div>
-
-              {/* Syllabus point */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => !isReadOnly && setField('isSyllabusBased', !state.isSyllabusBased)}
-                  className={cn('relative w-9 h-5 rounded-full transition-colors cursor-pointer shrink-0', state.isSyllabusBased ? 'bg-violet-500' : 'bg-border')}
-                >
-                  <div className={cn('absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform', state.isSyllabusBased ? 'translate-x-4' : 'translate-x-0.5')} />
+            <div className="border-b border-border bg-background-secondary shrink-0">
+              <div 
+                className="flex items-center justify-between p-4 cursor-pointer hover:bg-background-secondary/80 transition-colors"
+                onClick={() => setShowMetadata(!showMetadata)}
+              >
+                <p className="text-xs font-semibold text-foreground-muted uppercase tracking-wider">Note Metadata</p>
+                <button className="text-foreground-muted hover:text-foreground">
+                  {showMetadata ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 </button>
-                <span className="text-xs text-foreground-muted shrink-0">Spec-Based</span>
-                {state.isSyllabusBased && (
-                  <input type="text" value={state.syllabusPoint}
-                    onChange={(e) => setField('syllabusPoint', e.target.value)}
-                    disabled={isReadOnly}
-                    placeholder="e.g. 1.5.3 — Newton's Third Law"
-                    className="flex-1 px-3 py-1.5 rounded-xl bg-background-card border border-border text-xs font-mono text-foreground focus:outline-none focus:border-violet-500/60 transition-all"
-                  />
-                )}
               </div>
 
-              {/* Tags */}
-              <div className="flex flex-wrap gap-1.5 items-center">
-                <Tag className="h-3.5 w-3.5 text-foreground-muted shrink-0" />
-                {state.tags.map((tag) => (
-                  <span key={tag} className="flex items-center gap-1 text-xs bg-background-card border border-border text-foreground-muted px-2 py-0.5 rounded-full">
-                    #{tag}
-                    {!isReadOnly && (
-                      <button onClick={() => setField('tags', state.tags.filter((t) => t !== tag))} className="cursor-pointer hover:text-error transition-colors">
-                        <X className="h-3 w-3" />
-                      </button>
-                    )}
-                  </span>
-                ))}
-                {!isReadOnly && (
-                  <input type="text" value={tagInput}
-                    onChange={(e) => setTagInput(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); handleAddTag(); } }}
-                    placeholder="Add tag…"
-                    className="text-xs px-2 py-0.5 rounded-full bg-background-card border border-dashed border-border text-foreground focus:outline-none focus:border-primary/60 w-24 transition-all"
+              {showMetadata && (
+                <div className="px-4 pb-4 space-y-3">
+                  {/* Summary */}
+                  <input type="text" value={state.summary}
+                    onChange={(e) => setField('summary', e.target.value)}
+                    disabled={isReadOnly}
+                    placeholder="Short summary (shown on library cards)…"
+                    className="w-full px-3 py-2 rounded-xl bg-background-card border border-border text-sm text-foreground placeholder-foreground-muted focus:outline-none focus:border-primary/60 transition-all disabled:opacity-60"
                   />
-                )}
-              </div>
+
+                  {/* Curriculum & Subject */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <select value={state.curriculumId ?? ''}
+                      onChange={(e) => setField('curriculumId', e.target.value || null)}
+                      disabled={isReadOnly}
+                      className="px-3 py-2 rounded-xl bg-background-card border border-border text-sm text-foreground focus:outline-none focus:border-primary/60 cursor-pointer disabled:opacity-60">
+                      <option value="">No Curriculum</option>
+                      {mockCurriculums.map((c) => <option key={c.id} value={c.id}>{c.qualification} — {c.exam_board}</option>)}
+                    </select>
+                    <select value={state.subjectId ?? ''}
+                      onChange={(e) => setField('subjectId', e.target.value || null)}
+                      disabled={isReadOnly || !state.curriculumId}
+                      className="px-3 py-2 rounded-xl bg-background-card border border-border text-sm text-foreground focus:outline-none focus:border-primary/60 cursor-pointer disabled:opacity-60">
+                      <option value="">No Subject</option>
+                      {filteredSubjects.map((s) => <option key={s.id} value={s.id}>{s.title}</option>)}
+                    </select>
+                  </div>
+
+                  {/* Topic */}
+                  <div>
+                    <select value={state.topicId ?? ''}
+                      onChange={(e) => setField('topicId', e.target.value || null)}
+                      disabled={isReadOnly || !state.subjectId}
+                      className="w-full px-3 py-2 rounded-xl bg-background-card border border-border text-sm text-foreground focus:outline-none focus:border-primary/60 cursor-pointer disabled:opacity-60">
+                      <option value="">No Topic</option>
+                      {filteredTopics.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
+                    </select>
+                  </div>
+
+                  {/* Syllabus point */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => !isReadOnly && setField('isSyllabusBased', !state.isSyllabusBased)}
+                      className={cn('relative w-9 h-5 rounded-full transition-colors cursor-pointer shrink-0', state.isSyllabusBased ? 'bg-violet-500' : 'bg-border')}
+                    >
+                      <div className={cn('absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform', state.isSyllabusBased ? 'translate-x-4' : 'translate-x-0.5')} />
+                    </button>
+                    <span className="text-xs text-foreground-muted shrink-0">Spec-Based</span>
+                    {state.isSyllabusBased && (
+                      <input type="text" value={state.syllabusPoint}
+                        onChange={(e) => setField('syllabusPoint', e.target.value)}
+                        disabled={isReadOnly}
+                        placeholder="e.g. 1.5.3 — Newton's Third Law"
+                        className="flex-1 px-3 py-1.5 rounded-xl bg-background-card border border-border text-xs font-mono text-foreground focus:outline-none focus:border-violet-500/60 transition-all"
+                      />
+                    )}
+                  </div>
+
+                  {/* Tags */}
+                  <div className="flex flex-wrap gap-1.5 items-center">
+                    <Tag className="h-3.5 w-3.5 text-foreground-muted shrink-0" />
+                    {state.tags.map((tag) => (
+                      <span key={tag} className="flex items-center gap-1 text-xs bg-background-card border border-border text-foreground-muted px-2 py-0.5 rounded-full">
+                        #{tag}
+                        {!isReadOnly && (
+                          <button onClick={() => setField('tags', state.tags.filter((t) => t !== tag))} className="cursor-pointer hover:text-error transition-colors">
+                            <X className="h-3 w-3" />
+                          </button>
+                        )}
+                      </span>
+                    ))}
+                    {!isReadOnly && (
+                      <input type="text" value={tagInput}
+                        onChange={(e) => setTagInput(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); handleAddTag(); } }}
+                        placeholder="Add tag…"
+                        className="text-xs px-2 py-0.5 rounded-full bg-background-card border border-dashed border-border text-foreground focus:outline-none focus:border-primary/60 w-24 transition-all"
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Block editor */}
