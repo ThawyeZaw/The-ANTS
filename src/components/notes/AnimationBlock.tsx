@@ -2,15 +2,17 @@
 
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTS — AnimationBlock
-// Predefined interactive CSS/JS animations for visual learning.
+// Predefined interactive CSS/JS animations for visual learning,
+// plus custom script rendering for AI/user-generated canvas animations.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useRef, useState } from 'react';
 import type { AnimationTemplate } from '@/types';
 
 interface AnimationBlockProps {
-  template: AnimationTemplate;
+  template?: AnimationTemplate;
   config?: Record<string, string | number | boolean>;
+  script?: string;
   caption?: string;
 }
 
@@ -142,14 +144,19 @@ function GasParticlesAnimation() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number>(0);
   const [speed, setSpeed] = useState(1.5);
-  const particlesRef = useRef(
-    Array.from({ length: 30 }, () => ({
+  const particlesRef = useRef<{ x: number; y: number; vx: number; vy: number }[]>([]);
+  const initRef = useRef(false);
+
+  useEffect(() => {
+    if (initRef.current) return;
+    initRef.current = true;
+    particlesRef.current = Array.from({ length: 30 }, () => ({
       x: Math.random() * 280,
       y: Math.random() * 160,
       vx: (Math.random() - 0.5) * 3,
       vy: (Math.random() - 0.5) * 3,
-    }))
-  );
+    }));
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -329,7 +336,54 @@ function SpringOscillationAnimation() {
   return <canvas ref={canvasRef} width={320} height={160} className="w-full max-w-sm" />;
 }
 
-// Generic placeholder for templates not yet fully implemented
+// ── Custom script animation (for AI/user-generated canvas code) ───────────────
+
+function CustomScriptAnimation({ script, caption }: { script: string; caption?: string }) {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+
+    // Build a sandboxed HTML page with the canvas and embedded script
+    const html = `<!DOCTYPE html>
+<html>
+<head><style>body{margin:0;overflow:hidden;background:#1e293b;}canvas{display:block;width:320px;height:200px;}</style></head>
+<body>
+<canvas id="canvas" width="320" height="200"></canvas>
+<script>
+var canvas = document.getElementById('canvas');
+var ctx = canvas.getContext('2d');
+var width = 320;
+var height = 200;
+// User-generated animation script:
+(function() {
+  ${script}
+})();
+<\/script>
+</body>
+</html>`;
+
+    iframe.srcdoc = html;
+  }, [script]);
+
+  return (
+    <div className="my-4 flex flex-col items-center gap-2">
+      <div className="w-full max-w-sm bg-background-secondary rounded-xl p-4 border border-border overflow-hidden">
+        <iframe
+          ref={iframeRef}
+          title="Custom Animation"
+          sandbox="allow-scripts"
+          className="w-[320px] h-[200px] mx-auto rounded-lg"
+        />
+      </div>
+      {caption && <p className="text-xs text-foreground-muted text-center max-w-sm italic">{caption}</p>}
+    </div>
+  );
+}
+
+// ── Generic placeholder for templates not yet fully implemented ───────────────
+
 function PlaceholderAnimation({ template }: { template: AnimationTemplate }) {
   const info = ANIMATION_TEMPLATES[template];
   return (
@@ -343,8 +397,16 @@ function PlaceholderAnimation({ template }: { template: AnimationTemplate }) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function AnimationBlock({ template, caption }: AnimationBlockProps) {
+export default function AnimationBlock({ template, script, caption }: AnimationBlockProps) {
+  // If a custom script is provided, render it instead of a predefined template
+  if (script) {
+    return <CustomScriptAnimation script={script} caption={caption} />;
+  }
+
+  // Otherwise render the selected predefined template
+  if (!template) return null;
   const info = ANIMATION_TEMPLATES[template];
+  if (!info) return null;
 
   const renderAnimation = () => {
     switch (template) {
