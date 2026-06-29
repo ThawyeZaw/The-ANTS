@@ -181,6 +181,151 @@ export interface FeatureCard {
   gradient: string;
 }
 
+// -----------------------------------------------------------------------------
+// Notes
+// -----------------------------------------------------------------------------
+
+export type NoteStatus = 'draft' | 'pending_review' | 'approved' | 'rejected';
+export type NoteVisibility = 'private' | 'link' | 'public';
+
+export type NoteStyle = 'concise' | 'detailed' | 'eli5' | 'academic';
+
+export interface AIPromptContext {
+  curriculum: string;
+  examBoard: string;
+  subject: string;
+  topic: string;
+  syllabusPoint: string;
+  style: NoteStyle;
+  additionalContext: string;
+}
+
+export interface NoteFilters {
+  search: string;
+  curriculumId: string | null;
+  subjectId: string | null;
+  isSyllabusBased: boolean | null;
+  tags: string[];
+}
+
+export interface NoteEditorState {
+  noteId: string | null;
+  title: string;
+  summary: string;
+  curriculumId: string | null;
+  subjectId: string | null;
+  topicId: string | null;
+  syllabusPoint: string;
+  isSyllabusBased: boolean;
+  tags: string[];
+  blocks: NoteBlock[];
+  isDirty: boolean;
+  isSaving: boolean;
+  status: NoteStatus;
+  visibility: NoteVisibility;
+}
+
+export type AnimationTemplate =
+  | 'pendulum'
+  | 'wave_motion'
+  | 'projectile'
+  | 'cell_division'
+  | 'lens_refraction'
+  | 'circuit_dc'
+  | 'dna_helix'
+  | 'gas_particles'
+  | 'titration'
+  | 'spring_oscillation';
+
+export type NoteBlock =
+  | {
+      type: 'heading';
+      id: string;
+      level: 1 | 2 | 3;
+      text: string;
+    }
+  | {
+      type: 'paragraph';
+      id: string;
+      text: string;
+    }
+  | {
+      type: 'latex';
+      id: string;
+      expression: string;
+      display: boolean;
+    }
+  | {
+      type: 'svg';
+      id: string;
+      markup: string;
+      caption?: string;
+    }
+  | {
+      type: 'animation';
+      id: string;
+      template: AnimationTemplate;
+      caption?: string;
+      config?: Record<string, string | number | boolean>;
+    }
+  | {
+      type: 'image';
+      id: string;
+      url: string;
+      alt?: string;
+      caption?: string;
+    }
+  | {
+      type: 'link';
+      id: string;
+      url: string;
+      label: string;
+      description?: string;
+    }
+  | {
+      type: 'code';
+      id: string;
+      language: string;
+      code: string;
+      caption?: string;
+    }
+  | {
+      type: 'table';
+      id: string;
+      rows: string[][];
+    }
+  | {
+      type: 'divider';
+      id: string;
+    };
+
+export interface Note {
+  id: string;
+  title: string;
+  summary?: string | null;
+  curriculum_id: string | null;
+  subject_id: string | null;
+  topic_id: string | null;
+  syllabus_point?: string | null;
+  is_syllabus_based: boolean;
+  tags: string[];
+  contributor_id: string;
+  status: NoteStatus;
+  visibility: NoteVisibility;
+  reviewer_id?: string | null;
+  reviewer_feedback?: string | null;
+  created_at: string;
+  updated_at: string;
+  blocks: NoteBlock[];
+}
+
+export interface UserSavedNote {
+  id: string;
+  user_id: string;
+  note_id: string;
+  saved_at: string;
+}
+
 /** Stat widget for role landing pages */
 export interface StatWidget {
   label: string;
@@ -335,8 +480,8 @@ export interface ExamCountdown {
   exam_id: string | null;
   custom_title: string | null;
   target_date: string | null;
-  priority_indicator: string;
-  qualification_group: string;
+  priority_indicator: 'high' | 'medium' | 'low' | string | null;
+  qualification_group?: string;
   created_at: string;
 }
 
@@ -402,6 +547,7 @@ export interface ParsedAICard {
   confirmed: boolean;
 }
 
+<<<<<<< HEAD
 // -----------------------------------------------------------------------------
 // Notes
 // -----------------------------------------------------------------------------
@@ -605,3 +751,5 @@ export interface NoteFilters {
   isSyllabusBased: boolean | null;
   tags: string[];
 }
+=======
+>>>>>>> 8d508d3b307498386cc4c9c0f30b9c2d7eb9f9f4

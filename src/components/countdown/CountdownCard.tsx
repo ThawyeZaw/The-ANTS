@@ -14,8 +14,8 @@ export function CountdownCard({ countdown, onDelete }: CountdownCardProps) {
 
   const priorityColors = {
     high: 'border-red-500 bg-red-500/10 text-red-500',
-    medium: 'border-amber-500 bg-amber-500/10 text-amber-500',
-    low: 'border-emerald-500 bg-emerald-500/10 text-emerald-500',
+    medium: 'border-[var(--primary)] bg-[var(--primary-light)] text-[var(--primary)]',
+    low: 'border-[var(--accent)] bg-[var(--accent-light)] text-[var(--accent)]',
   };
   
   const priorityStyle = priorityColors[priority_indicator as keyof typeof priorityColors] || priorityColors.medium;
@@ -25,12 +25,12 @@ export function CountdownCard({ countdown, onDelete }: CountdownCardProps) {
     : 'Unknown Date';
 
   return (
-    <div className="relative overflow-hidden rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-md transition-all hover:border-white/20">
+    <div className="relative overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--background-card)] p-6 backdrop-blur-md transition-all hover:border-[var(--primary)]/30">
       <div className="flex items-start justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-white">{custom_title || 'Untitled Exam'}</h3>
-          <div className="mt-1 flex items-center gap-2 text-sm text-gray-400">
-            <Calendar className="h-4 w-4" />
+          <h3 className="text-lg font-semibold text-[var(--foreground)]">{custom_title || 'Untitled Exam'}</h3>
+          <div className="mt-1 flex items-center gap-2 text-sm text-[var(--foreground-secondary)]">
+            <Calendar className="h-4 w-4 text-[var(--foreground-secondary)]" />
             <span>{formattedDate}</span>
           </div>
         </div>
@@ -47,7 +47,7 @@ export function CountdownCard({ countdown, onDelete }: CountdownCardProps) {
           </div>
           <button
             onClick={() => onDelete(countdown.id)}
-            className="rounded-lg p-2 text-gray-400 hover:bg-red-500/20 hover:text-red-500 transition-colors focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none"
+            className="rounded-lg p-2 text-[var(--foreground-secondary)] hover:bg-[var(--error)]/20 hover:text-[var(--error)] transition-colors focus-visible:ring-2 focus-visible:ring-[var(--error)] focus-visible:outline-none"
             title="Delete countdown"
             aria-label={`Delete ${custom_title || 'Untitled Exam'} countdown`}
           >
@@ -56,32 +56,32 @@ export function CountdownCard({ countdown, onDelete }: CountdownCardProps) {
         </div>
       </div>
 
-      <div className="mt-6 flex items-center justify-between rounded-lg bg-black/40 p-4">
+      <div className="mt-6 flex items-center justify-between rounded-lg bg-[var(--background-secondary)] p-4">
         {timeLeft.isPast ? (
-          <div className="flex w-full items-center justify-center gap-2 text-emerald-400">
-            <Clock className="h-5 w-5" />
-            <span className="font-semibold tracking-wide">Exam time has passed!</span>
+          <div className="flex w-full items-center justify-center gap-2 text-[var(--success)]">
+            <Clock className="h-5 w-5 text-[var(--success)]" />
+            <span className="font-semibold tracking-wide text-[var(--foreground)]">Exam time has passed!</span>
           </div>
         ) : (
-          <div className="flex w-full justify-around text-center">
+          <div className="flex w-full justify-around text-center text-[var(--foreground)]">
             <div className="flex flex-col">
-              <span className="text-3xl font-bold text-white font-mono">{String(timeLeft.days).padStart(2, '0')}</span>
-              <span className="text-xs font-medium uppercase tracking-wider text-gray-400 mt-1">Days</span>
+              <span className="text-3xl font-bold text-[var(--foreground)] font-mono">{String(timeLeft.days).padStart(2, '0')}</span>
+              <span className="text-xs font-medium uppercase tracking-wider text-[var(--foreground-secondary)] mt-1">Days</span>
             </div>
-            <div className="text-2xl font-bold text-gray-600 font-mono self-start mt-1">:</div>
+            <div className="text-2xl font-bold text-[var(--foreground-secondary)] font-mono self-start mt-1">:</div>
             <div className="flex flex-col">
-              <span className="text-3xl font-bold text-white font-mono">{String(timeLeft.hours).padStart(2, '0')}</span>
-              <span className="text-xs font-medium uppercase tracking-wider text-gray-400 mt-1">Hours</span>
+              <span className="text-3xl font-bold text-[var(--foreground)] font-mono">{String(timeLeft.hours).padStart(2, '0')}</span>
+              <span className="text-xs font-medium uppercase tracking-wider text-[var(--foreground-secondary)] mt-1">Hours</span>
             </div>
-            <div className="text-2xl font-bold text-gray-600 font-mono self-start mt-1">:</div>
+            <div className="text-2xl font-bold text-[var(--foreground-secondary)] font-mono self-start mt-1">:</div>
             <div className="flex flex-col">
-              <span className="text-3xl font-bold text-white font-mono">{String(timeLeft.minutes).padStart(2, '0')}</span>
-              <span className="text-xs font-medium uppercase tracking-wider text-gray-400 mt-1">Mins</span>
+              <span className="text-3xl font-bold text-[var(--foreground)] font-mono">{String(timeLeft.minutes).padStart(2, '0')}</span>
+              <span className="text-xs font-medium uppercase tracking-wider text-[var(--foreground-secondary)] mt-1">Mins</span>
             </div>
-            <div className="text-2xl font-bold text-gray-600 font-mono self-start mt-1">:</div>
+            <div className="text-2xl font-bold text-[var(--foreground-secondary)] font-mono self-start mt-1">:</div>
             <div className="flex flex-col">
-              <span className="text-3xl font-bold text-cyan-400 font-mono">{String(timeLeft.seconds).padStart(2, '0')}</span>
-              <span className="text-xs font-medium uppercase tracking-wider text-cyan-400/70 mt-1">Secs</span>
+              <span className="text-3xl font-bold text-[var(--primary)] font-mono">{String(timeLeft.seconds).padStart(2, '0')}</span>
+              <span className="text-xs font-medium uppercase tracking-wider text-[var(--primary)]/70 mt-1">Secs</span>
             </div>
           </div>
         )}
