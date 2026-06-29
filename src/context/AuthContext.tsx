@@ -30,7 +30,7 @@ interface AuthContextValue {
   ) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   updateProfile: (
-    data: Partial<Pick<Profile, 'name' | 'bio' | 'title' | 'socialLinks' | 'avatar'>>
+    data: Partial<Pick<Profile, 'name' | 'bio' | 'title' | 'socialLinks' | 'avatar' | 'coverImage' | 'isPublic' | 'projects' | 'activities' | 'achievements' | 'academicGrades' | 'pinnedItemId' | 'sectionVisibility'>>
   ) => Promise<{ success: boolean; error?: string }>;
   updateRole: (newRole: UserRole) => Promise<{ success: boolean; error?: string }>;
 }
@@ -105,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const updateProfile = useCallback(
     async (
-      data: Partial<Pick<Profile, 'name' | 'bio' | 'title' | 'socialLinks' | 'avatar'>>
+      data: Partial<Pick<Profile, 'name' | 'bio' | 'title' | 'socialLinks' | 'avatar' | 'coverImage' | 'isPublic' | 'projects' | 'activities' | 'achievements' | 'academicGrades' | 'pinnedItemId' | 'sectionVisibility'>>
     ): Promise<{ success: boolean; error?: string }> => {
       if (!user) return { success: false, error: 'Not authenticated.' };
 

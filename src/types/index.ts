@@ -17,6 +17,7 @@ export interface SocialLinks {
 
 /** A single project entry in a user's portfolio */
 export interface ProjectEntry {
+  id: string;
   title: string;
   description: string;
   role?: string;
@@ -28,10 +29,13 @@ export interface ProjectEntry {
     other?: string;
   };
   media?: string[];
+  isHidden?: boolean;
+  order?: number;
 }
 
 /** A single CCA / activity entry */
 export interface ActivityEntry {
+  id: string;
   name: string;
   organization: string;
   role: string;
@@ -39,15 +43,30 @@ export interface ActivityEntry {
   end_date?: string;
   description?: string;
   verification_link?: string;
+  isHidden?: boolean;
+  order?: number;
 }
 
 /** A single achievement or award entry */
 export interface AchievementEntry {
+  id: string;
   title: string;
   description?: string;
   date?: string;
   issuer?: string;
   link?: string;
+  isHidden?: boolean;
+  order?: number;
+}
+
+/** A single academic grade / certificate entry */
+export interface AcademicGradeEntry {
+  id: string;
+  title: string;
+  description?: string;
+  fileUrl: string; // URL to PDF or image
+  isHidden?: boolean;
+  order?: number;
 }
 
 /** User profile stored in the `profiles` table */
@@ -57,14 +76,23 @@ export interface Profile {
   name: string;
   username: string;
   avatar: string;
+  coverImage?: string;
   role: UserRole;
   bio?: string;
   title?: string;
   socialLinks?: SocialLinks;
   isPublic?: boolean;
+  pinnedItemId?: string;
+  sectionVisibility?: {
+    projects?: boolean;
+    activities?: boolean;
+    achievements?: boolean;
+    academicGrades?: boolean;
+  };
   projects?: ProjectEntry[];
   activities?: ActivityEntry[];
   achievements?: AchievementEntry[];
+  academicGrades?: AcademicGradeEntry[];
   createdAt: string;
 }
 

@@ -5,6 +5,7 @@
 // Conditionally renders content based on user role (student, teacher, contributor, main_contributor)
 // ──────────────────────────────────────────────────────────────────────────────
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   CalendarDays,
@@ -34,25 +35,17 @@ import {
   Library,
   Bookmark,
   BookMarked,
+  History,
+  Megaphone,
+  Bell,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 import { useSavedNotes, useContributorNotes } from '@/hooks/useNotes';
+import { getAllNavItems } from '@/components/layout/NavBar';
+import { mockExams, mockClubAnnouncements } from '@/lib/mock/database';
 
-// --- STUDENT DATA ---
-const STUDENT_QUICK_LINKS = [
-  { title: 'Timetable', description: 'Manage your schedule', href: '/timetable', icon: <CalendarDays className="h-5 w-5" />, gradient: 'from-blue-500 to-cyan-400' },
-  { title: 'Pomodoro', description: 'Focus sessions', href: '/pomodoro', icon: <Timer className="h-5 w-5" />, gradient: 'from-rose-500 to-pink-400' },
-  { title: 'Flashcards', description: 'Spaced repetition', href: '/flashcards', icon: <Layers className="h-5 w-5" />, gradient: 'from-violet-500 to-purple-400' },
-  { title: 'Lessons', description: 'Track confidence', href: '/lessons', icon: <ClipboardCheck className="h-5 w-5" />, gradient: 'from-emerald-500 to-teal-400' },
-  { title: 'Courses', description: 'Manage subjects', href: '/courses', icon: <BookOpen className="h-5 w-5" />, gradient: 'from-orange-500 to-amber-400' },
-  { title: 'Classrooms', description: 'Join a class', href: '/classrooms', icon: <GraduationCap className="h-5 w-5" />, gradient: 'from-sky-500 to-blue-400' },
-  { title: 'Notes Library', description: 'Browse study notes', href: '/library', icon: <Library className="h-5 w-5" />, gradient: 'from-violet-500 to-indigo-400' },
-  { title: 'Clubs', description: 'Community spaces', href: '/clubs', icon: <MessageSquare className="h-5 w-5" />, gradient: 'from-indigo-500 to-violet-400' },
-  { title: 'Countdown', description: 'Exam timers', href: '/countdown', icon: <Clock className="h-5 w-5" />, gradient: 'from-red-500 to-rose-400' },
-  { title: 'Calculator', description: 'Grade prediction', href: '/calculator', icon: <Calculator className="h-5 w-5" />, gradient: 'from-teal-500 to-emerald-400' },
-  { title: 'My Profile', description: 'View & edit profile', href: '/profile/me', icon: <UserCircle className="h-5 w-5" />, gradient: 'from-pink-500 to-rose-400' },
-];
+
 
 const STUDENT_STATS = [
   { label: 'Study Streak', value: '7 days', icon: <Flame className="h-5 w-5" />, color: 'text-orange-500 bg-orange-500/10' },
@@ -61,20 +54,7 @@ const STUDENT_STATS = [
   { label: 'Avg. Confidence', value: '72%', icon: <TrendingUp className="h-5 w-5" />, color: 'text-emerald-500 bg-emerald-500/10' },
 ];
 
-// --- TEACHER DATA ---
-const TEACHER_QUICK_LINKS = [
-  { title: 'Classrooms', description: 'Manage your classes', href: '/classrooms', icon: <GraduationCap className="h-5 w-5" />, gradient: 'from-emerald-500 to-teal-400' },
-  { title: 'Timetable', description: 'Your schedule', href: '/timetable', icon: <CalendarDays className="h-5 w-5" />, gradient: 'from-blue-500 to-cyan-400' },
-  { title: 'Pomodoro', description: 'Focus sessions', href: '/pomodoro', icon: <Timer className="h-5 w-5" />, gradient: 'from-rose-500 to-pink-400' },
-  { title: 'Flashcards', description: 'Study decks', href: '/flashcards', icon: <Layers className="h-5 w-5" />, gradient: 'from-violet-500 to-purple-400' },
-  { title: 'Lessons', description: 'Track progress', href: '/lessons', icon: <ClipboardCheck className="h-5 w-5" />, gradient: 'from-orange-500 to-amber-400' },
-  { title: 'Courses', description: 'Manage curricula', href: '/courses', icon: <BookOpen className="h-5 w-5" />, gradient: 'from-sky-500 to-blue-400' },
-  { title: 'Notes Library', description: 'Browse study notes', href: '/library', icon: <Library className="h-5 w-5" />, gradient: 'from-violet-500 to-indigo-400' },
-  { title: 'Clubs', description: 'Join communities', href: '/clubs', icon: <MessageSquare className="h-5 w-5" />, gradient: 'from-indigo-500 to-violet-400' },
-  { title: 'Countdown', description: 'Exam timers', href: '/countdown', icon: <Clock className="h-5 w-5" />, gradient: 'from-red-500 to-rose-400' },
-  { title: 'Calculator', description: 'Grade prediction', href: '/calculator', icon: <Calculator className="h-5 w-5" />, gradient: 'from-teal-500 to-emerald-400' },
-  { title: 'My Profile', description: 'View & edit profile', href: '/profile/me', icon: <UserCircle className="h-5 w-5" />, gradient: 'from-pink-500 to-rose-400' },
-];
+
 
 const TEACHER_STATS = [
   { label: 'Active Classrooms', value: '3', icon: <GraduationCap className="h-5 w-5" />, color: 'text-emerald-500 bg-emerald-500/10' },
@@ -83,20 +63,7 @@ const TEACHER_STATS = [
   { label: 'Completed This Week', value: '12', icon: <CheckSquare className="h-5 w-5" />, color: 'text-violet-500 bg-violet-500/10' },
 ];
 
-// --- CONTRIBUTOR DATA ---
-const CONTRIBUTOR_QUICK_LINKS = [
-  { title: 'Notes Editor', description: 'Create study notes', href: '/editor/notes', icon: <Library className="h-5 w-5" />, gradient: 'from-violet-500 to-purple-400' },
-  { title: 'Curriculum Editor', description: 'Build resources', href: '/editor', icon: <Pencil className="h-5 w-5" />, gradient: 'from-indigo-500 to-violet-400' },
-  { title: 'Exam Data Editor', description: 'Edit exam data', href: '/editor/exam', icon: <FileText className="h-5 w-5" />, gradient: 'from-blue-500 to-indigo-400' },
-  { title: 'Notes Library', description: 'Browse all notes', href: '/library', icon: <BookOpen className="h-5 w-5" />, gradient: 'from-sky-500 to-blue-400' },
-  { title: 'My Profile', description: 'Public profile', href: '/profile/me', icon: <UserCircle className="h-5 w-5" />, gradient: 'from-pink-500 to-rose-400' },
-  { title: 'Clubs', description: 'Lead communities', href: '/clubs', icon: <MessageSquare className="h-5 w-5" />, gradient: 'from-sky-500 to-blue-400' },
-  { title: 'Classrooms', description: 'Join a class', href: '/classrooms', icon: <GraduationCap className="h-5 w-5" />, gradient: 'from-emerald-500 to-teal-400' },
-  { title: 'Timetable', description: 'Your schedule', href: '/timetable', icon: <CalendarDays className="h-5 w-5" />, gradient: 'from-blue-500 to-cyan-400' },
-  { title: 'Flashcards', description: 'Study decks', href: '/flashcards', icon: <Layers className="h-5 w-5" />, gradient: 'from-amber-500 to-orange-400' },
-  { title: 'Lessons', description: 'Track confidence', href: '/lessons', icon: <ClipboardCheck className="h-5 w-5" />, gradient: 'from-teal-500 to-emerald-400' },
-  { title: 'Countdown', description: 'Exam timers', href: '/countdown', icon: <Clock className="h-5 w-5" />, gradient: 'from-red-500 to-rose-400' },
-];
+
 
 const CONTRIBUTOR_STATS = [
   { label: 'Published', value: '14', icon: <Star className="h-5 w-5" />, color: 'text-violet-500 bg-violet-500/10' },
@@ -105,21 +72,7 @@ const CONTRIBUTOR_STATS = [
   { label: 'Profile Views', value: '128', icon: <UserCircle className="h-5 w-5" />, color: 'text-pink-500 bg-pink-500/10' },
 ];
 
-// --- MAIN CONTRIBUTOR DATA ---
-const MAIN_CONTRIBUTOR_QUICK_LINKS = [
-  { title: 'Notes Editor', description: 'Create study notes', href: '/editor/notes', icon: <Library className="h-5 w-5" />, gradient: 'from-violet-500 to-purple-400' },
-  { title: 'Review Queue', description: 'Approve submissions', href: '/review', icon: <ShieldCheck className="h-5 w-5" />, gradient: 'from-amber-500 to-orange-400' },
-  { title: 'Add New User', description: 'Create accounts', href: '/add-user', icon: <UserPlus className="h-5 w-5" />, gradient: 'from-fuchsia-500 to-pink-400' },
-  { title: 'Curriculum Editor', description: 'Build resources', href: '/editor', icon: <Pencil className="h-5 w-5" />, gradient: 'from-indigo-500 to-violet-400' },
-  { title: 'Exam Data Editor', description: 'Edit exam data', href: '/editor/exam', icon: <FileText className="h-5 w-5" />, gradient: 'from-blue-500 to-indigo-400' },
-  { title: 'Notes Library', description: 'Browse all notes', href: '/library', icon: <BookOpen className="h-5 w-5" />, gradient: 'from-sky-500 to-blue-400' },
-  { title: 'My Profile', description: 'Public profile', href: '/profile/me', icon: <UserCircle className="h-5 w-5" />, gradient: 'from-pink-500 to-rose-400' },
-  { title: 'Clubs', description: 'Lead communities', href: '/clubs', icon: <MessageSquare className="h-5 w-5" />, gradient: 'from-sky-500 to-blue-400' },
-  { title: 'Classrooms', description: 'Join a class', href: '/classrooms', icon: <GraduationCap className="h-5 w-5" />, gradient: 'from-emerald-500 to-teal-400' },
-  { title: 'Timetable', description: 'Your schedule', href: '/timetable', icon: <CalendarDays className="h-5 w-5" />, gradient: 'from-blue-500 to-cyan-400' },
-  { title: 'Flashcards', description: 'Study decks', href: '/flashcards', icon: <Layers className="h-5 w-5" />, gradient: 'from-rose-500 to-pink-400' },
-  { title: 'Lessons', description: 'Track confidence', href: '/lessons', icon: <ClipboardCheck className="h-5 w-5" />, gradient: 'from-teal-500 to-emerald-400' },
-];
+
 
 const MAIN_CONTRIBUTOR_STATS = [
   { label: 'Pending Reviews', value: '8', icon: <AlertTriangle className="h-5 w-5" />, color: 'text-amber-500 bg-amber-500/10' },
@@ -142,20 +95,44 @@ export default function DashboardPage() {
     (role === 'contributor' || role === 'main_contributor') ? user.id : undefined
   );
 
-  let quickLinks = STUDENT_QUICK_LINKS;
+  const [recentPages, setRecentPages] = useState<any[]>([]);
+
+  useEffect(() => {
+    try {
+      const recentStr = localStorage.getItem('recentPages');
+      if (recentStr) {
+        const recent: { href: string; timestamp: number }[] = JSON.parse(recentStr);
+        const allItems = getAllNavItems();
+        
+        const mapped = recent
+          .map(r => {
+            const item = allItems.find(i => r.href.startsWith(i.href) && i.href !== '/');
+            if (item) {
+              return { ...item, timestamp: r.timestamp };
+            }
+            return null;
+          })
+          .filter(Boolean);
+        
+        // Remove duplicates by label just in case
+        const uniqueMapped = mapped.filter((v, i, a) => a.findIndex(t => (t?.label === v?.label)) === i);
+        setRecentPages(uniqueMapped.slice(0, 3));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
+
   let stats = STUDENT_STATS;
   let welcomeSubtitle = "Here's your study snapshot for today. Keep up the great work!";
 
   if (role === 'teacher') {
-    quickLinks = TEACHER_QUICK_LINKS;
     stats = TEACHER_STATS;
     welcomeSubtitle = "Your classrooms are waiting. Here's your teaching overview for today.";
   } else if (role === 'contributor') {
-    quickLinks = CONTRIBUTOR_QUICK_LINKS;
     stats = CONTRIBUTOR_STATS;
     welcomeSubtitle = "Your contributions are making a difference. Here's your creator overview.";
   } else if (role === 'main_contributor') {
-    quickLinks = MAIN_CONTRIBUTOR_QUICK_LINKS;
     stats = MAIN_CONTRIBUTOR_STATS;
     welcomeSubtitle = "You have pending reviews waiting. Here's your gatekeeper overview.";
   }
@@ -286,27 +263,84 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* Quick Links */}
+      {/* Recently Accessed */}
+      {recentPages.length > 0 && (
+        <div>
+          <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+            <History className="h-5 w-5 text-blue-500" />
+            Recently Accessed
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {recentPages.map((page, i) => (
+              <Link
+                key={`${page.href}-${i}`}
+                href={page.href}
+                className="group flex items-center gap-4 bg-background-card border border-border rounded-xl p-4 hover:border-border-hover hover:shadow-md transition-all duration-200"
+              >
+                <div className="p-2.5 rounded-xl bg-primary/10 text-primary shrink-0">
+                  {page.icon}
+                </div>
+                <div className="min-w-0">
+                  <p className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                    {page.label}
+                  </p>
+                  <p className="text-sm text-foreground-muted truncate">{page.description}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Important Information */}
       <div>
-        <h2 className="text-xl font-bold text-foreground mb-4">Quick Access</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {quickLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="group flex items-center gap-4 bg-background-card border border-border rounded-xl p-4 hover:border-border-hover hover:shadow-md transition-all duration-200"
-            >
-              <div className={cn('p-2.5 rounded-xl bg-linear-to-br text-white shrink-0', link.gradient)}>
-                {link.icon}
-              </div>
-              <div className="min-w-0">
-                <p className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                  {link.title}
-                </p>
-                <p className="text-sm text-foreground-muted">{link.description}</p>
-              </div>
-            </Link>
-          ))}
+        <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+          <Bell className="h-5 w-5 text-amber-500" />
+          Important Information
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Announcements */}
+          <div className="bg-background-card border border-border rounded-xl p-5">
+             <h3 className="font-semibold flex items-center gap-2 mb-4 text-foreground">
+               <Megaphone className="h-4 w-4 text-sky-500" />
+               Club Announcements
+             </h3>
+             <div className="space-y-3">
+               {mockClubAnnouncements.slice(0, 3).map(ann => (
+                 <div key={ann.id} className="p-3 bg-background-secondary rounded-lg border border-border/50">
+                    <p className="font-medium text-sm text-foreground">{ann.title}</p>
+                    <p className="text-xs text-foreground-muted mt-1">{ann.content}</p>
+                 </div>
+               ))}
+               {mockClubAnnouncements.length === 0 && (
+                 <p className="text-sm text-foreground-muted">No announcements right now.</p>
+               )}
+             </div>
+          </div>
+          
+          {/* Upcoming Exams */}
+          <div className="bg-background-card border border-border rounded-xl p-5">
+             <h3 className="font-semibold flex items-center gap-2 mb-4 text-foreground">
+               <Clock className="h-4 w-4 text-rose-500" />
+               Upcoming Exams
+             </h3>
+             <div className="space-y-3">
+               {mockExams.slice(0, 3).map(exam => (
+                 <div key={exam.id} className="p-3 bg-background-secondary rounded-lg border border-border/50 flex flex-col justify-between">
+                    <div>
+                      <p className="font-medium text-sm text-foreground">{exam.title}</p>
+                      <p className="text-xs text-foreground-muted mt-0.5">{exam.exam_series}</p>
+                    </div>
+                    <div className="mt-2 text-xs font-semibold text-rose-500 bg-rose-500/10 self-start px-2 py-1 rounded-md">
+                      {new Date(exam.exam_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </div>
+                 </div>
+               ))}
+               {mockExams.length === 0 && (
+                 <p className="text-sm text-foreground-muted">No upcoming exams.</p>
+               )}
+             </div>
+          </div>
         </div>
       </div>
     </div>

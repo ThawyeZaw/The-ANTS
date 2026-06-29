@@ -9,7 +9,7 @@ import { Check, Sun, Moon, Palette, User, ArrowLeft, UserCog } from 'lucide-reac
 import { useTheme, COLOR_PRESETS, type ThemeColor } from '@/context/ThemeContext';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
-import ProfileEditor from '@/components/settings/ProfileEditor';
+import Link from 'next/link';
 import RoleUpgradeForm from '@/components/settings/RoleUpgradeForm';
 
 // ── Section Wrapper ───────────────────────────────────────────────────────────
@@ -180,7 +180,17 @@ export default function SettingsPage() {
         description="Your public profile information"
         icon={<User className="h-4 w-4" />}
       >
-        <ProfileEditor />
+        <div className="space-y-4">
+          <p className="text-sm text-foreground-secondary">
+            Manage your public profile, portfolio items, achievements, and academic grades in the dedicated profile editor.
+          </p>
+          <Link
+            href="/settings/profile"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary-hover transition-colors shadow-sm"
+          >
+            Open Profile Editor
+          </Link>
+        </div>
       </SettingsSection>
 
       {/* Role Management Section */}

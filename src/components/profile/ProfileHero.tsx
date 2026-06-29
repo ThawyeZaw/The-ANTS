@@ -1,16 +1,14 @@
 'use client';
 
-// ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Profile Hero Component
-// Hero banner for the public contributor profile page.
-// ──────────────────────────────────────────────────────────────────────────────
-
 import Link from 'next/link';
 import {
   Globe,
   Settings,
   ExternalLink,
 } from 'lucide-react';
+import { RoleBadge } from '@/components/ui/Badge';
+import { cn, getInitials } from '@/lib/utils';
+import { ROLE_METADATA, type Profile } from '@/types';
 
 /** Lightweight brand SVGs — lucide-react doesn't include brand/social icons */
 function FacebookIcon({ className }: { className?: string }) {
@@ -39,9 +37,6 @@ function GithubIcon({ className }: { className?: string }) {
     </svg>
   );
 }
-import { RoleBadge } from '@/components/ui/Badge';
-import { cn, getInitials } from '@/lib/utils';
-import { ROLE_METADATA, type Profile } from '@/types';
 
 interface ProfileHeroProps {
   profile: Profile;
@@ -59,80 +54,69 @@ export default function ProfileHero({ profile, isOwnProfile }: ProfileHeroProps)
   ].filter((link) => link.url);
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-border bg-background-card">
-      {/* Gradient Banner */}
-      <div
-        className={cn(
-          'h-32 sm:h-40 bg-gradient-to-br',
-          roleMeta.gradient
-        )}
-        style={{ opacity: 0.85 }}
-      >
-        {/* Decorative pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-4 right-8 w-32 h-32 rounded-full border-2 border-white/30" />
-          <div className="absolute bottom-2 left-12 w-20 h-20 rounded-full border-2 border-white/20" />
-          <div className="absolute top-8 left-1/3 w-12 h-12 rounded-full bg-white/10" />
-        </div>
-      </div>
-
-      {/* Profile Content */}
-      <div className="px-6 pb-6 -mt-12 relative">
-        <div className="flex flex-col sm:flex-row sm:items-end gap-4">
-          {/* Avatar */}
-          <div className="shrink-0">
-            <div className="h-24 w-24 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-3xl font-bold shadow-xl ring-4 ring-background-card">
+    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-background-card/40 backdrop-blur-md shadow-2xl p-8">
+      <div className="relative z-10 flex flex-col items-center text-center">
+        {/* Avatar */}
+        <div className="shrink-0 p-1.5 bg-background/50 backdrop-blur-xl rounded-full border border-white/10 shadow-xl mb-5">
+          {profile.avatar ? (
+             <img src={profile.avatar} alt={profile.name} className="h-32 w-32 rounded-full object-cover" />
+          ) : (
+            <div className="h-32 w-32 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-5xl font-bold">
               {getInitials(profile.name)}
             </div>
-          </div>
-
-          {/* Name + Meta */}
-          <div className="flex-1 min-w-0 pb-1">
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-2xl font-bold text-foreground">{profile.name}</h1>
-              <RoleBadge role={profile.role} />
-            </div>
-            {profile.title && (
-              <p className="text-sm text-foreground-secondary mt-1">{profile.title}</p>
-            )}
-            <p className="text-xs text-foreground-muted mt-0.5">@{profile.username}</p>
-          </div>
-
-          {/* Edit button (own profile only) */}
-          {isOwnProfile && (
-            <Link
-              href="/settings"
-              className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border text-sm font-medium text-foreground-secondary hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all duration-200 shrink-0"
-            >
-              <Settings className="h-4 w-4" />
-              Edit Profile
-            </Link>
           )}
+        </div>
+
+        {/* Name + Meta */}
+        <div className="flex flex-col items-center mb-4">
+          <div className="flex flex-wrap justify-center items-center gap-3 mb-2">
+            <h1 className="text-3xl font-bold text-foreground drop-shadow-sm">{profile.name}</h1>
+            <RoleBadge role={profile.role} />
+          </div>
+          {profile.title && (
+            <p className="text-base font-medium text-foreground-secondary">{profile.title}</p>
+          )}
+          <p className="text-sm text-primary/80 font-mono mt-1">@{profile.username}</p>
         </div>
 
         {/* Bio */}
         {profile.bio && (
-          <p className="mt-4 text-sm text-foreground-secondary leading-relaxed max-w-2xl">
-            {profile.bio}
-          </p>
+          <div className="mt-2 p-4 rounded-xl bg-white/5 border border-white/5 backdrop-blur-sm max-w-2xl w-full">
+            <p className="text-sm text-foreground-secondary leading-relaxed">
+              {profile.bio}
+            </p>
+          </div>
         )}
 
         {/* Social Links */}
         {socialLinks.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-4">
+          <div className="flex flex-wrap justify-center gap-3 mt-6">
             {socialLinks.map((link) => (
               <a
                 key={link.key}
                 href={link.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-background-secondary border border-border text-xs font-medium text-foreground-secondary hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all duration-200 group"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-sm font-medium text-foreground-secondary hover:text-foreground hover:bg-white/10 hover:border-white/20 transition-all duration-300 group backdrop-blur-md"
               >
-                {link.icon}
+                <span className="text-primary/70 group-hover:text-primary transition-colors">{link.icon}</span>
                 {link.label}
-                <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <ExternalLink className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity ml-1" />
               </a>
             ))}
+          </div>
+        )}
+
+        {/* Edit button (own profile only) */}
+        {isOwnProfile && (
+          <div className="mt-8">
+            <Link
+              href="/settings/profile"
+              className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-sm font-medium text-foreground transition-all duration-300 shadow-sm backdrop-blur-md"
+            >
+              <Settings className="h-4 w-4" />
+              Edit Profile
+            </Link>
           </div>
         )}
       </div>
