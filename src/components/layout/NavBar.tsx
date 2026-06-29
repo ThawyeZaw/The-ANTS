@@ -8,7 +8,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import {
   CalendarDays,
   Timer,
@@ -119,30 +119,10 @@ const NAV_GROUPS: NavGroupDef[] = [
       { label: 'Add User', href: '/main-contributor/add-contributor', icon: <UserPlus className="h-4 w-4" />, description: 'Invite new contributor' },
     ],
   },
-  {
-    label: 'Profile',
-    icon: <UserCircle className="h-4 w-4" />,
-    allowedRoles: ['student', 'teacher', 'contributor', 'main_contributor'],
-    items: [
-      { label: 'My Profile', href: '/profile/me', icon: <UserCircle className="h-4 w-4" />, description: 'Your public profile' },
-    ],
-  },
+
 ];
 
-// Helper to build nav groups with dynamic profile link
-function getNavGroups(username?: string): NavGroupDef[] {
-  if (!username) return NAV_GROUPS;
-  return NAV_GROUPS.map((group) => {
-    if (group.label !== 'Profile') return group;
-    return {
-      ...group,
-      items: group.items.map((item) => ({
-        ...item,
-        href: `/profile/${username}`,
-      })),
-    };
-  });
-}
+
 
 // ── Dropdown Component ───────────────────────────────────────────────────────
 
@@ -216,6 +196,11 @@ function NavDropdown({
   );
 }
 
+// ── Helper to flatten nav items ────────────────────────────────────────────────
+export const getAllNavItems = () => {
+  return NAV_GROUPS.flatMap(group => group.items);
+};
+
 // ── Main NavBar ──────────────────────────────────────────────────────────────
 
 export default function NavBar() {
@@ -223,6 +208,7 @@ export default function NavBar() {
   const { role } = useRole();
   const { theme, toggleTheme } = useTheme();
   const router = useRouter();
+  const pathname = usePathname();
 
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -242,8 +228,34 @@ export default function NavBar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isUserMenuOpen]);
 
-  // Filter nav groups by current role, with dynamic profile link
-  const visibleGroups = getNavGroups(user?.profile?.username).filter(
+  // Track recently accessed pages
+  useEffect(() => {
+    if (!pathname || pathname === '/dashboard' || pathname === '/') return;
+    
+    // Only track valid nav items
+    const allItems = getAllNavItems();
+    const isValidItem = allItems.some(item => pathname.startsWith(item.href));
+    if (!isValidItem && !pathname.startsWith('/profile')) return;
+
+    try {
+      const recentStr = localStorage.getItem('recentPages');
+      let recent: { href: string; timestamp: number }[] = recentStr ? JSON.parse(recentStr) : [];
+      
+      // Remove if already exists to move to top
+      recent = recent.filter(p => p.href !== pathname);
+      recent.unshift({ href: pathname, timestamp: Date.now() });
+      
+      // Keep only last 5
+      if (recent.length > 5) recent.pop();
+      
+      localStorage.setItem('recentPages', JSON.stringify(recent));
+    } catch (e) {
+      console.error('Failed to track recent page:', e);
+    }
+  }, [pathname]);
+
+  // Filter nav groups by current role
+  const visibleGroups = NAV_GROUPS.filter(
     (group) => role && group.allowedRoles.includes(role)
   );
 
@@ -379,7 +391,7 @@ export default function NavBar() {
 
         {/* ─── Mobile Menu ─── */}
         {isMobileOpen && (
-          <div className="md:hidden mt-2 glass rounded-2xl p-4 animate-slide-down">
+          <div className="md:hidden mt-2 glass rounded-2xl p-4 animate-slide-down max-h-[calc(100vh-6rem)] overflow-y-auto">
             {visibleGroups.map((group) => (
               <div key={group.label} className="mb-4 last:mb-0">
                 <p className="text-xs font-semibold text-foreground-muted uppercase tracking-wider mb-2 px-2">

@@ -65,9 +65,6 @@ export function useProfile(username: string): UseProfileReturn {
   const isOwnProfile = !!(user && profile && user.id === profile.id);
 
   useEffect(() => {
-    setIsLoading(true);
-    setNotFound(false);
-
     // Simulate async fetch
     const timer = setTimeout(() => {
       // Resolve "me" to the current user's username

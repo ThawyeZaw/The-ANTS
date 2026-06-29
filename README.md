@@ -68,7 +68,7 @@ Whether you're targeting A* in IGCSE or A Levels, IELTS band 7+, or an OSSD dipl
 
 ### 📚 Notes Library & Curriculum Editor 
 - **Notes Library (`/library`)**: Browse, search, and filter approved study notes by qualification, subject, topic, difficulty, tags, and specification points.
-- **Selected Notes (`/library/saved`)**: A dedicated user page listing all bookmarked/saved study notes with instant search, client-side filters, and quick access.
+- **My Notes (`/my-notes`)**: A dedicated user page listing all your created and bookmarked/saved study notes with instant search, client-side filters, and quick access.
 - **Inline Note Reader**: Read notes instantly directly inside the library using a slide-out drawer overlay. Renders:
   - 🧮 *LaTeX Equations*: Rendered dynamically using KaTeX.
   - 🧬 *Interactive Animations*: WebGL/Canvas-based simulations (Pendulum, Gas Particles, DNA Double Helix, Waves, mass-spring).

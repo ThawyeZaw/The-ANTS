@@ -165,6 +165,9 @@ the-ants/                                 # Project root
     │       │   └── [noteId]/
     │       │       └── page.tsx          # Standalone note viewer (All Roles)
     │       │
+    │       ├── my-notes/
+    │       │   └── page.tsx              # My Notes hub (created & saved notes)
+    │       │
     │       ├── classrooms/
     │       │   ├── page.tsx              # 🔒 BMK & ABC — Classroom list
     │       │   └── [id]/
@@ -182,7 +185,7 @@ the-ants/                                 # Project root
     │       │   └── page.tsx              # 🔒 AKT — Grade Calculator
     │       │
     │       ├── settings/
-    │       │   └── page.tsx              # 🔒 PM — User settings (profile editor, role upgrade request, visibility toggle)
+    │       │   └── page.tsx              # 🔒 PM — User settings (profile editor, role upgrade request, role switcher)
     │       │
     │       │   # ── Contributor & Main Contributor Only ──────────────────────────────
     │       ├── editor/
@@ -219,11 +222,11 @@ the-ants/                                 # Project root
     │   ├── settings/                     # 🔒 PM — Settings page components
     │   │   ├── ProfileEditor.tsx          # Inline editable profile form (includes projects, activities, achievements)
     │   │   ├── RoleUpgradeForm.tsx         # Role upgrade request form
-    │   │   └── ProfileVisibilityToggle.tsx # Public/private profile toggle
+    │   │   └── RoleSwitcher.tsx            # Role switching component
     │   ├── profile/                      # 🔒 PM — Public profile components
     │   │   ├── ProfileHero.tsx            # Hero banner with avatar, bio, role badge
     │   │   ├── ProfileProjects.tsx        # Project showcase grid
-    │   │   ├── ProfileActivities.tsx      # CCA/activities timeline
+    │   │   ├── ProfileActivity.tsx        # CCA/activities timeline
     │   │   ├── ProfileAchievements.tsx    # Achievements & awards
     │   │   └── ProfileStats.tsx           # Stat cards (published count, views)
     │   ├── contributor-manager/          # 🔒 PM — Add-contributor invite flow components
@@ -258,6 +261,7 @@ the-ants/                                 # Project root
     │       ├── NoteViewer.tsx
     │       ├── NotesEditor.tsx
     │       ├── NotesLibrary.tsx
+    │       ├── MyNotesLibrary.tsx
     │       └── SavedNotesLibrary.tsx
     │
     ├── hooks/                            # Custom React Hooks (logic only — no JSX)
@@ -325,7 +329,7 @@ The authenticated app shell uses a **single NavBar** component (`src/components/
 |---|---|---|---|:---:|:---:|:---:|
 | **Plan** | Timetable, Exam Countdown, Grade Calculator | ✅ | ✅ | ✅ | ✅ |
 | **Study Tools** | Flashcards, Pomodoro Timer | ✅ | ✅ | ✅ | ✅ |
-| **Learn** | Lesson Tracker, Course Manager, Notes Library, Notes Editor, Selected Notes | ✅ | ✅ | ✅ | ✅ |
+| **Learn** | Lesson Tracker, Course Manager, Notes Library, Notes Editor, My Notes | ✅ | ✅ | ✅ | ✅ |
 | **Community** | Classrooms, Clubs | ✅ | ✅ | ✅ | ✅ |
 | **Editor** | Curriculum Editor, Exam Data Editor | ❌ | ❌ | ✅ | ✅ |
 | **Review** | Gatekeeper / Review Queue, Role Upgrade Requests | ❌ | ❌ | ❌ | ✅ |

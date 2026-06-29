@@ -58,6 +58,7 @@ const mockProfiles: Profile[] = [
     isPublic: true,
     projects: [
       {
+        id: 'proj-1',
         title: 'Physics Experiment Simulator',
         description: 'A web-based physics lab simulator built for IGCSE students.',
         role: 'Lead Developer',
@@ -67,6 +68,7 @@ const mockProfiles: Profile[] = [
     ],
     activities: [
       {
+        id: 'act-1',
         name: 'Science Olympiad',
         organization: 'Myanmar Science Society',
         role: 'Team Member',
@@ -77,6 +79,7 @@ const mockProfiles: Profile[] = [
     ],
     achievements: [
       {
+        id: 'ach-1',
         title: 'IGCSE Outstanding Achievement Award',
         description: 'Awarded for top marks in Physics and Mathematics.',
         date: '2025-08-15',
@@ -97,6 +100,7 @@ const mockProfiles: Profile[] = [
     isPublic: true,
     projects: [
       {
+        id: 'proj-2',
         title: 'Cell Biology Study Guide',
         description: 'Interactive study guide with diagrams and quizzes.',
         role: 'Creator',
@@ -120,6 +124,7 @@ const mockProfiles: Profile[] = [
     isPublic: true,
     projects: [
       {
+        id: 'proj-3',
         title: 'Chemistry Revision Portal',
         description: 'Comprehensive revision resources for A Level Chemistry.',
         role: 'Author',
@@ -130,6 +135,7 @@ const mockProfiles: Profile[] = [
     activities: [],
     achievements: [
       {
+        id: 'ach-2',
         title: 'Best Teacher Award 2025',
         description: 'Recognized for excellence in online teaching.',
         date: '2025-12-01',
@@ -169,6 +175,7 @@ const mockProfiles: Profile[] = [
     },
     projects: [
       {
+        id: 'proj-4',
         title: 'IGCSE Physics Curriculum',
         description: 'Full curriculum template with lesson plans and assessments.',
         role: 'Lead Developer',
@@ -177,6 +184,7 @@ const mockProfiles: Profile[] = [
     ],
     activities: [
       {
+        id: 'act-2',
         name: 'Education Summit 2025',
         organization: 'Myanmar Education Forum',
         role: 'Speaker',
@@ -187,6 +195,7 @@ const mockProfiles: Profile[] = [
     ],
     achievements: [
       {
+        id: 'ach-3',
         title: 'Published Curriculum Author',
         description: 'Authored 3 IGCSE curriculum templates on The ANTS.',
         date: '2025-06-20',
@@ -228,6 +237,7 @@ const mockProfiles: Profile[] = [
     },
     projects: [
       {
+        id: 'proj-5',
         title: 'Gatekeeper Review System',
         description: 'Designed the review workflow for curriculum submissions.',
         role: 'Project Lead',
@@ -236,6 +246,7 @@ const mockProfiles: Profile[] = [
     ],
     activities: [
       {
+        id: 'act-3',
         name: 'International Education Conference',
         organization: 'Cambridge University Press',
         role: 'Panelist',
@@ -245,6 +256,7 @@ const mockProfiles: Profile[] = [
     ],
     achievements: [
       {
+        id: 'ach-4',
         title: '15 Years in Education',
         description: 'Recognized for contributions to Myanmar\'s education sector.',
         date: '2025-03-10',
@@ -400,7 +412,7 @@ export function getPublicProfiles(roles?: UserRole[]): Profile[] {
  */
 export function mockUpdateProfile(
   userId: string,
-  data: Partial<Pick<Profile, 'name' | 'bio' | 'title' | 'socialLinks' | 'avatar' | 'isPublic' | 'projects' | 'activities' | 'achievements'>>
+  data: Partial<Pick<Profile, 'name' | 'bio' | 'title' | 'socialLinks' | 'avatar' | 'coverImage' | 'isPublic' | 'projects' | 'activities' | 'achievements' | 'academicGrades' | 'pinnedItemId' | 'sectionVisibility'>>
 ): { success: true; profile: Profile } | { success: false; error: string } {
   const profile = mockProfiles.find((p) => p.id === userId);
   if (!profile) return { success: false, error: 'User not found.' };
@@ -414,9 +426,13 @@ export function mockUpdateProfile(
   if (data.socialLinks !== undefined) profile.socialLinks = data.socialLinks;
   if (data.avatar !== undefined) profile.avatar = data.avatar;
   if (data.isPublic !== undefined) profile.isPublic = data.isPublic;
+  if (data.coverImage !== undefined) profile.coverImage = data.coverImage;
+  if (data.pinnedItemId !== undefined) profile.pinnedItemId = data.pinnedItemId;
+  if (data.sectionVisibility !== undefined) profile.sectionVisibility = data.sectionVisibility;
   if (data.projects !== undefined) profile.projects = data.projects;
   if (data.activities !== undefined) profile.activities = data.activities;
   if (data.achievements !== undefined) profile.achievements = data.achievements;
+  if (data.academicGrades !== undefined) profile.academicGrades = data.academicGrades;
 
   return { success: true, profile: { ...profile } };
 }

@@ -6,6 +6,7 @@
 // No authentication required. Anyone with the link can view.
 // ──────────────────────────────────────────────────────────────────────────────
 
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -47,6 +48,12 @@ const FEATURE_NAMES: Record<string, string> = {
 };
 
 export default function PublicClubDetailPage() {
+  const [url, setUrl] = useState('');
+
+  useEffect(() => {
+    setUrl(window.location.href);
+  }, []);
+
   const params = useParams();
   const clubId = params.id as string;
   const club = getClub(clubId);
@@ -190,7 +197,7 @@ export default function PublicClubDetailPage() {
             Share this page link to let others discover this club.
           </p>
           <p className="text-xs text-foreground-muted mt-1 font-mono">
-            {typeof window !== 'undefined' ? window.location.href : ''}
+            {url}
           </p>
         </div>
 
