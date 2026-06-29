@@ -25,6 +25,7 @@ const MIN_INTERVAL = 1; // days
 /** Quality score mapping for SM-2 */
 const QUALITY_MAP: Record<SRSRating, number> = {
   again: 1,
+  hard: 2,
   good: 3,
   easy: 4,
 };
@@ -65,6 +66,16 @@ export function computeNextReview(
     // Again (1): full reset — start over from day 1
     newInterval = MIN_INTERVAL;
     newEaseFactor = Math.max(MIN_EASE_FACTOR, currentEaseFactor - 0.2);
+  } else if (quality === 2) {
+    // Hard (2): shortened interval growth and a slight ease factor reduction
+    if (currentInterval === 1) {
+      newInterval = 2;
+    } else if (currentInterval <= 3) {
+      newInterval = 4;
+    } else {
+      newInterval = Math.round(currentInterval * Math.max(MIN_EASE_FACTOR, currentEaseFactor - 0.1));
+    }
+    newEaseFactor = Math.max(MIN_EASE_FACTOR, currentEaseFactor - 0.15);
   } else if (quality === 3) {
     // Good (3): standard SM-2 interval progression
     if (currentInterval === 1) {

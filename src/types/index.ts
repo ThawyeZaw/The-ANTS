@@ -540,7 +540,7 @@ export interface ExamCountdown {
 // -----------------------------------------------------------------------------
 
 /** Rating a user gives to a flashcard during review (maps to SM-2 quality scores) */
-export type SRSRating = 'again' | 'good' | 'easy';
+export type SRSRating = 'again' | 'hard' | 'good' | 'easy';
 
 /** A flashcard deck (maps to `decks` table) */
 export interface Deck {

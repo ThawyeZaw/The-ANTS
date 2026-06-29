@@ -175,7 +175,7 @@ export function useFlashcardSRS(): UseFlashcardSRSReturn {
 
   const currentCard = state.sessionComplete ? null : (state.dueCards[state.currentIndex] ?? null);
 
-  const ratings: Record<SRSRating, number> = { again: 0, good: 0, easy: 0 };
+  const ratings: Record<SRSRating, number> = { again: 0, hard: 0, good: 0, easy: 0 };
   Object.values(state.cardRatings).forEach(r => {
     if (ratings[r] !== undefined) ratings[r]++;
   });
