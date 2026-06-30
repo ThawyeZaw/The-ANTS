@@ -1,3 +1,9 @@
+# The ANTS — Database Schema Reference
+
+> **Quick Sync Check** — This file is the single source of truth for all PostgreSQL table schemas. It must stay in sync with `src/types/index.ts` and `src/lib/mock/database.ts`. When tables, columns, or types change in the code, update this file.
+
+---
+
 ## Table `profiles`
 
 ### Columns
@@ -16,9 +22,11 @@
 | `activities` | `jsonb` |  Nullable |
 | `achievements` | `jsonb` |  Nullable |
 
-> **`projects` JSONB structure:** Array of `{ title, description, role, technologies: string[], links: { github?, live?, other? }, media: string[] }`
-> **`activities` JSONB structure:** Array of `{ name, organization, role, start_date, end_date?, description, verification_link? }`
-> **`achievements` JSONB structure:** Array of `{ title, description, date?, issuer?, link? }`
+> **`projects` JSONB structure:** Array of `{ id, title, description, role?, technologies?: string[], links?: { github?, live?, website?, other? }, media?: string[], isHidden?, order? }`
+> **`activities` JSONB structure:** Array of `{ id, name, organization, role, start_date, end_date?, description?, verification_link?, isHidden?, order? }`
+> **`achievements` JSONB structure:** Array of `{ id, title, description?, date?, issuer?, link?, isHidden?, order? }`
+
+---
 
 ## Table `student_profiles`
 
@@ -30,6 +38,8 @@
 | `target_exam_year` | `int4` |  Nullable |
 | `study_goals_metadata` | `jsonb` |  Nullable |
 
+---
+
 ## Table `teacher_profiles`
 
 ### Columns
@@ -39,6 +49,8 @@
 | `id` | `uuid` | Primary |
 | `institution_name` | `text` |  Nullable |
 | `is_verified_teacher` | `bool` |  Nullable |
+
+---
 
 ## Table `contributor_profiles`
 
@@ -54,6 +66,8 @@
 | `linkedin_url` | `text` |  Nullable |
 | `github_url` | `text` |  Nullable |
 | `verification_documents_url` | `text` |  Nullable |
+
+---
 
 ## Table `curriculums`
 
@@ -72,6 +86,8 @@
 | `created_at` | `timestamp` |  Nullable |
 | `updated_at` | `timestamp` |  Nullable |
 
+---
+
 ## Table `subjects`
 
 ### Columns
@@ -83,6 +99,8 @@
 | `title`         | `text` |             |
 | `description`   | `text` | Nullable    |
 | `order_no`      | `int4` | Nullable    |
+
+---
 
 ## Table `topics`
 
@@ -96,6 +114,8 @@
 | `description` | `text` |  Nullable |
 | `order_no` | `int4` |  Nullable |
 
+---
+
 ## Table `user_curriculums`
 
 ### Columns
@@ -106,6 +126,8 @@
 | `user_id` | `uuid` |  |
 | `curriculum_id` | `uuid` |  |
 | `selected_at` | `timestamp` |  Nullable |
+
+---
 
 ## Table `topic_progress`
 
@@ -119,6 +141,8 @@
 | `confidence_level` | `int4` |  Nullable |
 | `status` | `text` |  Nullable |
 | `updated_at` | `timestamp` |  Nullable |
+
+---
 
 ## Table `resources`
 
@@ -137,6 +161,8 @@
 | `created_at`     | `timestamp` | Nullable    |
 | `updated_at`     | `timestamp` | Nullable    |
 
+---
+
 ## Table `editor_submissions`
 
 ### Columns
@@ -153,6 +179,8 @@
 | `submitted_at` | `timestamp` |  Nullable |
 | `reviewed_at` | `timestamp` |  Nullable |
 
+---
+
 ## Table `classrooms`
 
 ### Columns
@@ -162,9 +190,14 @@
 | `id` | `uuid` | Primary |
 | `name` | `text` |  |
 | `description` | `text` |  Nullable |
-| `teacher_id` | `uuid` |  |
 | `invite_code` | `text` |  Nullable Unique |
+| `curriculum_ids` | `text[]` |  Nullable |
+| `enabled_features` | `jsonb` |  Nullable |
 | `created_at` | `timestamp` |  Nullable |
+
+> **`enabled_features` JSONB structure:** Array of `{ key: ("assignments" | "quizzes" | "resources" | "discussions" | "links"), enabled: bool }`. Default: all features except quizzes, discussions, and links.
+
+---
 
 ## Table `classroom_members`
 
@@ -175,7 +208,12 @@
 | `id` | `uuid` | Primary |
 | `classroom_id` | `uuid` |  |
 | `user_id` | `uuid` |  |
+| `role` | `text` |  |
 | `joined_at` | `timestamp` |  Nullable |
+
+> **`role` values:** `"teacher"` | `"student"` — classrooms support multiple teachers.
+
+---
 
 ## Table `classroom_curriculums`
 
@@ -187,6 +225,8 @@
 | `classroom_id` | `uuid` |  |
 | `curriculum_id` | `uuid` |  |
 
+---
+
 ## Table `assignments`
 
 ### Columns
@@ -197,10 +237,19 @@
 | `classroom_id` | `uuid` |  |
 | `title` | `text` |  |
 | `description` | `text` |  Nullable |
-| `due_date` | `timestamp` |  Nullable |
-| `priority` | `text` |  Nullable |
+| `due_date` | `timestamp` |  |
+| `priority` | `text` |  |
+| `status` | `text` |  Default: 'draft' |
+| `total_points` | `int4` |  Nullable |
+| `attachment_urls` | `text[]` |  Nullable |
 | `created_by` | `uuid` |  |
-| `created_at` | `timestamp` |  Nullable |
+| `created_at` | `timestamp` |  |
+| `updated_at` | `timestamp` |  |
+
+> **`priority` values:** `"low"` | `"medium"` | `"high"`
+> **`status` values:** `"draft"` | `"published"` | `"closed"`
+
+---
 
 ## Table `assignment_submissions`
 
@@ -211,9 +260,110 @@
 | `id` | `uuid` | Primary |
 | `assignment_id` | `uuid` |  |
 | `student_id` | `uuid` |  |
-| `submission_text` | `text` |  Nullable |
-| `status` | `text` |  Nullable |
+| `content` | `text` |  Nullable |
+| `attachment_urls` | `text[]` |  Nullable |
 | `submitted_at` | `timestamp` |  Nullable |
+| `grade` | `numeric` |  Nullable |
+| `feedback` | `text` |  Nullable |
+| `graded_at` | `timestamp` |  Nullable |
+
+---
+
+## Table `quizzes`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `classroom_id` | `uuid` |  |
+| `title` | `text` |  |
+| `description` | `text` |  Nullable |
+| `time_limit_minutes` | `int4` |  Nullable |
+| `due_date` | `timestamp` |  Nullable |
+| `status` | `text` |  |
+| `questions` | `jsonb` |  |
+| `created_by` | `uuid` |  |
+| `created_at` | `timestamp` |  |
+
+> **`status` values:** `"draft"` | `"published"` | `"closed"`
+> **`questions` JSONB structure:** Array of `{ id, type, question_text, options?: string[], correct_answer, points, order }` where `type` is `"multiple_choice"` | `"true_false"` | `"short_answer"`.
+
+---
+
+## Table `quiz_attempts`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `quiz_id` | `uuid` |  |
+| `student_id` | `uuid` |  |
+| `answers` | `jsonb` |  |
+| `score` | `numeric` |  Nullable |
+| `total_points` | `int4` |  |
+| `started_at` | `timestamp` |  |
+| `submitted_at` | `timestamp` |  Nullable |
+
+> **`answers` JSONB structure:** Array of `{ question_id, answer, is_correct?: bool }`. The `is_correct` field is set server-side after submission.
+
+---
+
+## Table `discussion_topics`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `classroom_id` | `uuid` |  |
+| `title` | `text` |  |
+| `content` | `text` |  |
+| `assignment_id` | `uuid` |  Nullable |
+| `is_pinned` | `bool` |  Default: false |
+| `is_locked` | `bool` |  Default: false |
+| `created_by` | `uuid` |  |
+| `created_at` | `timestamp` |  |
+| `updated_at` | `timestamp` |  |
+
+---
+
+## Table `discussion_replies`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `topic_id` | `uuid` |  |
+| `content` | `text` |  |
+| `created_by` | `uuid` |  |
+| `created_at` | `timestamp` |  |
+| `updated_at` | `timestamp` |  |
+
+---
+
+## Table `classroom_resources`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `classroom_id` | `uuid` |  |
+| `title` | `text` |  |
+| `description` | `text` |  Nullable |
+| `type` | `text` |  |
+| `url` | `text` |  |
+| `curriculum_id` | `uuid` |  Nullable |
+| `subject_id` | `uuid` |  Nullable |
+| `uploaded_by` | `uuid` |  |
+| `created_at` | `timestamp` |  |
+
+> **`type` values:** `"pdf"` | `"video"` | `"document"` | `"link"` | `"image"`
+
+---
 
 ## Table `clubs`
 
@@ -230,7 +380,9 @@
 | `enabled_features` | `jsonb` |  Nullable |
 | `created_at` | `timestamp` |  Nullable |
 
-> **`enabled_features` JSONB structure:** Array of strings from: `"chat"`, `"announcements"`, `"links"`, `"members"`, `"projects"`, `"activity_timeline"`, `"leaderboard"`. Default: `["chat", "announcements", "links", "members"]`
+> **`enabled_features` JSONB structure:** Array of `{ key: ("chat" | "announcements" | "links" | "members" | "projects" | "activity_timeline" | "leaderboard"), enabled: bool, public_visible: bool }`. Default: `["chat", "announcements", "links", "members"]` with all enabled and publicly visible.
+
+---
 
 ## Table `club_members`
 
@@ -245,6 +397,11 @@
 | `membership_status` | `text` |  Nullable |
 | `joined_at` | `timestamp` |  Nullable |
 
+> **`role` values:** `"admin"` | `"moderator"` | `"member"`
+> **`membership_status` values:** `"active"` | `"pending"` | `"rejected"`
+
+---
+
 ## Table `club_curriculums`
 
 ### Columns
@@ -255,6 +412,8 @@
 | `club_id` | `uuid` |  |
 | `curriculum_id` | `uuid` |  |
 
+---
+
 ## Table `club_subjects`
 
 ### Columns
@@ -264,6 +423,8 @@
 | `id` | `uuid` | Primary |
 | `club_id` | `uuid` |  |
 | `subject_id` | `uuid` |  |
+
+---
 
 ## Table `club_messages`
 
@@ -276,6 +437,8 @@
 | `sender_id` | `uuid` |  |
 | `message` | `text` |  |
 | `created_at` | `timestamp` |  Nullable |
+
+---
 
 ## Table `club_announcements`
 
@@ -290,6 +453,8 @@
 | `content` | `text` |  Nullable |
 | `created_at` | `timestamp` |  Nullable |
 
+---
+
 ## Table `club_links`
 
 ### Columns
@@ -302,6 +467,24 @@
 | `url` | `text` |  Nullable |
 | `shared_by` | `uuid` |  |
 | `created_at` | `timestamp` |  Nullable |
+
+---
+
+## Table `club_join_requests`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `club_id` | `uuid` |  |
+| `user_id` | `uuid` |  |
+| `status` | `text` |  |
+| `requested_at` | `timestamp` |  |
+
+> **`status` values:** `"pending"` | `"approved"` | `"rejected"`
+
+---
 
 ## Table `timetable_events`
 
@@ -322,6 +505,8 @@
 | `metadata` | `jsonb` |  Nullable |
 | `created_at` | `timestamp` |  Nullable |
 
+---
+
 ## Table `pomodoro_sessions`
 
 ### Columns
@@ -334,6 +519,8 @@
 | `task_name` | `text` |  Nullable |
 | `category` | `text` |  Nullable |
 | `completed_at` | `timestamp` |  Nullable |
+
+---
 
 ## Table `decks`
 
@@ -351,6 +538,8 @@
 | `is_public` | `bool` |  Nullable |
 | `created_at` | `timestamp` |  Nullable |
 
+---
+
 ## Table `cards`
 
 ### Columns
@@ -362,6 +551,8 @@
 | `front_text` | `text` |  Nullable |
 | `back_text` | `text` |  Nullable |
 | `created_at` | `timestamp` |  Nullable |
+
+---
 
 ## Table `card_reviews`
 
@@ -377,6 +568,10 @@
 | `next_review_date` | `timestamp` |  Nullable |
 | `last_rating` | `text` |  Nullable |
 
+> **`last_rating` values:** `"again"` | `"hard"` | `"good"` | `"easy"`
+
+---
+
 ## Table `exams`
 
 ### Columns
@@ -384,11 +579,13 @@
 | Name | Type | Constraints |
 |------|------|-------------|
 | `id` | `uuid` | Primary |
-| `curriculum_id` | `uuid` |  |
-| `title` | `text` |  Nullable |
+| `curriculum_id` | `uuid` |  Nullable |
+| `title` | `text` |  |
 | `exam_series` | `text` |  Nullable |
-| `exam_date` | `timestamp` |  Nullable |
-| `created_at` | `timestamp` |  Nullable |
+| `exam_date` | `timestamp` |  |
+| `created_at` | `timestamp` |  |
+
+---
 
 ## Table `exam_countdowns`
 
@@ -402,7 +599,10 @@
 | `custom_title` | `text` |  Nullable |
 | `target_date` | `timestamp` |  Nullable |
 | `priority_indicator` | `text` |  Nullable |
+| `qualification_group` | `text` |  Nullable |
 | `created_at` | `timestamp` |  Nullable |
+
+---
 
 ## Table `grade_boundaries`
 
@@ -415,6 +615,8 @@
 | `grade` | `text` |  Nullable |
 | `min_mark` | `numeric` |  Nullable |
 | `max_mark` | `numeric` |  Nullable |
+
+---
 
 ## Table `grade_entries`
 
@@ -431,6 +633,8 @@
 | `weight` | `numeric` |  Nullable |
 | `predicted_grade` | `text` |  Nullable |
 | `created_at` | `timestamp` |  Nullable |
+
+---
 
 ## Table `role_upgrade_requests`
 
@@ -450,6 +654,8 @@
 
 > **`status` values:** `"pending"`, `"approved"`, `"rejected"`
 > **Rule:** Roles can only be upgraded (student → teacher → contributor → main_contributor). Downgrades are not permitted. Only a `main_contributor` can approve or reject upgrade requests.
+
+---
 
 ## Table `notes`
 
@@ -475,9 +681,11 @@
 | `created_at` | `timestamp` | |
 | `updated_at` | `timestamp` | |
 
-> **`blocks` JSONB structure:** Array of `NoteBlock` objects (`{ type, id, ... }` representing headings, paragraphs, latex, svgs, animations, etc).
+> **`blocks` JSONB structure:** Array of `NoteBlock` objects (`{ type, id, ... }` representing headings, paragraphs, latex, svgs, animations, images, code, tables, dividers, links).
 > **`status` values:** `"draft"`, `"pending_review"`, `"approved"`, `"rejected"`
 > **`visibility` values:** `"private"`, `"link"`, `"public"`. When approved, a note automatically becomes `"public"`.
+
+---
 
 ## Table `user_saved_notes`
 
