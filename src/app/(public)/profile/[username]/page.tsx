@@ -3,17 +3,33 @@
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTS — Public Profile Page (All Roles)
 // Displays a user's public profile with projects, activities, achievements, 
-// academic grades, and role-specific stats.
+// academic grades, and role-specific stats. Supports theme, layout, and section
+// ordering customization.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, UserX, Loader2, ExternalLink, CalendarDays, Award, FolderGit2, BookOpen, Pin } from 'lucide-react';
+import {
+  ArrowLeft,
+  UserX,
+  Loader2,
+  ExternalLink,
+  Award,
+  Pin,
+  Star,
+  GraduationCap,
+  Code2,
+  Camera,
+  Music2,
+  Globe,
+  Link2,
+} from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import ProfileHero from '@/components/profile/ProfileHero';
 import ProfileStats from '@/components/profile/ProfileStats';
 import ProfileActivity from '@/components/profile/ProfileActivity';
+import { PROFILE_THEME_PRESETS, type Profile } from '@/types';
 import { cn } from '@/lib/utils';
 
 export default function ProfilePage() {
@@ -41,17 +57,36 @@ export default function ProfilePage() {
     notFound,
   } = useProfile(username);
 
-  // Filter out hidden items and apply sorting
-  const projects = useMemo(() => rawProjects.filter(p => !p.isHidden).sort((a, b) => (a.order || 0) - (b.order || 0)), [rawProjects]);
-  const activities = useMemo(() => rawActivities.filter(a => !a.isHidden).sort((a, b) => (a.order || 0) - (b.order || 0)), [rawActivities]);
-  const achievements = useMemo(() => rawAchievements.filter(a => !a.isHidden).sort((a, b) => (a.order || 0) - (b.order || 0)), [rawAchievements]);
-  const academicGrades = useMemo(() => (profile?.academicGrades || []).filter(g => !g.isHidden).sort((a, b) => (a.order || 0) - (b.order || 0)), [profile?.academicGrades]);
+  // ── Compute theme CSS variables ───────────────────────────────────────────
+  const themeColors = useMemo(() => {
+    if (!profile?.theme) return null;
+    const preset = PROFILE_THEME_PRESETS.find(p => p.key === profile.theme!.preset);
+    if (!preset) return null;
+    return {
+      '--profile-accent': profile.theme.accentColor || preset.colors.accent,
+      '--profile-bg': profile.theme.backgroundColor || preset.colors.background,
+      '--profile-card': preset.colors.card,
+    };
+  }, [profile?.theme]);
 
-  // Find pinned item
+  // ── Filter visible items ──────────────────────────────────────────────────
+  const projects = useMemo(() =>
+    rawProjects.filter(p => !p.isHidden).sort((a, b) => (a.order || 0) - (b.order || 0)),
+  [rawProjects]);
+  const activities = useMemo(() =>
+    rawActivities.filter(a => !a.isHidden).sort((a, b) => (a.order || 0) - (b.order || 0)),
+  [rawActivities]);
+  const achievements = useMemo(() =>
+    rawAchievements.filter(a => !a.isHidden).sort((a, b) => (a.order || 0) - (b.order || 0)),
+  [rawAchievements]);
+  const academicGrades = useMemo(() =>
+    (profile?.academicGrades || []).filter(g => !g.isHidden).sort((a, b) => (a.order || 0) - (b.order || 0)),
+  [profile?.academicGrades]);
+
+  // ── Pinned item ───────────────────────────────────────────────────────────
   const pinnedItemId = profile?.pinnedItemId;
   let pinnedItem: any = null;
   let pinnedType = '';
-
   if (pinnedItemId) {
     if (projects.find(p => p.id === pinnedItemId)) { pinnedItem = projects.find(p => p.id === pinnedItemId); pinnedType = 'project'; }
     else if (activities.find(a => a.id === pinnedItemId)) { pinnedItem = activities.find(a => a.id === pinnedItemId); pinnedType = 'activity'; }
@@ -59,22 +94,56 @@ export default function ProfilePage() {
     else if (academicGrades.find(g => g.id === pinnedItemId)) { pinnedItem = academicGrades.find(g => g.id === pinnedItemId); pinnedType = 'grade'; }
   }
 
-  // Section visibility checks
+  // ── Section visibility ────────────────────────────────────────────────────
   const showProjects = profile?.sectionVisibility?.projects !== false && projects.length > 0;
   const showActivities = profile?.sectionVisibility?.activities !== false && activities.length > 0;
   const showAchievements = profile?.sectionVisibility?.achievements !== false && achievements.length > 0;
   const showGrades = profile?.sectionVisibility?.academicGrades !== false && academicGrades.length > 0;
 
-  const hasPortfolio = showProjects || showActivities || showAchievements || showGrades;
+  // ── Section ordering ──────────────────────────────────────────────────────
+  const sectionOrder = profile?.sectionOrder || ['projects', 'activities', 'achievements', 'academicGrades'];
+  const sectionsMap: Record<string, { key: string; visible: boolean; content: React.ReactNode }> = {
+    projects: {
+      key: 'projects',
+      visible: showProjects,
+      content: <ProjectsSection key="projects" projects={projects} profile={profile!} />,
+    },
+    activities: {
+      key: 'activities',
+      visible: showActivities,
+      content: <ActivitiesSection key="activities" activities={activities} profile={profile!} />,
+    },
+    achievements: {
+      key: 'achievements',
+      visible: showAchievements,
+      content: <AchievementsSection key="achievements" achievements={achievements} profile={profile!} />,
+    },
+    academicGrades: {
+      key: 'academicGrades',
+      visible: showGrades,
+      content: <GradesSection key="academicGrades" grades={academicGrades} />,
+    },
+  };
+
+  const orderedSections = sectionOrder
+    .map(key => sectionsMap[key])
+    .filter(s => s && s.visible)
+    .map(s => s.content);
+
+  const hasPortfolio = orderedSections.length > 0;
+  const isContributor = profile?.role === 'contributor' || profile?.role === 'main_contributor';
+
+  // ── Layout classes ────────────────────────────────────────────────────────
+  const spacingClass = profile?.spacing === 'spacious' ? 'space-y-10' : 'space-y-6';
+  const widthClass = profile?.width === 'full' ? 'max-w-7xl' : 'max-w-5xl';
+  const sectionLayout = profile?.sectionLayout || 'layout-a';
 
   // Loading state
   if (username === 'me' || isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh] animate-fade-in">
-        <div className="flex flex-col items-center gap-3 p-8 rounded-2xl bg-background-card/50 backdrop-blur-sm border border-white/5">
-          <Loader2 className="h-8 w-8 text-primary animate-spin" />
-          <p className="text-sm font-medium text-foreground-muted">Loading profile...</p>
-        </div>
+      <div className="flex flex-col items-center gap-3 py-24 animate-fade-in">
+        <Loader2 className="h-6 w-6 text-primary animate-spin" />
+        <p className="text-sm font-medium text-foreground-muted">Loading profile...</p>
       </div>
     );
   }
@@ -82,33 +151,30 @@ export default function ProfilePage() {
   // 404 state
   if (notFound || !profile || (!profile.isPublic && !isOwnProfile)) {
     return (
-      <div className="max-w-2xl mx-auto text-center py-24 animate-fade-in">
-        <div className="inline-flex items-center justify-center h-20 w-20 rounded-3xl bg-error/10 text-error mb-6 shadow-sm border border-error/20">
-          <UserX className="h-10 w-10" />
-        </div>
-        <h1 className="text-2xl font-bold text-foreground mb-3">Profile Unavailable</h1>
-        <p className="text-foreground-secondary mb-8 max-w-md mx-auto leading-relaxed">
+      <div className="max-w-lg mx-auto text-center py-24 animate-fade-in">
+        <h1 className="text-xl font-bold text-foreground mb-3">Profile Unavailable</h1>
+        <p className="text-sm text-foreground-secondary leading-relaxed mb-6">
           The user <span className="font-mono text-foreground font-semibold">@{username}</span> could not be found, or their profile is set to private.
         </p>
         <button
           onClick={() => router.back()}
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary-hover transition-all shadow-md hover:shadow-lg cursor-pointer"
+          className="text-sm font-medium text-foreground-muted hover:text-foreground transition-colors cursor-pointer"
         >
-          <ArrowLeft className="h-4 w-4" />
-          Go Back
+          <ArrowLeft className="h-4 w-4 inline mr-1" /> Go Back
         </button>
       </div>
     );
   }
 
-  const isContributor = profile.role === 'contributor' || profile.role === 'main_contributor';
-
   return (
-    <div className="max-w-5xl mx-auto space-y-8 animate-fade-in pb-12">
+    <div
+      className={`${widthClass} mx-auto ${spacingClass} animate-fade-in pb-12`}
+      style={themeColors ? (themeColors as React.CSSProperties) : undefined}
+    >
       {/* Back Button */}
       <button
         onClick={() => router.back()}
-        className="group flex items-center gap-2 px-4 py-2 rounded-xl bg-background-card/50 backdrop-blur-md border border-white/10 shadow-sm hover:shadow-md hover:bg-white/5 text-sm font-medium text-foreground transition-all duration-300 cursor-pointer w-fit"
+        className="group flex items-center gap-1.5 text-sm font-medium text-foreground-muted hover:text-foreground transition-colors cursor-pointer w-fit"
       >
         <ArrowLeft className="h-4 w-4 text-foreground-muted group-hover:text-primary group-hover:-translate-x-0.5 transition-all duration-300" />
         Back
@@ -124,202 +190,86 @@ export default function ProfilePage() {
 
       {/* ── Pinned Item Section ─── */}
       {pinnedItem && (
-        <section className="relative p-[1px] rounded-2xl bg-gradient-to-br from-primary/50 via-accent/30 to-background">
-          <div className="bg-background/90 backdrop-blur-xl rounded-2xl p-6 h-full">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
-                 <Pin className="h-4 w-4" />
-              </div>
-              <h2 className="text-sm font-bold text-primary uppercase tracking-wider">Pinned Highlight</h2>
-            </div>
-            
+        <section>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-1 h-6 rounded-full" style={{ backgroundColor: 'var(--profile-accent)' }} />
+            <Pin className="h-4 w-4" style={{ color: 'var(--profile-accent)' }} />
+            <h2 className="text-sm font-bold uppercase tracking-wider text-foreground-secondary">Pinned Highlight</h2>
+          </div>
+
+          <div className="pl-4 border-l-2" style={{ borderColor: 'var(--profile-accent)' }}>
             {pinnedType === 'project' && (
               <div>
-                <h3 className="text-xl font-bold text-foreground">{pinnedItem.title}</h3>
-                {pinnedItem.role && <p className="text-sm text-primary/80 font-medium mt-1">{pinnedItem.role}</p>}
-                <p className="text-foreground-secondary mt-3 leading-relaxed">{pinnedItem.description}</p>
+                <h3 className="text-lg font-bold text-foreground">{pinnedItem.title}</h3>
+                {pinnedItem.role && <p className="text-xs font-medium mt-0.5" style={{ color: 'var(--profile-accent)' }}>{pinnedItem.role}</p>}
+                <p className="text-sm text-foreground-secondary mt-2 leading-relaxed">{pinnedItem.description}</p>
+                {pinnedItem.technologies && pinnedItem.technologies.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {pinnedItem.technologies.map((tech: string) => (
+                      <span key={tech} className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-background-secondary/50 text-foreground-muted">
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 {pinnedItem.links?.live && (
-                  <a href={pinnedItem.links.live} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 mt-4 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary-hover transition-colors shadow-sm">
-                    View Project <ExternalLink className="h-4 w-4" />
+                  <a href={pinnedItem.links.live} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 mt-3 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors" style={{ backgroundColor: 'var(--profile-accent)', color: '#fff' }}>
+                    View Project <ExternalLink className="h-3 w-3" />
                   </a>
                 )}
               </div>
             )}
-            
+
             {pinnedType === 'achievement' && (
-              <div className="flex gap-4 items-start">
-                 <div className="p-4 rounded-2xl bg-amber-500/10 text-amber-500 shrink-0">
-                   <Award className="h-8 w-8" />
-                 </div>
-                 <div>
-                   <h3 className="text-xl font-bold text-foreground">{pinnedItem.title}</h3>
-                   <p className="text-sm font-medium text-foreground-muted mt-1">{pinnedItem.issuer} • {pinnedItem.date}</p>
-                   {pinnedItem.description && <p className="text-foreground-secondary mt-3 leading-relaxed">{pinnedItem.description}</p>}
-                 </div>
+              <div className="flex gap-3 items-start">
+                <div className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center" style={{ backgroundColor: 'var(--profile-accent)', opacity: 0.1 }}>
+                  <Award className="h-4 w-4" style={{ color: 'var(--profile-accent)' }} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-foreground">{pinnedItem.title}</h3>
+                  <p className="text-xs font-medium text-foreground-muted mt-1">{pinnedItem.issuer} • {pinnedItem.date}</p>
+                  {pinnedItem.description && <p className="text-sm text-foreground-secondary mt-2 leading-relaxed">{pinnedItem.description}</p>}
+                </div>
               </div>
             )}
-            
-            {/* Can add renders for pinned activity or grade similarly */}
           </div>
         </section>
       )}
 
-      {/* Main Grid for Portfolio Items */}
-      <div className={cn("grid gap-8", hasPortfolio ? "grid-cols-1 lg:grid-cols-12" : "grid-cols-1")}>
-        
-        {/* Left Column (Projects & Grades) */}
-        <div className={cn("space-y-8", isContributor ? "lg:col-span-12" : "lg:col-span-7")}>
-          
-          {/* ── Projects Section ─── */}
-          {showProjects && (
-            <section className="bg-background-card/40 backdrop-blur-xl border border-white/5 rounded-3xl p-6 sm:p-8 shadow-sm">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
-                    <FolderGit2 className="h-5 w-5" />
-                  </div>
-                  <h2 className="text-xl font-bold text-foreground">Projects</h2>
-                </div>
-              </div>
-              <div className={cn("grid gap-4", isContributor ? "md:grid-cols-2" : "grid-cols-1")}>
-                {projects.map((project) => (
-                  <div key={project.id} className="group relative bg-white/5 border border-white/5 rounded-2xl p-5 hover:bg-white/10 hover:border-white/10 transition-all duration-300 overflow-hidden">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-primary/0 group-hover:bg-primary transition-colors" />
-                    <h3 className="font-bold text-foreground text-lg group-hover:text-primary transition-colors">{project.title}</h3>
-                    {project.role && (
-                      <p className="text-xs font-medium text-primary/80 mt-1 uppercase tracking-wide">{project.role}</p>
-                    )}
-                    <p className="text-sm text-foreground-secondary mt-3 leading-relaxed">
-                      {project.description}
-                    </p>
-                    {project.technologies && project.technologies.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mt-4">
-                        {project.technologies.map((tech) => (
-                          <span key={tech} className="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-background-secondary/50 text-foreground-secondary border border-white/5">
-                            {tech}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    {project.links && Object.keys(project.links).length > 0 && (
-                      <div className="flex flex-wrap gap-3 mt-5 pt-4 border-t border-white/5">
-                        {project.links.github && (
-                          <a href={project.links.github} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs font-medium text-foreground-muted hover:text-foreground transition-colors">
-                            <ExternalLink className="h-3.5 w-3.5" /> Source
-                          </a>
-                        )}
-                        {project.links.live && (
-                          <a href={project.links.live} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary-hover transition-colors">
-                            <ExternalLink className="h-3.5 w-3.5" /> Live Demo
-                          </a>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* ─── Academic Grades Section ─── */}
-          {showGrades && (
-            <section className="bg-background-card/40 backdrop-blur-xl border border-white/5 rounded-3xl p-6 sm:p-8 shadow-sm">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-500">
-                  <BookOpen className="h-5 w-5" />
-                </div>
-                <h2 className="text-xl font-bold text-foreground">Academic Grades</h2>
-              </div>
-              <div className="space-y-4">
-                {academicGrades.map((grade) => (
-                  <div key={grade.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
-                    <div>
-                      <h3 className="font-bold text-foreground">{grade.title}</h3>
-                      {grade.description && <p className="text-sm text-foreground-secondary mt-1">{grade.description}</p>}
-                    </div>
-                    {grade.fileUrl && (
-                      <a href={grade.fileUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-blue-500/10 text-blue-500 text-sm font-medium hover:bg-blue-500/20 transition-colors shrink-0">
-                        View Certificate <ExternalLink className="h-4 w-4" />
-                      </a>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
+      {/* ── Portfolio Sections ─── */}
+      {sectionLayout === 'layout-b' ? (
+        /* Full-width single column */
+        <div className="space-y-8">{orderedSections}</div>
+      ) : sectionLayout === 'layout-c' ? (
+        /* Two-column with sidebar (equal columns) */
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="space-y-8">
+            {orderedSections.filter((_, i) => i % 2 === 0)}
+          </div>
+          <div className="space-y-8">
+            {orderedSections.filter((_, i) => i % 2 === 1)}
+          </div>
         </div>
-
-        {/* Right Column (Activities & Achievements) */}
-        <div className={cn("space-y-8", isContributor ? "lg:col-span-12" : "lg:col-span-5")}>
-          
-          {/* ─── Achievements Section ─── */}
-          {showAchievements && (
-            <section className="bg-background-card/40 backdrop-blur-xl border border-white/5 rounded-3xl p-6 sm:p-8 shadow-sm">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-500">
-                  <Award className="h-5 w-5" />
-                </div>
-                <h2 className="text-xl font-bold text-foreground">Achievements</h2>
-              </div>
-              <div className={cn("grid gap-4", isContributor ? "md:grid-cols-2" : "grid-cols-1")}>
-                {achievements.map((achievement) => (
-                  <div key={achievement.id} className="flex items-start gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-amber-500/30 transition-colors">
-                    <div className="shrink-0 w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center mt-0.5">
-                      <Award className="h-5 w-5 text-amber-500" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-foreground">{achievement.title}</h3>
-                      {achievement.description && (
-                        <p className="text-sm text-foreground-secondary mt-1.5 leading-relaxed">{achievement.description}</p>
-                      )}
-                      <div className="flex flex-wrap items-center gap-2 mt-2.5 text-xs font-medium text-foreground-muted">
-                        {achievement.issuer && <span>{achievement.issuer}</span>}
-                        {achievement.issuer && achievement.date && <span>•</span>}
-                        {achievement.date && <span>{achievement.date}</span>}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* ─── Activities / CCA Section ─── */}
-          {showActivities && (
-            <section className="bg-background-card/40 backdrop-blur-xl border border-white/5 rounded-3xl p-6 sm:p-8 shadow-sm">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500">
-                  <CalendarDays className="h-5 w-5" />
-                </div>
-                <h2 className="text-xl font-bold text-foreground">Activities & CCA</h2>
-              </div>
-              <div className={cn("space-y-6", isContributor && "grid md:grid-cols-2 gap-6 space-y-0")}>
-                {activities.map((activity) => (
-                  <div key={activity.id} className="relative pl-6 before:content-[''] before:absolute before:left-0 before:top-2 before:w-2 before:h-2 before:rounded-full before:bg-emerald-500 after:content-[''] after:absolute after:left-[3px] after:top-6 after:w-[2px] after:h-[calc(100%-12px)] after:bg-white/5 last:after:hidden">
-                    <h3 className="font-bold text-foreground">{activity.name}</h3>
-                    <p className="text-sm text-emerald-500/80 font-medium mt-0.5">{activity.role} at {activity.organization}</p>
-                    <span className="inline-block mt-1.5 text-xs font-mono text-foreground-muted px-2 py-0.5 rounded bg-background-secondary/50">
-                      {activity.start_date} {activity.end_date ? `— ${activity.end_date}` : '— Present'}
-                    </span>
-                    {activity.description && (
-                      <p className="text-sm text-foreground-secondary mt-3 leading-relaxed">{activity.description}</p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
+      ) : (
+        /* Layout A: Two-column default (equal columns) */
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="space-y-8">
+            {orderedSections.filter((_, i) => i % 2 === 0)}
+          </div>
+          <div className="space-y-8">
+            {orderedSections.filter((_, i) => i % 2 === 1)}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Activity Feed (contributor/main_contributor only) */}
       {isContributor && <ProfileActivity activities={timelineActivities} />}
 
-      {/* Empty state for users with no portfolio */}
+      {/* Empty state */}
       {!hasPortfolio && !isContributor && (
-        <div className="bg-background-card/40 backdrop-blur-xl border border-white/5 rounded-3xl p-12 text-center max-w-2xl mx-auto shadow-sm">
-          <div className="inline-flex p-4 rounded-2xl bg-white/5 mb-4">
-            <UserX className="h-8 w-8 text-foreground-muted" />
+        <div className="text-center py-16 max-w-lg mx-auto">
+          <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
+            <UserX className="h-5 w-5 text-foreground-muted" />
           </div>
           <h2 className="text-lg font-bold text-foreground mb-2">Portfolio Empty</h2>
           <p className="text-sm text-foreground-secondary leading-relaxed">
@@ -328,12 +278,175 @@ export default function ProfilePage() {
               : `@${profile.username} hasn't added any public portfolio items yet.`}
           </p>
           {isOwnProfile && (
-             <button onClick={() => router.push('/settings/profile')} className="mt-6 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-medium hover:bg-primary-hover transition-colors shadow-sm cursor-pointer">
+             <button onClick={() => router.push('/settings/profile')} className="mt-6 px-4 py-2 text-sm font-medium transition-all rounded-lg cursor-pointer" style={{ backgroundColor: 'var(--profile-accent, #6366f1)', color: '#fff' }}>
                Setup Portfolio
              </button>
           )}
         </div>
       )}
     </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  Section Components (Continuous Flow — no card borders/backgrounds)
+//  Sections stack seamlessly with only headers and subtle dividers.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function ProjectsSection({ projects, profile }: { projects: any[]; profile: Profile }) {
+  return (
+    <section>
+      <div className="flex items-center gap-3 mb-6 pb-2 border-b border-white/5">
+        <div className="w-1 h-6 rounded-full" style={{ backgroundColor: 'var(--profile-accent)' }} />
+        <h2 className="text-lg font-bold text-foreground">Projects</h2>
+      </div>
+      <div className="grid gap-5 md:grid-cols-2">
+        {projects.map((project) => (
+          <div key={project.id} className="group">
+            <div className="flex items-start gap-1 mb-1.5">
+              <div
+                className="w-0.5 h-5 mt-1.5 shrink-0 rounded-full transition-colors group-hover:opacity-100 opacity-40"
+                style={{ backgroundColor: 'var(--profile-accent)' }}
+              />
+              <h3
+                className="font-bold text-foreground text-base ml-1.5 transition-colors group-hover"
+                style={{ '--hover-color': 'var(--profile-accent)' } as React.CSSProperties}
+                onMouseEnter={e => (e.currentTarget.style.color = 'var(--profile-accent)')}
+                onMouseLeave={e => (e.currentTarget.style.color = '')}
+              >
+                {project.title}
+              </h3>
+            </div>
+            {project.role && (
+              <p className="text-xs font-medium ml-2.5 -mt-0.5" style={{ color: 'var(--profile-accent)' }}>
+                {project.role}
+              </p>
+            )}
+            <p className="text-sm text-foreground-secondary mt-2 ml-2.5 leading-relaxed">
+              {project.description}
+            </p>
+            {project.technologies && project.technologies.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2.5 ml-2.5">
+                {project.technologies.map((tech: string) => (
+                  <span key={tech} className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-background-secondary/50 text-foreground-muted">
+                    {tech}
+                  </span>
+                ))}
+              </div>
+            )}
+            {project.links && Object.keys(project.links).length > 0 && (
+              <div className="flex flex-wrap gap-3 mt-2.5 ml-2.5">
+                {project.links.github && (
+                  <a href={project.links.github} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs font-medium text-foreground-muted hover:text-foreground transition-colors">
+                    <Code2 className="h-3 w-3" /> Source
+                  </a>
+                )}
+                {project.links.live && (
+                  <a href={project.links.live} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs font-medium transition-colors" style={{ color: 'var(--profile-accent)' }}>
+                    <ExternalLink className="h-3 w-3" /> Live Demo
+                  </a>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ActivitiesSection({ activities }: { activities: any[]; profile: Profile }) {
+  return (
+    <section>
+      <div className="flex items-center gap-3 mb-6 pb-2 border-b border-white/5">
+        <div className="w-1 h-6 rounded-full bg-emerald-500" />
+        <h2 className="text-lg font-bold text-foreground">Activities & CCA</h2>
+      </div>
+      <div className="grid gap-5 md:grid-cols-2">
+        {activities.map((activity) => (
+          <div key={activity.id} className="group">
+            <div className="flex items-start gap-2">
+              <div className="w-7 h-7 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                <Star className="h-3.5 w-3.5 text-emerald-500" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="font-bold text-foreground text-sm">{activity.name}</h3>
+                <p className="text-xs font-medium text-emerald-500/80">
+                  {activity.role} at {activity.organization}
+                </p>
+                <span className="inline-block mt-1 text-[11px] font-mono text-foreground-muted">
+                  {activity.start_date} {activity.end_date ? `— ${activity.end_date}` : '— Present'}
+                </span>
+                {activity.description && (
+                  <p className="text-sm text-foreground-secondary mt-2 leading-relaxed">{activity.description}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function AchievementsSection({ achievements }: { achievements: any[]; profile: Profile }) {
+  return (
+    <section>
+      <div className="flex items-center gap-3 mb-6 pb-2 border-b border-white/5">
+        <div className="w-1 h-6 rounded-full bg-amber-500" />
+        <h2 className="text-lg font-bold text-foreground">Achievements</h2>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        {achievements.map((achievement) => (
+          <div key={achievement.id} className="flex items-start gap-3 group">
+            <div className="w-7 h-7 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0 mt-0.5">
+              <Award className="h-3.5 w-3.5 text-amber-500" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="font-bold text-foreground text-sm">{achievement.title}</h3>
+              {achievement.description && (
+                <p className="text-sm text-foreground-secondary mt-1 leading-relaxed">{achievement.description}</p>
+              )}
+              <div className="flex flex-wrap items-center gap-2 mt-1.5 text-xs text-foreground-muted">
+                {achievement.issuer && <span>{achievement.issuer}</span>}
+                {achievement.issuer && achievement.date && <span>•</span>}
+                {achievement.date && <span>{achievement.date}</span>}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function GradesSection({ grades }: { grades: any[] }) {
+  return (
+    <section>
+      <div className="flex items-center gap-3 mb-6 pb-2 border-b border-white/5">
+        <div className="w-1 h-6 rounded-full bg-blue-500" />
+        <h2 className="text-lg font-bold text-foreground">Academic Grades</h2>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        {grades.map((grade) => (
+          <div key={grade.id} className="flex items-start gap-3 group">
+            <div className="w-7 h-7 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0 mt-0.5">
+              <GraduationCap className="h-3.5 w-3.5 text-blue-500" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="font-bold text-foreground text-sm">{grade.title}</h3>
+              {grade.description && (
+                <p className="text-sm text-foreground-secondary mt-1 leading-relaxed">{grade.description}</p>
+              )}
+              {grade.fileUrl && (
+                <a href={grade.fileUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 mt-2 text-xs font-medium transition-colors" style={{ color: '#3b82f6' }}>
+                  View Certificate <ExternalLink className="h-3 w-3" />
+                </a>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }

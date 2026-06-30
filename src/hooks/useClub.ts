@@ -29,10 +29,14 @@ import {
   mockClubs,
   mockCurriculums,
   mockSubjects,
+  mockUpdateClubFeatures,
   requestClubJoin,
   reviewClubJoinRequest,
   sendClubMessage,
   shareClubLink,
+  updateClubDetails as dbUpdateClubDetails,
+  promoteClubMember,
+  demoteClubLeader,
 } from '@/lib/mock/database';
 
 type Result = { success: boolean; error?: string };
@@ -97,6 +101,14 @@ export function useClub() {
     if (!title.trim() || !content.trim()) {
       return { success: false, error: 'Announcement title and content are required.' };
     }
+    // Check if user is a leader (admin or moderator)
+    const membership = getUserClubMembership(clubId, userId);
+    if (!membership || membership.membership_status !== 'active') {
+      return { success: false, error: 'You must be an active member to post announcements.' };
+    }
+    if (membership.role !== 'admin' && membership.role !== 'moderator') {
+      return { success: false, error: 'Only club leaders (admins and moderators) can post announcements.' };
+    }
     createClubAnnouncement(clubId, userId, title.trim(), content.trim());
     refresh();
     return { success: true };
@@ -106,9 +118,46 @@ export function useClub() {
     if (!title.trim() || !url.trim()) {
       return { success: false, error: 'Link title and URL are required.' };
     }
+    // Check if user is a leader (admin or moderator)
+    const membership = getUserClubMembership(clubId, userId);
+    if (!membership || membership.membership_status !== 'active') {
+      return { success: false, error: 'You must be an active member to share links.' };
+    }
+    if (membership.role !== 'admin' && membership.role !== 'moderator') {
+      return { success: false, error: 'Only club leaders (admins and moderators) can share links.' };
+    }
     shareClubLink(clubId, userId, title.trim(), url.trim());
     refresh();
     return { success: true };
+  }, [refresh]);
+
+  const updateClubDetails = useCallback((clubId: string, userId: string, updates: {
+    name?: string;
+    description?: string | null;
+    join_mode?: ClubJoinMode;
+    invite_code?: string | null;
+  }): Result => {
+    const result = dbUpdateClubDetails(clubId, userId, updates);
+    refresh();
+    return result.success ? { success: true } : result;
+  }, [refresh]);
+
+  const promoteMember = useCallback((clubId: string, adminUserId: string, targetUserId: string, newRole: 'admin' | 'moderator'): Result => {
+    const result = promoteClubMember(clubId, adminUserId, targetUserId, newRole);
+    refresh();
+    return result.success ? { success: true } : result;
+  }, [refresh]);
+
+  const demoteLeader = useCallback((clubId: string, adminUserId: string, targetUserId: string): Result => {
+    const result = demoteClubLeader(clubId, adminUserId, targetUserId);
+    refresh();
+    return result.success ? { success: true } : result;
+  }, [refresh]);
+
+  const updateFeatures = useCallback((clubId: string, userId: string, features: import('@/types').ClubFeature[]): Result => {
+    const result = mockUpdateClubFeatures(clubId, userId, features);
+    refresh();
+    return result.success ? { success: true } : result;
   }, [refresh]);
 
   return {
@@ -137,5 +186,9 @@ export function useClub() {
     sendMessage,
     postAnnouncement,
     shareLink,
+    updateClubDetails,
+    updateFeatures,
+    promoteMember,
+    demoteLeader,
   };
 }

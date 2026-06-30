@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { getClub, getClubMembers, getClubCurriculumLinks, getClubs } from '@/lib/mock/database';
+import { ClubFeatureKey, DEFAULT_CLUB_FEATURES } from '@/types';
 
 export default function ExploreClubsPage() {
   const clubs = getClubs();
@@ -86,7 +87,12 @@ export default function ExploreClubsPage() {
             {filteredClubs.map((club) => {
               const memberCount = getClubMembers(club.id).filter(m => m.membership_status === 'active').length;
               const curriculumLinks = getClubCurriculumLinks(club.id);
-              const features = club.enabled_features || [];
+              const enabledFeatures = club.enabled_features || DEFAULT_CLUB_FEATURES;
+              
+              // Filter features that are enabled and publicly visible
+              const publicFeatures = enabledFeatures
+                .filter(f => f.enabled && f.public_visible)
+                .map(f => f.key);
 
               return (
                 <Link
@@ -124,19 +130,19 @@ export default function ExploreClubsPage() {
                     </p>
 
                     {/* Feature tags */}
-                    {features.length > 0 && (
+                    {publicFeatures.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 mb-4">
-                        {features.slice(0, 4).map((f) => (
+                        {publicFeatures.slice(0, 4).map((featureKey) => (
                           <span
-                            key={f}
+                            key={featureKey}
                             className="text-[10px] px-2 py-0.5 rounded-full bg-background-secondary text-foreground-muted border border-border"
                           >
-                            {f.replace(/_/g, ' ')}
+                            {featureKey.replace(/_/g, ' ')}
                           </span>
                         ))}
-                        {features.length > 4 && (
+                        {publicFeatures.length > 4 && (
                           <span className="text-[10px] px-2 py-0.5 rounded-full bg-background-secondary text-foreground-muted">
-                            +{features.length - 4}
+                            +{publicFeatures.length - 4}
                           </span>
                         )}
                       </div>

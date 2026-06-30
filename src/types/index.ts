@@ -6,7 +6,24 @@
 /** The four user roles in the system. Matches the PostgreSQL enum. */
 export type UserRole = 'student' | 'teacher' | 'contributor' | 'main_contributor';
 
-/** Social links for contributor profiles */
+/** Predefined social platforms available for profile links */
+export type SocialPlatform = 'github' | 'tiktok' | 'facebook' | 'website' | 'instagram';
+
+/** A single social link entry in a user's profile */
+export interface SocialLinkItem {
+  id: string;
+  platform: SocialPlatform | 'custom';
+  /** Display label (e.g. "GitHub" for predefined, "Medium" for custom) */
+  label: string;
+  /** Full URL including protocol */
+  url: string;
+  /** Whether to display this link on the public profile */
+  visible: boolean;
+  /** Optional order index for sorting */
+  order?: number;
+}
+
+/** Legacy social links interface for backwards compatibility */
 export interface SocialLinks {
   github?: string;
   linkedin?: string;
@@ -69,6 +86,46 @@ export interface AcademicGradeEntry {
   order?: number;
 }
 
+/** Profile theme preset configuration */
+export interface ThemePreset {
+  key: string;
+  name: string;
+  colors: {
+    accent: string;
+    background: string;
+    card: string;
+  };
+}
+
+/** Curated theme presets for profile customization */
+export const PROFILE_THEME_PRESETS: ThemePreset[] = [
+  { key: 'default', name: 'Default', colors: { accent: '#6366f1', background: '#0a0a0f', card: '#13131a' } },
+  { key: 'ocean', name: 'Ocean', colors: { accent: '#0ea5e9', background: '#0c1222', card: '#141e33' } },
+  { key: 'sunset', name: 'Sunset', colors: { accent: '#f97316', background: '#1a0f0a', card: '#2a1a10' } },
+  { key: 'forest', name: 'Forest', colors: { accent: '#22c55e', background: '#0a1a0f', card: '#112a18' } },
+  { key: 'midnight', name: 'Midnight', colors: { accent: '#8b5cf6', background: '#0a0a14', card: '#14142a' } },
+  { key: 'rose', name: 'Rose', colors: { accent: '#ec4899', background: '#1a0a14', card: '#2a1422' } },
+  { key: 'aurora', name: 'Aurora', colors: { accent: '#06b6d4', background: '#0a141a', card: '#0f202a' } },
+  { key: 'amber', name: 'Amber', colors: { accent: '#d97706', background: '#14100a', card: '#221a10' } },
+];
+
+/** Profile theme customization */
+export interface ProfileTheme {
+  /** Theme preset key */
+  preset: string;
+  /** Custom accent color override (hex) */
+  accentColor?: string;
+  /** Custom background color override (hex) */
+  backgroundColor?: string;
+}
+
+/** Profile spacing density */
+export type ProfileSpacing = 'compact' | 'spacious';
+/** Profile content width */
+export type ProfileWidth = 'full' | 'contained';
+/** Profile section layout arrangement */
+export type ProfileSectionLayout = 'layout-a' | 'layout-b' | 'layout-c';
+
 /** User profile stored in the `profiles` table */
 export interface Profile {
   id: string;
@@ -76,11 +133,10 @@ export interface Profile {
   name: string;
   username: string;
   avatar: string;
-  coverImage?: string;
   role: UserRole;
   bio?: string;
   title?: string;
-  socialLinks?: SocialLinks;
+  socialLinks?: SocialLinkItem[];
   isPublic?: boolean;
   pinnedItemId?: string;
   sectionVisibility?: {
@@ -89,6 +145,11 @@ export interface Profile {
     achievements?: boolean;
     academicGrades?: boolean;
   };
+  sectionOrder?: string[];
+  theme?: ProfileTheme;
+  spacing?: ProfileSpacing;
+  width?: ProfileWidth;
+  sectionLayout?: ProfileSectionLayout;
   projects?: ProjectEntry[];
   activities?: ActivityEntry[];
   achievements?: AchievementEntry[];
@@ -410,12 +471,12 @@ export interface InvitedUser {
 // -----------------------------------------------------------------------------
 
 export type ClubJoinMode = 'open' | 'invite_link' | 'approval_based';
-export type ClubMemberRole = 'leader' | 'member';
+export type ClubMemberRole = 'admin' | 'moderator' | 'member';
 export type ClubMembershipStatus = 'active' | 'pending' | 'rejected';
 export type ClubJoinRequestStatus = 'pending' | 'approved' | 'rejected';
 
 /** Available features that a club can enable or disable */
-export type ClubFeature =
+export type ClubFeatureKey =
   | 'chat'
   | 'announcements'
   | 'links'
@@ -424,8 +485,20 @@ export type ClubFeature =
   | 'activity_timeline'
   | 'leaderboard';
 
+/** Feature configuration with visibility and enablement settings */
+export interface ClubFeature {
+  key: ClubFeatureKey;
+  enabled: boolean;
+  public_visible: boolean;
+}
+
 /** Default features enabled for a new club */
-export const DEFAULT_CLUB_FEATURES: ClubFeature[] = ['chat', 'announcements', 'links', 'members'];
+export const DEFAULT_CLUB_FEATURES: ClubFeature[] = [
+  { key: 'chat', enabled: true, public_visible: true },
+  { key: 'announcements', enabled: true, public_visible: true },
+  { key: 'links', enabled: true, public_visible: true },
+  { key: 'members', enabled: true, public_visible: true },
+];
 
 export interface Club {
   id: string;
@@ -494,6 +567,257 @@ export interface ClubSubject {
 }
 
 // -----------------------------------------------------------------------------
+// Club Permission Helpers
+// -----------------------------------------------------------------------------
+
+/** Check if a user has admin permissions in a club */
+export function isClubAdmin(role: ClubMemberRole): boolean {
+  return role === 'admin';
+}
+
+/** Check if a user has moderator or admin permissions in a club */
+export function isClubLeader(role: ClubMemberRole): boolean {
+  return role === 'admin' || role === 'moderator';
+}
+
+/** Check if a user can modify club details */
+export function canModifyClubDetails(role: ClubMemberRole): boolean {
+  return role === 'admin';
+}
+
+/** Check if a user can manage club features */
+export function canManageClubFeatures(role: ClubMemberRole): boolean {
+  return role === 'admin';
+}
+
+/** Check if a user can make announcements */
+export function canMakeAnnouncements(role: ClubMemberRole): boolean {
+  return role === 'admin' || role === 'moderator';
+}
+
+/** Check if a user can add links */
+export function canAddLinks(role: ClubMemberRole): boolean {
+  return role === 'admin' || role === 'moderator';
+}
+
+/** Check if a user can send messages in chat */
+export function canSendMessages(role: ClubMemberRole, membershipStatus: ClubMembershipStatus): boolean {
+  return membershipStatus === 'active';
+}
+
+/** Check if a feature is enabled for a club */
+export function isFeatureEnabled(club: Club, featureKey: ClubFeatureKey): boolean {
+  const feature = club.enabled_features?.find(f => f.key === featureKey);
+  return feature?.enabled ?? false;
+}
+
+/** Check if a feature is publicly visible for a club */
+export function isFeaturePubliclyVisible(club: Club, featureKey: ClubFeatureKey): boolean {
+  const feature = club.enabled_features?.find(f => f.key === featureKey);
+  return feature?.public_visible ?? false;
+}
+
+/** Get all publicly visible features for a club */
+export function getPubliclyVisibleFeatures(club: Club): ClubFeatureKey[] {
+  return club.enabled_features
+    ?.filter(f => f.public_visible)
+    .map(f => f.key) || [];
+}
+
+// -----------------------------------------------------------------------------
+// Classrooms
+// -----------------------------------------------------------------------------
+
+/** Roles within a classroom — supports multiple teachers */
+export type ClassroomMemberRole = 'teacher' | 'student';
+
+/** Available features that a classroom can enable or disable */
+export type ClassroomFeatureKey =
+  | 'assignments'
+  | 'quizzes'
+  | 'resources'
+  | 'discussions'
+  | 'links';
+
+/** Feature configuration for a classroom */
+export interface ClassroomFeature {
+  key: ClassroomFeatureKey;
+  enabled: boolean;
+}
+
+/** Default features enabled for a new classroom */
+export const DEFAULT_CLASSROOM_FEATURES: ClassroomFeature[] = [
+  { key: 'assignments', enabled: true },
+  { key: 'quizzes', enabled: false },
+  { key: 'resources', enabled: true },
+  { key: 'discussions', enabled: false },
+  { key: 'links', enabled: false },
+];
+
+export interface Classroom {
+  id: string;
+  name: string;
+  description: string | null;
+  invite_code: string | null;
+  curriculum_ids: string[];
+  enabled_features: ClassroomFeature[];
+  created_at: string;
+}
+
+export interface ClassroomMember {
+  id: string;
+  classroom_id: string;
+  user_id: string;
+  role: ClassroomMemberRole;
+  joined_at: string;
+}
+
+export interface ClassroomCurriculum {
+  id: string;
+  classroom_id: string;
+  curriculum_id: string;
+}
+
+// ── Assignments ───────────────────────────────────────────────────────────────
+
+export type AssignmentPriority = 'low' | 'medium' | 'high';
+export type AssignmentStatus = 'draft' | 'published' | 'closed';
+
+export interface Assignment {
+  id: string;
+  classroom_id: string;
+  title: string;
+  description: string | null;
+  due_date: string;
+  priority: AssignmentPriority;
+  status: AssignmentStatus;
+  total_points: number | null;
+  attachment_urls: string[];
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AssignmentSubmission {
+  id: string;
+  assignment_id: string;
+  student_id: string;
+  content: string | null;
+  attachment_urls: string[];
+  submitted_at: string | null;
+  grade: number | null;
+  feedback: string | null;
+  graded_at: string | null;
+}
+
+// ── Quizzes ───────────────────────────────────────────────────────────────────
+
+export type QuizQuestionType = 'multiple_choice' | 'true_false' | 'short_answer';
+export type QuizStatus = 'draft' | 'published' | 'closed';
+
+export interface Quiz {
+  id: string;
+  classroom_id: string;
+  title: string;
+  description: string | null;
+  time_limit_minutes: number | null;
+  due_date: string | null;
+  status: QuizStatus;
+  questions: QuizQuestion[];
+  created_by: string;
+  created_at: string;
+}
+
+export interface QuizQuestion {
+  id: string;
+  type: QuizQuestionType;
+  question_text: string;
+  options: string[] | null;
+  correct_answer: string;
+  points: number;
+  order: number;
+}
+
+export interface QuizAttempt {
+  id: string;
+  quiz_id: string;
+  student_id: string;
+  answers: QuizAnswer[];
+  score: number | null;
+  total_points: number;
+  started_at: string;
+  submitted_at: string | null;
+}
+
+export interface QuizAnswer {
+  question_id: string;
+  answer: string;
+  is_correct: boolean | null;
+}
+
+// ── Discussions ───────────────────────────────────────────────────────────────
+
+export interface DiscussionTopic {
+  id: string;
+  classroom_id: string;
+  title: string;
+  content: string;
+  assignment_id: string | null;
+  is_pinned: boolean;
+  is_locked: boolean;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DiscussionReply {
+  id: string;
+  topic_id: string;
+  content: string;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// ── Classroom Resources ───────────────────────────────────────────────────────
+
+export type ResourceType = 'pdf' | 'video' | 'document' | 'link' | 'image';
+
+export interface ClassroomResource {
+  id: string;
+  classroom_id: string;
+  title: string;
+  description: string | null;
+  type: ResourceType;
+  url: string;
+  curriculum_id: string | null;
+  subject_id: string | null;
+  uploaded_by: string;
+  created_at: string;
+}
+
+// ── Classroom Permission Helpers ──────────────────────────────────────────────
+
+/** Check if a user is a teacher in a classroom */
+export function isClassroomTeacher(role: ClassroomMemberRole): boolean {
+  return role === 'teacher';
+}
+
+/** Check if a user is a student in a classroom */
+export function isClassroomStudent(role: ClassroomMemberRole): boolean {
+  return role === 'student';
+}
+
+/** Check if a classroom feature is enabled */
+export function isClassroomFeatureEnabled(
+  classroom: Classroom,
+  featureKey: ClassroomFeatureKey
+): boolean {
+  const feature = classroom.enabled_features?.find(f => f.key === featureKey);
+  return feature?.enabled ?? false;
+}
+
+// -----------------------------------------------------------------------------
 // Role Upgrade Requests
 // -----------------------------------------------------------------------------
 
@@ -540,7 +864,7 @@ export interface ExamCountdown {
 // -----------------------------------------------------------------------------
 
 /** Rating a user gives to a flashcard during review (maps to SM-2 quality scores) */
-export type SRSRating = 'again' | 'good' | 'easy';
+export type SRSRating = 'again' | 'hard' | 'good' | 'easy';
 
 /** A flashcard deck (maps to `decks` table) */
 export interface Deck {

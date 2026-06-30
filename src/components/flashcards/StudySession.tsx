@@ -9,6 +9,7 @@ import { useEffect, useCallback } from 'react';
 import { ArrowLeft, RotateCcw, Keyboard, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useFlashcardSRS } from '@/hooks/useFlashcardSRS';
 import SessionSummary from './SessionSummary';
+import FlashcardText from './FlashcardText';
 import type { SRSRating } from '@/types';
 
 interface StudySessionProps {
@@ -19,9 +20,10 @@ interface StudySessionProps {
 }
 
 const RATING_BUTTONS: { rating: SRSRating; label: string; shortcut: string; color: string; hoverColor: string; emoji: string }[] = [
-  { rating: 'again', label: 'Needs Review', shortcut: '1', color: 'border-red-400 text-red-500', hoverColor: 'hover:bg-red-50', emoji: '🔄' },
-  { rating: 'good', label: 'Got It', shortcut: '2', color: 'border-green-400 text-green-500', hoverColor: 'hover:bg-green-50', emoji: '👍' },
-  { rating: 'easy', label: 'Nailed It', shortcut: '3', color: 'border-blue-400 text-blue-500', hoverColor: 'hover:bg-blue-50', emoji: '⭐' },
+  { rating: 'again', label: 'Again', shortcut: '1', color: 'border-red-400 text-red-500', hoverColor: 'hover:bg-red-50', emoji: '🔴' },
+  { rating: 'hard', label: 'Hard', shortcut: '2', color: 'border-amber-400 text-amber-500', hoverColor: 'hover:bg-amber-50', emoji: '🟡' },
+  { rating: 'good', label: 'Good', shortcut: '3', color: 'border-green-400 text-green-500', hoverColor: 'hover:bg-green-50', emoji: '🟢' },
+  { rating: 'easy', label: 'Easy', shortcut: '4', color: 'border-blue-400 text-blue-500', hoverColor: 'hover:bg-blue-50', emoji: '🔵' },
 ];
 
 export default function StudySession({ deckId, deckName, userId, onBack }: StudySessionProps) {
@@ -56,8 +58,9 @@ export default function StudySession({ deckId, deckName, userId, onBack }: Study
     }
     if (hasFlipped) {
       if (e.key === '1') rate('again');
-      if (e.key === '2') rate('good');
-      if (e.key === '3') rate('easy');
+      if (e.key === '2') rate('hard');
+      if (e.key === '3') rate('good');
+      if (e.key === '4') rate('easy');
     }
     if (e.key === 'ArrowLeft') goBack();
     if (e.key === 'ArrowRight') goNext();
@@ -148,7 +151,7 @@ export default function StudySession({ deckId, deckName, userId, onBack }: Study
       {/* Flashcard 3D flip */}
       <div
         id="flashcard-container"
-        className="flex-1 cursor-pointer h-full h-[300px]"
+        className="cursor-pointer h-[300px] min-h-[300px] w-full"
         onClick={flip}
         style={{ perspective: '1200px' }}
       >
@@ -158,6 +161,7 @@ export default function StudySession({ deckId, deckName, userId, onBack }: Study
             transformStyle: 'preserve-3d',
             transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
             transitionDuration: '0.55s',
+            minHeight: '300px',
           }}
         >
           {/* Front face */}
@@ -168,12 +172,13 @@ export default function StudySession({ deckId, deckName, userId, onBack }: Study
             <p className="mb-4 text-xs font-bold uppercase tracking-widest text-[var(--primary)]">
               Question
             </p>
-            <p className="text-center text-xl font-semibold text-[var(--foreground)] leading-relaxed whitespace-pre-wrap">
-              {currentCard.front_text}
-            </p>
+            <FlashcardText
+            text={currentCard.front_text}
+            className="text-center text-xl font-semibold text-[var(--foreground)] leading-relaxed whitespace-pre-wrap"
+          />
             {!isFlipped && (
-              <p className="absolute bottom-5 text-xs text-[var(--foreground-muted)] flex items-center gap-1.5">
-                <Keyboard size={11} /> Press <kbd className="rounded border border-[var(--border)] px-1.5 py-0.5 text-xs font-mono">Space</kbd> or click to flip
+              <p className="absolute bottom-5 text-xs text-[var(--foreground-muted)] flex flex-wrap items-center justify-center gap-1.5 px-3 text-center">
+                <Keyboard size={11} /> Press <kbd className="rounded border border-[var(--border)] px-1.5 py-0.5 text-xs font-mono">Space</kbd> to flip, then use <kbd className="rounded border border-[var(--border)] px-1.5 py-0.5 text-xs font-mono">1</kbd>–<kbd className="rounded border border-[var(--border)] px-1.5 py-0.5 text-xs font-mono">4</kbd> to rate
               </p>
             )}
           </div>
@@ -190,9 +195,10 @@ export default function StudySession({ deckId, deckName, userId, onBack }: Study
             <p className="mb-4 text-xs font-bold uppercase tracking-widest text-[var(--accent)]">
               Answer
             </p>
-            <p className="text-center text-xl font-semibold text-[var(--foreground)] leading-relaxed whitespace-pre-wrap">
-              {currentCard.back_text}
-            </p>
+            <FlashcardText
+              text={currentCard.back_text}
+              className="text-center text-xl font-semibold text-[var(--foreground)] leading-relaxed whitespace-pre-wrap"
+            />
           </div>
         </div>
       </div>
@@ -204,17 +210,17 @@ export default function StudySession({ deckId, deckName, userId, onBack }: Study
             <p className="text-center text-xs text-[var(--foreground-muted)]">
               How well did you remember this?
             </p>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {RATING_BUTTONS.map(btn => (
                 <button
                   key={btn.rating}
                   id={`rate-${btn.rating}-btn`}
                   onClick={() => rate(btn.rating)}
-                  className={`flex flex-col items-center gap-1 rounded-xl border-2 px-2 py-3 text-xs font-semibold transition-all hover:shadow-md ${btn.color} ${btn.hoverColor}`}
+                  className={`flex min-h-[96px] flex-col items-center justify-between gap-3 rounded-2xl border-2 px-3 py-3 text-sm font-semibold transition-all hover:shadow-md ${btn.color} ${btn.hoverColor}`}
                 >
                   <span className="text-lg">{btn.emoji}</span>
                   <span>{btn.label}</span>
-                  <kbd className="rounded border border-current px-1.5 py-0.5 text-xs font-mono opacity-60">
+                  <kbd className="rounded bg-[rgba(255,255,255,0.14)] border border-[rgba(255,255,255,0.2)] px-2 py-1 font-mono text-white shadow-sm">
                     {btn.shortcut}
                   </kbd>
                 </button>

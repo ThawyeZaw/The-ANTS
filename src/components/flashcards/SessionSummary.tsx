@@ -20,9 +20,10 @@ interface SessionSummaryProps {
 }
 
 const RATING_CONFIG: Record<SRSRating, { label: string; color: string; bg: string; emoji: string }> = {
-  again: { label: 'Needs Review', color: 'text-red-500',    bg: 'bg-red-500/10',    emoji: '🔄' },
-  good:  { label: 'Got It',       color: 'text-green-500',  bg: 'bg-green-500/10',  emoji: '👍' },
-  easy:  { label: 'Nailed It',    color: 'text-blue-500',   bg: 'bg-blue-500/10',   emoji: '⭐' },
+  again: { label: 'Again', color: 'text-red-500',    bg: 'bg-red-500/10',    emoji: '🔴' },
+  hard:  { label: 'Hard',  color: 'text-amber-500',  bg: 'bg-amber-500/10',  emoji: '🟡' },
+  good:  { label: 'Good',  color: 'text-green-500',  bg: 'bg-green-500/10',  emoji: '🟢' },
+  easy:  { label: 'Easy',  color: 'text-blue-500',   bg: 'bg-blue-500/10',   emoji: '🔵' },
 };
 
 export default function SessionSummary({
@@ -76,7 +77,8 @@ export default function SessionSummary({
 
       {/* Ratings breakdown */}
       <div className="w-full max-w-sm grid grid-cols-2 gap-3">
-        {(Object.entries(ratings) as [SRSRating, number][]).map(([rating, count]) => {
+        {(['again', 'hard', 'good', 'easy'] as SRSRating[]).map((rating) => {
+          const count = ratings[rating];
           const config = RATING_CONFIG[rating];
           const pct = totalRated > 0 ? Math.round((count / totalRated) * 100) : 0;
           return (
