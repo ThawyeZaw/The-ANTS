@@ -36,9 +36,23 @@ import {
   ProjectEntry,
   ActivityEntry,
   AchievementEntry,
+  SocialLinkItem,
   DEFAULT_CLUB_FEATURES,
   Note,
-
+  Classroom,
+  ClassroomMember,
+  ClassroomMemberRole,
+  ClassroomCurriculum,
+  ClassroomFeature,
+  Assignment,
+  AssignmentSubmission,
+  Quiz,
+  QuizQuestion,
+  QuizAttempt,
+  QuizAnswer,
+  DiscussionTopic,
+  DiscussionReply,
+  ClassroomResource,
   UserSavedNote,
 } from '@/types';
 import { generateUsername } from '@/lib/utils';
@@ -169,10 +183,10 @@ const mockProfiles: Profile[] = [
     bio: 'Cambridge-trained educator building curriculum resources for Myanmar students.',
     title: 'Curriculum Developer',
     isPublic: true,
-    socialLinks: {
-      github: 'https://github.com/ayechanthu',
-      linkedin: 'https://linkedin.com/in/ayechanthu',
-    },
+    socialLinks: [
+      { id: 'sl1', platform: 'github', label: 'GitHub', url: 'https://github.com/ayechanthu', visible: true, order: 0 },
+      { id: 'sl2', platform: 'website', label: 'Website', url: 'https://ayechanthu.dev', visible: true, order: 1 },
+    ],
     projects: [
       {
         id: 'proj-4',
@@ -213,9 +227,9 @@ const mockProfiles: Profile[] = [
     bio: 'Former IGCSE examiner. Building free exam prep resources for Myanmar students.',
     title: 'Exam Resource Creator',
     isPublic: true,
-    socialLinks: {
-      linkedin: 'https://linkedin.com/in/kozawwin',
-    },
+    socialLinks: [
+      { id: 'sl3', platform: 'facebook', label: 'Facebook', url: 'https://facebook.com/kozawwin', visible: true, order: 0 },
+    ],
     projects: [],
     activities: [],
     achievements: [],
@@ -231,10 +245,10 @@ const mockProfiles: Profile[] = [
     bio: 'Senior gatekeeper and lead reviewer. 15 years in international education.',
     title: 'Head of Content',
     isPublic: true,
-    socialLinks: {
-      linkedin: 'https://linkedin.com/in/dawhlamyint',
-      website: 'https://dawhlamyint.com',
-    },
+    socialLinks: [
+      { id: 'sl4', platform: 'github', label: 'GitHub', url: 'https://github.com/dawhlamyint', visible: true, order: 0 },
+      { id: 'sl5', platform: 'website', label: 'Website', url: 'https://dawhlamyint.com', visible: true, order: 1 },
+    ],
     projects: [
       {
         id: 'proj-5',
@@ -412,7 +426,7 @@ export function getPublicProfiles(roles?: UserRole[]): Profile[] {
  */
 export function mockUpdateProfile(
   userId: string,
-  data: Partial<Pick<Profile, 'name' | 'bio' | 'title' | 'socialLinks' | 'avatar' | 'coverImage' | 'isPublic' | 'projects' | 'activities' | 'achievements' | 'academicGrades' | 'pinnedItemId' | 'sectionVisibility'>>
+  data: Partial<Pick<Profile, 'name' | 'bio' | 'title' | 'socialLinks' | 'avatar' | 'isPublic' | 'projects' | 'activities' | 'achievements' | 'academicGrades' | 'pinnedItemId' | 'sectionVisibility' | 'sectionOrder' | 'theme' | 'spacing' | 'width' | 'sectionLayout'>>
 ): { success: true; profile: Profile } | { success: false; error: string } {
   const profile = mockProfiles.find((p) => p.id === userId);
   if (!profile) return { success: false, error: 'User not found.' };
@@ -426,9 +440,13 @@ export function mockUpdateProfile(
   if (data.socialLinks !== undefined) profile.socialLinks = data.socialLinks;
   if (data.avatar !== undefined) profile.avatar = data.avatar;
   if (data.isPublic !== undefined) profile.isPublic = data.isPublic;
-  if (data.coverImage !== undefined) profile.coverImage = data.coverImage;
   if (data.pinnedItemId !== undefined) profile.pinnedItemId = data.pinnedItemId;
   if (data.sectionVisibility !== undefined) profile.sectionVisibility = data.sectionVisibility;
+  if (data.sectionOrder !== undefined) profile.sectionOrder = data.sectionOrder;
+  if (data.theme !== undefined) profile.theme = data.theme;
+  if (data.spacing !== undefined) profile.spacing = data.spacing;
+  if (data.width !== undefined) profile.width = data.width;
+  if (data.sectionLayout !== undefined) profile.sectionLayout = data.sectionLayout;
   if (data.projects !== undefined) profile.projects = data.projects;
   if (data.activities !== undefined) profile.activities = data.activities;
   if (data.achievements !== undefined) profile.achievements = data.achievements;
@@ -690,12 +708,13 @@ export function mockCompleteProfile(
   // Update profile fields
   if (data.title) profile.title = data.title;
   if (data.bio) profile.bio = data.bio;
-  if (data.website_url || data.linkedin_url || data.github_url) {
-    profile.socialLinks = {
-      website: data.website_url || undefined,
-      linkedin: data.linkedin_url || undefined,
-      github: data.github_url || undefined,
-    };
+  if (data.website_url || data.linkedin_url || data.github_url || data.facebook_url) {
+    const newLinks: SocialLinkItem[] = [];
+    if (data.website_url) newLinks.push({ id: `sl_${Date.now()}_w`, platform: 'website', label: 'Website', url: data.website_url, visible: true });
+    if (data.github_url) newLinks.push({ id: `sl_${Date.now()}_g`, platform: 'github', label: 'GitHub', url: data.github_url, visible: true });
+    if (data.linkedin_url) newLinks.push({ id: `sl_${Date.now()}_l`, platform: 'custom', label: 'LinkedIn', url: data.linkedin_url, visible: true });
+    if (data.facebook_url) newLinks.push({ id: `sl_${Date.now()}_f`, platform: 'facebook', label: 'Facebook', url: data.facebook_url, visible: true });
+    profile.socialLinks = newLinks;
   }
 
   // Store password
@@ -783,24 +802,338 @@ export const mockEditorSubmissions: Array<{
 
 
 // ── Mock Classrooms ─────────────────────────────────────────────────────────
-export const mockClassrooms = [
-  { id: 'class-1', name: 'Year 11 Physics', description: 'Ms. Kyaw\'s physics class.', teacher_id: 'user-teacher-001', invite_code: 'PHY11', created_at: '2026-01-01T00:00:00Z' }
+export const mockClassrooms: Classroom[] = [
+  {
+    id: 'class-1',
+    name: 'Year 11 Physics',
+    description: 'Ms. Kyaw\'s physics class — covering Mechanics, Waves, Electricity, and Thermal Physics.',
+    invite_code: 'PHY11',
+    curriculum_ids: ['curr-1'],
+    enabled_features: [
+      { key: 'assignments', enabled: true },
+      { key: 'quizzes', enabled: true },
+      { key: 'resources', enabled: true },
+      { key: 'discussions', enabled: true },
+      { key: 'links', enabled: true },
+    ],
+    created_at: '2026-01-01T00:00:00Z',
+  },
+  {
+    id: 'class-2',
+    name: 'IGCSE Chemistry Lab',
+    description: 'Practical chemistry for IGCSE students — Stoichiometry, Organic, and Acids & Bases.',
+    invite_code: 'CHEM24',
+    curriculum_ids: ['curr-1'],
+    enabled_features: [
+      { key: 'assignments', enabled: true },
+      { key: 'quizzes', enabled: false },
+      { key: 'resources', enabled: true },
+      { key: 'discussions', enabled: false },
+      { key: 'links', enabled: false },
+    ],
+    created_at: '2026-03-01T00:00:00Z',
+  },
 ];
 
-export const mockClassroomMembers = [
-  { id: 'cm-1', classroom_id: 'class-1', user_id: 'user-student-001', joined_at: '2026-01-10T00:00:00Z' }
+export const mockClassroomMembers: ClassroomMember[] = [
+  { id: 'cm-1', classroom_id: 'class-1', user_id: 'user-teacher-001', role: 'teacher', joined_at: '2026-01-01T00:00:00Z' },
+  { id: 'cm-2', classroom_id: 'class-1', user_id: 'user-teacher-002', role: 'teacher', joined_at: '2026-01-15T00:00:00Z' },
+  { id: 'cm-3', classroom_id: 'class-1', user_id: 'user-student-001', role: 'student', joined_at: '2026-01-10T00:00:00Z' },
+  { id: 'cm-4', classroom_id: 'class-1', user_id: 'user-student-002', role: 'student', joined_at: '2026-02-01T00:00:00Z' },
+  { id: 'cm-5', classroom_id: 'class-2', user_id: 'user-teacher-001', role: 'teacher', joined_at: '2026-03-01T00:00:00Z' },
+  { id: 'cm-6', classroom_id: 'class-2', user_id: 'user-student-001', role: 'student', joined_at: '2026-03-15T00:00:00Z' },
 ];
 
-export const mockClassroomCurriculums = [
-  { id: 'cc-1', classroom_id: 'class-1', curriculum_id: 'curr-1' }
+export const mockClassroomCurriculums: ClassroomCurriculum[] = [
+  { id: 'cc-1', classroom_id: 'class-1', curriculum_id: 'curr-1' },
+  { id: 'cc-2', classroom_id: 'class-2', curriculum_id: 'curr-1' },
 ];
 
-export const mockAssignments = [
-  { id: 'assn-1', classroom_id: 'class-1', title: 'Forces Worksheet', description: 'Complete all questions on forces.', due_date: '2026-06-30T23:59:59Z', priority: 'high', created_by: 'user-teacher-001', created_at: '2026-06-15T00:00:00Z' }
+// ── Mock Assignments ────────────────────────────────────────────────────────
+export const mockAssignments: Assignment[] = [
+  {
+    id: 'assn-1',
+    classroom_id: 'class-1',
+    title: 'Forces Worksheet',
+    description: 'Complete all questions on forces: Newton\'s Laws, friction, and free-body diagrams.',
+    due_date: '2026-07-15T23:59:59Z',
+    priority: 'high',
+    status: 'published',
+    total_points: 50,
+    attachment_urls: ['https://example.com/worksheets/forces-v1.pdf'],
+    created_by: 'user-teacher-001',
+    created_at: '2026-06-15T00:00:00Z',
+    updated_at: '2026-06-15T00:00:00Z',
+  },
+  {
+    id: 'assn-2',
+    classroom_id: 'class-1',
+    title: 'Energy & Work Problems',
+    description: 'Solve end-of-chapter problems on kinetic energy, potential energy, and conservation of energy.',
+    due_date: '2026-07-22T23:59:59Z',
+    priority: 'medium',
+    status: 'published',
+    total_points: 40,
+    attachment_urls: [],
+    created_by: 'user-teacher-002',
+    created_at: '2026-06-20T00:00:00Z',
+    updated_at: '2026-06-20T00:00:00Z',
+  },
+  {
+    id: 'assn-3',
+    classroom_id: 'class-2',
+    title: 'Balancing Chemical Equations',
+    description: 'Balance 20 chemical equations and identify reaction types.',
+    due_date: '2026-07-10T23:59:59Z',
+    priority: 'high',
+    status: 'published',
+    total_points: 30,
+    attachment_urls: ['https://example.com/worksheets/balancing-equations.pdf'],
+    created_by: 'user-teacher-001',
+    created_at: '2026-06-18T00:00:00Z',
+    updated_at: '2026-06-18T00:00:00Z',
+  },
 ];
 
-export const mockAssignmentSubmissions = [
-  { id: 'asub-1', assignment_id: 'assn-1', student_id: 'user-student-001', submission_text: 'Done!', status: 'submitted', submitted_at: '2026-06-16T12:00:00Z' }
+export let mockAssignmentSubmissions: AssignmentSubmission[] = [
+  {
+    id: 'asub-1',
+    assignment_id: 'assn-1',
+    student_id: 'user-student-001',
+    content: 'Completed all questions. See attached PDF for diagrams.',
+    attachment_urls: ['https://example.com/submissions/thiri-forces.pdf'],
+    submitted_at: '2026-06-28T14:30:00Z',
+    grade: 42,
+    feedback: 'Excellent work! Clear free-body diagrams. Lost points on Q7 (friction direction).',
+    graded_at: '2026-06-29T10:00:00Z',
+  },
+  {
+    id: 'asub-2',
+    assignment_id: 'assn-1',
+    student_id: 'user-student-002',
+    content: 'Here is my work for the Forces worksheet.',
+    attachment_urls: [],
+    submitted_at: '2026-06-27T21:00:00Z',
+    grade: null,
+    feedback: null,
+    graded_at: null,
+  },
+  {
+    id: 'asub-3',
+    assignment_id: 'assn-3',
+    student_id: 'user-student-001',
+    content: null,
+    attachment_urls: [],
+    submitted_at: null,
+    grade: null,
+    feedback: null,
+    graded_at: null,
+  },
+];
+
+// ── Mock Quizzes ─────────────────────────────────────────────────────────────
+export const mockQuizzes: Quiz[] = [
+  {
+    id: 'quiz-1',
+    classroom_id: 'class-1',
+    title: 'Forces & Motion Quick Check',
+    description: 'Quick assessment on speed, velocity, acceleration, and Newton\'s Laws.',
+    time_limit_minutes: 20,
+    due_date: '2026-07-08T23:59:59Z',
+    status: 'published',
+    questions: [
+      {
+        id: 'q-1',
+        type: 'multiple_choice',
+        question_text: 'What is the SI unit of force?',
+        options: ['Joule', 'Newton', 'Watt', 'Pascal'],
+        correct_answer: 'Newton',
+        points: 1,
+        order: 1,
+      },
+      {
+        id: 'q-2',
+        type: 'multiple_choice',
+        question_text: 'A car accelerates from 0 to 20 m/s in 5 seconds. What is its acceleration?',
+        options: ['2 m/s²', '4 m/s²', '5 m/s²', '10 m/s²'],
+        correct_answer: '4 m/s²',
+        points: 1,
+        order: 2,
+      },
+      {
+        id: 'q-3',
+        type: 'true_false',
+        question_text: 'According to Newton\'s Third Law, forces always come in pairs acting on different objects.',
+        options: null,
+        correct_answer: 'true',
+        points: 1,
+        order: 3,
+      },
+      {
+        id: 'q-4',
+        type: 'short_answer',
+        question_text: 'Explain why a passenger lurches forward when a bus brakes suddenly.',
+        options: null,
+        correct_answer: 'Inertia — the passenger\'s body continues moving forward while the bus decelerates.',
+        points: 2,
+        order: 4,
+      },
+    ],
+    created_by: 'user-teacher-001',
+    created_at: '2026-06-25T00:00:00Z',
+  },
+  {
+    id: 'quiz-2',
+    classroom_id: 'class-1',
+    title: 'Energy Chapter Test',
+    description: 'Covers work, kinetic energy, potential energy, and power.',
+    time_limit_minutes: 30,
+    due_date: null,
+    status: 'draft',
+    questions: [
+      {
+        id: 'q-5',
+        type: 'multiple_choice',
+        question_text: 'Which of the following is a correct statement about energy?',
+        options: [
+          'Energy can be created',
+          'Energy can be destroyed',
+          'Energy can be transferred but not created or destroyed',
+          'Energy is only found in moving objects',
+        ],
+        correct_answer: 'Energy can be transferred but not created or destroyed',
+        points: 1,
+        order: 1,
+      },
+    ],
+    created_by: 'user-teacher-002',
+    created_at: '2026-06-28T00:00:00Z',
+  },
+];
+
+export let mockQuizAttempts: QuizAttempt[] = [
+  {
+    id: 'qa-1',
+    quiz_id: 'quiz-1',
+    student_id: 'user-student-001',
+    answers: [
+      { question_id: 'q-1', answer: 'Newton', is_correct: true },
+      { question_id: 'q-2', answer: '4 m/s²', is_correct: true },
+      { question_id: 'q-3', answer: 'true', is_correct: true },
+      { question_id: 'q-4', answer: 'Due to inertia, the passenger tends to stay in motion when the bus stops.', is_correct: true },
+    ],
+    score: 5,
+    total_points: 5,
+    started_at: '2026-06-30T10:00:00Z',
+    submitted_at: '2026-06-30T10:18:00Z',
+  },
+];
+
+// ── Mock Discussions ─────────────────────────────────────────────────────────
+export const mockDiscussionTopics: DiscussionTopic[] = [
+  {
+    id: 'disc-1',
+    classroom_id: 'class-1',
+    title: 'Question about Newton\'s Third Law',
+    content: 'I\'m confused about the difference between balanced forces and action-reaction pairs. Can someone explain?',
+    assignment_id: null,
+    is_pinned: false,
+    is_locked: false,
+    created_by: 'user-student-001',
+    created_at: '2026-06-22T14:00:00Z',
+    updated_at: '2026-06-22T14:00:00Z',
+  },
+  {
+    id: 'disc-2',
+    classroom_id: 'class-1',
+    title: 'Forces Worksheet — Office Hours',
+    content: 'Post your questions about the Forces Worksheet here. I\'ll check this thread daily.',
+    assignment_id: 'assn-1',
+    is_pinned: true,
+    is_locked: false,
+    created_by: 'user-teacher-001',
+    created_at: '2026-06-16T09:00:00Z',
+    updated_at: '2026-06-16T09:00:00Z',
+  },
+];
+
+export let mockDiscussionReplies: DiscussionReply[] = [
+  {
+    id: 'drep-1',
+    topic_id: 'disc-1',
+    content: 'Action-reaction pairs act on *different* objects. Balanced forces act on the *same* object. For example, when you push a wall, you exert a force on the wall (action), and the wall exerts an equal force back on you (reaction).',
+    created_by: 'user-teacher-002',
+    created_at: '2026-06-22T16:30:00Z',
+    updated_at: '2026-06-22T16:30:00Z',
+  },
+  {
+    id: 'drep-2',
+    topic_id: 'disc-1',
+    content: 'Thank you! That makes it much clearer.',
+    created_by: 'user-student-001',
+    created_at: '2026-06-22T17:00:00Z',
+    updated_at: '2026-06-22T17:00:00Z',
+  },
+  {
+    id: 'drep-3',
+    topic_id: 'disc-2',
+    content: 'For Q7, should we draw the free-body diagram before or after calculating the net force?',
+    created_by: 'user-student-002',
+    created_at: '2026-06-17T11:00:00Z',
+    updated_at: '2026-06-17T11:00:00Z',
+  },
+];
+
+// ── Mock Classroom Resources ──────────────────────────────────────────────────
+export const mockClassroomResources: ClassroomResource[] = [
+  {
+    id: 'cr-1',
+    classroom_id: 'class-1',
+    title: 'Physics Formula Sheet',
+    description: 'Complete formula sheet for Mechanics, Waves, and Electricity topics.',
+    type: 'pdf',
+    url: 'https://example.com/resources/physics-formula-sheet.pdf',
+    curriculum_id: 'curr-1',
+    subject_id: 'subj-1',
+    uploaded_by: 'user-teacher-001',
+    created_at: '2026-01-10T00:00:00Z',
+  },
+  {
+    id: 'cr-2',
+    classroom_id: 'class-1',
+    title: 'Forces & Motion — Khan Academy',
+    description: 'Excellent video series covering Newton\'s Laws with interactive examples.',
+    type: 'video',
+    url: 'https://www.khanacademy.org/science/physics/forces-newtons-laws',
+    curriculum_id: 'curr-1',
+    subject_id: 'subj-1',
+    uploaded_by: 'user-teacher-002',
+    created_at: '2026-01-20T00:00:00Z',
+  },
+  {
+    id: 'cr-3',
+    classroom_id: 'class-1',
+    title: 'PhET Forces Simulation',
+    description: 'Interactive simulation for exploring forces and motion visually.',
+    type: 'link',
+    url: 'https://phet.colorado.edu/en/simulations/forces-and-motion-basics',
+    curriculum_id: 'curr-1',
+    subject_id: 'subj-1',
+    uploaded_by: 'user-teacher-001',
+    created_at: '2026-02-05T00:00:00Z',
+  },
+  {
+    id: 'cr-4',
+    classroom_id: 'class-2',
+    title: 'Periodic Table — Interactive',
+    description: 'Clickable periodic table with element properties.',
+    type: 'link',
+    url: 'https://ptable.com',
+    curriculum_id: 'curr-1',
+    subject_id: null,
+    uploaded_by: 'user-teacher-001',
+    created_at: '2026-03-10T00:00:00Z',
+  },
 ];
 
 // ── Mock Clubs ──────────────────────────────────────────────────────────────
@@ -812,7 +1145,15 @@ export const mockClubs: Club[] = [
     created_by: 'user-contributor-001',
     join_mode: 'open',
     invite_code: null,
-    enabled_features: ['chat', 'announcements', 'links', 'members', 'projects', 'activity_timeline'],
+    enabled_features: [
+      { key: 'chat', enabled: true, public_visible: true },
+      { key: 'announcements', enabled: true, public_visible: true },
+      { key: 'links', enabled: true, public_visible: true },
+      { key: 'members', enabled: true, public_visible: true },
+      { key: 'projects', enabled: true, public_visible: false },
+      { key: 'activity_timeline', enabled: true, public_visible: true },
+      { key: 'leaderboard', enabled: false, public_visible: false },
+    ],
     created_at: '2025-10-01T00:00:00Z',
   },
   {
@@ -822,7 +1163,15 @@ export const mockClubs: Club[] = [
     created_by: 'user-contributor-002',
     join_mode: 'approval_based',
     invite_code: null,
-    enabled_features: ['chat', 'announcements', 'links', 'members', 'leaderboard'],
+    enabled_features: [
+      { key: 'chat', enabled: true, public_visible: true },
+      { key: 'announcements', enabled: true, public_visible: true },
+      { key: 'links', enabled: true, public_visible: true },
+      { key: 'members', enabled: true, public_visible: true },
+      { key: 'projects', enabled: false, public_visible: false },
+      { key: 'activity_timeline', enabled: false, public_visible: false },
+      { key: 'leaderboard', enabled: true, public_visible: true },
+    ],
     created_at: '2026-02-14T00:00:00Z',
   },
   {
@@ -832,17 +1181,36 @@ export const mockClubs: Club[] = [
     created_by: 'user-main-contributor-001',
     join_mode: 'invite_link',
     invite_code: 'SPRINT26',
-    enabled_features: ['chat', 'members', 'activity_timeline'],
+    enabled_features: [
+      { key: 'chat', enabled: true, public_visible: false },
+      { key: 'announcements', enabled: false, public_visible: false },
+      { key: 'links', enabled: false, public_visible: false },
+      { key: 'members', enabled: true, public_visible: false },
+      { key: 'projects', enabled: false, public_visible: false },
+      { key: 'activity_timeline', enabled: true, public_visible: false },
+      { key: 'leaderboard', enabled: false, public_visible: false },
+    ],
     created_at: '2026-04-05T00:00:00Z',
   },
 ];
 
 export const mockClubMembers: ClubMember[] = [
-  { id: 'clm-1', club_id: 'club-1', user_id: 'user-contributor-001', role: 'leader', membership_status: 'active', joined_at: '2025-10-01T00:00:00Z' },
-  { id: 'clm-2', club_id: 'club-1', user_id: 'user-student-001', role: 'member', membership_status: 'active', joined_at: '2026-01-15T00:00:00Z' },
-  { id: 'clm-3', club_id: 'club-1', user_id: 'user-teacher-001', role: 'member', membership_status: 'active', joined_at: '2026-03-10T00:00:00Z' },
-  { id: 'clm-4', club_id: 'club-2', user_id: 'user-contributor-002', role: 'leader', membership_status: 'active', joined_at: '2026-02-14T00:00:00Z' },
-  { id: 'clm-5', club_id: 'club-3', user_id: 'user-main-contributor-001', role: 'leader', membership_status: 'active', joined_at: '2026-04-05T00:00:00Z' },
+  // Club 1 - Multiple leaders
+  { id: 'clm-1', club_id: 'club-1', user_id: 'user-contributor-001', role: 'admin', membership_status: 'active', joined_at: '2025-10-01T00:00:00Z' },
+  { id: 'clm-2', club_id: 'club-1', user_id: 'user-teacher-001', role: 'moderator', membership_status: 'active', joined_at: '2026-03-10T00:00:00Z' },
+  { id: 'clm-3', club_id: 'club-1', user_id: 'user-student-001', role: 'member', membership_status: 'active', joined_at: '2026-01-15T00:00:00Z' },
+  { id: 'clm-4', club_id: 'club-1', user_id: 'user-student-002', role: 'member', membership_status: 'active', joined_at: '2026-05-20T00:00:00Z' },
+  
+  // Club 2 - Multiple admins
+  { id: 'clm-5', club_id: 'club-2', user_id: 'user-contributor-002', role: 'admin', membership_status: 'active', joined_at: '2026-02-14T00:00:00Z' },
+  { id: 'clm-6', club_id: 'club-2', user_id: 'user-contributor-003', role: 'admin', membership_status: 'active', joined_at: '2026-03-01T00:00:00Z' },
+  { id: 'clm-7', club_id: 'club-2', user_id: 'user-teacher-002', role: 'moderator', membership_status: 'active', joined_at: '2026-04-10T00:00:00Z' },
+  { id: 'clm-8', club_id: 'club-2', user_id: 'user-student-003', role: 'member', membership_status: 'active', joined_at: '2026-05-05T00:00:00Z' },
+  
+  // Club 3 - Single admin with moderators
+  { id: 'clm-9', club_id: 'club-3', user_id: 'user-main-contributor-001', role: 'admin', membership_status: 'active', joined_at: '2026-04-05T00:00:00Z' },
+  { id: 'clm-10', club_id: 'club-3', user_id: 'user-contributor-004', role: 'moderator', membership_status: 'active', joined_at: '2026-05-15T00:00:00Z' },
+  { id: 'clm-11', club_id: 'club-3', user_id: 'user-student-004', role: 'member', membership_status: 'active', joined_at: '2026-06-01T00:00:00Z' },
 ];
 
 export const mockClubMessages: ClubMessage[] = [
@@ -865,7 +1233,7 @@ export const mockClubLinks: ClubLink[] = [
 
 /**
  * Update the enabled features for a club.
- * Only the club creator/leader can modify this.
+ * Only club admins can modify this.
  */
 export function mockUpdateClubFeatures(
   clubId: string,
@@ -876,12 +1244,104 @@ export function mockUpdateClubFeatures(
   if (!club) return { success: false, error: 'Club not found.' };
 
   const member = mockClubMembers.find(
-    (m) => m.club_id === clubId && m.user_id === userId && m.role === 'leader'
+    (m) => m.club_id === clubId && m.user_id === userId && m.role === 'admin'
   );
-  if (!member) return { success: false, error: 'Only the club leader can manage features.' };
+  if (!member) return { success: false, error: 'Only club admins can manage features.' };
 
   club.enabled_features = features;
   return { success: true, club: { ...club } };
+}
+
+/**
+ * Update club details (name, description, join mode, invite code).
+ * Only club admins can modify club details.
+ */
+export function updateClubDetails(
+  clubId: string,
+  userId: string,
+  updates: {
+    name?: string;
+    description?: string | null;
+    join_mode?: ClubJoinMode;
+    invite_code?: string | null;
+  }
+): { success: true; club: Club } | { success: false; error: string } {
+  const club = mockClubs.find((c) => c.id === clubId);
+  if (!club) return { success: false, error: 'Club not found.' };
+
+  const member = mockClubMembers.find(
+    (m) => m.club_id === clubId && m.user_id === userId && m.role === 'admin'
+  );
+  if (!member) return { success: false, error: 'Only club admins can modify club details.' };
+
+  if (updates.name !== undefined) club.name = updates.name;
+  if (updates.description !== undefined) club.description = updates.description;
+  if (updates.join_mode !== undefined) club.join_mode = updates.join_mode;
+  if (updates.invite_code !== undefined) club.invite_code = updates.invite_code;
+
+  return { success: true, club: { ...club } };
+}
+
+/**
+ * Promote a user to a leadership role (admin or moderator).
+ * Only admins can promote users.
+ */
+export function promoteClubMember(
+  clubId: string,
+  adminUserId: string,
+  targetUserId: string,
+  newRole: 'admin' | 'moderator'
+): { success: true; member: ClubMember } | { success: false; error: string } {
+  const club = mockClubs.find((c) => c.id === clubId);
+  if (!club) return { success: false, error: 'Club not found.' };
+
+  const admin = mockClubMembers.find(
+    (m) => m.club_id === clubId && m.user_id === adminUserId && m.role === 'admin'
+  );
+  if (!admin) return { success: false, error: 'Only club admins can promote members.' };
+
+  const targetMember = mockClubMembers.find(
+    (m) => m.club_id === clubId && m.user_id === targetUserId && m.membership_status === 'active'
+  );
+  if (!targetMember) return { success: false, error: 'Target user is not an active member of this club.' };
+
+  targetMember.role = newRole;
+  return { success: true, member: { ...targetMember } };
+}
+
+/**
+ * Demote a leader to a regular member.
+ * Only admins can demote users.
+ * Admins cannot demote themselves (need another admin to do it).
+ */
+export function demoteClubLeader(
+  clubId: string,
+  adminUserId: string,
+  targetUserId: string
+): { success: true; member: ClubMember } | { success: false; error: string } {
+  const club = mockClubs.find((c) => c.id === clubId);
+  if (!club) return { success: false, error: 'Club not found.' };
+
+  const admin = mockClubMembers.find(
+    (m) => m.club_id === clubId && m.user_id === adminUserId && m.role === 'admin'
+  );
+  if (!admin) return { success: false, error: 'Only club admins can demote leaders.' };
+
+  if (adminUserId === targetUserId) {
+    return { success: false, error: 'Admins cannot demote themselves.' };
+  }
+
+  const targetMember = mockClubMembers.find(
+    (m) => m.club_id === clubId && m.user_id === targetUserId && m.membership_status === 'active'
+  );
+  if (!targetMember) return { success: false, error: 'Target user is not an active member of this club.' };
+
+  if (targetMember.role !== 'admin' && targetMember.role !== 'moderator') {
+    return { success: false, error: 'Target user is not a leader.' };
+  }
+
+  targetMember.role = 'member';
+  return { success: true, member: { ...targetMember } };
 }
 
 // ── Mock Timetable & Pomodoro ───────────────────────────────────────────────
@@ -1070,20 +1530,6 @@ export const mockCurriculumNotes = [
   },
 ];
 
-// ── Classroom Student Progress ──────────────────────────────────────────────
-
-export const mockClassroomProgress = [
-  {
-    classroom_id: 'class-1',
-    student_id: 'user-student-001',
-    curriculum_completion: 62,
-    assignments_completed: 8,
-    assignments_total: 10,
-    average_confidence_level: 4,
-    last_active_at: '2026-06-17T12:00:00Z',
-  },
-];
-
 // ── Club Join Requests ──────────────────────────────────────────────────────
 
 export const mockClubJoinRequests: ClubJoinRequest[] = [
@@ -1185,14 +1631,300 @@ export const getSubjectsByCurriculum = (curriculumId: string) =>
 export const getTopicsBySubject = (subjectId: string) =>
   mockTopics.filter(t => t.subject_id === subjectId);
 
+// ── Classroom Queries ───────────────────────────────────────────────────────
+
 export const getClassroom = (id: string) =>
   mockClassrooms.find(c => c.id === id);
+
+export const getClassroomsByUser = (userId: string) => {
+  const memberClassIds = mockClassroomMembers
+    .filter(m => m.user_id === userId)
+    .map(m => m.classroom_id);
+  return mockClassrooms.filter(c => memberClassIds.includes(c.id));
+};
 
 export const getClassroomMembers = (classroomId: string) =>
   mockClassroomMembers.filter(m => m.classroom_id === classroomId);
 
+export const getClassroomTeachers = (classroomId: string) =>
+  mockClassroomMembers.filter(m => m.classroom_id === classroomId && m.role === 'teacher');
+
+export const getClassroomTeacherIds = (classroomId: string) =>
+  mockClassroomMembers
+    .filter(m => m.classroom_id === classroomId && m.role === 'teacher')
+    .map(m => m.user_id);
+
+export const getClassroomStudents = (classroomId: string) =>
+  mockClassroomMembers.filter(m => m.classroom_id === classroomId && m.role === 'student');
+
+export const getClassroomMember = (classroomId: string, userId: string) =>
+  mockClassroomMembers.find(m => m.classroom_id === classroomId && m.user_id === userId);
+
 export const getAssignmentsByClassroom = (classroomId: string) =>
   mockAssignments.filter(a => a.classroom_id === classroomId);
+
+export const getAssignment = (id: string) =>
+  mockAssignments.find(a => a.id === id);
+
+export const getSubmission = (assignmentId: string, studentId: string) =>
+  mockAssignmentSubmissions.find(s => s.assignment_id === assignmentId && s.student_id === studentId);
+
+export const getSubmissionsByAssignment = (assignmentId: string) =>
+  mockAssignmentSubmissions.filter(s => s.assignment_id === assignmentId);
+
+export const getQuizzesByClassroom = (classroomId: string) =>
+  mockQuizzes.filter(q => q.classroom_id === classroomId);
+
+export const getQuiz = (id: string) =>
+  mockQuizzes.find(q => q.id === id);
+
+export const getQuizAttemptsByQuiz = (quizId: string) =>
+  mockQuizAttempts.filter(a => a.quiz_id === quizId);
+
+export const getQuizAttempt = (quizId: string, studentId: string) =>
+  mockQuizAttempts.find(a => a.quiz_id === quizId && a.student_id === studentId);
+
+export const getDiscussionTopicsByClassroom = (classroomId: string) =>
+  mockDiscussionTopics.filter(t => t.classroom_id === classroomId);
+
+export const getDiscussionTopic = (id: string) =>
+  mockDiscussionTopics.find(t => t.id === id);
+
+export const getDiscussionReplies = (topicId: string) =>
+  mockDiscussionReplies.filter(r => r.topic_id === topicId);
+
+export const getResourcesByClassroom = (classroomId: string) =>
+  mockClassroomResources.filter(r => r.classroom_id === classroomId);
+
+// ── Classroom Mutations ─────────────────────────────────────────────────────
+
+export const createClassroom = (data: Omit<Classroom, 'id' | 'created_at'>) => {
+  const classroom: Classroom = {
+    ...data,
+    id: `class-${Date.now()}`,
+    created_at: new Date().toISOString(),
+  };
+  mockClassrooms.push(classroom);
+  return { success: true, classroom };
+};
+
+export const updateClassroom = (id: string, data: Partial<Classroom>) => {
+  const idx = mockClassrooms.findIndex(c => c.id === id);
+  if (idx === -1) return { success: false, error: 'Classroom not found' };
+  mockClassrooms[idx] = { ...mockClassrooms[idx], ...data };
+  return { success: true, classroom: mockClassrooms[idx] };
+};
+
+export const joinClassroom = (classroomId: string, userId: string, role: ClassroomMemberRole = 'student') => {
+  const existing = mockClassroomMembers.find(m => m.classroom_id === classroomId && m.user_id === userId);
+  if (existing) return { success: false, error: 'Already a member' };
+  const member: ClassroomMember = {
+    id: `cm-${Date.now()}`,
+    classroom_id: classroomId,
+    user_id: userId,
+    role,
+    joined_at: new Date().toISOString(),
+  };
+  mockClassroomMembers.push(member);
+  return { success: true, member };
+};
+
+export const leaveClassroom = (classroomId: string, userId: string) => {
+  const idx = mockClassroomMembers.findIndex(m => m.classroom_id === classroomId && m.user_id === userId);
+  if (idx === -1) return { success: false, error: 'Not a member' };
+  mockClassroomMembers.splice(idx, 1);
+  return { success: true };
+};
+
+export const createAssignment = (data: Omit<Assignment, 'id' | 'created_at' | 'updated_at'>) => {
+  const assignment: Assignment = {
+    ...data,
+    id: `assn-${Date.now()}`,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+  mockAssignments.push(assignment);
+  return { success: true, assignment };
+};
+
+export const updateAssignment = (id: string, data: Partial<Assignment>) => {
+  const idx = mockAssignments.findIndex(a => a.id === id);
+  if (idx === -1) return { success: false, error: 'Assignment not found' };
+  mockAssignments[idx] = { ...mockAssignments[idx], ...data, updated_at: new Date().toISOString() };
+  return { success: true, assignment: mockAssignments[idx] };
+};
+
+export const submitAssignment = (assignmentId: string, studentId: string, content: string | null, attachmentUrls: string[] = []) => {
+  const existing = mockAssignmentSubmissions.find(s => s.assignment_id === assignmentId && s.student_id === studentId);
+  if (existing) {
+    existing.content = content;
+    existing.attachment_urls = attachmentUrls;
+    existing.submitted_at = new Date().toISOString();
+    return { success: true, submission: existing };
+  }
+  const submission: AssignmentSubmission = {
+    id: `asub-${Date.now()}`,
+    assignment_id: assignmentId,
+    student_id: studentId,
+    content,
+    attachment_urls: attachmentUrls,
+    submitted_at: new Date().toISOString(),
+    grade: null,
+    feedback: null,
+    graded_at: null,
+  };
+  mockAssignmentSubmissions.push(submission);
+  return { success: true, submission };
+};
+
+export const gradeSubmission = (submissionId: string, grade: number, feedback: string | null) => {
+  const sub = mockAssignmentSubmissions.find(s => s.id === submissionId);
+  if (!sub) return { success: false, error: 'Submission not found' };
+  sub.grade = grade;
+  sub.feedback = feedback;
+  sub.graded_at = new Date().toISOString();
+  return { success: true, submission: sub };
+};
+
+export const createQuiz = (data: Omit<Quiz, 'id' | 'created_at'>) => {
+  const quiz: Quiz = {
+    ...data,
+    id: `quiz-${Date.now()}`,
+    created_at: new Date().toISOString(),
+  };
+  mockQuizzes.push(quiz);
+  return { success: true, quiz };
+};
+
+export const updateQuiz = (id: string, data: Partial<Quiz>) => {
+  const idx = mockQuizzes.findIndex(q => q.id === id);
+  if (idx === -1) return { success: false, error: 'Quiz not found' };
+  mockQuizzes[idx] = { ...mockQuizzes[idx], ...data };
+  return { success: true, quiz: mockQuizzes[idx] };
+};
+
+export const submitQuizAttempt = (quizId: string, studentId: string, answers: QuizAnswer[]) => {
+  const quiz = mockQuizzes.find(q => q.id === quizId);
+  if (!quiz) return { success: false, error: 'Quiz not found' };
+
+  // Auto-grade: compare answers against correct_answer for each question
+  const gradedAnswers: QuizAnswer[] = answers.map(ans => {
+    const question = quiz.questions.find(q => q.id === ans.question_id);
+    if (!question) return ans;
+    const isCorrect = question.type === 'short_answer'
+      ? null // Short answer needs manual review
+      : ans.answer.toLowerCase().trim() === question.correct_answer.toLowerCase().trim();
+    return { ...ans, is_correct: isCorrect };
+  });
+
+  const totalScore = gradedAnswers.reduce((sum, a) => {
+    const question = quiz.questions.find(q => q.id === a.question_id);
+    return sum + (a.is_correct === true ? (question?.points ?? 0) : 0);
+  }, 0);
+
+  const totalPoints = quiz.questions.reduce((sum, q) => sum + q.points, 0);
+
+  const attempt: QuizAttempt = {
+    id: `qa-${Date.now()}`,
+    quiz_id: quizId,
+    student_id: studentId,
+    answers: gradedAnswers,
+    score: totalScore,
+    total_points: totalPoints,
+    started_at: new Date().toISOString(),
+    submitted_at: new Date().toISOString(),
+  };
+
+  // Remove previous attempt if exists
+  const prevIdx = mockQuizAttempts.findIndex(a => a.quiz_id === quizId && a.student_id === studentId);
+  if (prevIdx !== -1) mockQuizAttempts.splice(prevIdx, 1);
+
+  mockQuizAttempts.push(attempt);
+  return { success: true, attempt };
+};
+
+export const createDiscussionTopic = (data: Omit<DiscussionTopic, 'id' | 'created_at' | 'updated_at'>) => {
+  const topic: DiscussionTopic = {
+    ...data,
+    id: `disc-${Date.now()}`,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+  mockDiscussionTopics.push(topic);
+  return { success: true, topic };
+};
+
+export const createDiscussionReply = (topicId: string, content: string, createdBy: string) => {
+  const reply: DiscussionReply = {
+    id: `drep-${Date.now()}`,
+    topic_id: topicId,
+    content,
+    created_by: createdBy,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+  mockDiscussionReplies.push(reply);
+  return { success: true, reply };
+};
+
+export const addResource = (data: Omit<ClassroomResource, 'id' | 'created_at'>) => {
+  const resource: ClassroomResource = {
+    ...data,
+    id: `cr-${Date.now()}`,
+    created_at: new Date().toISOString(),
+  };
+  mockClassroomResources.push(resource);
+  return { success: true, resource };
+};
+
+export const deleteResource = (id: string) => {
+  const idx = mockClassroomResources.findIndex(r => r.id === id);
+  if (idx === -1) return { success: false, error: 'Resource not found' };
+  mockClassroomResources.splice(idx, 1);
+  return { success: true };
+};
+
+export const updateResource = (id: string, data: Partial<ClassroomResource>) => {
+  const idx = mockClassroomResources.findIndex(r => r.id === id);
+  if (idx === -1) return { success: false, error: 'Resource not found' };
+  mockClassroomResources[idx] = { ...mockClassroomResources[idx], ...data };
+  return { success: true, resource: mockClassroomResources[idx] };
+};
+
+export const deleteAssignment = (id: string) => {
+  const idx = mockAssignments.findIndex(a => a.id === id);
+  if (idx === -1) return { success: false, error: 'Assignment not found' };
+  mockAssignments.splice(idx, 1);
+  // Also remove related submissions
+  const submissionIds = mockAssignmentSubmissions.filter(s => s.assignment_id === id).map(s => s.id);
+  mockAssignmentSubmissions = mockAssignmentSubmissions.filter(s => !submissionIds.includes(s.id));
+  return { success: true };
+};
+
+export const deleteQuiz = (id: string) => {
+  const idx = mockQuizzes.findIndex(q => q.id === id);
+  if (idx === -1) return { success: false, error: 'Quiz not found' };
+  mockQuizzes.splice(idx, 1);
+  // Also remove related attempts
+  mockQuizAttempts = mockQuizAttempts.filter(a => a.quiz_id !== id);
+  return { success: true };
+};
+
+export const deleteDiscussionTopic = (id: string) => {
+  const idx = mockDiscussionTopics.findIndex(t => t.id === id);
+  if (idx === -1) return { success: false, error: 'Topic not found' };
+  mockDiscussionTopics.splice(idx, 1);
+  // Also remove related replies
+  mockDiscussionReplies = mockDiscussionReplies.filter(r => r.topic_id !== id);
+  return { success: true };
+};
+
+export const updateDiscussionTopic = (id: string, data: Partial<DiscussionTopic>) => {
+  const idx = mockDiscussionTopics.findIndex(t => t.id === id);
+  if (idx === -1) return { success: false, error: 'Topic not found' };
+  mockDiscussionTopics[idx] = { ...mockDiscussionTopics[idx], ...data, updated_at: new Date().toISOString() };
+  return { success: true, topic: mockDiscussionTopics[idx] };
+};
 
 export const getClub = (id: string) =>
   mockClubs.find(c => c.id === id);
@@ -1254,7 +1986,7 @@ export function createClub(data: {
     id: `clm-${Date.now()}`,
     club_id: club.id,
     user_id: data.created_by,
-    role: 'leader',
+    role: 'admin',
     membership_status: 'active',
     joined_at: now,
   });
@@ -1339,9 +2071,9 @@ export function leaveClub(clubId: string, userId: string): { success: true } | {
   if (memberIndex < 0) return { success: false, error: 'You are not an active member of this club.' };
 
   const member = mockClubMembers[memberIndex];
-  const activeLeaders = mockClubMembers.filter(m => m.club_id === clubId && m.role === 'leader' && m.membership_status === 'active');
-  if (member.role === 'leader' && activeLeaders.length === 1) {
-    return { success: false, error: 'The sole leader cannot leave this club.' };
+  const activeAdmins = mockClubMembers.filter(m => m.club_id === clubId && m.role === 'admin' && m.membership_status === 'active');
+  if (member.role === 'admin' && activeAdmins.length === 1) {
+    return { success: false, error: 'The sole admin cannot leave this club.' };
   }
 
   mockClubMembers.splice(memberIndex, 1);

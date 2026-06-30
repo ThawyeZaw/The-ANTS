@@ -12,6 +12,7 @@ import {
   Megaphone,
   MessageSquare,
   Send,
+  Settings,
   Trophy,
   UserCheck,
   Users,
@@ -20,7 +21,7 @@ import {
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { ClubFeature } from '@/types';
+import { ClubFeatureKey, DEFAULT_CLUB_FEATURES } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 import { useClub } from '@/hooks/useClub';
 import { cn, formatDate, formatRelativeTime, getInitials } from '@/lib/utils';
@@ -28,7 +29,7 @@ import { cn, formatDate, formatRelativeTime, getInitials } from '@/lib/utils';
 type TabKey = 'chat' | 'announcements' | 'links' | 'members' | 'requests' | 'projects' | 'activity_timeline' | 'leaderboard';
 
 /** Map tab keys to their required club feature */
-const TAB_FEATURE_MAP: Record<TabKey, string> = {
+const TAB_FEATURE_MAP: Record<TabKey, ClubFeatureKey> = {
   chat: 'chat',
   announcements: 'announcements',
   links: 'links',
@@ -71,18 +72,21 @@ export default function ClubDetail({ clubId }: { clubId: string }) {
   const activeMembers = members.filter((member) => member.membership_status === 'active');
   const currentMembership = user ? clubStore.getUserClubMembership(clubId, user.id) : undefined;
   const isMember = currentMembership?.membership_status === 'active';
-  const isLeader = currentMembership?.role === 'leader' && isMember;
+  const isAdmin = currentMembership?.role === 'admin' && isMember;
+  const isModerator = currentMembership?.role === 'moderator' && isMember;
+  const isLeader = isAdmin || isModerator;
   const pendingRequest = user ? clubStore.getUserClubJoinRequest(clubId, user.id) : undefined;
   const joinRequests = clubStore.getClubJoinRequests(clubId).filter((request) => request.status === 'pending');
 
   // Filter tabs based on enabled features
-  const enabledFeatures = (club?.enabled_features || ['chat', 'announcements', 'links', 'members']) as ClubFeature[];
+  const enabledFeatures = club?.enabled_features || DEFAULT_CLUB_FEATURES;
   const visibleTabs = tabs.filter((tab) => {
-    // Requests is always visible to leaders
-    if (tab.key === 'requests') return isLeader;
+    // Requests is only visible to admins
+    if (tab.key === 'requests') return isAdmin;
     // Check if the feature is enabled
-    const requiredFeature = TAB_FEATURE_MAP[tab.key] as ClubFeature;
-    return enabledFeatures.includes(requiredFeature);
+    const requiredFeature = TAB_FEATURE_MAP[tab.key] as ClubFeatureKey;
+    const feature = enabledFeatures.find(f => f.key === requiredFeature);
+    return feature?.enabled ?? false;
   });
 
   const topicTags = useMemo(() => {
@@ -153,7 +157,14 @@ export default function ClubDetail({ clubId }: { clubId: string }) {
             </div>
           </div>
 
-          <div className="w-full lg:w-72">
+          <div className="w-full lg:w-72 space-y-3">
+            {isLeader && (
+              <Link href={`/clubs/${club.id}/manage`} className="block w-full">
+                <Button variant="secondary" fullWidth icon={<Settings className="h-4 w-4" />}>
+                  Manage Club
+                </Button>
+              </Link>
+            )}
             {isMember ? (
               <Button variant="outline" fullWidth onClick={handleLeave}>
                 Leave Club
@@ -210,7 +221,7 @@ export default function ClubDetail({ clubId }: { clubId: string }) {
       )}
       {activeTab === 'links' && (
         <LinksTab
-          isMember={isMember}
+          isLeader={isLeader}
           links={clubStore.getClubLinks(club.id)}
           getProfile={clubStore.getProfile}
           onShare={(title, url) => user ? clubStore.shareLink(club.id, user.id, title, url) : { success: false, error: 'Sign in required.' }}
@@ -386,12 +397,12 @@ function AnnouncementsTab({
 }
 
 function LinksTab({
-  isMember,
+  isLeader,
   links,
   getProfile,
   onShare,
 }: {
-  isMember: boolean;
+  isLeader: boolean;
   links: ReturnType<ReturnType<typeof useClub>['getClubLinks']>;
   getProfile: ReturnType<typeof useClub>['getProfile'];
   onShare: (title: string, url: string) => { success: boolean; error?: string };
@@ -414,16 +425,18 @@ function LinksTab({
 
   return (
     <section className="space-y-4">
-      <form onSubmit={handleShare} className="rounded-xl border border-border bg-background-card p-5">
-        <div className="grid gap-3 md:grid-cols-2">
-          <Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder={isMember ? 'Link title' : 'Join to share links'} disabled={!isMember} />
-          <Input value={url} onChange={(event) => setUrl(event.target.value)} placeholder="https://example.com" disabled={!isMember} />
-        </div>
-        <div className="mt-4 flex items-center justify-between gap-3">
-          {error ? <p className="text-sm text-error">{error}</p> : <span />}
-          <Button type="submit" disabled={!isMember} icon={<LinkIcon className="h-4 w-4" />}>Share</Button>
-        </div>
-      </form>
+      {isLeader && (
+        <form onSubmit={handleShare} className="rounded-xl border border-border bg-background-card p-5">
+          <div className="grid gap-3 md:grid-cols-2">
+            <Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Link title" />
+            <Input value={url} onChange={(event) => setUrl(event.target.value)} placeholder="https://example.com" />
+          </div>
+          <div className="mt-4 flex items-center justify-between gap-3">
+            {error ? <p className="text-sm text-error">{error}</p> : <span />}
+            <Button type="submit" icon={<LinkIcon className="h-4 w-4" />}>Share</Button>
+          </div>
+        </form>
+      )}
       <div className="grid gap-3 md:grid-cols-2">
         {links.map((item) => {
           const profile = getProfile(item.shared_by);
@@ -471,7 +484,7 @@ function MembersTab({
               <p className="truncate font-semibold text-foreground">{profile?.name || 'Unknown user'}</p>
               <p className="text-xs text-foreground-muted">{profile?.title || profile?.role}</p>
             </div>
-            <Badge variant={member.role === 'leader' ? 'warning' : 'default'}>{member.role}</Badge>
+            <Badge variant={member.role === 'admin' || member.role === 'moderator' ? 'warning' : 'default'}>{member.role}</Badge>
           </article>
         );
       })}

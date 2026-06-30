@@ -213,7 +213,33 @@ export default function NavBar() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isNavHidden, setIsNavHidden] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+
+  // Hide navbar on scroll down, show on scroll up
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+    let ticking = false;
+
+    function handleScroll() {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY;
+          if (currentScrollY > lastScrollY && currentScrollY > 80) {
+            setIsNavHidden(true);
+          } else {
+            setIsNavHidden(false);
+          }
+          lastScrollY = currentScrollY;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Close user menu on outside click
   useEffect(() => {
@@ -266,7 +292,7 @@ export default function NavBar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full">
+    <header className={cn('sticky top-0 z-50 w-full transition-transform duration-300', isNavHidden && '-translate-y-full')}>
       {/* Floating NavBar Container */}
       <div className="mx-auto max-w-7xl px-4 pt-3">
         <nav className="glass rounded-2xl px-4 py-2 flex items-center justify-between animate-glow">

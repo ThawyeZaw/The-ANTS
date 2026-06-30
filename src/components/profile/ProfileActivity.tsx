@@ -2,7 +2,7 @@
 
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTS — Profile Activity Component
-// Timeline-style recent activity feed for the public profile page.
+// Flowing timeline — no card containers, just a connected stream.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import {
@@ -40,36 +40,31 @@ const ACTIVITY_COLORS: Record<string, string> = {
 };
 
 export default function ProfileActivity({ activities }: ProfileActivityProps) {
-  if (activities.length === 0) {
-    return (
-      <div className="bg-background-card border border-border rounded-2xl p-8 text-center">
-        <Clock className="h-8 w-8 text-foreground-muted mx-auto mb-3" />
-        <p className="text-sm text-foreground-muted">No recent activity to show.</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="bg-background-card border border-border rounded-2xl overflow-hidden">
-      {/* Header */}
-      <div className="px-6 py-4 border-b border-border">
-        <h2 className="font-semibold text-foreground">Recent Activity</h2>
-        <p className="text-xs text-foreground-muted mt-0.5">Latest contributions and milestones</p>
+    <section>
+      {/* Header — just text, no card */}
+      <div className="flex items-center gap-3 mb-6 pb-2 border-b border-white/5">
+        <div className="w-1 h-6 rounded-full bg-purple-500" />
+        <h2 className="text-lg font-bold text-foreground">Recent Activity</h2>
       </div>
 
-      {/* Timeline */}
-      <div className="px-6 py-4">
-        <div className="space-y-0">
+      {activities.length === 0 ? (
+        <p className="text-sm text-foreground-muted text-center py-8">
+          No recent activity to show.
+        </p>
+      ) : (
+        /* Timeline — connected flow */
+        <div className="pl-5">
           {activities.map((activity, index) => {
             const icon = ACTIVITY_ICONS[activity.activity_type] || <Zap className="h-4 w-4" />;
             const colorClass = ACTIVITY_COLORS[activity.activity_type] || 'text-foreground-muted bg-background-secondary';
             const isLast = index === activities.length - 1;
 
             return (
-              <div key={activity.id} className="flex gap-3 group">
-                {/* Timeline line + dot */}
+              <div key={activity.id} className="flex gap-4 group">
+                {/* Timeline dot + continuing line */}
                 <div className="flex flex-col items-center shrink-0">
-                  <div className={`p-2 rounded-lg ${colorClass} group-hover:scale-110 transition-transform duration-200`}>
+                  <div className={`p-2 rounded-full ${colorClass} group-hover:scale-110 transition-transform duration-200`}>
                     {icon}
                   </div>
                   {!isLast && (
@@ -78,7 +73,7 @@ export default function ProfileActivity({ activities }: ProfileActivityProps) {
                 </div>
 
                 {/* Content */}
-                <div className={`pb-5 ${isLast ? 'pb-0' : ''}`}>
+                <div className={`pb-6 ${isLast ? 'pb-0' : ''} min-w-0`}>
                   <p className="text-sm text-foreground font-medium">
                     {activity.description}
                   </p>
@@ -90,7 +85,7 @@ export default function ProfileActivity({ activities }: ProfileActivityProps) {
             );
           })}
         </div>
-      </div>
-    </div>
+      )}
+    </section>
   );
 }

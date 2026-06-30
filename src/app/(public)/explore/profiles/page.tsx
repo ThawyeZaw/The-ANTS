@@ -25,6 +25,7 @@ import Button from '@/components/ui/Button';
 import { getPublicProfiles } from '@/lib/mock/database';
 import { UserRole, ROLE_METADATA } from '@/types';
 import { cn } from '@/lib/utils';
+import AvatarImage from '@/components/ui/AvatarImage';
 
 const ROLE_FILTERS: { label: string; roles: UserRole[]; icon: React.ReactNode }[] = [
   { label: 'All', roles: [], icon: <Users className="h-4 w-4" /> },
@@ -138,9 +139,7 @@ function ExploreProfilesContent() {
                 >
                   <div className="bg-background-card border border-border rounded-2xl p-6 hover:border-primary/30 hover:shadow-lg transition-all duration-300 h-full">
                     <div className="flex items-start gap-4 mb-4">
-                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold text-lg shrink-0">
-                        {profile.name.charAt(0).toUpperCase()}
-                      </div>
+                      <AvatarImage avatar={profile.avatar} name={profile.name} size="sm" className="shrink-0" />
                       <div className="min-w-0 flex-1">
                         <h3 className="text-lg font-semibold text-foreground truncate group-hover:text-primary transition-colors">
                           {profile.name}
