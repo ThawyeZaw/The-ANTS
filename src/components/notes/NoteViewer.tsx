@@ -16,6 +16,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
 import { useSavedNotes } from '@/hooks/useNotes';
 import BlockPreview from './BlockPreview';
+import RelatedContent from '@/components/ui/RelatedContent';
 import { getProfile, mockCurriculums, mockSubjects } from '@/lib/mock/database';
 
 interface NoteViewerProps {
@@ -194,6 +195,14 @@ export default function NoteViewer({ note }: NoteViewerProps) {
           ))}
         </div>
       </div>
+
+      {/* ── Related Content ── */}
+      <RelatedContent
+        curriculumId={note.curriculum_id}
+        subjectId={note.subject_id}
+        topicId={note.topic_id}
+        excludeNoteId={note.id}
+      />
 
     </div>
   );

@@ -12,15 +12,23 @@
 |------|------|-------------|
 | `id` | `uuid` | Primary |
 | `email` | `text` |  Unique |
-| `full_name` | `text` |  |
+| `name` | `text` |  |
+| `username` | `text` |  Unique |
 | `avatar_url` | `text` |  Nullable |
 | `created_at` | `timestamp` |  Nullable |
 | `updated_at` | `timestamp` |  Nullable |
 | `role` | `user_role` |  Nullable |
 | `is_public` | `bool` |  Nullable |
+| `bio` | `text` |  Nullable |
+| `title` | `text` |  Nullable |
+| `social_links` | `jsonb` |  Nullable |
 | `projects` | `jsonb` |  Nullable |
 | `activities` | `jsonb` |  Nullable |
 | `achievements` | `jsonb` |  Nullable |
+| `pinned_item_id` | `text` |  Nullable |
+| `section_visibility` | `jsonb` |  Nullable |
+
+> **`social_links` JSONB structure:** Array of `{ id, platform: ("github" | "facebook" | "linkedin" | "website" | "twitter" | "instagram" | "youtube" | "custom"), label, url, visible: bool, order? }`
 
 > **`projects` JSONB structure:** Array of `{ id, title, description, role?, technologies?: string[], links?: { github?, live?, website?, other? }, media?: string[], isHidden?, order? }`
 > **`activities` JSONB structure:** Array of `{ id, name, organization, role, start_date, end_date?, description?, verification_link?, isHidden?, order? }`
@@ -483,6 +491,41 @@
 | `requested_at` | `timestamp` |  |
 
 > **`status` values:** `"pending"` | `"approved"` | `"rejected"`
+
+---
+
+## Table `club_projects`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `club_id` | `uuid` |  |
+| `created_by` | `uuid` |  |
+| `title` | `text` |  |
+| `description` | `text` |  Nullable |
+| `created_at` | `timestamp` |  |
+
+> **Permission:** Any active club member can add projects.
+
+---
+
+## Table `club_events`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `club_id` | `uuid` |  |
+| `created_by` | `uuid` |  |
+| `title` | `text` |  |
+| `description` | `text` |  Nullable |
+| `event_date` | `timestamp` |  |
+| `created_at` | `timestamp` |  |
+
+> **Permission:** Only club leaders (admins and moderators) can schedule events.
 
 ---
 

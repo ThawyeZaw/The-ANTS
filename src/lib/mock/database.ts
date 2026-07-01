@@ -842,6 +842,13 @@ export const mockClassroomMembers: ClassroomMember[] = [
   { id: 'cm-4', classroom_id: 'class-1', user_id: 'user-student-002', role: 'student', joined_at: '2026-02-01T00:00:00Z' },
   { id: 'cm-5', classroom_id: 'class-2', user_id: 'user-teacher-001', role: 'teacher', joined_at: '2026-03-01T00:00:00Z' },
   { id: 'cm-6', classroom_id: 'class-2', user_id: 'user-student-001', role: 'student', joined_at: '2026-03-15T00:00:00Z' },
+  // class-3 members
+  { id: 'cm-7', classroom_id: 'class-3', user_id: 'user-teacher-001', role: 'teacher', joined_at: '2026-04-01T00:00:00Z' },
+  { id: 'cm-8', classroom_id: 'class-3', user_id: 'user-student-001', role: 'student', joined_at: '2026-04-05T00:00:00Z' },
+  { id: 'cm-9', classroom_id: 'class-3', user_id: 'user-student-002', role: 'student', joined_at: '2026-04-10T00:00:00Z' },
+  // class-4 members
+  { id: 'cm-10', classroom_id: 'class-4', user_id: 'user-teacher-002', role: 'teacher', joined_at: '2026-05-01T00:00:00Z' },
+  { id: 'cm-11', classroom_id: 'class-4', user_id: 'user-student-001', role: 'student', joined_at: '2026-05-10T00:00:00Z' },
 ];
 
 export const mockClassroomCurriculums: ClassroomCurriculum[] = [
@@ -1211,25 +1218,181 @@ export const mockClubMembers: ClubMember[] = [
   { id: 'clm-9', club_id: 'club-3', user_id: 'user-main-contributor-001', role: 'admin', membership_status: 'active', joined_at: '2026-04-05T00:00:00Z' },
   { id: 'clm-10', club_id: 'club-3', user_id: 'user-contributor-004', role: 'moderator', membership_status: 'active', joined_at: '2026-05-15T00:00:00Z' },
   { id: 'clm-11', club_id: 'club-3', user_id: 'user-student-004', role: 'member', membership_status: 'active', joined_at: '2026-06-01T00:00:00Z' },
+  // Club 4 - Literary Society
+  { id: 'clm-12', club_id: 'club-4', user_id: 'user-teacher-002', role: 'admin', membership_status: 'active', joined_at: '2026-05-10T00:00:00Z' },
+  { id: 'clm-13', club_id: 'club-4', user_id: 'user-student-001', role: 'member', membership_status: 'active', joined_at: '2026-05-12T00:00:00Z' },
+  { id: 'clm-14', club_id: 'club-4', user_id: 'user-student-002', role: 'member', membership_status: 'active', joined_at: '2026-05-15T00:00:00Z' },
+  // Club 5 - Math Olympiad
+  { id: 'clm-15', club_id: 'club-5', user_id: 'user-teacher-001', role: 'admin', membership_status: 'active', joined_at: '2026-06-01T00:00:00Z' },
+  { id: 'clm-16', club_id: 'club-5', user_id: 'user-student-001', role: 'member', membership_status: 'active', joined_at: '2026-06-05T00:00:00Z' },
 ];
 
 export const mockClubMessages: ClubMessage[] = [
   { id: 'cmsg-1', club_id: 'club-1', sender_id: 'user-student-001', message: 'Hi everyone! Anyone revising forces this week?', created_at: '2026-06-10T10:00:00Z' },
   { id: 'cmsg-2', club_id: 'club-1', sender_id: 'user-contributor-001', message: 'Yes. I will drop a compact question set later today.', created_at: '2026-06-10T10:12:00Z' },
   { id: 'cmsg-3', club_id: 'club-2', sender_id: 'user-contributor-002', message: 'Welcome to the Chemistry Circle. Post your hardest equilibrium question here.', created_at: '2026-06-12T09:30:00Z' },
+  { id: 'cmsg-4', club_id: 'club-4', sender_id: 'user-student-002', message: 'Has anyone read the new Murakami book? The prose is stunning.', created_at: '2026-06-20T14:00:00Z' },
+  { id: 'cmsg-5', club_id: 'club-5', sender_id: 'user-teacher-001', message: 'This week: AMC 10 problems 15-20. Come prepared with solutions.', created_at: '2026-06-22T16:00:00Z' },
 ];
 
 export const mockClubAnnouncements: ClubAnnouncement[] = [
   { id: 'cann-1', club_id: 'club-1', created_by: 'user-contributor-001', title: 'Science Fair', content: 'Bring one idea and one question to this month\'s science fair prep session.', created_at: '2026-06-01T00:00:00Z' },
   { id: 'cann-2', club_id: 'club-3', created_by: 'user-main-contributor-001', title: 'Sprint Rules', content: 'Share goals before each sprint and check in after your timer ends.', created_at: '2026-06-05T00:00:00Z' },
+  { id: 'cann-3', club_id: 'club-4', created_by: 'user-teacher-002', title: 'Monthly Book Club', content: 'This month we are reading "Klara and the Sun" by Kazuo Ishiguro. Discussion on July 15.', created_at: '2026-06-15T00:00:00Z' },
+  { id: 'cann-4', club_id: 'club-5', created_by: 'user-teacher-001', title: 'Olympiad Bootcamp', content: 'Summer intensive begins July 5. 4 weeks of daily problem sets and 2 mock contests.', created_at: '2026-06-25T00:00:00Z' },
 ];
 
 export const mockClubLinks: ClubLink[] = [
   { id: 'clink-1', club_id: 'club-1', title: 'Physics Simulations', url: 'https://phet.colorado.edu/', shared_by: 'user-contributor-001', created_at: '2026-05-01T00:00:00Z' },
   { id: 'clink-2', club_id: 'club-2', title: 'Chemguide', url: 'https://www.chemguide.co.uk/', shared_by: 'user-contributor-002', created_at: '2026-05-22T00:00:00Z' },
+  { id: 'clink-3', club_id: 'club-4', title: 'Poetry Foundation', url: 'https://www.poetryfoundation.org/', shared_by: 'user-teacher-002', created_at: '2026-06-10T00:00:00Z' },
+  { id: 'clink-4', club_id: 'club-5', title: 'AOPS Wiki', url: 'https://artofproblemsolving.com/wiki/', shared_by: 'user-contributor-001', created_at: '2026-06-12T00:00:00Z' },
+];
+
+// ── Club Projects & Events ─────────────────────────────────────────────────
+
+export const mockClubProjects: {
+  id: string;
+  club_id: string;
+  created_by: string;
+  title: string;
+  description: string | null;
+  created_at: string;
+}[] = [
+  {
+    id: 'cp-1',
+    club_id: 'club-1',
+    created_by: 'user-contributor-001',
+    title: 'Newton\'s Laws Demo App',
+    description: 'Interactive web app demonstrating all three laws of motion with real-time physics simulations.',
+    created_at: '2026-04-15T00:00:00Z',
+  },
+  {
+    id: 'cp-2',
+    club_id: 'club-2',
+    created_by: 'user-contributor-002',
+    title: 'Organic Chemistry Flashcards',
+    description: 'A curated deck covering all IGCSE organic chemistry reaction mechanisms and functional groups.',
+    created_at: '2026-05-20T00:00:00Z',
+  },
+  {
+    id: 'cp-3',
+    club_id: 'club-1',
+    created_by: 'user-student-001',
+    title: 'Physics Lab Report Template',
+    description: 'Standardised LaTeX template for IGCSE physics lab reports with pre-built sections.',
+    created_at: '2026-06-01T00:00:00Z',
+  },
+];
+
+export const mockClubEvents: {
+  id: string;
+  club_id: string;
+  created_by: string;
+  title: string;
+  description: string | null;
+  event_date: string;
+  created_at: string;
+}[] = [
+  {
+    id: 'ce-1',
+    club_id: 'club-1',
+    created_by: 'user-contributor-001',
+    title: 'Physics Olympiad Prep Session',
+    description: 'Group study session covering past Olympiad problems — bring your own solutions to discuss.',
+    event_date: '2026-07-10T14:00:00Z',
+    created_at: '2026-06-25T08:00:00Z',
+  },
+  {
+    id: 'ce-2',
+    club_id: 'club-2',
+    created_by: 'user-contributor-002',
+    title: 'Chemistry Lab Safety Workshop',
+    description: 'Mandatory refresher on lab safety protocols before the summer practical sessions.',
+    event_date: '2026-07-05T10:00:00Z',
+    created_at: '2026-06-20T09:00:00Z',
+  },
+  {
+    id: 'ce-3',
+    club_id: 'club-4',
+    created_by: 'user-teacher-002',
+    title: 'Poetry Reading Night',
+    description: 'Open mic session — read your own work or a favourite poem. All genres welcome.',
+    event_date: '2026-07-15T18:00:00Z',
+    created_at: '2026-06-22T12:00:00Z',
+  },
+  {
+    id: 'ce-4',
+    club_id: 'club-5',
+    created_by: 'user-contributor-001',
+    title: 'Mock Olympiad Round 1',
+    description: 'Timed mock competition under real Olympiad conditions. Prizes for top 3!',
+    event_date: '2026-07-20T09:00:00Z',
+    created_at: '2026-06-18T10:00:00Z',
+  },
 ];
 
 // ── Club Feature Management ─────────────────────────────────────────────────
+
+/** Get all projects for a club */
+export function getClubProjects(clubId: string) {
+  return mockClubProjects.filter((p) => p.club_id === clubId);
+}
+
+/** Get all events for a club */
+export function getClubEvents(clubId: string) {
+  return mockClubEvents.filter((e) => e.club_id === clubId);
+}
+
+/** Add a project to a club */
+export function addClubProject(
+  clubId: string,
+  userId: string,
+  title: string,
+  description: string
+): { success: true; id: string } | { success: false; error: string } {
+  const member = mockClubMembers.find(
+    (m) => m.club_id === clubId && m.user_id === userId && m.membership_status === 'active'
+  );
+  if (!member) return { success: false, error: 'You must be a member to add projects.' };
+
+  const id = `cp-${Date.now()}`;
+  mockClubProjects.push({
+    id,
+    club_id: clubId,
+    created_by: userId,
+    title,
+    description: description || null,
+    created_at: new Date().toISOString(),
+  });
+  return { success: true, id };
+}
+
+/** Add an event to a club */
+export function addClubEvent(
+  clubId: string,
+  userId: string,
+  title: string,
+  description: string,
+  eventDate: string
+): { success: true; id: string } | { success: false; error: string } {
+  const member = mockClubMembers.find(
+    (m) => m.club_id === clubId && m.user_id === userId && (m.role === 'admin' || m.role === 'moderator')
+  );
+  if (!member) return { success: false, error: 'Only club leaders can schedule events.' };
+
+  const id = `ce-${Date.now()}`;
+  mockClubEvents.push({
+    id,
+    club_id: clubId,
+    created_by: userId,
+    title,
+    description: description || null,
+    event_date: eventDate || new Date().toISOString(),
+    created_at: new Date().toISOString(),
+  });
+  return { success: true, id };
+}
 
 /**
  * Update the enabled features for a club.
@@ -1438,6 +1601,15 @@ export let mockCards: FlashCard[] = [
   { id: 'card-18', deck_id: 'deck-5', front_text: 'Ubiquitous', back_text: '(adj) Present, appearing, or found everywhere.\nE.g. "Mobile phones are now ubiquitous in modern society."', created_at: '2026-05-20T00:00:00Z' },
   { id: 'card-19', deck_id: 'deck-5', front_text: 'Proliferate', back_text: '(v) To increase rapidly in number or amount.\nE.g. "Social media platforms have proliferated in recent years."', created_at: '2026-05-20T00:00:00Z' },
   { id: 'card-20', deck_id: 'deck-5', front_text: 'Exacerbate', back_text: '(v) To make a problem or situation worse.\nE.g. "Pollution exacerbates the effects of climate change."', created_at: '2026-05-21T00:00:00Z' },
+  // deck-6: History Dates
+  { id: 'card-21', deck_id: 'deck-6', front_text: 'When did World War II end?', back_text: 'September 2, 1945 (V-J Day — Japan\'s surrender)', created_at: '2026-06-10T00:00:00Z' },
+  { id: 'card-22', deck_id: 'deck-6', front_text: 'Treaty of Versailles signed in:', back_text: 'June 28, 1919', created_at: '2026-06-10T00:00:00Z' },
+  { id: 'card-23', deck_id: 'deck-6', front_text: 'Fall of the Berlin Wall', back_text: 'November 9, 1989', created_at: '2026-06-10T00:00:00Z' },
+  { id: 'card-24', deck_id: 'deck-6', front_text: 'First manned moon landing', back_text: 'July 20, 1969 (Apollo 11)', created_at: '2026-06-11T00:00:00Z' },
+  // deck-7: Computer Science
+  { id: 'card-25', deck_id: 'deck-7', front_text: 'What is the time complexity of binary search?', back_text: 'O(log n)', created_at: '2026-06-15T00:00:00Z' },
+  { id: 'card-26', deck_id: 'deck-7', front_text: 'Define encapsulation in OOP', back_text: 'Bundling data and methods that operate on that data within a single unit (class), restricting direct access.', created_at: '2026-06-15T00:00:00Z' },
+  { id: 'card-27', deck_id: 'deck-7', front_text: 'What does SQL stand for?', back_text: 'Structured Query Language', created_at: '2026-06-16T00:00:00Z' },
 ];
 
 export let mockCardReviews: CardReview[] = [
@@ -2347,6 +2519,15 @@ export function createCard(data: {
   return card;
 }
 
+/** Get decks related to a curriculum and/or subject */
+export function getRelatedDecks(curriculumId?: string | null, subjectId?: string | null): Deck[] {
+  return mockDecks.filter((d) => {
+    if (curriculumId && d.curriculum_id === curriculumId) return true;
+    if (subjectId && d.subject_id === subjectId) return true;
+    return false;
+  });
+}
+
 /** Update an existing card's content */
 export function updateCard(
   cardId: string,
@@ -2578,6 +2759,73 @@ export const mockNotes: Note[] = [
           ['Δ > 0', 'Two distinct real roots'],
           ['Δ = 0', 'One repeated real root'],
           ['Δ < 0', 'No real roots (complex)'],
+        ]
+      },
+    ],
+  },
+  {
+    id: 'note-006',
+    title: 'Electromagnetic Spectrum',
+    summary: 'From radio waves to gamma rays — understand wavelength, frequency, and real-world applications.',
+    curriculum_id: 'curr-1',
+    subject_id: 'subj-1',
+    topic_id: null,
+    syllabus_point: '3.1 — Electromagnetic Waves',
+    is_syllabus_based: true,
+    tags: ['physics', 'waves', 'electromagnetic', 'IGCSE'],
+    contributor_id: 'user-contributor-002',
+    status: 'approved',
+    visibility: 'public',
+    reviewer_id: 'user-main-contributor-001',
+    created_at: '2026-06-10T10:00:00Z',
+    updated_at: '2026-06-10T10:00:00Z',
+    blocks: [
+      { type: 'heading', id: 'g1', level: 1, text: 'Electromagnetic Spectrum' },
+      { type: 'paragraph', id: 'g2', text: 'The EM spectrum arranges all types of electromagnetic radiation by wavelength and frequency.' },
+      {
+        type: 'table', id: 'g3', rows: [
+          ['Region', 'Wavelength', 'Uses'],
+          ['Radio', '> 0.1 m', 'Broadcasting, MRI'],
+          ['Microwave', '1 mm – 0.1 m', 'Cooking, radar'],
+          ['Infrared', '700 nm – 1 mm', 'Remote controls, thermal imaging'],
+          ['Visible', '400 – 700 nm', 'Sight, photography'],
+          ['UV', '10 – 400 nm', 'Sterilisation, tanning'],
+          ['X-ray', '0.01 – 10 nm', 'Medical imaging'],
+          ['Gamma', '< 0.01 nm', 'Cancer treatment'],
+        ]
+      },
+      { type: 'latex', id: 'g4', expression: 'c = f\\lambda', display: true },
+      { type: 'paragraph', id: 'g5', text: 'All EM waves travel at the speed of light in a vacuum: **c = 3 × 10⁸ m/s**.' },
+    ],
+  },
+  {
+    id: 'note-007',
+    title: 'Past Simple vs Present Perfect',
+    summary: 'Clear comparison of the two most confused tenses in English grammar with timeline visualisations.',
+    curriculum_id: null,
+    subject_id: null,
+    topic_id: null,
+    is_syllabus_based: false,
+    tags: ['english', 'grammar', 'tenses', 'IELTS'],
+    contributor_id: 'user-contributor-002',
+    status: 'approved',
+    visibility: 'public',
+    reviewer_id: 'user-main-contributor-001',
+    created_at: '2026-06-18T11:00:00Z',
+    updated_at: '2026-06-18T11:00:00Z',
+    blocks: [
+      { type: 'heading', id: 'h1', level: 1, text: 'Past Simple vs Present Perfect' },
+      { type: 'paragraph', id: 'h2', text: 'These two tenses cause the most confusion for English learners. The key difference is **time reference**.' },
+      { type: 'heading', id: 'h3', level: 2, text: 'Past Simple' },
+      { type: 'paragraph', id: 'h4', text: '**Form:** Subject + past verb (V2)\n**Use:** Completed actions at a specific time in the past.\n**Signal words:** yesterday, last week, in 2010, ago' },
+      { type: 'heading', id: 'h5', level: 2, text: 'Present Perfect' },
+      { type: 'paragraph', id: 'h6', text: '**Form:** Subject + has/have + past participle (V3)\n**Use:** Actions with present relevance or unspecified time.\n**Signal words:** ever, never, just, yet, already, since, for' },
+      {
+        type: 'table', id: 'h7', rows: [
+          ['Past Simple', 'Present Perfect'],
+          ['I ate lunch at 1 PM.', 'I have already eaten lunch.'],
+          ['She lived in Paris in 2015.', 'She has lived in Paris since 2015.'],
+          ['Did you finish?', 'Have you finished yet?'],
         ]
       },
     ],

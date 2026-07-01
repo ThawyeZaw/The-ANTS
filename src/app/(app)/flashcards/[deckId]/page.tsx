@@ -12,6 +12,7 @@ import { getDeck } from '@/lib/mock/database';
 import type { Deck } from '@/types';
 import StudySession from '@/components/flashcards/StudySession';
 import DeckEditView from '@/components/flashcards/DeckEditView';
+import RelatedContent from '@/components/ui/RelatedContent';
 import { ArrowLeft, Layers } from 'lucide-react';
 
 export default function DeckPage() {
@@ -74,22 +75,30 @@ export default function DeckPage() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl rounded-3xl border border-[var(--border)] bg-[var(--background-card)] shadow-[var(--shadow-md)] overflow-hidden">
-      {mode === 'edit' ? (
-        <DeckEditView
-          deck={deck}
-          userId={user.profile.id}
-          onBack={handleBack}
-          onDeckUpdated={handleDeckUpdated}
-        />
-      ) : (
-        <StudySession
-          deckId={deck.id}
-          deckName={deck.name}
-          userId={user.profile.id}
-          onBack={handleBack}
-        />
-      )}
+    <div className="mx-auto max-w-3xl space-y-6">
+      <div className="rounded-3xl border border-[var(--border)] bg-[var(--background-card)] shadow-[var(--shadow-md)] overflow-hidden">
+        {mode === 'edit' ? (
+          <DeckEditView
+            deck={deck}
+            userId={user.profile.id}
+            onBack={handleBack}
+            onDeckUpdated={handleDeckUpdated}
+          />
+        ) : (
+          <StudySession
+            deckId={deck.id}
+            deckName={deck.name}
+            userId={user.profile.id}
+            onBack={handleBack}
+          />
+        )}
+      </div>
+
+      <RelatedContent
+        curriculumId={deck.curriculum_id}
+        subjectId={deck.subject_id}
+        excludeDeckId={deck.id}
+      />
     </div>
   );
 }

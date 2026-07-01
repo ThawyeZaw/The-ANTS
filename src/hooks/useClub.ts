@@ -37,6 +37,10 @@ import {
   updateClubDetails as dbUpdateClubDetails,
   promoteClubMember,
   demoteClubLeader,
+  getClubProjects,
+  getClubEvents,
+  addClubProject,
+  addClubEvent,
 } from '@/lib/mock/database';
 
 type Result = { success: boolean; error?: string };
@@ -190,5 +194,9 @@ export function useClub() {
     updateFeatures,
     promoteMember,
     demoteLeader,
+    getClubProjects,
+    getClubEvents,
+    addClubProject,
+    addClubEvent,
   };
 }

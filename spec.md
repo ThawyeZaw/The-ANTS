@@ -76,7 +76,7 @@ The full PostgreSQL schema is maintained in [`schema.md`](./schema.md) — the s
 - `quizzes`, `quiz_attempts`: Quiz lifecycle with manual + AI generation
 - `discussion_topics`, `discussion_replies`: Classroom discussions
 - `classroom_resources`: Typed resource sharing (pdf, video, document, link, image)
-- `clubs`, `club_members`, `club_messages`, `club_announcements`, `club_links`, `club_join_requests`: Club ecosystem
+- `clubs`, `club_members`, `club_messages`, `club_announcements`, `club_links`, `club_join_requests`, `club_projects`, `club_events`: Club ecosystem
 - `timetable_events`: JSONB scheduling arrays
 - `decks`, `cards`, `card_reviews`: Flashcard SRS
 - `exams`, `exam_countdowns`, `grade_boundaries`, `grade_entries`: Exam & grading
@@ -113,10 +113,12 @@ the-ants/                                 # Project root
     │   ├── not-found.tsx                 # 🔒 PM — Global 404 page
     │   │
     │   ├── (auth)/                       # 🔒 PM (TYZ) — Auth route group
+    │   │   ├── error.tsx                 # 🔒 PM — Auth route group error boundary
     │   │   ├── login/page.tsx
     │   │   └── signup/page.tsx
     │   │
     │   ├── (public)/                     # Public routes (no auth required)
+    │   │   ├── error.tsx                 # 🔒 PM — Public route group error boundary
     │   │   ├── explore/
     │   │   │   ├── clubs/page.tsx        # 🔒 PM — Public club discovery
     │   │   │   └── profiles/page.tsx     # 🔒 PM — Public profile listing
@@ -127,30 +129,42 @@ the-ants/                                 # Project root
     │   │
     │   └── (app)/                        # Authenticated shell
     │       ├── layout.tsx                # 🔒 PM — App shell (NavBar wraps all authed routes)
-    │       ├── loading.tsx               # 🔒 PM — Global skeleton loader
+    │       ├── loading.tsx               # 🔒 PM — Global app skeleton loader
+    │       ├── error.tsx                 # 🔒 PM — App route group error boundary
     │       │
     │       ├── dashboard/page.tsx        # 🔒 PM — Unified role-aware dashboard
     │       ├── timetable/page.tsx        # 🔒 PPP
     │       ├── pomodoro/page.tsx         # 🔒 PPP
     │       ├── flashcards/
     │       │   ├── page.tsx              # 🔒 ZLH — Deck library
-    │       │   └── [deckId]/page.tsx     # 🔒 ZLH — Study session
+    │       │   ├── loading.tsx           # 🔒 ZLH — Deck library skeleton
+    │       │   └── [deckId]/page.tsx     # 🔒 ZLH — Study session + RelatedContent
     │       ├── lessons/page.tsx          # 🔒 BMK & ABC — Lesson Tracker
     │       ├── courses/page.tsx          # 🔒 BMK & ABC — Course Manager
     │       ├── library/
     │       │   ├── page.tsx              # Notes Library (All Roles)
-    │       │   ├── saved/page.tsx        # Saved Notes catalog
-    │       │   └── [noteId]/page.tsx     # Standalone note viewer
-    │       ├── my-notes/page.tsx         # My Notes hub
+    │       │   └── [noteId]/page.tsx     # Standalone note viewer + RelatedContent
+    │       ├── my-notes/
+    │       │   ├── page.tsx              # My Notes hub (created + saved)
+    │       │   └── loading.tsx           # My Notes skeleton
     │       ├── classrooms/
     │       │   ├── page.tsx              # 🔒 BMK & ABC — Classroom list
+    │       │   ├── loading.tsx           # 🔒 BMK & ABC — Classroom list skeleton
     │       │   └── [id]/page.tsx         # 🔒 BMK & ABC — Classroom detail (tabs: assignments, quizzes, resources, discussions, links, members, settings)
     │       ├── clubs/
     │       │   ├── page.tsx              # 🔒 AKT — Club Discovery
-    │       │   └── [id]/page.tsx         # 🔒 AKT — Club detail with feature toggles
-    │       ├── countdown/page.tsx        # 🔒 ZLH — Exam Countdown
+    │       │   ├── loading.tsx           # 🔒 AKT — Club Discovery skeleton
+    │       │   └── [id]/page.tsx         # 🔒 AKT — Club detail (tabs: chat, announcements, links, members, projects, activity_timeline)
+    │       ├── countdown/
+    │       │   ├── page.tsx              # 🔒 ZLH — Exam Countdown
+    │       │   └── loading.tsx           # 🔒 ZLH — Exam Countdown skeleton
     │       ├── calculator/page.tsx       # 🔒 AKT — Grade Calculator
-    │       ├── settings/page.tsx         # 🔒 PM — User settings
+    │       ├── settings/
+    │       │   ├── page.tsx              # 🔒 PM — User settings
+    │       │   ├── loading.tsx           # 🔒 PM — Settings skeleton
+    │       │   └── profile/
+    │       │       ├── page.tsx          # 🔒 PM — Profile editor
+    │       │       └── loading.tsx       # 🔒 PM — Profile editor skeleton
     │       ├── editor/
     │       │   ├── page.tsx              # 🔒 BMK & ABC — Curriculum editor
     │       │   ├── notes/page.tsx        # Split-screen Notes Editor
@@ -168,40 +182,40 @@ the-ants/                                 # Project root
     │   │   ├── Modal.tsx
     │   │   ├── Input.tsx
     │   │   ├── Badge.tsx
-    │   │   └── ProgressBar.tsx
+    │   │   ├── ProgressBar.tsx
+    │   │   ├── BackButton.tsx            # Reusable back navigation button
+    │   │   └── RelatedContent.tsx        # Cross-feature linking (related flashcards/notes by topic/curriculum)
     │   ├── layout/                       # 🔒 PM — Global shell
     │   │   ├── NavBar.tsx                # Creative floating glassmorphism nav with scroll-hide behavior
     │   │   └── AuthModal.tsx
     │   ├── auth/                         # 🔒 PM — Login & signup forms
+    │   │   ├── LoginForm.tsx
+    │   │   └── SignupForm.tsx
     │   ├── settings/                     # 🔒 PM
+    │   │   ├── AdvancedProfileEditor.tsx
     │   │   ├── ProfileEditor.tsx
     │   │   ├── RoleUpgradeForm.tsx
     │   │   └── RoleSwitcher.tsx
     │   ├── profile/                      # 🔒 PM — Public profile components
     │   │   ├── ProfileHero.tsx
-    │   │   ├── ProfileProjects.tsx
     │   │   ├── ProfileActivity.tsx
-    │   │   ├── ProfileAchievements.tsx
     │   │   └── ProfileStats.tsx
     │   ├── contributor-manager/          # 🔒 PM
-    │   │   ├── InviteStep.tsx
-    │   │   ├── VerifyStep.tsx
-    │   │   ├── ProfileStep.tsx
-    │   │   ├── SuccessStep.tsx
-    │   │   └── StepProgress.tsx
+    │   │   ├── CompleteProfileForm.tsx
+    │   │   ├── InviteForm.tsx
+    │   │   ├── OtpVerification.tsx
+    │   │   ├── StepIndicator.tsx
+    │   │   └── UsersTable.tsx
     │   ├── explore/                      # 🔒 PM
     │   │   ├── ClubCard.tsx
     │   │   └── ProfileCard.tsx
-    │   ├── timetable/                    # 🔒 PPP
-    │   ├── pomodoro/                     # 🔒 PPP
-    │   ├── lessons/                      # 🔒 BMK & ABC
-    │   ├── courses/                      # 🔒 BMK & ABC
-    │   ├── classrooms/                   # 🔒 BMK & ABC
+    │   ├── Lessons/                      # 🔒 BMK & ABC
+    │   │   ├── LessonTracker.tsx
+    │   │   └── TopicCard.tsx
+    │   ├── classrooms/                   # 🔒 BMK & ABC (11 files)
     │   │   ├── ClassroomCard.tsx         # Card shown in classroom grid
     │   │   ├── ClassroomList.tsx         # Main classroom list page
     │   │   ├── ClassroomDetail.tsx       # Classroom detail with tabs, search, feedback
-    │   │   ├── ClassroomJoinModal.tsx    # Join classroom by invite code modal
-    │   │   ├── CreateClassroomModal.tsx  # Create classroom modal (teachers)
     │   │   ├── AssignmentsPanel.tsx      # Assignment CRUD with grading
     │   │   ├── QuizzesPanel.tsx          # Quiz list, preview, take, results
     │   │   ├── QuizCreator.tsx           # Quiz creation wizard (manual + AI)
@@ -209,19 +223,32 @@ the-ants/                                 # Project root
     │   │   ├── ResourcesPanel.tsx        # Resource browsing with add/edit/delete
     │   │   ├── DiscussionsPanel.tsx      # Discussion topics + replies
     │   │   ├── LinksPanel.tsx            # Quick link sharing
-    │   │   ├── MembersPanel.tsx          # Member list with roles
-    │   │   └── SettingsPanel.tsx         # Classroom settings (teachers)
+    │   │   └── MembersPanel.tsx          # Member list with roles
     │   ├── clubs/                        # 🔒 AKT
-    │   ├── editor/                       # 🔒 BMK & ABC
-    │   ├── exam-editor/                  # 🔒 ZLH
-    │   ├── calculator/                   # 🔒 AKT
+    │   │   ├── ClubDetail.tsx            # Club detail with tabs (chat, announcements, links, members, projects, activity_timeline)
+    │   │   └── ClubDiscovery.tsx         # Club discovery page
     │   ├── countdown/                    # 🔒 ZLH
-    │   ├── flashcards/                   # 🔒 ZLH
-    │   └── notes/                        # Notes features
+    │   │   ├── AddCountdownModal.tsx
+    │   │   ├── CountdownCard.tsx
+    │   │   └── CountdownManager.tsx
+    │   ├── flashcards/                   # 🔒 ZLH (11 files)
+    │   │   ├── AICardParser.tsx
+    │   │   ├── AIPromptGenerator.tsx
+    │   │   ├── CardCreatorAI.tsx
+    │   │   ├── CardCreatorManual.tsx
+    │   │   ├── CreateDeckModal.tsx
+    │   │   ├── DeckCard.tsx
+    │   │   ├── DeckEditView.tsx
+    │   │   ├── DeckLibrary.tsx
+    │   │   ├── FlashcardText.tsx
+    │   │   ├── SessionSummary.tsx
+    │   │   └── StudySession.tsx
+    │   └── notes/                        # Notes features (13 files)
     │       ├── AIPromptGenerator.tsx
     │       ├── AnimationBlock.tsx
     │       ├── BlockEditor.tsx
     │       ├── BlockPreview.tsx
+    │       ├── MyNotesLibrary.tsx
     │       ├── NoteCard.tsx
     │       ├── NoteFilters.tsx
     │       ├── NoteReaderModal.tsx
@@ -229,7 +256,6 @@ the-ants/                                 # Project root
     │       ├── NoteViewer.tsx
     │       ├── NotesEditor.tsx
     │       ├── NotesLibrary.tsx
-    │       ├── MyNotesLibrary.tsx
     │       └── SavedNotesLibrary.tsx
     │
     ├── hooks/                            # Custom React Hooks
@@ -385,13 +411,12 @@ Each classroom has an `enabled_features` JSONB array controlling which tabs are 
 
 ### 10.2 Feature Toggles
 Each club has `enabled_features` with `enabled` + `public_visible` flags:
-- `chat` — Real-time messaging
-- `announcements` — Pinned leader posts
-- `links` — Resource sharing
+- `chat` — Real-time messaging (any member)
+- `announcements` — Pinned leader posts (admins & moderators only)
+- `links` — Resource sharing (admins & moderators only)
 - `members` — Member directory
-- `projects` — Project showcase
-- `activity_timeline` — Upcoming events
-- `leaderboard` — Member rankings
+- `projects` — Project showcase (any member can add)
+- `activity_timeline` — Upcoming events (admins & moderators only can schedule)
 
 ### 10.3 Join Modes
 - `open`: Anyone can join
