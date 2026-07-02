@@ -7,10 +7,10 @@
 // ordering customization.
 // ──────────────────────────────────────────────────────────────────────────────
 
+import BackButton from '@/components/ui/BackButton';
 import { useEffect, useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
-  ArrowLeft,
   UserX,
   Loader2,
   ExternalLink,
@@ -82,6 +82,12 @@ export default function ProfilePage() {
   const academicGrades = useMemo(() =>
     (profile?.academicGrades || []).filter(g => !g.isHidden).sort((a, b) => (a.order || 0) - (b.order || 0)),
   [profile?.academicGrades]);
+  const testimonials = useMemo(() =>
+    (profile?.testimonials || []).filter(t => !t.isHidden).sort((a, b) => (a.order || 0) - (b.order || 0)),
+  [profile?.testimonials]);
+  const certifications = useMemo(() =>
+    (profile?.certifications || []).filter(c => !c.isHidden).sort((a, b) => (a.order || 0) - (b.order || 0)),
+  [profile?.certifications]);
 
   // ── Pinned item ───────────────────────────────────────────────────────────
   const pinnedItemId = profile?.pinnedItemId;
@@ -92,6 +98,8 @@ export default function ProfilePage() {
     else if (activities.find(a => a.id === pinnedItemId)) { pinnedItem = activities.find(a => a.id === pinnedItemId); pinnedType = 'activity'; }
     else if (achievements.find(a => a.id === pinnedItemId)) { pinnedItem = achievements.find(a => a.id === pinnedItemId); pinnedType = 'achievement'; }
     else if (academicGrades.find(g => g.id === pinnedItemId)) { pinnedItem = academicGrades.find(g => g.id === pinnedItemId); pinnedType = 'grade'; }
+    else if (testimonials.find(t => t.id === pinnedItemId)) { pinnedItem = testimonials.find(t => t.id === pinnedItemId); pinnedType = 'testimonial'; }
+    else if (certifications.find(c => c.id === pinnedItemId)) { pinnedItem = certifications.find(c => c.id === pinnedItemId); pinnedType = 'certification'; }
   }
 
   // ── Section visibility ────────────────────────────────────────────────────
@@ -99,9 +107,11 @@ export default function ProfilePage() {
   const showActivities = profile?.sectionVisibility?.activities !== false && activities.length > 0;
   const showAchievements = profile?.sectionVisibility?.achievements !== false && achievements.length > 0;
   const showGrades = profile?.sectionVisibility?.academicGrades !== false && academicGrades.length > 0;
+  const showTestimonials = profile?.sectionVisibility?.testimonials !== false && testimonials.length > 0;
+  const showCertifications = profile?.sectionVisibility?.certifications !== false && certifications.length > 0;
 
   // ── Section ordering ──────────────────────────────────────────────────────
-  const sectionOrder = profile?.sectionOrder || ['projects', 'activities', 'achievements', 'academicGrades'];
+  const sectionOrder = profile?.sectionOrder || ['projects', 'activities', 'achievements', 'academicGrades', 'testimonials', 'certifications'];
   const sectionsMap: Record<string, { key: string; visible: boolean; content: React.ReactNode }> = {
     projects: {
       key: 'projects',
@@ -122,6 +132,16 @@ export default function ProfilePage() {
       key: 'academicGrades',
       visible: showGrades,
       content: <GradesSection key="academicGrades" grades={academicGrades} />,
+    },
+    testimonials: {
+      key: 'testimonials',
+      visible: showTestimonials,
+      content: <TestimonialsSection key="testimonials" testimonials={testimonials} profile={profile!} />,
+    },
+    certifications: {
+      key: 'certifications',
+      visible: showCertifications,
+      content: <CertificationsSection key="certifications" certifications={certifications} profile={profile!} />,
     },
   };
 
@@ -156,12 +176,7 @@ export default function ProfilePage() {
         <p className="text-sm text-foreground-secondary leading-relaxed mb-6">
           The user <span className="font-mono text-foreground font-semibold">@{username}</span> could not be found, or their profile is set to private.
         </p>
-        <button
-          onClick={() => router.back()}
-          className="text-sm font-medium text-foreground-muted hover:text-foreground transition-colors cursor-pointer"
-        >
-          <ArrowLeft className="h-4 w-4 inline mr-1" /> Go Back
-        </button>
+        <BackButton href="/" label="Go Back" />
       </div>
     );
   }
@@ -171,14 +186,7 @@ export default function ProfilePage() {
       className={`${widthClass} mx-auto ${spacingClass} animate-fade-in pb-12`}
       style={themeColors ? (themeColors as React.CSSProperties) : undefined}
     >
-      {/* Back Button */}
-      <button
-        onClick={() => router.back()}
-        className="group flex items-center gap-1.5 text-sm font-medium text-foreground-muted hover:text-foreground transition-colors cursor-pointer w-fit"
-      >
-        <ArrowLeft className="h-4 w-4 text-foreground-muted group-hover:text-primary group-hover:-translate-x-0.5 transition-all duration-300" />
-        Back
-      </button>
+      <BackButton href="/" label="Back" />
 
       {/* Profile Hero */}
       <ProfileHero profile={profile} isOwnProfile={isOwnProfile} />
@@ -441,6 +449,74 @@ function GradesSection({ grades }: { grades: any[] }) {
               {grade.fileUrl && (
                 <a href={grade.fileUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 mt-2 text-xs font-medium transition-colors" style={{ color: '#3b82f6' }}>
                   View Certificate <ExternalLink className="h-3 w-3" />
+                </a>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function TestimonialsSection({ testimonials, profile }: { testimonials: any[]; profile: Profile }) {
+  return (
+    <section>
+      <div className="flex items-center gap-3 mb-6 pb-2 border-b border-white/5">
+        <div className="w-1 h-6 rounded-full bg-rose-500" />
+        <h2 className="text-lg font-bold text-foreground">Testimonials</h2>
+      </div>
+      <div className="space-y-4">
+        {testimonials.map((testimonial) => (
+          <div key={testimonial.id} className="pl-4 border-l-2 border-rose-500/20 group hover:border-rose-500/60 transition-colors">
+            <p className="text-sm text-foreground-secondary italic leading-relaxed">
+              &ldquo;{testimonial.content}&rdquo;
+            </p>
+            <div className="flex items-center gap-2 mt-3">
+              <div className="w-6 h-6 rounded-full bg-rose-500/15 flex items-center justify-center">
+                <span className="text-[11px] font-bold text-rose-400">
+                  {testimonial.fromName.charAt(0)}
+                </span>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-foreground">{testimonial.fromName}</p>
+                <p className="text-[11px] text-foreground-muted">{testimonial.fromTitle}</p>
+              </div>
+              {testimonial.date && (
+                <span className="ml-auto text-[11px] text-foreground-muted">{testimonial.date}</span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function CertificationsSection({ certifications, profile }: { certifications: any[]; profile: Profile }) {
+  return (
+    <section>
+      <div className="flex items-center gap-3 mb-6 pb-2 border-b border-white/5">
+        <div className="w-1 h-6 rounded-full bg-teal-500" />
+        <h2 className="text-lg font-bold text-foreground">Certifications</h2>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        {certifications.map((cert) => (
+          <div key={cert.id} className="flex items-start gap-3 group p-4 rounded-xl bg-background-secondary/50 hover:bg-background-secondary transition-colors">
+            <div className="w-7 h-7 rounded-full bg-teal-500/10 flex items-center justify-center shrink-0 mt-0.5">
+              <GraduationCap className="h-3.5 w-3.5 text-teal-500" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="font-bold text-foreground text-sm">{cert.title}</h3>
+              <p className="text-xs text-foreground-muted mt-0.5">{cert.issuer}{cert.date ? ` · ${cert.date}` : ''}</p>
+              {cert.credentialUrl && (
+                <a
+                  href={cert.credentialUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 mt-2 text-xs font-medium text-teal-500 hover:text-teal-400 transition-colors"
+                >
+                  View Credential <ExternalLink className="h-3 w-3" />
                 </a>
               )}
             </div>

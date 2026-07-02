@@ -1,5 +1,6 @@
 'use client';
 
+import BackButton from '@/components/ui/BackButton';
 import { FormEvent, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
@@ -59,6 +60,7 @@ export default function ClubDiscovery() {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      <BackButton href="/dashboard" label="Back" />
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-sm font-medium text-primary">Community</p>

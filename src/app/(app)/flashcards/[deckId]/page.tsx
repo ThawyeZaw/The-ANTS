@@ -13,7 +13,8 @@ import type { Deck } from '@/types';
 import StudySession from '@/components/flashcards/StudySession';
 import DeckEditView from '@/components/flashcards/DeckEditView';
 import RelatedContent from '@/components/ui/RelatedContent';
-import { ArrowLeft, Layers } from 'lucide-react';
+import BackButton from '@/components/ui/BackButton';
+import { Layers } from 'lucide-react';
 
 export default function DeckPage() {
   const params = useParams<{ deckId: string }>();
@@ -56,12 +57,7 @@ export default function DeckPage() {
         <p className="mb-6 max-w-sm text-sm text-[var(--foreground-secondary)]">
           The flashcard deck you are trying to access does not exist or has been deleted.
         </p>
-        <button
-          onClick={() => router.push('/flashcards')}
-          className="flex items-center gap-2 rounded-xl bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--primary-hover)] transition-colors"
-        >
-          <ArrowLeft size={16} /> Back to Decks
-        </button>
+        <BackButton href="/flashcards" label="Back to Decks" />
       </div>
     );
   }

@@ -2,8 +2,8 @@
 
 import { FormEvent, useMemo, useState } from 'react';
 import Link from 'next/link';
+import BackButton from '@/components/ui/BackButton';
 import {
-  ArrowLeft,
   CalendarDays,
   Check,
   ExternalLink,
@@ -104,9 +104,7 @@ export default function ClubDetail({ clubId }: { clubId: string }) {
         <MessageSquare className="mx-auto h-10 w-10 text-foreground-muted" />
         <h1 className="mt-4 text-2xl font-bold text-foreground">Club not found</h1>
         <p className="mt-2 text-foreground-muted">This club may have moved or does not exist in the mock data.</p>
-        <Link href="/clubs" className="mt-6 inline-flex">
-          <Button icon={<ArrowLeft className="h-4 w-4" />}>Back to Clubs</Button>
-        </Link>
+        <BackButton href="/clubs" label="Back to Clubs" />
       </div>
     );
   }
@@ -127,11 +125,7 @@ export default function ClubDetail({ clubId }: { clubId: string }) {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <Link href="/clubs" className="inline-flex">
-        <Button variant="secondary" icon={<ArrowLeft className="h-4 w-4" />}>
-          Clubs
-        </Button>
-      </Link>
+      <BackButton href="/clubs" label="Clubs" />
 
       <section className="rounded-2xl border border-border bg-background-card p-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">

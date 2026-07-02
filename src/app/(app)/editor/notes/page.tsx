@@ -5,9 +5,10 @@
 // Route: /editor/notes — Contributor and Main Contributor only.
 // ──────────────────────────────────────────────────────────────────────────────
 
+import BackButton from '@/components/ui/BackButton';
 import { Suspense, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ShieldAlert, ArrowLeft } from 'lucide-react';
+import { ShieldAlert } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
@@ -48,13 +49,7 @@ function EditorGuard() {
           Browse the Library or request a role upgrade in Settings.
         </p>
         <div className="mt-6 flex items-center gap-3">
-          <Link
-            href="/library"
-            className="inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--background-card)] px-4 py-2.5 text-sm font-medium text-[var(--foreground-secondary)] hover:bg-[var(--background-secondary)] transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Go to Library
-          </Link>
+          <BackButton href="/library" label="Go to Library" />
           <Link
             href="/settings"
             className="inline-flex items-center gap-2 rounded-xl bg-[var(--primary)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[var(--primary-hover)] transition-colors"

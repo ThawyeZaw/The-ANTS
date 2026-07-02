@@ -1,10 +1,10 @@
 'use client';
 
+import BackButton from '@/components/ui/BackButton';
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  ArrowLeft,
   Check,
   Settings,
   Shield,
@@ -33,9 +33,7 @@ export default function ManageClubPage() {
         <Shield className="mx-auto h-10 w-10 text-foreground-muted" />
         <h1 className="mt-4 text-2xl font-bold text-foreground">Club not found</h1>
         <p className="mt-2 text-foreground-muted">This club may have moved or does not exist.</p>
-        <Link href="/clubs" className="mt-6 inline-flex">
-          <Button icon={<ArrowLeft className="h-4 w-4" />}>Back to Clubs</Button>
-        </Link>
+        <BackButton href="/clubs" label="Back to Clubs" />
       </div>
     );
   }
@@ -52,9 +50,7 @@ export default function ManageClubPage() {
         <Shield className="mx-auto h-10 w-10 text-foreground-muted" />
         <h1 className="mt-4 text-2xl font-bold text-foreground">Access Denied</h1>
         <p className="mt-2 text-foreground-muted">Only club leaders can manage this club.</p>
-        <Link href={`/clubs/${club.id}`} className="mt-6 inline-flex">
-          <Button icon={<ArrowLeft className="h-4 w-4" />}>Back to Club</Button>
-        </Link>
+        <BackButton href={`/clubs/${club.id}`} label="Back to Club" />
       </div>
     );
   }
@@ -131,13 +127,7 @@ function ManageClubForm({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <button
-            onClick={onGoBack}
-            className="group inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-foreground-secondary hover:text-primary hover:bg-background-secondary transition-all mb-4 w-fit cursor-pointer"
-          >
-            <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
-            Back to Club
-          </button>
+          <BackButton href={`/clubs/${club.id}`} label="Back to Club" />
           <h1 className="text-2xl font-bold text-foreground">Manage Club</h1>
           <p className="mt-1 text-sm text-foreground-muted">{club.name}</p>
         </div>
