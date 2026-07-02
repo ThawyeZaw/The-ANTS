@@ -35,6 +35,9 @@ import {
   UserPlus,
   Library,
   Bookmark,
+  Info,
+  LayoutGrid,
+  Compass,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
@@ -97,6 +100,8 @@ const NAV_GROUPS: NavGroupDef[] = [
     items: [
       { label: 'Classrooms', href: '/classrooms', icon: <GraduationCap className="h-4 w-4" />, description: 'Virtual classrooms' },
       { label: 'Clubs', href: '/clubs', icon: <MessageSquare className="h-4 w-4" />, description: 'Community spaces' },
+      { label: 'Explore Profiles', href: '/explore/profiles', icon: <Compass className="h-4 w-4" />, description: 'Browse student & educator profiles' },
+      { label: 'About The ANTS', href: '/about', icon: <Info className="h-4 w-4" />, description: 'Our mission, team, and journey' },
     ],
   },
   {
@@ -117,6 +122,14 @@ const NAV_GROUPS: NavGroupDef[] = [
       { label: 'Review Queue', href: '/review', icon: <ShieldCheck className="h-4 w-4" />, description: 'Approve or reject submissions' },
       { label: 'Role Upgrades', href: '/main-contributor/role-upgrades', icon: <UserCircle className="h-4 w-4" />, description: 'Review role upgrade requests' },
       { label: 'Add User', href: '/main-contributor/add-contributor', icon: <UserPlus className="h-4 w-4" />, description: 'Invite new contributor' },
+    ],
+  },
+  {
+    label: 'Organisation',
+    icon: <LayoutGrid className="h-4 w-4" />,
+    allowedRoles: ['main_contributor'],
+    items: [
+      { label: 'Manage Activities & Timeline', href: '/org-activities/manage', icon: <LayoutGrid className="h-4 w-4" />, description: 'Manage org activities, photos & milestones' },
     ],
   },
 
@@ -391,6 +404,14 @@ export default function NavBar() {
                     >
                       <Settings className="h-4 w-4" />
                       Settings
+                    </Link>
+                    <Link
+                      href="/about"
+                      onClick={() => setIsUserMenuOpen(false)}
+                      className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-foreground-secondary hover:text-foreground hover:bg-background-secondary transition-colors cursor-pointer"
+                    >
+                      <Info className="h-4 w-4" />
+                      About The ANTS
                     </Link>
                     <button
                       onClick={handleLogout}

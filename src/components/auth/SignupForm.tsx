@@ -8,14 +8,13 @@
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import BackButton from '@/components/ui/BackButton';
 import {
   Mail,
   Lock,
   Eye,
   EyeOff,
   ArrowRight,
-  ArrowLeft,
-  Home,
   User,
   GraduationCap,
   BookOpen,
@@ -115,15 +114,7 @@ export default function SignupForm() {
   return (
     <div className="w-full max-w-lg mx-auto">
       <div className="bg-background-card border border-border rounded-2xl p-8 shadow-lg animate-fade-in-up">
-        {/* Back to Home */}
-        <Link
-          href="/"
-          className="group inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-foreground-secondary hover:text-primary hover:bg-background-secondary transition-all mb-6 w-fit"
-        >
-          <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
-          <Home className="h-3.5 w-3.5" />
-          Back to Home
-        </Link>
+        <BackButton href="/" />
 
         {/* Header */}
         <div className="text-center mb-8">

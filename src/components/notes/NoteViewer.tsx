@@ -6,8 +6,9 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import Link from 'next/link';
+import BackButton from '@/components/ui/BackButton';
 import {
-  ArrowLeft, Bookmark, BookmarkCheck, GraduationCap, Zap, FlaskConical,
+   Bookmark, BookmarkCheck, GraduationCap, Zap, FlaskConical,
   CalendarDays, Pencil, AlertCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -16,6 +17,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
 import { useSavedNotes } from '@/hooks/useNotes';
 import BlockPreview from './BlockPreview';
+import RelatedContent from '@/components/ui/RelatedContent';
 import { getProfile, mockCurriculums, mockSubjects } from '@/lib/mock/database';
 
 interface NoteViewerProps {
@@ -45,14 +47,7 @@ export default function NoteViewer({ note }: NoteViewerProps) {
   return (
     <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
 
-      {/* ── Back nav ── */}
-      <Link
-        href="/library"
-        className="inline-flex items-center gap-2 text-sm text-foreground-muted hover:text-foreground transition-colors group"
-      >
-        <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
-        Back to Library
-      </Link>
+      <BackButton href="/library" label="Back to Library" />
 
       {/* ── Pending / rejected notice ── */}
       {note.status !== 'approved' && (
@@ -194,6 +189,14 @@ export default function NoteViewer({ note }: NoteViewerProps) {
           ))}
         </div>
       </div>
+
+      {/* ── Related Content ── */}
+      <RelatedContent
+        curriculumId={note.curriculum_id}
+        subjectId={note.subject_id}
+        topicId={note.topic_id}
+        excludeNoteId={note.id}
+      />
 
     </div>
   );

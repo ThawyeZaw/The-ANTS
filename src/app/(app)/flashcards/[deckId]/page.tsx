@@ -12,7 +12,9 @@ import { getDeck } from '@/lib/mock/database';
 import type { Deck } from '@/types';
 import StudySession from '@/components/flashcards/StudySession';
 import DeckEditView from '@/components/flashcards/DeckEditView';
-import { ArrowLeft, Layers } from 'lucide-react';
+import RelatedContent from '@/components/ui/RelatedContent';
+import BackButton from '@/components/ui/BackButton';
+import { Layers } from 'lucide-react';
 
 export default function DeckPage() {
   const params = useParams<{ deckId: string }>();
@@ -55,12 +57,7 @@ export default function DeckPage() {
         <p className="mb-6 max-w-sm text-sm text-[var(--foreground-secondary)]">
           The flashcard deck you are trying to access does not exist or has been deleted.
         </p>
-        <button
-          onClick={() => router.push('/flashcards')}
-          className="flex items-center gap-2 rounded-xl bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--primary-hover)] transition-colors"
-        >
-          <ArrowLeft size={16} /> Back to Decks
-        </button>
+        <BackButton href="/flashcards" label="Back to Decks" />
       </div>
     );
   }
@@ -74,22 +71,30 @@ export default function DeckPage() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl rounded-3xl border border-[var(--border)] bg-[var(--background-card)] shadow-[var(--shadow-md)] overflow-hidden">
-      {mode === 'edit' ? (
-        <DeckEditView
-          deck={deck}
-          userId={user.profile.id}
-          onBack={handleBack}
-          onDeckUpdated={handleDeckUpdated}
-        />
-      ) : (
-        <StudySession
-          deckId={deck.id}
-          deckName={deck.name}
-          userId={user.profile.id}
-          onBack={handleBack}
-        />
-      )}
+    <div className="mx-auto max-w-3xl space-y-6">
+      <div className="rounded-3xl border border-[var(--border)] bg-[var(--background-card)] shadow-[var(--shadow-md)] overflow-hidden">
+        {mode === 'edit' ? (
+          <DeckEditView
+            deck={deck}
+            userId={user.profile.id}
+            onBack={handleBack}
+            onDeckUpdated={handleDeckUpdated}
+          />
+        ) : (
+          <StudySession
+            deckId={deck.id}
+            deckName={deck.name}
+            userId={user.profile.id}
+            onBack={handleBack}
+          />
+        )}
+      </div>
+
+      <RelatedContent
+        curriculumId={deck.curriculum_id}
+        subjectId={deck.subject_id}
+        excludeDeckId={deck.id}
+      />
     </div>
   );
 }

@@ -9,6 +9,7 @@ import {
   Camera,
   Music2,
   Link2,
+  BadgeCheck,
 } from 'lucide-react';
 import { RoleBadge } from '@/components/ui/Badge';
 import AvatarImage from '@/components/ui/AvatarImage';
@@ -51,6 +52,12 @@ export default function ProfileHero({ profile, isOwnProfile }: ProfileHeroProps)
           <p className="text-base font-medium text-foreground-secondary">{profile.title}</p>
         )}
         <p className="text-sm text-primary/80 font-mono mt-1">@{profile.username}</p>
+      </div>
+
+      {/* The ANTS Org Affiliation */}
+      <div className="flex items-center gap-1.5 mb-4 px-3 py-1.5 rounded-full bg-primary/8 border border-primary/15 text-primary/80 text-xs font-medium">
+        <BadgeCheck className="h-3.5 w-3.5" />
+        The ANTS Member
       </div>
 
       {/* Bio — plain text, no card */}

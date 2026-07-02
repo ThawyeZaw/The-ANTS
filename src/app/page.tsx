@@ -267,22 +267,30 @@ export default function HomePage() {
 
           <AnimatedSection delay={100}>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground leading-tight tracking-tight">
-              The Academic{' '}
+              More Than Tutors.{' '}
               <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                Productivity
-              </span>{' '}
-              Ecosystem
+                Your Bridge to Global Education.
+              </span>
             </h1>
           </AnimatedSection>
 
           <AnimatedSection delay={200}>
             <p className="mt-6 text-lg sm:text-xl text-foreground-secondary max-w-2xl mx-auto leading-relaxed">
-              Timetables, flashcards, classrooms, clubs, grade calculators, and exam countdowns —
-              all wired into your exam board criteria. <strong className="text-foreground">Ace with us! {'\u{1F41C}'}</strong>
+              A dynamic, student-led ecosystem of mentors from A-Levels, Polytechnics, Foundation programs, OSSD, and top UK universities — helping IGCSE students achieve absolute academic excellence and navigate their future.
             </p>
           </AnimatedSection>
 
-          <AnimatedSection delay={300}>
+          <AnimatedSection delay={250}>
+            <Link
+              href="/about"
+              className="inline-flex items-center gap-1.5 mt-6 text-sm font-semibold text-primary/80 hover:text-primary transition-colors group"
+            >
+              Learn more about The ANTS
+              <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+          </AnimatedSection>
+
+          <AnimatedSection delay={350}>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/signup">
                 <Button size="lg" iconRight={<ArrowRight className="h-5 w-5" />}>
@@ -507,6 +515,7 @@ export default function HomePage() {
               <a href="#features" className="hover:text-foreground transition-colors">Features</a>
               <Link href="/explore/clubs" className="hover:text-foreground transition-colors">Clubs</Link>
               <Link href="/explore/profiles" className="hover:text-foreground transition-colors">Profiles</Link>
+              <Link href="/about" className="hover:text-foreground transition-colors">About</Link>
               <Link href="/login" className="hover:text-foreground transition-colors">Sign In</Link>
               <Link href="/signup" className="hover:text-foreground transition-colors">Sign Up</Link>
             </div>

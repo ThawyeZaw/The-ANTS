@@ -3,6 +3,7 @@
 // Route: /library — accessible to all authenticated users.
 // ──────────────────────────────────────────────────────────────────────────────
 
+import BackButton from '@/components/ui/BackButton';
 import type { Metadata } from 'next';
 import NotesLibrary from '@/components/notes/NotesLibrary';
 
@@ -12,5 +13,10 @@ export const metadata: Metadata = {
 };
 
 export default function LibraryPage() {
-  return <NotesLibrary />;
+  return (
+    <div className="space-y-6">
+      <BackButton href="/dashboard" label="Back" />
+      <NotesLibrary />
+    </div>
+  );
 }

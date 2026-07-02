@@ -1,23 +1,14 @@
-'use client';
-
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Flashcards Library Shell Page
-// Owner: ZLH
+// The ANTS — App Route Group Loading Skeleton
+// Shown while authenticated pages load.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import BackButton from '@/components/ui/BackButton';
-import { useAuth } from '@/hooks/useAuth';
-import DeckLibrary from '@/components/flashcards/DeckLibrary';
-
-export default function FlashcardsPage() {
-  const { user } = useAuth();
-
-  if (!user) return null;
-
+export default function AppLoading() {
   return (
-    <div className="space-y-6">
-      <BackButton href="/dashboard" label="Back" />
-      <DeckLibrary userId={user.profile.id} />
+    <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 animate-pulse">
+      <div className="text-4xl">🐜</div>
+      <div className="h-2 w-48 rounded-full bg-[var(--background-secondary)]" />
+      <p className="text-sm text-[var(--foreground-muted)]">Loading...</p>
     </div>
   );
 }

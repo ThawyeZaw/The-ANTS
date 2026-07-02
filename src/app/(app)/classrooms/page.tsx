@@ -6,6 +6,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState } from 'react';
+import BackButton from '@/components/ui/BackButton';
 import { useAuth } from '@/hooks/useAuth';
 import { useClassroom } from '@/hooks/useClassroom';
 import ClassroomList from '@/components/classrooms/ClassroomList';
@@ -21,7 +22,9 @@ export default function ClassroomsPage() {
   const userClassrooms = c.getClassroomsByUser(user.id);
 
   return (
-    <ClassroomList
+    <div className="space-y-6">
+      <BackButton href="/dashboard" label="Back" />
+      <ClassroomList
       classrooms={userClassrooms}
       getMemberCount={(classroomId) => c.getMembers(classroomId).length}
       getTeacherNames={(classroomId) =>
@@ -59,5 +62,6 @@ export default function ClassroomsPage() {
       feedback={feedback}
       onClearFeedback={() => setFeedback('')}
     />
+    </div>
   );
 }

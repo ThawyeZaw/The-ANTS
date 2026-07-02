@@ -86,6 +86,29 @@ export interface AcademicGradeEntry {
   order?: number;
 }
 
+/** A testimonial from a peer, mentor, or student */
+export interface TestimonialEntry {
+  id: string;
+  fromName: string;
+  fromTitle: string;
+  content: string;
+  date?: string;
+  isHidden?: boolean;
+  order?: number;
+}
+
+/** A certification or qualification credential */
+export interface CertificationEntry {
+  id: string;
+  title: string;
+  issuer: string;
+  date?: string;
+  credentialUrl?: string;
+  fileUrl?: string;
+  isHidden?: boolean;
+  order?: number;
+}
+
 /** Profile theme preset configuration */
 export interface ThemePreset {
   key: string;
@@ -144,6 +167,8 @@ export interface Profile {
     activities?: boolean;
     achievements?: boolean;
     academicGrades?: boolean;
+    testimonials?: boolean;
+    certifications?: boolean;
   };
   sectionOrder?: string[];
   theme?: ProfileTheme;
@@ -154,6 +179,8 @@ export interface Profile {
   activities?: ActivityEntry[];
   achievements?: AchievementEntry[];
   academicGrades?: AcademicGradeEntry[];
+  testimonials?: TestimonialEntry[];
+  certifications?: CertificationEntry[];
   createdAt: string;
 }
 
@@ -919,4 +946,49 @@ export interface ParsedAICard {
   back: string;
   /** Whether the user has confirmed/edited this card in the preview */
   confirmed: boolean;
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Organisation — The ANTS
+// ──────────────────────────────────────────────────────────────────────────────
+
+/** A team member of The ANTS (may or may not have a linked user profile) */
+export interface OrgTeamMember {
+  id: string;
+  name: string;
+  title: string;
+  bio: string;
+  photoUrl: string;
+  /** Optional link to an existing user profile by username */
+  linkedProfileUsername?: string;
+  order: number;
+  isAlumni?: boolean;
+}
+
+/** A single timeline item — an event, milestone, or activity in The ANTS history */
+export interface OrgTimelineItem {
+  id: string;
+  title: string;
+  description: string;
+  /** Display date string shown on the timeline/about page (e.g. "2024 Q1", "2025-06-10") */
+  date: string;
+  /** Optional category for filtering in gallery view */
+  category?: 'workshop' | 'competition' | 'camp' | 'community' | 'other' | 'milestone';
+  imageUrls: string[];
+  location?: string;
+  /** When true, this item appears on the /about page timeline */
+  showOnTimeline: boolean;
+  order: number;
+  createdAt: string;
+}
+
+/** Form data for creating/editing an org timeline item */
+export interface OrgTimelineItemFormData {
+  title: string;
+  description: string;
+  date: string;
+  category?: OrgTimelineItem['category'];
+  imageUrls: string[];
+  showOnTimeline?: boolean;
+  location?: string;
 }

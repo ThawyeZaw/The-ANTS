@@ -9,8 +9,8 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import BackButton from '@/components/ui/BackButton';
 import {
-  ArrowLeft,
   MessageSquare,
   Users,
   CalendarDays,
@@ -96,15 +96,7 @@ export default function PublicClubDetailPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-4 py-8 space-y-6 animate-fade-in">
-        {/* Back Navigation */}
-        <Link
-          href="/explore/clubs"
-          className="group inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-background-card border border-border shadow-sm hover:shadow-md hover:border-primary/40 text-sm font-medium text-foreground transition-all duration-300 w-fit"
-        >
-          <ArrowLeft className="h-4 w-4 text-foreground-muted group-hover:text-primary group-hover:-translate-x-0.5 transition-all duration-300" />
-          <Home className="h-3.5 w-3.5" />
-          Back to Clubs
-        </Link>
+        <BackButton href="/explore/clubs" label="Back to Clubs" />
 
         {/* Club Header */}
         <section className="bg-background-card border border-border rounded-2xl p-6">

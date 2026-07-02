@@ -75,6 +75,11 @@ Whether you're targeting A* in IGCSE or A Levels, IELTS band 7+, or an OSSD dipl
 - **AI Prompt Generator Wizard**: 4-step wizard — specify context, copy the prompt, paste raw AI output, parse into editor blocks.
 - **Gatekeeper Review Queue**: All public notes go through a mandatory review workflow.
 
+### 🔗 Cross-Feature Linking (Related Content)
+- When viewing a note or flashcard deck, a **Related Content** section appears below the main content.
+- Automatically surfaces related flashcards and approved notes based on the same curriculum, subject, or topic.
+- Does not show the currently viewed item — always shows complementary resources.
+
 ### 🏫 Virtual Classrooms — Assignments, Quizzes, Resources & More
 
 Classrooms are virtual learning spaces with full CRUD for educational content. **Teachers** create and manage classrooms; **students** join via invite code.
@@ -101,7 +106,7 @@ Classrooms are virtual learning spaces with full CRUD for educational content. *
 ### 🐜 Clubs (Community Spaces)
 - **Contributors** can create and lead Clubs focused on CCA activities, subjects, or projects.
 - Each club can be linked to one or more subjects or curriculums.
-- Club leaders control which features to enable: chat, announcements, links, members, projects, activity timeline, leaderboard.
+- Club leaders control which features to enable: chat, announcements, links, members, projects, activity timeline.
 - Join modes: open, invite-link, or approval-based.
 - **Admin/Moderator/Member** role hierarchy with granular permissions.
 - Members can leave at any time.
@@ -138,7 +143,7 @@ Classrooms are virtual learning spaces with full CRUD for educational content. *
 
 | Role | Who | What they can do |
 |---|---|---|
-| **Student** | Primary users | Timetable, Pomodoro, Flashcards, Lessons, Courses, Exams, Grade Calculator, join Classrooms, join Clubs, public profile, personal Notes Editor |
+| **Student** | Primary users | Timetable, Pomodoro, Flashcards, Lessons, Courses, Exams, Grade Calculator, join Classrooms, join Clubs, public profile, browse & save notes |
 | **Teacher** | Paid tier | Everything above + create & manage Classrooms, issue Assignments & Quizzes, monitor student progress, Clubs (join & participate) |
 | **Contributor** | Verified experts | Everything above + Curriculum & Notes Editor, Exam Data Editor, create & lead Clubs, submit notes to library |
 | **Main Contributor** | Senior verified experts | Everything above + Gatekeeper Review Queue, approve role upgrade requests, promote users directly |
@@ -166,11 +171,13 @@ the-ants/
 ├── src/
 │   ├── app/                     # Next.js App Router pages
 │   ├── components/
-│   │   ├── ui/                  # Shared atomic components (Button, Badge, Modal, etc.)
-│   │   ├── layout/              # NavBar, AuthModal
-│   │   ├── classrooms/          # Classroom components (13 files)
-│   │   ├── clubs/               # Club components
-│   │   ├── notes/               # Notes components
+│   │   ├── ui/                  # Shared atomic components (Button, Badge, BackButton, RelatedContent, etc.)
+│   │   ├── layout/              # NavBar
+│   │   ├── classrooms/          # Classroom components (11 files)
+│   │   ├── clubs/               # Club components (ClubDetail, ClubDiscovery)
+│   │   ├── flashcards/          # Flashcard components (11 files)
+│   │   ├── notes/               # Notes components (13 files)
+│   │   ├── countdown/           # Exam countdown components
 │   │   └── ...                  # Other feature components
 │   ├── hooks/                   # Custom React hooks
 │   ├── actions/                 # Next.js Server Actions
@@ -180,8 +187,8 @@ the-ants/
 │   ├── types/                   # Shared TypeScript definitions
 │   ├── constants/               # Static reference data
 │   └── context/                 # React context providers
-├── spec.md                      # System specification
-└── schema.md                    # Database schema reference
+├── schema.md                    # Database schema reference
+└── spec.md                      # System specification
 ```
 
 ---
