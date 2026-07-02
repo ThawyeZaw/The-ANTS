@@ -1,10 +1,20 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import ExamDataEditor from '@/components/exam-data/ExamDataEditor';
 import GradeCalculator from '@/components/exam-data/GradeCalculator';
+import GradeCalculatorEditor from '@/components/exam-data/GradeCalculatorEditor';
+import CountdownEditor from '@/components/exam-data/CountdownEditor';
+import ReviewQueuePanel from '@/components/exam-data/ReviewQueuePanel';
+import { useAuth } from '@/hooks/useAuth';
+import { mockGradeBoundaries } from '@/lib/mock/database';
+import { ExamGradeBoundary } from '@/types';
 
 export default function ExamDataPage() {
+  const { user } = useAuth();
+  const [gradeBoundaries, setGradeBoundaries] = useState<ExamGradeBoundary[]>(() => mockGradeBoundaries);
+  const canReview = user?.profile.role === 'main_contributor';
+
   return (
     <div className="min-h-screen bg-white font-sans relative">
       {/* Background Pattern similar to reference */}
@@ -32,13 +42,29 @@ export default function ExamDataPage() {
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 h-[calc(100vh-140px)] min-h-[800px]">
           {/* Left Side: Editor */}
           <div className="bg-white rounded-3xl shadow-xl border-2 border-slate-200 overflow-y-auto overflow-x-hidden relative flex flex-col">
-            <ExamDataEditor />
+            <ExamDataEditor gradeBoundaries={gradeBoundaries} onGradeBoundariesChange={setGradeBoundaries} />
           </div>
 
           {/* Right Side: Calculator */}
           <div className="bg-white rounded-3xl shadow-xl border-2 border-slate-200 overflow-y-auto overflow-x-hidden relative flex flex-col">
-            <GradeCalculator />
+            <GradeCalculator gradeBoundaries={gradeBoundaries} />
           </div>
+        </div>
+
+        <div className="mt-8 space-y-6">
+          <div className="mb-2">
+            <h2 className="text-2xl font-extrabold text-[#0F172A]">Contributor editors</h2>
+            <p className="text-slate-600 mt-1 font-medium">
+              Submit new grade calculator presets and countdown entries for review before they become live.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <GradeCalculatorEditor />
+            <CountdownEditor />
+          </div>
+
+          {canReview ? <ReviewQueuePanel /> : null}
         </div>
       </div>
     </div>

@@ -10,6 +10,7 @@ import {
   Info,
   ChevronDown
 } from 'lucide-react';
+import { ExamGradeBoundary } from '@/types';
 
 // ==========================================
 // MOCK DATA FACADE (Syllabus & Boundary Rules)
@@ -67,7 +68,11 @@ const SYLLABUS_PRESETS = {
   }
 };
 
-export default function App() {
+interface GradeCalculatorProps {
+  gradeBoundaries?: ExamGradeBoundary[];
+}
+
+export default function GradeCalculator({ gradeBoundaries = [] }: GradeCalculatorProps) {
   const [selectedCode, setSelectedCode] = useState("0606");
   const [selectedSeries, setSelectedSeries] = useState("May/June 2024 (V2)");
   
@@ -83,9 +88,21 @@ export default function App() {
   }, [selectedCode]);
 
   const activeBoundaries = useMemo(() => {
+    if (gradeBoundaries.length > 0) {
+      const boundaryMap = gradeBoundaries.reduce<Record<string, number>>((acc, boundary) => {
+        if (boundary.grade?.trim()) {
+          acc[boundary.grade.trim()] = Number(boundary.min_mark) || 0;
+        }
+        return acc;
+      }, {});
+
+      const maxPossible = Math.max(...Object.values(boundaryMap), 100);
+      return { maxPossible, ...boundaryMap } as Record<string, number> & { maxPossible: number };
+    }
+
     const defaultBounds = { maxPossible: 160, "A*": 137, "A": 115, "B": 87, "C": 68 };
     return (activeSyllabus.boundaries as any)[selectedSeries] || defaultBounds;
-  }, [activeSyllabus, selectedSeries]);
+  }, [activeSyllabus, selectedSeries, gradeBoundaries]);
 
   // Handle Input Changes with safe numeric sanitization
   const handleMarkChange = (paperId: string, value: string) => {

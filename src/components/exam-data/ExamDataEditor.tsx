@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { submitExamData } from '@/actions/exam-editor';
+import { ExamGradeBoundary } from '@/types';
 
 const QUALIFICATIONS_MAP: Record<string, string[]> = {
   caie: ['IGCSE', 'A Level', 'AS Level'],
@@ -74,7 +75,20 @@ const INITIAL_MOCK_SUBMISSIONS = [
   }
 ];
 
-export default function ExamDataEditor() {
+const createDefaultGradeBoundaries = (): ExamGradeBoundary[] => [
+  { id: 'boundary-a-star', exam_id: 'default', grade: 'A*', min_mark: 90, max_mark: null, boundary_level: 'overall_subject' },
+  { id: 'boundary-a', exam_id: 'default', grade: 'A', min_mark: 80, max_mark: null, boundary_level: 'overall_subject' },
+  { id: 'boundary-b', exam_id: 'default', grade: 'B', min_mark: 70, max_mark: null, boundary_level: 'overall_subject' },
+  { id: 'boundary-c', exam_id: 'default', grade: 'C', min_mark: 60, max_mark: null, boundary_level: 'overall_subject' },
+  { id: 'boundary-d', exam_id: 'default', grade: 'D', min_mark: 50, max_mark: null, boundary_level: 'overall_subject' },
+];
+
+interface ExamDataEditorProps {
+  gradeBoundaries?: ExamGradeBoundary[];
+  onGradeBoundariesChange?: (boundaries: ExamGradeBoundary[]) => void;
+}
+
+export default function ExamDataEditor({ gradeBoundaries = [], onGradeBoundariesChange }: ExamDataEditorProps) {
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [submissionsList, setSubmissionsList] = useState(INITIAL_MOCK_SUBMISSIONS);
@@ -94,6 +108,13 @@ export default function ExamDataEditor() {
     { id: 'paper-1', name: 'Paper 1 (Theory / Core)', maxMark: 80, weight: 50 },
     { id: 'paper-2', name: 'Paper 2 (Practical / Problem Solving)', maxMark: 80, weight: 50 }
   ]);
+  const [boundaryRows, setBoundaryRows] = useState<ExamGradeBoundary[]>(() => (gradeBoundaries.length ? gradeBoundaries : createDefaultGradeBoundaries()));
+
+  useEffect(() => {
+    if (gradeBoundaries.length) {
+      setBoundaryRows(gradeBoundaries);
+    }
+  }, [gradeBoundaries]);
 
   const totalWeight = useMemo(() => papers.reduce((sum, p) => sum + (Number(p.weight) || 0), 0), [papers]);
   const maxTotalRawMark = useMemo(() => papers.reduce((sum, p) => sum + (Number(p.maxMark) || 0), 0), [papers]);
@@ -132,6 +153,33 @@ export default function ExamDataEditor() {
     }));
   };
 
+  const syncBoundaryRows = (nextRows: ExamGradeBoundary[]) => {
+    setBoundaryRows(nextRows);
+    onGradeBoundariesChange?.(nextRows);
+  };
+
+  const handleAddBoundary = () => {
+    syncBoundaryRows([
+      ...boundaryRows,
+      { id: `boundary-${Date.now()}`, exam_id: 'default', grade: '', min_mark: 0, max_mark: null, boundary_level: 'overall_subject' }
+    ]);
+  };
+
+  const handleRemoveBoundary = (id: string) => {
+    if (boundaryRows.length === 1) return;
+    syncBoundaryRows(boundaryRows.filter((row) => row.id !== id));
+  };
+
+  const handleUpdateBoundary = (id: string, key: 'grade' | 'min_mark', value: string) => {
+    syncBoundaryRows(boundaryRows.map((row) => {
+      if (row.id !== id) return row;
+      return {
+        ...row,
+        [key]: key === 'grade' ? value : Math.max(0, Number(value) || 0)
+      };
+    }));
+  };
+
   const isWeightValid = totalWeight === 100;
   const canSubmit = examTitle.trim().length > 0 && examSeries.trim().length > 0 && examDate.length > 0 && isWeightValid && !!user;
 
@@ -164,6 +212,7 @@ export default function ExamDataEditor() {
           exam_series: examSeries.trim(),
           exam_date: examDate,
           papers,
+          gradeBoundaries: boundaryRows.filter((row) => row.grade.trim()),
         };
 
         const result = await submitExamData(payload, user.id);
@@ -202,6 +251,7 @@ export default function ExamDataEditor() {
       { id: 'paper-1', name: 'Paper 1 (Theory / Core)', maxMark: 80, weight: 50 },
       { id: 'paper-2', name: 'Paper 2 (Practical / Problem Solving)', maxMark: 80, weight: 50 }
     ]);
+    syncBoundaryRows(createDefaultGradeBoundaries());
     setEditorSuccess(false);
     setCurrentStep(1);
   };
@@ -521,6 +571,62 @@ export default function ExamDataEditor() {
                           <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">{maxTotalRawMark}</p>
                         </div>
                       </div>
+                    </div>
+
+                    <div className="mt-6 rounded-3xl border border-[var(--border)] bg-[var(--background-card)] p-5">
+                      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                        <div>
+                          <h3 className="text-lg font-bold text-[var(--foreground)]">Overall Subject Boundaries</h3>
+                          <p className="text-[var(--foreground-secondary)] text-xs mt-1">Capture grade thresholds once and let the calculator use them instantly.</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleAddBoundary}
+                          className="inline-flex items-center gap-2 rounded-2xl border border-[var(--border)] bg-[var(--background-secondary)] px-4 py-3 text-xs font-semibold text-[var(--foreground)] transition hover:border-[var(--primary)] hover:bg-[var(--background-card)]"
+                        >
+                          <Plus className="w-4 h-4" />
+                          Add Grade
+                        </button>
+                      </div>
+
+                      <div className="mt-5 space-y-3">
+                        {boundaryRows.map((row) => (
+                          <div key={row.id} className="grid gap-3 grid-cols-1 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_auto] items-end rounded-2xl border border-[var(--border)] bg-[var(--background-secondary)] p-4">
+                            <div className="min-w-0">
+                              <label className="block text-[11px] uppercase tracking-[0.28em] text-[var(--foreground-secondary)]">Grade</label>
+                              <input
+                                type="text"
+                                value={row.grade}
+                                onChange={(e) => handleUpdateBoundary(row.id, 'grade', e.target.value)}
+                                placeholder="A*"
+                                className="mt-2 w-full min-w-0 rounded-xl border border-[var(--border)] bg-[var(--background-card)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all"
+                              />
+                            </div>
+                            <div className="min-w-0">
+                              <label className="block text-[11px] uppercase tracking-[0.28em] text-[var(--foreground-secondary)]">Minimum weighted mark</label>
+                              <input
+                                type="number"
+                                min={0}
+                                max={100}
+                                value={row.min_mark}
+                                onChange={(e) => handleUpdateBoundary(row.id, 'min_mark', e.target.value)}
+                                className="mt-2 w-full min-w-0 rounded-xl border border-[var(--border)] bg-[var(--background-card)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveBoundary(row.id)}
+                              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-300 hover:bg-rose-500/15 transition"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+
+                      <p className="mt-4 text-[11px] text-[var(--foreground-secondary)] leading-relaxed">
+                        Phase 1 stores overall subject-level boundaries and feeds the calculator immediately as soon as you adjust the matrix.
+                      </p>
                     </div>
 
                     <div className="space-y-1.5">
