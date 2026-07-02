@@ -20,7 +20,7 @@ export default function ExamDataPage() {
       
       <div className="relative z-10 w-full px-4 py-6 md:px-6 max-w-[1800px] mx-auto">
         <div className="mb-4">
-          <h1 className="text-3xl font-extrabold text-[#0F172A]" style={{ fontFamily: '"Plus Jakarta Sans", sans-serif' }}>
+          <h1 className="text-3xl font-extrabold text-[#0F172A]">
             Exam Data & Boundaries
           </h1>
           <p className="text-slate-600 mt-1 font-medium">

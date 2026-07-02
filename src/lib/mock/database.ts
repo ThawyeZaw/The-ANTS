@@ -781,6 +781,30 @@ export const mockEditorSubmissions: Array<{
     { id: 'sub-1', contributor_id: 'user-contributor-001', submission_type: 'resource', entity_id: 'res-1', status: 'approved', reviewer_id: 'user-main-contributor-001', feedback: 'Looks good', submitted_at: '2025-01-20T00:00:00Z', reviewed_at: '2025-01-21T00:00:00Z' }
   ];
 
+export function submitExamData(payload: any, contributorId: string): { success: true } | { success: false; error: string } {
+  if (!contributorId) {
+    return { success: false, error: 'Missing contributor context.' };
+  }
+
+  if (!payload || !payload.title?.trim()) {
+    return { success: false, error: 'Exam title is required.' };
+  }
+
+  mockEditorSubmissions.push({
+    id: `sub-exam-${Date.now()}`,
+    contributor_id: contributorId,
+    submission_type: 'exam',
+    entity_id: payload.title.trim(),
+    status: 'pending_review',
+    reviewer_id: null,
+    feedback: null,
+    submitted_at: new Date().toISOString(),
+    reviewed_at: null,
+  });
+
+  return { success: true };
+}
+
 
 // ── Mock Classrooms ─────────────────────────────────────────────────────────
 export const mockClassrooms = [
