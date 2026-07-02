@@ -373,6 +373,65 @@
 
 ---
 
+> **`answers` JSONB structure:** Array of `{ question_id, answer, is_correct?: bool }`. The `is_correct` field is set server-side after submission.
+
+---
+
+## Table `discussion_topics`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `classroom_id` | `uuid` |  |
+| `title` | `text` |  |
+| `content` | `text` |  |
+| `assignment_id` | `uuid` |  Nullable |
+| `is_pinned` | `bool` |  Default: false |
+| `is_locked` | `bool` |  Default: false |
+| `created_by` | `uuid` |  |
+| `created_at` | `timestamp` |  |
+| `updated_at` | `timestamp` |  |
+
+---
+
+## Table `discussion_replies`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `topic_id` | `uuid` |  |
+| `content` | `text` |  |
+| `created_by` | `uuid` |  |
+| `created_at` | `timestamp` |  |
+| `updated_at` | `timestamp` |  |
+
+---
+
+## Table `classroom_resources`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `classroom_id` | `uuid` |  |
+| `title` | `text` |  |
+| `description` | `text` |  Nullable |
+| `type` | `text` |  |
+| `url` | `text` |  |
+| `curriculum_id` | `uuid` |  Nullable |
+| `subject_id` | `uuid` |  Nullable |
+| `uploaded_by` | `uuid` |  |
+| `created_at` | `timestamp` |  |
+
+> **`type` values:** `"pdf"` | `"video"` | `"document"` | `"link"` | `"image"`
+
+---
+
 ## Table `clubs`
 
 ### Columns
