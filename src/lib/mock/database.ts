@@ -36,9 +36,28 @@ import {
   ProjectEntry,
   ActivityEntry,
   AchievementEntry,
+  SocialLinkItem,
+  TestimonialEntry,
+  CertificationEntry,
+  OrgTeamMember,
+  OrgTimelineItem,
+  OrgTimelineItemFormData,
   DEFAULT_CLUB_FEATURES,
   Note,
-
+  Classroom,
+  ClassroomMember,
+  ClassroomMemberRole,
+  ClassroomCurriculum,
+  ClassroomFeature,
+  Assignment,
+  AssignmentSubmission,
+  Quiz,
+  QuizQuestion,
+  QuizAttempt,
+  QuizAnswer,
+  DiscussionTopic,
+  DiscussionReply,
+  ClassroomResource,
   UserSavedNote,
   ExamGradeBoundary,
 } from '@/types';
@@ -170,10 +189,10 @@ const mockProfiles: Profile[] = [
     bio: 'Cambridge-trained educator building curriculum resources for Myanmar students.',
     title: 'Curriculum Developer',
     isPublic: true,
-    socialLinks: {
-      github: 'https://github.com/ayechanthu',
-      linkedin: 'https://linkedin.com/in/ayechanthu',
-    },
+    socialLinks: [
+      { id: 'sl1', platform: 'github', label: 'GitHub', url: 'https://github.com/ayechanthu', visible: true, order: 0 },
+      { id: 'sl2', platform: 'website', label: 'Website', url: 'https://ayechanthu.dev', visible: true, order: 1 },
+    ],
     projects: [
       {
         id: 'proj-4',
@@ -202,6 +221,25 @@ const mockProfiles: Profile[] = [
         date: '2025-06-20',
       },
     ],
+    testimonials: [
+      {
+        id: 'test-1',
+        fromName: 'Daw Hla Myint',
+        fromTitle: 'Head of Content, The ANTS',
+        content: 'Aye Chan Thu is one of the most dedicated curriculum developers I have worked with. His IGCSE Physics resources are thorough, accurate, and student-friendly.',
+        date: '2025-12-01',
+        order: 0,
+      },
+    ],
+    certifications: [
+      {
+        id: 'cert-1',
+        title: 'Cambridge CELTA',
+        issuer: 'Cambridge Assessment English',
+        date: '2024',
+        order: 0,
+      },
+    ],
     createdAt: '2025-06-20T08:00:00Z',
   },
   {
@@ -214,9 +252,9 @@ const mockProfiles: Profile[] = [
     bio: 'Former IGCSE examiner. Building free exam prep resources for Myanmar students.',
     title: 'Exam Resource Creator',
     isPublic: true,
-    socialLinks: {
-      linkedin: 'https://linkedin.com/in/kozawwin',
-    },
+    socialLinks: [
+      { id: 'sl3', platform: 'facebook', label: 'Facebook', url: 'https://facebook.com/kozawwin', visible: true, order: 0 },
+    ],
     projects: [],
     activities: [],
     achievements: [],
@@ -232,10 +270,10 @@ const mockProfiles: Profile[] = [
     bio: 'Senior gatekeeper and lead reviewer. 15 years in international education.',
     title: 'Head of Content',
     isPublic: true,
-    socialLinks: {
-      linkedin: 'https://linkedin.com/in/dawhlamyint',
-      website: 'https://dawhlamyint.com',
-    },
+    socialLinks: [
+      { id: 'sl4', platform: 'github', label: 'GitHub', url: 'https://github.com/dawhlamyint', visible: true, order: 0 },
+      { id: 'sl5', platform: 'website', label: 'Website', url: 'https://dawhlamyint.com', visible: true, order: 1 },
+    ],
     projects: [
       {
         id: 'proj-5',
@@ -413,7 +451,7 @@ export function getPublicProfiles(roles?: UserRole[]): Profile[] {
  */
 export function mockUpdateProfile(
   userId: string,
-  data: Partial<Pick<Profile, 'name' | 'bio' | 'title' | 'socialLinks' | 'avatar' | 'coverImage' | 'isPublic' | 'projects' | 'activities' | 'achievements' | 'academicGrades' | 'pinnedItemId' | 'sectionVisibility'>>
+  data: Partial<Pick<Profile, 'name' | 'bio' | 'title' | 'socialLinks' | 'avatar' | 'isPublic' | 'projects' | 'activities' | 'achievements' | 'academicGrades' | 'pinnedItemId' | 'sectionVisibility' | 'sectionOrder' | 'theme' | 'spacing' | 'width' | 'sectionLayout'>>
 ): { success: true; profile: Profile } | { success: false; error: string } {
   const profile = mockProfiles.find((p) => p.id === userId);
   if (!profile) return { success: false, error: 'User not found.' };
@@ -427,9 +465,13 @@ export function mockUpdateProfile(
   if (data.socialLinks !== undefined) profile.socialLinks = data.socialLinks;
   if (data.avatar !== undefined) profile.avatar = data.avatar;
   if (data.isPublic !== undefined) profile.isPublic = data.isPublic;
-  if (data.coverImage !== undefined) profile.coverImage = data.coverImage;
   if (data.pinnedItemId !== undefined) profile.pinnedItemId = data.pinnedItemId;
   if (data.sectionVisibility !== undefined) profile.sectionVisibility = data.sectionVisibility;
+  if (data.sectionOrder !== undefined) profile.sectionOrder = data.sectionOrder;
+  if (data.theme !== undefined) profile.theme = data.theme;
+  if (data.spacing !== undefined) profile.spacing = data.spacing;
+  if (data.width !== undefined) profile.width = data.width;
+  if (data.sectionLayout !== undefined) profile.sectionLayout = data.sectionLayout;
   if (data.projects !== undefined) profile.projects = data.projects;
   if (data.activities !== undefined) profile.activities = data.activities;
   if (data.achievements !== undefined) profile.achievements = data.achievements;
@@ -691,12 +733,13 @@ export function mockCompleteProfile(
   // Update profile fields
   if (data.title) profile.title = data.title;
   if (data.bio) profile.bio = data.bio;
-  if (data.website_url || data.linkedin_url || data.github_url) {
-    profile.socialLinks = {
-      website: data.website_url || undefined,
-      linkedin: data.linkedin_url || undefined,
-      github: data.github_url || undefined,
-    };
+  if (data.website_url || data.linkedin_url || data.github_url || data.facebook_url) {
+    const newLinks: SocialLinkItem[] = [];
+    if (data.website_url) newLinks.push({ id: `sl_${Date.now()}_w`, platform: 'website', label: 'Website', url: data.website_url, visible: true });
+    if (data.github_url) newLinks.push({ id: `sl_${Date.now()}_g`, platform: 'github', label: 'GitHub', url: data.github_url, visible: true });
+    if (data.linkedin_url) newLinks.push({ id: `sl_${Date.now()}_l`, platform: 'custom', label: 'LinkedIn', url: data.linkedin_url, visible: true });
+    if (data.facebook_url) newLinks.push({ id: `sl_${Date.now()}_f`, platform: 'facebook', label: 'Facebook', url: data.facebook_url, visible: true });
+    profile.socialLinks = newLinks;
   }
 
   // Store password
@@ -913,24 +956,345 @@ export function rejectExamSubmission(submissionId: string, reviewerId: string, f
 
 
 // ── Mock Classrooms ─────────────────────────────────────────────────────────
-export const mockClassrooms = [
-  { id: 'class-1', name: 'Year 11 Physics', description: 'Ms. Kyaw\'s physics class.', teacher_id: 'user-teacher-001', invite_code: 'PHY11', created_at: '2026-01-01T00:00:00Z' }
+export const mockClassrooms: Classroom[] = [
+  {
+    id: 'class-1',
+    name: 'Year 11 Physics',
+    description: 'Ms. Kyaw\'s physics class — covering Mechanics, Waves, Electricity, and Thermal Physics.',
+    invite_code: 'PHY11',
+    curriculum_ids: ['curr-1'],
+    enabled_features: [
+      { key: 'assignments', enabled: true },
+      { key: 'quizzes', enabled: true },
+      { key: 'resources', enabled: true },
+      { key: 'discussions', enabled: true },
+      { key: 'links', enabled: true },
+    ],
+    created_at: '2026-01-01T00:00:00Z',
+  },
+  {
+    id: 'class-2',
+    name: 'IGCSE Chemistry Lab',
+    description: 'Practical chemistry for IGCSE students — Stoichiometry, Organic, and Acids & Bases.',
+    invite_code: 'CHEM24',
+    curriculum_ids: ['curr-1'],
+    enabled_features: [
+      { key: 'assignments', enabled: true },
+      { key: 'quizzes', enabled: false },
+      { key: 'resources', enabled: true },
+      { key: 'discussions', enabled: false },
+      { key: 'links', enabled: false },
+    ],
+    created_at: '2026-03-01T00:00:00Z',
+  },
 ];
 
-export const mockClassroomMembers = [
-  { id: 'cm-1', classroom_id: 'class-1', user_id: 'user-student-001', joined_at: '2026-01-10T00:00:00Z' }
+export const mockClassroomMembers: ClassroomMember[] = [
+  { id: 'cm-1', classroom_id: 'class-1', user_id: 'user-teacher-001', role: 'teacher', joined_at: '2026-01-01T00:00:00Z' },
+  { id: 'cm-2', classroom_id: 'class-1', user_id: 'user-teacher-002', role: 'teacher', joined_at: '2026-01-15T00:00:00Z' },
+  { id: 'cm-3', classroom_id: 'class-1', user_id: 'user-student-001', role: 'student', joined_at: '2026-01-10T00:00:00Z' },
+  { id: 'cm-4', classroom_id: 'class-1', user_id: 'user-student-002', role: 'student', joined_at: '2026-02-01T00:00:00Z' },
+  { id: 'cm-5', classroom_id: 'class-2', user_id: 'user-teacher-001', role: 'teacher', joined_at: '2026-03-01T00:00:00Z' },
+  { id: 'cm-6', classroom_id: 'class-2', user_id: 'user-student-001', role: 'student', joined_at: '2026-03-15T00:00:00Z' },
+  // class-3 members
+  { id: 'cm-7', classroom_id: 'class-3', user_id: 'user-teacher-001', role: 'teacher', joined_at: '2026-04-01T00:00:00Z' },
+  { id: 'cm-8', classroom_id: 'class-3', user_id: 'user-student-001', role: 'student', joined_at: '2026-04-05T00:00:00Z' },
+  { id: 'cm-9', classroom_id: 'class-3', user_id: 'user-student-002', role: 'student', joined_at: '2026-04-10T00:00:00Z' },
+  // class-4 members
+  { id: 'cm-10', classroom_id: 'class-4', user_id: 'user-teacher-002', role: 'teacher', joined_at: '2026-05-01T00:00:00Z' },
+  { id: 'cm-11', classroom_id: 'class-4', user_id: 'user-student-001', role: 'student', joined_at: '2026-05-10T00:00:00Z' },
 ];
 
-export const mockClassroomCurriculums = [
-  { id: 'cc-1', classroom_id: 'class-1', curriculum_id: 'curr-1' }
+export const mockClassroomCurriculums: ClassroomCurriculum[] = [
+  { id: 'cc-1', classroom_id: 'class-1', curriculum_id: 'curr-1' },
+  { id: 'cc-2', classroom_id: 'class-2', curriculum_id: 'curr-1' },
 ];
 
-export const mockAssignments = [
-  { id: 'assn-1', classroom_id: 'class-1', title: 'Forces Worksheet', description: 'Complete all questions on forces.', due_date: '2026-06-30T23:59:59Z', priority: 'high', created_by: 'user-teacher-001', created_at: '2026-06-15T00:00:00Z' }
+// ── Mock Assignments ────────────────────────────────────────────────────────
+export const mockAssignments: Assignment[] = [
+  {
+    id: 'assn-1',
+    classroom_id: 'class-1',
+    title: 'Forces Worksheet',
+    description: 'Complete all questions on forces: Newton\'s Laws, friction, and free-body diagrams.',
+    due_date: '2026-07-15T23:59:59Z',
+    priority: 'high',
+    status: 'published',
+    total_points: 50,
+    attachment_urls: ['https://example.com/worksheets/forces-v1.pdf'],
+    created_by: 'user-teacher-001',
+    created_at: '2026-06-15T00:00:00Z',
+    updated_at: '2026-06-15T00:00:00Z',
+  },
+  {
+    id: 'assn-2',
+    classroom_id: 'class-1',
+    title: 'Energy & Work Problems',
+    description: 'Solve end-of-chapter problems on kinetic energy, potential energy, and conservation of energy.',
+    due_date: '2026-07-22T23:59:59Z',
+    priority: 'medium',
+    status: 'published',
+    total_points: 40,
+    attachment_urls: [],
+    created_by: 'user-teacher-002',
+    created_at: '2026-06-20T00:00:00Z',
+    updated_at: '2026-06-20T00:00:00Z',
+  },
+  {
+    id: 'assn-3',
+    classroom_id: 'class-2',
+    title: 'Balancing Chemical Equations',
+    description: 'Balance 20 chemical equations and identify reaction types.',
+    due_date: '2026-07-10T23:59:59Z',
+    priority: 'high',
+    status: 'published',
+    total_points: 30,
+    attachment_urls: ['https://example.com/worksheets/balancing-equations.pdf'],
+    created_by: 'user-teacher-001',
+    created_at: '2026-06-18T00:00:00Z',
+    updated_at: '2026-06-18T00:00:00Z',
+  },
 ];
 
-export const mockAssignmentSubmissions = [
-  { id: 'asub-1', assignment_id: 'assn-1', student_id: 'user-student-001', submission_text: 'Done!', status: 'submitted', submitted_at: '2026-06-16T12:00:00Z' }
+export let mockAssignmentSubmissions: AssignmentSubmission[] = [
+  {
+    id: 'asub-1',
+    assignment_id: 'assn-1',
+    student_id: 'user-student-001',
+    content: 'Completed all questions. See attached PDF for diagrams.',
+    attachment_urls: ['https://example.com/submissions/thiri-forces.pdf'],
+    submitted_at: '2026-06-28T14:30:00Z',
+    grade: 42,
+    feedback: 'Excellent work! Clear free-body diagrams. Lost points on Q7 (friction direction).',
+    graded_at: '2026-06-29T10:00:00Z',
+  },
+  {
+    id: 'asub-2',
+    assignment_id: 'assn-1',
+    student_id: 'user-student-002',
+    content: 'Here is my work for the Forces worksheet.',
+    attachment_urls: [],
+    submitted_at: '2026-06-27T21:00:00Z',
+    grade: null,
+    feedback: null,
+    graded_at: null,
+  },
+  {
+    id: 'asub-3',
+    assignment_id: 'assn-3',
+    student_id: 'user-student-001',
+    content: null,
+    attachment_urls: [],
+    submitted_at: null,
+    grade: null,
+    feedback: null,
+    graded_at: null,
+  },
+];
+
+// ── Mock Quizzes ─────────────────────────────────────────────────────────────
+export const mockQuizzes: Quiz[] = [
+  {
+    id: 'quiz-1',
+    classroom_id: 'class-1',
+    title: 'Forces & Motion Quick Check',
+    description: 'Quick assessment on speed, velocity, acceleration, and Newton\'s Laws.',
+    time_limit_minutes: 20,
+    due_date: '2026-07-08T23:59:59Z',
+    status: 'published',
+    questions: [
+      {
+        id: 'q-1',
+        type: 'multiple_choice',
+        question_text: 'What is the SI unit of force?',
+        options: ['Joule', 'Newton', 'Watt', 'Pascal'],
+        correct_answer: 'Newton',
+        points: 1,
+        order: 1,
+      },
+      {
+        id: 'q-2',
+        type: 'multiple_choice',
+        question_text: 'A car accelerates from 0 to 20 m/s in 5 seconds. What is its acceleration?',
+        options: ['2 m/s²', '4 m/s²', '5 m/s²', '10 m/s²'],
+        correct_answer: '4 m/s²',
+        points: 1,
+        order: 2,
+      },
+      {
+        id: 'q-3',
+        type: 'true_false',
+        question_text: 'According to Newton\'s Third Law, forces always come in pairs acting on different objects.',
+        options: null,
+        correct_answer: 'true',
+        points: 1,
+        order: 3,
+      },
+      {
+        id: 'q-4',
+        type: 'short_answer',
+        question_text: 'Explain why a passenger lurches forward when a bus brakes suddenly.',
+        options: null,
+        correct_answer: 'Inertia — the passenger\'s body continues moving forward while the bus decelerates.',
+        points: 2,
+        order: 4,
+      },
+    ],
+    created_by: 'user-teacher-001',
+    created_at: '2026-06-25T00:00:00Z',
+  },
+  {
+    id: 'quiz-2',
+    classroom_id: 'class-1',
+    title: 'Energy Chapter Test',
+    description: 'Covers work, kinetic energy, potential energy, and power.',
+    time_limit_minutes: 30,
+    due_date: null,
+    status: 'draft',
+    questions: [
+      {
+        id: 'q-5',
+        type: 'multiple_choice',
+        question_text: 'Which of the following is a correct statement about energy?',
+        options: [
+          'Energy can be created',
+          'Energy can be destroyed',
+          'Energy can be transferred but not created or destroyed',
+          'Energy is only found in moving objects',
+        ],
+        correct_answer: 'Energy can be transferred but not created or destroyed',
+        points: 1,
+        order: 1,
+      },
+    ],
+    created_by: 'user-teacher-002',
+    created_at: '2026-06-28T00:00:00Z',
+  },
+];
+
+export let mockQuizAttempts: QuizAttempt[] = [
+  {
+    id: 'qa-1',
+    quiz_id: 'quiz-1',
+    student_id: 'user-student-001',
+    answers: [
+      { question_id: 'q-1', answer: 'Newton', is_correct: true },
+      { question_id: 'q-2', answer: '4 m/s²', is_correct: true },
+      { question_id: 'q-3', answer: 'true', is_correct: true },
+      { question_id: 'q-4', answer: 'Due to inertia, the passenger tends to stay in motion when the bus stops.', is_correct: true },
+    ],
+    score: 5,
+    total_points: 5,
+    started_at: '2026-06-30T10:00:00Z',
+    submitted_at: '2026-06-30T10:18:00Z',
+  },
+];
+
+// ── Mock Discussions ─────────────────────────────────────────────────────────
+export const mockDiscussionTopics: DiscussionTopic[] = [
+  {
+    id: 'disc-1',
+    classroom_id: 'class-1',
+    title: 'Question about Newton\'s Third Law',
+    content: 'I\'m confused about the difference between balanced forces and action-reaction pairs. Can someone explain?',
+    assignment_id: null,
+    is_pinned: false,
+    is_locked: false,
+    created_by: 'user-student-001',
+    created_at: '2026-06-22T14:00:00Z',
+    updated_at: '2026-06-22T14:00:00Z',
+  },
+  {
+    id: 'disc-2',
+    classroom_id: 'class-1',
+    title: 'Forces Worksheet — Office Hours',
+    content: 'Post your questions about the Forces Worksheet here. I\'ll check this thread daily.',
+    assignment_id: 'assn-1',
+    is_pinned: true,
+    is_locked: false,
+    created_by: 'user-teacher-001',
+    created_at: '2026-06-16T09:00:00Z',
+    updated_at: '2026-06-16T09:00:00Z',
+  },
+];
+
+export let mockDiscussionReplies: DiscussionReply[] = [
+  {
+    id: 'drep-1',
+    topic_id: 'disc-1',
+    content: 'Action-reaction pairs act on *different* objects. Balanced forces act on the *same* object. For example, when you push a wall, you exert a force on the wall (action), and the wall exerts an equal force back on you (reaction).',
+    created_by: 'user-teacher-002',
+    created_at: '2026-06-22T16:30:00Z',
+    updated_at: '2026-06-22T16:30:00Z',
+  },
+  {
+    id: 'drep-2',
+    topic_id: 'disc-1',
+    content: 'Thank you! That makes it much clearer.',
+    created_by: 'user-student-001',
+    created_at: '2026-06-22T17:00:00Z',
+    updated_at: '2026-06-22T17:00:00Z',
+  },
+  {
+    id: 'drep-3',
+    topic_id: 'disc-2',
+    content: 'For Q7, should we draw the free-body diagram before or after calculating the net force?',
+    created_by: 'user-student-002',
+    created_at: '2026-06-17T11:00:00Z',
+    updated_at: '2026-06-17T11:00:00Z',
+  },
+];
+
+// ── Mock Classroom Resources ──────────────────────────────────────────────────
+export const mockClassroomResources: ClassroomResource[] = [
+  {
+    id: 'cr-1',
+    classroom_id: 'class-1',
+    title: 'Physics Formula Sheet',
+    description: 'Complete formula sheet for Mechanics, Waves, and Electricity topics.',
+    type: 'pdf',
+    url: 'https://example.com/resources/physics-formula-sheet.pdf',
+    curriculum_id: 'curr-1',
+    subject_id: 'subj-1',
+    uploaded_by: 'user-teacher-001',
+    created_at: '2026-01-10T00:00:00Z',
+  },
+  {
+    id: 'cr-2',
+    classroom_id: 'class-1',
+    title: 'Forces & Motion — Khan Academy',
+    description: 'Excellent video series covering Newton\'s Laws with interactive examples.',
+    type: 'video',
+    url: 'https://www.khanacademy.org/science/physics/forces-newtons-laws',
+    curriculum_id: 'curr-1',
+    subject_id: 'subj-1',
+    uploaded_by: 'user-teacher-002',
+    created_at: '2026-01-20T00:00:00Z',
+  },
+  {
+    id: 'cr-3',
+    classroom_id: 'class-1',
+    title: 'PhET Forces Simulation',
+    description: 'Interactive simulation for exploring forces and motion visually.',
+    type: 'link',
+    url: 'https://phet.colorado.edu/en/simulations/forces-and-motion-basics',
+    curriculum_id: 'curr-1',
+    subject_id: 'subj-1',
+    uploaded_by: 'user-teacher-001',
+    created_at: '2026-02-05T00:00:00Z',
+  },
+  {
+    id: 'cr-4',
+    classroom_id: 'class-2',
+    title: 'Periodic Table — Interactive',
+    description: 'Clickable periodic table with element properties.',
+    type: 'link',
+    url: 'https://ptable.com',
+    curriculum_id: 'curr-1',
+    subject_id: null,
+    uploaded_by: 'user-teacher-001',
+    created_at: '2026-03-10T00:00:00Z',
+  },
 ];
 
 // ── Mock Clubs ──────────────────────────────────────────────────────────────
@@ -942,7 +1306,15 @@ export const mockClubs: Club[] = [
     created_by: 'user-contributor-001',
     join_mode: 'open',
     invite_code: null,
-    enabled_features: ['chat', 'announcements', 'links', 'members', 'projects', 'activity_timeline'],
+    enabled_features: [
+      { key: 'chat', enabled: true, public_visible: true },
+      { key: 'announcements', enabled: true, public_visible: true },
+      { key: 'links', enabled: true, public_visible: true },
+      { key: 'members', enabled: true, public_visible: true },
+      { key: 'projects', enabled: true, public_visible: false },
+      { key: 'activity_timeline', enabled: true, public_visible: true },
+      { key: 'leaderboard', enabled: false, public_visible: false },
+    ],
     created_at: '2025-10-01T00:00:00Z',
   },
   {
@@ -952,7 +1324,15 @@ export const mockClubs: Club[] = [
     created_by: 'user-contributor-002',
     join_mode: 'approval_based',
     invite_code: null,
-    enabled_features: ['chat', 'announcements', 'links', 'members', 'leaderboard'],
+    enabled_features: [
+      { key: 'chat', enabled: true, public_visible: true },
+      { key: 'announcements', enabled: true, public_visible: true },
+      { key: 'links', enabled: true, public_visible: true },
+      { key: 'members', enabled: true, public_visible: true },
+      { key: 'projects', enabled: false, public_visible: false },
+      { key: 'activity_timeline', enabled: false, public_visible: false },
+      { key: 'leaderboard', enabled: true, public_visible: true },
+    ],
     created_at: '2026-02-14T00:00:00Z',
   },
   {
@@ -962,40 +1342,215 @@ export const mockClubs: Club[] = [
     created_by: 'user-main-contributor-001',
     join_mode: 'invite_link',
     invite_code: 'SPRINT26',
-    enabled_features: ['chat', 'members', 'activity_timeline'],
+    enabled_features: [
+      { key: 'chat', enabled: true, public_visible: false },
+      { key: 'announcements', enabled: false, public_visible: false },
+      { key: 'links', enabled: false, public_visible: false },
+      { key: 'members', enabled: true, public_visible: false },
+      { key: 'projects', enabled: false, public_visible: false },
+      { key: 'activity_timeline', enabled: true, public_visible: false },
+      { key: 'leaderboard', enabled: false, public_visible: false },
+    ],
     created_at: '2026-04-05T00:00:00Z',
   },
 ];
 
 export const mockClubMembers: ClubMember[] = [
-  { id: 'clm-1', club_id: 'club-1', user_id: 'user-contributor-001', role: 'leader', membership_status: 'active', joined_at: '2025-10-01T00:00:00Z' },
-  { id: 'clm-2', club_id: 'club-1', user_id: 'user-student-001', role: 'member', membership_status: 'active', joined_at: '2026-01-15T00:00:00Z' },
-  { id: 'clm-3', club_id: 'club-1', user_id: 'user-teacher-001', role: 'member', membership_status: 'active', joined_at: '2026-03-10T00:00:00Z' },
-  { id: 'clm-4', club_id: 'club-2', user_id: 'user-contributor-002', role: 'leader', membership_status: 'active', joined_at: '2026-02-14T00:00:00Z' },
-  { id: 'clm-5', club_id: 'club-3', user_id: 'user-main-contributor-001', role: 'leader', membership_status: 'active', joined_at: '2026-04-05T00:00:00Z' },
+  // Club 1 - Multiple leaders
+  { id: 'clm-1', club_id: 'club-1', user_id: 'user-contributor-001', role: 'admin', membership_status: 'active', joined_at: '2025-10-01T00:00:00Z' },
+  { id: 'clm-2', club_id: 'club-1', user_id: 'user-teacher-001', role: 'moderator', membership_status: 'active', joined_at: '2026-03-10T00:00:00Z' },
+  { id: 'clm-3', club_id: 'club-1', user_id: 'user-student-001', role: 'member', membership_status: 'active', joined_at: '2026-01-15T00:00:00Z' },
+  { id: 'clm-4', club_id: 'club-1', user_id: 'user-student-002', role: 'member', membership_status: 'active', joined_at: '2026-05-20T00:00:00Z' },
+  
+  // Club 2 - Multiple admins
+  { id: 'clm-5', club_id: 'club-2', user_id: 'user-contributor-002', role: 'admin', membership_status: 'active', joined_at: '2026-02-14T00:00:00Z' },
+  { id: 'clm-6', club_id: 'club-2', user_id: 'user-contributor-003', role: 'admin', membership_status: 'active', joined_at: '2026-03-01T00:00:00Z' },
+  { id: 'clm-7', club_id: 'club-2', user_id: 'user-teacher-002', role: 'moderator', membership_status: 'active', joined_at: '2026-04-10T00:00:00Z' },
+  { id: 'clm-8', club_id: 'club-2', user_id: 'user-student-003', role: 'member', membership_status: 'active', joined_at: '2026-05-05T00:00:00Z' },
+  
+  // Club 3 - Single admin with moderators
+  { id: 'clm-9', club_id: 'club-3', user_id: 'user-main-contributor-001', role: 'admin', membership_status: 'active', joined_at: '2026-04-05T00:00:00Z' },
+  { id: 'clm-10', club_id: 'club-3', user_id: 'user-contributor-004', role: 'moderator', membership_status: 'active', joined_at: '2026-05-15T00:00:00Z' },
+  { id: 'clm-11', club_id: 'club-3', user_id: 'user-student-004', role: 'member', membership_status: 'active', joined_at: '2026-06-01T00:00:00Z' },
+  // Club 4 - Literary Society
+  { id: 'clm-12', club_id: 'club-4', user_id: 'user-teacher-002', role: 'admin', membership_status: 'active', joined_at: '2026-05-10T00:00:00Z' },
+  { id: 'clm-13', club_id: 'club-4', user_id: 'user-student-001', role: 'member', membership_status: 'active', joined_at: '2026-05-12T00:00:00Z' },
+  { id: 'clm-14', club_id: 'club-4', user_id: 'user-student-002', role: 'member', membership_status: 'active', joined_at: '2026-05-15T00:00:00Z' },
+  // Club 5 - Math Olympiad
+  { id: 'clm-15', club_id: 'club-5', user_id: 'user-teacher-001', role: 'admin', membership_status: 'active', joined_at: '2026-06-01T00:00:00Z' },
+  { id: 'clm-16', club_id: 'club-5', user_id: 'user-student-001', role: 'member', membership_status: 'active', joined_at: '2026-06-05T00:00:00Z' },
 ];
 
 export const mockClubMessages: ClubMessage[] = [
   { id: 'cmsg-1', club_id: 'club-1', sender_id: 'user-student-001', message: 'Hi everyone! Anyone revising forces this week?', created_at: '2026-06-10T10:00:00Z' },
   { id: 'cmsg-2', club_id: 'club-1', sender_id: 'user-contributor-001', message: 'Yes. I will drop a compact question set later today.', created_at: '2026-06-10T10:12:00Z' },
   { id: 'cmsg-3', club_id: 'club-2', sender_id: 'user-contributor-002', message: 'Welcome to the Chemistry Circle. Post your hardest equilibrium question here.', created_at: '2026-06-12T09:30:00Z' },
+  { id: 'cmsg-4', club_id: 'club-4', sender_id: 'user-student-002', message: 'Has anyone read the new Murakami book? The prose is stunning.', created_at: '2026-06-20T14:00:00Z' },
+  { id: 'cmsg-5', club_id: 'club-5', sender_id: 'user-teacher-001', message: 'This week: AMC 10 problems 15-20. Come prepared with solutions.', created_at: '2026-06-22T16:00:00Z' },
 ];
 
 export const mockClubAnnouncements: ClubAnnouncement[] = [
   { id: 'cann-1', club_id: 'club-1', created_by: 'user-contributor-001', title: 'Science Fair', content: 'Bring one idea and one question to this month\'s science fair prep session.', created_at: '2026-06-01T00:00:00Z' },
   { id: 'cann-2', club_id: 'club-3', created_by: 'user-main-contributor-001', title: 'Sprint Rules', content: 'Share goals before each sprint and check in after your timer ends.', created_at: '2026-06-05T00:00:00Z' },
+  { id: 'cann-3', club_id: 'club-4', created_by: 'user-teacher-002', title: 'Monthly Book Club', content: 'This month we are reading "Klara and the Sun" by Kazuo Ishiguro. Discussion on July 15.', created_at: '2026-06-15T00:00:00Z' },
+  { id: 'cann-4', club_id: 'club-5', created_by: 'user-teacher-001', title: 'Olympiad Bootcamp', content: 'Summer intensive begins July 5. 4 weeks of daily problem sets and 2 mock contests.', created_at: '2026-06-25T00:00:00Z' },
 ];
 
 export const mockClubLinks: ClubLink[] = [
   { id: 'clink-1', club_id: 'club-1', title: 'Physics Simulations', url: 'https://phet.colorado.edu/', shared_by: 'user-contributor-001', created_at: '2026-05-01T00:00:00Z' },
   { id: 'clink-2', club_id: 'club-2', title: 'Chemguide', url: 'https://www.chemguide.co.uk/', shared_by: 'user-contributor-002', created_at: '2026-05-22T00:00:00Z' },
+  { id: 'clink-3', club_id: 'club-4', title: 'Poetry Foundation', url: 'https://www.poetryfoundation.org/', shared_by: 'user-teacher-002', created_at: '2026-06-10T00:00:00Z' },
+  { id: 'clink-4', club_id: 'club-5', title: 'AOPS Wiki', url: 'https://artofproblemsolving.com/wiki/', shared_by: 'user-contributor-001', created_at: '2026-06-12T00:00:00Z' },
+];
+
+// ── Club Projects & Events ─────────────────────────────────────────────────
+
+export const mockClubProjects: {
+  id: string;
+  club_id: string;
+  created_by: string;
+  title: string;
+  description: string | null;
+  created_at: string;
+}[] = [
+  {
+    id: 'cp-1',
+    club_id: 'club-1',
+    created_by: 'user-contributor-001',
+    title: 'Newton\'s Laws Demo App',
+    description: 'Interactive web app demonstrating all three laws of motion with real-time physics simulations.',
+    created_at: '2026-04-15T00:00:00Z',
+  },
+  {
+    id: 'cp-2',
+    club_id: 'club-2',
+    created_by: 'user-contributor-002',
+    title: 'Organic Chemistry Flashcards',
+    description: 'A curated deck covering all IGCSE organic chemistry reaction mechanisms and functional groups.',
+    created_at: '2026-05-20T00:00:00Z',
+  },
+  {
+    id: 'cp-3',
+    club_id: 'club-1',
+    created_by: 'user-student-001',
+    title: 'Physics Lab Report Template',
+    description: 'Standardised LaTeX template for IGCSE physics lab reports with pre-built sections.',
+    created_at: '2026-06-01T00:00:00Z',
+  },
+];
+
+export const mockClubEvents: {
+  id: string;
+  club_id: string;
+  created_by: string;
+  title: string;
+  description: string | null;
+  event_date: string;
+  created_at: string;
+}[] = [
+  {
+    id: 'ce-1',
+    club_id: 'club-1',
+    created_by: 'user-contributor-001',
+    title: 'Physics Olympiad Prep Session',
+    description: 'Group study session covering past Olympiad problems — bring your own solutions to discuss.',
+    event_date: '2026-07-10T14:00:00Z',
+    created_at: '2026-06-25T08:00:00Z',
+  },
+  {
+    id: 'ce-2',
+    club_id: 'club-2',
+    created_by: 'user-contributor-002',
+    title: 'Chemistry Lab Safety Workshop',
+    description: 'Mandatory refresher on lab safety protocols before the summer practical sessions.',
+    event_date: '2026-07-05T10:00:00Z',
+    created_at: '2026-06-20T09:00:00Z',
+  },
+  {
+    id: 'ce-3',
+    club_id: 'club-4',
+    created_by: 'user-teacher-002',
+    title: 'Poetry Reading Night',
+    description: 'Open mic session — read your own work or a favourite poem. All genres welcome.',
+    event_date: '2026-07-15T18:00:00Z',
+    created_at: '2026-06-22T12:00:00Z',
+  },
+  {
+    id: 'ce-4',
+    club_id: 'club-5',
+    created_by: 'user-contributor-001',
+    title: 'Mock Olympiad Round 1',
+    description: 'Timed mock competition under real Olympiad conditions. Prizes for top 3!',
+    event_date: '2026-07-20T09:00:00Z',
+    created_at: '2026-06-18T10:00:00Z',
+  },
 ];
 
 // ── Club Feature Management ─────────────────────────────────────────────────
 
+/** Get all projects for a club */
+export function getClubProjects(clubId: string) {
+  return mockClubProjects.filter((p) => p.club_id === clubId);
+}
+
+/** Get all events for a club */
+export function getClubEvents(clubId: string) {
+  return mockClubEvents.filter((e) => e.club_id === clubId);
+}
+
+/** Add a project to a club */
+export function addClubProject(
+  clubId: string,
+  userId: string,
+  title: string,
+  description: string
+): { success: true; id: string } | { success: false; error: string } {
+  const member = mockClubMembers.find(
+    (m) => m.club_id === clubId && m.user_id === userId && m.membership_status === 'active'
+  );
+  if (!member) return { success: false, error: 'You must be a member to add projects.' };
+
+  const id = `cp-${Date.now()}`;
+  mockClubProjects.push({
+    id,
+    club_id: clubId,
+    created_by: userId,
+    title,
+    description: description || null,
+    created_at: new Date().toISOString(),
+  });
+  return { success: true, id };
+}
+
+/** Add an event to a club */
+export function addClubEvent(
+  clubId: string,
+  userId: string,
+  title: string,
+  description: string,
+  eventDate: string
+): { success: true; id: string } | { success: false; error: string } {
+  const member = mockClubMembers.find(
+    (m) => m.club_id === clubId && m.user_id === userId && (m.role === 'admin' || m.role === 'moderator')
+  );
+  if (!member) return { success: false, error: 'Only club leaders can schedule events.' };
+
+  const id = `ce-${Date.now()}`;
+  mockClubEvents.push({
+    id,
+    club_id: clubId,
+    created_by: userId,
+    title,
+    description: description || null,
+    event_date: eventDate || new Date().toISOString(),
+    created_at: new Date().toISOString(),
+  });
+  return { success: true, id };
+}
+
 /**
  * Update the enabled features for a club.
- * Only the club creator/leader can modify this.
+ * Only club admins can modify this.
  */
 export function mockUpdateClubFeatures(
   clubId: string,
@@ -1006,12 +1561,104 @@ export function mockUpdateClubFeatures(
   if (!club) return { success: false, error: 'Club not found.' };
 
   const member = mockClubMembers.find(
-    (m) => m.club_id === clubId && m.user_id === userId && m.role === 'leader'
+    (m) => m.club_id === clubId && m.user_id === userId && m.role === 'admin'
   );
-  if (!member) return { success: false, error: 'Only the club leader can manage features.' };
+  if (!member) return { success: false, error: 'Only club admins can manage features.' };
 
   club.enabled_features = features;
   return { success: true, club: { ...club } };
+}
+
+/**
+ * Update club details (name, description, join mode, invite code).
+ * Only club admins can modify club details.
+ */
+export function updateClubDetails(
+  clubId: string,
+  userId: string,
+  updates: {
+    name?: string;
+    description?: string | null;
+    join_mode?: ClubJoinMode;
+    invite_code?: string | null;
+  }
+): { success: true; club: Club } | { success: false; error: string } {
+  const club = mockClubs.find((c) => c.id === clubId);
+  if (!club) return { success: false, error: 'Club not found.' };
+
+  const member = mockClubMembers.find(
+    (m) => m.club_id === clubId && m.user_id === userId && m.role === 'admin'
+  );
+  if (!member) return { success: false, error: 'Only club admins can modify club details.' };
+
+  if (updates.name !== undefined) club.name = updates.name;
+  if (updates.description !== undefined) club.description = updates.description;
+  if (updates.join_mode !== undefined) club.join_mode = updates.join_mode;
+  if (updates.invite_code !== undefined) club.invite_code = updates.invite_code;
+
+  return { success: true, club: { ...club } };
+}
+
+/**
+ * Promote a user to a leadership role (admin or moderator).
+ * Only admins can promote users.
+ */
+export function promoteClubMember(
+  clubId: string,
+  adminUserId: string,
+  targetUserId: string,
+  newRole: 'admin' | 'moderator'
+): { success: true; member: ClubMember } | { success: false; error: string } {
+  const club = mockClubs.find((c) => c.id === clubId);
+  if (!club) return { success: false, error: 'Club not found.' };
+
+  const admin = mockClubMembers.find(
+    (m) => m.club_id === clubId && m.user_id === adminUserId && m.role === 'admin'
+  );
+  if (!admin) return { success: false, error: 'Only club admins can promote members.' };
+
+  const targetMember = mockClubMembers.find(
+    (m) => m.club_id === clubId && m.user_id === targetUserId && m.membership_status === 'active'
+  );
+  if (!targetMember) return { success: false, error: 'Target user is not an active member of this club.' };
+
+  targetMember.role = newRole;
+  return { success: true, member: { ...targetMember } };
+}
+
+/**
+ * Demote a leader to a regular member.
+ * Only admins can demote users.
+ * Admins cannot demote themselves (need another admin to do it).
+ */
+export function demoteClubLeader(
+  clubId: string,
+  adminUserId: string,
+  targetUserId: string
+): { success: true; member: ClubMember } | { success: false; error: string } {
+  const club = mockClubs.find((c) => c.id === clubId);
+  if (!club) return { success: false, error: 'Club not found.' };
+
+  const admin = mockClubMembers.find(
+    (m) => m.club_id === clubId && m.user_id === adminUserId && m.role === 'admin'
+  );
+  if (!admin) return { success: false, error: 'Only club admins can demote leaders.' };
+
+  if (adminUserId === targetUserId) {
+    return { success: false, error: 'Admins cannot demote themselves.' };
+  }
+
+  const targetMember = mockClubMembers.find(
+    (m) => m.club_id === clubId && m.user_id === targetUserId && m.membership_status === 'active'
+  );
+  if (!targetMember) return { success: false, error: 'Target user is not an active member of this club.' };
+
+  if (targetMember.role !== 'admin' && targetMember.role !== 'moderator') {
+    return { success: false, error: 'Target user is not a leader.' };
+  }
+
+  targetMember.role = 'member';
+  return { success: true, member: { ...targetMember } };
 }
 
 // ── Mock Timetable & Pomodoro ───────────────────────────────────────────────
@@ -1108,6 +1755,15 @@ export let mockCards: FlashCard[] = [
   { id: 'card-18', deck_id: 'deck-5', front_text: 'Ubiquitous', back_text: '(adj) Present, appearing, or found everywhere.\nE.g. "Mobile phones are now ubiquitous in modern society."', created_at: '2026-05-20T00:00:00Z' },
   { id: 'card-19', deck_id: 'deck-5', front_text: 'Proliferate', back_text: '(v) To increase rapidly in number or amount.\nE.g. "Social media platforms have proliferated in recent years."', created_at: '2026-05-20T00:00:00Z' },
   { id: 'card-20', deck_id: 'deck-5', front_text: 'Exacerbate', back_text: '(v) To make a problem or situation worse.\nE.g. "Pollution exacerbates the effects of climate change."', created_at: '2026-05-21T00:00:00Z' },
+  // deck-6: History Dates
+  { id: 'card-21', deck_id: 'deck-6', front_text: 'When did World War II end?', back_text: 'September 2, 1945 (V-J Day — Japan\'s surrender)', created_at: '2026-06-10T00:00:00Z' },
+  { id: 'card-22', deck_id: 'deck-6', front_text: 'Treaty of Versailles signed in:', back_text: 'June 28, 1919', created_at: '2026-06-10T00:00:00Z' },
+  { id: 'card-23', deck_id: 'deck-6', front_text: 'Fall of the Berlin Wall', back_text: 'November 9, 1989', created_at: '2026-06-10T00:00:00Z' },
+  { id: 'card-24', deck_id: 'deck-6', front_text: 'First manned moon landing', back_text: 'July 20, 1969 (Apollo 11)', created_at: '2026-06-11T00:00:00Z' },
+  // deck-7: Computer Science
+  { id: 'card-25', deck_id: 'deck-7', front_text: 'What is the time complexity of binary search?', back_text: 'O(log n)', created_at: '2026-06-15T00:00:00Z' },
+  { id: 'card-26', deck_id: 'deck-7', front_text: 'Define encapsulation in OOP', back_text: 'Bundling data and methods that operate on that data within a single unit (class), restricting direct access.', created_at: '2026-06-15T00:00:00Z' },
+  { id: 'card-27', deck_id: 'deck-7', front_text: 'What does SQL stand for?', back_text: 'Structured Query Language', created_at: '2026-06-16T00:00:00Z' },
 ];
 
 export let mockCardReviews: CardReview[] = [
@@ -1220,20 +1876,6 @@ export const mockCurriculumNotes = [
   },
 ];
 
-// ── Classroom Student Progress ──────────────────────────────────────────────
-
-export const mockClassroomProgress = [
-  {
-    classroom_id: 'class-1',
-    student_id: 'user-student-001',
-    curriculum_completion: 62,
-    assignments_completed: 8,
-    assignments_total: 10,
-    average_confidence_level: 4,
-    last_active_at: '2026-06-17T12:00:00Z',
-  },
-];
-
 // ── Club Join Requests ──────────────────────────────────────────────────────
 
 export const mockClubJoinRequests: ClubJoinRequest[] = [
@@ -1335,14 +1977,300 @@ export const getSubjectsByCurriculum = (curriculumId: string) =>
 export const getTopicsBySubject = (subjectId: string) =>
   mockTopics.filter(t => t.subject_id === subjectId);
 
+// ── Classroom Queries ───────────────────────────────────────────────────────
+
 export const getClassroom = (id: string) =>
   mockClassrooms.find(c => c.id === id);
+
+export const getClassroomsByUser = (userId: string) => {
+  const memberClassIds = mockClassroomMembers
+    .filter(m => m.user_id === userId)
+    .map(m => m.classroom_id);
+  return mockClassrooms.filter(c => memberClassIds.includes(c.id));
+};
 
 export const getClassroomMembers = (classroomId: string) =>
   mockClassroomMembers.filter(m => m.classroom_id === classroomId);
 
+export const getClassroomTeachers = (classroomId: string) =>
+  mockClassroomMembers.filter(m => m.classroom_id === classroomId && m.role === 'teacher');
+
+export const getClassroomTeacherIds = (classroomId: string) =>
+  mockClassroomMembers
+    .filter(m => m.classroom_id === classroomId && m.role === 'teacher')
+    .map(m => m.user_id);
+
+export const getClassroomStudents = (classroomId: string) =>
+  mockClassroomMembers.filter(m => m.classroom_id === classroomId && m.role === 'student');
+
+export const getClassroomMember = (classroomId: string, userId: string) =>
+  mockClassroomMembers.find(m => m.classroom_id === classroomId && m.user_id === userId);
+
 export const getAssignmentsByClassroom = (classroomId: string) =>
   mockAssignments.filter(a => a.classroom_id === classroomId);
+
+export const getAssignment = (id: string) =>
+  mockAssignments.find(a => a.id === id);
+
+export const getSubmission = (assignmentId: string, studentId: string) =>
+  mockAssignmentSubmissions.find(s => s.assignment_id === assignmentId && s.student_id === studentId);
+
+export const getSubmissionsByAssignment = (assignmentId: string) =>
+  mockAssignmentSubmissions.filter(s => s.assignment_id === assignmentId);
+
+export const getQuizzesByClassroom = (classroomId: string) =>
+  mockQuizzes.filter(q => q.classroom_id === classroomId);
+
+export const getQuiz = (id: string) =>
+  mockQuizzes.find(q => q.id === id);
+
+export const getQuizAttemptsByQuiz = (quizId: string) =>
+  mockQuizAttempts.filter(a => a.quiz_id === quizId);
+
+export const getQuizAttempt = (quizId: string, studentId: string) =>
+  mockQuizAttempts.find(a => a.quiz_id === quizId && a.student_id === studentId);
+
+export const getDiscussionTopicsByClassroom = (classroomId: string) =>
+  mockDiscussionTopics.filter(t => t.classroom_id === classroomId);
+
+export const getDiscussionTopic = (id: string) =>
+  mockDiscussionTopics.find(t => t.id === id);
+
+export const getDiscussionReplies = (topicId: string) =>
+  mockDiscussionReplies.filter(r => r.topic_id === topicId);
+
+export const getResourcesByClassroom = (classroomId: string) =>
+  mockClassroomResources.filter(r => r.classroom_id === classroomId);
+
+// ── Classroom Mutations ─────────────────────────────────────────────────────
+
+export const createClassroom = (data: Omit<Classroom, 'id' | 'created_at'>) => {
+  const classroom: Classroom = {
+    ...data,
+    id: `class-${Date.now()}`,
+    created_at: new Date().toISOString(),
+  };
+  mockClassrooms.push(classroom);
+  return { success: true, classroom };
+};
+
+export const updateClassroom = (id: string, data: Partial<Classroom>) => {
+  const idx = mockClassrooms.findIndex(c => c.id === id);
+  if (idx === -1) return { success: false, error: 'Classroom not found' };
+  mockClassrooms[idx] = { ...mockClassrooms[idx], ...data };
+  return { success: true, classroom: mockClassrooms[idx] };
+};
+
+export const joinClassroom = (classroomId: string, userId: string, role: ClassroomMemberRole = 'student') => {
+  const existing = mockClassroomMembers.find(m => m.classroom_id === classroomId && m.user_id === userId);
+  if (existing) return { success: false, error: 'Already a member' };
+  const member: ClassroomMember = {
+    id: `cm-${Date.now()}`,
+    classroom_id: classroomId,
+    user_id: userId,
+    role,
+    joined_at: new Date().toISOString(),
+  };
+  mockClassroomMembers.push(member);
+  return { success: true, member };
+};
+
+export const leaveClassroom = (classroomId: string, userId: string) => {
+  const idx = mockClassroomMembers.findIndex(m => m.classroom_id === classroomId && m.user_id === userId);
+  if (idx === -1) return { success: false, error: 'Not a member' };
+  mockClassroomMembers.splice(idx, 1);
+  return { success: true };
+};
+
+export const createAssignment = (data: Omit<Assignment, 'id' | 'created_at' | 'updated_at'>) => {
+  const assignment: Assignment = {
+    ...data,
+    id: `assn-${Date.now()}`,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+  mockAssignments.push(assignment);
+  return { success: true, assignment };
+};
+
+export const updateAssignment = (id: string, data: Partial<Assignment>) => {
+  const idx = mockAssignments.findIndex(a => a.id === id);
+  if (idx === -1) return { success: false, error: 'Assignment not found' };
+  mockAssignments[idx] = { ...mockAssignments[idx], ...data, updated_at: new Date().toISOString() };
+  return { success: true, assignment: mockAssignments[idx] };
+};
+
+export const submitAssignment = (assignmentId: string, studentId: string, content: string | null, attachmentUrls: string[] = []) => {
+  const existing = mockAssignmentSubmissions.find(s => s.assignment_id === assignmentId && s.student_id === studentId);
+  if (existing) {
+    existing.content = content;
+    existing.attachment_urls = attachmentUrls;
+    existing.submitted_at = new Date().toISOString();
+    return { success: true, submission: existing };
+  }
+  const submission: AssignmentSubmission = {
+    id: `asub-${Date.now()}`,
+    assignment_id: assignmentId,
+    student_id: studentId,
+    content,
+    attachment_urls: attachmentUrls,
+    submitted_at: new Date().toISOString(),
+    grade: null,
+    feedback: null,
+    graded_at: null,
+  };
+  mockAssignmentSubmissions.push(submission);
+  return { success: true, submission };
+};
+
+export const gradeSubmission = (submissionId: string, grade: number, feedback: string | null) => {
+  const sub = mockAssignmentSubmissions.find(s => s.id === submissionId);
+  if (!sub) return { success: false, error: 'Submission not found' };
+  sub.grade = grade;
+  sub.feedback = feedback;
+  sub.graded_at = new Date().toISOString();
+  return { success: true, submission: sub };
+};
+
+export const createQuiz = (data: Omit<Quiz, 'id' | 'created_at'>) => {
+  const quiz: Quiz = {
+    ...data,
+    id: `quiz-${Date.now()}`,
+    created_at: new Date().toISOString(),
+  };
+  mockQuizzes.push(quiz);
+  return { success: true, quiz };
+};
+
+export const updateQuiz = (id: string, data: Partial<Quiz>) => {
+  const idx = mockQuizzes.findIndex(q => q.id === id);
+  if (idx === -1) return { success: false, error: 'Quiz not found' };
+  mockQuizzes[idx] = { ...mockQuizzes[idx], ...data };
+  return { success: true, quiz: mockQuizzes[idx] };
+};
+
+export const submitQuizAttempt = (quizId: string, studentId: string, answers: QuizAnswer[]) => {
+  const quiz = mockQuizzes.find(q => q.id === quizId);
+  if (!quiz) return { success: false, error: 'Quiz not found' };
+
+  // Auto-grade: compare answers against correct_answer for each question
+  const gradedAnswers: QuizAnswer[] = answers.map(ans => {
+    const question = quiz.questions.find(q => q.id === ans.question_id);
+    if (!question) return ans;
+    const isCorrect = question.type === 'short_answer'
+      ? null // Short answer needs manual review
+      : ans.answer.toLowerCase().trim() === question.correct_answer.toLowerCase().trim();
+    return { ...ans, is_correct: isCorrect };
+  });
+
+  const totalScore = gradedAnswers.reduce((sum, a) => {
+    const question = quiz.questions.find(q => q.id === a.question_id);
+    return sum + (a.is_correct === true ? (question?.points ?? 0) : 0);
+  }, 0);
+
+  const totalPoints = quiz.questions.reduce((sum, q) => sum + q.points, 0);
+
+  const attempt: QuizAttempt = {
+    id: `qa-${Date.now()}`,
+    quiz_id: quizId,
+    student_id: studentId,
+    answers: gradedAnswers,
+    score: totalScore,
+    total_points: totalPoints,
+    started_at: new Date().toISOString(),
+    submitted_at: new Date().toISOString(),
+  };
+
+  // Remove previous attempt if exists
+  const prevIdx = mockQuizAttempts.findIndex(a => a.quiz_id === quizId && a.student_id === studentId);
+  if (prevIdx !== -1) mockQuizAttempts.splice(prevIdx, 1);
+
+  mockQuizAttempts.push(attempt);
+  return { success: true, attempt };
+};
+
+export const createDiscussionTopic = (data: Omit<DiscussionTopic, 'id' | 'created_at' | 'updated_at'>) => {
+  const topic: DiscussionTopic = {
+    ...data,
+    id: `disc-${Date.now()}`,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+  mockDiscussionTopics.push(topic);
+  return { success: true, topic };
+};
+
+export const createDiscussionReply = (topicId: string, content: string, createdBy: string) => {
+  const reply: DiscussionReply = {
+    id: `drep-${Date.now()}`,
+    topic_id: topicId,
+    content,
+    created_by: createdBy,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+  mockDiscussionReplies.push(reply);
+  return { success: true, reply };
+};
+
+export const addResource = (data: Omit<ClassroomResource, 'id' | 'created_at'>) => {
+  const resource: ClassroomResource = {
+    ...data,
+    id: `cr-${Date.now()}`,
+    created_at: new Date().toISOString(),
+  };
+  mockClassroomResources.push(resource);
+  return { success: true, resource };
+};
+
+export const deleteResource = (id: string) => {
+  const idx = mockClassroomResources.findIndex(r => r.id === id);
+  if (idx === -1) return { success: false, error: 'Resource not found' };
+  mockClassroomResources.splice(idx, 1);
+  return { success: true };
+};
+
+export const updateResource = (id: string, data: Partial<ClassroomResource>) => {
+  const idx = mockClassroomResources.findIndex(r => r.id === id);
+  if (idx === -1) return { success: false, error: 'Resource not found' };
+  mockClassroomResources[idx] = { ...mockClassroomResources[idx], ...data };
+  return { success: true, resource: mockClassroomResources[idx] };
+};
+
+export const deleteAssignment = (id: string) => {
+  const idx = mockAssignments.findIndex(a => a.id === id);
+  if (idx === -1) return { success: false, error: 'Assignment not found' };
+  mockAssignments.splice(idx, 1);
+  // Also remove related submissions
+  const submissionIds = mockAssignmentSubmissions.filter(s => s.assignment_id === id).map(s => s.id);
+  mockAssignmentSubmissions = mockAssignmentSubmissions.filter(s => !submissionIds.includes(s.id));
+  return { success: true };
+};
+
+export const deleteQuiz = (id: string) => {
+  const idx = mockQuizzes.findIndex(q => q.id === id);
+  if (idx === -1) return { success: false, error: 'Quiz not found' };
+  mockQuizzes.splice(idx, 1);
+  // Also remove related attempts
+  mockQuizAttempts = mockQuizAttempts.filter(a => a.quiz_id !== id);
+  return { success: true };
+};
+
+export const deleteDiscussionTopic = (id: string) => {
+  const idx = mockDiscussionTopics.findIndex(t => t.id === id);
+  if (idx === -1) return { success: false, error: 'Topic not found' };
+  mockDiscussionTopics.splice(idx, 1);
+  // Also remove related replies
+  mockDiscussionReplies = mockDiscussionReplies.filter(r => r.topic_id !== id);
+  return { success: true };
+};
+
+export const updateDiscussionTopic = (id: string, data: Partial<DiscussionTopic>) => {
+  const idx = mockDiscussionTopics.findIndex(t => t.id === id);
+  if (idx === -1) return { success: false, error: 'Topic not found' };
+  mockDiscussionTopics[idx] = { ...mockDiscussionTopics[idx], ...data, updated_at: new Date().toISOString() };
+  return { success: true, topic: mockDiscussionTopics[idx] };
+};
 
 export const getClub = (id: string) =>
   mockClubs.find(c => c.id === id);
@@ -1404,7 +2332,7 @@ export function createClub(data: {
     id: `clm-${Date.now()}`,
     club_id: club.id,
     user_id: data.created_by,
-    role: 'leader',
+    role: 'admin',
     membership_status: 'active',
     joined_at: now,
   });
@@ -1489,9 +2417,9 @@ export function leaveClub(clubId: string, userId: string): { success: true } | {
   if (memberIndex < 0) return { success: false, error: 'You are not an active member of this club.' };
 
   const member = mockClubMembers[memberIndex];
-  const activeLeaders = mockClubMembers.filter(m => m.club_id === clubId && m.role === 'leader' && m.membership_status === 'active');
-  if (member.role === 'leader' && activeLeaders.length === 1) {
-    return { success: false, error: 'The sole leader cannot leave this club.' };
+  const activeAdmins = mockClubMembers.filter(m => m.club_id === clubId && m.role === 'admin' && m.membership_status === 'active');
+  if (member.role === 'admin' && activeAdmins.length === 1) {
+    return { success: false, error: 'The sole admin cannot leave this club.' };
   }
 
   mockClubMembers.splice(memberIndex, 1);
@@ -1765,6 +2693,15 @@ export function createCard(data: {
   return card;
 }
 
+/** Get decks related to a curriculum and/or subject */
+export function getRelatedDecks(curriculumId?: string | null, subjectId?: string | null): Deck[] {
+  return mockDecks.filter((d) => {
+    if (curriculumId && d.curriculum_id === curriculumId) return true;
+    if (subjectId && d.subject_id === subjectId) return true;
+    return false;
+  });
+}
+
 /** Update an existing card's content */
 export function updateCard(
   cardId: string,
@@ -1996,6 +2933,73 @@ export const mockNotes: Note[] = [
           ['Δ > 0', 'Two distinct real roots'],
           ['Δ = 0', 'One repeated real root'],
           ['Δ < 0', 'No real roots (complex)'],
+        ]
+      },
+    ],
+  },
+  {
+    id: 'note-006',
+    title: 'Electromagnetic Spectrum',
+    summary: 'From radio waves to gamma rays — understand wavelength, frequency, and real-world applications.',
+    curriculum_id: 'curr-1',
+    subject_id: 'subj-1',
+    topic_id: null,
+    syllabus_point: '3.1 — Electromagnetic Waves',
+    is_syllabus_based: true,
+    tags: ['physics', 'waves', 'electromagnetic', 'IGCSE'],
+    contributor_id: 'user-contributor-002',
+    status: 'approved',
+    visibility: 'public',
+    reviewer_id: 'user-main-contributor-001',
+    created_at: '2026-06-10T10:00:00Z',
+    updated_at: '2026-06-10T10:00:00Z',
+    blocks: [
+      { type: 'heading', id: 'g1', level: 1, text: 'Electromagnetic Spectrum' },
+      { type: 'paragraph', id: 'g2', text: 'The EM spectrum arranges all types of electromagnetic radiation by wavelength and frequency.' },
+      {
+        type: 'table', id: 'g3', rows: [
+          ['Region', 'Wavelength', 'Uses'],
+          ['Radio', '> 0.1 m', 'Broadcasting, MRI'],
+          ['Microwave', '1 mm – 0.1 m', 'Cooking, radar'],
+          ['Infrared', '700 nm – 1 mm', 'Remote controls, thermal imaging'],
+          ['Visible', '400 – 700 nm', 'Sight, photography'],
+          ['UV', '10 – 400 nm', 'Sterilisation, tanning'],
+          ['X-ray', '0.01 – 10 nm', 'Medical imaging'],
+          ['Gamma', '< 0.01 nm', 'Cancer treatment'],
+        ]
+      },
+      { type: 'latex', id: 'g4', expression: 'c = f\\lambda', display: true },
+      { type: 'paragraph', id: 'g5', text: 'All EM waves travel at the speed of light in a vacuum: **c = 3 × 10⁸ m/s**.' },
+    ],
+  },
+  {
+    id: 'note-007',
+    title: 'Past Simple vs Present Perfect',
+    summary: 'Clear comparison of the two most confused tenses in English grammar with timeline visualisations.',
+    curriculum_id: null,
+    subject_id: null,
+    topic_id: null,
+    is_syllabus_based: false,
+    tags: ['english', 'grammar', 'tenses', 'IELTS'],
+    contributor_id: 'user-contributor-002',
+    status: 'approved',
+    visibility: 'public',
+    reviewer_id: 'user-main-contributor-001',
+    created_at: '2026-06-18T11:00:00Z',
+    updated_at: '2026-06-18T11:00:00Z',
+    blocks: [
+      { type: 'heading', id: 'h1', level: 1, text: 'Past Simple vs Present Perfect' },
+      { type: 'paragraph', id: 'h2', text: 'These two tenses cause the most confusion for English learners. The key difference is **time reference**.' },
+      { type: 'heading', id: 'h3', level: 2, text: 'Past Simple' },
+      { type: 'paragraph', id: 'h4', text: '**Form:** Subject + past verb (V2)\n**Use:** Completed actions at a specific time in the past.\n**Signal words:** yesterday, last week, in 2010, ago' },
+      { type: 'heading', id: 'h5', level: 2, text: 'Present Perfect' },
+      { type: 'paragraph', id: 'h6', text: '**Form:** Subject + has/have + past participle (V3)\n**Use:** Actions with present relevance or unspecified time.\n**Signal words:** ever, never, just, yet, already, since, for' },
+      {
+        type: 'table', id: 'h7', rows: [
+          ['Past Simple', 'Present Perfect'],
+          ['I ate lunch at 1 PM.', 'I have already eaten lunch.'],
+          ['She lived in Paris in 2015.', 'She has lived in Paris since 2015.'],
+          ['Did you finish?', 'Have you finished yet?'],
         ]
       },
     ],
@@ -2287,5 +3291,299 @@ export function unsaveNote(
   );
   if (idx < 0) return { success: false, error: 'Saved note not found.' };
   mockUserSavedNotes.splice(idx, 1);
+  return { success: true };
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Organisation — The ANTS (Mock Data & Queries)
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── Team Members ─────────────────────────────────────────────────────────────
+
+const mockTeamMembers: OrgTeamMember[] = [
+  {
+    id: 'team-001',
+    name: 'Ko Zaw Win',
+    title: 'Founder & Lead Mentor',
+    bio: 'Passionate about bridging the gap between Myanmar students and global education. Specializes in IGCSE Physics and Mathematics with over 8 years of teaching experience.',
+    photoUrl: '',
+    linkedProfileUsername: 'kozawwin',
+    order: 0,
+  },
+  {
+    id: 'team-002',
+    name: 'Aye Chan Thu',
+    title: 'Head of Curriculum Development',
+    bio: 'Cambridge-trained educator dedicated to building world-class curriculum resources tailored for Myanmar students pursuing international qualifications.',
+    photoUrl: '',
+    linkedProfileUsername: 'ayechanthu',
+    order: 1,
+  },
+  {
+    id: 'team-003',
+    name: 'Daw Hla Myint',
+    title: 'Head of Content & Quality Assurance',
+    bio: 'Senior gatekeeper with 15 years in international education. Ensures every resource and submission meets our rigorous quality standards.',
+    photoUrl: '',
+    linkedProfileUsername: 'dawhlamyint',
+    order: 2,
+  },
+  {
+    id: 'team-004',
+    name: 'Thiri Aung',
+    title: 'Student Ambassador & Peer Mentor',
+    bio: 'IGCSE high-achiever who helps new students navigate the platform and organizes peer study groups. Pursuing straight A*s across all subjects.',
+    photoUrl: '',
+    linkedProfileUsername: 'thiriaung',
+    order: 3,
+  },
+  {
+    id: 'team-005',
+    name: 'May Thu Kyaw',
+    title: 'Community & Events Coordinator',
+    bio: 'Organizes our CCA programs, workshops, and community-building events. Background in educational psychology and student engagement.',
+    photoUrl: '',
+    order: 4,
+  },
+  {
+    id: 'team-006',
+    name: 'Htet Lin Aung',
+    title: 'Technical Lead & Platform Developer',
+    bio: 'Full-stack developer responsible for building and maintaining The ANTS platform. Passionate about edtech and creating tools that make learning accessible.',
+    photoUrl: '',
+    order: 5,
+  },
+  {
+    id: 'team-007',
+    name: 'Su Myat Noe',
+    title: 'A-Level Specialist (Alumni)',
+    bio: 'Former A-Level student who achieved 4 A*s and now mentors current students. Specializes in Chemistry and Biology.',
+    photoUrl: '',
+    isAlumni: true,
+    order: 6,
+  },
+];
+
+/** Get all team members sorted by order */
+export function getOrgTeamMembers(): OrgTeamMember[] {
+  return [...mockTeamMembers].sort((a, b) => a.order - b.order);
+}
+
+// ── Organisation Timeline Items ──────────────────────────────────────────────
+
+let mockTimelineItems: OrgTimelineItem[] = [
+  {
+    id: 'tl-001',
+    title: 'The ANTS Founded',
+    description: 'Founded by Ko Zaw Win with a small group of volunteer tutors, offering IGCSE Physics and Maths tutoring to students in Yangon.',
+    date: '2022',
+    category: 'milestone',
+    imageUrls: [],
+    showOnTimeline: true,
+    order: 0,
+    createdAt: '2025-01-01T08:00:00Z',
+  },
+  {
+    id: 'tl-002',
+    title: 'First Cohort Graduates',
+    description: 'Our first cohort of 15 IGCSE students completed their exams, with 80% achieving A*–B grades. Expanded to include Chemistry and Biology.',
+    date: '2023',
+    category: 'milestone',
+    imageUrls: [],
+    showOnTimeline: true,
+    order: 1,
+    createdAt: '2025-01-01T08:00:00Z',
+  },
+  {
+    id: 'tl-003',
+    title: 'Online Platform Launch',
+    description: 'Launched the first version of The ANTS digital platform — bringing timetables, flashcards, and lesson trackers online for students across Myanmar.',
+    date: '2024 Q1',
+    category: 'milestone',
+    imageUrls: [],
+    showOnTimeline: true,
+    order: 2,
+    createdAt: '2025-01-01T08:00:00Z',
+  },
+  {
+    id: 'tl-004',
+    title: 'Mentor Network Expansion',
+    description: 'Grew our mentor network to include scholars from A-Level, Polytechnic, University Foundation, OSSD, and UK university pathways.',
+    date: '2024 Q3',
+    category: 'milestone',
+    imageUrls: [],
+    showOnTimeline: true,
+    order: 3,
+    createdAt: '2025-01-01T08:00:00Z',
+  },
+  {
+    id: 'tl-005',
+    title: 'Clubs & Classrooms',
+    description: 'Rolled out virtual classrooms for teachers and community clubs for students — creating spaces for collaboration beyond individual study.',
+    date: '2025 Q1',
+    category: 'milestone',
+    imageUrls: [],
+    showOnTimeline: true,
+    order: 4,
+    createdAt: '2025-01-01T08:00:00Z',
+  },
+  {
+    id: 'tl-006',
+    title: '100+ Active Students',
+    description: 'Crossed 100 active students on the platform. Introduced CCA activities and the public contributor network.',
+    date: '2025 Q3',
+    category: 'milestone',
+    imageUrls: [],
+    showOnTimeline: true,
+    order: 5,
+    createdAt: '2025-01-01T08:00:00Z',
+  },
+  {
+    id: 'tl-007',
+    title: 'Global Community Vision',
+    description: 'Expanding to support students across Southeast Asia with a full ecosystem of academic tools, peer mentorship, and global university pathway guidance.',
+    date: '2026',
+    category: 'milestone',
+    imageUrls: [],
+    showOnTimeline: true,
+    order: 6,
+    createdAt: '2025-01-01T08:00:00Z',
+  },
+  {
+    id: 'tl-008',
+    title: 'IGCSE Intensive Bootcamp (Physics)',
+    description: 'A 2-week intensive revision bootcamp covering all CAIE IGCSE Physics topics. Includes past paper walkthroughs, lab demonstrations, and one-on-one mentoring sessions.',
+    date: '2025-06-10',
+    category: 'workshop',
+    imageUrls: [],
+    showOnTimeline: false,
+    location: 'Online (Zoom)',
+    order: 7,
+    createdAt: '2025-05-01T08:00:00Z',
+  },
+  {
+    id: 'tl-009',
+    title: 'Science Olympiad Team Training',
+    description: 'Preparatory training sessions for the Myanmar Science Olympiad. Students worked in teams on experimental design, theory, and problem-solving under mentor guidance.',
+    date: '2025-08-15',
+    category: 'competition',
+    imageUrls: [],
+    showOnTimeline: false,
+    location: 'Yangon, Myanmar',
+    order: 8,
+    createdAt: '2025-07-20T08:00:00Z',
+  },
+  {
+    id: 'tl-010',
+    title: 'Study Abroad Info Session: UK & Canada Pathways',
+    description: 'An information session where mentors shared their experiences with A-Levels, OSSD, Foundation programs, and UK university applications. Q&A with current university students.',
+    date: '2025-09-22',
+    category: 'community',
+    imageUrls: [],
+    showOnTimeline: false,
+    location: 'Online (Google Meet)',
+    order: 9,
+    createdAt: '2025-09-10T08:00:00Z',
+  },
+  {
+    id: 'tl-011',
+    title: 'Year-End Academic Awards Ceremony',
+    description: 'Celebrated student achievements across all subjects. Recognized top performers, most improved students, and outstanding peer mentors.',
+    date: '2025-12-18',
+    category: 'community',
+    imageUrls: [],
+    showOnTimeline: false,
+    location: 'The ANTS Learning Center, Yangon',
+    order: 10,
+    createdAt: '2025-12-01T08:00:00Z',
+  },
+  {
+    id: 'tl-012',
+    title: 'CCA Leadership Camp',
+    description: 'A 3-day camp focused on developing leadership, teamwork, and communication skills through workshops, group projects, and outdoor activities.',
+    date: '2026-01-15',
+    category: 'camp',
+    imageUrls: [],
+    showOnTimeline: false,
+    location: 'Hlawga National Park, Yangon',
+    order: 11,
+    createdAt: '2025-12-20T08:00:00Z',
+  },
+  {
+    id: 'tl-013',
+    title: 'IGCSE Maths Intensive Revision',
+    description: 'Weekend intensive covering the most challenging IGCSE Maths topics: vectors, transformations, and probability. Included exam strategy sessions.',
+    date: '2026-03-05',
+    category: 'workshop',
+    imageUrls: [],
+    showOnTimeline: false,
+    location: 'Online (Zoom)',
+    order: 12,
+    createdAt: '2026-02-15T08:00:00Z',
+  },
+];
+
+// ── Timeline Item Queries ────────────────────────────────────────────────────
+
+/** Get all timeline items sorted by order */
+export function getOrgTimelineItems(): OrgTimelineItem[] {
+  return [...mockTimelineItems].sort((a, b) => a.order - b.order);
+}
+
+/** Get items where showOnTimeline is true (for /about timeline display) */
+export function getOrgMilestones(): OrgTimelineItem[] {
+  return mockTimelineItems.filter((i) => i.showOnTimeline).sort((a, b) => a.order - b.order);
+}
+
+/** Get items where showOnTimeline is false (for gallery, excluding timeline items) */
+export function getOrgActivities(): OrgTimelineItem[] {
+  return mockTimelineItems.filter((i) => !i.showOnTimeline).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+/** Get a single item by ID */
+export function getOrgTimelineItem(id: string): OrgTimelineItem | undefined {
+  return mockTimelineItems.find((i) => i.id === id);
+}
+
+/** Add a new timeline item */
+export function addOrgTimelineItem(data: OrgTimelineItemFormData): { success: true; item: OrgTimelineItem } {
+  const item: OrgTimelineItem = {
+    id: `tl-${Date.now()}`,
+    title: data.title,
+    description: data.description,
+    date: data.date,
+    category: data.category,
+    imageUrls: data.imageUrls,
+    location: data.location,
+    showOnTimeline: data.showOnTimeline ?? (data.category === 'milestone'),
+    order: mockTimelineItems.length,
+    createdAt: new Date().toISOString(),
+  };
+  mockTimelineItems.push(item);
+  return { success: true, item };
+}
+
+/** Update an existing timeline item */
+export function updateOrgTimelineItem(
+  id: string,
+  data: Partial<OrgTimelineItemFormData>
+): { success: true; item: OrgTimelineItem } | { success: false; error: string } {
+  const idx = mockTimelineItems.findIndex((i) => i.id === id);
+  if (idx < 0) return { success: false, error: 'Item not found.' };
+  if (data.title !== undefined) mockTimelineItems[idx].title = data.title;
+  if (data.description !== undefined) mockTimelineItems[idx].description = data.description;
+  if (data.date !== undefined) mockTimelineItems[idx].date = data.date;
+  if (data.category !== undefined) mockTimelineItems[idx].category = data.category;
+  if (data.imageUrls !== undefined) mockTimelineItems[idx].imageUrls = data.imageUrls;
+  if (data.location !== undefined) mockTimelineItems[idx].location = data.location;
+  if (data.showOnTimeline !== undefined) mockTimelineItems[idx].showOnTimeline = data.showOnTimeline;
+  return { success: true, item: { ...mockTimelineItems[idx] } };
+}
+
+/** Delete a timeline item */
+export function deleteOrgTimelineItem(id: string): { success: true } | { success: false; error: string } {
+  const idx = mockTimelineItems.findIndex((i) => i.id === id);
+  if (idx < 0) return { success: false, error: 'Item not found.' };
+  mockTimelineItems.splice(idx, 1);
   return { success: true };
 }

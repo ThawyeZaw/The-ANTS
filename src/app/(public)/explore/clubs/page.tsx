@@ -5,11 +5,10 @@
 // Browse all clubs without authentication. Anyone can view this page.
 // ──────────────────────────────────────────────────────────────────────────────
 
+import BackButton from '@/components/ui/BackButton';
 import { useState } from 'react';
 import Link from 'next/link';
 import {
-  ArrowLeft,
-  Home,
   MessageSquare,
   Users,
   ArrowRight,
@@ -19,6 +18,7 @@ import {
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { getClub, getClubMembers, getClubCurriculumLinks, getClubs } from '@/lib/mock/database';
+import { ClubFeatureKey, DEFAULT_CLUB_FEATURES } from '@/types';
 
 export default function ExploreClubsPage() {
   const clubs = getClubs();
@@ -40,14 +40,7 @@ export default function ExploreClubsPage() {
         <div className="max-w-6xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <Link
-                href="/"
-                className="group inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-foreground-secondary hover:text-primary hover:bg-background-secondary transition-all mb-6 w-fit"
-              >
-                <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
-                <Home className="h-3.5 w-3.5" />
-                Back to Home
-              </Link>
+              <BackButton href="/" />
               <h1 className="text-3xl font-bold text-foreground mt-2">Explore Clubs</h1>
               <p className="text-foreground-secondary mt-1">
                 Discover community spaces for subjects, CCAs, and projects.
@@ -86,7 +79,12 @@ export default function ExploreClubsPage() {
             {filteredClubs.map((club) => {
               const memberCount = getClubMembers(club.id).filter(m => m.membership_status === 'active').length;
               const curriculumLinks = getClubCurriculumLinks(club.id);
-              const features = club.enabled_features || [];
+              const enabledFeatures = club.enabled_features || DEFAULT_CLUB_FEATURES;
+              
+              // Filter features that are enabled and publicly visible
+              const publicFeatures = enabledFeatures
+                .filter(f => f.enabled && f.public_visible)
+                .map(f => f.key);
 
               return (
                 <Link
@@ -124,19 +122,19 @@ export default function ExploreClubsPage() {
                     </p>
 
                     {/* Feature tags */}
-                    {features.length > 0 && (
+                    {publicFeatures.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 mb-4">
-                        {features.slice(0, 4).map((f) => (
+                        {publicFeatures.slice(0, 4).map((featureKey) => (
                           <span
-                            key={f}
+                            key={featureKey}
                             className="text-[10px] px-2 py-0.5 rounded-full bg-background-secondary text-foreground-muted border border-border"
                           >
-                            {f.replace(/_/g, ' ')}
+                            {featureKey.replace(/_/g, ' ')}
                           </span>
                         ))}
-                        {features.length > 4 && (
+                        {publicFeatures.length > 4 && (
                           <span className="text-[10px] px-2 py-0.5 rounded-full bg-background-secondary text-foreground-muted">
-                            +{features.length - 4}
+                            +{publicFeatures.length - 4}
                           </span>
                         )}
                       </div>

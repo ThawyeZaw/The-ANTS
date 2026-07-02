@@ -6,9 +6,10 @@
 // Route: /main-contributor/add-contributor
 // ──────────────────────────────────────────────────────────────────────────────
 
+import BackButton from '@/components/ui/BackButton';
 import { useMemo } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, UserPlus, ShieldAlert, RotateCcw } from 'lucide-react';
+import { UserPlus, ShieldAlert, RotateCcw } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
 import { useContributorManager } from '@/hooks/useContributorManager';
@@ -68,12 +69,7 @@ export default function AddContributorPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link
-            href="/dashboard"
-            className="p-2 rounded-lg bg-background-card border border-border hover:bg-background-secondary transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-foreground-muted" />
-          </Link>
+          <BackButton href="/dashboard" label="Back" />
           <div>
             <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
               <UserPlus className="w-6 h-6 text-amber-500" />

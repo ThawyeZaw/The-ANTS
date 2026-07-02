@@ -5,9 +5,9 @@
 // Route: /library/[noteId] — accessible to all authenticated users.
 // ──────────────────────────────────────────────────────────────────────────────
 
+import BackButton from '@/components/ui/BackButton';
 import { use } from 'react';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
 import { useSingleNote } from '@/hooks/useNotes';
 import { useAuth } from '@/hooks/useAuth';
 import NoteViewer from '@/components/notes/NoteViewer';
@@ -43,13 +43,7 @@ function NotePageContent({ noteId }: { noteId: string }) {
         <p className="text-foreground-muted text-sm">
           This note doesn't exist, is private, or hasn't been approved yet.
         </p>
-        <Link
-          href="/library"
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Library
-        </Link>
+        <BackButton href="/library" label="Back to Library" />
       </div>
     );
   }

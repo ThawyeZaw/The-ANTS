@@ -2,8 +2,8 @@
 
 import { FormEvent, useMemo, useState } from 'react';
 import Link from 'next/link';
+import BackButton from '@/components/ui/BackButton';
 import {
-  ArrowLeft,
   CalendarDays,
   Check,
   ExternalLink,
@@ -11,8 +11,9 @@ import {
   Link as LinkIcon,
   Megaphone,
   MessageSquare,
+  Plus,
   Send,
-  Trophy,
+  Settings,
   UserCheck,
   Users,
   X,
@@ -20,15 +21,15 @@ import {
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { ClubFeature } from '@/types';
+import { ClubFeatureKey, DEFAULT_CLUB_FEATURES } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 import { useClub } from '@/hooks/useClub';
 import { cn, formatDate, formatRelativeTime, getInitials } from '@/lib/utils';
 
-type TabKey = 'chat' | 'announcements' | 'links' | 'members' | 'requests' | 'projects' | 'activity_timeline' | 'leaderboard';
+type TabKey = 'chat' | 'announcements' | 'links' | 'members' | 'requests' | 'projects' | 'activity_timeline';
 
 /** Map tab keys to their required club feature */
-const TAB_FEATURE_MAP: Record<TabKey, string> = {
+const TAB_FEATURE_MAP: Record<TabKey, ClubFeatureKey> = {
   chat: 'chat',
   announcements: 'announcements',
   links: 'links',
@@ -36,7 +37,6 @@ const TAB_FEATURE_MAP: Record<TabKey, string> = {
   requests: 'members', // requests is under members feature
   projects: 'projects',
   activity_timeline: 'activity_timeline',
-  leaderboard: 'leaderboard',
 };
 
 const tabs: Array<{ key: TabKey; label: string; icon: React.ReactNode }> = [
@@ -47,7 +47,6 @@ const tabs: Array<{ key: TabKey; label: string; icon: React.ReactNode }> = [
   { key: 'requests', label: 'Requests', icon: <UserCheck className="h-4 w-4" /> },
   { key: 'projects', label: 'Projects', icon: <FolderGit2 className="h-4 w-4" /> },
   { key: 'activity_timeline', label: 'Activity', icon: <CalendarDays className="h-4 w-4" /> },
-  { key: 'leaderboard', label: 'Leaderboard', icon: <Trophy className="h-4 w-4" /> },
 ];
 
 const FEATURE_NAMES: Record<string, string> = {
@@ -71,18 +70,21 @@ export default function ClubDetail({ clubId }: { clubId: string }) {
   const activeMembers = members.filter((member) => member.membership_status === 'active');
   const currentMembership = user ? clubStore.getUserClubMembership(clubId, user.id) : undefined;
   const isMember = currentMembership?.membership_status === 'active';
-  const isLeader = currentMembership?.role === 'leader' && isMember;
+  const isAdmin = currentMembership?.role === 'admin' && isMember;
+  const isModerator = currentMembership?.role === 'moderator' && isMember;
+  const isLeader = isAdmin || isModerator;
   const pendingRequest = user ? clubStore.getUserClubJoinRequest(clubId, user.id) : undefined;
   const joinRequests = clubStore.getClubJoinRequests(clubId).filter((request) => request.status === 'pending');
 
   // Filter tabs based on enabled features
-  const enabledFeatures = (club?.enabled_features || ['chat', 'announcements', 'links', 'members']) as ClubFeature[];
+  const enabledFeatures = club?.enabled_features || DEFAULT_CLUB_FEATURES;
   const visibleTabs = tabs.filter((tab) => {
-    // Requests is always visible to leaders
-    if (tab.key === 'requests') return isLeader;
+    // Requests is only visible to admins
+    if (tab.key === 'requests') return isAdmin;
     // Check if the feature is enabled
-    const requiredFeature = TAB_FEATURE_MAP[tab.key] as ClubFeature;
-    return enabledFeatures.includes(requiredFeature);
+    const requiredFeature = TAB_FEATURE_MAP[tab.key] as ClubFeatureKey;
+    const feature = enabledFeatures.find(f => f.key === requiredFeature);
+    return feature?.enabled ?? false;
   });
 
   const topicTags = useMemo(() => {
@@ -102,9 +104,7 @@ export default function ClubDetail({ clubId }: { clubId: string }) {
         <MessageSquare className="mx-auto h-10 w-10 text-foreground-muted" />
         <h1 className="mt-4 text-2xl font-bold text-foreground">Club not found</h1>
         <p className="mt-2 text-foreground-muted">This club may have moved or does not exist in the mock data.</p>
-        <Link href="/clubs" className="mt-6 inline-flex">
-          <Button icon={<ArrowLeft className="h-4 w-4" />}>Back to Clubs</Button>
-        </Link>
+        <BackButton href="/clubs" label="Back to Clubs" />
       </div>
     );
   }
@@ -125,11 +125,7 @@ export default function ClubDetail({ clubId }: { clubId: string }) {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <Link href="/clubs" className="inline-flex">
-        <Button variant="secondary" icon={<ArrowLeft className="h-4 w-4" />}>
-          Clubs
-        </Button>
-      </Link>
+      <BackButton href="/clubs" label="Clubs" />
 
       <section className="rounded-2xl border border-border bg-background-card p-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
@@ -153,7 +149,14 @@ export default function ClubDetail({ clubId }: { clubId: string }) {
             </div>
           </div>
 
-          <div className="w-full lg:w-72">
+          <div className="w-full lg:w-72 space-y-3">
+            {isLeader && (
+              <Link href={`/clubs/${club.id}/manage`} className="block w-full">
+                <Button variant="secondary" fullWidth icon={<Settings className="h-4 w-4" />}>
+                  Manage Club
+                </Button>
+              </Link>
+            )}
             {isMember ? (
               <Button variant="outline" fullWidth onClick={handleLeave}>
                 Leave Club
@@ -210,7 +213,7 @@ export default function ClubDetail({ clubId }: { clubId: string }) {
       )}
       {activeTab === 'links' && (
         <LinksTab
-          isMember={isMember}
+          isLeader={isLeader}
           links={clubStore.getClubLinks(club.id)}
           getProfile={clubStore.getProfile}
           onShare={(title, url) => user ? clubStore.shareLink(club.id, user.id, title, url) : { success: false, error: 'Sign in required.' }}
@@ -224,6 +227,26 @@ export default function ClubDetail({ clubId }: { clubId: string }) {
           requests={joinRequests}
           getProfile={clubStore.getProfile}
           onReview={(requestId, status) => clubStore.reviewRequest(requestId, status)}
+        />
+      )}
+      {activeTab === 'projects' && (
+        <ProjectsTab
+          isMember={isMember}
+          projects={clubStore.getClubProjects?.(club.id) ?? []}
+          getProfile={clubStore.getProfile}
+          onAddProject={(title, description) =>
+            user ? clubStore.addClubProject?.(club.id, user.id, title, description) ?? { success: false, error: 'Not implemented' } : { success: false, error: 'Sign in required.' }
+          }
+        />
+      )}
+      {activeTab === 'activity_timeline' && (
+        <ActivityTimelineTab
+          isLeader={isLeader}
+          events={clubStore.getClubEvents?.(club.id) ?? []}
+          getProfile={clubStore.getProfile}
+          onAddEvent={(title, description, date) =>
+            user ? clubStore.addClubEvent?.(club.id, user.id, title, description, date) ?? { success: false, error: 'Not implemented' } : { success: false, error: 'Sign in required.' }
+          }
         />
       )}
     </div>
@@ -386,12 +409,12 @@ function AnnouncementsTab({
 }
 
 function LinksTab({
-  isMember,
+  isLeader,
   links,
   getProfile,
   onShare,
 }: {
-  isMember: boolean;
+  isLeader: boolean;
   links: ReturnType<ReturnType<typeof useClub>['getClubLinks']>;
   getProfile: ReturnType<typeof useClub>['getProfile'];
   onShare: (title: string, url: string) => { success: boolean; error?: string };
@@ -414,16 +437,18 @@ function LinksTab({
 
   return (
     <section className="space-y-4">
-      <form onSubmit={handleShare} className="rounded-xl border border-border bg-background-card p-5">
-        <div className="grid gap-3 md:grid-cols-2">
-          <Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder={isMember ? 'Link title' : 'Join to share links'} disabled={!isMember} />
-          <Input value={url} onChange={(event) => setUrl(event.target.value)} placeholder="https://example.com" disabled={!isMember} />
-        </div>
-        <div className="mt-4 flex items-center justify-between gap-3">
-          {error ? <p className="text-sm text-error">{error}</p> : <span />}
-          <Button type="submit" disabled={!isMember} icon={<LinkIcon className="h-4 w-4" />}>Share</Button>
-        </div>
-      </form>
+      {isLeader && (
+        <form onSubmit={handleShare} className="rounded-xl border border-border bg-background-card p-5">
+          <div className="grid gap-3 md:grid-cols-2">
+            <Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Link title" />
+            <Input value={url} onChange={(event) => setUrl(event.target.value)} placeholder="https://example.com" />
+          </div>
+          <div className="mt-4 flex items-center justify-between gap-3">
+            {error ? <p className="text-sm text-error">{error}</p> : <span />}
+            <Button type="submit" icon={<LinkIcon className="h-4 w-4" />}>Share</Button>
+          </div>
+        </form>
+      )}
       <div className="grid gap-3 md:grid-cols-2">
         {links.map((item) => {
           const profile = getProfile(item.shared_by);
@@ -471,7 +496,7 @@ function MembersTab({
               <p className="truncate font-semibold text-foreground">{profile?.name || 'Unknown user'}</p>
               <p className="text-xs text-foreground-muted">{profile?.title || profile?.role}</p>
             </div>
-            <Badge variant={member.role === 'leader' ? 'warning' : 'default'}>{member.role}</Badge>
+            <Badge variant={member.role === 'admin' || member.role === 'moderator' ? 'warning' : 'default'}>{member.role}</Badge>
           </article>
         );
       })}
@@ -524,6 +549,198 @@ function RequestsTab({
           </article>
         );
       })}
+    </section>
+  );
+}
+
+// ── Projects Tab ────────────────────────────────────────────────────────────
+
+interface ClubProject {
+  id: string;
+  club_id: string;
+  created_by: string;
+  title: string;
+  description: string | null;
+  created_at: string;
+}
+
+function ProjectsTab({
+  isMember,
+  projects,
+  getProfile,
+  onAddProject,
+}: {
+  isMember: boolean;
+  projects: ClubProject[];
+  getProfile: ReturnType<typeof useClub>['getProfile'];
+  onAddProject: (title: string, description: string) => { success: boolean; error?: string };
+}) {
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [error, setError] = useState('');
+
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    if (!title.trim()) return;
+    const result = onAddProject(title, description);
+    if (!result.success) {
+      setError(result.error || 'Could not add project.');
+      return;
+    }
+    setTitle('');
+    setDescription('');
+    setError('');
+  };
+
+  return (
+    <section className="space-y-4">
+      {isMember && (
+        <form onSubmit={handleSubmit} className="rounded-xl border border-border bg-background-card p-5">
+          <div className="grid gap-3">
+            <Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Project title" />
+            <textarea
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              rows={2}
+              placeholder="Brief description of the project"
+              className="rounded-xl border border-border bg-background-card px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
+            />
+          </div>
+          <div className="mt-4 flex items-center justify-between gap-3">
+            {error ? <p className="text-sm text-error">{error}</p> : <span />}
+            <Button type="submit" icon={<Plus className="h-4 w-4" />}>Add Project</Button>
+          </div>
+        </form>
+      )}
+      {projects.length === 0 ? (
+        <div className="rounded-xl border border-border bg-background-card p-8 text-center">
+          <FolderGit2 className="mx-auto h-8 w-8 text-foreground-muted" />
+          <p className="mt-3 font-semibold text-foreground">No projects yet</p>
+          <p className="text-sm text-foreground-muted">
+            {isMember ? 'Share a project with the club.' : 'Club members can share their projects here.'}
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-3 md:grid-cols-2">
+          {projects.map((project) => {
+            const profile = getProfile(project.created_by);
+            return (
+              <article key={project.id} className="rounded-xl border border-border bg-background-card p-5 transition-all hover:-translate-y-0.5 hover:border-border-hover hover:shadow-md">
+                <h2 className="font-semibold text-foreground">{project.title}</h2>
+                {project.description && (
+                  <p className="mt-2 text-sm text-foreground-secondary">{project.description}</p>
+                )}
+                <p className="mt-4 text-xs text-foreground-muted">
+                  Shared by {profile?.name || 'Member'} on {formatDate(project.created_at)}
+                </p>
+              </article>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ── Activity Timeline Tab ───────────────────────────────────────────────────
+
+interface ClubEvent {
+  id: string;
+  club_id: string;
+  created_by: string;
+  title: string;
+  description: string | null;
+  event_date: string;
+  created_at: string;
+}
+
+function ActivityTimelineTab({
+  isLeader,
+  events,
+  getProfile,
+  onAddEvent,
+}: {
+  isLeader: boolean;
+  events: ClubEvent[];
+  getProfile: ReturnType<typeof useClub>['getProfile'];
+  onAddEvent: (title: string, description: string, date: string) => { success: boolean; error?: string };
+}) {
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [eventDate, setEventDate] = useState('');
+  const [error, setError] = useState('');
+
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    if (!title.trim()) return;
+    const result = onAddEvent(title, description, eventDate);
+    if (!result.success) {
+      setError(result.error || 'Could not add event.');
+      return;
+    }
+    setTitle('');
+    setDescription('');
+    setEventDate('');
+    setError('');
+  };
+
+  // Sort events by date (upcoming first)
+  const sortedEvents = [...events].sort(
+    (a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime()
+  );
+
+  return (
+    <section className="space-y-4">
+      {isLeader && (
+        <form onSubmit={handleSubmit} className="rounded-xl border border-border bg-background-card p-5">
+          <div className="grid gap-3 md:grid-cols-3">
+            <Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Event title" />
+            <Input value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Description (optional)" />
+            <Input value={eventDate} onChange={(event) => setEventDate(event.target.value)} type="date" placeholder="Date" />
+          </div>
+          <div className="mt-4 flex items-center justify-between gap-3">
+            {error ? <p className="text-sm text-error">{error}</p> : <span />}
+            <Button type="submit" icon={<CalendarDays className="h-4 w-4" />}>Add Event</Button>
+          </div>
+        </form>
+      )}
+      {sortedEvents.length === 0 ? (
+        <div className="rounded-xl border border-border bg-background-card p-8 text-center">
+          <CalendarDays className="mx-auto h-8 w-8 text-foreground-muted" />
+          <p className="mt-3 font-semibold text-foreground">No upcoming events</p>
+          <p className="text-sm text-foreground-muted">
+            {isLeader ? 'Add an event to the club calendar.' : 'No events have been scheduled yet.'}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {sortedEvents.map((event) => {
+            const profile = getProfile(event.created_by);
+            const isUpcoming = new Date(event.event_date) >= new Date();
+            return (
+              <div key={event.id} className="flex items-start gap-4 rounded-xl border border-border bg-background-card p-4">
+                <div className="flex flex-col items-center shrink-0">
+                  <span className={cn(
+                    'text-xs font-bold uppercase px-2 py-1 rounded-lg',
+                    isUpcoming ? 'bg-primary/10 text-primary' : 'bg-foreground-muted/10 text-foreground-muted'
+                  )}>
+                    {new Date(event.event_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                  </span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-semibold text-foreground text-sm">{event.title}</h3>
+                  {event.description && (
+                    <p className="mt-1 text-xs text-foreground-secondary">{event.description}</p>
+                  )}
+                  <p className="mt-2 text-xs text-foreground-muted">
+                    Added by {profile?.name || 'Leader'} &middot; {isUpcoming ? 'Upcoming' : 'Past event'}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }

@@ -5,10 +5,10 @@
 // Lets users edit their profile, change their role, and personalise appearance.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { Check, Sun, Moon, Palette, User, ArrowLeft, UserCog } from 'lucide-react';
+import BackButton from '@/components/ui/BackButton';
+import { Check, Sun, Moon, Palette, User, UserCog } from 'lucide-react';
 import { useTheme, COLOR_PRESETS, type ThemeColor } from '@/context/ThemeContext';
 import { cn } from '@/lib/utils';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import RoleUpgradeForm from '@/components/settings/RoleUpgradeForm';
 
@@ -151,20 +151,9 @@ function ColorPalettePicker() {
 // ── Main Settings Page ────────────────────────────────────────────────────────
 
 export default function SettingsPage() {
-  const router = useRouter();
-
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
-      {/* Back Button */}
-      <div>
-        <button
-          onClick={() => router.back()}
-          className="group flex items-center gap-2 px-4 py-2 rounded-xl bg-background-card border border-border shadow-sm hover:shadow-md hover:border-primary/40 text-sm font-medium text-foreground transition-all duration-300 cursor-pointer mb-6 w-fit"
-        >
-          <ArrowLeft className="h-4 w-4 text-foreground-muted group-hover:text-primary group-hover:-translate-x-0.5 transition-all duration-300" />
-          Go Back
-        </button>
-      </div>
+      <BackButton href="/dashboard" label="Back" />
 
       {/* Page Header */}
       <div>

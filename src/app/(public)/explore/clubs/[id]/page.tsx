@@ -9,8 +9,8 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import BackButton from '@/components/ui/BackButton';
 import {
-  ArrowLeft,
   MessageSquare,
   Users,
   CalendarDays,
@@ -25,7 +25,7 @@ import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import { getClub, getClubMembers, getClubCurriculumLinks, getClubSubjectLinks, getProfile, getCurriculum } from '@/lib/mock/database';
 import { cn, formatDate, getInitials } from '@/lib/utils';
-import { ClubFeature } from '@/types';
+import { ClubFeatureKey, DEFAULT_CLUB_FEATURES } from '@/types';
 
 const FEATURE_ICONS: Record<string, React.ReactNode> = {
   chat: <MessageSquare className="h-4 w-4" />,
@@ -81,9 +81,12 @@ export default function PublicClubDetailPage() {
   const members = getClubMembers(clubId);
   const activeMembers = members.filter(m => m.membership_status === 'active');
   const leader = getProfile(club.created_by);
-  const enabledFeatures = club.enabled_features || ['chat', 'announcements', 'links', 'members'];
+  const enabledFeatures = club.enabled_features || DEFAULT_CLUB_FEATURES;
   const curriculumLinks = getClubCurriculumLinks(club.id);
   const subjectLinks = getClubSubjectLinks(club.id);
+
+  // Get publicly visible features
+  const publicFeatures = enabledFeatures.filter(f => f.public_visible).map(f => f.key);
 
   const topicTags = [
     ...curriculumLinks.map(link => getCurriculum(link.curriculum_id)?.title).filter(Boolean),
@@ -93,15 +96,7 @@ export default function PublicClubDetailPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-4 py-8 space-y-6 animate-fade-in">
-        {/* Back Navigation */}
-        <Link
-          href="/explore/clubs"
-          className="group inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-background-card border border-border shadow-sm hover:shadow-md hover:border-primary/40 text-sm font-medium text-foreground transition-all duration-300 w-fit"
-        >
-          <ArrowLeft className="h-4 w-4 text-foreground-muted group-hover:text-primary group-hover:-translate-x-0.5 transition-all duration-300" />
-          <Home className="h-3.5 w-3.5" />
-          Back to Clubs
-        </Link>
+        <BackButton href="/explore/clubs" label="Back to Clubs" />
 
         {/* Club Header */}
         <section className="bg-background-card border border-border rounded-2xl p-6">
@@ -151,7 +146,7 @@ export default function PublicClubDetailPage() {
         <section className="bg-background-card border border-border rounded-2xl p-6">
           <h2 className="text-lg font-semibold text-foreground mb-4">Club Features</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-            {enabledFeatures.map((feature) => (
+            {publicFeatures.map((feature) => (
               <div
                 key={feature}
                 className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-background-secondary border border-border"
@@ -180,9 +175,11 @@ export default function PublicClubDetailPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-foreground truncate">{profile?.name || 'Unknown'}</p>
-                    <p className="text-xs text-foreground-muted">{member.role === 'leader' ? 'Leader' : 'Member'}</p>
+                    <p className="text-xs text-foreground-muted">
+                      {member.role === 'admin' ? 'Admin' : member.role === 'moderator' ? 'Moderator' : 'Member'}
+                    </p>
                   </div>
-                  {member.role === 'leader' && (
+                  {(member.role === 'admin' || member.role === 'moderator') && (
                     <Badge variant="warning">Leader</Badge>
                   )}
                 </div>
