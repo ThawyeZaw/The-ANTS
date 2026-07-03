@@ -59,6 +59,7 @@ import {
   DiscussionReply,
   ClassroomResource,
   UserSavedNote,
+  ExamGradeBoundary,
 } from '@/types';
 import { generateUsername } from '@/lib/utils';
 
@@ -823,6 +824,135 @@ export const mockEditorSubmissions: Array<{
 }> = [
     { id: 'sub-1', contributor_id: 'user-contributor-001', submission_type: 'resource', entity_id: 'res-1', status: 'approved', reviewer_id: 'user-main-contributor-001', feedback: 'Looks good', submitted_at: '2025-01-20T00:00:00Z', reviewed_at: '2025-01-21T00:00:00Z' }
   ];
+
+export function submitExamData(payload: any, contributorId: string): { success: true } | { success: false; error: string } {
+  if (!contributorId) {
+    return { success: false, error: 'Missing contributor context.' };
+  }
+
+  if (!payload || !payload.title?.trim()) {
+    return { success: false, error: 'Exam title is required.' };
+  }
+
+  const examRef = payload.exam_id || `exam-${Date.now()}`;
+
+  if (Array.isArray(payload.gradeBoundaries)) {
+    saveExamGradeBoundaries(payload.gradeBoundaries, examRef);
+  }
+
+  mockEditorSubmissions.push({
+    id: `sub-exam-${Date.now()}`,
+    contributor_id: contributorId,
+    submission_type: 'exam',
+    entity_id: payload.title.trim(),
+    status: 'pending_review',
+    reviewer_id: null,
+    feedback: null,
+    submitted_at: new Date().toISOString(),
+    reviewed_at: null,
+  });
+
+  return { success: true };
+}
+
+interface ExamReviewSubmissionRecord {
+  id: string;
+  contributor_id: string;
+  submission_type: 'calculator' | 'countdown' | 'exam';
+  entity_id: string;
+  status: 'pending_review' | 'approved' | 'rejected';
+  reviewer_id: string | null;
+  feedback: string | null;
+  submitted_at: string;
+  reviewed_at: string | null;
+  payload?: Record<string, unknown>;
+}
+
+const examReviewSubmissions: ExamReviewSubmissionRecord[] = [];
+
+function addExamReviewSubmission(contributorId: string, type: ExamReviewSubmissionRecord['submission_type'], entityId: string, payload?: Record<string, unknown>) {
+  const submission: ExamReviewSubmissionRecord = {
+    id: `sub-${type}-${Date.now()}`,
+    contributor_id: contributorId,
+    submission_type: type,
+    entity_id: entityId,
+    status: 'pending_review',
+    reviewer_id: null,
+    feedback: null,
+    submitted_at: new Date().toISOString(),
+    reviewed_at: null,
+    payload,
+  };
+
+  examReviewSubmissions.push(submission);
+  return submission;
+}
+
+export function submitExamCalculatorPreset(payload: any, contributorId: string): { success: true } | { success: false; error: string } {
+  if (!contributorId) {
+    return { success: false, error: 'Missing contributor context.' };
+  }
+
+  if (!payload || !payload.title?.trim()) {
+    return { success: false, error: 'Subject title is required.' };
+  }
+
+  addExamReviewSubmission(contributorId, 'calculator', payload.title.trim(), payload);
+  return { success: true };
+}
+
+export function submitExamCountdownProposal(payload: any, contributorId: string): { success: true } | { success: false; error: string } {
+  if (!contributorId) {
+    return { success: false, error: 'Missing contributor context.' };
+  }
+
+  if (!payload?.countdowns?.length) {
+    return { success: false, error: 'At least one countdown proposal is required.' };
+  }
+
+  addExamReviewSubmission(contributorId, 'countdown', payload.countdowns[0].title || 'Countdown proposal', payload);
+  return { success: true };
+}
+
+export function getPendingExamSubmissions() {
+  return examReviewSubmissions
+    .map((submission) => {
+      const contributor = mockProfiles.find((profile) => profile.id === submission.contributor_id);
+      const title = submission.payload?.title || submission.payload?.countdowns?.[0]?.title || submission.entity_id;
+      const summary = submission.submission_type === 'calculator'
+        ? `Calculator preset for ${submission.payload?.subject_code || 'new subject'} • ${submission.payload?.series || 'review pending'}`
+        : `Countdown proposal for ${submission.payload?.countdowns?.[0]?.title || 'new exam'} • ${submission.payload?.countdowns?.[0]?.qualification_group || 'Custom'}`;
+
+      return {
+        id: submission.id,
+        title: typeof title === 'string' ? title : 'Exam submission',
+        type: submission.submission_type as 'calculator' | 'countdown' | 'exam',
+        contributorName: contributor?.name || 'Contributor',
+        summary,
+        status: submission.status as 'pending_review' | 'approved' | 'rejected',
+      };
+    })
+    .sort((a, b) => (a.status === 'pending_review' ? -1 : 1));
+}
+
+export function approveExamSubmission(submissionId: string, reviewerId: string): { success: boolean } {
+  const submission = examReviewSubmissions.find((item) => item.id === submissionId);
+  if (!submission) return { success: false };
+  submission.status = 'approved';
+  submission.reviewer_id = reviewerId;
+  submission.reviewed_at = new Date().toISOString();
+  return { success: true };
+}
+
+export function rejectExamSubmission(submissionId: string, reviewerId: string, feedback: string): { success: boolean } {
+  const submission = examReviewSubmissions.find((item) => item.id === submissionId);
+  if (!submission) return { success: false };
+  submission.status = 'rejected';
+  submission.reviewer_id = reviewerId;
+  submission.feedback = feedback;
+  submission.reviewed_at = new Date().toISOString();
+  return { success: true };
+}
 
 
 // ── Mock Classrooms ─────────────────────────────────────────────────────────
@@ -1654,10 +1784,30 @@ export const mockExamCountdowns: ExamCountdown[] = [
   { id: 'ec-1', user_id: 'user-student-001', exam_id: 'exam-1', custom_title: 'Physics Finals!', target_date: '2027-05-15T09:00:00Z', priority_indicator: 'high', qualification_group: 'IGCSE', created_at: '2026-01-01T00:00:00Z' }
 ];
 
-export const mockGradeBoundaries = [
-  { id: 'gb-1', exam_id: 'exam-1', grade: 'A*', min_mark: 35, max_mark: 40 },
-  { id: 'gb-2', exam_id: 'exam-1', grade: 'A', min_mark: 30, max_mark: 34 }
+export let mockGradeBoundaries: ExamGradeBoundary[] = [
+  { id: 'gb-1', exam_id: 'exam-1', grade: 'A*', min_mark: 90, max_mark: null, boundary_level: 'overall_subject' },
+  { id: 'gb-2', exam_id: 'exam-1', grade: 'A', min_mark: 80, max_mark: null, boundary_level: 'overall_subject' },
+  { id: 'gb-3', exam_id: 'exam-1', grade: 'B', min_mark: 70, max_mark: null, boundary_level: 'overall_subject' },
+  { id: 'gb-4', exam_id: 'exam-1', grade: 'C', min_mark: 60, max_mark: null, boundary_level: 'overall_subject' },
+  { id: 'gb-5', exam_id: 'exam-1', grade: 'D', min_mark: 50, max_mark: null, boundary_level: 'overall_subject' }
 ];
+
+export function saveExamGradeBoundaries(boundaries: ExamGradeBoundary[], examRef: string) {
+  const sanitizedBoundaries = boundaries
+    .filter((row) => row.grade?.trim())
+    .map((row, index) => ({
+      ...row,
+      id: row.id || `gb-${Date.now()}-${index}`,
+      exam_id: examRef,
+      min_mark: Number(row.min_mark) || 0,
+      max_mark: row.max_mark === null || row.max_mark === undefined ? null : Number(row.max_mark),
+      boundary_level: row.boundary_level || 'overall_subject',
+      created_at: row.created_at || new Date().toISOString(),
+    }));
+
+  mockGradeBoundaries = mockGradeBoundaries.filter((row) => row.exam_id !== examRef);
+  mockGradeBoundaries = [...mockGradeBoundaries, ...sanitizedBoundaries];
+}
 
 export const mockGradeEntries = [
   { id: 'ge-1', user_id: 'user-student-001', exam_id: 'exam-1', component_name: 'Mock Exam', raw_score: 36, max_score: 40, weight: 1.0, predicted_grade: 'A*', created_at: '2026-04-01T00:00:00Z' }

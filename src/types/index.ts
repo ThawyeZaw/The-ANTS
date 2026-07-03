@@ -875,6 +875,16 @@ export interface Exam {
   created_at: string;
 }
 
+export interface ExamGradeBoundary {
+  id: string;
+  exam_id: string;
+  grade: string;
+  min_mark: number;
+  max_mark: number | null;
+  boundary_level: string;
+  created_at?: string;
+}
+
 export interface ExamCountdown {
   id: string;
   user_id: string;
