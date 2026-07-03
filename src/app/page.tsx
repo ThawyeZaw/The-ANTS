@@ -1,535 +1,916 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Public Home / Landing Page
-// Showcases features, supported qualifications, roles, and CTAs.
-// Now includes Explore Clubs & Explore Profiles sections.
+// The ANTS — Public Home / Landing Page (redesigned)
+// Visual redesign based on the-ants-redesign.html mockup.
+// All original copy is preserved verbatim.
+// New components: HeroVisual, BentoFeatures, QualTrail, RoleLadder.
+// Dark palette is scoped to the .hp class — does not affect authenticated pages.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import {
-  CalendarDays,
-  Timer,
-  Layers,
-  ClipboardCheck,
-  GraduationCap,
-  Users,
-  MessageSquare,
-  Clock,
-  Calculator,
-  BookOpen,
-  Pencil,
-  Shield,
-  ArrowRight,
-  Sun,
-  Moon,
-  Sparkles,
-  ChevronDown,
-  Compass,
-  UserCheck,
-  Home,
-} from 'lucide-react';
-import Button from '@/components/ui/Button';
+import { ArrowRight, MessageSquare, Users, Sun, Moon, Home } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
-import { cn, getRoleLandingPath } from '@/lib/utils';
+import { getRoleLandingPath } from '@/lib/utils';
+import HomepageFonts from '@/components/homepage/HomepageFonts';
+import HeroVisual from '@/components/homepage/HeroVisual';
+import BentoFeatures from '@/components/homepage/BentoFeatures';
+import QualTrail from '@/components/homepage/QualTrail';
+import QualCarousel from '@/components/homepage/QualCarousel';
+import RoleLadder from '@/components/homepage/RoleLadder';
+import RevealSection from '@/components/homepage/RevealSection';
+import StatsRow from '@/components/homepage/StatsRow';
+import DotGrid from '@/components/homepage/DotGrid';
 
-// ── Feature Data ─────────────────────────────────────────────────────────────
-
-const FEATURES = [
-  {
-    title: 'Smart Timetable',
-    description: 'Drag-and-drop weekly planner with colour-coded events, repeating schedules, and multiple views.',
-    icon: <CalendarDays className="h-6 w-6" />,
-    gradient: 'from-blue-500 to-cyan-400',
-  },
-  {
-    title: 'Pomodoro Timer',
-    description: 'Focus sessions with customisable intervals and background music to keep you in the zone.',
-    icon: <Timer className="h-6 w-6" />,
-    gradient: 'from-rose-500 to-pink-400',
-  },
-  {
-    title: 'Flashcard Decks',
-    description: 'Create or browse decks with spaced-repetition. Never forget what you\'ve learnt.',
-    icon: <Layers className="h-6 w-6" />,
-    gradient: 'from-violet-500 to-purple-400',
-  },
-  {
-    title: 'Lesson Tracker',
-    description: 'Track your confidence across every topic in your syllabus with intuitive progress indicators.',
-    icon: <ClipboardCheck className="h-6 w-6" />,
-    gradient: 'from-emerald-500 to-teal-400',
-  },
-  {
-    title: 'Virtual Classrooms',
-    description: 'Teachers create classrooms, issue assignments, and monitor student progress in real time.',
-    icon: <GraduationCap className="h-6 w-6" />,
-    gradient: 'from-amber-500 to-orange-400',
-  },
-  {
-    title: 'Clubs',
-    description: 'Community spaces for subjects, CCAs, and projects — with chat, announcements, and resources.',
-    icon: <MessageSquare className="h-6 w-6" />,
-    gradient: 'from-sky-500 to-blue-400',
-  },
-  {
-    title: 'Exam Countdown',
-    description: 'Visual urgency indicators showing exactly how long until each exam. Never miss a date.',
-    icon: <Clock className="h-6 w-6" />,
-    gradient: 'from-red-500 to-rose-400',
-  },
-  {
-    title: 'Grade Calculator',
-    description: 'Enter raw marks and get predicted grades using official boundary tables for IGCSE, A Level, and more.',
-    icon: <Calculator className="h-6 w-6" />,
-    gradient: 'from-indigo-500 to-violet-400',
-  },
-];
-
-const QUALIFICATIONS = [
-  { name: 'Cambridge CAIE', sub: 'IGCSE & A Levels', emoji: '\u{1F393}' },
-  { name: 'Pearson Edexcel', sub: 'IGCSE & IAL', emoji: '\u{1F4D8}' },
-  { name: 'OSSD', sub: 'Ontario Diploma', emoji: '\u{1F341}' },
-  { name: 'IELTS', sub: 'Academic & General', emoji: '\u{1F30D}' },
-  { name: 'SAT', sub: 'Math + Reading/Writing', emoji: '\u{1F4DD}' },
-  { name: 'Duolingo', sub: 'English Test (DET)', emoji: '\u{1F4AC}' },
-];
-
-const ROLES = [
-  {
-    title: 'Student',
-    description: 'Access all study tools — timetables, flashcards, grade calculators, and more. Join classrooms and clubs.',
-    icon: <GraduationCap className="h-7 w-7" />,
-    gradient: 'from-blue-500 to-cyan-400',
-    color: 'text-blue-500',
-  },
-  {
-    title: 'Teacher',
-    description: 'Everything students get, plus create classrooms, issue assignments, and track student progress.',
-    icon: <BookOpen className="h-7 w-7" />,
-    gradient: 'from-emerald-500 to-teal-400',
-    color: 'text-emerald-500',
-  },
-  {
-    title: 'Contributor',
-    description: 'Build curriculum resources, create notes, lead clubs, and get a public profile.',
-    icon: <Pencil className="h-7 w-7" />,
-    gradient: 'from-violet-500 to-purple-400',
-    color: 'text-violet-500',
-  },
-  {
-    title: 'Main Contributor',
-    description: 'Senior gatekeeper — review and approve submissions before they go live to all users.',
-    icon: <Shield className="h-7 w-7" />,
-    gradient: 'from-amber-500 to-orange-400',
-    color: 'text-amber-500',
-  },
-];
-
-// ── Explore Cards ────────────────────────────────────────────────────────────
+// ── Explore card data ─────────────────────────────────────────────────────────
 
 const EXPLORE_CARDS = [
   {
     title: 'Explore Clubs',
-    description: 'Discover community spaces for subjects, CCAs, and projects. Browse clubs and see what members are building.',
-    icon: <MessageSquare className="h-8 w-8" />,
+    description:
+      'Discover community spaces for subjects, CCAs, and projects. Browse clubs and see what members are building.',
+    Icon: MessageSquare,
     href: '/explore/clubs',
-    gradient: 'from-sky-500 to-blue-400',
-    color: 'text-sky-500',
+    iconBg: 'rgba(60,219,167,0.12)',
+    iconColor: 'var(--hp-brand)',
+    stats: [
+      { value: '120+', label: 'ACTIVE CLUBS' },
+      { value: 'Open', label: 'JOIN MODES VARY' },
+    ],
   },
   {
     title: 'Explore Profiles',
-    description: 'Browse student portfolios, projects, CCA activities, and verified educators & contributors. View achievements and credentials.',
-    icon: <Users className="h-8 w-8" />,
+    description:
+      'Browse student portfolios, projects, CCA activities, and verified educators & contributors. View achievements and credentials.',
+    Icon: Users,
     href: '/explore/profiles',
-    gradient: 'from-violet-500 to-purple-400',
-    color: 'text-violet-500',
+    iconBg: 'rgba(140,127,240,0.14)',
+    iconColor: 'var(--hp-violet)',
+    stats: [
+      { value: '4', label: 'ROLE TYPES' },
+      { value: 'Public', label: 'SHAREABLE LINK' },
+    ],
   },
 ];
 
-// ── Intersection Observer Hook ───────────────────────────────────────────────
+// ── Shared section heading ────────────────────────────────────────────────────
 
-function useInView(options?: IntersectionObserverInit) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [isInView, setIsInView] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) {
-        setIsInView(true);
-        observer.unobserve(el);
-      }
-    }, { threshold: 0.1, ...options });
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  return { ref, isInView };
-}
-
-// ── Section Wrapper with Animation ───────────────────────────────────────────
-
-function AnimatedSection({
-  children,
-  className,
-  delay = 0,
+function SectionHead({
+  eyebrow,
+  heading,
+  gradPhrase,
+  subtext,
+  align = 'center',
 }: {
-  children: React.ReactNode;
-  className?: string;
-  delay?: number;
+  eyebrow: string;
+  heading: string;
+  gradPhrase: string;
+  subtext: string;
+  align?: 'center' | 'left';
 }) {
-  const { ref, isInView } = useInView();
+  const textAlign = align === 'center' ? 'center' : 'left';
+  const mx = align === 'center' ? 'auto' : '0';
 
   return (
-    <div
-      ref={ref}
-      className={cn(className)}
-      style={{
-        opacity: isInView ? 1 : 0,
-        transform: isInView ? 'translateY(0)' : 'translateY(30px)',
-        transition: `opacity 0.7s ease ${delay}ms, transform 0.4s ease ${delay}ms`,
-      }}
-    >
-      {children}
-    </div>
+    <RevealSection>
+      <div
+        style={{
+          maxWidth: 640,
+          margin: `0 ${mx} 56px`,
+          textAlign,
+        }}
+      >
+        <span className="hp-eyebrow">{eyebrow}</span>
+        <h2
+          style={{
+            fontFamily: 'var(--hp-font-display)',
+            fontSize: 'clamp(1.9rem, 3.4vw, 2.7rem)',
+            fontWeight: 560,
+            letterSpacing: '-0.01em',
+            color: 'var(--hp-ink)',
+            margin: '14px 0 0',
+            lineHeight: 1.15,
+          }}
+        >
+          {heading.replace(gradPhrase, '').trim()}{' '}
+          <span className="hp-grad">{gradPhrase}</span>
+        </h2>
+        <p
+          style={{
+            fontFamily: 'var(--hp-font-body)',
+            fontSize: 16,
+            color: 'var(--hp-ink-muted)',
+            marginTop: 14,
+            lineHeight: 1.65,
+          }}
+        >
+          {subtext}
+        </p>
+      </div>
+    </RevealSection>
   );
 }
 
-// ── Main Component ───────────────────────────────────────────────────────────
+// ── Main component ────────────────────────────────────────────────────────────
 
 export default function HomePage() {
   const { theme, toggleTheme } = useTheme();
   const { isAuthenticated, user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* ─── Sticky Top Bar ─── */}
-      <header className="sticky top-0 z-50 w-full">
-        <div className="mx-auto max-w-7xl px-4 pt-3">
-          <nav className="glass rounded-2xl px-6 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Home className="h-5 w-5 text-primary" />
-              <span className="font-bold text-lg bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                The ANTS
-              </span>
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={toggleTheme}
-                className="p-2 rounded-lg text-foreground-secondary hover:text-foreground hover:bg-background-secondary transition-all cursor-pointer"
-                aria-label="Toggle theme"
-              >
-                {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-              </button>
-              {isAuthenticated && user ? (
-                <Link href={getRoleLandingPath(user.profile.role)}>
-                  <Button size="sm" iconRight={<ArrowRight className="h-4 w-4" />}>
-                    Go to Dashboard
-                  </Button>
+    <div className="hp" style={{ minHeight: '100vh', overflowX: 'hidden', position: 'relative' }}>
+      {/* Font loader (Fraunces + JetBrains Mono) */}
+      <HomepageFonts />
+
+      {/* ── Sticky Nav (theme-aware via .hp-nav class) ──────────────────── */}
+      <header
+        style={{
+          position: 'sticky',
+          top: 16,
+          zIndex: 50,
+          display: 'flex',
+          justifyContent: 'center',
+          marginBottom: -84,
+          pointerEvents: 'none',
+        }}
+      >
+        <nav
+          style={{
+            pointerEvents: 'auto',
+            width: 'min(94%, 980px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '12px 12px 12px 22px',
+            borderRadius: 999,
+            border: '1px solid var(--hp-border-strong)',
+            backdropFilter: 'blur(18px)',
+            WebkitBackdropFilter: 'blur(18px)',
+          }}
+          className="hp-nav"
+        >
+          {/* Brand */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 9,
+              fontWeight: 600,
+              fontSize: 17,
+              color: 'var(--hp-ink)',
+            }}
+          >
+            <Home size={19} strokeWidth={1.8} style={{ color: 'var(--hp-brand)' }} />
+            The ANTS
+          </div>
+
+          {/* Nav links (desktop only) */}
+          <div
+            className="hp-nav-links"
+            style={{
+              display: 'flex',
+              gap: 26,
+              fontSize: 14,
+              color: 'var(--hp-ink-muted)',
+              fontWeight: 500,
+            }}
+          >
+            <style>{`
+              .hp-nav-links { display: flex; align-items: center; }
+              @media (max-width: 820px) { .hp-nav-links { display: none !important; } }
+              .hp-nav-links a:hover { color: var(--hp-ink); }
+            `}</style>
+            <a href="#explore">Explore</a>
+            <a href="#features">Features</a>
+            <a href="#qualifications">Boards</a>
+            <a href="#roles">Roles</a>
+          </div>
+
+          {/* CTA area */}
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            {/* Theme toggle — keeps existing app behaviour */}
+            <button
+              onClick={toggleTheme}
+              style={{
+                background: 'none',
+                border: '1px solid var(--hp-border-strong)',
+                borderRadius: 999,
+                padding: '8px 10px',
+                color: 'var(--hp-ink-muted)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+              }}
+              aria-label="Toggle theme"
+            >
+              {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+            </button>
+
+            {isAuthenticated && user ? (
+              <Link href={getRoleLandingPath(user.profile.role)}>
+                <button
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    background: 'var(--hp-brand)',
+                    color: '#06110D',
+                    border: 'none',
+                    borderRadius: 999,
+                    padding: '9px 18px',
+                    fontFamily: 'var(--hp-font-body)',
+                    fontWeight: 600,
+                    fontSize: 13,
+                    cursor: 'pointer',
+                    transition: 'transform .18s ease, box-shadow .18s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)';
+                    (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 12px 28px -10px rgba(60,219,167,0.55)';
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)';
+                    (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
+                  }}
+                >
+                  Dashboard <ArrowRight size={14} />
+                </button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/login">
+                  <button
+                    style={{
+                      background: 'transparent',
+                      border: '1px solid var(--hp-border-strong)',
+                      borderRadius: 999,
+                      padding: '9px 18px',
+                      color: 'var(--hp-ink)',
+                      fontFamily: 'var(--hp-font-body)',
+                      fontWeight: 600,
+                      fontSize: 13,
+                      cursor: 'pointer',
+                      transition: 'background .18s ease',
+                    }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--hp-surface)'; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+                  >
+                    Sign In
+                  </button>
                 </Link>
-              ) : (
-                <>
-                  <Link href="/login">
-                    <Button variant="ghost" size="sm">Log In</Button>
-                  </Link>
-                  <Link href="/signup">
-                    <Button size="sm" iconRight={<ArrowRight className="h-4 w-4" />}>
-                      Get Started
-                    </Button>
-                  </Link>
-                </>
-              )}
-            </div>
-          </nav>
-        </div>
+                <Link href="/signup">
+                  <button
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      background: 'var(--hp-brand)',
+                      color: '#06110D',
+                      border: 'none',
+                      borderRadius: 999,
+                      padding: '9px 18px',
+                      fontFamily: 'var(--hp-font-body)',
+                      fontWeight: 600,
+                      fontSize: 13,
+                      cursor: 'pointer',
+                      transition: 'transform .18s ease, box-shadow .18s ease',
+                      whiteSpace: 'nowrap',
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)';
+                      (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 12px 28px -10px rgba(60,219,167,0.55)';
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)';
+                      (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
+                    }}
+                  >
+                    Get Started
+                  </button>
+                </Link>
+              </>
+            )}
+          </div>
+        </nav>
       </header>
 
-      {/* ─── Hero Section ─── */}
-      <section className="relative pt-20 pb-24 px-4 overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-20 left-1/4 w-96 h-96 bg-primary/8 rounded-full blur-3xl animate-float" />
-          <div className="absolute bottom-10 right-1/4 w-80 h-80 bg-accent/8 rounded-full blur-3xl animate-float delay-700" />
+      {/* ── Hero ────────────────────────────────────────────────────────── */}
+      <section
+        style={{
+          paddingTop: 190,
+          paddingBottom: 120,
+          textAlign: 'center',
+          position: 'relative',
+        }}
+      >
+        {/* Ambient glow blobs */}
+        <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+          <div
+            style={{
+              position: 'absolute',
+              top: '15%',
+              left: '20%',
+              width: 480,
+              height: 480,
+              borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(60,219,167,0.07) 0%, transparent 70%)',
+              filter: 'blur(40px)',
+            }}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              bottom: '10%',
+              right: '15%',
+              width: 380,
+              height: 380,
+              borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(140,127,240,0.06) 0%, transparent 70%)',
+              filter: 'blur(40px)',
+            }}
+          />
         </div>
 
-        <div className="relative max-w-4xl mx-auto text-center">
-          <AnimatedSection>
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-6">
-              <Sparkles className="h-4 w-4" />
-              Built for Myanmar students
+        <div
+          style={{
+            position: 'relative',
+            maxWidth: 'var(--hp-maxw)',
+            margin: '0 auto',
+            padding: '0 28px',
+          }}
+        >
+          {/* Hero content — all items cascade with Apple-like stagger */}
+          <RevealSection stagger>
+            <div className="hp-reveal">
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '7px 16px',
+                  borderRadius: 999,
+                  background: 'rgba(60,219,167,0.09)',
+                  border: '1px solid rgba(60,219,167,0.28)',
+                  fontFamily: 'var(--hp-font-mono)',
+                  fontSize: 12.5,
+                  color: 'var(--hp-brand)',
+                  marginBottom: 28,
+                }}
+              >
+                🐜 Built for Myanmar students
+              </div>
             </div>
-          </AnimatedSection>
 
-          <AnimatedSection delay={100}>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground leading-tight tracking-tight">
-              More Than Tutors.{' '}
-              <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                Your Bridge to Global Education.
-              </span>
-            </h1>
-          </AnimatedSection>
-
-          <AnimatedSection delay={200}>
-            <p className="mt-6 text-lg sm:text-xl text-foreground-secondary max-w-2xl mx-auto leading-relaxed">
-              A dynamic, student-led ecosystem of mentors from A-Levels, Polytechnics, Foundation programs, OSSD, and top UK universities — helping IGCSE students achieve absolute academic excellence and navigate their future.
-            </p>
-          </AnimatedSection>
-
-          <AnimatedSection delay={250}>
-            <Link
-              href="/about"
-              className="inline-flex items-center gap-1.5 mt-6 text-sm font-semibold text-primary/80 hover:text-primary transition-colors group"
+            <h1
+              className="hp-reveal"
+              style={{
+                fontFamily: 'var(--hp-font-display)',
+                fontSize: 'clamp(2.6rem, 5.6vw, 4.4rem)',
+                fontWeight: 560,
+                lineHeight: 1.06,
+                letterSpacing: '-0.01em',
+                maxWidth: 920,
+                margin: '0 auto',
+                color: 'var(--hp-ink)',
+              }}
             >
-              Learn more about The ANTS
-              <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
-            </Link>
-          </AnimatedSection>
+              More than tutors. Your bridge to{' '}
+              <span className="hp-grad">global education.</span>
+            </h1>
 
-          <AnimatedSection delay={350}>
-            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <p
+              className="hp-reveal"
+              style={{
+                fontFamily: 'var(--hp-font-body)',
+                maxWidth: 620,
+                margin: '26px auto 0',
+                fontSize: 17,
+                lineHeight: 1.65,
+                color: 'var(--hp-ink-muted)',
+              }}
+            >
+              A dynamic, student-led ecosystem of mentors from A-Levels, Polytechnics, Foundation
+              programs, OSSD, and top UK universities — helping IGCSE students achieve absolute
+              academic excellence and navigate their future.
+            </p>
+
+            <div
+              className="hp-reveal"
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+              }}
+            >
+              <Link
+                href="/about"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  marginTop: 22,
+                  fontFamily: 'var(--hp-font-body)',
+                  fontSize: 13,
+                  color: 'var(--hp-ink-faint)',
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = 'var(--hp-ink-muted)'; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = 'var(--hp-ink-faint)'; }}
+              >
+                Learn more about The ANTS
+                <ArrowRight size={13} />
+              </Link>
+            </div>
+
+            <div
+              className="hp-reveal"
+              style={{
+                display: 'flex',
+                gap: 14,
+                justifyContent: 'center',
+                marginTop: 40,
+                flexWrap: 'wrap',
+              }}
+            >
               <Link href="/signup">
-                <Button size="lg" iconRight={<ArrowRight className="h-5 w-5" />}>
-                  Get Started &mdash; It{"'"}s Free
-                </Button>
+                <button
+                  className="hp-btn"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    background: 'var(--hp-brand)',
+                    color: '#06110D',
+                    border: 'none',
+                    borderRadius: 999,
+                    padding: '13px 24px',
+                    fontFamily: 'var(--hp-font-body)',
+                    fontWeight: 600,
+                    fontSize: 14.5,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)';
+                    (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 12px 28px -10px rgba(60,219,167,0.55)';
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)';
+                    (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
+                  }}
+                >
+                  Get Started — It's Free →
+                </button>
               </Link>
               <Link href="/login">
-                <Button variant="secondary" size="lg">
+                <button
+                  className="hp-btn"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    background: 'transparent',
+                    border: '1px solid var(--hp-border-strong)',
+                    borderRadius: 999,
+                    padding: '13px 24px',
+                    color: 'var(--hp-ink)',
+                    fontFamily: 'var(--hp-font-body)',
+                    fontWeight: 600,
+                    fontSize: 14.5,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                  }}
+                  onMouseEnter={(e) => {
+                    const el = e.currentTarget as HTMLButtonElement;
+                    el.style.background = 'var(--hp-surface)';
+                    el.style.borderColor = 'var(--hp-ink-faint)';
+                  }}
+                  onMouseLeave={(e) => {
+                    const el = e.currentTarget as HTMLButtonElement;
+                    el.style.background = 'transparent';
+                    el.style.borderColor = 'var(--hp-border-strong)';
+                  }}
+                >
                   Sign In
-                </Button>
+                </button>
               </Link>
             </div>
-          </AnimatedSection>
 
-          <AnimatedSection delay={500}>
-            <div className="mt-16 flex justify-center">
-              <ChevronDown className="h-6 w-6 text-foreground-muted animate-float" />
+            <div
+              className="hp-reveal"
+              style={{
+                marginTop: 22,
+                fontFamily: 'var(--hp-font-mono)',
+                fontSize: 12,
+                color: 'var(--hp-ink-faint)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+              }}
+            >
+              <span
+                style={{
+                  width: 5,
+                  height: 5,
+                  borderRadius: '50%',
+                  background: 'var(--hp-amber)',
+                  display: 'inline-block',
+                }}
+              />
+              No credit card · used by students across Yangon, Mandalay & beyond
             </div>
-          </AnimatedSection>
+          </RevealSection>
+
+          {/* Hero visual widget */}
+          <HeroVisual />
         </div>
       </section>
 
-      {/* ─── Explore Section ─── */}
-      <section className="py-20 px-4 bg-background-secondary" id="explore">
-        <div className="max-w-6xl mx-auto">
-          <AnimatedSection>
-            <div className="text-center mb-14">
-              <p className="text-sm font-semibold text-primary uppercase tracking-wider mb-2">Discover</p>
-              <h2 className="text-3xl sm:text-4xl font-bold text-foreground">
-                Explore{' '}
-                <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                  Clubs & Profiles
-                </span>
-              </h2>
-              <p className="mt-4 text-foreground-secondary max-w-xl mx-auto">
-                Browse community clubs, view student portfolios, and discover verified educators &mdash; no login required.
-              </p>
-            </div>
-          </AnimatedSection>
+      {/* ── Explore Section ──────────────────────────────────────────────── */}
+      <section
+        id="explore"
+        style={{
+          padding: '130px 28px',
+          background: 'var(--hp-bg-soft)',
+          position: 'relative',
+        }}
+      >
+        <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
+          <SectionHead
+            eyebrow="Discover"
+            heading="Explore clubs & profiles"
+            gradPhrase="clubs & profiles"
+            subtext="Browse community clubs, view student portfolios, and discover verified educators — no login required."
+          />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-            {EXPLORE_CARDS.map((card, i) => (
-              <AnimatedSection key={card.title} delay={i * 100}>
-                <Link href={card.href} className="block group">
-                  <div className="relative bg-background-card border border-border rounded-2xl p-8 hover:border-border-hover hover:shadow-lg transition-all duration-300 h-full">
+          <RevealSection>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: 20,
+              }}
+              className="explore-grid-hp"
+            >
+              <style>{`
+                @media (max-width: 760px) { .explore-grid-hp { grid-template-columns: 1fr !important; } }
+                .explore-card-hp:hover { border-color: var(--hp-border-strong) !important; transform: translateY(-3px) !important; }
+              `}</style>
+
+              {EXPLORE_CARDS.map((card) => (
+                <Link key={card.title} href={card.href} style={{ display: 'block' }}>
+                  <div
+                    className="explore-card-hp"
+                    style={{
+                      padding: 32,
+                      borderRadius: 'var(--hp-radius-lg)',
+                      background: 'var(--hp-surface)',
+                      border: '1px solid var(--hp-border)',
+                      transition: 'border-color .2s ease, transform .2s ease',
+                      height: '100%',
+                    }}
+                  >
+                    {/* Icon */}
                     <div
-                      className={cn(
-                        'inline-flex p-3 rounded-xl bg-gradient-to-br text-white mb-5',
-                        card.gradient
-                      )}
+                      style={{
+                        width: 46,
+                        height: 46,
+                        borderRadius: 13,
+                        background: card.iconBg,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginBottom: 20,
+                      }}
                     >
-                      {card.icon}
+                      <card.Icon size={22} style={{ color: card.iconColor }} strokeWidth={1.7} />
                     </div>
-                    <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors">
+
+                    <h3
+                      style={{
+                        fontFamily: 'var(--hp-font-display)',
+                        fontSize: 20,
+                        fontWeight: 600,
+                        color: 'var(--hp-ink)',
+                        margin: '0 0 10px',
+                      }}
+                    >
                       {card.title}
                     </h3>
-                    <p className="text-foreground-secondary leading-relaxed text-sm">
+                    <p
+                      style={{
+                        fontFamily: 'var(--hp-font-body)',
+                        fontSize: 14.5,
+                        color: 'var(--hp-ink-muted)',
+                        margin: 0,
+                        lineHeight: 1.6,
+                      }}
+                    >
                       {card.description}
                     </p>
-                    <div className="mt-4 flex items-center gap-1 text-sm font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                      View <ArrowRight className="h-4 w-4" />
+
+                    {/* Stat chips */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        gap: 22,
+                        marginTop: 22,
+                        paddingTop: 22,
+                        borderTop: '1px solid var(--hp-border)',
+                      }}
+                    >
+                      {card.stats.map((stat) => (
+                        <div key={stat.label}>
+                          <b
+                            style={{
+                              display: 'block',
+                              fontFamily: 'var(--hp-font-mono)',
+                              color: 'var(--hp-ink)',
+                              fontSize: 17,
+                            }}
+                          >
+                            {stat.value}
+                          </b>
+                          <span
+                            style={{
+                              fontSize: 11,
+                              color: 'var(--hp-ink-faint)',
+                              fontFamily: 'var(--hp-font-mono)',
+                              letterSpacing: '0.06em',
+                            }}
+                          >
+                            {stat.label}
+                          </span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </Link>
-              </AnimatedSection>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Features Section ─── */}
-      <section className="py-24 px-4" id="features">
-        <div className="max-w-6xl mx-auto">
-          <AnimatedSection>
-            <div className="text-center mb-16">
-              <p className="text-sm font-semibold text-primary uppercase tracking-wider mb-2">Features</p>
-              <h2 className="text-3xl sm:text-4xl font-bold text-foreground">
-                Everything you need to{' '}
-                <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">ace your exams</span>
-              </h2>
-              <p className="mt-4 text-foreground-secondary max-w-xl mx-auto">
-                A complete toolkit designed specifically for students pursuing international qualifications.
-              </p>
+              ))}
             </div>
-          </AnimatedSection>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {FEATURES.map((feature, i) => (
-              <AnimatedSection key={feature.title} delay={i * 80}>
-                <div className="group relative bg-background-card border border-border rounded-2xl p-6 hover:border-border-hover hover:shadow-lg transition-all duration-300 h-full">
-                  <div
-                    className={cn(
-                      'inline-flex p-3 rounded-xl bg-gradient-to-br text-white mb-4',
-                      feature.gradient
-                    )}
-                  >
-                    {feature.icon}
-                  </div>
-                  <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
-                    {feature.title}
-                  </h3>
-                  <p className="text-sm text-foreground-secondary leading-relaxed">
-                    {feature.description}
-                  </p>
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                </div>
-              </AnimatedSection>
-            ))}
-          </div>
+          </RevealSection>
         </div>
       </section>
 
-      {/* ─── Qualifications Section ─── */}
-      <section className="py-20 px-4 bg-background-secondary">
-        <div className="max-w-5xl mx-auto">
-          <AnimatedSection>
-            <div className="text-center mb-12">
-              <p className="text-sm font-semibold text-primary uppercase tracking-wider mb-2">Qualifications</p>
-              <h2 className="text-3xl sm:text-4xl font-bold text-foreground">
-                Wired into your{' '}
-                <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">exam board</span>
-              </h2>
-              <p className="mt-4 text-foreground-secondary max-w-xl mx-auto">
-                Our tools understand the difference between CAIE IGCSE and Edexcel IAL — so your grades are always accurate.
-              </p>
+      {/* ── Stats Row (high-impact metrics divider) ──────────────────────── */}
+      <section style={{ position: 'relative' }}>
+        <StatsRow />
+      </section>
+
+      {/* ── Features Section ─────────────────────────────────────────────── */}
+      <DotGrid>
+        <section
+          id="features"
+          style={{ padding: '130px 28px', position: 'relative' }}
+        >
+          <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
+            <SectionHead
+              eyebrow="F E A T U R E S"
+              heading="Everything you need to ace your exams"
+              gradPhrase="ace your exams"
+              subtext="A complete toolkit designed specifically for students pursuing international qualifications."
+            />
+            <BentoFeatures />
+          </div>
+        </section>
+      </DotGrid>
+
+      {/* ── Qualifications Section ───────────────────────────────────────── */}
+      <DotGrid>
+        <section
+          id="qualifications"
+          style={{
+            padding: '130px 28px',
+            background: 'var(--hp-bg-soft)',
+            position: 'relative',
+          }}
+        >
+          <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
+            <SectionHead
+              eyebrow="Q U A L I F I C A T I O N S"
+              heading="Wired into your exam board"
+              gradPhrase="exam board"
+              subtext="Our tools understand the difference between CAIE IGCSE and Edexcel IAL — so your grades are always accurate."
+            />
+            {/* Interactive carousel replaces the static QualTrail on desktop */}
+            <div className="hp-quals-carousel">
+              <QualCarousel />
             </div>
-          </AnimatedSection>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-            {QUALIFICATIONS.map((qual, i) => (
-              <AnimatedSection key={qual.name} delay={i * 60}>
-                <div className="flex flex-col items-center text-center p-5 bg-background-card border border-border rounded-2xl hover:border-border-hover hover:shadow-md transition-all duration-300">
-                  <span className="text-3xl mb-3">{qual.emoji}</span>
-                  <p className="text-sm font-semibold text-foreground">{qual.name}</p>
-                  <p className="text-xs text-foreground-muted mt-1">{qual.sub}</p>
-                </div>
-              </AnimatedSection>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Roles Section ─── */}
-      <section className="py-24 px-4">
-        <div className="max-w-5xl mx-auto">
-          <AnimatedSection>
-            <div className="text-center mb-16">
-              <p className="text-sm font-semibold text-primary uppercase tracking-wider mb-2">For Everyone</p>
-              <h2 className="text-3xl sm:text-4xl font-bold text-foreground">
-                Choose your{' '}
-                <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">role</span>
-              </h2>
-              <p className="mt-4 text-foreground-secondary max-w-xl mx-auto">
-                The ANTS adapts to who you are — student, teacher, content creator, or quality gatekeeper.
-              </p>
+            {/* Keep QualTrail as a static fallback on mobile (hidden when carousel shows) */}
+            <div className="hp-quals-trail-fallback">
+              <QualTrail />
             </div>
-          </AnimatedSection>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {ROLES.map((role, i) => (
-              <AnimatedSection key={role.title} delay={i * 100}>
-                <div className="group relative bg-background-card border border-border rounded-2xl p-8 hover:border-border-hover hover:shadow-lg transition-all duration-300">
-                  <div
-                    className={cn(
-                      'inline-flex p-3 rounded-xl bg-gradient-to-br text-white mb-5',
-                      role.gradient
-                    )}
-                  >
-                    {role.icon}
-                  </div>
-                  <h3 className="text-xl font-bold text-foreground mb-3">{role.title}</h3>
-                  <p className="text-foreground-secondary leading-relaxed">{role.description}</p>
-                </div>
-              </AnimatedSection>
-            ))}
+            <style>{`
+              @media (min-width: 641px) {
+                .hp-quals-trail-fallback { display: none !important; }
+              }
+              @media (max-width: 640px) {
+                .hp-quals-carousel { display: none !important; }
+              }
+            `}</style>
           </div>
-        </div>
-      </section>
+        </section>
+      </DotGrid>
 
-      {/* ─── CTA Section ─── */}
-      <section className="py-24 px-4">
-        <div className="max-w-3xl mx-auto">
-          <AnimatedSection>
-            <div className="relative bg-gradient-to-br from-primary to-accent rounded-3xl p-12 text-center text-white overflow-hidden">
-              <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
-                <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
+      {/* ── Roles Section ────────────────────────────────────────────────── */}
+      <DotGrid>
+        <section
+          id="roles"
+          style={{ padding: '130px 28px', position: 'relative' }}
+        >
+          <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
+            <SectionHead
+              eyebrow="F O R   E V E R Y O N E"
+              heading="Choose your role"
+              gradPhrase="role"
+              subtext="The ANTS adapts to who you are — student, teacher, content creator, or quality gatekeeper."
+            />
+            <RoleLadder />
+          </div>
+        </section>
+      </DotGrid>
+
+      {/* ── CTA Section ──────────────────────────────────────────────────── */}
+      <section style={{ padding: '40px 28px 130px', position: 'relative' }}>
+        <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
+          <RevealSection>
+            <div
+              style={{
+                borderRadius: 'var(--hp-radius-lg)',
+                background: 'linear-gradient(120deg, var(--hp-brand-deep), var(--hp-brand) 55%, var(--hp-amber) 130%)',
+                padding: '70px 40px',
+                textAlign: 'center',
+                position: 'relative',
+                overflow: 'hidden',
+              }}
+            >
+              {/* Glow blobs */}
+              <div aria-hidden="true">
+                <div
+                  style={{
+                    position: 'absolute', top: 0, right: 0,
+                    width: 180, height: 180,
+                    background: 'rgba(255,255,255,0.12)', borderRadius: '50%', filter: 'blur(30px)',
+                  }}
+                />
+                <div
+                  style={{
+                    position: 'absolute', bottom: 0, left: 0,
+                    width: 140, height: 140,
+                    background: 'rgba(255,255,255,0.10)', borderRadius: '50%', filter: 'blur(30px)',
+                  }}
+                />
               </div>
-              <div className="relative z-10">
-                <h2 className="text-3xl sm:text-4xl font-bold mb-4">Ready to ace your exams?</h2>
-                <p className="text-white/80 text-lg mb-8 max-w-lg mx-auto">
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <h2
+                  style={{
+                    fontFamily: 'var(--hp-font-display)',
+                    fontSize: 'clamp(1.8rem, 3.6vw, 2.6rem)',
+                    fontWeight: 560,
+                    color: '#06110D',
+                    margin: 0,
+                    letterSpacing: '-0.01em',
+                  }}
+                >
+                  Ready to ace your exams?
+                </h2>
+                <p
+                  style={{
+                    fontFamily: 'var(--hp-font-body)',
+                    color: 'rgba(6,17,13,0.72)',
+                    maxWidth: 480,
+                    margin: '14px auto 0',
+                    fontSize: 16,
+                    lineHeight: 1.6,
+                  }}
+                >
                   Join thousands of Myanmar students already using The ANTS to study smarter.
                 </p>
                 <Link href="/signup">
-                  <Button
-                    variant="secondary"
-                    size="lg"
-                    iconRight={<ArrowRight className="h-5 w-5" />}
-                    className="bg-white text-primary hover:bg-white/90 border-none"
+                  <button
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      marginTop: 30,
+                      background: '#06110D',
+                      color: '#F3F6FB',
+                      border: 'none',
+                      borderRadius: 999,
+                      padding: '13px 26px',
+                      fontFamily: 'var(--hp-font-body)',
+                      fontWeight: 600,
+                      fontSize: 14.5,
+                      cursor: 'pointer',
+                      transition: 'transform .18s ease, box-shadow .18s ease',
+                      whiteSpace: 'nowrap',
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)';
+                      (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 12px 28px -10px rgba(6,17,13,0.4)';
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)';
+                      (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
+                    }}
                   >
-                    Get Started &mdash; It{"'"}s Free
-                  </Button>
+                    Get Started — It&apos;s Free →
+                  </button>
                 </Link>
               </div>
             </div>
-          </AnimatedSection>
+          </RevealSection>
         </div>
       </section>
 
-      {/* ─── Footer ─── */}
-      <footer className="border-t border-border bg-background-secondary py-12 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-2">
-              <Home className="h-5 w-5 text-primary" />
-              <span className="font-bold text-lg bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                The ANTS
-              </span>
+      {/* ── Footer ───────────────────────────────────────────────────────── */}
+      <DotGrid>
+        <footer
+          style={{
+            borderTop: '1px solid var(--hp-border)',
+            padding: '56px 28px 40px',
+            background: 'var(--hp-bg-soft)',
+          }}
+        >
+        <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
+          {/* Top row */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: 20,
+            }}
+          >
+            {/* Brand */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                fontFamily: 'var(--hp-font-display)',
+                fontWeight: 600,
+                fontSize: 15,
+                color: 'var(--hp-ink)',
+              }}
+            >
+              🐜 The ANTS
             </div>
-            <div className="flex items-center gap-6 text-sm text-foreground-muted">
-              <a href="#explore" className="hover:text-foreground transition-colors">Explore</a>
-              <a href="#features" className="hover:text-foreground transition-colors">Features</a>
-              <Link href="/explore/clubs" className="hover:text-foreground transition-colors">Clubs</Link>
-              <Link href="/explore/profiles" className="hover:text-foreground transition-colors">Profiles</Link>
-              <Link href="/about" className="hover:text-foreground transition-colors">About</Link>
-              <Link href="/login" className="hover:text-foreground transition-colors">Sign In</Link>
-              <Link href="/signup" className="hover:text-foreground transition-colors">Sign Up</Link>
+
+            {/* Nav links */}
+            <div
+              style={{
+                display: 'flex',
+                gap: 22,
+                fontSize: 13.5,
+                color: 'var(--hp-ink-muted)',
+                flexWrap: 'wrap',
+              }}
+              className="hp-foot-links"
+            >
+              <style>{`
+                .hp-foot-links a:hover { color: var(--hp-ink); }
+              `}</style>
+              <a href="#explore">Explore</a>
+              <a href="#features">Features</a>
+              <Link href="/explore/clubs">Clubs</Link>
+              <Link href="/explore/profiles">Profiles</Link>
+              <Link href="/about">About</Link>
+              <Link href="/login">Sign In</Link>
+              <Link href="/signup">Sign Up</Link>
             </div>
-            <p className="text-xs text-foreground-muted">
-              Built with {'\u2764\uFE0F'} for Myanmar students
+
+            {/* Credit */}
+            <p
+              style={{
+                fontFamily: 'var(--hp-font-body)',
+                fontSize: 12.5,
+                color: 'var(--hp-ink-faint)',
+                margin: 0,
+              }}
+            >
+              Built with ❤️ for Myanmar students
             </p>
           </div>
-          <div className="mt-6 pt-6 border-t border-border text-center">
-            <p className="text-xs text-foreground-muted">
-              &copy; {new Date().getFullYear()} The ANTS. Ace with us! {'\u{1F41C}'}
-            </p>
+
+          {/* Bottom bar */}
+          <div
+            style={{
+              marginTop: 30,
+              paddingTop: 24,
+              borderTop: '1px solid var(--hp-border)',
+              textAlign: 'center',
+              fontFamily: 'var(--hp-font-mono)',
+              fontSize: 12,
+              color: 'var(--hp-ink-faint)',
+            }}
+          >
+            © {new Date().getFullYear()} The ANTS. Ace with us! 🐜
           </div>
         </div>
-      </footer>
+        </footer>
+      </DotGrid>
     </div>
   );
 }
