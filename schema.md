@@ -623,6 +623,7 @@
 |------|------|-------------|
 | `id` | `uuid` | Primary |
 | `curriculum_id` | `uuid` |  Nullable |
+| `subject_id` | `uuid` |  Nullable |
 | `title` | `text` |  |
 | `exam_series` | `text` |  Nullable |
 | `exam_date` | `timestamp` |  |
@@ -676,6 +677,107 @@
 | `weight` | `numeric` |  Nullable |
 | `predicted_grade` | `text` |  Nullable |
 | `created_at` | `timestamp` |  Nullable |
+
+---
+
+## Table `user_enrollments`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `user_id` | `uuid` |  |
+| `curriculum_id` | `uuid` |  |
+| `subject_id` | `uuid` |  |
+| `exam_id` | `uuid` |  Nullable |
+| `enrolled_at` | `timestamp` |  |
+
+> Junction table linking a user to a subject within a curriculum, with an optional exam target.
+
+---
+
+## Table `user_exam_overrides`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `user_id` | `uuid` |  |
+| `exam_id` | `uuid` |  |
+| `custom_title` | `text` |  Nullable |
+| `custom_exam_series` | `text` |  Nullable |
+| `custom_exam_date` | `timestamp` |  Nullable |
+
+> User-specific overrides for exam entries. Only overridden fields are stored; other fields are read from the library `exams` table. Null values mean "use library default".
+
+---
+
+## Table `user_exam_history`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `user_id` | `uuid` |  |
+| `curriculum_id` | `uuid` |  |
+| `subject_id` | `uuid` |  |
+| `exam_id` | `uuid` |  Nullable |
+| `exam_date` | `timestamp` |  |
+| `result` | `text` |  Nullable |
+| `is_mock` | `bool` |  Default: false |
+| `notes` | `text` |  Nullable |
+| `recorded_at` | `timestamp` |  |
+
+> Completed exam records for the user's exam history. Exam countdowns that pass their target date are moved here automatically.
+
+---
+
+## Table `review_queue`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `contributor_id` | `uuid` |  |
+| `submission_type` | `text` |  |
+| `entity_id` | `uuid` |  |
+| `submitted_data` | `jsonb` |  |
+| `is_update` | `bool` |  Default: false |
+| `published_entity_id` | `uuid` |  Nullable |
+| `status` | `text` |  Default: 'pending' |
+| `reviewer_id` | `uuid` |  Nullable |
+| `feedback` | `jsonb` |  Nullable |
+| `submitted_at` | `timestamp` |  |
+| `reviewed_at` | `timestamp` |  Nullable |
+
+> **`submission_type` values:** `"curriculum"` | `"subject"` | `"topic"` | `"note"` | `"resource"` | `"flashcard_deck"` | `"exam"`
+> **`status` values:** `"pending"` | `"approved"` | `"rejected"`
+> **`feedback` JSONB structure:** `{ categories: ("inaccurate_content" | "formatting_issues" | "missing_information" | "grammar_spelling" | "duplicate_entry" | "outdated_syllabus" | "other")[], note: string }`
+> When `is_update` is true, `published_entity_id` refers to the existing published entity being edited (which remains visible during review).
+
+---
+
+## Table `version_history`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `entity_type` | `text` |  |
+| `entity_id` | `uuid` |  |
+| `version_number` | `int4` |  |
+| `changes` | `jsonb` |  |
+| `changed_by` | `uuid` |  |
+| `review_item_id` | `uuid` |  Nullable |
+| `changed_at` | `timestamp` |  |
+
+> **`changes` JSONB structure:** Array of `{ field: string, old_value: any, new_value: any }` describing field-level diffs.
+> **`version_number`** auto-increments per entity. Versions are kept indefinitely. Only `main_contributors` can rollback.
 
 ---
 
