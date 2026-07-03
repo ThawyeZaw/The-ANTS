@@ -142,13 +142,15 @@ function MermaidRenderer({ code, caption }: { code: string; caption?: string }) 
     import('mermaid').then(({ default: mermaid }) => {
       mermaid.initialize({ startOnLoad: false, theme: 'dark' });
       const id = `mermaid-svg-${++mermaidIdCounter}`;
-      mermaid.render(id, code).then(({ svg }) => {
+      mermaid.render(id, code).then(({ svg }: { svg: string }) => {
         if (isMounted) {
           setSvgCode(svg);
         }
-      }).catch((err) => {
+      }).catch((err: unknown) => {
         console.error('Mermaid rendering failed', err);
       });
+    }).catch((err: unknown) => {
+      console.error('Failed to load Mermaid', err);
     });
     return () => { isMounted = false; };
   }, [code]);
