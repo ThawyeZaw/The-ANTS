@@ -869,6 +869,8 @@ export interface RoleUpgradeRequest {
 export interface Exam {
   id: string;
   curriculum_id: string | null;
+  /** FK to subjects.id — nullable for exams not tied to a specific subject */
+  subject_id: string | null;
   title: string;
   exam_series: string | null;
   exam_date: string;
@@ -894,6 +896,152 @@ export interface ExamCountdown {
   priority_indicator: 'high' | 'medium' | 'low' | string | null;
   qualification_group?: string;
   created_at: string;
+}
+
+// -----------------------------------------------------------------------------
+// Course Manager — User Enrollments, Exam Targets & Overrides
+// -----------------------------------------------------------------------------
+
+/** Junction: a user enrols in a subject within a curriculum with an optional exam target */
+export interface UserEnrollment {
+  id: string;
+  user_id: string;
+  curriculum_id: string;
+  subject_id: string;
+  /** FK to exams.id — the exam series the user is targeting */
+  exam_id: string | null;
+  enrolled_at: string;
+}
+
+/** User-specific overrides for an exam entry (stored separately from library data) */
+export interface UserExamOverride {
+  id: string;
+  user_id: string;
+  exam_id: string;
+  /** Overridden title (nullable — null means use library default) */
+  custom_title: string | null;
+  /** Overridden exam series label */
+  custom_exam_series: string | null;
+  /** Overridden exam date */
+  custom_exam_date: string | null;
+}
+
+/** A completed exam in the user's exam history */
+export interface UserExamHistory {
+  id: string;
+  user_id: string;
+  curriculum_id: string;
+  subject_id: string;
+  exam_id: string | null;
+  /** The date the exam was taken */
+  exam_date: string;
+  /** User-entered grade/result (e.g. "A*", "8", "Band 7") */
+  result: string | null;
+  /** Whether this was a real exam or a mock */
+  is_mock: boolean;
+  /** Optional free-form notes */
+  notes: string | null;
+  recorded_at: string;
+}
+
+// -----------------------------------------------------------------------------
+// Topic
+// -----------------------------------------------------------------------------
+
+/** A topic within a subject (e.g. "Motion, Forces and Energy" in Physics) */
+export interface Topic {
+  id: string;
+  subject_id: string;
+  title: string;
+  description: string;
+  /** Official syllabus reference code (e.g. "4.1.2") */
+  syllabus_code: string | null;
+  /** Learning objectives for this topic */
+  learning_objectives: string | null;
+  order_no: number;
+}
+
+// -----------------------------------------------------------------------------
+// Review Queue & Version Control
+// -----------------------------------------------------------------------------
+
+/** All entity types that go through the review queue */
+export type ReviewSubmissionType =
+  | 'curriculum'
+  | 'subject'
+  | 'topic'
+  | 'note'
+  | 'resource'
+  | 'flashcard_deck'
+  | 'exam';
+
+/** Predefined feedback category tags for rejected submissions */
+export type ReviewFeedbackCategory =
+  | 'inaccurate_content'
+  | 'formatting_issues'
+  | 'missing_information'
+  | 'grammar_spelling'
+  | 'duplicate_entry'
+  | 'outdated_syllabus'
+  | 'other';
+
+/** Structured feedback for a rejected submission */
+export interface ReviewFeedback {
+  /** Selected category tags */
+  categories: ReviewFeedbackCategory[];
+  /** Free-text note from the reviewer */
+  note: string;
+}
+
+/** A single item in the review queue */
+export interface ReviewQueueItem {
+  id: string;
+  /** Who submitted it */
+  contributor_id: string;
+  /** What type of entity */
+  submission_type: ReviewSubmissionType;
+  /** FK to the actual entity (curriculums.id, subjects.id, etc.) */
+  entity_id: string;
+  /** The submitted data snapshot (JSON) — used for review & versioning */
+  submitted_data: Record<string, unknown>;
+  /** Whether this is a new entry or an edit to an existing published entry */
+  is_update: boolean;
+  /** ID of the published entity being updated (null for new entries) */
+  published_entity_id: string | null;
+  status: 'pending' | 'approved' | 'rejected';
+  /** Who reviewed it */
+  reviewer_id: string | null;
+  /** Structured feedback (only when rejected) */
+  feedback: ReviewFeedback | null;
+  submitted_at: string;
+  reviewed_at: string | null;
+}
+
+// ── Version History ───────────────────────────────────────────────────────────
+
+/** A single field-level change in a version entry */
+export interface FieldChange {
+  field: string;
+  old_value: unknown;
+  new_value: unknown;
+}
+
+/** A version history entry stored when published content is updated */
+export interface VersionEntry {
+  id: string;
+  /** Which type of entity */
+  entity_type: ReviewSubmissionType;
+  /** FK to the entity */
+  entity_id: string;
+  /** Version number (auto-incrementing per entity) */
+  version_number: number;
+  /** RFC 6902 JSON Patch array describing field-level changes */
+  changes: FieldChange[];
+  /** Who made the change */
+  changed_by: string;
+  /** ID of the review queue item that triggered this version */
+  review_item_id: string | null;
+  changed_at: string;
 }
 
 // -----------------------------------------------------------------------------

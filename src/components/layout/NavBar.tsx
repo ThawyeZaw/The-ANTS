@@ -101,7 +101,6 @@ const NAV_GROUPS: NavGroupDef[] = [
       { label: 'Classrooms', href: '/classrooms', icon: <GraduationCap className="h-4 w-4" />, description: 'Virtual classrooms' },
       { label: 'Clubs', href: '/clubs', icon: <MessageSquare className="h-4 w-4" />, description: 'Community spaces' },
       { label: 'Explore Profiles', href: '/explore/profiles', icon: <Compass className="h-4 w-4" />, description: 'Browse student & educator profiles' },
-      { label: 'About The ANTS', href: '/about', icon: <Info className="h-4 w-4" />, description: 'Our mission, team, and journey' },
     ],
   },
   {
@@ -109,8 +108,8 @@ const NAV_GROUPS: NavGroupDef[] = [
     icon: <Pencil className="h-4 w-4" />,
     allowedRoles: ['contributor', 'main_contributor'],
     items: [
-      { label: 'Curriculum & Notes', href: '/editor', icon: <FileText className="h-4 w-4" />, description: 'Build curriculum resources' },
       { label: 'Notes Editor', href: '/editor/notes', icon: <Library className="h-4 w-4" />, description: 'Create & edit study notes' },
+      { label: 'Curriculum Library', href: '/editor/curriculum', icon: <BookOpen className="h-4 w-4" />, description: 'Manage curricula & subjects' },
       { label: 'Exam Data', href: '/editor/exam', icon: <ClipboardCheck className="h-4 w-4" />, description: 'Edit exam data & boundaries' },
     ],
   },
@@ -119,7 +118,7 @@ const NAV_GROUPS: NavGroupDef[] = [
     icon: <ShieldCheck className="h-4 w-4" />,
     allowedRoles: ['main_contributor'],
     items: [
-      { label: 'Review Queue', href: '/review', icon: <ShieldCheck className="h-4 w-4" />, description: 'Approve or reject submissions' },
+      { label: 'Review Queue', href: '/main-contributor/review-queue', icon: <ShieldCheck className="h-4 w-4" />, description: 'Approve or reject submissions' },
       { label: 'Role Upgrades', href: '/main-contributor/role-upgrades', icon: <UserCircle className="h-4 w-4" />, description: 'Review role upgrade requests' },
       { label: 'Add User', href: '/main-contributor/add-contributor', icon: <UserPlus className="h-4 w-4" />, description: 'Invite new contributor' },
     ],

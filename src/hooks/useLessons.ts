@@ -9,11 +9,11 @@
 import { useCallback, useMemo, useState } from 'react';
 import {
   mockCurriculums,
-  mockSubjects,
   mockTopicProgress,
-  mockUserCurriculums,
   getSubjectsByCurriculum,
   getTopicsBySubject,
+  getUserEnrollments,
+  getEnrolledCurriculumIds,
 } from '@/lib/mock/database';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -77,29 +77,34 @@ export function useLessons() {
   const enrolledCurriculums = useMemo<CurriculumItem[]>(() => {
     if (!userId) return [];
 
-    const enrolledIds = mockUserCurriculums
-      .filter((uc) => uc.user_id === userId)
-      .map((uc) => uc.curriculum_id);
+    // Use the new enrollment system to get enrolled curriculum + subject pairs
+    const enrolledIds = getEnrolledCurriculumIds(userId);
 
     return enrolledIds
       .map((cid): CurriculumItem | null => {
         const curriculum = mockCurriculums.find((c) => c.id === cid);
         if (!curriculum) return null;
 
-        const subjects: SubjectItem[] = getSubjectsByCurriculum(cid).map((subj) => ({
-          id: subj.id,
-          curriculum_id: subj.curriculum_id,
-          title: subj.title,
-          description: subj.description,
-          order_no: subj.order_no,
-          topics: getTopicsBySubject(subj.id).map((t) => ({
-            id: t.id,
-            subject_id: t.subject_id,
-            title: t.title,
-            description: t.description,
-            order_no: t.order_no,
-          })),
-        }));
+        // Only include subjects the user is enrolled in
+        const userEnrollments = getUserEnrollments(userId).filter(e => e.curriculum_id === cid);
+        const enrolledSubjectIds = new Set(userEnrollments.map(e => e.subject_id));
+
+        const subjects: SubjectItem[] = getSubjectsByCurriculum(cid)
+          .filter(subj => enrolledSubjectIds.has(subj.id))
+          .map((subj) => ({
+            id: subj.id,
+            curriculum_id: subj.curriculum_id,
+            title: subj.title,
+            description: subj.description,
+            order_no: subj.order_no,
+            topics: getTopicsBySubject(subj.id).map((t) => ({
+              id: t.id,
+              subject_id: t.subject_id,
+              title: t.title,
+              description: t.description,
+              order_no: t.order_no,
+            })),
+          }));
 
         return {
           id: curriculum.id,

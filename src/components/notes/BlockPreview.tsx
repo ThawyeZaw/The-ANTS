@@ -139,18 +139,17 @@ function MermaidRenderer({ code, caption }: { code: string; caption?: string }) 
 
   useEffect(() => {
     let isMounted = true;
-    import('mermaid/dist/mermaid.esm.min.mjs').then((module) => {
-      const mermaid = (module as { default?: typeof import('mermaid') })?.default ?? module;
+    import('mermaid').then(({ default: mermaid }) => {
       mermaid.initialize({ startOnLoad: false, theme: 'dark' });
       const id = `mermaid-svg-${++mermaidIdCounter}`;
       mermaid.render(id, code).then(({ svg }: { svg: string }) => {
         if (isMounted) {
           setSvgCode(svg);
         }
-      }).catch((err) => {
+      }).catch((err: unknown) => {
         console.error('Mermaid rendering failed', err);
       });
-    }).catch((err) => {
+    }).catch((err: unknown) => {
       console.error('Failed to load Mermaid', err);
     });
     return () => { isMounted = false; };
