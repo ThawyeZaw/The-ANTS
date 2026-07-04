@@ -109,6 +109,7 @@ export default function StudySession({ deckId, deckName, userId, onBack }: Study
         reviewedCards={dueCards}
         onRestart={restartSession}
         onBackToDecks={onBack}
+        deckId={deckId}
       />
     );
   }

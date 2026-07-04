@@ -15,6 +15,11 @@ import {
   mockContributorStats,
   mockActivityFeed,
   mockEditorSubmissions,
+  getUserCertifications,
+  getUserClubs,
+  getClubProjects,
+  getMemberContributions,
+  mockClubMembers,
 } from '@/lib/mock/database';
 
 interface ContributorProfileData {
@@ -40,6 +45,15 @@ interface ActivityItem {
   created_at: string;
 }
 
+interface ClubMembershipInfo {
+  id: string;
+  name: string;
+  role: string;
+  memberCount: number;
+  joinMode: string;
+  custom_domain_slug?: string | null;
+}
+
 interface UseProfileReturn {
   profile: Profile | null;
   contributorProfile: ContributorProfileData | null;
@@ -48,6 +62,10 @@ interface UseProfileReturn {
   projects: ProjectEntry[];
   portfolioActivities: ActivityEntry[];
   achievements: AchievementEntry[];
+  certifications: ReturnType<typeof getUserCertifications>;
+  clubMemberships: ClubMembershipInfo[];
+  clubProjects: ProjectEntry[];
+  clubActivity: ActivityItem[];
   isLoading: boolean;
   isOwnProfile: boolean;
   notFound: boolean;
@@ -61,6 +79,10 @@ export function useProfile(username: string): UseProfileReturn {
   const [stats, setStats] = useState<ContributorStatsData | null>(null);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [notFound, setNotFound] = useState(false);
+  const [certifications, setCertifications] = useState<ReturnType<typeof getUserCertifications>>([]);
+  const [clubMemberships, setClubMemberships] = useState<ClubMembershipInfo[]>([]);
+  const [clubProjects, setClubProjects] = useState<ProjectEntry[]>([]);
+  const [clubActivity, setClubActivity] = useState<ActivityItem[]>([]);
 
   const isOwnProfile = !!(user && profile && user.id === profile.id);
 
@@ -85,6 +107,59 @@ export function useProfile(username: string): UseProfileReturn {
       }
 
       setProfile(foundProfile);
+
+      // Fetch certifications for the profile user
+      const userCerts = getUserCertifications(foundProfile.id);
+      setCertifications(userCerts);
+
+      // Fetch club memberships for the profile user
+      const userClubs = getUserClubs(foundProfile.id);
+      const memberships: ClubMembershipInfo[] = userClubs.map(({ club, membership }) => {
+        const memberCount = mockClubMembers.filter(
+          (m) => m.club_id === club.id && m.membership_status === 'active'
+        ).length;
+        return {
+          id: club.id,
+          name: club.name,
+          role: membership.role,
+          memberCount,
+          joinMode: club.join_mode,
+          custom_domain_slug: club.custom_domain_slug,
+        };
+      });
+      setClubMemberships(memberships);
+
+      // Generate club projects for profile display
+      const clubProjEntries: ProjectEntry[] = [];
+      const clubActivityItems: ActivityItem[] = [];
+      if (foundProfile.showClubProjects !== false) {
+        for (const { club } of userClubs) {
+          const projects = getClubProjects(club.id);
+          for (const p of projects) {
+            if (p.contributors?.includes(foundProfile.id) || p.created_by === foundProfile.id) {
+              clubProjEntries.push({
+                id: `club-${p.id}`,
+                title: p.title,
+                description: p.description || '',
+                technologies: p.tags,
+              });
+            }
+          }
+          if (foundProfile.showClubActivity !== false) {
+            const contributions = getMemberContributions(club.id, foundProfile.id);
+            for (const c of contributions) {
+              clubActivityItems.push({
+                id: c.id,
+                activity_type: `club_${c.contribution_type}`,
+                description: `[${club.name}] ${c.title}`,
+                created_at: c.created_at,
+              });
+            }
+          }
+        }
+      }
+      setClubProjects(clubProjEntries);
+      setClubActivity(clubActivityItems);
 
       // Fetch contributor-specific data if applicable
       if (foundProfile.role === 'contributor' || foundProfile.role === 'main_contributor') {
@@ -142,6 +217,10 @@ export function useProfile(username: string): UseProfileReturn {
     projects: profile?.projects || [],
     portfolioActivities: profile?.activities || [],
     achievements: profile?.achievements || [],
+    certifications,
+    clubMemberships,
+    clubProjects,
+    clubActivity,
     isLoading,
     isOwnProfile,
     notFound,

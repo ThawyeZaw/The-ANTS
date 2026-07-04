@@ -181,6 +181,11 @@ export interface Profile {
   academicGrades?: AcademicGradeEntry[];
   testimonials?: TestimonialEntry[];
   certifications?: CertificationEntry[];
+  customUrlSlug?: string | null;
+  showClubMemberships?: boolean;
+  showClubProjects?: boolean;
+  showClubActivity?: boolean;
+  certificationIds?: string[] | null;
   createdAt: string;
 }
 
@@ -310,6 +315,7 @@ export interface NoteEditorState {
   topicId: string | null;
   syllabusPoint: string;
   isSyllabusBased: boolean;
+  examBoard: string | null;
   tags: string[];
   blocks: NoteBlock[];
   isDirty: boolean;
@@ -454,6 +460,11 @@ export interface Note {
   reviewer_id?: string | null;
   created_at: string;
   updated_at: string;
+  // ── Library System additions ──
+  /** Exam board for library/filter tagging, e.g. "CAIE", "Edexcel" */
+  exam_board?: string | null;
+  /** Opaque token for link-sharing private notes */
+  share_token?: string | null;
 }
 
 /** Junction table: which notes a user has saved to their dashboard */
@@ -535,6 +546,10 @@ export interface Club {
   join_mode: ClubJoinMode;
   invite_code: string | null;
   enabled_features?: ClubFeature[];
+  cover_image_url?: string | null;
+  tagline?: string | null;
+  custom_domain_slug?: string | null;
+  is_showcase?: boolean;
   created_at: string;
 }
 
@@ -592,6 +607,106 @@ export interface ClubSubject {
   club_id: string;
   subject_id: string;
 }
+
+// ── Club Projects ──
+
+export type ProjectStatus = 'active' | 'completed' | 'archived';
+
+export interface ClubProjectLink {
+  label: string;
+  url: string;
+}
+
+export interface ClubProject {
+  id: string;
+  club_id: string;
+  created_by: string;
+  title: string;
+  description: string | null;
+  status?: ProjectStatus;
+  cover_image_url?: string | null;
+  links?: ClubProjectLink[];
+  contributors?: string[];
+  tags?: string[];
+  created_at: string;
+  updated_at?: string | null;
+}
+
+// ── Club Events ──
+
+export interface ClubEvent {
+  id: string;
+  club_id: string;
+  created_by: string;
+  title: string;
+  description: string | null;
+  event_date: string;
+  created_at: string;
+}
+
+// ── Club Milestones ──
+
+export type ClubMilestoneStatus = 'planned' | 'in_progress' | 'completed';
+
+export interface ClubMilestone {
+  id: string;
+  club_id: string;
+  title: string;
+  description: string | null;
+  status: ClubMilestoneStatus;
+  target_date?: string | null;
+  completed_at?: string | null;
+  created_by: string;
+  created_at: string;
+  order_no?: number | null;
+}
+
+// ── Club Member Contributions ──
+
+export type ContributionType = 'project' | 'event' | 'milestone_completed' | 'discussion' | 'other';
+
+export interface ClubMemberContribution {
+  id: string;
+  club_id: string;
+  user_id: string;
+  contribution_type: ContributionType;
+  title: string;
+  description?: string | null;
+  metadata?: Record<string, unknown> | null;
+  created_at: string;
+}
+
+// ── Academic Certifications ──
+
+export type CertificationType = 'igcse' | 'as_level' | 'a_level' | 'ielts' | 'toefl' | 'sat' | 'other';
+
+export interface Certification {
+  id: string;
+  user_id: string;
+  type: CertificationType;
+  subject?: string | null;
+  exam_board?: string | null;
+  grade?: string | null;
+  year?: number | null;
+  certificate_url?: string | null;
+  is_verified: boolean;
+  verified_by?: string | null;
+  is_hidden: boolean;
+  order_no?: number | null;
+  created_at: string;
+}
+
+/** Display metadata for certification types */
+export const CERTIFICATION_TYPE_META: Record<CertificationType, { label: string; icon: string; color: string }> = {
+  igcse: { label: 'IGCSE', icon: 'BookOpen', color: 'bg-blue-500/10 text-blue-400' },
+  as_level: { label: 'AS Level', icon: 'BookOpen', color: 'bg-purple-500/10 text-purple-400' },
+  a_level: { label: 'A Level', icon: 'BookOpen', color: 'bg-indigo-500/10 text-indigo-400' },
+  ielts: { label: 'IELTS', icon: 'Globe', color: 'bg-emerald-500/10 text-emerald-400' },
+  toefl: { label: 'TOEFL', icon: 'Globe', color: 'bg-teal-500/10 text-teal-400' },
+  sat: { label: 'SAT', icon: 'PenTool', color: 'bg-amber-500/10 text-amber-400' },
+  other: { label: 'Other', icon: 'Award', color: 'bg-gray-500/10 text-gray-400' },
+};
+
 
 // -----------------------------------------------------------------------------
 // Club Permission Helpers
@@ -866,6 +981,48 @@ export interface RoleUpgradeRequest {
 // Exams & Countdowns
 // -----------------------------------------------------------------------------
 
+// ── Library System Types ─────────────────────────────────────────────────────
+
+/** Status of a piece of content in the contributor library pipeline */
+export type LibraryStatus = 'pending_review' | 'approved' | 'rejected' | null;
+
+/** Visibility level for user-created content */
+export type ContentVisibility = 'private' | 'link' | 'public';
+
+/** Supported qualification keys (board_qualification format) */
+export type QualificationKey =
+  | 'CAIE_IGCSE'
+  | 'Edexcel_IGCSE'
+  | 'Edexcel_IAL'
+  | 'CAIE_AL'
+  | 'IELTS'
+  | 'OSSD'
+  | 'GED';
+
+/** Grading system identifier for grade calculator logic */
+export type GradingSystem =
+  | 'raw_marks_AG'      // Cambridge: A*-G via raw marks + boundaries
+  | 'raw_marks_91'      // Edexcel IGCSE: 9-1 via raw marks
+  | 'ums'               // Edexcel IAL: raw → UMS → aggregate
+  | 'band'              // IELTS: 0-9.0 in 0.5 increments
+  | 'percentage'        // OSSD: 0-100%
+  | 'scaled';           // GED: 145-200 per subject
+
+/** Describes the 3-level content hierarchy for a curriculum */
+export interface HierarchyModel {
+  /** Top level, e.g. "Subject" */
+  level1: string;
+  /** Middle level, e.g. "Paper", "Unit", "Module" */
+  level2: string;
+  /** Leaf level, e.g. "Topic", "Assignment" */
+  level3: string;
+}
+
+/** Date type for exam entries — fixed (board-defined) or custom (user-picked) */
+export type ExamDateType = 'fixed' | 'custom';
+
+// ── End Library System Types ──────────────────────────────────────────────────
+
 export interface Exam {
   id: string;
   curriculum_id: string | null;
@@ -875,6 +1032,19 @@ export interface Exam {
   exam_series: string | null;
   exam_date: string;
   created_at: string;
+  // ── Library System additions ──
+  /** Exam board abbreviation, e.g. "CAIE", "Edexcel", "IELTS" */
+  exam_board: string | null;
+  /** Subject syllabus code, e.g. "0620", "4MA1" */
+  syllabus_code: string | null;
+  /** Qualification type, e.g. "IGCSE", "IAL", "IELTS" */
+  qualification: string | null;
+  /** For IAL: unit code, e.g. "WMA11". For IGCSE: paper number, e.g. "P1" */
+  paper_code: string | null;
+  /** Whether the date is globally fixed (board series) or must be set by user */
+  date_type: ExamDateType;
+  /** Library pipeline status — null means user-created, not in library */
+  library_status: LibraryStatus;
 }
 
 export interface ExamGradeBoundary {
@@ -896,6 +1066,13 @@ export interface ExamCountdown {
   priority_indicator: 'high' | 'medium' | 'low' | string | null;
   qualification_group?: string;
   created_at: string;
+  // ── Library System additions ──
+  /** User override for the exam date (even for 'fixed' type exams) */
+  custom_date_override: string | null;
+  /** Token for link-sharing this countdown */
+  share_token: string | null;
+  /** Whether this countdown was created from the library (has linked exam) or is fully custom */
+  is_custom: boolean;
 }
 
 // -----------------------------------------------------------------------------
@@ -973,7 +1150,9 @@ export type ReviewSubmissionType =
   | 'note'
   | 'resource'
   | 'flashcard_deck'
-  | 'exam';
+  | 'exam'
+  | 'calculator'
+  | 'countdown';
 
 /** Predefined feedback category tags for rejected submissions */
 export type ReviewFeedbackCategory =
@@ -1064,6 +1243,17 @@ export interface Deck {
   category: string | null;
   is_public: boolean;
   created_at: string;
+  // ── Library System additions ──
+  /** Exam board abbreviation for library tagging, e.g. "CAIE", "Edexcel" */
+  exam_board: string | null;
+  /** Subject syllabus code for library tagging, e.g. "0620" */
+  syllabus_code: string | null;
+  /** Visibility level: private (default), link (share URL), public (in library) */
+  visibility: ContentVisibility;
+  /** Opaque token for link-sharing (generated on demand) */
+  share_token: string | null;
+  /** Library pipeline status — null means never submitted to library */
+  library_status: LibraryStatus;
 }
 
 /** A single flashcard (maps to `cards` table) */

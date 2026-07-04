@@ -1,9 +1,9 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — NavBar Component
-// Creative floating glassmorphism nav with grouped dropdowns.
-// Role-aware: links render only for the roles that can access them.
+// The ANTS — NavBar Component (v2 — Library System Redesign)
+// Restructured groups: Learn | Study | Plan | Library | Community | Contribute | Admin
+// Role-aware floating glassmorphism nav with grouped dropdowns.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useRef, useEffect } from 'react';
@@ -18,7 +18,6 @@ import {
   Users,
   ClipboardCheck,
   Pencil,
-  FileText,
   ShieldCheck,
   UserCircle,
   Sun,
@@ -30,7 +29,6 @@ import {
   Clock,
   Calculator,
   MessageSquare,
-  Bug,
   Settings,
   UserPlus,
   Library,
@@ -38,11 +36,18 @@ import {
   Info,
   LayoutGrid,
   Compass,
+  BookMarked,
+  FlaskConical,
+  NotebookPen,
+  Sparkles,
+  ScrollText,
+  SquareStack,
+  Briefcase,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
 import { useTheme } from '@/context/ThemeContext';
-import { cn, getInitials, getRoleDisplayName } from '@/lib/utils';
+import { cn, getInitials } from '@/lib/utils';
 import { RoleBadge } from '@/components/ui/Badge';
 import type { UserRole } from '@/types';
 
@@ -53,6 +58,7 @@ interface NavItem {
   href: string;
   icon: React.ReactNode;
   description: string;
+  badge?: string; // e.g. "Soon" or "New"
 }
 
 interface NavGroupDef {
@@ -60,81 +66,219 @@ interface NavGroupDef {
   icon: React.ReactNode;
   items: NavItem[];
   allowedRoles: UserRole[];
+  accentColor?: string; // CSS var or tailwind colour for the group indicator
 }
+
+const ALL_ROLES: UserRole[] = ['student', 'teacher', 'contributor', 'main_contributor'];
 
 const NAV_GROUPS: NavGroupDef[] = [
   {
-    label: 'Plan',
-    icon: <CalendarDays className="h-4 w-4" />,
-    allowedRoles: ['student', 'teacher', 'contributor', 'main_contributor'],
-    items: [
-      { label: 'Timetable', href: '/timetable', icon: <CalendarDays className="h-4 w-4" />, description: 'Manage your weekly schedule' },
-      { label: 'Exam Countdown', href: '/countdown', icon: <Clock className="h-4 w-4" />, description: 'Track time until exams' },
-      { label: 'Grade Calculator', href: '/calculator', icon: <Calculator className="h-4 w-4" />, description: 'Calculate predicted grades' },
-    ],
-  },
-  {
-    label: 'Study Tools',
-    icon: <BookOpen className="h-4 w-4" />,
-    allowedRoles: ['student', 'teacher', 'contributor', 'main_contributor'],
-    items: [
-      { label: 'Flashcards', href: '/flashcards', icon: <Layers className="h-4 w-4" />, description: 'Spaced-repetition decks' },
-      { label: 'Pomodoro Timer', href: '/pomodoro', icon: <Timer className="h-4 w-4" />, description: 'Focus sessions with music' },
-    ],
-  },
-  {
     label: 'Learn',
     icon: <GraduationCap className="h-4 w-4" />,
-    allowedRoles: ['student', 'teacher', 'contributor', 'main_contributor'],
+    allowedRoles: ALL_ROLES,
+    accentColor: 'var(--color-emerald-500, #10b981)',
     items: [
-      { label: 'Lesson Tracker', href: '/lessons', icon: <ClipboardCheck className="h-4 w-4" />, description: 'Track topic confidence' },
-      { label: 'Course Manager', href: '/courses', icon: <BookOpen className="h-4 w-4" />, description: 'Manage your subjects' },
-      { label: 'Notes Library', href: '/library', icon: <Library className="h-4 w-4" />, description: 'Browse study notes' },
-      { label: 'My Notes', href: '/my-notes', icon: <Bookmark className="h-4 w-4" />, description: 'Your created and saved notes' },
+      {
+        label: 'Course Manager',
+        href: '/courses',
+        icon: <BookOpen className="h-4 w-4" />,
+        description: 'Manage enrolled qualifications & subjects',
+      },
+      {
+        label: 'Lesson Tracker',
+        href: '/lessons',
+        icon: <ClipboardCheck className="h-4 w-4" />,
+        description: 'Track topic confidence & progress',
+      },
+      {
+        label: 'My Workspace',
+        href: '/workspace',
+        icon: <Briefcase className="h-4 w-4" />,
+        description: 'All your notes, decks, courses & exams',
+      },
+    ],
+  },
+  {
+    label: 'Study',
+    icon: <Sparkles className="h-4 w-4" />,
+    allowedRoles: ALL_ROLES,
+    accentColor: 'var(--color-violet-500, #8b5cf6)',
+    items: [
+      {
+        label: 'Flashcards',
+        href: '/flashcards',
+        icon: <Layers className="h-4 w-4" />,
+        description: 'Spaced-repetition study sessions',
+      },
+      {
+        label: 'Notes',
+        href: '/my-notes',
+        icon: <NotebookPen className="h-4 w-4" />,
+        description: 'Your created & saved study notes',
+      },
+      {
+        label: 'Pomodoro Timer',
+        href: '/pomodoro',
+        icon: <Timer className="h-4 w-4" />,
+        description: 'Focus sessions with ambient music',
+      },
+    ],
+  },
+  {
+    label: 'Plan',
+    icon: <CalendarDays className="h-4 w-4" />,
+    allowedRoles: ALL_ROLES,
+    accentColor: 'var(--color-sky-500, #0ea5e9)',
+    items: [
+      {
+        label: 'Timetable',
+        href: '/timetable',
+        icon: <CalendarDays className="h-4 w-4" />,
+        description: 'Manage your weekly schedule',
+      },
+      {
+        label: 'Exam Countdown',
+        href: '/countdown',
+        icon: <Clock className="h-4 w-4" />,
+        description: 'Track time until your exams',
+      },
+      {
+        label: 'Grade Calculator',
+        href: '/calculator',
+        icon: <Calculator className="h-4 w-4" />,
+        description: 'Predict grades by qualification',
+      },
+    ],
+  },
+  {
+    label: 'Library',
+    icon: <BookMarked className="h-4 w-4" />,
+    allowedRoles: ALL_ROLES,
+    accentColor: 'var(--color-amber-500, #f59e0b)',
+    items: [
+      {
+        label: 'Courses Library',
+        href: '/library/courses',
+        icon: <ScrollText className="h-4 w-4" />,
+        description: 'Browse verified curriculum templates',
+      },
+      {
+        label: 'Flashcards Library',
+        href: '/library/flashcards',
+        icon: <SquareStack className="h-4 w-4" />,
+        description: 'Browse contributor-approved decks',
+      },
+      {
+        label: 'Notes Library',
+        href: '/library',
+        icon: <Library className="h-4 w-4" />,
+        description: 'Browse verified study notes',
+      },
+      {
+        label: 'Exams Library',
+        href: '/library/exams',
+        icon: <FlaskConical className="h-4 w-4" />,
+        description: 'Browse exam dates & papers by board',
+      },
     ],
   },
   {
     label: 'Community',
     icon: <Users className="h-4 w-4" />,
-    allowedRoles: ['student', 'teacher', 'contributor', 'main_contributor'],
+    allowedRoles: ALL_ROLES,
+    accentColor: 'var(--color-pink-500, #ec4899)',
     items: [
-      { label: 'Classrooms', href: '/classrooms', icon: <GraduationCap className="h-4 w-4" />, description: 'Virtual classrooms' },
-      { label: 'Clubs', href: '/clubs', icon: <MessageSquare className="h-4 w-4" />, description: 'Community spaces' },
-      { label: 'Explore Profiles', href: '/explore/profiles', icon: <Compass className="h-4 w-4" />, description: 'Browse student & educator profiles' },
+      {
+        label: 'Classrooms',
+        href: '/classrooms',
+        icon: <GraduationCap className="h-4 w-4" />,
+        description: 'Virtual classrooms & assignments',
+      },
+      {
+        label: 'Clubs',
+        href: '/clubs',
+        icon: <MessageSquare className="h-4 w-4" />,
+        description: 'Community spaces & discussions',
+      },
+      {
+        label: 'Explore Profiles',
+        href: '/explore/profiles',
+        icon: <Compass className="h-4 w-4" />,
+        description: 'Browse student & educator profiles',
+      },
     ],
   },
   {
-    label: 'Editor',
+    label: 'Contribute',
     icon: <Pencil className="h-4 w-4" />,
     allowedRoles: ['contributor', 'main_contributor'],
+    accentColor: 'var(--color-indigo-500, #6366f1)',
     items: [
-      { label: 'Notes Editor', href: '/editor/notes', icon: <Library className="h-4 w-4" />, description: 'Create & edit study notes' },
-      { label: 'Curriculum Library', href: '/editor/curriculum', icon: <BookOpen className="h-4 w-4" />, description: 'Manage curricula & subjects' },
-      { label: 'Exam Data', href: '/editor/exam', icon: <ClipboardCheck className="h-4 w-4" />, description: 'Edit exam data & boundaries' },
+      {
+        label: 'Notes Editor',
+        href: '/editor/notes',
+        icon: <NotebookPen className="h-4 w-4" />,
+        description: 'Create & edit study notes',
+      },
+      {
+        label: 'Curriculum Editor',
+        href: '/editor/curriculum',
+        icon: <BookOpen className="h-4 w-4" />,
+        description: 'Manage curricula & subjects',
+      },
+      {
+        label: 'Exam Data Editor',
+        href: '/editor/exam',
+        icon: <ClipboardCheck className="h-4 w-4" />,
+        description: 'Edit exam data & grade boundaries',
+      },
+      {
+        label: 'Grade Calc Presets',
+        href: '/contribute/grade-calculator',
+        icon: <Calculator className="h-4 w-4" />,
+        description: 'Propose grade calculator configurations',
+      },
+      {
+        label: 'Countdown Editor',
+        href: '/contribute/countdown',
+        icon: <Clock className="h-4 w-4" />,
+        description: 'Propose exam dates to the library',
+      },
     ],
   },
   {
-    label: 'Review',
+    label: 'Admin',
     icon: <ShieldCheck className="h-4 w-4" />,
     allowedRoles: ['main_contributor'],
+    accentColor: 'var(--color-amber-500, #f59e0b)',
     items: [
-      { label: 'Review Queue', href: '/main-contributor/review-queue', icon: <ShieldCheck className="h-4 w-4" />, description: 'Approve or reject submissions' },
-      { label: 'Role Upgrades', href: '/main-contributor/role-upgrades', icon: <UserCircle className="h-4 w-4" />, description: 'Review role upgrade requests' },
-      { label: 'Add User', href: '/main-contributor/add-contributor', icon: <UserPlus className="h-4 w-4" />, description: 'Invite new contributor' },
+      {
+        label: 'Review Queue',
+        href: '/main-contributor/review-queue',
+        icon: <ShieldCheck className="h-4 w-4" />,
+        description: 'Approve or reject submissions',
+      },
+      {
+        label: 'Role Upgrades',
+        href: '/main-contributor/role-upgrades',
+        icon: <UserCircle className="h-4 w-4" />,
+        description: 'Review role upgrade requests',
+      },
+      {
+        label: 'Add User',
+        href: '/main-contributor/add-contributor',
+        icon: <UserPlus className="h-4 w-4" />,
+        description: 'Invite a new contributor',
+      },
+      {
+        label: 'Manage Org',
+        href: '/org-activities/manage',
+        icon: <LayoutGrid className="h-4 w-4" />,
+        description: 'Manage org activities & timeline',
+      },
     ],
   },
-  {
-    label: 'Organisation',
-    icon: <LayoutGrid className="h-4 w-4" />,
-    allowedRoles: ['main_contributor'],
-    items: [
-      { label: 'Manage Activities & Timeline', href: '/org-activities/manage', icon: <LayoutGrid className="h-4 w-4" />, description: 'Manage org activities, photos & milestones' },
-    ],
-  },
-
 ];
-
-
 
 // ── Dropdown Component ───────────────────────────────────────────────────────
 
@@ -150,6 +294,10 @@ function NavDropdown({
   onClose: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
+
+  // Check if any item in this group is the current page
+  const isActive = group.items.some(item => pathname.startsWith(item.href));
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -169,7 +317,7 @@ function NavDropdown({
         onClick={onToggle}
         className={cn(
           'flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer',
-          isOpen
+          isOpen || isActive
             ? 'bg-primary/10 text-primary'
             : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary'
         )}
@@ -185,30 +333,57 @@ function NavDropdown({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-64 glass rounded-xl p-2 animate-slide-down z-50">
-          {group.items.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onClose}
-              className="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-background-secondary transition-colors duration-150 group"
-            >
-              <div className="mt-0.5 text-foreground-muted group-hover:text-primary transition-colors">
-                {item.icon}
-              </div>
-              <div>
-                <p className="text-sm font-medium text-foreground">{item.label}</p>
-                <p className="text-xs text-foreground-muted">{item.description}</p>
-              </div>
-            </Link>
-          ))}
+        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-72 glass rounded-xl p-2 animate-slide-down z-50 shadow-xl">
+          {/* Group label header */}
+          <div className="px-3 py-1.5 mb-1 border-b border-border/50">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-foreground-muted">
+              {group.label}
+            </p>
+          </div>
+          {group.items.map((item) => {
+            const isItemActive = pathname.startsWith(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={onClose}
+                className={cn(
+                  'flex items-start gap-3 px-3 py-2.5 rounded-lg transition-colors duration-150 group',
+                  isItemActive
+                    ? 'bg-primary/10 text-primary'
+                    : 'hover:bg-background-secondary'
+                )}
+              >
+                <div className={cn(
+                  'mt-0.5 transition-colors shrink-0',
+                  isItemActive ? 'text-primary' : 'text-foreground-muted group-hover:text-primary'
+                )}>
+                  {item.icon}
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className={cn(
+                      'text-sm font-medium',
+                      isItemActive ? 'text-primary' : 'text-foreground'
+                    )}>{item.label}</p>
+                    {item.badge && (
+                      <span className="text-[9px] font-bold uppercase tracking-wide bg-primary/15 text-primary px-1.5 py-0.5 rounded-full">
+                        {item.badge}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-foreground-muted leading-tight mt-0.5">{item.description}</p>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>
   );
 }
 
-// ── Helper to flatten nav items ────────────────────────────────────────────────
+// ── Helper to flatten nav items ───────────────────────────────────────────────
 export const getAllNavItems = () => {
   return NAV_GROUPS.flatMap(group => group.items);
 };
@@ -269,23 +444,15 @@ export default function NavBar() {
   // Track recently accessed pages
   useEffect(() => {
     if (!pathname || pathname === '/dashboard' || pathname === '/') return;
-    
-    // Only track valid nav items
     const allItems = getAllNavItems();
     const isValidItem = allItems.some(item => pathname.startsWith(item.href));
     if (!isValidItem && !pathname.startsWith('/profile')) return;
-
     try {
       const recentStr = localStorage.getItem('recentPages');
       let recent: { href: string; timestamp: number }[] = recentStr ? JSON.parse(recentStr) : [];
-      
-      // Remove if already exists to move to top
       recent = recent.filter(p => p.href !== pathname);
       recent.unshift({ href: pathname, timestamp: Date.now() });
-      
-      // Keep only last 5
       if (recent.length > 5) recent.pop();
-      
       localStorage.setItem('recentPages', JSON.stringify(recent));
     } catch (e) {
       console.error('Failed to track recent page:', e);
@@ -308,19 +475,19 @@ export default function NavBar() {
       {/* Floating NavBar Container */}
       <div className="mx-auto max-w-7xl px-4 pt-3">
         <nav className="glass rounded-2xl px-4 py-2 flex items-center justify-between animate-glow">
-          {/* ─── Logo ─── */}
+          {/* ─── Logo + Dashboard ─── */}
           <Link
             href={role ? '/dashboard' : '/'}
-            className="flex items-center gap-2 shrink-0"
+            className="flex items-center gap-2 shrink-0 group"
           >
-            <span className="text-xl">{'\u{1F41C}'}</span>
+            <span className="text-xl group-hover:scale-110 transition-transform duration-200">{'🐜'}</span>
             <span className="font-bold text-lg bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               The ANTS
             </span>
           </Link>
 
           {/* ─── Desktop Nav Groups ─── */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden md:flex items-center gap-0.5">
             {visibleGroups.map((group) => (
               <NavDropdown
                 key={group.label}
@@ -378,7 +545,7 @@ export default function NavBar() {
                 </button>
 
                 {isUserMenuOpen && (
-                  <div className="absolute top-full right-0 mt-2 w-64 glass rounded-xl p-3 animate-slide-down z-50">
+                  <div className="absolute top-full right-0 mt-2 w-64 glass rounded-xl p-3 animate-slide-down z-50 shadow-xl">
                     <div className="pb-3 mb-3 border-b border-border">
                       <p className="font-semibold text-sm text-foreground">{user.profile.name}</p>
                       <p className="text-xs text-foreground-muted mt-0.5">{user.email}</p>
@@ -437,25 +604,71 @@ export default function NavBar() {
 
         {/* ─── Mobile Menu ─── */}
         {isMobileOpen && (
-          <div className="md:hidden mt-2 glass rounded-2xl p-4 animate-slide-down max-h-[calc(100vh-6rem)] overflow-y-auto">
+          <div className="md:hidden mt-2 glass rounded-2xl p-4 animate-slide-down max-h-[calc(100vh-6rem)] overflow-y-auto shadow-xl">
             {visibleGroups.map((group) => (
-              <div key={group.label} className="mb-4 last:mb-0">
-                <p className="text-xs font-semibold text-foreground-muted uppercase tracking-wider mb-2 px-2">
-                  {group.label}
-                </p>
-                {group.items.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setIsMobileOpen(false)}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-background-secondary transition-colors"
-                  >
-                    <span className="text-foreground-muted">{item.icon}</span>
-                    <span className="text-sm font-medium text-foreground">{item.label}</span>
-                  </Link>
-                ))}
+              <div key={group.label} className="mb-5 last:mb-0">
+                <div className="flex items-center gap-2 mb-2 px-2">
+                  <span className="text-foreground-muted">{group.icon}</span>
+                  <p className="text-xs font-bold text-foreground-muted uppercase tracking-widest">
+                    {group.label}
+                  </p>
+                </div>
+                {group.items.map((item) => {
+                  const isItemActive = pathname.startsWith(item.href);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setIsMobileOpen(false)}
+                      className={cn(
+                        'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors mb-0.5',
+                        isItemActive
+                          ? 'bg-primary/10 text-primary'
+                          : 'hover:bg-background-secondary'
+                      )}
+                    >
+                      <span className={isItemActive ? 'text-primary' : 'text-foreground-muted'}>
+                        {item.icon}
+                      </span>
+                      <div>
+                        <p className={cn('text-sm font-medium', isItemActive ? 'text-primary' : 'text-foreground')}>
+                          {item.label}
+                        </p>
+                        <p className="text-xs text-foreground-muted">{item.description}</p>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             ))}
+            {/* Mobile user actions */}
+            {user && (
+              <div className="mt-4 pt-4 border-t border-border space-y-1">
+                <Link
+                  href={`/profile/${user.profile.username}`}
+                  onClick={() => setIsMobileOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-background-secondary transition-colors"
+                >
+                  <UserCircle className="h-4 w-4 text-foreground-muted" />
+                  <span className="text-sm font-medium text-foreground">My Profile</span>
+                </Link>
+                <Link
+                  href="/settings"
+                  onClick={() => setIsMobileOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-background-secondary transition-colors"
+                >
+                  <Settings className="h-4 w-4 text-foreground-muted" />
+                  <span className="text-sm font-medium text-foreground">Settings</span>
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-error hover:bg-error/10 transition-colors cursor-pointer"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span className="text-sm font-medium">Sign Out</span>
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import { useCountdown } from '@/hooks/useCountdown';
 import { CountdownCard } from './CountdownCard';
 import { AddCountdownModal } from './AddCountdownModal';
-import { Plus, Timer } from 'lucide-react';
+import { Plus, Timer, BookMarked } from 'lucide-react';
+import Link from 'next/link';
 
 interface CountdownManagerProps {
   userId: string;
@@ -38,14 +39,23 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
           <p className="text-[var(--foreground-secondary)] mt-2">Manage your upcoming exams and visualize remaining time.</p>
         </div>
         
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 rounded-xl bg-[var(--primary)] px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-[var(--primary-hover)] hover:shadow-[var(--shadow-glow)] focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:outline-none"
-          aria-label="Add a new exam countdown"
-        >
-          <Plus className="h-5 w-5" aria-hidden="true" />
-          Add Countdown
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Link
+            href="/library/exams"
+            className="flex items-center gap-2 rounded-xl bg-amber-500/10 px-4 py-2 text-sm font-semibold text-amber-600 dark:text-amber-400 transition-all hover:bg-amber-500/20"
+          >
+            <BookMarked className="h-4 w-4" aria-hidden="true" />
+            Browse Exams Library
+          </Link>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 rounded-xl bg-[var(--primary)] px-5 py-2 text-sm font-medium text-white transition-all hover:bg-[var(--primary-hover)] hover:shadow-[var(--shadow-glow)] focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:outline-none"
+            aria-label="Add a new custom countdown"
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            Custom
+          </button>
+        </div>
       </div>
 
       {sortedGroups.length === 0 ? (

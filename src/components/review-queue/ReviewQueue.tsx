@@ -9,7 +9,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import {
   Shield, CheckCircle, XCircle, Pencil, Eye,
-  Clock, BookOpen, FileText, Layers, Database, GraduationCap,
+  Clock, BookOpen, FileText, Layers, Database, GraduationCap, Calculator,
   ChevronDown, ChevronRight, Tag, MessageSquare,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -34,6 +34,8 @@ const SUBMISSION_TABS: { key: ReviewSubmissionType | 'all'; label: string; icon:
   { key: 'resource', label: 'Resources', icon: <Database className="h-4 w-4" /> },
   { key: 'flashcard_deck', label: 'Flashcards', icon: <Layers className="h-4 w-4" /> },
   { key: 'exam', label: 'Exams', icon: <Clock className="h-4 w-4" /> },
+  { key: 'calculator', label: 'Grade Calc', icon: <Calculator className="h-4 w-4" /> },
+  { key: 'countdown', label: 'Countdowns', icon: <Clock className="h-4 w-4" /> },
 ];
 
 const FEEDBACK_CATEGORIES: { key: ReviewFeedbackCategory; label: string }[] = [
@@ -275,6 +277,8 @@ export default function ReviewQueue() {
                       item.submission_type === 'resource' && 'bg-emerald-500/10 text-emerald-500',
                       item.submission_type === 'flashcard_deck' && 'bg-pink-500/10 text-pink-500',
                       item.submission_type === 'exam' && 'bg-red-500/10 text-red-500',
+                      item.submission_type === 'calculator' && 'bg-indigo-500/10 text-indigo-500',
+                      item.submission_type === 'countdown' && 'bg-orange-500/10 text-orange-500',
                     )}>
                       {getTypeLabel(item.submission_type)}
                     </span>

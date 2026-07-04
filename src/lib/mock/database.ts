@@ -60,6 +60,7 @@ import {
   ClassroomResource,
   UserSavedNote,
   ExamGradeBoundary,
+  ReviewQueueItem,
   Topic,
 } from '@/types';
 import { generateUsername } from '@/lib/utils';
@@ -1113,7 +1114,157 @@ interface ExamReviewSubmissionRecord {
   payload?: Record<string, unknown>;
 }
 
-const examReviewSubmissions: ExamReviewSubmissionRecord[] = [];
+const examReviewSubmissions: ExamReviewSubmissionRecord[] = [
+  // ── Sample approved calculator presets ──────────────────────────────────────
+  {
+    id: 'sub-calculator-0625-mj27',
+    contributor_id: 'user-contributor-001',
+    submission_type: 'calculator',
+    entity_id: 'Physics 0625 May/June 2027',
+    status: 'approved',
+    reviewer_id: 'user-main-contributor-001',
+    feedback: null,
+    submitted_at: '2026-06-15T10:00:00Z',
+    reviewed_at: '2026-06-16T14:00:00Z',
+    payload: {
+      curriculum_id: 'curr-igcse-cie',
+      subject_id: 'subj-cie-physics',
+      title: 'Physics (0625)',
+      subject_code: '0625',
+      series: 'May/June 2027 (V2)',
+      papers: [
+        { name: 'Paper 2 (Multiple Choice)', max_mark: 40, weight: 30, paper_boundaries: [
+          { grade: 'A*', min_mark: 36 },
+          { grade: 'A', min_mark: 32 },
+          { grade: 'B', min_mark: 28 },
+          { grade: 'C', min_mark: 24 },
+          { grade: 'D', min_mark: 20 },
+          { grade: 'E', min_mark: 16 },
+        ]},
+        { name: 'Paper 4 (Theory)', max_mark: 80, weight: 50, paper_boundaries: [
+          { grade: 'A*', min_mark: 72 },
+          { grade: 'A', min_mark: 64 },
+          { grade: 'B', min_mark: 56 },
+          { grade: 'C', min_mark: 48 },
+          { grade: 'D', min_mark: 40 },
+          { grade: 'E', min_mark: 32 },
+        ]},
+        { name: 'Paper 6 (Practical)', max_mark: 40, weight: 20, paper_boundaries: [
+          { grade: 'A*', min_mark: 36 },
+          { grade: 'A', min_mark: 32 },
+          { grade: 'B', min_mark: 28 },
+          { grade: 'C', min_mark: 24 },
+          { grade: 'D', min_mark: 20 },
+          { grade: 'E', min_mark: 16 },
+        ]},
+      ],
+      grade_boundaries: [
+        { grade: 'A*', min_mark: 136 },
+        { grade: 'A', min_mark: 120 },
+        { grade: 'B', min_mark: 104 },
+        { grade: 'C', min_mark: 88 },
+        { grade: 'D', min_mark: 72 },
+        { grade: 'E', min_mark: 56 },
+      ],
+    },
+  },
+  {
+    id: 'sub-calculator-0580-mj27',
+    contributor_id: 'user-contributor-001',
+    submission_type: 'calculator',
+    entity_id: 'Mathematics 0580 May/June 2027',
+    status: 'approved',
+    reviewer_id: 'user-main-contributor-001',
+    feedback: null,
+    submitted_at: '2026-06-20T09:00:00Z',
+    reviewed_at: '2026-06-21T11:00:00Z',
+    payload: {
+      curriculum_id: 'curr-igcse-cie',
+      subject_id: 'subj-cie-maths',
+      title: 'Mathematics (0580)',
+      subject_code: '0580',
+      series: 'May/June 2027 (V2)',
+      papers: [
+        { name: 'Paper 2 (Non-Calculator)', max_mark: 70, weight: 35 },
+        { name: 'Paper 4 (Calculator)', max_mark: 130, weight: 65 },
+      ],
+      grade_boundaries: [
+        { grade: 'A*', min_mark: 156 },
+        { grade: 'A', min_mark: 132 },
+        { grade: 'B', min_mark: 108 },
+        { grade: 'C', min_mark: 84 },
+        { grade: 'D', min_mark: 60 },
+        { grade: 'E', min_mark: 40 },
+      ],
+    },
+  },
+  {
+    id: 'sub-calculator-0478-mj27',
+    contributor_id: 'user-contributor-001',
+    submission_type: 'calculator',
+    entity_id: 'Computer Science 0478 May/June 2027',
+    status: 'approved',
+    reviewer_id: 'user-main-contributor-001',
+    feedback: null,
+    submitted_at: '2026-06-25T12:00:00Z',
+    reviewed_at: '2026-06-26T08:00:00Z',
+    payload: {
+      curriculum_id: 'curr-igcse-cie',
+      subject_id: 'subj-cie-cs',
+      title: 'Computer Science (0478)',
+      subject_code: '0478',
+      series: 'May/June 2027 (V2)',
+      papers: [
+        { name: 'Paper 1 (Theory)', max_mark: 75, weight: 50 },
+        { name: 'Paper 2 (Problem Solving)', max_mark: 50, weight: 50 },
+      ],
+      grade_boundaries: [
+        { grade: 'A*', min_mark: 95 },
+        { grade: 'A', min_mark: 82 },
+        { grade: 'B', min_mark: 69 },
+        { grade: 'C', min_mark: 56 },
+        { grade: 'D', min_mark: 43 },
+        { grade: 'E', min_mark: 30 },
+      ],
+    },
+  },
+  // ── Edexcel IAL Physics (modular) ──────────────────────────────────────────
+  {
+    id: 'sub-calculator-ial-phys-mj27',
+    contributor_id: 'user-contributor-001',
+    submission_type: 'calculator',
+    entity_id: 'Edexcel IAL Physics WPH11 May/June 2027',
+    status: 'approved',
+    reviewer_id: 'user-main-contributor-001',
+    feedback: null,
+    submitted_at: '2026-07-01T08:00:00Z',
+    reviewed_at: '2026-07-01T16:00:00Z',
+    payload: {
+      curriculum_id: 'curr-ial-edx',
+      subject_id: 'subj-ial-physics',
+      title: 'Edexcel IAL Physics (WPH)',
+      subject_code: 'WPH',
+      series: 'May/June 2027',
+      is_modular: true,
+      papers: [
+        { name: 'Unit 1 — Mechanics & Materials', max_mark: 80, weight: 100, unit_group: 'AS' },
+        { name: 'Unit 2 — Waves & Electricity', max_mark: 80, weight: 100, unit_group: 'AS' },
+        { name: 'Unit 3 — Practical Skills I', max_mark: 50, weight: 100, unit_group: 'AS' },
+        { name: 'Unit 4 — Fields & Further Mechanics', max_mark: 80, weight: 100, unit_group: 'A2' },
+        { name: 'Unit 5 — Thermodynamics & Nuclear', max_mark: 80, weight: 100, unit_group: 'A2' },
+        { name: 'Unit 6 — Practical Skills II', max_mark: 50, weight: 100, unit_group: 'A2' },
+      ],
+      grade_boundaries: [
+        { grade: 'A*', min_mark: 420 },
+        { grade: 'A', min_mark: 380 },
+        { grade: 'B', min_mark: 320 },
+        { grade: 'C', min_mark: 260 },
+        { grade: 'D', min_mark: 200 },
+        { grade: 'E', min_mark: 140 },
+      ],
+    },
+  },
+];
 
 function addExamReviewSubmission(contributorId: string, type: ExamReviewSubmissionRecord['submission_type'], entityId: string, payload?: Record<string, unknown>) {
   const submission: ExamReviewSubmissionRecord = {
@@ -1142,7 +1293,19 @@ export function submitExamCalculatorPreset(payload: any, contributorId: string):
     return { success: false, error: 'Subject title is required.' };
   }
 
+  // Add to legacy exam review list
   addExamReviewSubmission(contributorId, 'calculator', payload.title.trim(), payload);
+
+  // Also add to the general review queue for the main ReviewQueue component
+  submitToReviewQueue({
+    contributor_id: contributorId,
+    submission_type: 'calculator',
+    entity_id: payload.title.trim(),
+    submitted_data: payload,
+    is_update: false,
+    published_entity_id: null,
+  });
+
   return { success: true };
 }
 
@@ -1155,7 +1318,19 @@ export function submitExamCountdownProposal(payload: any, contributorId: string)
     return { success: false, error: 'At least one countdown proposal is required.' };
   }
 
+  // Add to legacy exam review list
   addExamReviewSubmission(contributorId, 'countdown', payload.countdowns[0].title || 'Countdown proposal', payload);
+
+  // Also add to the general review queue for the main ReviewQueue component
+  submitToReviewQueue({
+    contributor_id: contributorId,
+    submission_type: 'countdown',
+    entity_id: payload.countdowns[0].title || 'countdown-proposal',
+    submitted_data: payload,
+    is_update: false,
+    published_entity_id: null,
+  });
+
   return { success: true };
 }
 
@@ -1181,6 +1356,31 @@ export function getPendingExamSubmissions() {
     .sort((a, b) => (a.status === 'pending_review' ? -1 : 1));
 }
 
+/** Get exam submissions filtered by contributor ID (for "My Submissions" view) */
+export function getExamSubmissionsByContributor(contributorId: string) {
+  return examReviewSubmissions
+    .filter((submission) => submission.contributor_id === contributorId)
+    .sort((a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime())
+    .map((submission) => {
+      const contributor = mockProfiles.find((profile) => profile.id === submission.contributor_id);
+      const p = submission.payload as Record<string, unknown> | undefined;
+      const title = p?.title as string | undefined || ((p?.countdowns as Array<Record<string, unknown>> | undefined)?.[0]?.title as string | undefined) || submission.entity_id;
+      const summary = submission.submission_type === 'calculator'
+        ? `Calculator preset for ${(p?.subject_code as string) || 'new subject'} • ${(p?.series as string) || 'review pending'}`
+        : `Countdown proposal for ${((p?.countdowns as Array<Record<string, unknown>> | undefined)?.[0]?.title as string) || 'new exam'} • ${((p?.countdowns as Array<Record<string, unknown>> | undefined)?.[0]?.qualification_group as string) || 'Custom'}`;
+
+      return {
+        id: submission.id,
+        title: typeof title === 'string' ? title : 'Exam submission',
+        type: submission.submission_type as 'calculator' | 'countdown' | 'exam',
+        contributorName: contributor?.name || 'Contributor',
+        summary,
+        status: submission.status as 'pending_review' | 'approved' | 'rejected',
+        feedback: submission.feedback,
+      };
+    });
+}
+
 export function approveExamSubmission(submissionId: string, reviewerId: string): { success: boolean } {
   const submission = examReviewSubmissions.find((item) => item.id === submissionId);
   if (!submission) return { success: false };
@@ -1198,6 +1398,26 @@ export function rejectExamSubmission(submissionId: string, reviewerId: string, f
   submission.feedback = feedback;
   submission.reviewed_at = new Date().toISOString();
   return { success: true };
+}
+
+/** Get approved calculator presets for the student-facing GradeCalculator */
+export function getApprovedCalculatorPresets() {
+  return examReviewSubmissions
+    .filter(s => s.submission_type === 'calculator' && s.status === 'approved' && s.payload)
+    .map(s => {
+      const p = s.payload!;
+      return {
+        id: s.id,
+        title: (p.title as string) || 'Untitled Preset',
+        subject_code: (p.subject_code as string) || '',
+        curriculum_id: (p.curriculum_id as string) || '',
+        subject_id: (p.subject_id as string) || '',
+        series: (p.series as string) || 'May/June 2027',
+        is_modular: (p.is_modular as boolean) || false,
+        papers: (p.papers as Array<{ name: string; max_mark: number; weight: number; unit_group?: string; paper_boundaries?: Array<{ grade: string; min_mark: number }> }>) || [],
+        grade_boundaries: (p.grade_boundaries as Array<{ grade: string; min_mark: number }>) || [],
+      };
+    });
 }
 
 
@@ -1561,6 +1781,10 @@ export const mockClubs: Club[] = [
       { key: 'activity_timeline', enabled: true, public_visible: true },
       { key: 'leaderboard', enabled: false, public_visible: false },
     ],
+    cover_image_url: null,
+    tagline: 'Where curiosity meets discovery — explore, experiment, excel.',
+    custom_domain_slug: 'science-enthusiasts',
+    is_showcase: true,
     created_at: '2025-10-01T00:00:00Z',
   },
   {
@@ -1579,6 +1803,10 @@ export const mockClubs: Club[] = [
       { key: 'activity_timeline', enabled: false, public_visible: false },
       { key: 'leaderboard', enabled: true, public_visible: true },
     ],
+    cover_image_url: null,
+    tagline: 'Master the elements — one reaction at a time.',
+    custom_domain_slug: 'chemistry-circle',
+    is_showcase: false,
     created_at: '2026-02-14T00:00:00Z',
   },
   {
@@ -1597,6 +1825,10 @@ export const mockClubs: Club[] = [
       { key: 'activity_timeline', enabled: true, public_visible: false },
       { key: 'leaderboard', enabled: false, public_visible: false },
     ],
+    cover_image_url: null,
+    tagline: 'Sprint to success — focused revision, real results.',
+    custom_domain_slug: 'exam-sprint',
+    is_showcase: false,
     created_at: '2026-04-05T00:00:00Z',
   },
 ];
@@ -1657,7 +1889,13 @@ export const mockClubProjects: {
   created_by: string;
   title: string;
   description: string | null;
+  status?: string;
+  cover_image_url?: string | null;
+  links?: { label: string; url: string }[];
+  contributors?: string[];
+  tags?: string[];
   created_at: string;
+  updated_at?: string | null;
 }[] = [
   {
     id: 'cp-1',
@@ -1665,7 +1903,16 @@ export const mockClubProjects: {
     created_by: 'user-contributor-001',
     title: 'Newton\'s Laws Demo App',
     description: 'Interactive web app demonstrating all three laws of motion with real-time physics simulations.',
+    status: 'completed',
+    cover_image_url: null,
+    links: [
+      { label: 'GitHub', url: 'https://github.com/theants/newton-demo' },
+      { label: 'Live Demo', url: 'https://newton-demo.theants.app' },
+    ],
+    contributors: ['user-contributor-001', 'user-student-001'],
+    tags: ['physics', 'react', 'simulation'],
     created_at: '2026-04-15T00:00:00Z',
+    updated_at: '2026-06-01T00:00:00Z',
   },
   {
     id: 'cp-2',
@@ -1673,7 +1920,15 @@ export const mockClubProjects: {
     created_by: 'user-contributor-002',
     title: 'Organic Chemistry Flashcards',
     description: 'A curated deck covering all IGCSE organic chemistry reaction mechanisms and functional groups.',
+    status: 'active',
+    cover_image_url: null,
+    links: [
+      { label: 'View Deck', url: 'https://theants.app/flashcards/org-chem' },
+    ],
+    contributors: ['user-contributor-002'],
+    tags: ['chemistry', 'organic', 'flashcards', 'igcse'],
     created_at: '2026-05-20T00:00:00Z',
+    updated_at: null,
   },
   {
     id: 'cp-3',
@@ -1681,7 +1936,16 @@ export const mockClubProjects: {
     created_by: 'user-student-001',
     title: 'Physics Lab Report Template',
     description: 'Standardised LaTeX template for IGCSE physics lab reports with pre-built sections.',
+    status: 'completed',
+    cover_image_url: null,
+    links: [
+      { label: 'GitHub', url: 'https://github.com/theants/phys-lab-template' },
+      { label: 'Overleaf', url: 'https://overleaf.com/read/phys-template' },
+    ],
+    contributors: ['user-student-001'],
+    tags: ['physics', 'latex', 'template', 'igcse'],
     created_at: '2026-06-01T00:00:00Z',
+    updated_at: null,
   },
 ];
 
@@ -1729,6 +1993,171 @@ export const mockClubEvents: {
     description: 'Timed mock competition under real Olympiad conditions. Prizes for top 3!',
     event_date: '2026-07-20T09:00:00Z',
     created_at: '2026-06-18T10:00:00Z',
+  },
+];
+
+// ── Club Milestones ─────────────────────────────────────────────────────────
+
+export const mockClubMilestones: {
+  id: string;
+  club_id: string;
+  title: string;
+  description: string | null;
+  status: string;
+  target_date?: string | null;
+  completed_at?: string | null;
+  created_by: string;
+  created_at: string;
+  order_no?: number | null;
+}[] = [
+  // Club 1 milestones
+  {
+    id: 'cms-1',
+    club_id: 'club-1',
+    title: 'Launch Physics Demo App',
+    description: 'Complete and publish the Newton\'s Laws interactive demo app.',
+    status: 'completed',
+    target_date: '2026-06-01T00:00:00Z',
+    completed_at: '2026-06-01T00:00:00Z',
+    created_by: 'user-contributor-001',
+    created_at: '2026-04-01T00:00:00Z',
+    order_no: 1,
+  },
+  {
+    id: 'cms-2',
+    club_id: 'club-1',
+    title: 'Reach 50 Club Members',
+    description: 'Grow the community to 50 active members through outreach and events.',
+    status: 'in_progress',
+    target_date: '2026-08-01T00:00:00Z',
+    completed_at: null,
+    created_by: 'user-contributor-001',
+    created_at: '2026-04-01T00:00:00Z',
+    order_no: 2,
+  },
+  {
+    id: 'cms-3',
+    club_id: 'club-1',
+    title: 'Host Monthly Science Fair',
+    description: 'Organize a monthly science fair where members present projects and experiments.',
+    status: 'planned',
+    target_date: '2026-09-01T00:00:00Z',
+    completed_at: null,
+    created_by: 'user-contributor-001',
+    created_at: '2026-05-15T00:00:00Z',
+    order_no: 3,
+  },
+  // Club 2 milestones
+  {
+    id: 'cms-4',
+    club_id: 'club-2',
+    title: 'Complete Organic Chemistry Deck',
+    description: 'Finish and publish the comprehensive IGCSE organic chemistry flashcard deck.',
+    status: 'completed',
+    target_date: '2026-05-20T00:00:00Z',
+    completed_at: '2026-05-20T00:00:00Z',
+    created_by: 'user-contributor-002',
+    created_at: '2026-04-10T00:00:00Z',
+    order_no: 1,
+  },
+  {
+    id: 'cms-5',
+    club_id: 'club-2',
+    title: 'Lab Safety Workshop',
+    description: 'Conduct the mandatory lab safety refresher workshop before summer practicals.',
+    status: 'completed',
+    target_date: '2026-07-05T00:00:00Z',
+    completed_at: '2026-07-05T00:00:00Z',
+    created_by: 'user-contributor-002',
+    created_at: '2026-06-01T00:00:00Z',
+    order_no: 2,
+  },
+  // Club 3 milestones
+  {
+    id: 'cms-6',
+    club_id: 'club-3',
+    title: 'First Mock Exam Sprint',
+    description: 'Complete the first full mock exam sprint with all members.',
+    status: 'in_progress',
+    target_date: '2026-07-15T00:00:00Z',
+    completed_at: null,
+    created_by: 'user-main-contributor-001',
+    created_at: '2026-06-01T00:00:00Z',
+    order_no: 1,
+  },
+];
+
+// ── Club Member Contributions ────────────────────────────────────────────────
+
+export const mockMemberContributions: {
+  id: string;
+  club_id: string;
+  user_id: string;
+  contribution_type: string;
+  title: string;
+  description?: string | null;
+  metadata?: Record<string, unknown> | null;
+  created_at: string;
+}[] = [
+  // Club 1 contributions
+  {
+    id: 'cmc-1',
+    club_id: 'club-1',
+    user_id: 'user-contributor-001',
+    contribution_type: 'project',
+    title: 'Created Newton\'s Laws Demo App',
+    description: 'Led development of the interactive physics demo application.',
+    metadata: { project_id: 'cp-1' },
+    created_at: '2026-04-15T00:00:00Z',
+  },
+  {
+    id: 'cmc-2',
+    club_id: 'club-1',
+    user_id: 'user-student-001',
+    contribution_type: 'project',
+    title: 'Contributed to Newton\'s Laws Demo App',
+    description: 'Added Three.js simulation components and lab report template.',
+    metadata: { project_id: 'cp-1' },
+    created_at: '2026-05-10T00:00:00Z',
+  },
+  {
+    id: 'cmc-3',
+    club_id: 'club-1',
+    user_id: 'user-contributor-001',
+    contribution_type: 'milestone_completed',
+    title: 'Completed milestone: Launch Physics Demo App',
+    metadata: { milestone_id: 'cms-1' },
+    created_at: '2026-06-01T00:00:00Z',
+  },
+  // Club 2 contributions
+  {
+    id: 'cmc-4',
+    club_id: 'club-2',
+    user_id: 'user-contributor-002',
+    contribution_type: 'project',
+    title: 'Created Organic Chemistry Flashcards',
+    description: 'Published curated flashcard deck for IGCSE chemistry.',
+    metadata: { project_id: 'cp-2' },
+    created_at: '2026-05-20T00:00:00Z',
+  },
+  {
+    id: 'cmc-5',
+    club_id: 'club-2',
+    user_id: 'user-contributor-002',
+    contribution_type: 'event',
+    title: 'Organized Lab Safety Workshop',
+    metadata: { event_id: 'ce-2' },
+    created_at: '2026-06-20T09:00:00Z',
+  },
+  // Club 3 contributions
+  {
+    id: 'cmc-6',
+    club_id: 'club-3',
+    user_id: 'user-main-contributor-001',
+    contribution_type: 'other',
+    title: 'Onboarded new sprint members',
+    description: 'Conducted orientation session for 5 new members.',
+    created_at: '2026-06-05T00:00:00Z',
   },
 ];
 
@@ -1907,6 +2336,298 @@ export function demoteClubLeader(
   return { success: true, member: { ...targetMember } };
 }
 
+// ── Club Milestones ─────────────────────────────────────────────────────────
+
+/** Get all milestones for a club */
+export function getClubMilestones(clubId: string) {
+  return mockClubMilestones
+    .filter((m) => m.club_id === clubId)
+    .sort((a, b) => (a.order_no ?? 0) - (b.order_no ?? 0));
+}
+
+/** Add a milestone to a club */
+export function addClubMilestone(
+  clubId: string,
+  userId: string,
+  title: string,
+  description?: string | null,
+  targetDate?: string | null
+): { success: true; id: string } | { success: false; error: string } {
+  const member = mockClubMembers.find(
+    (m) => m.club_id === clubId && m.user_id === userId && (m.role === 'admin' || m.role === 'moderator')
+  );
+  if (!member) return { success: false, error: 'Only club leaders can add milestones.' };
+
+  const id = `cms-${Date.now()}`;
+  mockClubMilestones.push({
+    id,
+    club_id: clubId,
+    title,
+    description: description || null,
+    status: 'planned',
+    target_date: targetDate || null,
+    completed_at: null,
+    created_by: userId,
+    created_at: new Date().toISOString(),
+    order_no: mockClubMilestones.filter((m) => m.club_id === clubId).length + 1,
+  });
+  return { success: true, id };
+}
+
+/** Update a milestone status or details */
+export function updateClubMilestone(
+  milestoneId: string,
+  userId: string,
+  updates: {
+    title?: string;
+    description?: string | null;
+    status?: string;
+    target_date?: string | null;
+    order_no?: number | null;
+  }
+): { success: true } | { success: false; error: string } {
+  const milestone = mockClubMilestones.find((m) => m.id === milestoneId);
+  if (!milestone) return { success: false, error: 'Milestone not found.' };
+
+  const member = mockClubMembers.find(
+    (m) => m.club_id === milestone.club_id && m.user_id === userId && (m.role === 'admin' || m.role === 'moderator')
+  );
+  if (!member) return { success: false, error: 'Only club leaders can update milestones.' };
+
+  if (updates.title !== undefined) milestone.title = updates.title;
+  if (updates.description !== undefined) milestone.description = updates.description;
+  if (updates.status !== undefined) {
+    milestone.status = updates.status;
+    if (updates.status === 'completed' && !milestone.completed_at) {
+      milestone.completed_at = new Date().toISOString();
+      // Auto-record contribution
+      mockMemberContributions.push({
+        id: `cmc-${Date.now()}`,
+        club_id: milestone.club_id,
+        user_id: userId,
+        contribution_type: 'milestone_completed',
+        title: `Completed milestone: ${milestone.title}`,
+        metadata: { milestone_id: milestone.id },
+        created_at: new Date().toISOString(),
+      });
+    }
+  }
+  if (updates.target_date !== undefined) milestone.target_date = updates.target_date;
+  if (updates.order_no !== undefined) milestone.order_no = updates.order_no;
+
+  return { success: true };
+}
+
+/** Delete a club milestone */
+export function deleteClubMilestone(
+  milestoneId: string,
+  userId: string
+): { success: true } | { success: false; error: string } {
+  const idx = mockClubMilestones.findIndex((m) => m.id === milestoneId);
+  if (idx === -1) return { success: false, error: 'Milestone not found.' };
+
+  const milestone = mockClubMilestones[idx];
+  const member = mockClubMembers.find(
+    (m) => m.club_id === milestone.club_id && m.user_id === userId && (m.role === 'admin' || m.role === 'moderator')
+  );
+  if (!member) return { success: false, error: 'Only club leaders can delete milestones.' };
+
+  mockClubMilestones.splice(idx, 1);
+  return { success: true };
+}
+
+// ── Club Member Contributions ────────────────────────────────────────────────
+
+/** Get member contributions for a club, optionally filtered by user */
+export function getMemberContributions(clubId: string, userId?: string) {
+  let contributions = mockMemberContributions.filter((c) => c.club_id === clubId);
+  if (userId) {
+    contributions = contributions.filter((c) => c.user_id === userId);
+  }
+  return contributions.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+}
+
+/** Get aggregated contribution stats per member for a club */
+export function getClubMemberProgress(clubId: string): {
+  userId: string;
+  contributionCount: number;
+  projectCount: number;
+  eventCount: number;
+  milestoneCount: number;
+}[] {
+  const contributions = mockMemberContributions.filter((c) => c.club_id === clubId);
+  const userMap = new Map<string, { contributionCount: number; projectCount: number; eventCount: number; milestoneCount: number }>();
+
+  for (const c of contributions) {
+    if (!userMap.has(c.user_id)) {
+      userMap.set(c.user_id, { contributionCount: 0, projectCount: 0, eventCount: 0, milestoneCount: 0 });
+    }
+    const stats = userMap.get(c.user_id)!;
+    stats.contributionCount++;
+    if (c.contribution_type === 'project') stats.projectCount++;
+    if (c.contribution_type === 'event') stats.eventCount++;
+    if (c.contribution_type === 'milestone_completed') stats.milestoneCount++;
+  }
+
+  return Array.from(userMap.entries()).map(([userId, stats]) => ({ userId, ...stats }));
+}
+
+/** Manually log a member contribution (club leaders only) */
+export function addMemberContribution(
+  clubId: string,
+  userId: string,
+  targetUserId: string,
+  contributionType: string,
+  title: string,
+  description?: string | null
+): { success: true; id: string } | { success: false; error: string } {
+  const member = mockClubMembers.find(
+    (m) => m.club_id === clubId && m.user_id === userId && (m.role === 'admin' || m.role === 'moderator')
+  );
+  if (!member) return { success: false, error: 'Only club leaders can log contributions.' };
+
+  const id = `cmc-${Date.now()}`;
+  mockMemberContributions.push({
+    id,
+    club_id: clubId,
+    user_id: targetUserId,
+    contribution_type: contributionType,
+    title,
+    description: description || null,
+    metadata: null,
+    created_at: new Date().toISOString(),
+  });
+  return { success: true, id };
+}
+
+// ── Club Showcase Management ─────────────────────────────────────────────────
+
+/** Update club showcase / landing page settings */
+export function updateClubShowcase(
+  clubId: string,
+  userId: string,
+  updates: {
+    cover_image_url?: string | null;
+    tagline?: string | null;
+    custom_domain_slug?: string | null;
+    is_showcase?: boolean;
+  }
+): { success: true; club: Club } | { success: false; error: string } {
+  const club = mockClubs.find((c) => c.id === clubId);
+  if (!club) return { success: false, error: 'Club not found.' };
+
+  const member = mockClubMembers.find(
+    (m) => m.club_id === clubId && m.user_id === userId && m.role === 'admin'
+  );
+  if (!member) return { success: false, error: 'Only club admins can update showcase settings.' };
+
+  if (updates.cover_image_url !== undefined) club.cover_image_url = updates.cover_image_url;
+  if (updates.tagline !== undefined) club.tagline = updates.tagline;
+  if (updates.custom_domain_slug !== undefined) club.custom_domain_slug = updates.custom_domain_slug;
+  if (updates.is_showcase !== undefined) club.is_showcase = updates.is_showcase;
+
+  return { success: true, club: { ...club } };
+}
+
+/** Get all clubs a user is a member of */
+export function getUserClubs(userId: string) {
+  const memberships = mockClubMembers.filter(
+    (m) => m.user_id === userId && m.membership_status === 'active'
+  );
+  return memberships.map((m) => {
+    const club = mockClubs.find((c) => c.id === m.club_id);
+    return club ? { club, membership: m } : null;
+  }).filter(Boolean) as { club: Club; membership: ClubMember }[];
+}
+
+// ── Academic Certifications ──────────────────────────────────────────────────
+
+/** Get all certifications for a user */
+export function getUserCertifications(userId: string) {
+  return mockCertifications
+    .filter((c) => c.user_id === userId && !c.is_hidden)
+    .sort((a, b) => (a.order_no ?? 0) - (b.order_no ?? 0));
+}
+
+/** Get all public certifications for a user (non-hidden, for public profile) */
+export function getPublicCertifications(userId: string) {
+  return mockCertifications
+    .filter((c) => c.user_id === userId && !c.is_hidden)
+    .sort((a, b) => (a.order_no ?? 0) - (b.order_no ?? 0));
+}
+
+/** Add a certification for a user */
+export function addCertification(
+  userId: string,
+  data: {
+    type: string;
+    subject?: string | null;
+    exam_board?: string | null;
+    grade?: string | null;
+    year?: number | null;
+    certificate_url?: string | null;
+  }
+): { success: true; id: string } | { success: false; error: string } {
+  const id = `cert-${Date.now()}`;
+  mockCertifications.push({
+    id,
+    user_id: userId,
+    type: data.type,
+    subject: data.subject || null,
+    exam_board: data.exam_board || null,
+    grade: data.grade || null,
+    year: data.year || null,
+    certificate_url: data.certificate_url || null,
+    is_verified: false,
+    verified_by: null,
+    is_hidden: false,
+    order_no: mockCertifications.filter((c) => c.user_id === userId).length + 1,
+    created_at: new Date().toISOString(),
+  });
+  return { success: true, id };
+}
+
+/** Update a certification */
+export function updateCertification(
+  certId: string,
+  userId: string,
+  updates: {
+    type?: string;
+    subject?: string | null;
+    exam_board?: string | null;
+    grade?: string | null;
+    year?: number | null;
+    certificate_url?: string | null;
+    is_hidden?: boolean;
+    order_no?: number | null;
+  }
+): { success: true } | { success: false; error: string } {
+  const cert = mockCertifications.find((c) => c.id === certId && c.user_id === userId);
+  if (!cert) return { success: false, error: 'Certification not found.' };
+
+  if (updates.type !== undefined) cert.type = updates.type;
+  if (updates.subject !== undefined) cert.subject = updates.subject;
+  if (updates.exam_board !== undefined) cert.exam_board = updates.exam_board;
+  if (updates.grade !== undefined) cert.grade = updates.grade;
+  if (updates.year !== undefined) cert.year = updates.year;
+  if (updates.certificate_url !== undefined) cert.certificate_url = updates.certificate_url;
+  if (updates.is_hidden !== undefined) cert.is_hidden = updates.is_hidden;
+  if (updates.order_no !== undefined) cert.order_no = updates.order_no;
+
+  return { success: true };
+}
+
+/** Delete a certification */
+export function deleteCertification(
+  certId: string,
+  userId: string
+): { success: true } | { success: false; error: string } {
+  const idx = mockCertifications.findIndex((c) => c.id === certId && c.user_id === userId);
+  if (idx === -1) return { success: false, error: 'Certification not found.' };
+  mockCertifications.splice(idx, 1);
+  return { success: true };
+}
+
 // ── Mock Timetable & Pomodoro ───────────────────────────────────────────────
 export const mockTimetableEvents = [
   { id: 'te-1', user_id: 'user-student-001', title: 'Physics Revision', event_type: 'study', start_time: '2026-06-18T14:00:00Z', end_time: '2026-06-18T16:00:00Z', all_day: false, is_recurring: false, recurrence_pattern: null, color_code: '#3b82f6', metadata: {}, created_at: '2026-06-10T00:00:00Z' }
@@ -1928,6 +2649,11 @@ export const mockDecks: Deck[] = [
     category: 'Physics',
     is_public: true,
     created_at: '2026-02-01T00:00:00Z',
+    exam_board: null,
+    syllabus_code: null,
+    visibility: 'private',
+    share_token: null,
+    library_status: null,
   },
   {
     id: 'deck-2',
@@ -1939,6 +2665,11 @@ export const mockDecks: Deck[] = [
     category: 'Biology',
     is_public: true,
     created_at: '2026-03-10T00:00:00Z',
+    exam_board: null,
+    syllabus_code: null,
+    visibility: 'private',
+    share_token: null,
+    library_status: null,
   },
   {
     id: 'deck-3',
@@ -1950,6 +2681,11 @@ export const mockDecks: Deck[] = [
     category: 'Chemistry',
     is_public: true,
     created_at: '2026-04-05T00:00:00Z',
+    exam_board: null,
+    syllabus_code: null,
+    visibility: 'private',
+    share_token: null,
+    library_status: null,
   },
   {
     id: 'deck-4',
@@ -1961,6 +2697,11 @@ export const mockDecks: Deck[] = [
     category: 'Mathematics',
     is_public: false,
     created_at: '2026-05-15T00:00:00Z',
+    exam_board: null,
+    syllabus_code: null,
+    visibility: 'private',
+    share_token: null,
+    library_status: null,
   },
   {
     id: 'deck-5',
@@ -1972,6 +2713,11 @@ export const mockDecks: Deck[] = [
     category: 'IELTS',
     is_public: true,
     created_at: '2026-05-20T00:00:00Z',
+    exam_board: null,
+    syllabus_code: null,
+    visibility: 'private',
+    share_token: null,
+    library_status: null,
   },
 ];
 
@@ -2024,28 +2770,28 @@ export let mockCardReviews: CardReview[] = [
 // ── Mock Exams & Grades ─────────────────────────────────────────────────────
 export const mockExams: Exam[] = [
   // IGCSE CIE Physics exams
-  { id: 'exam-cie-phys-0625-mj27', curriculum_id: 'curr-igcse-cie', subject_id: 'subj-cie-physics', title: 'IGCSE Physics Paper 2 (0625)', exam_series: 'May/June 2027', exam_date: '2027-05-15T09:00:00Z', created_at: '2025-12-01T00:00:00Z' },
-  { id: 'exam-cie-phys-0625-on27', curriculum_id: 'curr-igcse-cie', subject_id: 'subj-cie-physics', title: 'IGCSE Physics Paper 2 (0625)', exam_series: 'Oct/Nov 2027', exam_date: '2027-10-20T09:00:00Z', created_at: '2025-12-01T00:00:00Z' },
-  { id: 'exam-cie-phys-0625-mj26', curriculum_id: 'curr-igcse-cie', subject_id: 'subj-cie-physics', title: 'IGCSE Physics Paper 2 (0625)', exam_series: 'May/June 2026', exam_date: '2026-05-12T09:00:00Z', created_at: '2025-06-01T00:00:00Z' },
+  { id: 'exam-cie-phys-0625-mj27', curriculum_id: 'curr-igcse-cie', subject_id: 'subj-cie-physics', title: 'IGCSE Physics Paper 2 (0625)', exam_series: 'May/June 2027', exam_date: '2027-05-15T09:00:00Z', created_at: '2025-12-01T00:00:00Z', exam_board: 'CAIE', syllabus_code: '0625', qualification: 'IGCSE', paper_code: 'P2', date_type: 'fixed', library_status: null },
+  { id: 'exam-cie-phys-0625-on27', curriculum_id: 'curr-igcse-cie', subject_id: 'subj-cie-physics', title: 'IGCSE Physics Paper 2 (0625)', exam_series: 'Oct/Nov 2027', exam_date: '2027-10-20T09:00:00Z', created_at: '2025-12-01T00:00:00Z', exam_board: 'CAIE', syllabus_code: '0625', qualification: 'IGCSE', paper_code: 'P2', date_type: 'fixed', library_status: null },
+  { id: 'exam-cie-phys-0625-mj26', curriculum_id: 'curr-igcse-cie', subject_id: 'subj-cie-physics', title: 'IGCSE Physics Paper 2 (0625)', exam_series: 'May/June 2026', exam_date: '2026-05-12T09:00:00Z', created_at: '2025-06-01T00:00:00Z', exam_board: 'CAIE', syllabus_code: '0625', qualification: 'IGCSE', paper_code: 'P2', date_type: 'fixed', library_status: null },
   // IGCSE CIE Maths exams
-  { id: 'exam-cie-maths-0580-mj27', curriculum_id: 'curr-igcse-cie', subject_id: 'subj-cie-maths', title: 'IGCSE Mathematics Paper 2 (0580)', exam_series: 'May/June 2027', exam_date: '2027-05-20T09:00:00Z', created_at: '2025-12-01T00:00:00Z' },
-  { id: 'exam-cie-maths-0580-on27', curriculum_id: 'curr-igcse-cie', subject_id: 'subj-cie-maths', title: 'IGCSE Mathematics Paper 2 (0580)', exam_series: 'Oct/Nov 2027', exam_date: '2027-10-25T09:00:00Z', created_at: '2025-12-01T00:00:00Z' },
+  { id: 'exam-cie-maths-0580-mj27', curriculum_id: 'curr-igcse-cie', subject_id: 'subj-cie-maths', title: 'IGCSE Mathematics Paper 2 (0580)', exam_series: 'May/June 2027', exam_date: '2027-05-20T09:00:00Z', created_at: '2025-12-01T00:00:00Z', exam_board: 'CAIE', syllabus_code: '0580', qualification: 'IGCSE', paper_code: 'P2', date_type: 'fixed', library_status: null },
+  { id: 'exam-cie-maths-0580-on27', curriculum_id: 'curr-igcse-cie', subject_id: 'subj-cie-maths', title: 'IGCSE Mathematics Paper 2 (0580)', exam_series: 'Oct/Nov 2027', exam_date: '2027-10-25T09:00:00Z', created_at: '2025-12-01T00:00:00Z', exam_board: 'CAIE', syllabus_code: '0580', qualification: 'IGCSE', paper_code: 'P2', date_type: 'fixed', library_status: null },
   // IGCSE CIE CS exams
-  { id: 'exam-cie-cs-0478-mj27', curriculum_id: 'curr-igcse-cie', subject_id: 'subj-cie-cs', title: 'IGCSE Computer Science Paper 1 (0478)', exam_series: 'May/June 2027', exam_date: '2027-05-22T09:00:00Z', created_at: '2025-12-01T00:00:00Z' },
+  { id: 'exam-cie-cs-0478-mj27', curriculum_id: 'curr-igcse-cie', subject_id: 'subj-cie-cs', title: 'IGCSE Computer Science Paper 1 (0478)', exam_series: 'May/June 2027', exam_date: '2027-05-22T09:00:00Z', created_at: '2025-12-01T00:00:00Z', exam_board: 'CAIE', syllabus_code: '0478', qualification: 'IGCSE', paper_code: 'P1', date_type: 'fixed', library_status: null },
   // IGCSE Edexcel Physics exams
-  { id: 'exam-edx-phys-4ph1-mj27', curriculum_id: 'curr-igcse-edx', subject_id: 'subj-edx-physics', title: 'IGCSE Physics Paper 1 (4PH1)', exam_series: 'May/June 2027', exam_date: '2027-05-18T09:00:00Z', created_at: '2025-12-01T00:00:00Z' },
-  { id: 'exam-edx-phys-4ph1-on27', curriculum_id: 'curr-igcse-edx', subject_id: 'subj-edx-physics', title: 'IGCSE Physics Paper 1 (4PH1)', exam_series: 'Oct/Nov 2027', exam_date: '2027-10-22T09:00:00Z', created_at: '2025-12-01T00:00:00Z' },
+  { id: 'exam-edx-phys-4ph1-mj27', curriculum_id: 'curr-igcse-edx', subject_id: 'subj-edx-physics', title: 'IGCSE Physics Paper 1 (4PH1)', exam_series: 'May/June 2027', exam_date: '2027-05-18T09:00:00Z', created_at: '2025-12-01T00:00:00Z', exam_board: 'Edexcel', syllabus_code: '4PH1', qualification: 'IGCSE', paper_code: 'P1', date_type: 'fixed', library_status: null },
+  { id: 'exam-edx-phys-4ph1-on27', curriculum_id: 'curr-igcse-edx', subject_id: 'subj-edx-physics', title: 'IGCSE Physics Paper 1 (4PH1)', exam_series: 'Oct/Nov 2027', exam_date: '2027-10-22T09:00:00Z', created_at: '2025-12-01T00:00:00Z', exam_board: 'Edexcel', syllabus_code: '4PH1', qualification: 'IGCSE', paper_code: 'P1', date_type: 'fixed', library_status: null },
   // Edexcel IAL Physics exams
-  { id: 'exam-ial-phys-wph11-mj27', curriculum_id: 'curr-ial-edx', subject_id: 'subj-ial-physics', title: 'IAL Physics Unit 1 (WPH11)', exam_series: 'May/June 2027', exam_date: '2027-05-10T09:00:00Z', created_at: '2025-12-01T00:00:00Z' },
-  { id: 'exam-ial-phys-wph11-on27', curriculum_id: 'curr-ial-edx', subject_id: 'subj-ial-physics', title: 'IAL Physics Unit 1 (WPH11)', exam_series: 'Oct/Nov 2027', exam_date: '2027-10-15T09:00:00Z', created_at: '2025-12-01T00:00:00Z' },
+  { id: 'exam-ial-phys-wph11-mj27', curriculum_id: 'curr-ial-edx', subject_id: 'subj-ial-physics', title: 'IAL Physics Unit 1 (WPH11)', exam_series: 'May/June 2027', exam_date: '2027-05-10T09:00:00Z', created_at: '2025-12-01T00:00:00Z', exam_board: 'Edexcel', syllabus_code: 'WPH11', qualification: 'IAL', paper_code: 'U1', date_type: 'fixed', library_status: null },
+  { id: 'exam-ial-phys-wph11-on27', curriculum_id: 'curr-ial-edx', subject_id: 'subj-ial-physics', title: 'IAL Physics Unit 1 (WPH11)', exam_series: 'Oct/Nov 2027', exam_date: '2027-10-15T09:00:00Z', created_at: '2025-12-01T00:00:00Z', exam_board: 'Edexcel', syllabus_code: 'WPH11', qualification: 'IAL', paper_code: 'U1', date_type: 'fixed', library_status: null },
   // IELTS exams
-  { id: 'exam-ielts-ac-mj27', curriculum_id: 'curr-ielts', subject_id: null, title: 'IELTS Academic', exam_series: 'June 2027', exam_date: '2027-06-10T09:00:00Z', created_at: '2025-12-01T00:00:00Z' },
+  { id: 'exam-ielts-ac-mj27', curriculum_id: 'curr-ielts', subject_id: null, title: 'IELTS Academic', exam_series: 'June 2027', exam_date: '2027-06-10T09:00:00Z', created_at: '2025-12-01T00:00:00Z', exam_board: 'IELTS', syllabus_code: null, qualification: 'IELTS', paper_code: null, date_type: 'fixed', library_status: null },
   // Legacy
-  { id: 'exam-1', curriculum_id: 'curr-1', subject_id: null, title: 'IGCSE Physics Paper 2', exam_series: 'May/June 2027', exam_date: '2027-05-15T09:00:00Z', created_at: '2025-12-01T00:00:00Z' },
+  { id: 'exam-1', curriculum_id: 'curr-1', subject_id: null, title: 'IGCSE Physics Paper 2', exam_series: 'May/June 2027', exam_date: '2027-05-15T09:00:00Z', created_at: '2025-12-01T00:00:00Z', exam_board: 'CAIE', syllabus_code: '0625', qualification: 'IGCSE', paper_code: 'P2', date_type: 'fixed', library_status: null },
 ];
 
 export const mockExamCountdowns: ExamCountdown[] = [
-  { id: 'ec-1', user_id: 'user-student-001', exam_id: 'exam-1', custom_title: 'Physics Finals!', target_date: '2027-05-15T09:00:00Z', priority_indicator: 'high', qualification_group: 'IGCSE', created_at: '2026-01-01T00:00:00Z' }
+  { id: 'ec-1', user_id: 'user-student-001', exam_id: 'exam-1', custom_title: 'Physics Finals!', target_date: '2027-05-15T09:00:00Z', priority_indicator: 'high', qualification_group: 'IGCSE', created_at: '2026-01-01T00:00:00Z', custom_date_override: null, share_token: null, is_custom: false }
 ];
 
 export let mockGradeBoundaries: ExamGradeBoundary[] = [
@@ -2073,7 +2819,7 @@ export function saveExamGradeBoundaries(boundaries: ExamGradeBoundary[], examRef
   mockGradeBoundaries = [...mockGradeBoundaries, ...sanitizedBoundaries];
 }
 
-export const mockGradeEntries = [
+export const mockGradeEntries: Record<string, any>[] = [
   { id: 'ge-1', user_id: 'user-student-001', exam_id: 'exam-1', component_name: 'Mock Exam', raw_score: 36, max_score: 40, weight: 1.0, predicted_grade: 'A*', created_at: '2026-04-01T00:00:00Z' }
 ];
 
@@ -2182,6 +2928,100 @@ export const mockClubSubjects: ClubSubject[] = [
     id: 'club-subj-2',
     club_id: 'club-2',
     subject_id: 'subj-1',
+  },
+];
+
+// ── Academic Certifications ──────────────────────────────────────────────────
+
+export const mockCertifications: {
+  id: string;
+  user_id: string;
+  type: string;
+  subject?: string | null;
+  exam_board?: string | null;
+  grade?: string | null;
+  year?: number | null;
+  certificate_url?: string | null;
+  is_verified: boolean;
+  verified_by?: string | null;
+  is_hidden: boolean;
+  order_no?: number | null;
+  created_at: string;
+}[] = [
+  {
+    id: 'cert-1',
+    user_id: 'user-student-001',
+    type: 'igcse',
+    subject: 'Physics',
+    exam_board: 'Cambridge',
+    grade: 'A*',
+    year: 2025,
+    certificate_url: null,
+    is_verified: true,
+    verified_by: 'user-main-contributor-001',
+    is_hidden: false,
+    order_no: 1,
+    created_at: '2025-08-15T00:00:00Z',
+  },
+  {
+    id: 'cert-2',
+    user_id: 'user-student-001',
+    type: 'igcse',
+    subject: 'Mathematics',
+    exam_board: 'Cambridge',
+    grade: 'A*',
+    year: 2025,
+    certificate_url: null,
+    is_verified: true,
+    verified_by: 'user-main-contributor-001',
+    is_hidden: false,
+    order_no: 2,
+    created_at: '2025-08-15T00:00:00Z',
+  },
+  {
+    id: 'cert-3',
+    user_id: 'user-student-002',
+    type: 'ielts',
+    subject: null,
+    exam_board: 'British Council',
+    grade: 'Band 7.5',
+    year: 2026,
+    certificate_url: null,
+    is_verified: false,
+    verified_by: null,
+    is_hidden: false,
+    order_no: 1,
+    created_at: '2026-03-10T00:00:00Z',
+  },
+  {
+    id: 'cert-4',
+    user_id: 'user-contributor-001',
+    type: 'a_level',
+    subject: 'Physics',
+    exam_board: 'Edexcel',
+    grade: 'A',
+    year: 2023,
+    certificate_url: null,
+    is_verified: true,
+    verified_by: 'user-main-contributor-001',
+    is_hidden: false,
+    order_no: 1,
+    created_at: '2023-08-15T00:00:00Z',
+  },
+  {
+    id: 'cert-5',
+    user_id: 'user-contributor-001',
+    type: 'a_level',
+    subject: 'Mathematics',
+    exam_board: 'Edexcel',
+    grade: 'A*',
+    year: 2023,
+    certificate_url: null,
+    is_verified: true,
+    verified_by: 'user-main-contributor-001',
+    is_hidden: false,
+    order_no: 2,
+    created_at: '2023-08-15T00:00:00Z',
   },
 ];
 
@@ -2835,6 +3675,9 @@ export const createExamCountdown = (data: {
     priority_indicator: data.priority_indicator,
     qualification_group: data.qualification_group,
     created_at: new Date().toISOString(),
+    custom_date_override: null,
+    share_token: null,
+    is_custom: true,
   };
   mockExamCountdowns.push(countdown);
   return countdown;
@@ -3098,6 +3941,8 @@ export const getReviewQueueCounts = () => {
       resource: pending.filter(i => i.submission_type === 'resource').length,
       flashcard_deck: pending.filter(i => i.submission_type === 'flashcard_deck').length,
       exam: pending.filter(i => i.submission_type === 'exam').length,
+      calculator: pending.filter(i => i.submission_type === 'calculator').length,
+      countdown: pending.filter(i => i.submission_type === 'countdown').length,
     },
   };
 };
@@ -3223,6 +4068,11 @@ export function createDeck(data: {
     category: data.category || null,
     is_public: data.is_public ?? false,
     created_at: new Date().toISOString(),
+    exam_board: null,
+    syllabus_code: null,
+    visibility: 'private',
+    share_token: null,
+    library_status: null,
   };
   mockDecks.unshift(deck);
   return deck;
@@ -4195,3 +5045,288 @@ export function deleteOrgTimelineItem(id: string): { success: true } | { success
   mockTimelineItems.splice(idx, 1);
   return { success: true };
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Library System — Helper Functions
+// These power the Library browser pages and cross-feature connections.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Get all flashcard decks approved for the library */
+export function getLibraryDecks(): Deck[] {
+  return mockDecks.filter(
+    d => d.library_status === 'approved' && d.is_public
+  );
+}
+
+/** Get all exams approved for the library */
+export function getLibraryExams(): Exam[] {
+  return mockExams.filter(
+    e => e.library_status === 'approved'
+  );
+}
+
+/**
+ * Get library decks filtered to match a user's enrolled courses.
+ * Uses exam_board + syllabus_code matching.
+ * Falls back to all library decks if user has no enrollments.
+ */
+export function getDecksByEnrolledCourses(userId: string): Deck[] {
+  const userEnrollments = getUserEnrollments(userId);
+  if (userEnrollments.length === 0) return getLibraryDecks();
+
+  const enrolledCurriculumIds = new Set(userEnrollments.map(e => e.curriculum_id));
+  const enrolledCurriculums = mockCurriculums.filter(c => enrolledCurriculumIds.has(c.id));
+  const enrolledBoards = new Set(enrolledCurriculums.map(c => c.exam_board).filter(Boolean));
+
+  const libraryDecks = getLibraryDecks();
+  const filtered = libraryDecks.filter(d => {
+    const board = d.exam_board;
+    return board && enrolledBoards.has(board);
+  });
+
+  return filtered.length > 0 ? filtered : libraryDecks;
+}
+
+/**
+ * Get library notes filtered to match a user's enrolled courses.
+ * Uses curriculum_id or exam_board matching.
+ * Falls back to all public approved notes.
+ */
+export function getNotesByEnrolledCourses(userId: string): Note[] {
+  const userEnrollments = getUserEnrollments(userId);
+  const allPublicNotes = mockNotes.filter(n => n.status === 'approved' && n.visibility === 'public');
+
+  if (userEnrollments.length === 0) return allPublicNotes;
+
+  const enrolledCurriculumIds = new Set(userEnrollments.map(e => e.curriculum_id));
+  const enrolledCurriculums = mockCurriculums.filter(c => enrolledCurriculumIds.has(c.id));
+  const enrolledBoards = new Set(enrolledCurriculums.map(c => c.exam_board).filter(Boolean));
+
+  const filtered = allPublicNotes.filter(n => {
+    if (n.curriculum_id && enrolledCurriculumIds.has(n.curriculum_id)) return true;
+    const board = n.exam_board ?? null;
+    return board && enrolledBoards.has(board);
+  });
+
+  return filtered.length > 0 ? filtered : allPublicNotes;
+}
+
+/** Get library exams filtered to match a user's enrolled courses */
+export function getExamsByEnrolledCourses(userId: string): Exam[] {
+  const userEnrollments = getUserEnrollments(userId);
+  const allLibraryExams = getLibraryExams();
+
+  if (userEnrollments.length === 0) return allLibraryExams;
+
+  const enrolledCurriculumIds = new Set(userEnrollments.map(e => e.curriculum_id));
+  const enrolledCurriculums = mockCurriculums.filter(c => enrolledCurriculumIds.has(c.id));
+  const enrolledBoards = new Set(enrolledCurriculums.map(c => c.exam_board).filter(Boolean));
+
+  const filtered = allLibraryExams.filter(e => {
+    const board = e.exam_board;
+    return board && enrolledBoards.has(board);
+  });
+
+  return filtered.length > 0 ? filtered : allLibraryExams;
+}
+
+/**
+ * Submit a user-owned entity to the library for review.
+ * Sets the entity's library_status to 'pending_review' and creates a review queue entry.
+ */
+export function submitToLibrary(
+  entityType: 'flashcard_deck' | 'exam' | 'countdown',
+  entityId: string,
+  contributorId: string
+): { success: true } | { success: false; error: string } {
+  // Validate contributor role
+  const profile = mockProfiles.find(p => p.id === contributorId);
+  if (!profile || !['contributor', 'main_contributor'].includes(profile.role)) {
+    return { success: false, error: 'Only contributors can submit to the library.' };
+  }
+
+  // Update entity status
+  let entity: Record<string, unknown> | undefined;
+  if (entityType === 'flashcard_deck') {
+    entity = mockDecks.find(d => d.id === entityId) as Record<string, unknown> | undefined;
+  } else if (entityType === 'exam') {
+    entity = mockExams.find(e => e.id === entityId) as Record<string, unknown> | undefined;
+  }
+
+  if (!entity) return { success: false, error: 'Entity not found.' };
+  entity.library_status = 'pending_review';
+
+  // Create review queue entry
+  const item: ReviewQueueItem = {
+    id: `review-${Date.now()}`,
+    contributor_id: contributorId,
+    submission_type: entityType,
+    entity_id: entityId,
+    submitted_data: { ...entity },
+    is_update: false,
+    published_entity_id: null,
+    status: 'pending',
+    reviewer_id: null,
+    feedback: null,
+    submitted_at: new Date().toISOString(),
+    reviewed_at: null,
+  };
+  mockReviewQueue.push(item);
+
+  return { success: true };
+}
+
+/** Generate or retrieve a share token for a deck */
+export function getDeckShareToken(deckId: string): string | null {
+  const deck = mockDecks.find(d => d.id === deckId) as Record<string, unknown> | undefined;
+  if (!deck) return null;
+  if (!deck.share_token) {
+    deck.share_token = `share-deck-${deckId.slice(-8)}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+  return deck.share_token as string;
+}
+
+/** Get a deck by share token (read-only, for shared link pages) */
+export function getSharedDeck(token: string): Deck | null {
+  return mockDecks.find(d => d.share_token === token) ?? null;
+}
+
+/** Generate or retrieve a share token for a countdown */
+export function getCountdownShareToken(countdownId: string): string | null {
+  const c = mockExamCountdowns?.find(cd => cd.id === countdownId) ?? null;
+  if (!c) return null;
+  if (!c.share_token) {
+    c.share_token = `share-cd-${countdownId.slice(-8)}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+  return c.share_token as string;
+}
+
+/** Get a note by its share token (for link-shared private notes) */
+export function getNoteByShareToken(token: string): Note | null {
+  return mockNotes.find(n => n.share_token === token) ?? null;
+}
+
+/**
+ * Get a unified workspace summary for a user.
+ * Returns their enrollments, notes (created + saved), decks, and countdowns.
+ */
+export function getUserWorkspace(userId: string) {
+  return {
+    enrollments: getUserEnrollments(userId),
+    createdNotes: mockNotes.filter(n => n.contributor_id === userId),
+    savedNotes: mockUserSavedNotes
+      .filter(s => s.user_id === userId)
+      .map(s => mockNotes.find(n => n.id === s.note_id))
+      .filter(Boolean) as Note[],
+    decks: getDecksByUser(userId),
+    countdowns: getUserCountdowns(userId),
+  };
+}
+
+/**
+ * Auto-populate Lesson Tracker topic progress stubs when a user enrolls in a curriculum.
+ * Creates progress entries for all topics in all subjects of the curriculum.
+ * Called after successful enrollment.
+ */
+export function autoPopulateLessonTracker(userId: string, curriculumId: string): { success: true; created: number } {
+  const subjects = mockSubjects.filter(s => s.curriculum_id === curriculumId);
+  let created = 0;
+
+  for (const subject of subjects) {
+    const topics = mockTopics.filter(t => t.subject_id === subject.id);
+    for (const topic of topics) {
+      const alreadyExists = mockTopicProgress.some(
+        p => p.user_id === userId && p.topic_id === topic.id
+      );
+      if (!alreadyExists) {
+        mockTopicProgress.push({
+          id: `tp-${userId.slice(-4)}-${topic.id.slice(-4)}-${Date.now()}`,
+          user_id: userId,
+          topic_id: topic.id,
+          status: 'not_started',
+          confidence_level: 0,
+          updated_at: new Date().toISOString(),
+        });
+        created++;
+      }
+    }
+  }
+
+  return { success: true, created };
+}
+
+/**
+ * Auto-populate Grade Calculator entries when a user enrolls in a curriculum.
+ * Creates grade_entry stubs matching the curriculum's grading system.
+ * For IAL: one entry per unit. For Cambridge: one entry per paper. For IELTS: four module entries.
+ */
+export function autoPopulateGradeCalculator(userId: string, curriculumId: string): { success: true; created: number } {
+  const curriculum = mockCurriculums.find(c => c.id === curriculumId);
+  if (!curriculum) return { success: true, created: 0 };
+
+  const gradingSystem = (curriculum as Record<string, unknown>).grading_system as string | null;
+  const exams = mockExams.filter(e => e.curriculum_id === curriculumId);
+  let created = 0;
+
+  for (const exam of exams) {
+    const alreadyExists = mockGradeEntries.some(
+      g => g.user_id === userId && g.exam_id === exam.id
+    );
+    if (!alreadyExists) {
+      // Determine component structure based on grading system
+      if (gradingSystem === 'band' && exam.title.toLowerCase().includes('ielts')) {
+        // IELTS: four module entries
+        const modules = ['Reading', 'Writing', 'Listening', 'Speaking'];
+        for (const mod of modules) {
+          mockGradeEntries.push({
+            id: `ge-${userId.slice(-4)}-${mod.slice(0, 3)}-${Date.now()}`,
+            user_id: userId,
+            exam_id: exam.id,
+            component_name: mod,
+            raw_score: null,
+            max_score: 9,
+            weight: 0.25,
+            predicted_grade: null,
+            created_at: new Date().toISOString(),
+          });
+          created++;
+        }
+      } else {
+        // Default: one entry per exam
+        mockGradeEntries.push({
+          id: `ge-${userId.slice(-4)}-${exam.id.slice(-4)}-${Date.now()}`,
+          user_id: userId,
+          exam_id: exam.id,
+          component_name: exam.title,
+          raw_score: null,
+          max_score: null,
+          weight: 1,
+          predicted_grade: null,
+          created_at: new Date().toISOString(),
+        });
+        created++;
+      }
+    }
+  }
+
+  return { success: true, created };
+}
+
+/** Get grade entries for a user (for Grade Calculator) */
+export function getGradeEntriesByUser(userId: string): Record<string, any>[] {
+  return mockGradeEntries.filter(g => g.user_id === userId);
+}
+
+/** Update a grade entry's raw score and predicted grade */
+export function updateGradeEntry(
+  entryId: string,
+  data: { raw_score?: number | null; predicted_grade?: string | null }
+): { success: true } | { success: false; error: string } {
+  const entry = mockGradeEntries.find(g => g.id === entryId);
+  if (!entry) return { success: false, error: 'Grade entry not found.' };
+  if (data.raw_score !== undefined) entry.raw_score = data.raw_score;
+  if (data.predicted_grade !== undefined) entry.predicted_grade = data.predicted_grade;
+  return { success: true };
+}
+
+

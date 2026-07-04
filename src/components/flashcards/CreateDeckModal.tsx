@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { X, Globe, Lock, Layers } from 'lucide-react';
 import { createDeck } from '@/lib/mock/database';
 import { mockCurriculums, mockSubjects } from '@/lib/mock/database';
+import { QUALIFICATION_REGISTRY, LIVE_QUALIFICATIONS } from '@/constants/qualifications';
 import type { Deck } from '@/types';
 
 const SUGGESTED_CATEGORIES = [
@@ -30,7 +31,9 @@ export default function CreateDeckModal({ userId, onClose, onCreated }: CreateDe
   const [customCategory, setCustomCategory] = useState('');
   const [curriculumId, setCurriculumId] = useState('');
   const [subjectId, setSubjectId] = useState('');
-  const [isPublic, setIsPublic] = useState(false);
+  const [examBoard, setExamBoard] = useState('');
+  const [syllabusCode, setSyllabusCode] = useState('');
+  const [visibility, setVisibility] = useState<'private' | 'public' | 'link'>('private');
   const [error, setError] = useState('');
 
   const availableSubjects = curriculumId
@@ -52,7 +55,11 @@ export default function CreateDeckModal({ userId, onClose, onCreated }: CreateDe
       category: finalCategory.trim() || undefined,
       curriculum_id: curriculumId || undefined,
       subject_id: subjectId || undefined,
-      is_public: isPublic,
+      exam_board: examBoard || undefined,
+      syllabus_code: syllabusCode || undefined,
+      visibility: visibility,
+      is_public: visibility === 'public',
+      library_status: 'none',
     });
     onCreated(deck);
   }
@@ -189,41 +196,81 @@ export default function CreateDeckModal({ userId, onClose, onCreated }: CreateDe
             </div>
           </div>
 
+          {/* Board & Syllabus Code */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1.5 block text-sm font-semibold text-[var(--foreground)]">
+                Exam Board <span className="text-[var(--foreground-muted)] font-normal">(optional)</span>
+              </label>
+              <select
+                id="exam-board-select"
+                value={examBoard}
+                onChange={e => setExamBoard(e.target.value)}
+                className="w-full rounded-xl border border-[var(--border)] bg-[var(--background-secondary)] px-3 py-2.5 text-sm text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 transition-all"
+              >
+                <option value="">None</option>
+                {LIVE_QUALIFICATIONS.map(q => (
+                  <option key={q.key} value={q.boardCode}>{q.boardCode} ({q.shortLabel})</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-semibold text-[var(--foreground)]">
+                Syllabus Code <span className="text-[var(--foreground-muted)] font-normal">(optional)</span>
+              </label>
+              <input
+                id="syllabus-code-input"
+                type="text"
+                value={syllabusCode}
+                onChange={e => setSyllabusCode(e.target.value)}
+                placeholder="e.g. 0620"
+                className="w-full rounded-xl border border-[var(--border)] bg-[var(--background-secondary)] px-4 py-2.5 text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-muted)] focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 transition-all"
+              />
+            </div>
+          </div>
+
           {/* Visibility */}
           <div className="rounded-xl border border-[var(--border)] p-4">
             <p className="mb-3 text-sm font-semibold text-[var(--foreground)]">Visibility</p>
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <button
                 type="button"
                 id="visibility-private"
-                onClick={() => setIsPublic(false)}
-                className={`flex flex-1 items-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all ${
-                  !isPublic
+                onClick={() => setVisibility('private')}
+                className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-2 py-2 text-sm font-medium transition-all ${
+                  visibility === 'private'
                     ? 'border-[var(--primary)] bg-[var(--primary-light)] text-[var(--primary)]'
                     : 'border-[var(--border)] text-[var(--foreground-secondary)] hover:border-[var(--primary)]'
                 }`}
               >
                 <Lock size={14} />
-                <div className="text-left">
-                  <div className="font-semibold">Private</div>
-                  <div className="text-xs opacity-70">Only visible to you</div>
-                </div>
+                Private
+              </button>
+              <button
+                type="button"
+                id="visibility-link"
+                onClick={() => setVisibility('link')}
+                className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-2 py-2 text-sm font-medium transition-all ${
+                  visibility === 'link'
+                    ? 'border-blue-500 bg-blue-500/10 text-blue-500'
+                    : 'border-[var(--border)] text-[var(--foreground-secondary)] hover:border-blue-500'
+                }`}
+              >
+                <Globe size={14} />
+                Link
               </button>
               <button
                 type="button"
                 id="visibility-public"
-                onClick={() => setIsPublic(true)}
-                className={`flex flex-1 items-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all ${
-                  isPublic
+                onClick={() => setVisibility('public')}
+                className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-2 py-2 text-sm font-medium transition-all ${
+                  visibility === 'public'
                     ? 'border-[var(--accent)] bg-[var(--accent-light)] text-[var(--accent)]'
                     : 'border-[var(--border)] text-[var(--foreground-secondary)] hover:border-[var(--accent)]'
                 }`}
               >
                 <Globe size={14} />
-                <div className="text-left">
-                  <div className="font-semibold">Public</div>
-                  <div className="text-xs opacity-70">Shared in library</div>
-                </div>
+                Public
               </button>
             </div>
           </div>

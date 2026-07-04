@@ -46,6 +46,21 @@ export interface CurriculumSummary {
   description: string | null;
   qualification: string | null;
   exam_board: string | null;
+  // ── Library System additions ──
+  /** Subject syllabus code, e.g. "0620", "4MA1" */
+  syllabus_code?: string | null;
+  /** Structural model: linear, modular, credit_based, proficiency */
+  structure_type?: string | null;
+  /** Grading system used by this curriculum */
+  grading_system?: string | null;
+  /** 3-level hierarchy labels (level1 = Subject, level2 = Paper/Unit, level3 = Topic) */
+  hierarchy_model?: { level1: string; level2: string; level3: string } | null;
+  /** Number of subjects in this curriculum */
+  subject_count?: number;
+  /** Library pipeline status */
+  library_status?: import('@/types').LibraryStatus;
+  /** Share token for link-sharing */
+  share_token?: string | null;
 }
 
 export interface SubjectSummary {
@@ -101,8 +116,16 @@ export function useCourseManager() {
       description: c.description,
       qualification: c.qualification,
       exam_board: c.exam_board,
+      // Library System additions — safely access optional fields
+      syllabus_code: (c as Record<string, unknown>).syllabus_code as string | null ?? null,
+      structure_type: (c as Record<string, unknown>).structure_type as string | null ?? null,
+      grading_system: (c as Record<string, unknown>).grading_system as string | null ?? null,
+      hierarchy_model: (c as Record<string, unknown>).hierarchy_model as { level1: string; level2: string; level3: string } | null ?? null,
+      library_status: ((c as Record<string, unknown>).library_status ?? 'approved') as import('@/types').LibraryStatus,
+      share_token: (c as Record<string, unknown>).share_token as string | null ?? null,
     }));
   }, []);
+
 
   /** Get subjects for a curriculum, enriched with exams */
   const getSubjectsForCurriculum = useCallback(

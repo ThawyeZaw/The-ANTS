@@ -5,7 +5,7 @@
 // Owner: ZLH
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { BookOpen, Brain, Globe, Lock, Play, Pencil, Copy, Trash2 } from 'lucide-react';
+import { BookOpen, Brain, Globe, Lock, Link as LinkIcon, Play, Pencil, Copy, Trash2 } from 'lucide-react';
 import type { Deck } from '@/types';
 import { getCardsByDeck, getDueCards } from '@/lib/mock/database';
 
@@ -58,29 +58,38 @@ export default function DeckCard({
       className="group relative flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--background-card)] p-5 transition-all duration-300 hover:border-[var(--primary)] hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5"
       style={{ boxShadow: 'var(--shadow-sm)' }}
     >
-      {/* Public/Private badge */}
+      {/* Visibility badge */}
       <div className="absolute top-4 right-4 flex items-center gap-1">
-        {deck.is_public ? (
-          <span className="flex items-center gap-1 rounded-full bg-[var(--accent-light)] px-2 py-0.5 text-xs font-medium text-[var(--accent)]">
+        {deck.visibility === 'public' ? (
+          <span className="flex items-center gap-1 rounded-full bg-[var(--accent-light)] px-2 py-0.5 text-xs font-medium text-[var(--accent)]" title="Shared in Library">
             <Globe size={10} /> Public
           </span>
+        ) : deck.visibility === 'link' ? (
+          <span className="flex items-center gap-1 rounded-full bg-blue-500/10 px-2 py-0.5 text-xs font-medium text-blue-500" title="Link Shared">
+            <LinkIcon size={10} /> Shared
+          </span>
         ) : (
-          <span className="flex items-center gap-1 rounded-full bg-[var(--background-secondary)] px-2 py-0.5 text-xs font-medium text-[var(--foreground-muted)]">
+          <span className="flex items-center gap-1 rounded-full bg-[var(--background-secondary)] px-2 py-0.5 text-xs font-medium text-[var(--foreground-muted)]" title="Private">
             <Lock size={10} /> Private
           </span>
         )}
       </div>
 
-      {/* Category badge */}
-      {deck.category && (
-        <div className="mb-3">
+      {/* Tags row */}
+      <div className="mb-3 flex flex-wrap gap-2">
+        {deck.exam_board && (
+          <span className="inline-flex items-center rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-0.5 text-xs font-semibold text-sky-500">
+            {deck.exam_board} {deck.syllabus_code && `(${deck.syllabus_code})`}
+          </span>
+        )}
+        {deck.category && (
           <span
             className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${categoryColor.bg} ${categoryColor.text} ${categoryColor.border}`}
           >
             {deck.category}
           </span>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Deck name & description */}
       <div className="mb-4 flex-1">

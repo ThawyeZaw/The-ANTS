@@ -14,6 +14,7 @@ import {
   Plus,
   Send,
   Settings,
+  Target,
   UserCheck,
   Users,
   X,
@@ -25,8 +26,10 @@ import { ClubFeatureKey, DEFAULT_CLUB_FEATURES } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 import { useClub } from '@/hooks/useClub';
 import { cn, formatDate, formatRelativeTime, getInitials } from '@/lib/utils';
+import MilestoneTracker from './MilestoneTracker';
+import MemberProgressPanel from './MemberProgressPanel';
 
-type TabKey = 'chat' | 'announcements' | 'links' | 'members' | 'requests' | 'projects' | 'activity_timeline';
+type TabKey = 'chat' | 'announcements' | 'links' | 'members' | 'requests' | 'projects' | 'activity_timeline' | 'milestones';
 
 /** Map tab keys to their required club feature */
 const TAB_FEATURE_MAP: Record<TabKey, ClubFeatureKey> = {
@@ -37,6 +40,7 @@ const TAB_FEATURE_MAP: Record<TabKey, ClubFeatureKey> = {
   requests: 'members', // requests is under members feature
   projects: 'projects',
   activity_timeline: 'activity_timeline',
+  milestones: 'projects',
 };
 
 const tabs: Array<{ key: TabKey; label: string; icon: React.ReactNode }> = [
@@ -47,6 +51,7 @@ const tabs: Array<{ key: TabKey; label: string; icon: React.ReactNode }> = [
   { key: 'requests', label: 'Requests', icon: <UserCheck className="h-4 w-4" /> },
   { key: 'projects', label: 'Projects', icon: <FolderGit2 className="h-4 w-4" /> },
   { key: 'activity_timeline', label: 'Activity', icon: <CalendarDays className="h-4 w-4" /> },
+  { key: 'milestones', label: 'Milestones', icon: <Target className="h-4 w-4" /> },
 ];
 
 const FEATURE_NAMES: Record<string, string> = {
@@ -246,6 +251,27 @@ export default function ClubDetail({ clubId }: { clubId: string }) {
           getProfile={clubStore.getProfile}
           onAddEvent={(title, description, date) =>
             user ? clubStore.addClubEvent?.(club.id, user.id, title, description, date) ?? { success: false, error: 'Not implemented' } : { success: false, error: 'Sign in required.' }
+          }
+        />
+      )}
+      {activeTab === 'milestones' && (
+        <MilestoneTracker
+          milestones={clubStore.getClubMilestones?.(club.id) ?? []}
+          isLeader={isLeader}
+          onAdd={(title, description, targetDate) =>
+            user
+              ? clubStore.addClubMilestone?.(club.id, user.id, title, description, targetDate) ?? { success: false, error: 'Not implemented' }
+              : { success: false, error: 'Sign in required.' }
+          }
+          onUpdateStatus={(id, status) =>
+            user
+              ? clubStore.updateClubMilestone?.(id, user.id, { status }) ?? { success: false, error: 'Not implemented' }
+              : { success: false, error: 'Sign in required.' }
+          }
+          onDelete={(id) =>
+            user
+              ? clubStore.deleteClubMilestone?.(id, user.id) ?? { success: false, error: 'Not implemented' }
+              : { success: false, error: 'Sign in required.' }
           }
         />
       )}

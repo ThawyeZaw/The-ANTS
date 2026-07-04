@@ -290,14 +290,30 @@ export default function NotesEditor() {
                     </select>
                   </div>
 
-                  {/* Topic */}
-                  <div>
+                  {/* Topic & Exam Board */}
+                  <div className="grid grid-cols-2 gap-2">
                     <select value={state.topicId ?? ''}
                       onChange={(e) => setField('topicId', e.target.value || null)}
                       disabled={isReadOnly || !state.subjectId}
-                      className="w-full px-3 py-2 rounded-xl bg-background-card border border-border text-sm text-foreground focus:outline-none focus:border-primary/60 cursor-pointer disabled:opacity-60">
+                      className="px-3 py-2 rounded-xl bg-[var(--background-card)] border border-[var(--border)] text-sm text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)]/60 cursor-pointer disabled:opacity-60">
                       <option value="">No Topic</option>
                       {filteredTopics.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
+                    </select>
+
+                    <select
+                      value={state.examBoard ?? ''}
+                      onChange={(e) => setField('examBoard', e.target.value || null)}
+                      disabled={isReadOnly}
+                      className="px-3 py-2 rounded-xl bg-[var(--background-card)] border border-[var(--border)] text-sm text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)]/60 cursor-pointer disabled:opacity-60"
+                    >
+                      <option value="">Select Board...</option>
+                      <option value="CAIE">CAIE (Cambridge)</option>
+                      <option value="Edexcel">Edexcel</option>
+                      <option value="AQA">AQA</option>
+                      <option value="OCR">OCR</option>
+                      <option value="WJEC">WJEC</option>
+                      <option value="IB">IB</option>
+                      <option value="Other">Other</option>
                     </select>
                   </div>
 
