@@ -177,6 +177,7 @@ the-ants/                                 # Project root
     │           └── [username]/page.tsx   # 🔒 PM — Authenticated user profile
     │
     ├── components/                       # UI components
+    │   ├── homepage/                     # 🔒 PM (TYZ) — Public landing page components (RevealSection, BentoFeatures, HeroVisual, QualTrail, QualCarousel, RoleLadder, StatsRow, DotGrid, HomepageFonts)
     │   ├── ui/                           # 🔒 PM — Shared atomic components
     │   │   ├── Button.tsx
     │   │   ├── Modal.tsx
