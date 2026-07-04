@@ -4057,6 +4057,10 @@ export function createDeck(data: {
   curriculum_id?: string;
   subject_id?: string;
   is_public?: boolean;
+  exam_board?: string;
+  syllabus_code?: string;
+  visibility?: string;
+  library_status?: string | null;
 }): Deck {
   const deck: Deck = {
     id: `deck-${Date.now()}`,
@@ -4068,11 +4072,11 @@ export function createDeck(data: {
     category: data.category || null,
     is_public: data.is_public ?? false,
     created_at: new Date().toISOString(),
-    exam_board: null,
-    syllabus_code: null,
-    visibility: 'private',
+    exam_board: data.exam_board || null,
+    syllabus_code: data.syllabus_code || null,
+    visibility: (data.visibility as Deck['visibility']) || 'private',
     share_token: null,
-    library_status: null,
+    library_status: (data.library_status as Deck['library_status']) ?? null,
   };
   mockDecks.unshift(deck);
   return deck;

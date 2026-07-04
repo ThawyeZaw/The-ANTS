@@ -59,7 +59,7 @@ export default function CreateDeckModal({ userId, onClose, onCreated }: CreateDe
       syllabus_code: syllabusCode || undefined,
       visibility: visibility,
       is_public: visibility === 'public',
-      library_status: 'none',
+      library_status: null,
     });
     onCreated(deck);
   }
