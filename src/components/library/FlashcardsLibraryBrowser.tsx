@@ -61,8 +61,8 @@ interface LibraryDeckCardProps {
 }
 
 function LibraryDeckCard({ deck, isOwned, onAddToWorkspace, onStudy, isAdding }: LibraryDeckCardProps) {
-  const examBoard = (deck as Record<string, unknown>).exam_board as string | null;
-  const syllabusCode = (deck as Record<string, unknown>).syllabus_code as string | null;
+  const examBoard = deck.exam_board;
+  const syllabusCode = deck.syllabus_code;
 
   return (
     <div className={cn(
@@ -167,7 +167,7 @@ export default function FlashcardsLibraryBrowser() {
     let list = libraryDecks;
 
     if (selectedBoard !== 'all') {
-      list = list.filter(d => (d as Record<string, unknown>).exam_board === selectedBoard);
+      list = list.filter(d => d.exam_board === selectedBoard);
     }
 
     if (searchQuery.trim()) {
@@ -176,8 +176,8 @@ export default function FlashcardsLibraryBrowser() {
         d.name.toLowerCase().includes(q) ||
         d.category?.toLowerCase().includes(q) ||
         d.description?.toLowerCase().includes(q) ||
-        ((d as Record<string, unknown>).exam_board as string | null)?.toLowerCase().includes(q) ||
-        ((d as Record<string, unknown>).syllabus_code as string | null)?.toLowerCase().includes(q)
+        d.exam_board?.toLowerCase().includes(q) ||
+        d.syllabus_code?.toLowerCase().includes(q)
       );
     }
 
@@ -187,7 +187,7 @@ export default function FlashcardsLibraryBrowser() {
   // Unique boards in library
   const allBoards = useMemo(() => {
     const boards = getLibraryDecks()
-      .map(d => (d as Record<string, unknown>).exam_board as string | null)
+      .map(d => d.exam_board)
       .filter(Boolean) as string[];
     return [...new Set(boards)];
   }, []);

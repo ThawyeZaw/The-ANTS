@@ -22,6 +22,7 @@ import { useCountdown } from '@/hooks/useCountdown';
 import { getUserWorkspace, getDecksByUser, deleteDeck } from '@/lib/mock/database';
 import { cn } from '@/lib/utils';
 import type { Note, Deck, ExamCountdown } from '@/types';
+import type { EnrollmentWithDetails } from '@/hooks/useCourseManager';
 
 // ── Tab config ────────────────────────────────────────────────────────────────
 
@@ -60,7 +61,7 @@ function EmptyState({ icon: Icon, title, description, cta, ctaHref }: {
 
 // ── Course tab content ────────────────────────────────────────────────────────
 
-function CoursesTab({ enrollments }: { enrollments: ReturnType<typeof useCourseManager>['enrolledWithDetails'] }) {
+function CoursesTab({ enrollments }: { enrollments: ReturnType<typeof useCourseManager>['enrollments'] }) {
   const router = useRouter();
 
   if (enrollments.length === 0) {
@@ -76,12 +77,12 @@ function CoursesTab({ enrollments }: { enrollments: ReturnType<typeof useCourseM
   }
 
   // Group by curriculum
-  const grouped = enrollments.reduce((acc, e) => {
+  const grouped = enrollments.reduce<Record<string, { curriculum: EnrollmentWithDetails['curriculum']; subjects: EnrollmentWithDetails[] }>>((acc, e) => {
     const key = e.curriculum.id;
     if (!acc[key]) acc[key] = { curriculum: e.curriculum, subjects: [] };
     acc[key].subjects.push(e);
     return acc;
-  }, {} as Record<string, { curriculum: typeof enrollments[0]['curriculum']; subjects: typeof enrollments }>);
+  }, {});
 
   return (
     <div className="space-y-4">
@@ -98,7 +99,7 @@ function CoursesTab({ enrollments }: { enrollments: ReturnType<typeof useCourseM
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {Object.values(grouped).map(({ curriculum, subjects }) => (
+        {Object.values(grouped).map(({ curriculum, subjects }: { curriculum: EnrollmentWithDetails['curriculum']; subjects: EnrollmentWithDetails[] }) => (
           <div key={curriculum.id} className="rounded-2xl border border-[var(--border)] bg-[var(--background-card)] p-5 hover:border-[var(--primary)]/30 transition-all">
             <div className="flex items-start justify-between mb-3">
               <div>
@@ -309,9 +310,9 @@ function DecksTab({ userId }: { userId: string }) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {filtered.map(deck => {
-          const examBoard = (deck as Record<string, unknown>).exam_board as string | null;
-          const syllabusCode = (deck as Record<string, unknown>).syllabus_code as string | null;
-          const visibility = (deck as Record<string, unknown>).visibility as string ?? (deck.is_public ? 'public' : 'private');
+          const examBoard = deck.exam_board;
+          const syllabusCode = deck.syllabus_code;
+          const visibility = deck.visibility ?? (deck.is_public ? 'public' : 'private');
 
           return (
             <div key={deck.id} className="group rounded-2xl border border-[var(--border)] bg-[var(--background-card)] p-4 hover:border-[var(--primary)]/30 transition-all">
