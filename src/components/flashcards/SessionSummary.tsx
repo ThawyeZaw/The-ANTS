@@ -7,8 +7,9 @@
 
 import { RotateCcw, ArrowLeft, Brain, TrendingUp } from 'lucide-react';
 import type { SRSRating, FlashCard } from '@/types';
-import { getUserCardReview } from '@/lib/mock/database';
+import { getUserCardReview, mockDecks } from '@/lib/mock/database';
 import { formatNextReview } from '@/lib/srs/algorithm';
+import RelatedContent from '@/components/ui/RelatedContent';
 
 interface SessionSummaryProps {
   ratings: Record<SRSRating, number>;
@@ -17,6 +18,7 @@ interface SessionSummaryProps {
   reviewedCards: FlashCard[];
   onRestart: () => void;
   onBackToDecks: () => void;
+  deckId: string;
 }
 
 const RATING_CONFIG: Record<SRSRating, { label: string; color: string; bg: string; emoji: string }> = {
@@ -33,7 +35,9 @@ export default function SessionSummary({
   reviewedCards,
   onRestart,
   onBackToDecks,
+  deckId,
 }: SessionSummaryProps) {
+  const deck = mockDecks.find((d) => d.id === deckId);
   const totalRated = Object.values(ratings).reduce((s, v) => s + v, 0);
   const masteryRate = totalCards > 0
     ? Math.round(((ratings.good + ratings.easy) / totalCards) * 100)
@@ -154,6 +158,17 @@ export default function SessionSummary({
           <RotateCcw size={15} /> Study Again
         </button>
       </div>
+
+      {deck && (
+        <div className="w-full max-w-lg mt-6 pt-6 border-t border-[var(--border)] text-left">
+          <RelatedContent
+            curriculumId={deck.curriculum_id}
+            subjectId={deck.subject_id}
+            excludeDeckId={deck.id}
+            maxItems={2}
+          />
+        </div>
+      )}
     </div>
   );
 }

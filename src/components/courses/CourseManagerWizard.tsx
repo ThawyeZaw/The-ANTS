@@ -218,8 +218,27 @@ export default function CourseManagerWizard() {
           );
         })}
       </div>
+
+      <div className="mt-8 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div>
+          <h3 className="text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-2">
+            <BookOpen size={18} />
+            Explore the Courses Library
+          </h3>
+          <p className="text-sm text-emerald-600/80 dark:text-emerald-400/80 mt-1 max-w-md">
+            Browse verified curriculum templates, filter by exam board, and auto-populate your Lesson Tracker.
+          </p>
+        </div>
+        <button
+          onClick={() => router.push('/library/courses')}
+          className="shrink-0 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold transition-all cursor-pointer shadow-lg shadow-emerald-500/20"
+        >
+          Browse Library
+        </button>
+      </div>
     </div>
   );
+
 
   const renderStep2 = () => (
     <div className="space-y-6">

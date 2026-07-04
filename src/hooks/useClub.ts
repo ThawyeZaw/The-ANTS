@@ -41,6 +41,15 @@ import {
   getClubEvents,
   addClubProject,
   addClubEvent,
+  getClubMilestones,
+  addClubMilestone,
+  updateClubMilestone,
+  deleteClubMilestone,
+  getMemberContributions,
+  getClubMemberProgress,
+  addMemberContribution,
+  updateClubShowcase,
+  getUserClubs,
 } from '@/lib/mock/database';
 
 type Result = { success: boolean; error?: string };
@@ -164,6 +173,63 @@ export function useClub() {
     return result.success ? { success: true } : result;
   }, [refresh]);
 
+  // ── Milestones ──
+
+  const getMilestones = useCallback((clubId: string) => getClubMilestones(clubId), [version]);
+
+  const addMilestone = useCallback((clubId: string, userId: string, title: string, description?: string | null, targetDate?: string | null): Result => {
+    const result = addClubMilestone(clubId, userId, title, description, targetDate);
+    refresh();
+    return result.success ? { success: true } : result;
+  }, [refresh]);
+
+  const updateMilestone = useCallback((milestoneId: string, userId: string, updates: {
+    title?: string;
+    description?: string | null;
+    status?: string;
+    target_date?: string | null;
+    order_no?: number | null;
+  }): Result => {
+    const result = updateClubMilestone(milestoneId, userId, updates);
+    refresh();
+    return result.success ? { success: true } : result;
+  }, [refresh]);
+
+  const deleteMilestone = useCallback((milestoneId: string, userId: string): Result => {
+    const result = deleteClubMilestone(milestoneId, userId);
+    refresh();
+    return result.success ? { success: true } : result;
+  }, [refresh]);
+
+  // ── Contributions ──
+
+  const getContributions = useCallback((clubId: string, userId?: string) => getMemberContributions(clubId, userId), [version]);
+
+  const getProgress = useCallback((clubId: string) => getClubMemberProgress(clubId), [version]);
+
+  const logContribution = useCallback((clubId: string, userId: string, targetUserId: string, contributionType: string, title: string, description?: string | null): Result => {
+    const result = addMemberContribution(clubId, userId, targetUserId, contributionType, title, description);
+    refresh();
+    return result.success ? { success: true } : result;
+  }, [refresh]);
+
+  // ── Showcase ──
+
+  const updateShowcase = useCallback((clubId: string, userId: string, updates: {
+    cover_image_url?: string | null;
+    tagline?: string | null;
+    custom_domain_slug?: string | null;
+    is_showcase?: boolean;
+  }): Result => {
+    const result = updateClubShowcase(clubId, userId, updates);
+    refresh();
+    return result.success ? { success: true } : result;
+  }, [refresh]);
+
+  // ── User Clubs ──
+
+  const getUserClubList = useCallback((userId: string) => getUserClubs(userId), [version]);
+
   return {
     clubs,
     curriculums,
@@ -198,5 +264,18 @@ export function useClub() {
     getClubEvents,
     addClubProject,
     addClubEvent,
+    // Milestones
+    getClubMilestones: getMilestones,
+    addClubMilestone: addMilestone,
+    updateClubMilestone: updateMilestone,
+    deleteClubMilestone: deleteMilestone,
+    // Contributions
+    getClubContributions: getContributions,
+    getClubMemberProgress: getProgress,
+    addMemberContribution: logContribution,
+    // Showcase
+    updateClubShowcase: updateShowcase,
+    // User Clubs
+    getUserClubs: getUserClubList,
   };
 }
