@@ -189,6 +189,7 @@ the-ants/                                 # Project root
     │           └── [username]/page.tsx   # 🔒 PM — Authenticated user profile
     │
     ├── components/                       # UI components
+    │   ├── homepage/                     # 🔒 PM (TYZ) — Public landing page components (RevealSection, BentoFeatures, HeroVisual, QualTrail, QualCarousel, RoleLadder, StatsRow, DotGrid, HomepageFonts)
     │   ├── ui/                           # 🔒 PM — Shared atomic components
     │   │   ├── Button.tsx
     │   │   ├── Modal.tsx
@@ -516,6 +517,9 @@ Club activity and contributions can appear on a user's public profile portfolio,
 6. **Server Actions Live in `src/actions/`:** Never define a `'use server'` function inside a component file.
 7. **Styling Consistency:** Use Tailwind CSS v4 utility classes with CSS custom properties (`var(--foreground)`, `var(--primary)`, `var(--border)`, etc.). Use `lucide-react` for all icons.
 8. **Respect 🔒 Ownership:** Do not create, edit, or delete files marked with another developer's lock.
+<<<<<<< HEAD
+9. **Role Upgrade Constraint:** Users always sign up as `student`. Role upgrades require `main_contributor` approval.
+=======
 9. **Role Upgrade Constraint:** Users always sign up as `student`. Role upgrades require `main_contributor` approval.
 10. **Supabase Query Pattern:** All Supabase queries must use the `database.ts` facade. Never call `supabase.from()` directly in component code. When transitioning from mock to live data, replace the facade implementation — never change the consumer interface.
 
@@ -2084,3 +2088,4 @@ Before applying any migration to production:
 - Migrations are never edited after application (immutable).
 - If a change is needed, create a new migration — never modify an existing one.
 - The `supabase/migrations/` folder contains the single source of truth for database schema history.
+>>>>>>> 23990f5be8b69266496f110f06c9e820e1f68a1b

@@ -131,6 +131,13 @@ Classrooms are virtual learning spaces with full CRUD for educational content. *
 - Converts to correct grades using official boundary tables for IGCSE, A Level, IAL, and OSSD.
 - Supports weighted multi-component calculations.
 
+### ✨ Smooth Animations & Transitions
+- **Apple-like scroll reveals** — Every section fades in with a blur-to-clear and scale-up entrance using Apple's `cubic-bezier(0, 0, 0.2, 1)` curve for a polished, cohesive feel.
+- **Connected cascade** — Hero elements (badge, heading, description, CTAs) enter one after another in a natural 80ms stagger rhythm — no manual delays needed.
+- **Floating gradient text** — Key phrases like "global education" gently levitate with a slow 3-second float while the gradient shimmer shifts across 4 seconds.
+- **Theme-synced glow effects** — The nav bar, bento cards, and hover states glow with the brand colour (emerald in dark mode, forest green in light mode), all driven by the same unified cubic-bezier curve.
+- **Reduced motion respected** — All animations respect `prefers-reduced-motion` — users who prefer less motion see a clean static layout.
+
 ### 🔄 Role System
 - **Signup defaults to `student`.** Users can only select `student` at registration.
 - **Upgrade-only policy:** Roles can only be upgraded (student → teacher → contributor → main_contributor). Downgrades are not permitted.
@@ -171,6 +178,7 @@ the-ants/
 ├── src/
 │   ├── app/                     # Next.js App Router pages
 │   ├── components/
+│   │   ├── homepage/            # Public landing page components (RevealSection, BentoFeatures, HeroVisual, QualTrail, QualCarousel, RoleLadder, StatsRow, DotGrid, HomepageFonts)
 │   │   ├── ui/                  # Shared atomic components (Button, Badge, BackButton, RelatedContent, etc.)
 │   │   ├── layout/              # NavBar
 │   │   ├── classrooms/          # Classroom components (11 files)

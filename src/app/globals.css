@@ -192,8 +192,13 @@ body {
 
 /* ── Keyframe Animations ──────────────────────────────────────────────────── */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes fadeInUp {
@@ -201,6 +206,7 @@ body {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -212,6 +218,7 @@ body {
     opacity: 0;
     transform: translateY(-8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -219,28 +226,59 @@ body {
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
 }
 
 @keyframes glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.15); }
-  50% { box-shadow: 0 0 30px rgba(99, 102, 241, 0.3); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.15);
+  }
+
+  50% {
+    box-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
+  }
 }
 
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 @keyframes pulse-soft {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
 }
 
 @keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ── Animation Utilities ──────────────────────────────────────────────────── */
@@ -265,12 +303,10 @@ body {
 }
 
 .animate-shimmer {
-  background: linear-gradient(
-    90deg,
-    var(--background-card) 25%,
-    var(--background-elevated) 50%,
-    var(--background-card) 75%
-  );
+  background: linear-gradient(90deg,
+      var(--background-card) 25%,
+      var(--background-elevated) 50%,
+      var(--background-card) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
@@ -280,14 +316,37 @@ body {
 }
 
 /* ── Staggered Animation Delays ───────────────────────────────────────────── */
-.delay-100 { animation-delay: 100ms; }
-.delay-200 { animation-delay: 200ms; }
-.delay-300 { animation-delay: 300ms; }
-.delay-400 { animation-delay: 400ms; }
-.delay-500 { animation-delay: 500ms; }
-.delay-600 { animation-delay: 600ms; }
-.delay-700 { animation-delay: 700ms; }
-.delay-800 { animation-delay: 800ms; }
+.delay-100 {
+  animation-delay: 100ms;
+}
+
+.delay-200 {
+  animation-delay: 200ms;
+}
+
+.delay-300 {
+  animation-delay: 300ms;
+}
+
+.delay-400 {
+  animation-delay: 400ms;
+}
+
+.delay-500 {
+  animation-delay: 500ms;
+}
+
+.delay-600 {
+  animation-delay: 600ms;
+}
+
+.delay-700 {
+  animation-delay: 700ms;
+}
+
+.delay-800 {
+  animation-delay: 800ms;
+}
 
 /* ── Focus Ring Utility ───────────────────────────────────────────────────── */
 .focus-ring {
@@ -304,4 +363,376 @@ body {
 a {
   color: inherit;
   text-decoration: none;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────────
+   Homepage-scoped design tokens (.hp)
+   Applied only to app/page.tsx — does NOT affect the authenticated app.
+   Light and dark variants toggle via [data-theme] on <html>.
+   ────────────────────────────────────────────────────────────────────────────── */
+.hp {
+  /* Radius (shared between themes) */
+  --hp-radius-sm: 10px;
+  --hp-radius-md: 16px;
+  --hp-radius-lg: 26px;
+
+  /* Fonts — loaded via HomepageFonts client component */
+  --hp-font-display: 'Fraunces', Georgia, serif;
+  --hp-font-body: 'Inter', var(--font-inter), -apple-system, sans-serif;
+  --hp-font-mono: 'JetBrains Mono', 'Courier New', monospace;
+
+  /* Layout */
+  --hp-maxw: 1180px;
+
+  /* ── Dark theme (default — also used when data-theme is not yet set) ── */
+  --hp-bg: #080B11;
+  --hp-bg-soft: #0C1119;
+  --hp-surface: #121926;
+  --hp-surface-2: #161E2C;
+  --hp-border: rgba(148, 163, 184, 0.14);
+  --hp-border-strong: rgba(148, 163, 184, 0.26);
+  --hp-ink: #F3F6FB;
+  --hp-ink-muted: #9AA7BD;
+  --hp-ink-faint: #5C6880;
+  --hp-brand: #3CDBA7;
+  --hp-brand-deep: #1E9E78;
+  --hp-amber: #F2B84B;
+  --hp-amber-deep: #C98F2A;
+  --hp-violet: #8C7FF0;
+
+  background: var(--hp-bg);
+  color: var(--hp-ink);
+}
+
+/* ── Light theme override (when data-theme is toggled to "light") ───────────── */
+[data-theme="light"] .hp {
+  --hp-bg: #F8FAFC;
+  --hp-bg-soft: #F1F5F9;
+  --hp-surface: #FFFFFF;
+  --hp-surface-2: #F8FAFC;
+  --hp-border: rgba(15, 23, 42, 0.10);
+  --hp-border-strong: rgba(15, 23, 42, 0.18);
+  --hp-ink: #0F172A;
+  --hp-ink-muted: #475569;
+  --hp-ink-faint: #94A3B8;
+  --hp-brand: #059669;
+  --hp-brand-deep: #047857;
+  --hp-amber: #D97706;
+  --hp-amber-deep: #B45309;
+  --hp-violet: #7C3AED;
+
+  background: var(--hp-bg);
+  color: var(--hp-ink);
+}
+
+/* ── Dark theme explicit override (higher specificity for toggled state) ────── */
+[data-theme="dark"] .hp {
+  --hp-bg: #080B11;
+  --hp-bg-soft: #0C1119;
+  --hp-surface: #121926;
+  --hp-surface-2: #161E2C;
+  --hp-border: rgba(148, 163, 184, 0.14);
+  --hp-border-strong: rgba(148, 163, 184, 0.26);
+  --hp-ink: #F3F6FB;
+  --hp-ink-muted: #9AA7BD;
+  --hp-ink-faint: #5C6880;
+  --hp-brand: #3CDBA7;
+  --hp-brand-deep: #1E9E78;
+  --hp-amber: #F2B84B;
+  --hp-amber-deep: #C98F2A;
+  --hp-violet: #8C7FF0;
+
+  background: var(--hp-bg);
+  color: var(--hp-ink);
+}
+
+/* ── Apple-like unified easing curves ──────────────────────────────────────────── */
+:root .hp {
+  --hp-ease-out: cubic-bezier(0.0, 0.0, 0.2, 1);
+  --hp-ease-in: cubic-bezier(0.4, 0.0, 1, 1);
+  --hp-ease-in-out: cubic-bezier(0.4, 0.0, 0.2, 1);
+  --hp-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --hp-ease-smooth: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* ── Homepage scroll-reveal — Apple blur + scale entrance ──────────────────────── */
+.hp-reveal {
+  opacity: 0;
+  transform: translateY(18px) scale(0.96);
+  filter: blur(6px);
+  transition: opacity 0.7s var(--hp-ease-out),
+              transform 0.7s var(--hp-ease-out),
+              filter 0.7s var(--hp-ease-out);
+}
+
+/* Staggered entry delay via CSS custom property (set by RevealSection inline style) */
+.hp-reveal {
+  transition-delay: var(--hp-delay, 0ms);
+}
+
+/* Fade-out is faster than fade-in for a snappy scroll-away feel */
+.hp-reveal:not(.hp-visible) {
+  transition-duration: 0.35s;
+  transition-timing-function: var(--hp-ease-in);
+  transition-delay: 0ms;
+  filter: blur(4px);
+}
+
+.hp-reveal.hp-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: blur(0);
+}
+
+/* ── Cascade stagger: children of a revealed parent stagger in ───────────────── */
+.hp-stagger > .hp-reveal {
+  transition-delay: calc(var(--hp-stagger-index, 0) * 80ms);
+}
+.hp-stagger.hp-visible > .hp-reveal {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: blur(0);
+}
+
+/* ── Apple-style card entrance (slightly stronger) ────────────────────────────── */
+.hp-reveal-card {
+  opacity: 0;
+  transform: translateY(24px) scale(0.94);
+  filter: blur(8px);
+  transition: opacity 0.8s var(--hp-ease-out),
+              transform 0.8s var(--hp-ease-out),
+              filter 0.8s var(--hp-ease-out);
+}
+.hp-reveal-card.hp-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: blur(0);
+}
+
+/* ── Unified hover transitions (Apple-like 0.3s ease-out) ─────────────────────── */
+.hp-nav-links a,
+.hp-foot-links a,
+.explore-card-hp,
+.hp button,
+.hp .hp-btn {
+  transition: all 0.3s var(--hp-ease-out) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hp-reveal,
+  .hp-reveal-card {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
+  }
+
+  .hp-stagger > .hp-reveal {
+    transition-delay: 0ms;
+  }
+
+  .hp .animate-float,
+  .hp .hp-grad {
+    animation: none;
+  }
+}
+
+/* ── Homepage sticky nav (theme-aware background + glow) ──────────────────────── */
+.hp-nav {
+  background: rgba(18, 25, 38, 0.78);
+  box-shadow: 0 8px 32px rgba(60, 219, 167, 0.12), 0 0 0 1px rgba(60, 219, 167, 0.06);
+}
+
+[data-theme="light"] .hp-nav {
+  background: rgba(248, 250, 252, 0.85);
+  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.06), 0 0 0 1px rgba(5, 150, 105, 0.06);
+}
+
+[data-theme="dark"] .hp-nav {
+  background: rgba(18, 25, 38, 0.78);
+  box-shadow: 0 8px 32px rgba(60, 219, 167, 0.12), 0 0 0 1px rgba(60, 219, 167, 0.06);
+}
+
+/* ── Homepage spaced typography utility ──────────────────────────────────────── */
+.hp-spaced {
+  letter-spacing: 0.18em;
+}
+
+/* ── Homepage gradient text helper ──────────────────────────────────────────── */
+.hp-grad {
+  background: linear-gradient(100deg, var(--hp-amber) 0%, var(--hp-brand) 65%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  background-size: 200% 200%;
+  animation: hp-float-grad 3s ease-in-out infinite, hp-shimmer-grad 4s ease-in-out infinite;
+}
+
+/* ── Gentle floating motion for gradient text ───────────────────────────────── */
+@keyframes hp-float-grad {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* ── Animated gradient shift for gradient text ──────────────────────────────── */
+@keyframes hp-shimmer-grad {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ── Homepage eyebrow label ──────────────────────────────────────────────────── */
+.hp-eyebrow {
+  font-family: var(--hp-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--hp-amber);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hp-eyebrow::before {
+  content: "";
+  width: 14px;
+  height: 1px;
+  background: var(--hp-amber);
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* ── Flip card ───────────────────────────────────────────────────────────────── */
+.hp-flip-card {
+  perspective: 800px;
+  cursor: pointer;
+}
+
+.hp-flip-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.hp-flip-card.flipped .hp-flip-inner {
+  transform: rotateY(180deg);
+}
+
+.hp-flip-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 11px;
+  padding: 8px;
+  font-family: var(--hp-font-mono);
+  border: 1px solid var(--hp-border-strong);
+}
+
+.hp-flip-front {
+  background: var(--hp-surface-2);
+  color: var(--hp-ink-muted);
+}
+
+.hp-flip-back {
+  background: var(--hp-brand);
+  color: #06110D;
+  transform: rotateY(180deg);
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hp-flip-inner {
+    transition: none;
+  }
+}
+
+/* ── Qualifications trail ────────────────────────────────────────────────────── */
+.hp-quals-line {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: repeating-linear-gradient(to right,
+      var(--hp-border-strong) 0 8px,
+      transparent 8px 16px);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+@media (max-width: 900px) {
+  .hp-quals-line {
+    display: none;
+  }
+}
+
+/* ── Homepage stats row divider ───────────────────────────────────────────────── */
+.hp-stats-divider {
+  position: absolute;
+  top: 10%;
+  right: 0;
+  width: 1px;
+  height: 80%;
+  background: var(--hp-border);
+}
+
+@media (max-width: 640px) {
+  .hp-stats-divider {
+    display: none;
+  }
+}
+
+/* ── Mobile carousel chevron sizing ──────────────────────────────────────────── */
+.hp-carousel-chevron-left {
+  left: -20px;
+}
+
+.hp-carousel-chevron-right {
+  right: -20px;
+}
+
+@media (max-width: 640px) {
+  .hp-carousel-chevron-left {
+    left: -12px !important;
+    width: 36px !important;
+    height: 36px !important;
+  }
+  .hp-carousel-chevron-right {
+    right: -12px !important;
+    width: 36px !important;
+    height: 36px !important;
+  }
+}
+
+/* ── Role ladder ─────────────────────────────────────────────────────────────── */
+.hp-ladder {
+  display: flex;
+  align-items: flex-end;
+  gap: 0;
+}
+
+@media (max-width: 900px) {
+  .hp-ladder {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hp-ladder .hp-rung {
+    margin-bottom: 0 !important;
+  }
+
+  .hp-connector {
+    width: auto !important;
+    height: 34px;
+    transform: rotate(90deg);
+    margin: 0 auto;
+  }
 }
