@@ -2628,11 +2628,7 @@ export function deleteCertification(
   return { success: true };
 }
 
-// ── Mock Timetable & Pomodoro ───────────────────────────────────────────────
-export const mockTimetableEvents = [
-  { id: 'te-1', user_id: 'user-student-001', title: 'Physics Revision', event_type: 'study', start_time: '2026-06-18T14:00:00Z', end_time: '2026-06-18T16:00:00Z', all_day: false, is_recurring: false, recurrence_pattern: null, color_code: '#3b82f6', metadata: {}, created_at: '2026-06-10T00:00:00Z' }
-];
-
+// ── Mock Pomodoro ────────────────────────────────────────────────────────────
 export const mockPomodoroSessions = [
   { id: 'ps-1', user_id: 'user-student-001', duration_minutes: 25, task_name: 'Physics Chapter 1', category: 'Study', completed_at: '2026-06-17T15:00:00Z' }
 ];
@@ -3689,9 +3685,6 @@ export const deleteExamCountdown = (id: string): { success: boolean } => {
   mockExamCountdowns.splice(idx, 1);
   return { success: true };
 };
-
-export const getUserTimetable = (userId: string) =>
-  mockTimetableEvents.filter(e => e.user_id === userId);
 
 export const getUserPomodoroSessions = (userId: string) =>
   mockPomodoroSessions.filter(s => s.user_id === userId);

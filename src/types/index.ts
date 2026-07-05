@@ -1340,3 +1340,15 @@ export interface OrgTimelineItemFormData {
   showOnTimeline?: boolean;
   location?: string;
 }
+
+// ── Timetable Types (re-exported from timetable.ts) ──────────────────────────
+export type {
+  TimetableEventType,
+  TimetableEventSource,
+  RecurrenceFrequency,
+  RecurrenceRule,
+  TimetableEvent,
+  TimetableView,
+  TimetableFilters,
+  TimetableEventFormData,
+} from './timetable';

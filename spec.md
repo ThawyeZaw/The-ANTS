@@ -524,62 +524,80 @@ Club activity and contributions can appear on a user's public profile portfolio,
 ## 12. Smart Timetable — Detailed Specification
 
 ### 12.1 Overview
-The Smart Timetable is a weekly scheduling tool that allows students to plan, visualize, and manage their study sessions. It supports recurring events, colour-coded subjects, conflict detection, and drag-to-reschedule interactions.
+The Smart Timetable is a full scheduling tool supporting daily, weekly, and monthly views. Students plan study sessions, classes, and personal events with drag-and-drop time blocks. Events are colour-coded by type (study, class, school, gym, exam, break, deadline, club event). Events can be to-dos with completion tracking or regular events, and can repeat daily, weekly, monthly, or on a custom interval.
 
 ### 12.2 Data Model
-Timetable events are stored as a JSONB array on the `timetable_events` table, allowing flexible per-user schedules without a separate events table.
+Timetable events are stored in the `timetable_events` table with a rich relational schema. Cross-feature integration surfaces exam countdowns, assignment deadlines, club events, and club milestones as read-only virtual events.
 
 | Field | Type | Description |
 |---|---|---|
 | `id` | UUID | Unique event identifier |
-| `title` | string | Event name (e.g., "Maths Revision") |
-| `day_of_week` | integer (0-6) | 0=Sunday through 6=Saturday |
-| `start_time` | string (HH:mm) | Start time in 24-hour format |
-| `end_time` | string (HH:mm) | End time in 24-hour format |
-| `subject` | string (optional) | Subject or curriculum reference |
-| `color` | string | Hex colour code for display |
-| `location` | string (optional) | Physical room or online link |
-| `recurrence` | string | `weekly` (default) or `none` for one-off |
-| `notes` | text (optional) | Free-text notes for the event |
+| `user_id` | UUID | Owning user |
+| `title` | text | Event name (e.g., "Physics Revision") |
+| `description` | text | Optional notes / details |
+| `event_type` | enum | `study`, `class`, `school`, `gym`, `exam`, `break`, `deadline`, `club_event` |
+| `subject` | text | Subject or curriculum reference |
+| `location` | text | Physical room, online link, or venue |
+| `start_time` | timestamptz | ISO start datetime (null for all-day or deadline-only) |
+| `end_time` | timestamptz | ISO end datetime (deadline for deadline-only events) |
+| `all_day` | boolean | True if event spans the full day |
+| `is_recurring` | boolean | Whether event repeats |
+| `recurrence_rule` | JSONB | `{ frequency, interval, days_of_week[], end_date }` |
+| `color_code` | text | Hex colour for display |
+| `is_todo` | boolean | Whether event has a completion checkbox |
+| `is_completed` | boolean | Completion state for to-do events |
+| `completed_at` | timestamptz | When the to-do was ticked |
+| `event_source` | enum | `user`, `exam_countdown`, `assignment`, `club_event`, `club_milestone` |
+| `source_id` | UUID | Reference to the originating entity (null for user events) |
+| `metadata` | JSONB | Extensible payload for external event context |
+| `created_at` | timestamptz | Creation timestamp |
 
 ### 12.3 Core Functional Requirements
-- **Weekly grid view**: Seven-day calendar grid with hourly slots (6:00 AM - 11:00 PM default).
-- **Event CRUD**: Create, edit, delete individual timetable events via modal form.
-- **Drag-to-reschedule**: Drag an event to a new time slot; updates `start_time`/`end_time`/`day_of_week`.
-- **Colour coding**: Each event renders with its assigned colour; optional auto-colour by subject.
-- **Conflict detection**: When saving/creating, check for overlapping events on the same day. Show a warning dialog listing conflicting events. Allow override (force-save with overlap).
-- **Recurring events**: Creating an event defaults to weekly recurrence. Editing a recurring event prompts: "Edit this event only" or "Edit all events in this series."
-- **Current time indicator**: A horizontal red line marks the current time on the current day.
+- **Daily, Weekly, and Monthly views**: Three toggleable calendar views. Day and week views show a time grid (6:00 AM–11:00 PM). Month view shows a compact 6-row calendar grid.
+- **Event CRUD**: Create, edit, delete events via modal form. Supports timed events, all-day events, and deadline-only events.
+- **Drag-and-drop reschedule**: Drag events to new time slots or across days. Uses `@dnd-kit/core` with `PointerSensor`. Drop targets highlight on hover. Duration is preserved on move.
+- **Overlapping events share width**: Events that overlap in time are rendered side-by-side with proportional column widths — no warnings or blocks.
+- **Colour coding**: Each event type has a default colour; user can choose from 12 presets or a custom colour picker.
+- **Recurring events**: Supports daily, weekly, monthly, and custom (every N days) recurrence with optional end date. Weekly recurrence allows day-of-week selection. Editing a recurring instance prompts "Edit this event only" (creates a one-off) or "Edit all events in series" (modifies the base event).
+- **To-do events**: Events can be marked as to-dos with a completion checkbox. Completed to-dos show with strikethrough style and can be unchecked.
+- **Current time indicator**: A horizontal indigo line with dot marks the current time on the current day.
+- **Cross-feature integration**: Exam countdowns (red), assignment deadlines (amber), club events (pink), and club milestones (amber) appear as read-only virtual events with lock badges. Toggleable via the "Show External Events" filter.
+- **Event count cap**: Soft warning when a day exceeds 20 events.
 
 ### 12.4 User Interaction Workflows
-1. **Create event**: Click an empty time slot → modal opens with pre-filled day/time → fill title, optional subject, colour, recurrence → save.
-2. **Edit event**: Click existing event → modal opens with current values → modify fields → save.
-3. **Delete event**: Click existing event → modal → "Delete" button with confirmation prompt.
-4. **Reschedule**: Drag event vertically (change time) or horizontally (change day). Drop target highlights. On drop, save new position.
-5. **Navigate weeks**: Left/right arrows to move between weeks. "Today" button to jump back to current week.
+1. **Create event**: Click "+" button or click an empty time slot → modal opens with pre-filled day/time → fill title, select event type, optionally set colour, recurrence, to-do status → save.
+2. **Edit event**: Click existing event → modal opens with current values → modify → save. Recurring instances prompt for scope choice.
+3. **Delete event**: Click event → modal → "Delete" button.
+4. **Reschedule**: Drag event vertically (change time) or horizontally (change day in week view). Drop zone highlights. On drop, event is moved preserving duration.
+5. **Navigate**: Left/right arrows move between days/weeks/months. "Today" button jumps to current date. View switcher toggles day/week/month.
+6. **Filter**: Filter panel toggles event types, show/hide completed to-dos, and show/hide external events.
 
 ### 12.5 Permission Constraints
-- **Student/Teacher/Contributor/Main Contributor**: Full CRUD on own timetable.
-- No shared or collaborative timetable editing; each user manages their own.
-- View-only if a classroom or club integrates timetable sharing (future scope).
+- All roles with a user account have full CRUD on their own timetable events.
+- External (virtual) events are read-only; they cannot be edited, moved, or deleted from the timetable.
+- No shared or collaborative timetable editing.
 
-### 12.6 Technical Implementation Prerequisites
+### 12.6 Technical Implementation
 - `'use client'` directive for all drag-and-drop interactions.
-- Drag-and-drop library (e.g., `@dnd-kit/core` or `dnd-kit`) for rescheduling.
-- JSONB read/write through `database.ts` facade; no direct Supabase JSONB mutations outside PM scope.
-- `useTimetable.ts` hook encapsulates all CRUD operations and conflict detection logic.
-- Timezone-aware rendering using the user's local timezone (no server-side timezone conversion needed for MVP).
+- `@dnd-kit/core` + `@dnd-kit/utilities` for drag-and-drop.
+- `src/lib/mock/timetable.ts` — full mock database with 12 rich events, CRUD, recurrence expansion, and cross-feature virtual event builders.
+- `src/hooks/useTimetable.ts` — state management, navigation, filtering, and CRUD.
+- `src/actions/timetable.ts` — server actions (ready for Supabase migration).
+- `src/lib/timetable/layout.ts` — overlap detection and column width algorithm.
+- `src/constants/timetable.ts` — event type configs, colour presets, grid config, labels.
+- `src/types/timetable.ts` — all timetable TypeScript types.
+- Timezone-aware rendering using the user's local timezone.
 
 ### 12.7 Error Handling
-- **Overlap conflict**: Warning dialog listing conflicting events; user chooses to cancel or force-save.
+- **Overlapping events**: Events are displayed side-by-side; no blocking or warning.
 - **Invalid time range**: `end_time` must be after `start_time`; form validation blocks save.
-- **Exceeded maximum events per day**: Soft cap at 20 events per day; warn user if exceeded.
-- **JSONB parse failure**: Fallback to empty events array; log error to console for debugging.
+- **Event count warning**: Soft cap at 20 events per day; warning shown in modal if exceeded.
+- **External event editing**: Attempts to edit/delete external events return an error silently.
 
 ### 12.8 Integration Requirements
-- Pulls subject colour mappings from `src/constants/timetable.ts`.
-- `RelatedContent.tsx` may surface flashcards/notes matching the event's subject label.
-- Middleware does not protect timetable routes; access is gated by `useRole()` within the component.
+- Pulls event type colours from `src/constants/timetable.ts`.
+- Virtual events are built at query time from exam countdowns, assignments, club events, and club milestones.
+- Middleware does not protect timetable routes; access is gated by application layout.
 
 ---
 
