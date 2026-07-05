@@ -1,14 +1,20 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// StatsRow — High-impact metric blocks
-// Oversized numbers with spaced labels — acts as a "proof of growth" divider
-// between the Hero and Features sections.
+// StatsRow — High-impact metric blocks with animated count-up
+// Each stat counts up from 0 when scrolled into view.
 // Collapses to 2×2 grid on mobile (≤640px).
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { HOMEPAGE_STATS } from '@/constants/homepage';
 import RevealSection from './RevealSection';
+import AnimatedStat from '@/components/ui/AnimatedStat';
+
+const STATS = [
+  { endValue: 6, label: 'EXAM BOARDS' },
+  { endValue: 4, label: 'USER ROLES' },
+  { endValue: 120, label: 'ACTIVE CLUBS', suffix: '+' },
+  { endValue: 100, label: 'STUDENTS', suffix: '+' },
+];
 
 export default function StatsRow() {
   return (
@@ -30,7 +36,7 @@ export default function StatsRow() {
           }
         `}</style>
 
-        {HOMEPAGE_STATS.map((stat, i) => (
+        {STATS.map((stat, i) => (
           <div
             key={stat.label}
             style={{
@@ -40,7 +46,7 @@ export default function StatsRow() {
             }}
           >
             {/* Vertical divider (hidden on mobile) */}
-            {i < HOMEPAGE_STATS.length - 1 && (
+            {i < STATS.length - 1 && (
               <div
                 className="hp-stats-divider"
                 style={{
@@ -59,38 +65,11 @@ export default function StatsRow() {
               }
             `}</style>
 
-            {/* Oversized value */}
-            <div
-              className="hp-stats-value"
-              style={{
-                fontFamily: 'var(--hp-font-display)',
-                fontSize: 'clamp(2.8rem, 5vw, 4.2rem)',
-                fontWeight: 560,
-                lineHeight: 1,
-                letterSpacing: '-0.02em',
-                background: 'linear-gradient(135deg, var(--hp-ink) 40%, var(--hp-ink-muted) 100%)',
-                WebkitBackgroundClip: 'text',
-                backgroundClip: 'text',
-                color: 'transparent',
-                marginBottom: 8,
-              }}
-            >
-              {stat.value}
-            </div>
-
-            {/* Spaced label */}
-            <div
-              className="hp-spaced"
-              style={{
-                fontFamily: 'var(--hp-font-mono)',
-                fontSize: 10.5,
-                letterSpacing: '0.18em',
-                color: 'var(--hp-ink-faint)',
-                fontWeight: 500,
-              }}
-            >
-              {stat.label}
-            </div>
+            <AnimatedStat
+              endValue={stat.endValue}
+              label={stat.label}
+              suffix={stat.suffix}
+            />
           </div>
         ))}
       </div>

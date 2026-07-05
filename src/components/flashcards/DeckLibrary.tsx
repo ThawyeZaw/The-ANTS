@@ -12,6 +12,8 @@ import { getDecksByUser, getPublicDecks, cloneDeck, deleteDeck } from '@/lib/moc
 import DeckCard from './DeckCard';
 import CreateDeckModal from './CreateDeckModal';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { BookMarked } from 'lucide-react';
 
 interface DeckLibraryProps {
   userId: string;
@@ -19,16 +21,12 @@ interface DeckLibraryProps {
 
 export default function DeckLibrary({ userId }: DeckLibraryProps) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'my-decks' | 'library'>('my-decks');
   const [searchQuery, setSearchQuery] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // Helper to fetch and deduplicate decks
   const getUniqueDecks = () => {
-    const allDecks = [...getDecksByUser(userId), ...getPublicDecks()];
-    // Deduplicate by deck id
-    const uniqueMap = new Map(allDecks.map(deck => [deck.id, deck]));
-    return Array.from(uniqueMap.values());
+    return getDecksByUser(userId);
   };
 
   const [decks, setDecks] = useState<Deck[]>(getUniqueDecks);
@@ -45,10 +43,7 @@ export default function DeckLibrary({ userId }: DeckLibraryProps) {
   };
 
   // Filter logic
-  const myDecks = decks.filter(d => d.owner_id === userId);
-  const publicDecks = decks.filter(d => d.is_public && d.owner_id !== userId);
-
-  const displayedDecks = activeTab === 'my-decks' ? myDecks : publicDecks;
+  const displayedDecks = decks;
   const filteredDecks = displayedDecks.filter(deck => {
     const query = searchQuery.toLowerCase().trim();
     if (!query) return true;
@@ -140,39 +135,15 @@ export default function DeckLibrary({ userId }: DeckLibraryProps) {
         <div className="absolute bottom-0 left-0 -ml-16 -mb-16 h-48 w-48 rounded-full bg-cyan-400/20 blur-3xl pointer-events-none" />
       </div>
 
-      {/* Controls & Tabs */}
+      {/* Controls & Search */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[var(--border)] pb-4">
-        {/* Tabs */}
-        <div className="flex bg-[var(--background-secondary)] p-1 rounded-xl border border-[var(--border)] self-start">
-          <button
-            id="tab-my-decks"
-            onClick={() => setActiveTab('my-decks')}
-            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all ${activeTab === 'my-decks'
-                ? 'bg-[var(--background-card)] text-[var(--primary)] shadow-[var(--shadow-sm)]'
-                : 'text-[var(--foreground-secondary)] hover:text-[var(--foreground)]'
-              }`}
-          >
-            <Layers size={15} />
-            My Decks
-            <span className="rounded-full bg-[var(--accent-light)] px-1.5 py-0.5 text-xs text-[var(--accent)]">
-              {myDecks.length}
-            </span>
-          </button>
-          <button
-            id="tab-library"
-            onClick={() => setActiveTab('library')}
-            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all ${activeTab === 'library'
-                ? 'bg-[var(--background-card)] text-[var(--primary)] shadow-[var(--shadow-sm)]'
-                : 'text-[var(--foreground-secondary)] hover:text-[var(--foreground)]'
-              }`}
-          >
-            <Globe size={15} />
-            Library
-            <span className="rounded-full bg-[var(--accent-light)] px-1.5 py-0.5 text-xs text-[var(--accent)]">
-              {publicDecks.length}
-            </span>
-          </button>
-        </div>
+        <Link
+          href="/library/flashcards"
+          className="flex items-center gap-2 rounded-xl bg-violet-500/10 px-4 py-2 text-sm font-semibold text-violet-600 dark:text-violet-400 transition-all hover:bg-violet-500/20 self-start sm:self-center"
+        >
+          <BookMarked className="h-4 w-4" aria-hidden="true" />
+          Browse Flashcards Library
+        </Link>
 
         {/* Search */}
         <div className="relative max-w-xs w-full">
@@ -212,12 +183,10 @@ export default function DeckLibrary({ userId }: DeckLibraryProps) {
           <h3 className="mb-1 text-base font-bold text-[var(--foreground)]">No decks found</h3>
           <p className="mb-6 max-w-sm text-sm text-[var(--foreground-secondary)]">
             {searchQuery
-              ? `No decks matching "${searchQuery}" in this view. Try another search query.`
-              : activeTab === 'my-decks'
-                ? "You haven't created or cloned any flashcard decks yet."
-                : 'No public decks are currently shared in the library.'}
+              ? `No decks matching "${searchQuery}". Try another search query.`
+              : "You haven't created or added any flashcard decks yet."}
           </p>
-          {activeTab === 'my-decks' && !searchQuery && (
+          {!searchQuery && (
             <button
               id="create-deck-empty-btn"
               onClick={() => setIsCreateModalOpen(true)}

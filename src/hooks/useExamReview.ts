@@ -6,7 +6,7 @@ import { getPendingExamSubmissions, approveExamSubmission, rejectExamSubmission 
 export interface ExamReviewSubmission {
   id: string;
   title: string;
-  type: 'calculator' | 'countdown';
+  type: 'calculator' | 'countdown' | 'exam';
   contributorName: string;
   summary: string;
   status: 'pending_review' | 'approved' | 'rejected';

@@ -7,9 +7,9 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import Link from 'next/link';
-import { Layers, BookOpen, ExternalLink, Package } from 'lucide-react';
-import type { Deck, Note } from '@/types';
-import { getNotes, getRelatedDecks, mockCurriculums, mockSubjects } from '@/lib/mock/database';
+import { Layers, BookOpen, ExternalLink, Package, Calendar, LineChart } from 'lucide-react';
+import type { Deck, Note, Exam } from '@/types';
+import { getNotes, getRelatedDecks, getExams, mockCurriculums, mockSubjects } from '@/lib/mock/database';
 
 interface RelatedContentProps {
   curriculumId?: string | null;
@@ -44,7 +44,16 @@ export default function RelatedContent({
     .filter((n) => n.id !== excludeNoteId)
     .slice(0, maxItems);
 
-  if (relatedDecks.length === 0 && relatedNotes.length === 0) {
+  // Query related exams
+  const relatedExams = getExams()
+    .filter(
+      (e) =>
+        (curriculumId ? e.curriculum_id === curriculumId : true) &&
+        (subjectId ? e.subject_id === subjectId : true)
+    )
+    .slice(0, maxItems);
+
+  if (relatedDecks.length === 0 && relatedNotes.length === 0 && relatedExams.length === 0 && (!curriculumId || !subjectId)) {
     return null;
   }
 
@@ -118,6 +127,54 @@ export default function RelatedContent({
                 </li>
               ))}
             </ul>
+          </div>
+        )}
+
+        {/* Related exams */}
+        {relatedExams.length > 0 && (
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--background-card)] p-4 space-y-3">
+            <div className="flex items-center gap-2 text-xs font-semibold text-[var(--foreground-muted)] uppercase tracking-wide">
+              <Calendar className="h-3.5 w-3.5" />
+              Exams & Milestones
+            </div>
+            <ul className="space-y-2">
+              {relatedExams.map((exam) => (
+                <li key={exam.id}>
+                  <div className="group flex flex-col gap-1 text-sm">
+                    <span className="font-medium text-[var(--foreground)] line-clamp-1">
+                      {exam.title}
+                    </span>
+                    <span className="text-xs text-[var(--foreground-muted)]">
+                      {new Date(exam.exam_date).toLocaleDateString()}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Progress Link */}
+        {curriculumId && subjectId && (
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--background-card)] p-4 space-y-3">
+            <div className="flex items-center gap-2 text-xs font-semibold text-[var(--foreground-muted)] uppercase tracking-wide">
+              <LineChart className="h-3.5 w-3.5" />
+              Your Progress
+            </div>
+            <Link
+              href={`/lessons/${curriculumId}/${subjectId}`}
+              className="group flex items-center justify-between p-3 rounded-lg border border-[var(--border)] hover:border-[var(--primary)] hover:bg-[var(--primary-light)] transition-all"
+            >
+              <div className="flex flex-col">
+                <span className="font-medium text-[var(--foreground)] group-hover:text-[var(--primary)] transition-colors">
+                  Lesson Tracker
+                </span>
+                <span className="text-xs text-[var(--foreground-muted)]">
+                  Track your topics and mastery
+                </span>
+              </div>
+              <ExternalLink className="h-4 w-4 text-[var(--foreground-muted)] group-hover:text-[var(--primary)] transition-colors" />
+            </Link>
           </div>
         )}
       </div>

@@ -11,6 +11,7 @@ import { BookOpen, Filter, Plus, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { NoteFilters } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
+import { useCourseManager } from '@/hooks/useCourseManager';
 
 import { useNotes, useSavedNotes } from '@/hooks/useNotes';
 import NoteCard from './NoteCard';
@@ -33,9 +34,11 @@ export default function NotesLibrary() {
   const [filters, setFilters] = useState<NoteFilters>(DEFAULT_FILTERS);
   const [showFilters, setShowFilters] = useState(false);
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
+  const [showEnrolledOnly, setShowEnrolledOnly] = useState(false);
 
   const { notes } = useNotes(filters);
   const { toggleSave, checkSaved } = useSavedNotes(user?.id);
+  const { enrolledCurriculumIds } = useCourseManager();
 
   // Build a contributor name lookup map
   const contributorNames = useMemo(() => {
@@ -48,6 +51,12 @@ export default function NotesLibrary() {
     });
     return map;
   }, [notes]);
+
+  // Apply enrolled filter
+  const displayNotes = useMemo(() => {
+    if (!showEnrolledOnly) return notes;
+    return notes.filter(n => n.curriculum_id && enrolledCurriculumIds.includes(n.curriculum_id));
+  }, [notes, showEnrolledOnly, enrolledCurriculumIds]);
 
   const activeFilterCount = [
     filters.curriculumId,
@@ -71,20 +80,28 @@ export default function NotesLibrary() {
           </div>
         </div>
 
-        {/* Tab switcher */}
-        <div className="flex border-b border-border/60 shrink-0">
-          <Link
-            href="/library"
-            className="px-4 py-2 border-b-2 font-semibold text-sm transition-all -mb-px border-primary text-primary"
+        {/* Smart Filter */}
+        <div className="flex border border-[var(--border)] rounded-xl bg-[var(--background-secondary)] p-1 shrink-0">
+          <button
+            onClick={() => setShowEnrolledOnly(false)}
+            className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+              !showEnrolledOnly
+                ? 'bg-[var(--background-card)] text-[var(--foreground)] shadow-[var(--shadow-sm)]'
+                : 'text-[var(--foreground-muted)] hover:text-[var(--foreground)]'
+            }`}
           >
             All Notes
-          </Link>
-          <Link
-            href="/my-notes"
-            className="px-4 py-2 border-b-2 font-medium text-sm transition-all -mb-px border-transparent text-foreground-muted hover:text-foreground hover:border-border"
+          </button>
+          <button
+            onClick={() => setShowEnrolledOnly(true)}
+            className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+              showEnrolledOnly
+                ? 'bg-[var(--background-card)] text-[var(--foreground)] shadow-[var(--shadow-sm)]'
+                : 'text-[var(--foreground-muted)] hover:text-[var(--foreground)]'
+            }`}
           >
-            My Notes
-          </Link>
+            My Courses
+          </button>
         </div>
 
         <div className="flex items-center gap-2">
@@ -135,7 +152,7 @@ export default function NotesLibrary() {
 
         {/* ── Notes Grid ── */}
         <main className="flex-1 min-w-0">
-          {notes.length === 0 ? (
+          {displayNotes.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
               <div className="text-5xl">📚</div>
               <p className="text-lg font-semibold text-foreground">No notes found</p>
@@ -154,7 +171,7 @@ export default function NotesLibrary() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {notes.map((note) => (
+              {displayNotes.map((note) => (
                 <NoteCard
                   key={note.id}
                   note={note}

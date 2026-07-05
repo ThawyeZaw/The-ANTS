@@ -21,6 +21,7 @@ import { useRole } from '@/hooks/useRole';
 import { useLessons, type TopicStatus } from '@/hooks/useLessons';
 import { cn } from '@/lib/utils';
 import TopicCard from './TopicCard';
+import RelatedContent from '@/components/ui/RelatedContent';
 
 // ── Role-aware subtitle ───────────────────────────────────────────────────────
 
@@ -116,6 +117,17 @@ function SubjectAccordion({
                 />
               );
             })
+          )}
+
+          {/* Related Content for this subject */}
+          {subject.topics.length > 0 && (
+            <div className="col-span-1 sm:col-span-2 pt-4 border-t border-border mt-2">
+              <RelatedContent
+                curriculumId={subject.curriculum_id}
+                subjectId={subject.id}
+                maxItems={2}
+              />
+            </div>
           )}
         </div>
       )}

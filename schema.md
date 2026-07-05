@@ -27,6 +27,11 @@
 | `achievements` | `jsonb` |  Nullable |
 | `pinned_item_id` | `text` |  Nullable |
 | `section_visibility` | `jsonb` |  Nullable |
+| `custom_url_slug` | `text` |  Nullable Unique |
+| `show_club_memberships` | `bool` |  Default: true |
+| `show_club_projects` | `bool` |  Default: true |
+| `show_club_activity` | `bool` |  Default: true |
+| `certification_ids` | `uuid[]` |  Nullable |
 
 > **`social_links` JSONB structure:** Array of `{ id, platform: ("github" | "facebook" | "linkedin" | "website" | "twitter" | "instagram" | "youtube" | "custom"), label, url, visible: bool, order? }`
 
@@ -69,11 +74,16 @@
 | `id` | `uuid` | Primary |
 | `title` | `text` |  Nullable |
 | `bio` | `text` |  Nullable |
-| `website_url` | `text` |  Nullable |
+| `website` | `text` |  Nullable |
 | `facebook_url` | `text` |  Nullable |
-| `linkedin_url` | `text` |  Nullable |
-| `github_url` | `text` |  Nullable |
+| `linkedin` | `text` |  Nullable |
+| `github` | `text` |  Nullable |
 | `verification_documents_url` | `text` |  Nullable |
+| `specialisations` | `text[]` |  Nullable |
+| `qualifications` | `text[]` |  Nullable |
+| `published_notes_count` | `int4` |  Nullable |
+| `published_curriculums_count` | `int4` |  Nullable |
+| `availability` | `text` |  Nullable |
 
 ---
 
@@ -133,7 +143,9 @@
 | `id` | `uuid` | Primary |
 | `user_id` | `uuid` |  |
 | `curriculum_id` | `uuid` |  |
-| `selected_at` | `timestamp` |  Nullable |
+| `subject_id` | `uuid` |  Nullable |
+| `started_at` | `timestamp` |  Nullable |
+| `completed_at` | `timestamp` |  Nullable |
 
 ---
 
@@ -372,66 +384,6 @@
 > **`type` values:** `"pdf"` | `"video"` | `"document"` | `"link"` | `"image"`
 
 ---
-
-> **`answers` JSONB structure:** Array of `{ question_id, answer, is_correct?: bool }`. The `is_correct` field is set server-side after submission.
-
----
-
-## Table `discussion_topics`
-
-### Columns
-
-| Name | Type | Constraints |
-|------|------|-------------|
-| `id` | `uuid` | Primary |
-| `classroom_id` | `uuid` |  |
-| `title` | `text` |  |
-| `content` | `text` |  |
-| `assignment_id` | `uuid` |  Nullable |
-| `is_pinned` | `bool` |  Default: false |
-| `is_locked` | `bool` |  Default: false |
-| `created_by` | `uuid` |  |
-| `created_at` | `timestamp` |  |
-| `updated_at` | `timestamp` |  |
-
----
-
-## Table `discussion_replies`
-
-### Columns
-
-| Name | Type | Constraints |
-|------|------|-------------|
-| `id` | `uuid` | Primary |
-| `topic_id` | `uuid` |  |
-| `content` | `text` |  |
-| `created_by` | `uuid` |  |
-| `created_at` | `timestamp` |  |
-| `updated_at` | `timestamp` |  |
-
----
-
-## Table `classroom_resources`
-
-### Columns
-
-| Name | Type | Constraints |
-|------|------|-------------|
-| `id` | `uuid` | Primary |
-| `classroom_id` | `uuid` |  |
-| `title` | `text` |  |
-| `description` | `text` |  Nullable |
-| `type` | `text` |  |
-| `url` | `text` |  |
-| `curriculum_id` | `uuid` |  Nullable |
-| `subject_id` | `uuid` |  Nullable |
-| `uploaded_by` | `uuid` |  |
-| `created_at` | `timestamp` |  |
-
-> **`type` values:** `"pdf"` | `"video"` | `"document"` | `"link"` | `"image"`
-
----
-
 ## Table `clubs`
 
 ### Columns
@@ -445,6 +397,10 @@
 | `join_mode` | `text` |  Nullable |
 | `invite_code` | `text` |  Nullable |
 | `enabled_features` | `jsonb` |  Nullable |
+| `cover_image_url` | `text` |  Nullable |
+| `tagline` | `text` |  Nullable |
+| `custom_domain_slug` | `text` |  Nullable Unique |
+| `is_showcase` | `bool` |  Default: false |
 | `created_at` | `timestamp` |  Nullable |
 
 > **`enabled_features` JSONB structure:** Array of `{ key: ("chat" | "announcements" | "links" | "members" | "projects" | "activity_timeline" | "leaderboard"), enabled: bool, public_visible: bool }`. Default: `["chat", "announcements", "links", "members"]` with all enabled and publicly visible.
@@ -564,9 +520,17 @@
 | `created_by` | `uuid` |  |
 | `title` | `text` |  |
 | `description` | `text` |  Nullable |
+| `status` | `text` |  Default: 'active' |
+| `cover_image_url` | `text` |  Nullable |
+| `links` | `jsonb` |  Nullable |
+| `contributors` | `uuid[]` |  Nullable |
+| `tags` | `text[]` |  Nullable |
 | `created_at` | `timestamp` |  |
+| `updated_at` | `timestamp` |  Nullable |
 
 > **Permission:** Any active club member can add projects.
+> **`status` values:** `"active"` | `"completed"` | `"archived"`
+> **`links` JSONB structure:** Array of `{ label, url }` for project-related links (GitHub, live demo, documentation, etc.)
 
 ---
 
@@ -585,6 +549,74 @@
 | `created_at` | `timestamp` |  |
 
 > **Permission:** Only club leaders (admins and moderators) can schedule events.
+
+---
+
+## Table `club_milestones`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `club_id` | `uuid` | FK → clubs.id |
+| `title` | `text` |  |
+| `description` | `text` |  Nullable |
+| `status` | `text` |  Default: 'planned' |
+| `target_date` | `timestamp` |  Nullable |
+| `completed_at` | `timestamp` |  Nullable |
+| `created_by` | `uuid` | FK → profiles.id |
+| `created_at` | `timestamp` |  |
+| `order_no` | `int4` |  Nullable |
+
+> **`status` values:** `"planned"` | `"in_progress"` | `"completed"`
+> **Permission:** Club leaders (admins and moderators) can create, edit, and delete milestones.
+
+---
+
+## Table `club_member_contributions`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `club_id` | `uuid` | FK → clubs.id |
+| `user_id` | `uuid` | FK → profiles.id |
+| `contribution_type` | `text` |  |
+| `title` | `text` |  |
+| `description` | `text` |  Nullable |
+| `metadata` | `jsonb` |  Nullable |
+| `created_at` | `timestamp` |  |
+
+> **`contribution_type` values:** `"project"` | `"event"` | `"milestone_completed"` | `"discussion"` | `"other"`
+> **`metadata` JSONB structure:** Flexible object for linked entity IDs (e.g., `{ project_id, event_id, milestone_id }`).
+> **Permission:** Club leaders can view all member contributions. Members can view their own contributions.
+
+---
+
+## Table `certifications`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `user_id` | `uuid` | FK → profiles.id |
+| `type` | `text` |  |
+| `subject` | `text` |  Nullable |
+| `exam_board` | `text` |  Nullable |
+| `grade` | `text` |  Nullable |
+| `year` | `int4` |  Nullable |
+| `certificate_url` | `text` |  Nullable |
+| `is_verified` | `bool` |  Default: false |
+| `verified_by` | `uuid` |  Nullable |
+| `is_hidden` | `bool` |  Default: false |
+| `order_no` | `int4` |  Nullable |
+| `created_at` | `timestamp` |  |
+
+> **`type` values:** `"igcse"` | `"as_level"` | `"a_level"` | `"ielts"` | `"toefl"` | `"sat"` | `"other"`
+> **Permission:** Users can CRUD their own certifications. Main Contributors can toggle `is_verified` and set `verified_by`. Public profiles show only non-hidden certifications.
 
 ---
 
@@ -665,12 +697,12 @@
 | `id` | `uuid` | Primary |
 | `card_id` | `uuid` |  |
 | `user_id` | `uuid` |  |
-| `interval_days` | `int4` |  Nullable |
 | `ease_factor` | `numeric` |  Nullable |
+| `interval` | `int4` |  Nullable |
+| `repetitions` | `int4` |  Nullable |
 | `next_review_date` | `timestamp` |  Nullable |
-| `last_rating` | `text` |  Nullable |
-
-> **`last_rating` values:** `"again"` | `"hard"` | `"good"` | `"easy"`
+| `last_review_date` | `timestamp` |  Nullable |
+| `quality` | `int4` |  Nullable |
 
 ---
 
@@ -682,9 +714,16 @@
 |------|------|-------------|
 | `id` | `uuid` | Primary |
 | `curriculum_id` | `uuid` |  Nullable |
-| `title` | `text` |  |
-| `exam_series` | `text` |  Nullable |
-| `exam_date` | `timestamp` |  |
+| `subject_id` | `uuid` |  Nullable |
+| `subject` | `text` |  |
+| `exam_board` | `text` |  Nullable |
+| `paper_code` | `text` |  Nullable |
+| `date` | `date` |  |
+| `start_time` | `time` |  Nullable |
+| `duration` | `int4` |  Nullable |
+| `session` | `text` |  Nullable |
+| `series` | `text` |  Nullable |
+| `year` | `int4` |  Nullable |
 | `created_at` | `timestamp` |  |
 
 ---
@@ -714,9 +753,16 @@
 |------|------|-------------|
 | `id` | `uuid` | Primary |
 | `exam_id` | `uuid` |  |
-| `grade` | `text` |  Nullable |
-| `min_mark` | `numeric` |  Nullable |
-| `max_mark` | `numeric` |  Nullable |
+| `raw_mark_max` | `numeric` |  Nullable |
+| `ums_max` | `numeric` |  Nullable |
+| `grade_a` | `numeric` |  Nullable |
+| `grade_b` | `numeric` |  Nullable |
+| `grade_c` | `numeric` |  Nullable |
+| `grade_d` | `numeric` |  Nullable |
+| `grade_e` | `numeric` |  Nullable |
+| `grade_f` | `numeric` |  Nullable |
+| `grade_g` | `numeric` |  Nullable |
+| `grade_u` | `numeric` |  Nullable |
 
 ---
 
@@ -735,6 +781,107 @@
 | `weight` | `numeric` |  Nullable |
 | `predicted_grade` | `text` |  Nullable |
 | `created_at` | `timestamp` |  Nullable |
+
+---
+
+## Table `user_enrollments`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `user_id` | `uuid` |  |
+| `curriculum_id` | `uuid` |  |
+| `subject_id` | `uuid` |  |
+| `exam_id` | `uuid` |  Nullable |
+| `enrolled_at` | `timestamp` |  |
+
+> Junction table linking a user to a subject within a curriculum, with an optional exam target.
+
+---
+
+## Table `user_exam_overrides`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `user_id` | `uuid` |  |
+| `exam_id` | `uuid` |  |
+| `custom_title` | `text` |  Nullable |
+| `custom_exam_series` | `text` |  Nullable |
+| `custom_exam_date` | `timestamp` |  Nullable |
+
+> User-specific overrides for exam entries. Only overridden fields are stored; other fields are read from the library `exams` table. Null values mean "use library default".
+
+---
+
+## Table `user_exam_history`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `user_id` | `uuid` |  |
+| `curriculum_id` | `uuid` |  |
+| `subject_id` | `uuid` |  |
+| `exam_id` | `uuid` |  Nullable |
+| `exam_date` | `timestamp` |  |
+| `result` | `text` |  Nullable |
+| `is_mock` | `bool` |  Default: false |
+| `notes` | `text` |  Nullable |
+| `recorded_at` | `timestamp` |  |
+
+> Completed exam records for the user's exam history. Exam countdowns that pass their target date are moved here automatically.
+
+---
+
+## Table `review_queue`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `contributor_id` | `uuid` |  |
+| `submission_type` | `text` |  |
+| `entity_id` | `uuid` |  |
+| `submitted_data` | `jsonb` |  |
+| `is_update` | `bool` |  Default: false |
+| `published_entity_id` | `uuid` |  Nullable |
+| `status` | `text` |  Default: 'pending' |
+| `reviewer_id` | `uuid` |  Nullable |
+| `feedback` | `jsonb` |  Nullable |
+| `submitted_at` | `timestamp` |  |
+| `reviewed_at` | `timestamp` |  Nullable |
+
+> **`submission_type` values:** `"curriculum"` | `"subject"` | `"topic"` | `"note"` | `"resource"` | `"flashcard_deck"` | `"exam"`
+> **`status` values:** `"pending"` | `"approved"` | `"rejected"`
+> **`feedback` JSONB structure:** `{ categories: ("inaccurate_content" | "formatting_issues" | "missing_information" | "grammar_spelling" | "duplicate_entry" | "outdated_syllabus" | "other")[], note: string }`
+> When `is_update` is true, `published_entity_id` refers to the existing published entity being edited (which remains visible during review).
+
+---
+
+## Table `version_history`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `entity_type` | `text` |  |
+| `entity_id` | `uuid` |  |
+| `version_number` | `int4` |  |
+| `changes` | `jsonb` |  |
+| `changed_by` | `uuid` |  |
+| `review_item_id` | `uuid` |  Nullable |
+| `changed_at` | `timestamp` |  |
+
+> **`changes` JSONB structure:** Array of `{ field: string, old_value: any, new_value: any }` describing field-level diffs.
+> **`version_number`** auto-increments per entity. Versions are kept indefinitely. Only `main_contributors` can rollback.
 
 ---
 

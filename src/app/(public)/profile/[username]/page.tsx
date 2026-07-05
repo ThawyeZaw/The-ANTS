@@ -29,6 +29,8 @@ import { useProfile } from '@/hooks/useProfile';
 import ProfileHero from '@/components/profile/ProfileHero';
 import ProfileStats from '@/components/profile/ProfileStats';
 import ProfileActivity from '@/components/profile/ProfileActivity';
+import CertificationSection from '@/components/profile/CertificationSection';
+import ClubMembershipsPanel from '@/components/profile/ClubMembershipsPanel';
 import { PROFILE_THEME_PRESETS, type Profile } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -52,6 +54,10 @@ export default function ProfilePage() {
     projects: rawProjects,
     portfolioActivities: rawActivities,
     achievements: rawAchievements,
+    certifications: profileCerts,
+    clubMemberships,
+    clubProjects,
+    clubActivity,
     isLoading,
     isOwnProfile,
     notFound,
@@ -89,6 +95,26 @@ export default function ProfilePage() {
     (profile?.certifications || []).filter(c => !c.isHidden).sort((a, b) => (a.order || 0) - (b.order || 0)),
   [profile?.certifications]);
 
+  // Merge club projects into portfolio projects if enabled
+  const allProjects = useMemo(() => {
+    const profileProjects = projects.map(p => ({ ...p, isClubProject: false }));
+    if (profile?.showClubProjects !== false) {
+      const clubProj = clubProjects.map(p => ({ ...p, isClubProject: true }));
+      return [...profileProjects, ...clubProj];
+    }
+    return profileProjects;
+  }, [projects, clubProjects, profile?.showClubProjects]);
+
+  // Merge club activity into timeline
+  const allTimelineActivities = useMemo(() => {
+    if (profile?.showClubActivity !== false) {
+      return [...timelineActivities, ...clubActivity].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    }
+    return timelineActivities;
+  }, [timelineActivities, clubActivity, profile?.showClubActivity]);
+
   // ── Pinned item ───────────────────────────────────────────────────────────
   const pinnedItemId = profile?.pinnedItemId;
   let pinnedItem: any = null;
@@ -103,12 +129,14 @@ export default function ProfilePage() {
   }
 
   // ── Section visibility ────────────────────────────────────────────────────
-  const showProjects = profile?.sectionVisibility?.projects !== false && projects.length > 0;
+  const showProjects = profile?.sectionVisibility?.projects !== false && allProjects.length > 0;
   const showActivities = profile?.sectionVisibility?.activities !== false && activities.length > 0;
   const showAchievements = profile?.sectionVisibility?.achievements !== false && achievements.length > 0;
   const showGrades = profile?.sectionVisibility?.academicGrades !== false && academicGrades.length > 0;
   const showTestimonials = profile?.sectionVisibility?.testimonials !== false && testimonials.length > 0;
   const showCertifications = profile?.sectionVisibility?.certifications !== false && certifications.length > 0;
+  const showStructuredCerts = profileCerts.length > 0;
+  const showClubs = profile?.showClubMemberships !== false && clubMemberships.length > 0;
 
   // ── Section ordering ──────────────────────────────────────────────────────
   const sectionOrder = profile?.sectionOrder || ['projects', 'activities', 'achievements', 'academicGrades', 'testimonials', 'certifications'];
@@ -116,7 +144,7 @@ export default function ProfilePage() {
     projects: {
       key: 'projects',
       visible: showProjects,
-      content: <ProjectsSection key="projects" projects={projects} profile={profile!} />,
+      content: <ProjectsSection key="projects" projects={allProjects} profile={profile!} />,
     },
     activities: {
       key: 'activities',
@@ -271,10 +299,20 @@ export default function ProfilePage() {
       )}
 
       {/* Activity Feed (contributor/main_contributor only) */}
-      {isContributor && <ProfileActivity activities={timelineActivities} />}
+      {isContributor && <ProfileActivity activities={allTimelineActivities} />}
+
+      {/* Structured Academic Certifications */}
+      {showStructuredCerts && (
+        <CertificationSection certifications={profileCerts} />
+      )}
+
+      {/* Club Memberships */}
+      {showClubs && (
+        <ClubMembershipsPanel memberships={clubMemberships} />
+      )}
 
       {/* Empty state */}
-      {!hasPortfolio && !isContributor && (
+      {!hasPortfolio && !isContributor && !showStructuredCerts && !showClubs && (
         <div className="text-center py-16 max-w-lg mx-auto">
           <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
             <UserX className="h-5 w-5 text-foreground-muted" />

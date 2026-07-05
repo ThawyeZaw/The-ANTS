@@ -29,7 +29,7 @@ const EXPLORE_CARDS = [
   {
     title: 'Explore Clubs',
     description:
-      'Discover community spaces for subjects, CCAs, and projects. Browse clubs and see what members are building.',
+      'Discover community spaces for subjects, CCAs and projects. Browse clubs and see what members are building.',
     Icon: MessageSquare,
     href: '/explore/clubs',
     iconBg: 'rgba(60,219,167,0.12)',
@@ -42,7 +42,7 @@ const EXPLORE_CARDS = [
   {
     title: 'Explore Profiles',
     description:
-      'Browse student portfolios, projects, CCA activities, and verified educators & contributors. View achievements and credentials.',
+      'Browse student portfolios, projects, CCA activities and verified educators & contributors. View achievements and credentials.',
     Icon: Users,
     href: '/explore/profiles',
     iconBg: 'rgba(140,127,240,0.14)',
@@ -391,7 +391,7 @@ export default function HomePage() {
               }}
             >
               A dynamic, student-led ecosystem of mentors from A-Levels, Polytechnics, Foundation
-              programs, OSSD, and top UK universities — helping IGCSE students achieve absolute
+              programs, OSSD and top UK universities — helping IGCSE students achieve absolute
               academic excellence and navigate their future.
             </p>
 
@@ -540,7 +540,7 @@ export default function HomePage() {
             eyebrow="Discover"
             heading="Explore clubs & profiles"
             gradPhrase="clubs & profiles"
-            subtext="Browse community clubs, view student portfolios, and discover verified educators — no login required."
+            subtext="Browse community clubs, view student portfolios and discover verified educators — no login required."
           />
 
           <RevealSection>
@@ -767,7 +767,7 @@ export default function HomePage() {
                     fontFamily: 'var(--hp-font-display)',
                     fontSize: 'clamp(1.8rem, 3.6vw, 2.6rem)',
                     fontWeight: 560,
-                    color: '#06110D',
+                    color: '#FFFFFF',
                     margin: 0,
                     letterSpacing: '-0.01em',
                   }}
@@ -777,7 +777,7 @@ export default function HomePage() {
                 <p
                   style={{
                     fontFamily: 'var(--hp-font-body)',
-                    color: 'rgba(6,17,13,0.72)',
+                    color: 'rgba(255,255,255,0.80)',
                     maxWidth: 480,
                     margin: '14px auto 0',
                     fontSize: 16,
@@ -793,8 +793,8 @@ export default function HomePage() {
                       alignItems: 'center',
                       gap: 8,
                       marginTop: 30,
-                      background: '#06110D',
-                      color: '#F3F6FB',
+                      background: '#FFFFFF',
+                      color: '#0F172A',
                       border: 'none',
                       borderRadius: 999,
                       padding: '13px 26px',
@@ -807,14 +807,14 @@ export default function HomePage() {
                     }}
                     onMouseEnter={(e) => {
                       (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)';
-                      (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 12px 28px -10px rgba(6,17,13,0.4)';
+                      (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 12px 28px -10px rgba(255,255,255,0.35)';
                     }}
                     onMouseLeave={(e) => {
                       (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)';
                       (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
                     }}
                   >
-                    Get Started — It&apos;s Free →
+                    Get Started — It's Free →
                   </button>
                 </Link>
               </div>

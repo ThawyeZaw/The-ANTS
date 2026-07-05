@@ -8,7 +8,7 @@ export const HOMEPAGE_STATS = [
   { value: '6', label: 'EXAM BOARDS' },
   { value: '4', label: 'USER ROLES' },
   { value: '120+', label: 'ACTIVE CLUBS' },
-  { value: '1,000+', label: 'STUDENTS' },
+  { value: '100+', label: 'STUDENTS' },
 ] as const;
 
 /** Qualification boards data for the carousel */

@@ -43,8 +43,15 @@ import { PRESET_AVATARS, makePresetAvatarKey, isPresetAvatar } from '@/constants
 import AvatarImage from '@/components/ui/AvatarImage';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
+import CertificationEditor from './CertificationEditor';
+import {
+  getUserCertifications,
+  addCertification,
+  updateCertification,
+  deleteCertification,
+} from '@/lib/mock/database';
 
-type TabId = 'basic' | 'social' | 'projects' | 'activities' | 'achievements' | 'grades' | 'appearance' | 'settings';
+type TabId = 'basic' | 'social' | 'projects' | 'activities' | 'achievements' | 'grades' | 'certifications' | 'appearance' | 'settings';
 
 export default function AdvancedProfileEditor() {
   const { user, updateProfile } = useAuth();
@@ -55,6 +62,8 @@ export default function AdvancedProfileEditor() {
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   const [formData, setFormData] = useState<Partial<Profile>>({});
+  const [certs, setCerts] = useState<ReturnType<typeof getUserCertifications>>([]);
+  const [certsVersion, setCertsVersion] = useState(0);
   
   useEffect(() => {
     if (user) {
@@ -75,7 +84,11 @@ export default function AdvancedProfileEditor() {
         spacing: user.profile.spacing || undefined,
         width: user.profile.width || undefined,
         sectionLayout: user.profile.sectionLayout || undefined,
+        showClubMemberships: user.profile.showClubMemberships ?? true,
+        showClubProjects: user.profile.showClubProjects ?? true,
+        showClubActivity: user.profile.showClubActivity ?? true,
       });
+      setCerts(getUserCertifications(user.profile.id));
     }
   }, [user]);
 
@@ -289,6 +302,7 @@ export default function AdvancedProfileEditor() {
     { id: 'activities', label: 'Activities', icon: <Globe className="h-4 w-4" /> },
     { id: 'achievements', label: 'Achievements', icon: <Award className="h-4 w-4" /> },
     { id: 'grades', label: 'Grades', icon: <BookOpen className="h-4 w-4" /> },
+    { id: 'certifications', label: 'Certifications', icon: <Award className="h-4 w-4" /> },
     { id: 'appearance', label: 'Appearance', icon: <LayoutTemplate className="h-4 w-4" /> },
     { id: 'settings', label: 'Settings', icon: <Settings className="h-4 w-4" /> }
   ];
@@ -673,6 +687,32 @@ export default function AdvancedProfileEditor() {
             </div>
           )}
 
+          {activeTab === 'certifications' && (
+            <div className="space-y-5 animate-fade-in">
+              <h2 className="text-xl font-bold text-foreground mb-4">Academic Certifications</h2>
+              <CertificationEditor
+                certifications={certs}
+                onAdd={(data) => {
+                  if (!user) return { success: false, error: 'Not signed in.' };
+                  const result = addCertification(user.profile.id, data);
+                  setCerts(getUserCertifications(user.profile.id));
+                  return result;
+                }}
+                onUpdate={(certId, updates) => {
+                  if (!user) return { success: false, error: 'Not signed in.' };
+                  const result = updateCertification(certId, user.profile.id, updates as any);
+                  setCerts(getUserCertifications(user.profile.id));
+                  return result;
+                }}
+                onDelete={(certId) => {
+                  if (!user) return { success: false, error: 'Not signed in.' };
+                  const result = deleteCertification(certId, user.profile.id);
+                  setCerts(getUserCertifications(user.profile.id));
+                  return result;
+                }}
+              />
+            </div>
+          )}
           {activeTab === 'appearance' && (
             <div className="space-y-6 animate-fade-in">
               <h2 className="text-xl font-bold text-foreground mb-4">Appearance</h2>
@@ -901,6 +941,34 @@ export default function AdvancedProfileEditor() {
                         </div>
                       );
                     })}
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-xl border border-border bg-background">
+                  <h3 className="font-medium text-foreground mb-3">Club Integration</h3>
+                  <p className="text-sm text-foreground-muted mb-3">Choose what club data appears on your public portfolio.</p>
+                  <div className="grid gap-3">
+                    <label className="flex items-center justify-between gap-2 text-sm text-foreground cursor-pointer">
+                      <span>Show Club Memberships</span>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" className="sr-only peer" checked={formData.showClubMemberships ?? true} onChange={e => setFormData(p => ({ ...p, showClubMemberships: e.target.checked }))} />
+                        <div className="w-10 h-5 bg-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary relative"></div>
+                      </label>
+                    </label>
+                    <label className="flex items-center justify-between gap-2 text-sm text-foreground cursor-pointer">
+                      <span>Show Club Projects in Portfolio</span>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" className="sr-only peer" checked={formData.showClubProjects ?? true} onChange={e => setFormData(p => ({ ...p, showClubProjects: e.target.checked }))} />
+                        <div className="w-10 h-5 bg-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary relative"></div>
+                      </label>
+                    </label>
+                    <label className="flex items-center justify-between gap-2 text-sm text-foreground cursor-pointer">
+                      <span>Show Club Activity in Timeline</span>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" className="sr-only peer" checked={formData.showClubActivity ?? true} onChange={e => setFormData(p => ({ ...p, showClubActivity: e.target.checked }))} />
+                        <div className="w-10 h-5 bg-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary relative"></div>
+                      </label>
+                    </label>
                   </div>
                 </div>
 

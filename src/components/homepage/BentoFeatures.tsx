@@ -113,6 +113,7 @@ interface Feature {
   title: string;
   description: string;
   Icon: LucideIcon;
+  iconColor: string;
   big?: boolean;
   preview?: 'timetable' | 'flashcard';
 }
@@ -121,8 +122,9 @@ const FEATURES: Feature[] = [
   {
     title: 'Smart Timetable',
     description:
-      'Drag-and-drop weekly planner with colour-coded events, repeating schedules, and daily / weekly / monthly views.',
+      'Drag-and-drop weekly planner with colour-coded events, repeating schedules and multiple views.',
     Icon: CalendarDays,
+    iconColor: '#1D9BF0',
     big: true,
     preview: 'timetable',
   },
@@ -130,6 +132,7 @@ const FEATURES: Feature[] = [
     title: 'Flashcard Decks',
     description: "Create or browse decks with spaced-repetition. Never forget what you've learnt.",
     Icon: Layers,
+    iconColor: '#9D5CFF',
     big: true,
     preview: 'flashcard',
   },
@@ -138,43 +141,49 @@ const FEATURES: Feature[] = [
     description:
       'Focus sessions with customisable intervals and background music to keep you in the zone.',
     Icon: Timer,
+    iconColor: '#FF4A6B',
   },
   {
     title: 'Lesson Tracker',
     description:
       'Track your confidence across every topic in your syllabus with intuitive progress indicators.',
     Icon: ClipboardCheck,
+    iconColor: '#00CC88',
   },
   {
     title: 'Virtual Classrooms',
     description:
-      'Teachers create classrooms, issue assignments, and monitor student progress in real time.',
+      'Teachers create classrooms, issue assignments and monitor student progress in real time.',
     Icon: GraduationCap,
+    iconColor: '#FF9F0A',
   },
   {
     title: 'Clubs',
     description:
-      'Community spaces for subjects, CCAs, and projects — with chat, announcements, and resources.',
+      'Community spaces for subjects, CCAs and projects — with chat, announcements and resources.',
     Icon: MessageSquare,
+    iconColor: '#00A2FF',
   },
   {
     title: 'Exam Countdown',
     description:
       'Visual urgency indicators showing exactly how long until each exam. Never miss a date.',
     Icon: Clock,
+    iconColor: '#FF453A',
   },
   {
     title: 'Grade Calculator',
     description:
       'Enter raw marks and get predicted grades using official boundary tables for IGCSE, A Level and more.',
     Icon: Calculator,
+    iconColor: '#7E57C2',
   },
 ];
 
 // ── Single bento card ─────────────────────────────────────────────────────────
 
 function BentoCard({ feature, index }: { feature: Feature; index: number }) {
-  const { title, description, Icon, big, preview } = feature;
+  const { title, description, Icon, iconColor, big, preview } = feature;
 
   return (
     <RevealSection
@@ -204,7 +213,7 @@ function BentoCard({ feature, index }: { feature: Feature; index: number }) {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: 'rgba(60,219,167,0.10)',
+              background: `${iconColor}1A`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -212,7 +221,7 @@ function BentoCard({ feature, index }: { feature: Feature; index: number }) {
             }}
           >
             <Icon
-              style={{ width: big ? 26 : 22, height: big ? 26 : 22, color: 'var(--hp-brand)' }}
+              style={{ width: big ? 26 : 22, height: big ? 26 : 22, color: iconColor }}
               strokeWidth={1.5}
             />
           </div>

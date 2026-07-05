@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+
 import { Exam } from '@/types';
 import { X } from 'lucide-react';
 
@@ -15,9 +16,12 @@ interface AddCountdownModalProps {
     priority_indicator?: string;
     qualification_group?: string;
   }) => void;
+  /** Pre-fill from a library exam (e.g. opened from Exams Library browser) */
+  prefilledExam?: Exam | null;
 }
 
-export function AddCountdownModal({ isOpen, onClose, availableExams, onCreate }: AddCountdownModalProps) {
+
+export function AddCountdownModal({ isOpen, onClose, availableExams, onCreate, prefilledExam }: AddCountdownModalProps) {
   const [tab, setTab] = useState<'library' | 'custom'>('library');
   
   // Form states
@@ -27,6 +31,20 @@ export function AddCountdownModal({ isOpen, onClose, availableExams, onCreate }:
   const [targetTime, setTargetTime] = useState('09:00');
   const [priority, setPriority] = useState('medium');
   const [group, setGroup] = useState('Custom');
+
+  // Pre-fill from library exam when provided
+  useEffect(() => {
+    if (prefilledExam) {
+      setTab('library');
+      setSelectedExamId(prefilledExam.id);
+      // Pre-fill date if fixed
+      if (prefilledExam.date_type === 'fixed' && prefilledExam.exam_date) {
+        setTargetDate(prefilledExam.exam_date.split('T')[0]);
+      }
+      // Auto-set group from board
+      if (prefilledExam.exam_board) setGroup(prefilledExam.exam_board);
+    }
+  }, [prefilledExam]);
 
   if (!isOpen) return null;
 

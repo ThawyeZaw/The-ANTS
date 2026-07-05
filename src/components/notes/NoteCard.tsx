@@ -6,7 +6,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import Link from 'next/link';
-import { Bookmark, BookmarkCheck, FlaskConical, GraduationCap, Zap, Pencil, Trash2 } from 'lucide-react';
+import { Bookmark, BookmarkCheck, FlaskConical, GraduationCap, Zap, Pencil, Trash2, Globe, Lock, Link as LinkIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Note } from '@/types';
 import { mockCurriculums, mockSubjects } from '@/lib/mock/database';
@@ -56,8 +56,28 @@ export default function NoteCard({ note, isSaved = false, onToggleSave, contribu
       <div className="flex flex-col flex-1 p-5 gap-3">
 
         {/* ── Top badges row ── */}
-        <div className="flex flex-wrap items-center gap-1.5">
-          {curriculum && (
+        <div className="flex flex-wrap items-center gap-1.5 relative">
+          {/* Visibility badge */}
+          {note.visibility === 'public' ? (
+            <span className="flex items-center gap-1 rounded-full bg-[var(--accent-light)] px-2 py-0.5 text-xs font-medium text-[var(--accent)]" title="Shared in Library">
+              <Globe size={10} /> Public
+            </span>
+          ) : note.visibility === 'link' ? (
+            <span className="flex items-center gap-1 rounded-full bg-blue-500/10 px-2 py-0.5 text-xs font-medium text-blue-500" title="Link Shared">
+              <LinkIcon size={10} /> Shared
+            </span>
+          ) : (
+            <span className="flex items-center gap-1 rounded-full bg-[var(--background-secondary)] px-2 py-0.5 text-xs font-medium text-[var(--foreground-muted)]" title="Private">
+              <Lock size={10} /> Private
+            </span>
+          )}
+
+          {note.exam_board && (
+            <span className="inline-flex items-center rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-xs font-medium text-sky-500">
+              {note.exam_board}
+            </span>
+          )}
+          {curriculum && !note.exam_board && (
             <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-background-secondary text-foreground-muted border border-border">
               {curriculum.qualification} {curriculum.exam_board}
             </span>

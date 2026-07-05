@@ -60,6 +60,8 @@ import {
   ClassroomResource,
   UserSavedNote,
   ExamGradeBoundary,
+  ReviewQueueItem,
+  Topic,
 } from '@/types';
 import { generateUsername } from '@/lib/utils';
 
@@ -786,29 +788,273 @@ export const mockContributorProfiles: Array<{
   ];
 
 // ── Mock Curriculums & Topics ────────────────────────────────────────────────
+
 export const mockCurriculums = [
-  { id: 'curr-1', title: 'IGCSE Physics', description: 'Cambridge IGCSE Physics 0625', qualification: 'IGCSE', exam_board: 'CAIE', created_by: 'user-contributor-001', status: 'published', is_public: true, created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z' }
+  // IGCSE CIE
+  { id: 'curr-igcse-cie', title: 'IGCSE Cambridge (CIE)', description: 'Cambridge IGCSE — the world\'s most popular international qualification for 14–16 year olds.', qualification: 'IGCSE', exam_board: 'CAIE', created_by: 'user-contributor-001', status: 'published', is_public: true, created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z' },
+  // IGCSE Edexcel
+  { id: 'curr-igcse-edx', title: 'IGCSE Edexcel', description: 'Pearson Edexcel International GCSE — globally recognised qualification with 9–1 grading.', qualification: 'IGCSE', exam_board: 'Edexcel', created_by: 'user-contributor-001', status: 'published', is_public: true, created_at: '2025-03-01T00:00:00Z', updated_at: '2025-03-01T00:00:00Z' },
+  // Edexcel IAL
+  { id: 'curr-ial-edx', title: 'Edexcel International A Level (IAL)', description: 'Pearson Edexcel International Advanced Level — modular A Levels designed for international students.', qualification: 'A Level', exam_board: 'Edexcel', created_by: 'user-main-contributor-001', status: 'published', is_public: true, created_at: '2025-04-01T00:00:00Z', updated_at: '2025-04-01T00:00:00Z' },
+  // IELTS
+  { id: 'curr-ielts', title: 'IELTS Academic', description: 'International English Language Testing System — Academic module for university admission.', qualification: 'IELTS', exam_board: 'British Council', created_by: 'user-main-contributor-001', status: 'published', is_public: true, created_at: '2025-06-01T00:00:00Z', updated_at: '2025-06-01T00:00:00Z' },
+  // Keep legacy curr-1 for backwards compatibility
+  { id: 'curr-1', title: 'IGCSE Physics (Legacy)', description: 'Cambridge IGCSE Physics 0625', qualification: 'IGCSE', exam_board: 'CAIE', created_by: 'user-contributor-001', status: 'published', is_public: true, created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z' },
 ];
 
 export const mockSubjects = [
-  { id: 'subj-1', curriculum_id: 'curr-1', title: 'Physics', description: 'Core Physics', order_no: 1 }
+  // IGCSE CIE subjects
+  { id: 'subj-cie-physics', curriculum_id: 'curr-igcse-cie', title: 'Physics', description: 'Cambridge IGCSE Physics 0625 syllabus — mechanics, thermal physics, waves, electricity, magnetism, nuclear physics, space physics.', order_no: 1 },
+  { id: 'subj-cie-maths', curriculum_id: 'curr-igcse-cie', title: 'Mathematics', description: 'Cambridge IGCSE Mathematics 0580 — number, algebra, geometry, statistics, probability.', order_no: 2 },
+  { id: 'subj-cie-cs', curriculum_id: 'curr-igcse-cie', title: 'Computer Science', description: 'Cambridge IGCSE Computer Science 0478 — data representation, algorithms, programming, logic.', order_no: 3 },
+  { id: 'subj-cie-economics', curriculum_id: 'curr-igcse-cie', title: 'Economics', description: 'Cambridge IGCSE Economics 0455 — micro & macro economics, trade, development.', order_no: 4 },
+  { id: 'subj-cie-bio', curriculum_id: 'curr-igcse-cie', title: 'Biology', description: 'Cambridge IGCSE Biology 0610 — cells, organisms, evolution, ecosystems.', order_no: 5 },
+  // IGCSE Edexcel subjects
+  { id: 'subj-edx-physics', curriculum_id: 'curr-igcse-edx', title: 'Physics', description: 'Edexcel IGCSE Physics 4PH1 — forces, electricity, waves, energy, solids/liquids/gases, magnetism, radioactivity.', order_no: 1 },
+  { id: 'subj-edx-maths', curriculum_id: 'curr-igcse-edx', title: 'Mathematics A', description: 'Edexcel IGCSE Mathematics A 4MA1 — number, algebra, geometry, statistics.', order_no: 2 },
+  { id: 'subj-edx-bio', curriculum_id: 'curr-igcse-edx', title: 'Biology', description: 'Edexcel IGCSE Biology 4BI1 — organisms, reproduction, ecology, human biology.', order_no: 3 },
+  // Edexcel IAL subjects
+  { id: 'subj-ial-physics', curriculum_id: 'curr-ial-edx', title: 'Physics', description: 'Edexcel IAL Physics WPH11–WPH16 — mechanics, materials, waves, electricity, fields, nuclear, thermodynamics.', order_no: 1 },
+  { id: 'subj-ial-maths', curriculum_id: 'curr-ial-edx', title: 'Mathematics', description: 'Edexcel IAL Mathematics — Pure 1–4 + applied modules (Statistics, Mechanics, Decision).', order_no: 2 },
+  { id: 'subj-ial-economics', curriculum_id: 'curr-ial-edx', title: 'Economics', description: 'Edexcel IAL Economics WEC11–WEC14 — markets, macroeconomics, global economy.', order_no: 3 },
+  // IELTS subjects
+  { id: 'subj-ielts-writing', curriculum_id: 'curr-ielts', title: 'Writing', description: 'IELTS Academic Writing — Task 1 (data description) & Task 2 (essay writing).', order_no: 1 },
+  { id: 'subj-ielts-reading', curriculum_id: 'curr-ielts', title: 'Reading', description: 'IELTS Academic Reading — 3 long texts with 40 questions across various formats.', order_no: 2 },
+  { id: 'subj-ielts-speaking', curriculum_id: 'curr-ielts', title: 'Speaking', description: 'IELTS Speaking — Part 1 (intro), Part 2 (long turn), Part 3 (discussion).', order_no: 3 },
+  { id: 'subj-ielts-listening', curriculum_id: 'curr-ielts', title: 'Listening', description: 'IELTS Listening — 4 sections, 40 questions covering everyday and academic contexts.', order_no: 4 },
+  // Legacy subject (backwards compatibility)
+  { id: 'subj-1', curriculum_id: 'curr-1', title: 'Physics', description: 'Core Physics', order_no: 1 },
 ];
 
-export const mockTopics = [
-  { id: 'top-1', subject_id: 'subj-1', title: 'Forces and Motion', description: 'Understanding speed, velocity, and acceleration.', order_no: 1 },
-  { id: 'top-2', subject_id: 'subj-1', title: 'Energy', description: 'Work, energy, and power.', order_no: 2 }
+export const mockTopics: Topic[] = [
+  // ── IGCSE CIE Physics (0625) ──────────────────────────────────────────────
+  { id: 'top-cie-phys-1', subject_id: 'subj-cie-physics', title: 'Motion, Forces and Energy', description: 'Speed, velocity, acceleration, forces, momentum, energy transfers, work, power.', syllabus_code: '1.1–1.7', learning_objectives: 'Define speed, velocity, and acceleration. Apply F=ma. Calculate work, power, and energy transfers.', order_no: 1 },
+  { id: 'top-cie-phys-2', subject_id: 'subj-cie-physics', title: 'Thermal Physics', description: 'States of matter, temperature, thermal expansion, heat capacity, latent heat.', syllabus_code: '2.1–2.3', learning_objectives: 'Describe the kinetic particle model. Calculate specific heat capacity and latent heat. Explain thermal expansion.', order_no: 2 },
+  { id: 'top-cie-phys-3', subject_id: 'subj-cie-physics', title: 'Waves', description: 'Wave properties, sound, light, reflection, refraction, lenses, electromagnetic spectrum.', syllabus_code: '3.1–3.4', learning_objectives: 'Describe transverse and longitudinal waves. Apply the wave equation v=fλ. Draw ray diagrams for lenses.', order_no: 3 },
+  { id: 'top-cie-phys-4', subject_id: 'subj-cie-physics', title: 'Electricity and Magnetism', description: 'Circuits, resistance, power, electromagnetism, motors, generators, transformers.', syllabus_code: '4.1–4.6', learning_objectives: 'Apply V=IR and P=IV. Describe series and parallel circuits. Explain electromagnetic induction.', order_no: 4 },
+  { id: 'top-cie-phys-5', subject_id: 'subj-cie-physics', title: 'Nuclear Physics', description: 'Atomic structure, radioactivity, fission, fusion, half-life, applications.', syllabus_code: '5.1–5.2', learning_objectives: 'Describe alpha, beta, and gamma radiation. Calculate half-life. Explain nuclear fission and fusion.', order_no: 5 },
+  { id: 'top-cie-phys-6', subject_id: 'subj-cie-physics', title: 'Space Physics', description: 'Earth\'s motion, solar system, stars, universe, redshift, Big Bang.', syllabus_code: '6.1–6.2', learning_objectives: 'Describe the solar system and orbital motion. Explain the life cycle of stars and redshift.', order_no: 6 },
+  // ── IGCSE CIE Mathematics (0580) ──────────────────────────────────────────
+  { id: 'top-cie-math-1', subject_id: 'subj-cie-maths', title: 'Number', description: 'Integers, fractions, decimals, percentages, ratio, proportion, standard form.', syllabus_code: '1.1–1.16', learning_objectives: 'Perform calculations with fractions, decimals, and percentages. Use ratio and proportion. Write numbers in standard form.', order_no: 1 },
+  { id: 'top-cie-math-2', subject_id: 'subj-cie-maths', title: 'Algebra and Graphs', description: 'Equations, inequalities, sequences, functions, graphs, transformations.', syllabus_code: '2.1–2.13', learning_objectives: 'Solve linear and quadratic equations. Sketch and interpret graphs. Find nth terms of sequences.', order_no: 2 },
+  { id: 'top-cie-math-3', subject_id: 'subj-cie-maths', title: 'Geometry', description: 'Angles, polygons, circles, constructions, loci, vectors, transformations.', syllabus_code: '3.1–3.8', learning_objectives: 'Calculate angles in polygons and circles. Apply vector addition and scalar multiplication. Perform transformations.', order_no: 3 },
+  { id: 'top-cie-math-4', subject_id: 'subj-cie-maths', title: 'Statistics and Probability', description: 'Data collection, representation, averages, spread, probability, combined events.', syllabus_code: '4.1–4.7', learning_objectives: 'Calculate mean, median, mode, and range. Draw and interpret charts. Calculate probabilities of combined events.', order_no: 4 },
+  // ── IGCSE CIE Computer Science (0478) ─────────────────────────────────────
+  { id: 'top-cie-cs-1', subject_id: 'subj-cie-cs', title: 'Data Representation', description: 'Binary, hexadecimal, text/audio/image compression, file sizes.', syllabus_code: '1.1–1.3', learning_objectives: 'Convert between binary, denary, and hexadecimal. Explain lossy and lossless compression.', order_no: 1 },
+  { id: 'top-cie-cs-2', subject_id: 'subj-cie-cs', title: 'Data Transmission', description: 'Serial/parallel, USB, error detection, parity, checksums, encryption.', syllabus_code: '2.1–2.3', learning_objectives: 'Compare serial and parallel transmission. Describe parity checks and checksums. Explain symmetric encryption.', order_no: 2 },
+  { id: 'top-cie-cs-3', subject_id: 'subj-cie-cs', title: 'Hardware', description: 'CPU architecture, fetch-decode-execute, memory, storage, embedded systems.', syllabus_code: '3.1–3.4', learning_objectives: 'Describe the Von Neumann architecture. Explain the fetch-decode-execute cycle. Compare RAM and ROM.', order_no: 3 },
+  { id: 'top-cie-cs-4', subject_id: 'subj-cie-cs', title: 'Software', description: 'Operating systems, interrupts, high/low-level languages, compilers vs interpreters.', syllabus_code: '4.1–4.2', learning_objectives: 'Describe the role of an operating system. Explain the difference between a compiler and interpreter.', order_no: 4 },
+  { id: 'top-cie-cs-5', subject_id: 'subj-cie-cs', title: 'Algorithms and Programming', description: 'Pseudocode, flowcharts, validation, verification, test data, trace tables.', syllabus_code: '7.1–8.1', learning_objectives: 'Write and trace pseudocode. Design test data (normal, boundary, erroneous).', order_no: 5 },
+  // ── IGCSE CIE Economics (0455) ────────────────────────────────────────────
+  { id: 'top-cie-eco-1', subject_id: 'subj-cie-economics', title: 'The Basic Economic Problem', description: 'Scarcity, opportunity cost, factors of production, PPC.', syllabus_code: '1.1–1.4', learning_objectives: 'Define scarcity and opportunity cost. Identify the four factors of production. Interpret the PPC.', order_no: 1 },
+  { id: 'top-cie-eco-2', subject_id: 'subj-cie-economics', title: 'Microeconomics — Demand and Supply', description: 'Demand/supply curves, equilibrium, PED, PES, market failure.', syllabus_code: '2.1–2.11', learning_objectives: 'Draw and interpret demand and supply diagrams. Calculate PED and PES. Explain market failure.', order_no: 2 },
+  { id: 'top-cie-eco-3', subject_id: 'subj-cie-economics', title: 'Macroeconomics', description: 'GDP, inflation, unemployment, fiscal/monetary policy, economic growth.', syllabus_code: '4.1–4.8', learning_objectives: 'Define GDP, inflation, and unemployment. Explain fiscal and monetary policy tools. Evaluate economic growth.', order_no: 3 },
+  { id: 'top-cie-eco-4', subject_id: 'subj-cie-economics', title: 'International Trade', description: 'Specialisation, free trade, protectionism, exchange rates, balance of payments.', syllabus_code: '6.1–6.4', learning_objectives: 'Explain the benefits of specialisation. Evaluate protectionist measures. Describe exchange rate systems.', order_no: 4 },
+  // ── IGCSE CIE Biology (0610) ──────────────────────────────────────────────
+  { id: 'top-cie-bio-1', subject_id: 'subj-cie-bio', title: 'Characteristics of Living Organisms', description: 'MRS GREN, classification, kingdoms, binomial naming.', syllabus_code: '1.1–1.4', learning_objectives: 'List the seven characteristics of life. Classify organisms into the five kingdoms. Use binomial nomenclature.', order_no: 1 },
+  { id: 'top-cie-bio-2', subject_id: 'subj-cie-bio', title: 'Cells and Organisation', description: 'Cell structure, specialised cells, tissues, organs, organ systems.', syllabus_code: '2.1–2.2', learning_objectives: 'Compare plant and animal cells. Describe levels of organisation from cell to organ system.', order_no: 2 },
+  { id: 'top-cie-bio-3', subject_id: 'subj-cie-bio', title: 'Movement In and Out of Cells', description: 'Diffusion, osmosis, active transport, water potential.', syllabus_code: '3.1–3.2', learning_objectives: 'Explain diffusion, osmosis, and active transport. Describe the effect of water potential on plant and animal cells.', order_no: 3 },
+  { id: 'top-cie-bio-4', subject_id: 'subj-cie-bio', title: 'Biological Molecules', description: 'Carbohydrates, proteins, lipids, enzymes, DNA structure.', syllabus_code: '4.1–4.2', learning_objectives: 'Describe the structure of carbohydrates, proteins, and lipids. Explain enzyme action and factors affecting it.', order_no: 4 },
+  { id: 'top-cie-bio-5', subject_id: 'subj-cie-bio', title: 'Human Nutrition', description: 'Digestive system, balanced diet, malnutrition, absorption.', syllabus_code: '7.1–7.5', learning_objectives: 'Describe the digestive system. Explain the roles of enzymes in digestion. Identify causes of malnutrition.', order_no: 5 },
+  // ── IGCSE Edexcel Physics (4PH1) ──────────────────────────────────────────
+  { id: 'top-edx-phys-1', subject_id: 'subj-edx-physics', title: 'Forces and Motion', description: 'Movement, forces, momentum, moments, Hooke\'s law.', syllabus_code: '1.1–1.33', learning_objectives: 'Calculate speed, velocity, and acceleration. Apply F=ma and momentum. Describe turning effect of forces.', order_no: 1 },
+  { id: 'top-edx-phys-2', subject_id: 'subj-edx-physics', title: 'Electricity', description: 'Circuits, mains electricity, static electricity, energy transfers.', syllabus_code: '2.1–2.30', learning_objectives: 'Apply V=IR, P=IV, E=IVt. Describe series and parallel circuits. Explain static electricity.', order_no: 2 },
+  { id: 'top-edx-phys-3', subject_id: 'subj-edx-physics', title: 'Waves', description: 'Properties, electromagnetic spectrum, light, sound.', syllabus_code: '3.1–3.33', learning_objectives: 'Use the wave equation. Describe reflection and refraction. Explain total internal reflection.', order_no: 3 },
+  { id: 'top-edx-phys-4', subject_id: 'subj-edx-physics', title: 'Energy Resources and Transfer', description: 'Energy stores, conservation, efficiency, renewables vs non-renewables.', syllabus_code: '4.1–4.18', learning_objectives: 'Describe energy stores and transfers. Calculate efficiency. Evaluate energy resources.', order_no: 4 },
+  { id: 'top-edx-phys-5', subject_id: 'subj-edx-physics', title: 'Solids, Liquids and Gases', description: 'Density, pressure, state changes, gas laws.', syllabus_code: '5.1–5.24', learning_objectives: 'Calculate density. Explain pressure in fluids. Apply Boyle\'s law.', order_no: 5 },
+  // ── IGCSE Edexcel Mathematics A (4MA1) ────────────────────────────────────
+  { id: 'top-edx-math-1', subject_id: 'subj-edx-maths', title: 'Number', description: 'Integers, fractions, percentages, ratio, standard form, surds.', syllabus_code: '1.1–1.12', learning_objectives: 'Perform calculations with fractions and surds. Convert recurring decimals. Use upper and lower bounds.', order_no: 1 },
+  { id: 'top-edx-math-2', subject_id: 'subj-edx-maths', title: 'Algebra', description: 'Expressions, equations, inequalities, quadratics, sequences, graphs.', syllabus_code: '2.1–2.13', learning_objectives: 'Factorise and solve quadratics. Sketch graphs. Find nth terms and sum of sequences.', order_no: 2 },
+  { id: 'top-edx-math-3', subject_id: 'subj-edx-maths', title: 'Geometry and Trigonometry', description: 'Angles, circles, Pythagoras, trig ratios, sine/cosine rules, vectors.', syllabus_code: '4.1–4.13', learning_objectives: 'Apply Pythagoras and trigonometry. Use sine and cosine rules. Perform vector operations.', order_no: 3 },
+  // ── IGCSE Edexcel Biology (4BI1) ──────────────────────────────────────────
+  { id: 'top-edx-bio-1', subject_id: 'subj-edx-bio', title: 'The Nature and Variety of Living Organisms', description: 'Characteristics of life, eukaryotes vs prokaryotes, pathogens.', syllabus_code: '1.1–1.4', learning_objectives: 'Describe characteristics of living organisms. Compare eukaryotic and prokaryotic cells. Identify pathogens.', order_no: 1 },
+  { id: 'top-edx-bio-2', subject_id: 'subj-edx-bio', title: 'Structure and Functions in Organisms', description: 'Cells, tissues, enzymes, nutrition, respiration, transport, excretion.', syllabus_code: '2.1–2.16', learning_objectives: 'Explain enzyme action. Describe aerobic and anaerobic respiration. Explain the circulatory system.', order_no: 2 },
+  { id: 'top-edx-bio-3', subject_id: 'subj-edx-bio', title: 'Reproduction and Inheritance', description: 'Sexual/asexual reproduction, DNA, mitosis, meiosis, genetics.', syllabus_code: '3.1–3.3', learning_objectives: 'Compare mitosis and meiosis. Use Punnett squares. Explain DNA structure and protein synthesis.', order_no: 3 },
+  { id: 'top-edx-bio-4', subject_id: 'subj-edx-bio', title: 'Ecology and the Environment', description: 'Ecosystems, food chains, carbon/nitrogen cycles, pollution.', syllabus_code: '4.1–4.5', learning_objectives: 'Describe food chains and webs. Explain the carbon and nitrogen cycles. Evaluate human impact on ecosystems.', order_no: 4 },
+  // ── Edexcel IAL Physics ───────────────────────────────────────────────────
+  { id: 'top-ial-phys-1', subject_id: 'subj-ial-physics', title: 'Mechanics and Materials', description: 'Kinematics, dynamics, statics, materials properties, Young modulus.', syllabus_code: 'WPH11', learning_objectives: 'Solve SUVAT problems. Apply Newton\'s laws. Calculate stress, strain, and Young modulus.', order_no: 1 },
+  { id: 'top-ial-phys-2', subject_id: 'subj-ial-physics', title: 'Waves and Electricity', description: 'Wave behaviour, superposition, circuits, resistivity, EMF, potential dividers.', syllabus_code: 'WPH12', learning_objectives: 'Describe standing waves and diffraction. Apply Ohm\'s law and Kirchhoff\'s rules. Use potential dividers.', order_no: 2 },
+  { id: 'top-ial-phys-3', subject_id: 'subj-ial-physics', title: 'Fields and Modern Physics', description: 'Gravitational, electric, magnetic fields, particle physics, nuclear decay, oscillations.', syllabus_code: 'WPH13/WPH14', learning_objectives: 'Calculate gravitational and electric field strengths. Explain particle accelerators. Describe radioactive decay.', order_no: 3 },
+  { id: 'top-ial-phys-4', subject_id: 'subj-ial-physics', title: 'Thermodynamics and Further Mechanics', description: 'Kinetic theory, ideal gases, SHM, circular motion, gravitation.', syllabus_code: 'WPH15', learning_objectives: 'Apply the ideal gas law. Describe SHM and circular motion. Calculate gravitational forces and orbital periods.', order_no: 4 },
+  // ── Edexcel IAL Mathematics ───────────────────────────────────────────────
+  { id: 'top-ial-math-1', subject_id: 'subj-ial-maths', title: 'Pure Mathematics 1', description: 'Algebra, quadratics, equations, coordinate geometry, differentiation, integration.', syllabus_code: 'P1', learning_objectives: 'Solve quadratic and simultaneous equations. Differentiate and integrate polynomials. Sketch curves.', order_no: 1 },
+  { id: 'top-ial-math-2', subject_id: 'subj-ial-maths', title: 'Pure Mathematics 2', description: 'Exponentials, logarithms, trigonometry, sequences, series, binomial expansion.', syllabus_code: 'P2', learning_objectives: 'Apply laws of logarithms. Solve trig equations. Use binomial expansion. Find sums of arithmetic and geometric series.', order_no: 2 },
+  { id: 'top-ial-math-3', subject_id: 'subj-ial-maths', title: 'Statistics', description: 'Probability, distributions, hypothesis testing, correlation, regression.', syllabus_code: 'S1/S2', learning_objectives: 'Calculate probabilities using binomial and normal distributions. Perform hypothesis tests. Interpret correlation and regression.', order_no: 3 },
+  // ── Edexcel IAL Economics ─────────────────────────────────────────────────
+  { id: 'top-ial-eco-1', subject_id: 'subj-ial-economics', title: 'Markets and Market Failure', description: 'Demand/supply, elasticity, externalities, public goods, government intervention.', syllabus_code: 'WEC11/WEC12', learning_objectives: 'Analyse demand and supply shifts. Calculate PED, PES, YED. Evaluate government intervention methods.', order_no: 1 },
+  { id: 'top-ial-eco-2', subject_id: 'subj-ial-economics', title: 'Macroeconomic Performance', description: 'AD/AS, inflation, unemployment, growth, fiscal/monetary/supply-side policy.', syllabus_code: 'WEC13', learning_objectives: 'Draw and interpret AD/AS diagrams. Evaluate causes of inflation and unemployment. Compare fiscal and monetary policy.', order_no: 2 },
+  { id: 'top-ial-eco-3', subject_id: 'subj-ial-economics', title: 'Global Economy', description: 'Trade, protectionism, exchange rates, development, globalisation.', syllabus_code: 'WEC14', learning_objectives: 'Explain comparative advantage. Evaluate trade barriers. Analyse exchange rate systems and development policies.', order_no: 3 },
+  // ── IELTS ─────────────────────────────────────────────────────────────────
+  { id: 'top-ielts-wr-1', subject_id: 'subj-ielts-writing', title: 'Task 1: Data Description', description: 'Describing graphs, charts, tables, maps, and processes. Summarising key trends.', syllabus_code: 'WR-T1', learning_objectives: 'Write a 150-word summary. Identify trends, compare data, and avoid personal opinions. Use appropriate linking devices.', order_no: 1 },
+  { id: 'top-ielts-wr-2', subject_id: 'subj-ielts-writing', title: 'Task 2: Essay Writing', description: 'Opinion, discussion, problem-solution, advantages-disadvantages essays.', syllabus_code: 'WR-T2', learning_objectives: 'Write a 250-word essay. Structure paragraphs with topic sentences. Support arguments with examples.', order_no: 2 },
+  { id: 'top-ielts-rd-1', subject_id: 'subj-ielts-reading', title: 'Reading Strategies', description: 'Skimming, scanning, identifying writer\'s views, matching headings, T/F/NG questions.', syllabus_code: 'RD-S1', learning_objectives: 'Apply skimming and scanning techniques. Distinguish True/False/Not Given. Match headings to paragraphs.', order_no: 1 },
+  { id: 'top-ielts-rd-2', subject_id: 'subj-ielts-reading', title: 'Question Types', description: 'Multiple choice, summary completion, sentence completion, diagram labelling.', syllabus_code: 'RD-S2', learning_objectives: 'Answer multiple choice and completion questions under time pressure. Label diagrams from text descriptions.', order_no: 2 },
+  { id: 'top-ielts-sp-1', subject_id: 'subj-ielts-speaking', title: 'Speaking Techniques', description: 'Fluency, coherence, lexical resource, pronunciation, dealing with unfamiliar topics.', syllabus_code: 'SP-P1', learning_objectives: 'Speak fluently with minimal hesitation. Use a range of vocabulary and grammatical structures. Maintain clear pronunciation.', order_no: 1 },
+  { id: 'top-ielts-sp-2', subject_id: 'subj-ielts-speaking', title: 'Part 2: Long Turn', description: 'Preparing a 2-minute talk using cue cards and prompt notes.', syllabus_code: 'SP-P2', learning_objectives: 'Structure a 2-minute response. Use the 1-minute preparation effectively. Develop ideas with examples.', order_no: 2 },
+  { id: 'top-ielts-ls-1', subject_id: 'subj-ielts-listening', title: 'Listening Comprehension', description: 'Understanding main ideas, specific details, and speaker attitudes.', syllabus_code: 'LS-S1', learning_objectives: 'Identify main ideas and specific factual information. Follow academic discussions and lectures.', order_no: 1 },
+  { id: 'top-ielts-ls-2', subject_id: 'subj-ielts-listening', title: 'Listening Question Types', description: 'Form completion, multiple choice, map labelling, sentence completion.', syllabus_code: 'LS-S2', learning_objectives: 'Complete forms and tables while listening. Follow map/plan directions. Answer multiple choice under time constraints.', order_no: 2 },
+  // ── Legacy topics ─────────────────────────────────────────────────────────
+  { id: 'top-1', subject_id: 'subj-1', title: 'Forces and Motion', description: 'Understanding speed, velocity, and acceleration.', syllabus_code: null, learning_objectives: null, order_no: 1 },
+  { id: 'top-2', subject_id: 'subj-1', title: 'Energy', description: 'Work, energy, and power.', syllabus_code: null, learning_objectives: null, order_no: 2 },
 ];
 
 export const mockUserCurriculums = [
-  { id: 'uc-1', user_id: 'user-student-001', curriculum_id: 'curr-1', selected_at: '2026-01-16T00:00:00Z' }
+  { id: 'uc-1', user_id: 'user-student-001', curriculum_id: 'curr-1', selected_at: '2026-01-16T00:00:00Z' },
+];
+
+// ── User Enrollments ─────────────────────────────────────────────────────────
+
+export const mockUserEnrollments = [
+  {
+    id: 'enr-1',
+    user_id: 'user-student-001',
+    curriculum_id: 'curr-igcse-cie',
+    subject_id: 'subj-cie-physics',
+    exam_id: 'exam-cie-phys-0625-mj27',
+    enrolled_at: '2026-06-01T00:00:00Z',
+  },
+  {
+    id: 'enr-2',
+    user_id: 'user-student-001',
+    curriculum_id: 'curr-igcse-cie',
+    subject_id: 'subj-cie-maths',
+    exam_id: null,
+    enrolled_at: '2026-06-01T00:00:00Z',
+  },
+];
+
+// ── User Exam Overrides ──────────────────────────────────────────────────────
+
+export const mockUserExamOverrides: Array<{ id: string; user_id: string; exam_id: string; custom_title: string | null; custom_exam_series: string | null; custom_exam_date: string | null }> = [
+  {
+    id: 'uov-1',
+    user_id: 'user-student-001',
+    exam_id: 'exam-cie-phys-0625-mj27',
+    custom_title: 'IGCSE Physics Paper 2 (Retake)',
+    custom_exam_series: null,
+    custom_exam_date: '2027-06-10T09:00:00Z',
+  },
+];
+
+// ── User Exam History ────────────────────────────────────────────────────────
+
+export const mockUserExamHistory: Array<{ id: string; user_id: string; curriculum_id: string; subject_id: string; exam_id: string | null; exam_date: string; result: string | null; is_mock: boolean; notes: string | null; recorded_at: string }> = [
+  {
+    id: 'eh-1',
+    user_id: 'user-student-001',
+    curriculum_id: 'curr-igcse-cie',
+    subject_id: 'subj-cie-physics',
+    exam_id: 'exam-cie-phys-0625-mj26',
+    exam_date: '2026-05-12T09:00:00Z',
+    result: 'Mock — 75%',
+    is_mock: true,
+    notes: 'School mock exam. Need to improve thermal physics.',
+    recorded_at: '2026-05-15T00:00:00Z',
+  },
 ];
 
 export const mockTopicProgress = [
-  { id: 'tp-1', user_id: 'user-student-001', topic_id: 'top-1', confidence_level: 4, status: 'in_progress', updated_at: '2026-06-17T00:00:00Z' }
+  { id: 'tp-1', user_id: 'user-student-001', topic_id: 'top-1', confidence_level: 4, status: 'in_progress', updated_at: '2026-06-17T00:00:00Z' },
+];
+
+// ── Review Queue ─────────────────────────────────────────────────────────────
+
+export const mockReviewQueue: import('@/types').ReviewQueueItem[] = [
+  {
+    id: 'rq-1',
+    contributor_id: 'user-contributor-001',
+    submission_type: 'curriculum',
+    entity_id: 'curr-pending-1',
+    submitted_data: {
+      title: 'IGCSE Cambridge (CIE) — Extended Maths',
+      description: 'Cambridge IGCSE Additional Mathematics 0606.',
+      qualification: 'IGCSE',
+      exam_board: 'CAIE',
+    },
+    is_update: false,
+    published_entity_id: null,
+    status: 'pending',
+    reviewer_id: null,
+    feedback: null,
+    submitted_at: '2026-06-25T10:00:00Z',
+    reviewed_at: null,
+  },
+  {
+    id: 'rq-2',
+    contributor_id: 'user-contributor-002',
+    submission_type: 'subject',
+    entity_id: 'subj-pending-1',
+    submitted_data: {
+      curriculum_id: 'curr-igcse-edx',
+      title: 'Computer Science',
+      description: 'Edexcel IGCSE Computer Science 4CP0.',
+      order_no: 4,
+    },
+    is_update: false,
+    published_entity_id: null,
+    status: 'pending',
+    reviewer_id: null,
+    feedback: null,
+    submitted_at: '2026-06-26T14:00:00Z',
+    reviewed_at: null,
+  },
+  {
+    id: 'rq-3',
+    contributor_id: 'user-contributor-001',
+    submission_type: 'topic',
+    entity_id: 'top-pending-1',
+    submitted_data: {
+      subject_id: 'subj-cie-cs',
+      title: 'Databases and SQL',
+      description: 'Relational databases, SQL queries, normalisation.',
+      order_no: 5,
+    },
+    is_update: false,
+    published_entity_id: null,
+    status: 'pending',
+    reviewer_id: null,
+    feedback: null,
+    submitted_at: '2026-06-27T09:00:00Z',
+    reviewed_at: null,
+  },
+  {
+    id: 'rq-4',
+    contributor_id: 'user-contributor-001',
+    submission_type: 'curriculum',
+    entity_id: 'curr-igcse-cie',
+    submitted_data: {
+      title: 'IGCSE Cambridge (CIE) 2027 Syllabus',
+      description: 'Updated description reflecting the 2027 syllabus changes.',
+    },
+    is_update: true,
+    published_entity_id: 'curr-igcse-cie',
+    status: 'pending',
+    reviewer_id: null,
+    feedback: null,
+    submitted_at: '2026-06-28T11:00:00Z',
+    reviewed_at: null,
+  },
+];
+
+// ── Version History ──────────────────────────────────────────────────────────
+
+export const mockVersionHistory: import('@/types').VersionEntry[] = [
+  {
+    id: 'ver-1',
+    entity_type: 'curriculum',
+    entity_id: 'curr-igcse-cie',
+    version_number: 1,
+    changes: [
+      { field: 'description', old_value: 'Cambridge IGCSE — basic description.', new_value: 'Cambridge IGCSE — the world\'s most popular international qualification for 14–16 year olds.' },
+    ],
+    changed_by: 'user-main-contributor-001',
+    review_item_id: 'rq-old-1',
+    changed_at: '2025-02-15T08:00:00Z',
+  },
 ];
 
 export const mockResources = [
-  { id: 'res-1', curriculum_id: 'curr-1', contributor_id: 'user-contributor-001', title: 'Forces Cheatsheet', content: 'https://example.com/forces.pdf', resource_type: 'pdf', status: 'published', is_public: true, created_at: '2025-02-01T00:00:00Z', updated_at: '2025-02-01T00:00:00Z' }
+  { id: 'res-1', curriculum_id: 'curr-1', contributor_id: 'user-contributor-001', title: 'Forces Cheatsheet', content: 'https://example.com/forces.pdf', resource_type: 'pdf', status: 'published', is_public: true, created_at: '2025-02-01T00:00:00Z', updated_at: '2025-02-01T00:00:00Z' },
 ];
 
 export const mockEditorSubmissions: Array<{
@@ -868,7 +1114,157 @@ interface ExamReviewSubmissionRecord {
   payload?: Record<string, unknown>;
 }
 
-const examReviewSubmissions: ExamReviewSubmissionRecord[] = [];
+const examReviewSubmissions: ExamReviewSubmissionRecord[] = [
+  // ── Sample approved calculator presets ──────────────────────────────────────
+  {
+    id: 'sub-calculator-0625-mj27',
+    contributor_id: 'user-contributor-001',
+    submission_type: 'calculator',
+    entity_id: 'Physics 0625 May/June 2027',
+    status: 'approved',
+    reviewer_id: 'user-main-contributor-001',
+    feedback: null,
+    submitted_at: '2026-06-15T10:00:00Z',
+    reviewed_at: '2026-06-16T14:00:00Z',
+    payload: {
+      curriculum_id: 'curr-igcse-cie',
+      subject_id: 'subj-cie-physics',
+      title: 'Physics (0625)',
+      subject_code: '0625',
+      series: 'May/June 2027 (V2)',
+      papers: [
+        { name: 'Paper 2 (Multiple Choice)', max_mark: 40, weight: 30, paper_boundaries: [
+          { grade: 'A*', min_mark: 36 },
+          { grade: 'A', min_mark: 32 },
+          { grade: 'B', min_mark: 28 },
+          { grade: 'C', min_mark: 24 },
+          { grade: 'D', min_mark: 20 },
+          { grade: 'E', min_mark: 16 },
+        ]},
+        { name: 'Paper 4 (Theory)', max_mark: 80, weight: 50, paper_boundaries: [
+          { grade: 'A*', min_mark: 72 },
+          { grade: 'A', min_mark: 64 },
+          { grade: 'B', min_mark: 56 },
+          { grade: 'C', min_mark: 48 },
+          { grade: 'D', min_mark: 40 },
+          { grade: 'E', min_mark: 32 },
+        ]},
+        { name: 'Paper 6 (Practical)', max_mark: 40, weight: 20, paper_boundaries: [
+          { grade: 'A*', min_mark: 36 },
+          { grade: 'A', min_mark: 32 },
+          { grade: 'B', min_mark: 28 },
+          { grade: 'C', min_mark: 24 },
+          { grade: 'D', min_mark: 20 },
+          { grade: 'E', min_mark: 16 },
+        ]},
+      ],
+      grade_boundaries: [
+        { grade: 'A*', min_mark: 136 },
+        { grade: 'A', min_mark: 120 },
+        { grade: 'B', min_mark: 104 },
+        { grade: 'C', min_mark: 88 },
+        { grade: 'D', min_mark: 72 },
+        { grade: 'E', min_mark: 56 },
+      ],
+    },
+  },
+  {
+    id: 'sub-calculator-0580-mj27',
+    contributor_id: 'user-contributor-001',
+    submission_type: 'calculator',
+    entity_id: 'Mathematics 0580 May/June 2027',
+    status: 'approved',
+    reviewer_id: 'user-main-contributor-001',
+    feedback: null,
+    submitted_at: '2026-06-20T09:00:00Z',
+    reviewed_at: '2026-06-21T11:00:00Z',
+    payload: {
+      curriculum_id: 'curr-igcse-cie',
+      subject_id: 'subj-cie-maths',
+      title: 'Mathematics (0580)',
+      subject_code: '0580',
+      series: 'May/June 2027 (V2)',
+      papers: [
+        { name: 'Paper 2 (Non-Calculator)', max_mark: 70, weight: 35 },
+        { name: 'Paper 4 (Calculator)', max_mark: 130, weight: 65 },
+      ],
+      grade_boundaries: [
+        { grade: 'A*', min_mark: 156 },
+        { grade: 'A', min_mark: 132 },
+        { grade: 'B', min_mark: 108 },
+        { grade: 'C', min_mark: 84 },
+        { grade: 'D', min_mark: 60 },
+        { grade: 'E', min_mark: 40 },
+      ],
+    },
+  },
+  {
+    id: 'sub-calculator-0478-mj27',
+    contributor_id: 'user-contributor-001',
+    submission_type: 'calculator',
+    entity_id: 'Computer Science 0478 May/June 2027',
+    status: 'approved',
+    reviewer_id: 'user-main-contributor-001',
+    feedback: null,
+    submitted_at: '2026-06-25T12:00:00Z',
+    reviewed_at: '2026-06-26T08:00:00Z',
+    payload: {
+      curriculum_id: 'curr-igcse-cie',
+      subject_id: 'subj-cie-cs',
+      title: 'Computer Science (0478)',
+      subject_code: '0478',
+      series: 'May/June 2027 (V2)',
+      papers: [
+        { name: 'Paper 1 (Theory)', max_mark: 75, weight: 50 },
+        { name: 'Paper 2 (Problem Solving)', max_mark: 50, weight: 50 },
+      ],
+      grade_boundaries: [
+        { grade: 'A*', min_mark: 95 },
+        { grade: 'A', min_mark: 82 },
+        { grade: 'B', min_mark: 69 },
+        { grade: 'C', min_mark: 56 },
+        { grade: 'D', min_mark: 43 },
+        { grade: 'E', min_mark: 30 },
+      ],
+    },
+  },
+  // ── Edexcel IAL Physics (modular) ──────────────────────────────────────────
+  {
+    id: 'sub-calculator-ial-phys-mj27',
+    contributor_id: 'user-contributor-001',
+    submission_type: 'calculator',
+    entity_id: 'Edexcel IAL Physics WPH11 May/June 2027',
+    status: 'approved',
+    reviewer_id: 'user-main-contributor-001',
+    feedback: null,
+    submitted_at: '2026-07-01T08:00:00Z',
+    reviewed_at: '2026-07-01T16:00:00Z',
+    payload: {
+      curriculum_id: 'curr-ial-edx',
+      subject_id: 'subj-ial-physics',
+      title: 'Edexcel IAL Physics (WPH)',
+      subject_code: 'WPH',
+      series: 'May/June 2027',
+      is_modular: true,
+      papers: [
+        { name: 'Unit 1 — Mechanics & Materials', max_mark: 80, weight: 100, unit_group: 'AS' },
+        { name: 'Unit 2 — Waves & Electricity', max_mark: 80, weight: 100, unit_group: 'AS' },
+        { name: 'Unit 3 — Practical Skills I', max_mark: 50, weight: 100, unit_group: 'AS' },
+        { name: 'Unit 4 — Fields & Further Mechanics', max_mark: 80, weight: 100, unit_group: 'A2' },
+        { name: 'Unit 5 — Thermodynamics & Nuclear', max_mark: 80, weight: 100, unit_group: 'A2' },
+        { name: 'Unit 6 — Practical Skills II', max_mark: 50, weight: 100, unit_group: 'A2' },
+      ],
+      grade_boundaries: [
+        { grade: 'A*', min_mark: 420 },
+        { grade: 'A', min_mark: 380 },
+        { grade: 'B', min_mark: 320 },
+        { grade: 'C', min_mark: 260 },
+        { grade: 'D', min_mark: 200 },
+        { grade: 'E', min_mark: 140 },
+      ],
+    },
+  },
+];
 
 function addExamReviewSubmission(contributorId: string, type: ExamReviewSubmissionRecord['submission_type'], entityId: string, payload?: Record<string, unknown>) {
   const submission: ExamReviewSubmissionRecord = {
@@ -897,7 +1293,19 @@ export function submitExamCalculatorPreset(payload: any, contributorId: string):
     return { success: false, error: 'Subject title is required.' };
   }
 
+  // Add to legacy exam review list
   addExamReviewSubmission(contributorId, 'calculator', payload.title.trim(), payload);
+
+  // Also add to the general review queue for the main ReviewQueue component
+  submitToReviewQueue({
+    contributor_id: contributorId,
+    submission_type: 'calculator',
+    entity_id: payload.title.trim(),
+    submitted_data: payload,
+    is_update: false,
+    published_entity_id: null,
+  });
+
   return { success: true };
 }
 
@@ -910,7 +1318,19 @@ export function submitExamCountdownProposal(payload: any, contributorId: string)
     return { success: false, error: 'At least one countdown proposal is required.' };
   }
 
+  // Add to legacy exam review list
   addExamReviewSubmission(contributorId, 'countdown', payload.countdowns[0].title || 'Countdown proposal', payload);
+
+  // Also add to the general review queue for the main ReviewQueue component
+  submitToReviewQueue({
+    contributor_id: contributorId,
+    submission_type: 'countdown',
+    entity_id: payload.countdowns[0].title || 'countdown-proposal',
+    submitted_data: payload,
+    is_update: false,
+    published_entity_id: null,
+  });
+
   return { success: true };
 }
 
@@ -918,10 +1338,11 @@ export function getPendingExamSubmissions() {
   return examReviewSubmissions
     .map((submission) => {
       const contributor = mockProfiles.find((profile) => profile.id === submission.contributor_id);
-      const title = submission.payload?.title || submission.payload?.countdowns?.[0]?.title || submission.entity_id;
+      const p = submission.payload as Record<string, unknown> | undefined;
+      const title = p?.title as string | undefined || ((p?.countdowns as Array<Record<string, unknown>> | undefined)?.[0]?.title as string | undefined) || submission.entity_id;
       const summary = submission.submission_type === 'calculator'
-        ? `Calculator preset for ${submission.payload?.subject_code || 'new subject'} • ${submission.payload?.series || 'review pending'}`
-        : `Countdown proposal for ${submission.payload?.countdowns?.[0]?.title || 'new exam'} • ${submission.payload?.countdowns?.[0]?.qualification_group || 'Custom'}`;
+        ? `Calculator preset for ${(p?.subject_code as string) || 'new subject'} • ${(p?.series as string) || 'review pending'}`
+        : `Countdown proposal for ${((p?.countdowns as Array<Record<string, unknown>> | undefined)?.[0]?.title as string) || 'new exam'} • ${((p?.countdowns as Array<Record<string, unknown>> | undefined)?.[0]?.qualification_group as string) || 'Custom'}`;
 
       return {
         id: submission.id,
@@ -933,6 +1354,31 @@ export function getPendingExamSubmissions() {
       };
     })
     .sort((a, b) => (a.status === 'pending_review' ? -1 : 1));
+}
+
+/** Get exam submissions filtered by contributor ID (for "My Submissions" view) */
+export function getExamSubmissionsByContributor(contributorId: string) {
+  return examReviewSubmissions
+    .filter((submission) => submission.contributor_id === contributorId)
+    .sort((a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime())
+    .map((submission) => {
+      const contributor = mockProfiles.find((profile) => profile.id === submission.contributor_id);
+      const p = submission.payload as Record<string, unknown> | undefined;
+      const title = p?.title as string | undefined || ((p?.countdowns as Array<Record<string, unknown>> | undefined)?.[0]?.title as string | undefined) || submission.entity_id;
+      const summary = submission.submission_type === 'calculator'
+        ? `Calculator preset for ${(p?.subject_code as string) || 'new subject'} • ${(p?.series as string) || 'review pending'}`
+        : `Countdown proposal for ${((p?.countdowns as Array<Record<string, unknown>> | undefined)?.[0]?.title as string) || 'new exam'} • ${((p?.countdowns as Array<Record<string, unknown>> | undefined)?.[0]?.qualification_group as string) || 'Custom'}`;
+
+      return {
+        id: submission.id,
+        title: typeof title === 'string' ? title : 'Exam submission',
+        type: submission.submission_type as 'calculator' | 'countdown' | 'exam',
+        contributorName: contributor?.name || 'Contributor',
+        summary,
+        status: submission.status as 'pending_review' | 'approved' | 'rejected',
+        feedback: submission.feedback,
+      };
+    });
 }
 
 export function approveExamSubmission(submissionId: string, reviewerId: string): { success: boolean } {
@@ -952,6 +1398,26 @@ export function rejectExamSubmission(submissionId: string, reviewerId: string, f
   submission.feedback = feedback;
   submission.reviewed_at = new Date().toISOString();
   return { success: true };
+}
+
+/** Get approved calculator presets for the student-facing GradeCalculator */
+export function getApprovedCalculatorPresets() {
+  return examReviewSubmissions
+    .filter(s => s.submission_type === 'calculator' && s.status === 'approved' && s.payload)
+    .map(s => {
+      const p = s.payload!;
+      return {
+        id: s.id,
+        title: (p.title as string) || 'Untitled Preset',
+        subject_code: (p.subject_code as string) || '',
+        curriculum_id: (p.curriculum_id as string) || '',
+        subject_id: (p.subject_id as string) || '',
+        series: (p.series as string) || 'May/June 2027',
+        is_modular: (p.is_modular as boolean) || false,
+        papers: (p.papers as Array<{ name: string; max_mark: number; weight: number; unit_group?: string; paper_boundaries?: Array<{ grade: string; min_mark: number }> }>) || [],
+        grade_boundaries: (p.grade_boundaries as Array<{ grade: string; min_mark: number }>) || [],
+      };
+    });
 }
 
 
@@ -1315,6 +1781,10 @@ export const mockClubs: Club[] = [
       { key: 'activity_timeline', enabled: true, public_visible: true },
       { key: 'leaderboard', enabled: false, public_visible: false },
     ],
+    cover_image_url: null,
+    tagline: 'Where curiosity meets discovery — explore, experiment, excel.',
+    custom_domain_slug: 'science-enthusiasts',
+    is_showcase: true,
     created_at: '2025-10-01T00:00:00Z',
   },
   {
@@ -1333,6 +1803,10 @@ export const mockClubs: Club[] = [
       { key: 'activity_timeline', enabled: false, public_visible: false },
       { key: 'leaderboard', enabled: true, public_visible: true },
     ],
+    cover_image_url: null,
+    tagline: 'Master the elements — one reaction at a time.',
+    custom_domain_slug: 'chemistry-circle',
+    is_showcase: false,
     created_at: '2026-02-14T00:00:00Z',
   },
   {
@@ -1351,6 +1825,10 @@ export const mockClubs: Club[] = [
       { key: 'activity_timeline', enabled: true, public_visible: false },
       { key: 'leaderboard', enabled: false, public_visible: false },
     ],
+    cover_image_url: null,
+    tagline: 'Sprint to success — focused revision, real results.',
+    custom_domain_slug: 'exam-sprint',
+    is_showcase: false,
     created_at: '2026-04-05T00:00:00Z',
   },
 ];
@@ -1411,7 +1889,13 @@ export const mockClubProjects: {
   created_by: string;
   title: string;
   description: string | null;
+  status?: string;
+  cover_image_url?: string | null;
+  links?: { label: string; url: string }[];
+  contributors?: string[];
+  tags?: string[];
   created_at: string;
+  updated_at?: string | null;
 }[] = [
   {
     id: 'cp-1',
@@ -1419,7 +1903,16 @@ export const mockClubProjects: {
     created_by: 'user-contributor-001',
     title: 'Newton\'s Laws Demo App',
     description: 'Interactive web app demonstrating all three laws of motion with real-time physics simulations.',
+    status: 'completed',
+    cover_image_url: null,
+    links: [
+      { label: 'GitHub', url: 'https://github.com/theants/newton-demo' },
+      { label: 'Live Demo', url: 'https://newton-demo.theants.app' },
+    ],
+    contributors: ['user-contributor-001', 'user-student-001'],
+    tags: ['physics', 'react', 'simulation'],
     created_at: '2026-04-15T00:00:00Z',
+    updated_at: '2026-06-01T00:00:00Z',
   },
   {
     id: 'cp-2',
@@ -1427,7 +1920,15 @@ export const mockClubProjects: {
     created_by: 'user-contributor-002',
     title: 'Organic Chemistry Flashcards',
     description: 'A curated deck covering all IGCSE organic chemistry reaction mechanisms and functional groups.',
+    status: 'active',
+    cover_image_url: null,
+    links: [
+      { label: 'View Deck', url: 'https://theants.app/flashcards/org-chem' },
+    ],
+    contributors: ['user-contributor-002'],
+    tags: ['chemistry', 'organic', 'flashcards', 'igcse'],
     created_at: '2026-05-20T00:00:00Z',
+    updated_at: null,
   },
   {
     id: 'cp-3',
@@ -1435,7 +1936,16 @@ export const mockClubProjects: {
     created_by: 'user-student-001',
     title: 'Physics Lab Report Template',
     description: 'Standardised LaTeX template for IGCSE physics lab reports with pre-built sections.',
+    status: 'completed',
+    cover_image_url: null,
+    links: [
+      { label: 'GitHub', url: 'https://github.com/theants/phys-lab-template' },
+      { label: 'Overleaf', url: 'https://overleaf.com/read/phys-template' },
+    ],
+    contributors: ['user-student-001'],
+    tags: ['physics', 'latex', 'template', 'igcse'],
     created_at: '2026-06-01T00:00:00Z',
+    updated_at: null,
   },
 ];
 
@@ -1483,6 +1993,171 @@ export const mockClubEvents: {
     description: 'Timed mock competition under real Olympiad conditions. Prizes for top 3!',
     event_date: '2026-07-20T09:00:00Z',
     created_at: '2026-06-18T10:00:00Z',
+  },
+];
+
+// ── Club Milestones ─────────────────────────────────────────────────────────
+
+export const mockClubMilestones: {
+  id: string;
+  club_id: string;
+  title: string;
+  description: string | null;
+  status: string;
+  target_date?: string | null;
+  completed_at?: string | null;
+  created_by: string;
+  created_at: string;
+  order_no?: number | null;
+}[] = [
+  // Club 1 milestones
+  {
+    id: 'cms-1',
+    club_id: 'club-1',
+    title: 'Launch Physics Demo App',
+    description: 'Complete and publish the Newton\'s Laws interactive demo app.',
+    status: 'completed',
+    target_date: '2026-06-01T00:00:00Z',
+    completed_at: '2026-06-01T00:00:00Z',
+    created_by: 'user-contributor-001',
+    created_at: '2026-04-01T00:00:00Z',
+    order_no: 1,
+  },
+  {
+    id: 'cms-2',
+    club_id: 'club-1',
+    title: 'Reach 50 Club Members',
+    description: 'Grow the community to 50 active members through outreach and events.',
+    status: 'in_progress',
+    target_date: '2026-08-01T00:00:00Z',
+    completed_at: null,
+    created_by: 'user-contributor-001',
+    created_at: '2026-04-01T00:00:00Z',
+    order_no: 2,
+  },
+  {
+    id: 'cms-3',
+    club_id: 'club-1',
+    title: 'Host Monthly Science Fair',
+    description: 'Organize a monthly science fair where members present projects and experiments.',
+    status: 'planned',
+    target_date: '2026-09-01T00:00:00Z',
+    completed_at: null,
+    created_by: 'user-contributor-001',
+    created_at: '2026-05-15T00:00:00Z',
+    order_no: 3,
+  },
+  // Club 2 milestones
+  {
+    id: 'cms-4',
+    club_id: 'club-2',
+    title: 'Complete Organic Chemistry Deck',
+    description: 'Finish and publish the comprehensive IGCSE organic chemistry flashcard deck.',
+    status: 'completed',
+    target_date: '2026-05-20T00:00:00Z',
+    completed_at: '2026-05-20T00:00:00Z',
+    created_by: 'user-contributor-002',
+    created_at: '2026-04-10T00:00:00Z',
+    order_no: 1,
+  },
+  {
+    id: 'cms-5',
+    club_id: 'club-2',
+    title: 'Lab Safety Workshop',
+    description: 'Conduct the mandatory lab safety refresher workshop before summer practicals.',
+    status: 'completed',
+    target_date: '2026-07-05T00:00:00Z',
+    completed_at: '2026-07-05T00:00:00Z',
+    created_by: 'user-contributor-002',
+    created_at: '2026-06-01T00:00:00Z',
+    order_no: 2,
+  },
+  // Club 3 milestones
+  {
+    id: 'cms-6',
+    club_id: 'club-3',
+    title: 'First Mock Exam Sprint',
+    description: 'Complete the first full mock exam sprint with all members.',
+    status: 'in_progress',
+    target_date: '2026-07-15T00:00:00Z',
+    completed_at: null,
+    created_by: 'user-main-contributor-001',
+    created_at: '2026-06-01T00:00:00Z',
+    order_no: 1,
+  },
+];
+
+// ── Club Member Contributions ────────────────────────────────────────────────
+
+export const mockMemberContributions: {
+  id: string;
+  club_id: string;
+  user_id: string;
+  contribution_type: string;
+  title: string;
+  description?: string | null;
+  metadata?: Record<string, unknown> | null;
+  created_at: string;
+}[] = [
+  // Club 1 contributions
+  {
+    id: 'cmc-1',
+    club_id: 'club-1',
+    user_id: 'user-contributor-001',
+    contribution_type: 'project',
+    title: 'Created Newton\'s Laws Demo App',
+    description: 'Led development of the interactive physics demo application.',
+    metadata: { project_id: 'cp-1' },
+    created_at: '2026-04-15T00:00:00Z',
+  },
+  {
+    id: 'cmc-2',
+    club_id: 'club-1',
+    user_id: 'user-student-001',
+    contribution_type: 'project',
+    title: 'Contributed to Newton\'s Laws Demo App',
+    description: 'Added Three.js simulation components and lab report template.',
+    metadata: { project_id: 'cp-1' },
+    created_at: '2026-05-10T00:00:00Z',
+  },
+  {
+    id: 'cmc-3',
+    club_id: 'club-1',
+    user_id: 'user-contributor-001',
+    contribution_type: 'milestone_completed',
+    title: 'Completed milestone: Launch Physics Demo App',
+    metadata: { milestone_id: 'cms-1' },
+    created_at: '2026-06-01T00:00:00Z',
+  },
+  // Club 2 contributions
+  {
+    id: 'cmc-4',
+    club_id: 'club-2',
+    user_id: 'user-contributor-002',
+    contribution_type: 'project',
+    title: 'Created Organic Chemistry Flashcards',
+    description: 'Published curated flashcard deck for IGCSE chemistry.',
+    metadata: { project_id: 'cp-2' },
+    created_at: '2026-05-20T00:00:00Z',
+  },
+  {
+    id: 'cmc-5',
+    club_id: 'club-2',
+    user_id: 'user-contributor-002',
+    contribution_type: 'event',
+    title: 'Organized Lab Safety Workshop',
+    metadata: { event_id: 'ce-2' },
+    created_at: '2026-06-20T09:00:00Z',
+  },
+  // Club 3 contributions
+  {
+    id: 'cmc-6',
+    club_id: 'club-3',
+    user_id: 'user-main-contributor-001',
+    contribution_type: 'other',
+    title: 'Onboarded new sprint members',
+    description: 'Conducted orientation session for 5 new members.',
+    created_at: '2026-06-05T00:00:00Z',
   },
 ];
 
@@ -1661,6 +2336,298 @@ export function demoteClubLeader(
   return { success: true, member: { ...targetMember } };
 }
 
+// ── Club Milestones ─────────────────────────────────────────────────────────
+
+/** Get all milestones for a club */
+export function getClubMilestones(clubId: string) {
+  return mockClubMilestones
+    .filter((m) => m.club_id === clubId)
+    .sort((a, b) => (a.order_no ?? 0) - (b.order_no ?? 0));
+}
+
+/** Add a milestone to a club */
+export function addClubMilestone(
+  clubId: string,
+  userId: string,
+  title: string,
+  description?: string | null,
+  targetDate?: string | null
+): { success: true; id: string } | { success: false; error: string } {
+  const member = mockClubMembers.find(
+    (m) => m.club_id === clubId && m.user_id === userId && (m.role === 'admin' || m.role === 'moderator')
+  );
+  if (!member) return { success: false, error: 'Only club leaders can add milestones.' };
+
+  const id = `cms-${Date.now()}`;
+  mockClubMilestones.push({
+    id,
+    club_id: clubId,
+    title,
+    description: description || null,
+    status: 'planned',
+    target_date: targetDate || null,
+    completed_at: null,
+    created_by: userId,
+    created_at: new Date().toISOString(),
+    order_no: mockClubMilestones.filter((m) => m.club_id === clubId).length + 1,
+  });
+  return { success: true, id };
+}
+
+/** Update a milestone status or details */
+export function updateClubMilestone(
+  milestoneId: string,
+  userId: string,
+  updates: {
+    title?: string;
+    description?: string | null;
+    status?: string;
+    target_date?: string | null;
+    order_no?: number | null;
+  }
+): { success: true } | { success: false; error: string } {
+  const milestone = mockClubMilestones.find((m) => m.id === milestoneId);
+  if (!milestone) return { success: false, error: 'Milestone not found.' };
+
+  const member = mockClubMembers.find(
+    (m) => m.club_id === milestone.club_id && m.user_id === userId && (m.role === 'admin' || m.role === 'moderator')
+  );
+  if (!member) return { success: false, error: 'Only club leaders can update milestones.' };
+
+  if (updates.title !== undefined) milestone.title = updates.title;
+  if (updates.description !== undefined) milestone.description = updates.description;
+  if (updates.status !== undefined) {
+    milestone.status = updates.status;
+    if (updates.status === 'completed' && !milestone.completed_at) {
+      milestone.completed_at = new Date().toISOString();
+      // Auto-record contribution
+      mockMemberContributions.push({
+        id: `cmc-${Date.now()}`,
+        club_id: milestone.club_id,
+        user_id: userId,
+        contribution_type: 'milestone_completed',
+        title: `Completed milestone: ${milestone.title}`,
+        metadata: { milestone_id: milestone.id },
+        created_at: new Date().toISOString(),
+      });
+    }
+  }
+  if (updates.target_date !== undefined) milestone.target_date = updates.target_date;
+  if (updates.order_no !== undefined) milestone.order_no = updates.order_no;
+
+  return { success: true };
+}
+
+/** Delete a club milestone */
+export function deleteClubMilestone(
+  milestoneId: string,
+  userId: string
+): { success: true } | { success: false; error: string } {
+  const idx = mockClubMilestones.findIndex((m) => m.id === milestoneId);
+  if (idx === -1) return { success: false, error: 'Milestone not found.' };
+
+  const milestone = mockClubMilestones[idx];
+  const member = mockClubMembers.find(
+    (m) => m.club_id === milestone.club_id && m.user_id === userId && (m.role === 'admin' || m.role === 'moderator')
+  );
+  if (!member) return { success: false, error: 'Only club leaders can delete milestones.' };
+
+  mockClubMilestones.splice(idx, 1);
+  return { success: true };
+}
+
+// ── Club Member Contributions ────────────────────────────────────────────────
+
+/** Get member contributions for a club, optionally filtered by user */
+export function getMemberContributions(clubId: string, userId?: string) {
+  let contributions = mockMemberContributions.filter((c) => c.club_id === clubId);
+  if (userId) {
+    contributions = contributions.filter((c) => c.user_id === userId);
+  }
+  return contributions.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+}
+
+/** Get aggregated contribution stats per member for a club */
+export function getClubMemberProgress(clubId: string): {
+  userId: string;
+  contributionCount: number;
+  projectCount: number;
+  eventCount: number;
+  milestoneCount: number;
+}[] {
+  const contributions = mockMemberContributions.filter((c) => c.club_id === clubId);
+  const userMap = new Map<string, { contributionCount: number; projectCount: number; eventCount: number; milestoneCount: number }>();
+
+  for (const c of contributions) {
+    if (!userMap.has(c.user_id)) {
+      userMap.set(c.user_id, { contributionCount: 0, projectCount: 0, eventCount: 0, milestoneCount: 0 });
+    }
+    const stats = userMap.get(c.user_id)!;
+    stats.contributionCount++;
+    if (c.contribution_type === 'project') stats.projectCount++;
+    if (c.contribution_type === 'event') stats.eventCount++;
+    if (c.contribution_type === 'milestone_completed') stats.milestoneCount++;
+  }
+
+  return Array.from(userMap.entries()).map(([userId, stats]) => ({ userId, ...stats }));
+}
+
+/** Manually log a member contribution (club leaders only) */
+export function addMemberContribution(
+  clubId: string,
+  userId: string,
+  targetUserId: string,
+  contributionType: string,
+  title: string,
+  description?: string | null
+): { success: true; id: string } | { success: false; error: string } {
+  const member = mockClubMembers.find(
+    (m) => m.club_id === clubId && m.user_id === userId && (m.role === 'admin' || m.role === 'moderator')
+  );
+  if (!member) return { success: false, error: 'Only club leaders can log contributions.' };
+
+  const id = `cmc-${Date.now()}`;
+  mockMemberContributions.push({
+    id,
+    club_id: clubId,
+    user_id: targetUserId,
+    contribution_type: contributionType,
+    title,
+    description: description || null,
+    metadata: null,
+    created_at: new Date().toISOString(),
+  });
+  return { success: true, id };
+}
+
+// ── Club Showcase Management ─────────────────────────────────────────────────
+
+/** Update club showcase / landing page settings */
+export function updateClubShowcase(
+  clubId: string,
+  userId: string,
+  updates: {
+    cover_image_url?: string | null;
+    tagline?: string | null;
+    custom_domain_slug?: string | null;
+    is_showcase?: boolean;
+  }
+): { success: true; club: Club } | { success: false; error: string } {
+  const club = mockClubs.find((c) => c.id === clubId);
+  if (!club) return { success: false, error: 'Club not found.' };
+
+  const member = mockClubMembers.find(
+    (m) => m.club_id === clubId && m.user_id === userId && m.role === 'admin'
+  );
+  if (!member) return { success: false, error: 'Only club admins can update showcase settings.' };
+
+  if (updates.cover_image_url !== undefined) club.cover_image_url = updates.cover_image_url;
+  if (updates.tagline !== undefined) club.tagline = updates.tagline;
+  if (updates.custom_domain_slug !== undefined) club.custom_domain_slug = updates.custom_domain_slug;
+  if (updates.is_showcase !== undefined) club.is_showcase = updates.is_showcase;
+
+  return { success: true, club: { ...club } };
+}
+
+/** Get all clubs a user is a member of */
+export function getUserClubs(userId: string) {
+  const memberships = mockClubMembers.filter(
+    (m) => m.user_id === userId && m.membership_status === 'active'
+  );
+  return memberships.map((m) => {
+    const club = mockClubs.find((c) => c.id === m.club_id);
+    return club ? { club, membership: m } : null;
+  }).filter(Boolean) as { club: Club; membership: ClubMember }[];
+}
+
+// ── Academic Certifications ──────────────────────────────────────────────────
+
+/** Get all certifications for a user */
+export function getUserCertifications(userId: string) {
+  return mockCertifications
+    .filter((c) => c.user_id === userId && !c.is_hidden)
+    .sort((a, b) => (a.order_no ?? 0) - (b.order_no ?? 0));
+}
+
+/** Get all public certifications for a user (non-hidden, for public profile) */
+export function getPublicCertifications(userId: string) {
+  return mockCertifications
+    .filter((c) => c.user_id === userId && !c.is_hidden)
+    .sort((a, b) => (a.order_no ?? 0) - (b.order_no ?? 0));
+}
+
+/** Add a certification for a user */
+export function addCertification(
+  userId: string,
+  data: {
+    type: string;
+    subject?: string | null;
+    exam_board?: string | null;
+    grade?: string | null;
+    year?: number | null;
+    certificate_url?: string | null;
+  }
+): { success: true; id: string } | { success: false; error: string } {
+  const id = `cert-${Date.now()}`;
+  mockCertifications.push({
+    id,
+    user_id: userId,
+    type: data.type,
+    subject: data.subject || null,
+    exam_board: data.exam_board || null,
+    grade: data.grade || null,
+    year: data.year || null,
+    certificate_url: data.certificate_url || null,
+    is_verified: false,
+    verified_by: null,
+    is_hidden: false,
+    order_no: mockCertifications.filter((c) => c.user_id === userId).length + 1,
+    created_at: new Date().toISOString(),
+  });
+  return { success: true, id };
+}
+
+/** Update a certification */
+export function updateCertification(
+  certId: string,
+  userId: string,
+  updates: {
+    type?: string;
+    subject?: string | null;
+    exam_board?: string | null;
+    grade?: string | null;
+    year?: number | null;
+    certificate_url?: string | null;
+    is_hidden?: boolean;
+    order_no?: number | null;
+  }
+): { success: true } | { success: false; error: string } {
+  const cert = mockCertifications.find((c) => c.id === certId && c.user_id === userId);
+  if (!cert) return { success: false, error: 'Certification not found.' };
+
+  if (updates.type !== undefined) cert.type = updates.type;
+  if (updates.subject !== undefined) cert.subject = updates.subject;
+  if (updates.exam_board !== undefined) cert.exam_board = updates.exam_board;
+  if (updates.grade !== undefined) cert.grade = updates.grade;
+  if (updates.year !== undefined) cert.year = updates.year;
+  if (updates.certificate_url !== undefined) cert.certificate_url = updates.certificate_url;
+  if (updates.is_hidden !== undefined) cert.is_hidden = updates.is_hidden;
+  if (updates.order_no !== undefined) cert.order_no = updates.order_no;
+
+  return { success: true };
+}
+
+/** Delete a certification */
+export function deleteCertification(
+  certId: string,
+  userId: string
+): { success: true } | { success: false; error: string } {
+  const idx = mockCertifications.findIndex((c) => c.id === certId && c.user_id === userId);
+  if (idx === -1) return { success: false, error: 'Certification not found.' };
+  mockCertifications.splice(idx, 1);
+  return { success: true };
+}
+
 // ── Mock Timetable & Pomodoro ───────────────────────────────────────────────
 export const mockTimetableEvents = [
   { id: 'te-1', user_id: 'user-student-001', title: 'Physics Revision', event_type: 'study', start_time: '2026-06-18T14:00:00Z', end_time: '2026-06-18T16:00:00Z', all_day: false, is_recurring: false, recurrence_pattern: null, color_code: '#3b82f6', metadata: {}, created_at: '2026-06-10T00:00:00Z' }
@@ -1682,6 +2649,11 @@ export const mockDecks: Deck[] = [
     category: 'Physics',
     is_public: true,
     created_at: '2026-02-01T00:00:00Z',
+    exam_board: null,
+    syllabus_code: null,
+    visibility: 'private',
+    share_token: null,
+    library_status: null,
   },
   {
     id: 'deck-2',
@@ -1693,6 +2665,11 @@ export const mockDecks: Deck[] = [
     category: 'Biology',
     is_public: true,
     created_at: '2026-03-10T00:00:00Z',
+    exam_board: null,
+    syllabus_code: null,
+    visibility: 'private',
+    share_token: null,
+    library_status: null,
   },
   {
     id: 'deck-3',
@@ -1704,6 +2681,11 @@ export const mockDecks: Deck[] = [
     category: 'Chemistry',
     is_public: true,
     created_at: '2026-04-05T00:00:00Z',
+    exam_board: null,
+    syllabus_code: null,
+    visibility: 'private',
+    share_token: null,
+    library_status: null,
   },
   {
     id: 'deck-4',
@@ -1715,6 +2697,11 @@ export const mockDecks: Deck[] = [
     category: 'Mathematics',
     is_public: false,
     created_at: '2026-05-15T00:00:00Z',
+    exam_board: null,
+    syllabus_code: null,
+    visibility: 'private',
+    share_token: null,
+    library_status: null,
   },
   {
     id: 'deck-5',
@@ -1726,6 +2713,11 @@ export const mockDecks: Deck[] = [
     category: 'IELTS',
     is_public: true,
     created_at: '2026-05-20T00:00:00Z',
+    exam_board: null,
+    syllabus_code: null,
+    visibility: 'private',
+    share_token: null,
+    library_status: null,
   },
 ];
 
@@ -1777,11 +2769,29 @@ export let mockCardReviews: CardReview[] = [
 
 // ── Mock Exams & Grades ─────────────────────────────────────────────────────
 export const mockExams: Exam[] = [
-  { id: 'exam-1', curriculum_id: 'curr-1', title: 'IGCSE Physics Paper 2', exam_series: 'May/June 2027', exam_date: '2027-05-15T09:00:00Z', created_at: '2025-12-01T00:00:00Z' }
+  // IGCSE CIE Physics exams
+  { id: 'exam-cie-phys-0625-mj27', curriculum_id: 'curr-igcse-cie', subject_id: 'subj-cie-physics', title: 'IGCSE Physics Paper 2 (0625)', exam_series: 'May/June 2027', exam_date: '2027-05-15T09:00:00Z', created_at: '2025-12-01T00:00:00Z', exam_board: 'CAIE', syllabus_code: '0625', qualification: 'IGCSE', paper_code: 'P2', date_type: 'fixed', library_status: null },
+  { id: 'exam-cie-phys-0625-on27', curriculum_id: 'curr-igcse-cie', subject_id: 'subj-cie-physics', title: 'IGCSE Physics Paper 2 (0625)', exam_series: 'Oct/Nov 2027', exam_date: '2027-10-20T09:00:00Z', created_at: '2025-12-01T00:00:00Z', exam_board: 'CAIE', syllabus_code: '0625', qualification: 'IGCSE', paper_code: 'P2', date_type: 'fixed', library_status: null },
+  { id: 'exam-cie-phys-0625-mj26', curriculum_id: 'curr-igcse-cie', subject_id: 'subj-cie-physics', title: 'IGCSE Physics Paper 2 (0625)', exam_series: 'May/June 2026', exam_date: '2026-05-12T09:00:00Z', created_at: '2025-06-01T00:00:00Z', exam_board: 'CAIE', syllabus_code: '0625', qualification: 'IGCSE', paper_code: 'P2', date_type: 'fixed', library_status: null },
+  // IGCSE CIE Maths exams
+  { id: 'exam-cie-maths-0580-mj27', curriculum_id: 'curr-igcse-cie', subject_id: 'subj-cie-maths', title: 'IGCSE Mathematics Paper 2 (0580)', exam_series: 'May/June 2027', exam_date: '2027-05-20T09:00:00Z', created_at: '2025-12-01T00:00:00Z', exam_board: 'CAIE', syllabus_code: '0580', qualification: 'IGCSE', paper_code: 'P2', date_type: 'fixed', library_status: null },
+  { id: 'exam-cie-maths-0580-on27', curriculum_id: 'curr-igcse-cie', subject_id: 'subj-cie-maths', title: 'IGCSE Mathematics Paper 2 (0580)', exam_series: 'Oct/Nov 2027', exam_date: '2027-10-25T09:00:00Z', created_at: '2025-12-01T00:00:00Z', exam_board: 'CAIE', syllabus_code: '0580', qualification: 'IGCSE', paper_code: 'P2', date_type: 'fixed', library_status: null },
+  // IGCSE CIE CS exams
+  { id: 'exam-cie-cs-0478-mj27', curriculum_id: 'curr-igcse-cie', subject_id: 'subj-cie-cs', title: 'IGCSE Computer Science Paper 1 (0478)', exam_series: 'May/June 2027', exam_date: '2027-05-22T09:00:00Z', created_at: '2025-12-01T00:00:00Z', exam_board: 'CAIE', syllabus_code: '0478', qualification: 'IGCSE', paper_code: 'P1', date_type: 'fixed', library_status: null },
+  // IGCSE Edexcel Physics exams
+  { id: 'exam-edx-phys-4ph1-mj27', curriculum_id: 'curr-igcse-edx', subject_id: 'subj-edx-physics', title: 'IGCSE Physics Paper 1 (4PH1)', exam_series: 'May/June 2027', exam_date: '2027-05-18T09:00:00Z', created_at: '2025-12-01T00:00:00Z', exam_board: 'Edexcel', syllabus_code: '4PH1', qualification: 'IGCSE', paper_code: 'P1', date_type: 'fixed', library_status: null },
+  { id: 'exam-edx-phys-4ph1-on27', curriculum_id: 'curr-igcse-edx', subject_id: 'subj-edx-physics', title: 'IGCSE Physics Paper 1 (4PH1)', exam_series: 'Oct/Nov 2027', exam_date: '2027-10-22T09:00:00Z', created_at: '2025-12-01T00:00:00Z', exam_board: 'Edexcel', syllabus_code: '4PH1', qualification: 'IGCSE', paper_code: 'P1', date_type: 'fixed', library_status: null },
+  // Edexcel IAL Physics exams
+  { id: 'exam-ial-phys-wph11-mj27', curriculum_id: 'curr-ial-edx', subject_id: 'subj-ial-physics', title: 'IAL Physics Unit 1 (WPH11)', exam_series: 'May/June 2027', exam_date: '2027-05-10T09:00:00Z', created_at: '2025-12-01T00:00:00Z', exam_board: 'Edexcel', syllabus_code: 'WPH11', qualification: 'IAL', paper_code: 'U1', date_type: 'fixed', library_status: null },
+  { id: 'exam-ial-phys-wph11-on27', curriculum_id: 'curr-ial-edx', subject_id: 'subj-ial-physics', title: 'IAL Physics Unit 1 (WPH11)', exam_series: 'Oct/Nov 2027', exam_date: '2027-10-15T09:00:00Z', created_at: '2025-12-01T00:00:00Z', exam_board: 'Edexcel', syllabus_code: 'WPH11', qualification: 'IAL', paper_code: 'U1', date_type: 'fixed', library_status: null },
+  // IELTS exams
+  { id: 'exam-ielts-ac-mj27', curriculum_id: 'curr-ielts', subject_id: null, title: 'IELTS Academic', exam_series: 'June 2027', exam_date: '2027-06-10T09:00:00Z', created_at: '2025-12-01T00:00:00Z', exam_board: 'IELTS', syllabus_code: null, qualification: 'IELTS', paper_code: null, date_type: 'fixed', library_status: null },
+  // Legacy
+  { id: 'exam-1', curriculum_id: 'curr-1', subject_id: null, title: 'IGCSE Physics Paper 2', exam_series: 'May/June 2027', exam_date: '2027-05-15T09:00:00Z', created_at: '2025-12-01T00:00:00Z', exam_board: 'CAIE', syllabus_code: '0625', qualification: 'IGCSE', paper_code: 'P2', date_type: 'fixed', library_status: null },
 ];
 
 export const mockExamCountdowns: ExamCountdown[] = [
-  { id: 'ec-1', user_id: 'user-student-001', exam_id: 'exam-1', custom_title: 'Physics Finals!', target_date: '2027-05-15T09:00:00Z', priority_indicator: 'high', qualification_group: 'IGCSE', created_at: '2026-01-01T00:00:00Z' }
+  { id: 'ec-1', user_id: 'user-student-001', exam_id: 'exam-1', custom_title: 'Physics Finals!', target_date: '2027-05-15T09:00:00Z', priority_indicator: 'high', qualification_group: 'IGCSE', created_at: '2026-01-01T00:00:00Z', custom_date_override: null, share_token: null, is_custom: false }
 ];
 
 export let mockGradeBoundaries: ExamGradeBoundary[] = [
@@ -1809,7 +2819,7 @@ export function saveExamGradeBoundaries(boundaries: ExamGradeBoundary[], examRef
   mockGradeBoundaries = [...mockGradeBoundaries, ...sanitizedBoundaries];
 }
 
-export const mockGradeEntries = [
+export const mockGradeEntries: Record<string, any>[] = [
   { id: 'ge-1', user_id: 'user-student-001', exam_id: 'exam-1', component_name: 'Mock Exam', raw_score: 36, max_score: 40, weight: 1.0, predicted_grade: 'A*', created_at: '2026-04-01T00:00:00Z' }
 ];
 
@@ -1921,6 +2931,100 @@ export const mockClubSubjects: ClubSubject[] = [
   },
 ];
 
+// ── Academic Certifications ──────────────────────────────────────────────────
+
+export const mockCertifications: {
+  id: string;
+  user_id: string;
+  type: string;
+  subject?: string | null;
+  exam_board?: string | null;
+  grade?: string | null;
+  year?: number | null;
+  certificate_url?: string | null;
+  is_verified: boolean;
+  verified_by?: string | null;
+  is_hidden: boolean;
+  order_no?: number | null;
+  created_at: string;
+}[] = [
+  {
+    id: 'cert-1',
+    user_id: 'user-student-001',
+    type: 'igcse',
+    subject: 'Physics',
+    exam_board: 'Cambridge',
+    grade: 'A*',
+    year: 2025,
+    certificate_url: null,
+    is_verified: true,
+    verified_by: 'user-main-contributor-001',
+    is_hidden: false,
+    order_no: 1,
+    created_at: '2025-08-15T00:00:00Z',
+  },
+  {
+    id: 'cert-2',
+    user_id: 'user-student-001',
+    type: 'igcse',
+    subject: 'Mathematics',
+    exam_board: 'Cambridge',
+    grade: 'A*',
+    year: 2025,
+    certificate_url: null,
+    is_verified: true,
+    verified_by: 'user-main-contributor-001',
+    is_hidden: false,
+    order_no: 2,
+    created_at: '2025-08-15T00:00:00Z',
+  },
+  {
+    id: 'cert-3',
+    user_id: 'user-student-002',
+    type: 'ielts',
+    subject: null,
+    exam_board: 'British Council',
+    grade: 'Band 7.5',
+    year: 2026,
+    certificate_url: null,
+    is_verified: false,
+    verified_by: null,
+    is_hidden: false,
+    order_no: 1,
+    created_at: '2026-03-10T00:00:00Z',
+  },
+  {
+    id: 'cert-4',
+    user_id: 'user-contributor-001',
+    type: 'a_level',
+    subject: 'Physics',
+    exam_board: 'Edexcel',
+    grade: 'A',
+    year: 2023,
+    certificate_url: null,
+    is_verified: true,
+    verified_by: 'user-main-contributor-001',
+    is_hidden: false,
+    order_no: 1,
+    created_at: '2023-08-15T00:00:00Z',
+  },
+  {
+    id: 'cert-5',
+    user_id: 'user-contributor-001',
+    type: 'a_level',
+    subject: 'Mathematics',
+    exam_board: 'Edexcel',
+    grade: 'A*',
+    year: 2023,
+    certificate_url: null,
+    is_verified: true,
+    verified_by: 'user-main-contributor-001',
+    is_hidden: false,
+    order_no: 2,
+    created_at: '2023-08-15T00:00:00Z',
+  },
+];
+
 // ── Notifications (Useful Across Features) ──────────────────────────────────
 
 export const mockNotifications = [
@@ -1976,6 +3080,51 @@ export const getSubjectsByCurriculum = (curriculumId: string) =>
 
 export const getTopicsBySubject = (subjectId: string) =>
   mockTopics.filter(t => t.subject_id === subjectId);
+
+export const addTopic = (topic: {
+  subject_id: string;
+  title: string;
+  description: string;
+  syllabus_code?: string | null;
+  learning_objectives?: string | null;
+  order_no?: number;
+}) => {
+  const id = `top-new-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  const maxOrder = mockTopics
+    .filter(t => t.subject_id === topic.subject_id)
+    .reduce((max, t) => Math.max(max, t.order_no), 0);
+  const newTopic = {
+    id,
+    subject_id: topic.subject_id,
+    title: topic.title,
+    description: topic.description,
+    syllabus_code: topic.syllabus_code ?? null,
+    learning_objectives: topic.learning_objectives ?? null,
+    order_no: topic.order_no ?? maxOrder + 1,
+  };
+  mockTopics.push(newTopic);
+  return newTopic;
+};
+
+export const updateTopic = (topicId: string, updates: {
+  title?: string;
+  description?: string;
+  syllabus_code?: string | null;
+  learning_objectives?: string | null;
+  order_no?: number;
+}) => {
+  const idx = mockTopics.findIndex(t => t.id === topicId);
+  if (idx === -1) return null;
+  mockTopics[idx] = { ...mockTopics[idx], ...updates };
+  return mockTopics[idx];
+};
+
+export const deleteTopic = (topicId: string): boolean => {
+  const idx = mockTopics.findIndex(t => t.id === topicId);
+  if (idx === -1) return false;
+  mockTopics.splice(idx, 1);
+  return true;
+};
 
 // ── Classroom Queries ───────────────────────────────────────────────────────
 
@@ -2526,6 +3675,9 @@ export const createExamCountdown = (data: {
     priority_indicator: data.priority_indicator,
     qualification_group: data.qualification_group,
     created_at: new Date().toISOString(),
+    custom_date_override: null,
+    share_token: null,
+    is_custom: true,
   };
   mockExamCountdowns.push(countdown);
   return countdown;
@@ -2552,6 +3704,307 @@ export const getUserNotifications = (userId: string) =>
 
 export const getUserActivityFeed = (userId: string) =>
   mockActivityFeed.filter(a => a.user_id === userId);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Course Manager — Enrollments
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Get all enrollments for a user */
+export const getUserEnrollments = (userId: string) =>
+  mockUserEnrollments.filter(e => e.user_id === userId);
+
+/** Get enrollments by curriculum */
+export const getEnrollmentsByCurriculum = (userId: string, curriculumId: string) =>
+  mockUserEnrollments.filter(e => e.user_id === userId && e.curriculum_id === curriculumId);
+
+/** Enrol a user in a subject within a curriculum */
+export function enrollInSubject(data: {
+  user_id: string;
+  curriculum_id: string;
+  subject_id: string;
+  exam_id?: string | null;
+}): { success: true; enrollment: typeof mockUserEnrollments[0] } | { success: false; error: string } {
+  const existing = mockUserEnrollments.find(
+    e => e.user_id === data.user_id && e.curriculum_id === data.curriculum_id && e.subject_id === data.subject_id
+  );
+  if (existing) return { success: false, error: 'Already enrolled in this subject.' };
+
+  const enrollment = {
+    id: `enr-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    user_id: data.user_id,
+    curriculum_id: data.curriculum_id,
+    subject_id: data.subject_id,
+    exam_id: data.exam_id ?? null,
+    enrolled_at: new Date().toISOString(),
+  };
+  mockUserEnrollments.push(enrollment);
+  return { success: true, enrollment };
+}
+
+/** Remove a user's enrollment */
+export function unenrollFromSubject(enrollmentId: string): { success: true } | { success: false; error: string } {
+  const idx = mockUserEnrollments.findIndex(e => e.id === enrollmentId);
+  if (idx < 0) return { success: false, error: 'Enrollment not found.' };
+  mockUserEnrollments.splice(idx, 1);
+  return { success: true };
+}
+
+/** Update exam target for an enrollment */
+export function updateEnrollmentExamTarget(enrollmentId: string, examId: string | null): { success: true } | { success: false; error: string } {
+  const enrollment = mockUserEnrollments.find(e => e.id === enrollmentId);
+  if (!enrollment) return { success: false, error: 'Enrollment not found.' };
+  enrollment.exam_id = examId;
+  return { success: true };
+}
+
+/** Get all enrolled curriculum IDs for a user */
+export const getEnrolledCurriculumIds = (userId: string): string[] =>
+  [...new Set(mockUserEnrollments.filter(e => e.user_id === userId).map(e => e.curriculum_id))];
+
+/** Get all enrolled subjects for a user within a curriculum */
+export const getEnrolledSubjects = (userId: string, curriculumId: string) =>
+  mockUserEnrollments.filter(e => e.user_id === userId && e.curriculum_id === curriculumId);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Course Manager — Exam Overrides
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Get user's override for a specific exam (or null if none) */
+export const getUserExamOverride = (userId: string, examId: string) =>
+  mockUserExamOverrides.find(o => o.user_id === userId && o.exam_id === examId) ?? null;
+
+/** Upsert an exam override */
+export function upsertExamOverride(data: {
+  user_id: string;
+  exam_id: string;
+  custom_title?: string | null;
+  custom_exam_series?: string | null;
+  custom_exam_date?: string | null;
+}) {
+  const existing = mockUserExamOverrides.find(o => o.user_id === data.user_id && o.exam_id === data.exam_id);
+  if (existing) {
+    if (data.custom_title !== undefined) existing.custom_title = data.custom_title;
+    if (data.custom_exam_series !== undefined) existing.custom_exam_series = data.custom_exam_series;
+    if (data.custom_exam_date !== undefined) existing.custom_exam_date = data.custom_exam_date;
+    return { success: true, override: existing };
+  }
+  const override = {
+    id: `uov-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    user_id: data.user_id,
+    exam_id: data.exam_id,
+    custom_title: data.custom_title ?? null,
+    custom_exam_series: data.custom_exam_series ?? null,
+    custom_exam_date: data.custom_exam_date ?? null,
+  };
+  mockUserExamOverrides.push(override);
+  return { success: true, override };
+}
+
+/** Resolve the effective exam data: library defaults merged with user overrides */
+export function resolveExam(userId: string, examId: string): Exam | null {
+  const exam = getExam(examId);
+  if (!exam) return null;
+  const override = getUserExamOverride(userId, examId);
+  if (!override) return exam;
+  return {
+    ...exam,
+    title: override.custom_title ?? exam.title,
+    exam_series: override.custom_exam_series ?? exam.exam_series,
+    exam_date: override.custom_exam_date ?? exam.exam_date,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Course Manager — Exam History
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Get a user's completed exam history */
+export const getUserExamHistory = (userId: string) =>
+  mockUserExamHistory.filter(h => h.user_id === userId);
+
+/** Record a completed exam */
+export function recordExamHistory(data: {
+  user_id: string;
+  curriculum_id: string;
+  subject_id: string;
+  exam_id?: string | null;
+  exam_date: string;
+  result?: string | null;
+  is_mock?: boolean;
+  notes?: string | null;
+}) {
+  const entry = {
+    id: `eh-${Date.now()}`,
+    user_id: data.user_id,
+    curriculum_id: data.curriculum_id,
+    subject_id: data.subject_id,
+    exam_id: data.exam_id ?? null,
+    exam_date: data.exam_date,
+    result: data.result ?? null,
+    is_mock: data.is_mock ?? false,
+    notes: data.notes ?? null,
+    recorded_at: new Date().toISOString(),
+  };
+  mockUserExamHistory.push(entry);
+  return { success: true, entry };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Course Manager — Review Queue
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Get all review queue items, optionally filtered by status and type */
+export const getReviewQueue = (filters?: { status?: string; submissionType?: string }) =>
+  mockReviewQueue.filter(item => {
+    if (filters?.status && item.status !== filters.status) return false;
+    if (filters?.submissionType && item.submission_type !== filters.submissionType) return false;
+    return true;
+  });
+
+/** Get a single review queue item */
+export const getReviewQueueItem = (id: string) =>
+  mockReviewQueue.find(item => item.id === id);
+
+/** Submit a new item to the review queue */
+export function submitToReviewQueue(data: {
+  contributor_id: string;
+  submission_type: import('@/types').ReviewSubmissionType;
+  entity_id: string;
+  submitted_data: Record<string, unknown>;
+  is_update?: boolean;
+  published_entity_id?: string | null;
+}) {
+  const item: import('@/types').ReviewQueueItem = {
+    id: `rq-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    contributor_id: data.contributor_id,
+    submission_type: data.submission_type,
+    entity_id: data.entity_id,
+    submitted_data: data.submitted_data,
+    is_update: data.is_update ?? false,
+    published_entity_id: data.published_entity_id ?? null,
+    status: 'pending',
+    reviewer_id: null,
+    feedback: null,
+    submitted_at: new Date().toISOString(),
+    reviewed_at: null,
+  };
+  mockReviewQueue.push(item);
+  return { success: true, item };
+}
+
+/** Approve a review queue item */
+export function approveReviewItem(itemId: string, reviewerId: string): { success: true } | { success: false; error: string } {
+  const item = mockReviewQueue.find(i => i.id === itemId);
+  if (!item) return { success: false, error: 'Review item not found.' };
+  if (item.status !== 'pending') return { success: false, error: 'Item is not pending.' };
+  item.status = 'approved';
+  item.reviewer_id = reviewerId;
+  item.reviewed_at = new Date().toISOString();
+  return { success: true };
+}
+
+/** Reject a review queue item with feedback */
+export function rejectReviewItem(
+  itemId: string,
+  reviewerId: string,
+  feedback: import('@/types').ReviewFeedback
+): { success: true } | { success: false; error: string } {
+  const item = mockReviewQueue.find(i => i.id === itemId);
+  if (!item) return { success: false, error: 'Review item not found.' };
+  if (item.status !== 'pending') return { success: false, error: 'Item is not pending.' };
+  item.status = 'rejected';
+  item.reviewer_id = reviewerId;
+  item.feedback = feedback;
+  item.reviewed_at = new Date().toISOString();
+  return { success: true };
+}
+
+/** Edit a review queue item's submitted data (main-contributor editing before approval) */
+export function editReviewItemData(itemId: string, data: Record<string, unknown>): { success: true } | { success: false; error: string } {
+  const item = mockReviewQueue.find(i => i.id === itemId);
+  if (!item) return { success: false, error: 'Review item not found.' };
+  if (item.status !== 'pending') return { success: false, error: 'Can only edit pending items.' };
+  item.submitted_data = { ...item.submitted_data, ...data };
+  return { success: true };
+}
+
+/** Get review queue counts by type for dashboard stats */
+export const getReviewQueueCounts = () => {
+  const pending = mockReviewQueue.filter(i => i.status === 'pending');
+  return {
+    total: pending.length,
+    byType: {
+      curriculum: pending.filter(i => i.submission_type === 'curriculum').length,
+      subject: pending.filter(i => i.submission_type === 'subject').length,
+      topic: pending.filter(i => i.submission_type === 'topic').length,
+      note: pending.filter(i => i.submission_type === 'note').length,
+      resource: pending.filter(i => i.submission_type === 'resource').length,
+      flashcard_deck: pending.filter(i => i.submission_type === 'flashcard_deck').length,
+      exam: pending.filter(i => i.submission_type === 'exam').length,
+      calculator: pending.filter(i => i.submission_type === 'calculator').length,
+      countdown: pending.filter(i => i.submission_type === 'countdown').length,
+    },
+  };
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Course Manager — Version History
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Get version history for an entity */
+export const getVersionHistory = (entityType: string, entityId: string) =>
+  mockVersionHistory.filter(v => v.entity_type === entityType && v.entity_id === entityId)
+    .sort((a, b) => b.version_number - a.version_number);
+
+/** Record a new version entry */
+export function recordVersion(data: {
+  entity_type: import('@/types').ReviewSubmissionType;
+  entity_id: string;
+  changes: import('@/types').FieldChange[];
+  changed_by: string;
+  review_item_id?: string | null;
+}) {
+  const existingVersions = mockVersionHistory.filter(v => v.entity_type === data.entity_type && v.entity_id === data.entity_id);
+  const versionNumber = existingVersions.length + 1;
+  const entry: import('@/types').VersionEntry = {
+    id: `ver-${Date.now()}`,
+    entity_type: data.entity_type,
+    entity_id: data.entity_id,
+    version_number: versionNumber,
+    changes: data.changes,
+    changed_by: data.changed_by,
+    review_item_id: data.review_item_id ?? null,
+    changed_at: new Date().toISOString(),
+  };
+  mockVersionHistory.push(entry);
+  return { success: true, entry };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Curriculum Library — CRUD
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Get all published curricula */
+export const getPublishedCurriculums = () =>
+  mockCurriculums.filter(c => c.is_public && c.status === 'published');
+
+/** Get all public subjects for a curriculum */
+export const getPublicSubjects = (curriculumId: string) =>
+  mockSubjects.filter(s => s.curriculum_id === curriculumId);
+
+/** Get exams by curriculum and optionally subject */
+export const getExamsByCurriculum = (curriculumId: string, subjectId?: string | null) =>
+  mockExams.filter(e => {
+    if (e.curriculum_id !== curriculumId) return false;
+    if (subjectId && e.subject_id !== subjectId) return false;
+    return true;
+  });
+
+/** Get all subjects (public) */
+export const getAllSubjects = () => [...mockSubjects];
+
+/** Get all curricula (public) */
+export const getAllCurriculums = () => [...mockCurriculums];
 
 // ── Flashcard Query Helpers ──────────────────────────────────────────────────
 
@@ -2604,6 +4057,10 @@ export function createDeck(data: {
   curriculum_id?: string;
   subject_id?: string;
   is_public?: boolean;
+  exam_board?: string;
+  syllabus_code?: string;
+  visibility?: string;
+  library_status?: string | null;
 }): Deck {
   const deck: Deck = {
     id: `deck-${Date.now()}`,
@@ -2615,6 +4072,11 @@ export function createDeck(data: {
     category: data.category || null,
     is_public: data.is_public ?? false,
     created_at: new Date().toISOString(),
+    exam_board: data.exam_board || null,
+    syllabus_code: data.syllabus_code || null,
+    visibility: (data.visibility as Deck['visibility']) || 'private',
+    share_token: null,
+    library_status: (data.library_status as Deck['library_status']) ?? null,
   };
   mockDecks.unshift(deck);
   return deck;
@@ -3587,3 +5049,288 @@ export function deleteOrgTimelineItem(id: string): { success: true } | { success
   mockTimelineItems.splice(idx, 1);
   return { success: true };
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Library System — Helper Functions
+// These power the Library browser pages and cross-feature connections.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Get all flashcard decks approved for the library */
+export function getLibraryDecks(): Deck[] {
+  return mockDecks.filter(
+    d => d.library_status === 'approved' && d.is_public
+  );
+}
+
+/** Get all exams approved for the library */
+export function getLibraryExams(): Exam[] {
+  return mockExams.filter(
+    e => e.library_status === 'approved'
+  );
+}
+
+/**
+ * Get library decks filtered to match a user's enrolled courses.
+ * Uses exam_board + syllabus_code matching.
+ * Falls back to all library decks if user has no enrollments.
+ */
+export function getDecksByEnrolledCourses(userId: string): Deck[] {
+  const userEnrollments = getUserEnrollments(userId);
+  if (userEnrollments.length === 0) return getLibraryDecks();
+
+  const enrolledCurriculumIds = new Set(userEnrollments.map(e => e.curriculum_id));
+  const enrolledCurriculums = mockCurriculums.filter(c => enrolledCurriculumIds.has(c.id));
+  const enrolledBoards = new Set(enrolledCurriculums.map(c => c.exam_board).filter(Boolean));
+
+  const libraryDecks = getLibraryDecks();
+  const filtered = libraryDecks.filter(d => {
+    const board = d.exam_board;
+    return board && enrolledBoards.has(board);
+  });
+
+  return filtered.length > 0 ? filtered : libraryDecks;
+}
+
+/**
+ * Get library notes filtered to match a user's enrolled courses.
+ * Uses curriculum_id or exam_board matching.
+ * Falls back to all public approved notes.
+ */
+export function getNotesByEnrolledCourses(userId: string): Note[] {
+  const userEnrollments = getUserEnrollments(userId);
+  const allPublicNotes = mockNotes.filter(n => n.status === 'approved' && n.visibility === 'public');
+
+  if (userEnrollments.length === 0) return allPublicNotes;
+
+  const enrolledCurriculumIds = new Set(userEnrollments.map(e => e.curriculum_id));
+  const enrolledCurriculums = mockCurriculums.filter(c => enrolledCurriculumIds.has(c.id));
+  const enrolledBoards = new Set(enrolledCurriculums.map(c => c.exam_board).filter(Boolean));
+
+  const filtered = allPublicNotes.filter(n => {
+    if (n.curriculum_id && enrolledCurriculumIds.has(n.curriculum_id)) return true;
+    const board = n.exam_board ?? null;
+    return board && enrolledBoards.has(board);
+  });
+
+  return filtered.length > 0 ? filtered : allPublicNotes;
+}
+
+/** Get library exams filtered to match a user's enrolled courses */
+export function getExamsByEnrolledCourses(userId: string): Exam[] {
+  const userEnrollments = getUserEnrollments(userId);
+  const allLibraryExams = getLibraryExams();
+
+  if (userEnrollments.length === 0) return allLibraryExams;
+
+  const enrolledCurriculumIds = new Set(userEnrollments.map(e => e.curriculum_id));
+  const enrolledCurriculums = mockCurriculums.filter(c => enrolledCurriculumIds.has(c.id));
+  const enrolledBoards = new Set(enrolledCurriculums.map(c => c.exam_board).filter(Boolean));
+
+  const filtered = allLibraryExams.filter(e => {
+    const board = e.exam_board;
+    return board && enrolledBoards.has(board);
+  });
+
+  return filtered.length > 0 ? filtered : allLibraryExams;
+}
+
+/**
+ * Submit a user-owned entity to the library for review.
+ * Sets the entity's library_status to 'pending_review' and creates a review queue entry.
+ */
+export function submitToLibrary(
+  entityType: 'flashcard_deck' | 'exam' | 'countdown',
+  entityId: string,
+  contributorId: string
+): { success: true } | { success: false; error: string } {
+  // Validate contributor role
+  const profile = mockProfiles.find(p => p.id === contributorId);
+  if (!profile || !['contributor', 'main_contributor'].includes(profile.role)) {
+    return { success: false, error: 'Only contributors can submit to the library.' };
+  }
+
+  // Update entity status
+  let entity: Record<string, unknown> | undefined;
+  if (entityType === 'flashcard_deck') {
+    entity = mockDecks.find(d => d.id === entityId) as Record<string, unknown> | undefined;
+  } else if (entityType === 'exam') {
+    entity = mockExams.find(e => e.id === entityId) as Record<string, unknown> | undefined;
+  }
+
+  if (!entity) return { success: false, error: 'Entity not found.' };
+  entity.library_status = 'pending_review';
+
+  // Create review queue entry
+  const item: ReviewQueueItem = {
+    id: `review-${Date.now()}`,
+    contributor_id: contributorId,
+    submission_type: entityType,
+    entity_id: entityId,
+    submitted_data: { ...entity },
+    is_update: false,
+    published_entity_id: null,
+    status: 'pending',
+    reviewer_id: null,
+    feedback: null,
+    submitted_at: new Date().toISOString(),
+    reviewed_at: null,
+  };
+  mockReviewQueue.push(item);
+
+  return { success: true };
+}
+
+/** Generate or retrieve a share token for a deck */
+export function getDeckShareToken(deckId: string): string | null {
+  const deck = mockDecks.find(d => d.id === deckId) as Record<string, unknown> | undefined;
+  if (!deck) return null;
+  if (!deck.share_token) {
+    deck.share_token = `share-deck-${deckId.slice(-8)}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+  return deck.share_token as string;
+}
+
+/** Get a deck by share token (read-only, for shared link pages) */
+export function getSharedDeck(token: string): Deck | null {
+  return mockDecks.find(d => d.share_token === token) ?? null;
+}
+
+/** Generate or retrieve a share token for a countdown */
+export function getCountdownShareToken(countdownId: string): string | null {
+  const c = mockExamCountdowns?.find(cd => cd.id === countdownId) ?? null;
+  if (!c) return null;
+  if (!c.share_token) {
+    c.share_token = `share-cd-${countdownId.slice(-8)}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+  return c.share_token as string;
+}
+
+/** Get a note by its share token (for link-shared private notes) */
+export function getNoteByShareToken(token: string): Note | null {
+  return mockNotes.find(n => n.share_token === token) ?? null;
+}
+
+/**
+ * Get a unified workspace summary for a user.
+ * Returns their enrollments, notes (created + saved), decks, and countdowns.
+ */
+export function getUserWorkspace(userId: string) {
+  return {
+    enrollments: getUserEnrollments(userId),
+    createdNotes: mockNotes.filter(n => n.contributor_id === userId),
+    savedNotes: mockUserSavedNotes
+      .filter(s => s.user_id === userId)
+      .map(s => mockNotes.find(n => n.id === s.note_id))
+      .filter(Boolean) as Note[],
+    decks: getDecksByUser(userId),
+    countdowns: getUserCountdowns(userId),
+  };
+}
+
+/**
+ * Auto-populate Lesson Tracker topic progress stubs when a user enrolls in a curriculum.
+ * Creates progress entries for all topics in all subjects of the curriculum.
+ * Called after successful enrollment.
+ */
+export function autoPopulateLessonTracker(userId: string, curriculumId: string): { success: true; created: number } {
+  const subjects = mockSubjects.filter(s => s.curriculum_id === curriculumId);
+  let created = 0;
+
+  for (const subject of subjects) {
+    const topics = mockTopics.filter(t => t.subject_id === subject.id);
+    for (const topic of topics) {
+      const alreadyExists = mockTopicProgress.some(
+        p => p.user_id === userId && p.topic_id === topic.id
+      );
+      if (!alreadyExists) {
+        mockTopicProgress.push({
+          id: `tp-${userId.slice(-4)}-${topic.id.slice(-4)}-${Date.now()}`,
+          user_id: userId,
+          topic_id: topic.id,
+          status: 'not_started',
+          confidence_level: 0,
+          updated_at: new Date().toISOString(),
+        });
+        created++;
+      }
+    }
+  }
+
+  return { success: true, created };
+}
+
+/**
+ * Auto-populate Grade Calculator entries when a user enrolls in a curriculum.
+ * Creates grade_entry stubs matching the curriculum's grading system.
+ * For IAL: one entry per unit. For Cambridge: one entry per paper. For IELTS: four module entries.
+ */
+export function autoPopulateGradeCalculator(userId: string, curriculumId: string): { success: true; created: number } {
+  const curriculum = mockCurriculums.find(c => c.id === curriculumId);
+  if (!curriculum) return { success: true, created: 0 };
+
+  const gradingSystem = (curriculum as Record<string, unknown>).grading_system as string | null;
+  const exams = mockExams.filter(e => e.curriculum_id === curriculumId);
+  let created = 0;
+
+  for (const exam of exams) {
+    const alreadyExists = mockGradeEntries.some(
+      g => g.user_id === userId && g.exam_id === exam.id
+    );
+    if (!alreadyExists) {
+      // Determine component structure based on grading system
+      if (gradingSystem === 'band' && exam.title.toLowerCase().includes('ielts')) {
+        // IELTS: four module entries
+        const modules = ['Reading', 'Writing', 'Listening', 'Speaking'];
+        for (const mod of modules) {
+          mockGradeEntries.push({
+            id: `ge-${userId.slice(-4)}-${mod.slice(0, 3)}-${Date.now()}`,
+            user_id: userId,
+            exam_id: exam.id,
+            component_name: mod,
+            raw_score: null,
+            max_score: 9,
+            weight: 0.25,
+            predicted_grade: null,
+            created_at: new Date().toISOString(),
+          });
+          created++;
+        }
+      } else {
+        // Default: one entry per exam
+        mockGradeEntries.push({
+          id: `ge-${userId.slice(-4)}-${exam.id.slice(-4)}-${Date.now()}`,
+          user_id: userId,
+          exam_id: exam.id,
+          component_name: exam.title,
+          raw_score: null,
+          max_score: null,
+          weight: 1,
+          predicted_grade: null,
+          created_at: new Date().toISOString(),
+        });
+        created++;
+      }
+    }
+  }
+
+  return { success: true, created };
+}
+
+/** Get grade entries for a user (for Grade Calculator) */
+export function getGradeEntriesByUser(userId: string): Record<string, any>[] {
+  return mockGradeEntries.filter(g => g.user_id === userId);
+}
+
+/** Update a grade entry's raw score and predicted grade */
+export function updateGradeEntry(
+  entryId: string,
+  data: { raw_score?: number | null; predicted_grade?: string | null }
+): { success: true } | { success: false; error: string } {
+  const entry = mockGradeEntries.find(g => g.id === entryId);
+  if (!entry) return { success: false, error: 'Grade entry not found.' };
+  if (data.raw_score !== undefined) entry.raw_score = data.raw_score;
+  if (data.predicted_grade !== undefined) entry.predicted_grade = data.predicted_grade;
+  return { success: true };
+}
+
+
