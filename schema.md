@@ -384,6 +384,7 @@
 > **`type` values:** `"pdf"` | `"video"` | `"document"` | `"link"` | `"image"`
 
 ---
+
 ## Table `clubs`
 
 ### Columns
@@ -627,17 +628,33 @@
 | Name | Type | Constraints |
 |------|------|-------------|
 | `id` | `uuid` | Primary |
-| `user_id` | `uuid` |  |
-| `title` | `text` |  |
-| `event_type` | `text` |  Nullable |
-| `start_time` | `timestamp` |  Nullable |
-| `end_time` | `timestamp` |  Nullable |
-| `all_day` | `bool` |  Nullable |
-| `is_recurring` | `bool` |  Nullable |
-| `recurrence_pattern` | `jsonb` |  Nullable |
-| `color_code` | `text` |  Nullable |
-| `metadata` | `jsonb` |  Nullable |
-| `created_at` | `timestamp` |  Nullable |
+| `user_id` | `uuid` | FK → profiles.id |
+| `title` | `text` | |
+| `description` | `text` | Nullable |
+| `event_type` | `text` | Nullable |
+| `subject` | `text` | Nullable |
+| `location` | `text` | Nullable |
+| `start_time` | `timestamp` | Nullable |
+| `end_time` | `timestamp` | Nullable |
+| `all_day` | `bool` | Default: false |
+| `is_recurring` | `bool` | Default: false |
+| `recurrence_rule` | `jsonb` | Nullable |
+| `color_code` | `text` | Nullable |
+| `is_todo` | `bool` | Default: false |
+| `is_completed` | `bool` | Default: false |
+| `completed_at` | `timestamp` | Nullable |
+| `event_source` | `text` | Default: 'user' |
+| `source_id` | `text` | Nullable |
+| `metadata` | `jsonb` | Nullable |
+| `created_at` | `timestamp` | Nullable |
+
+> **`event_type` values:** `"study"` | `"class"` | `"school"` | `"gym"` | `"exam"` | `"break"` | `"deadline"` | `"club_event"`
+
+> **`event_source` values:** `"user"` (default, user-created) | `"exam_countdown"` (sourced from exam_countdowns) | `"assignment"` (sourced from assignments) | `"club_event"` (sourced from club_events) | `"club_milestone"` (sourced from club_milestones). Events with a non-`"user"` source are **read-only** on the timetable — they cannot be moved or deleted via the timetable UI.
+
+> **`recurrence_rule` JSONB structure:** `{ frequency: ("daily" | "weekly" | "monthly" | "custom"), interval: number, days_of_week?: number[] (0=Sun…6=Sat, for weekly), end_date?: string | null }`. Example — every Monday: `{ frequency: "weekly", interval: 1, days_of_week: [1] }`. Every 2 weeks: `{ frequency: "custom", interval: 14 }`.
+
+> **Integration note:** External events from `exam_countdowns`, `assignments`, `club_events`, and `club_milestones` are **not stored** in `timetable_events`. They are computed at query time by `getIntegratedTimetableEvents()` in the database facade and merged into the calendar view as virtual read-only events. This avoids duplication and ensures changes to the source entity are immediately reflected in the timetable.
 
 ---
 

@@ -59,7 +59,7 @@ function MissionSection() {
           conquered the academic hurdles you are facing right now. Because our
           tutors come from a wide variety of prestigious academic pathways —
           including A-Levels, Polytechnics, University Foundation programs, the
-          OSSD, and top UK Universities — they bring rich, firsthand experience
+          OSSD and top UK Universities — they bring rich, firsthand experience
           to every lesson.
         </p>
       </div>
@@ -75,7 +75,7 @@ function MissionSection() {
         <p className="text-foreground-secondary leading-relaxed text-base">
           When you learn with us, you are not just memorizing a syllabus. You
           are connecting with high-achieving seniors who understand your exact
-          struggles. Whether you need rigorous IGCSE exam prep or real-world
+          struggles. Whether you need rigorous IGCSE exam preparation or real-world
           advice on transitioning to higher education abroad, our team provides
           the academic strategies and peer mentorship you need to succeed
           globally.
@@ -107,7 +107,7 @@ function TeamSection() {
           Meet Our Team
         </h2>
         <p className="text-foreground-secondary">
-          A diverse network of scholars, educators, and student leaders working
+          A diverse network of scholars, educators and student leaders working
           together to build bridges to global education.
         </p>
       </div>
