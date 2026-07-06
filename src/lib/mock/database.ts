@@ -1133,30 +1133,36 @@ const examReviewSubmissions: ExamReviewSubmissionRecord[] = [
       subject_code: '0625',
       series: 'May/June 2027 (V2)',
       papers: [
-        { name: 'Paper 2 (Multiple Choice)', max_mark: 40, weight: 30, paper_boundaries: [
-          { grade: 'A*', min_mark: 36 },
-          { grade: 'A', min_mark: 32 },
-          { grade: 'B', min_mark: 28 },
-          { grade: 'C', min_mark: 24 },
-          { grade: 'D', min_mark: 20 },
-          { grade: 'E', min_mark: 16 },
-        ]},
-        { name: 'Paper 4 (Theory)', max_mark: 80, weight: 50, paper_boundaries: [
-          { grade: 'A*', min_mark: 72 },
-          { grade: 'A', min_mark: 64 },
-          { grade: 'B', min_mark: 56 },
-          { grade: 'C', min_mark: 48 },
-          { grade: 'D', min_mark: 40 },
-          { grade: 'E', min_mark: 32 },
-        ]},
-        { name: 'Paper 6 (Practical)', max_mark: 40, weight: 20, paper_boundaries: [
-          { grade: 'A*', min_mark: 36 },
-          { grade: 'A', min_mark: 32 },
-          { grade: 'B', min_mark: 28 },
-          { grade: 'C', min_mark: 24 },
-          { grade: 'D', min_mark: 20 },
-          { grade: 'E', min_mark: 16 },
-        ]},
+        {
+          name: 'Paper 2 (Multiple Choice)', max_mark: 40, weight: 30, paper_boundaries: [
+            { grade: 'A*', min_mark: 36 },
+            { grade: 'A', min_mark: 32 },
+            { grade: 'B', min_mark: 28 },
+            { grade: 'C', min_mark: 24 },
+            { grade: 'D', min_mark: 20 },
+            { grade: 'E', min_mark: 16 },
+          ]
+        },
+        {
+          name: 'Paper 4 (Theory)', max_mark: 80, weight: 50, paper_boundaries: [
+            { grade: 'A*', min_mark: 72 },
+            { grade: 'A', min_mark: 64 },
+            { grade: 'B', min_mark: 56 },
+            { grade: 'C', min_mark: 48 },
+            { grade: 'D', min_mark: 40 },
+            { grade: 'E', min_mark: 32 },
+          ]
+        },
+        {
+          name: 'Paper 6 (Practical)', max_mark: 40, weight: 20, paper_boundaries: [
+            { grade: 'A*', min_mark: 36 },
+            { grade: 'A', min_mark: 32 },
+            { grade: 'B', min_mark: 28 },
+            { grade: 'C', min_mark: 24 },
+            { grade: 'D', min_mark: 20 },
+            { grade: 'E', min_mark: 16 },
+          ]
+        },
       ],
       grade_boundaries: [
         { grade: 'A*', min_mark: 136 },
@@ -1839,13 +1845,13 @@ export const mockClubMembers: ClubMember[] = [
   { id: 'clm-2', club_id: 'club-1', user_id: 'user-teacher-001', role: 'moderator', membership_status: 'active', joined_at: '2026-03-10T00:00:00Z' },
   { id: 'clm-3', club_id: 'club-1', user_id: 'user-student-001', role: 'member', membership_status: 'active', joined_at: '2026-01-15T00:00:00Z' },
   { id: 'clm-4', club_id: 'club-1', user_id: 'user-student-002', role: 'member', membership_status: 'active', joined_at: '2026-05-20T00:00:00Z' },
-  
+
   // Club 2 - Multiple admins
   { id: 'clm-5', club_id: 'club-2', user_id: 'user-contributor-002', role: 'admin', membership_status: 'active', joined_at: '2026-02-14T00:00:00Z' },
   { id: 'clm-6', club_id: 'club-2', user_id: 'user-contributor-003', role: 'admin', membership_status: 'active', joined_at: '2026-03-01T00:00:00Z' },
   { id: 'clm-7', club_id: 'club-2', user_id: 'user-teacher-002', role: 'moderator', membership_status: 'active', joined_at: '2026-04-10T00:00:00Z' },
   { id: 'clm-8', club_id: 'club-2', user_id: 'user-student-003', role: 'member', membership_status: 'active', joined_at: '2026-05-05T00:00:00Z' },
-  
+
   // Club 3 - Single admin with moderators
   { id: 'clm-9', club_id: 'club-3', user_id: 'user-main-contributor-001', role: 'admin', membership_status: 'active', joined_at: '2026-04-05T00:00:00Z' },
   { id: 'clm-10', club_id: 'club-3', user_id: 'user-contributor-004', role: 'moderator', membership_status: 'active', joined_at: '2026-05-15T00:00:00Z' },
@@ -1897,57 +1903,57 @@ export const mockClubProjects: {
   created_at: string;
   updated_at?: string | null;
 }[] = [
-  {
-    id: 'cp-1',
-    club_id: 'club-1',
-    created_by: 'user-contributor-001',
-    title: 'Newton\'s Laws Demo App',
-    description: 'Interactive web app demonstrating all three laws of motion with real-time physics simulations.',
-    status: 'completed',
-    cover_image_url: null,
-    links: [
-      { label: 'GitHub', url: 'https://github.com/theants/newton-demo' },
-      { label: 'Live Demo', url: 'https://newton-demo.theants.app' },
-    ],
-    contributors: ['user-contributor-001', 'user-student-001'],
-    tags: ['physics', 'react', 'simulation'],
-    created_at: '2026-04-15T00:00:00Z',
-    updated_at: '2026-06-01T00:00:00Z',
-  },
-  {
-    id: 'cp-2',
-    club_id: 'club-2',
-    created_by: 'user-contributor-002',
-    title: 'Organic Chemistry Flashcards',
-    description: 'A curated deck covering all IGCSE organic chemistry reaction mechanisms and functional groups.',
-    status: 'active',
-    cover_image_url: null,
-    links: [
-      { label: 'View Deck', url: 'https://theants.app/flashcards/org-chem' },
-    ],
-    contributors: ['user-contributor-002'],
-    tags: ['chemistry', 'organic', 'flashcards', 'igcse'],
-    created_at: '2026-05-20T00:00:00Z',
-    updated_at: null,
-  },
-  {
-    id: 'cp-3',
-    club_id: 'club-1',
-    created_by: 'user-student-001',
-    title: 'Physics Lab Report Template',
-    description: 'Standardised LaTeX template for IGCSE physics lab reports with pre-built sections.',
-    status: 'completed',
-    cover_image_url: null,
-    links: [
-      { label: 'GitHub', url: 'https://github.com/theants/phys-lab-template' },
-      { label: 'Overleaf', url: 'https://overleaf.com/read/phys-template' },
-    ],
-    contributors: ['user-student-001'],
-    tags: ['physics', 'latex', 'template', 'igcse'],
-    created_at: '2026-06-01T00:00:00Z',
-    updated_at: null,
-  },
-];
+    {
+      id: 'cp-1',
+      club_id: 'club-1',
+      created_by: 'user-contributor-001',
+      title: 'Newton\'s Laws Demo App',
+      description: 'Interactive web app demonstrating all three laws of motion with real-time physics simulations.',
+      status: 'completed',
+      cover_image_url: null,
+      links: [
+        { label: 'GitHub', url: 'https://github.com/theants/newton-demo' },
+        { label: 'Live Demo', url: 'https://newton-demo.theants.app' },
+      ],
+      contributors: ['user-contributor-001', 'user-student-001'],
+      tags: ['physics', 'react', 'simulation'],
+      created_at: '2026-04-15T00:00:00Z',
+      updated_at: '2026-06-01T00:00:00Z',
+    },
+    {
+      id: 'cp-2',
+      club_id: 'club-2',
+      created_by: 'user-contributor-002',
+      title: 'Organic Chemistry Flashcards',
+      description: 'A curated deck covering all IGCSE organic chemistry reaction mechanisms and functional groups.',
+      status: 'active',
+      cover_image_url: null,
+      links: [
+        { label: 'View Deck', url: 'https://theants.app/flashcards/org-chem' },
+      ],
+      contributors: ['user-contributor-002'],
+      tags: ['chemistry', 'organic', 'flashcards', 'igcse'],
+      created_at: '2026-05-20T00:00:00Z',
+      updated_at: null,
+    },
+    {
+      id: 'cp-3',
+      club_id: 'club-1',
+      created_by: 'user-student-001',
+      title: 'Physics Lab Report Template',
+      description: 'Standardised LaTeX template for IGCSE physics lab reports with pre-built sections.',
+      status: 'completed',
+      cover_image_url: null,
+      links: [
+        { label: 'GitHub', url: 'https://github.com/theants/phys-lab-template' },
+        { label: 'Overleaf', url: 'https://overleaf.com/read/phys-template' },
+      ],
+      contributors: ['user-student-001'],
+      tags: ['physics', 'latex', 'template', 'igcse'],
+      created_at: '2026-06-01T00:00:00Z',
+      updated_at: null,
+    },
+  ];
 
 export const mockClubEvents: {
   id: string;
@@ -1958,43 +1964,43 @@ export const mockClubEvents: {
   event_date: string;
   created_at: string;
 }[] = [
-  {
-    id: 'ce-1',
-    club_id: 'club-1',
-    created_by: 'user-contributor-001',
-    title: 'Physics Olympiad Prep Session',
-    description: 'Group study session covering past Olympiad problems — bring your own solutions to discuss.',
-    event_date: '2026-07-10T14:00:00Z',
-    created_at: '2026-06-25T08:00:00Z',
-  },
-  {
-    id: 'ce-2',
-    club_id: 'club-2',
-    created_by: 'user-contributor-002',
-    title: 'Chemistry Lab Safety Workshop',
-    description: 'Mandatory refresher on lab safety protocols before the summer practical sessions.',
-    event_date: '2026-07-05T10:00:00Z',
-    created_at: '2026-06-20T09:00:00Z',
-  },
-  {
-    id: 'ce-3',
-    club_id: 'club-4',
-    created_by: 'user-teacher-002',
-    title: 'Poetry Reading Night',
-    description: 'Open mic session — read your own work or a favourite poem. All genres welcome.',
-    event_date: '2026-07-15T18:00:00Z',
-    created_at: '2026-06-22T12:00:00Z',
-  },
-  {
-    id: 'ce-4',
-    club_id: 'club-5',
-    created_by: 'user-contributor-001',
-    title: 'Mock Olympiad Round 1',
-    description: 'Timed mock competition under real Olympiad conditions. Prizes for top 3!',
-    event_date: '2026-07-20T09:00:00Z',
-    created_at: '2026-06-18T10:00:00Z',
-  },
-];
+    {
+      id: 'ce-1',
+      club_id: 'club-1',
+      created_by: 'user-contributor-001',
+      title: 'Physics Olympiad Prep Session',
+      description: 'Group study session covering past Olympiad problems — bring your own solutions to discuss.',
+      event_date: '2026-07-10T14:00:00Z',
+      created_at: '2026-06-25T08:00:00Z',
+    },
+    {
+      id: 'ce-2',
+      club_id: 'club-2',
+      created_by: 'user-contributor-002',
+      title: 'Chemistry Lab Safety Workshop',
+      description: 'Mandatory refresher on lab safety protocols before the summer practical sessions.',
+      event_date: '2026-07-05T10:00:00Z',
+      created_at: '2026-06-20T09:00:00Z',
+    },
+    {
+      id: 'ce-3',
+      club_id: 'club-4',
+      created_by: 'user-teacher-002',
+      title: 'Poetry Reading Night',
+      description: 'Open mic session — read your own work or a favourite poem. All genres welcome.',
+      event_date: '2026-07-15T18:00:00Z',
+      created_at: '2026-06-22T12:00:00Z',
+    },
+    {
+      id: 'ce-4',
+      club_id: 'club-5',
+      created_by: 'user-contributor-001',
+      title: 'Mock Olympiad Round 1',
+      description: 'Timed mock competition under real Olympiad conditions. Prizes for top 3!',
+      event_date: '2026-07-20T09:00:00Z',
+      created_at: '2026-06-18T10:00:00Z',
+    },
+  ];
 
 // ── Club Milestones ─────────────────────────────────────────────────────────
 
@@ -2010,82 +2016,82 @@ export const mockClubMilestones: {
   created_at: string;
   order_no?: number | null;
 }[] = [
-  // Club 1 milestones
-  {
-    id: 'cms-1',
-    club_id: 'club-1',
-    title: 'Launch Physics Demo App',
-    description: 'Complete and publish the Newton\'s Laws interactive demo app.',
-    status: 'completed',
-    target_date: '2026-06-01T00:00:00Z',
-    completed_at: '2026-06-01T00:00:00Z',
-    created_by: 'user-contributor-001',
-    created_at: '2026-04-01T00:00:00Z',
-    order_no: 1,
-  },
-  {
-    id: 'cms-2',
-    club_id: 'club-1',
-    title: 'Reach 50 Club Members',
-    description: 'Grow the community to 50 active members through outreach and events.',
-    status: 'in_progress',
-    target_date: '2026-08-01T00:00:00Z',
-    completed_at: null,
-    created_by: 'user-contributor-001',
-    created_at: '2026-04-01T00:00:00Z',
-    order_no: 2,
-  },
-  {
-    id: 'cms-3',
-    club_id: 'club-1',
-    title: 'Host Monthly Science Fair',
-    description: 'Organize a monthly science fair where members present projects and experiments.',
-    status: 'planned',
-    target_date: '2026-09-01T00:00:00Z',
-    completed_at: null,
-    created_by: 'user-contributor-001',
-    created_at: '2026-05-15T00:00:00Z',
-    order_no: 3,
-  },
-  // Club 2 milestones
-  {
-    id: 'cms-4',
-    club_id: 'club-2',
-    title: 'Complete Organic Chemistry Deck',
-    description: 'Finish and publish the comprehensive IGCSE organic chemistry flashcard deck.',
-    status: 'completed',
-    target_date: '2026-05-20T00:00:00Z',
-    completed_at: '2026-05-20T00:00:00Z',
-    created_by: 'user-contributor-002',
-    created_at: '2026-04-10T00:00:00Z',
-    order_no: 1,
-  },
-  {
-    id: 'cms-5',
-    club_id: 'club-2',
-    title: 'Lab Safety Workshop',
-    description: 'Conduct the mandatory lab safety refresher workshop before summer practicals.',
-    status: 'completed',
-    target_date: '2026-07-05T00:00:00Z',
-    completed_at: '2026-07-05T00:00:00Z',
-    created_by: 'user-contributor-002',
-    created_at: '2026-06-01T00:00:00Z',
-    order_no: 2,
-  },
-  // Club 3 milestones
-  {
-    id: 'cms-6',
-    club_id: 'club-3',
-    title: 'First Mock Exam Sprint',
-    description: 'Complete the first full mock exam sprint with all members.',
-    status: 'in_progress',
-    target_date: '2026-07-15T00:00:00Z',
-    completed_at: null,
-    created_by: 'user-main-contributor-001',
-    created_at: '2026-06-01T00:00:00Z',
-    order_no: 1,
-  },
-];
+    // Club 1 milestones
+    {
+      id: 'cms-1',
+      club_id: 'club-1',
+      title: 'Launch Physics Demo App',
+      description: 'Complete and publish the Newton\'s Laws interactive demo app.',
+      status: 'completed',
+      target_date: '2026-06-01T00:00:00Z',
+      completed_at: '2026-06-01T00:00:00Z',
+      created_by: 'user-contributor-001',
+      created_at: '2026-04-01T00:00:00Z',
+      order_no: 1,
+    },
+    {
+      id: 'cms-2',
+      club_id: 'club-1',
+      title: 'Reach 50 Club Members',
+      description: 'Grow the community to 50 active members through outreach and events.',
+      status: 'in_progress',
+      target_date: '2026-08-01T00:00:00Z',
+      completed_at: null,
+      created_by: 'user-contributor-001',
+      created_at: '2026-04-01T00:00:00Z',
+      order_no: 2,
+    },
+    {
+      id: 'cms-3',
+      club_id: 'club-1',
+      title: 'Host Monthly Science Fair',
+      description: 'Organize a monthly science fair where members present projects and experiments.',
+      status: 'planned',
+      target_date: '2026-09-01T00:00:00Z',
+      completed_at: null,
+      created_by: 'user-contributor-001',
+      created_at: '2026-05-15T00:00:00Z',
+      order_no: 3,
+    },
+    // Club 2 milestones
+    {
+      id: 'cms-4',
+      club_id: 'club-2',
+      title: 'Complete Organic Chemistry Deck',
+      description: 'Finish and publish the comprehensive IGCSE organic chemistry flashcard deck.',
+      status: 'completed',
+      target_date: '2026-05-20T00:00:00Z',
+      completed_at: '2026-05-20T00:00:00Z',
+      created_by: 'user-contributor-002',
+      created_at: '2026-04-10T00:00:00Z',
+      order_no: 1,
+    },
+    {
+      id: 'cms-5',
+      club_id: 'club-2',
+      title: 'Lab Safety Workshop',
+      description: 'Conduct the mandatory lab safety refresher workshop before summer practicals.',
+      status: 'completed',
+      target_date: '2026-07-05T00:00:00Z',
+      completed_at: '2026-07-05T00:00:00Z',
+      created_by: 'user-contributor-002',
+      created_at: '2026-06-01T00:00:00Z',
+      order_no: 2,
+    },
+    // Club 3 milestones
+    {
+      id: 'cms-6',
+      club_id: 'club-3',
+      title: 'First Mock Exam Sprint',
+      description: 'Complete the first full mock exam sprint with all members.',
+      status: 'in_progress',
+      target_date: '2026-07-15T00:00:00Z',
+      completed_at: null,
+      created_by: 'user-main-contributor-001',
+      created_at: '2026-06-01T00:00:00Z',
+      order_no: 1,
+    },
+  ];
 
 // ── Club Member Contributions ────────────────────────────────────────────────
 
@@ -2099,67 +2105,67 @@ export const mockMemberContributions: {
   metadata?: Record<string, unknown> | null;
   created_at: string;
 }[] = [
-  // Club 1 contributions
-  {
-    id: 'cmc-1',
-    club_id: 'club-1',
-    user_id: 'user-contributor-001',
-    contribution_type: 'project',
-    title: 'Created Newton\'s Laws Demo App',
-    description: 'Led development of the interactive physics demo application.',
-    metadata: { project_id: 'cp-1' },
-    created_at: '2026-04-15T00:00:00Z',
-  },
-  {
-    id: 'cmc-2',
-    club_id: 'club-1',
-    user_id: 'user-student-001',
-    contribution_type: 'project',
-    title: 'Contributed to Newton\'s Laws Demo App',
-    description: 'Added Three.js simulation components and lab report template.',
-    metadata: { project_id: 'cp-1' },
-    created_at: '2026-05-10T00:00:00Z',
-  },
-  {
-    id: 'cmc-3',
-    club_id: 'club-1',
-    user_id: 'user-contributor-001',
-    contribution_type: 'milestone_completed',
-    title: 'Completed milestone: Launch Physics Demo App',
-    metadata: { milestone_id: 'cms-1' },
-    created_at: '2026-06-01T00:00:00Z',
-  },
-  // Club 2 contributions
-  {
-    id: 'cmc-4',
-    club_id: 'club-2',
-    user_id: 'user-contributor-002',
-    contribution_type: 'project',
-    title: 'Created Organic Chemistry Flashcards',
-    description: 'Published curated flashcard deck for IGCSE chemistry.',
-    metadata: { project_id: 'cp-2' },
-    created_at: '2026-05-20T00:00:00Z',
-  },
-  {
-    id: 'cmc-5',
-    club_id: 'club-2',
-    user_id: 'user-contributor-002',
-    contribution_type: 'event',
-    title: 'Organized Lab Safety Workshop',
-    metadata: { event_id: 'ce-2' },
-    created_at: '2026-06-20T09:00:00Z',
-  },
-  // Club 3 contributions
-  {
-    id: 'cmc-6',
-    club_id: 'club-3',
-    user_id: 'user-main-contributor-001',
-    contribution_type: 'other',
-    title: 'Onboarded new sprint members',
-    description: 'Conducted orientation session for 5 new members.',
-    created_at: '2026-06-05T00:00:00Z',
-  },
-];
+    // Club 1 contributions
+    {
+      id: 'cmc-1',
+      club_id: 'club-1',
+      user_id: 'user-contributor-001',
+      contribution_type: 'project',
+      title: 'Created Newton\'s Laws Demo App',
+      description: 'Led development of the interactive physics demo application.',
+      metadata: { project_id: 'cp-1' },
+      created_at: '2026-04-15T00:00:00Z',
+    },
+    {
+      id: 'cmc-2',
+      club_id: 'club-1',
+      user_id: 'user-student-001',
+      contribution_type: 'project',
+      title: 'Contributed to Newton\'s Laws Demo App',
+      description: 'Added Three.js simulation components and lab report template.',
+      metadata: { project_id: 'cp-1' },
+      created_at: '2026-05-10T00:00:00Z',
+    },
+    {
+      id: 'cmc-3',
+      club_id: 'club-1',
+      user_id: 'user-contributor-001',
+      contribution_type: 'milestone_completed',
+      title: 'Completed milestone: Launch Physics Demo App',
+      metadata: { milestone_id: 'cms-1' },
+      created_at: '2026-06-01T00:00:00Z',
+    },
+    // Club 2 contributions
+    {
+      id: 'cmc-4',
+      club_id: 'club-2',
+      user_id: 'user-contributor-002',
+      contribution_type: 'project',
+      title: 'Created Organic Chemistry Flashcards',
+      description: 'Published curated flashcard deck for IGCSE chemistry.',
+      metadata: { project_id: 'cp-2' },
+      created_at: '2026-05-20T00:00:00Z',
+    },
+    {
+      id: 'cmc-5',
+      club_id: 'club-2',
+      user_id: 'user-contributor-002',
+      contribution_type: 'event',
+      title: 'Organized Lab Safety Workshop',
+      metadata: { event_id: 'ce-2' },
+      created_at: '2026-06-20T09:00:00Z',
+    },
+    // Club 3 contributions
+    {
+      id: 'cmc-6',
+      club_id: 'club-3',
+      user_id: 'user-main-contributor-001',
+      contribution_type: 'other',
+      title: 'Onboarded new sprint members',
+      description: 'Conducted orientation session for 5 new members.',
+      created_at: '2026-06-05T00:00:00Z',
+    },
+  ];
 
 // ── Club Feature Management ─────────────────────────────────────────────────
 
@@ -2944,82 +2950,82 @@ export const mockCertifications: {
   order_no?: number | null;
   created_at: string;
 }[] = [
-  {
-    id: 'cert-1',
-    user_id: 'user-student-001',
-    type: 'igcse',
-    subject: 'Physics',
-    exam_board: 'Cambridge',
-    grade: 'A*',
-    year: 2025,
-    certificate_url: null,
-    is_verified: true,
-    verified_by: 'user-main-contributor-001',
-    is_hidden: false,
-    order_no: 1,
-    created_at: '2025-08-15T00:00:00Z',
-  },
-  {
-    id: 'cert-2',
-    user_id: 'user-student-001',
-    type: 'igcse',
-    subject: 'Mathematics',
-    exam_board: 'Cambridge',
-    grade: 'A*',
-    year: 2025,
-    certificate_url: null,
-    is_verified: true,
-    verified_by: 'user-main-contributor-001',
-    is_hidden: false,
-    order_no: 2,
-    created_at: '2025-08-15T00:00:00Z',
-  },
-  {
-    id: 'cert-3',
-    user_id: 'user-student-002',
-    type: 'ielts',
-    subject: null,
-    exam_board: 'British Council',
-    grade: 'Band 7.5',
-    year: 2026,
-    certificate_url: null,
-    is_verified: false,
-    verified_by: null,
-    is_hidden: false,
-    order_no: 1,
-    created_at: '2026-03-10T00:00:00Z',
-  },
-  {
-    id: 'cert-4',
-    user_id: 'user-contributor-001',
-    type: 'a_level',
-    subject: 'Physics',
-    exam_board: 'Edexcel',
-    grade: 'A',
-    year: 2023,
-    certificate_url: null,
-    is_verified: true,
-    verified_by: 'user-main-contributor-001',
-    is_hidden: false,
-    order_no: 1,
-    created_at: '2023-08-15T00:00:00Z',
-  },
-  {
-    id: 'cert-5',
-    user_id: 'user-contributor-001',
-    type: 'a_level',
-    subject: 'Mathematics',
-    exam_board: 'Edexcel',
-    grade: 'A*',
-    year: 2023,
-    certificate_url: null,
-    is_verified: true,
-    verified_by: 'user-main-contributor-001',
-    is_hidden: false,
-    order_no: 2,
-    created_at: '2023-08-15T00:00:00Z',
-  },
-];
+    {
+      id: 'cert-1',
+      user_id: 'user-student-001',
+      type: 'igcse',
+      subject: 'Physics',
+      exam_board: 'Cambridge',
+      grade: 'A*',
+      year: 2025,
+      certificate_url: null,
+      is_verified: true,
+      verified_by: 'user-main-contributor-001',
+      is_hidden: false,
+      order_no: 1,
+      created_at: '2025-08-15T00:00:00Z',
+    },
+    {
+      id: 'cert-2',
+      user_id: 'user-student-001',
+      type: 'igcse',
+      subject: 'Mathematics',
+      exam_board: 'Cambridge',
+      grade: 'A*',
+      year: 2025,
+      certificate_url: null,
+      is_verified: true,
+      verified_by: 'user-main-contributor-001',
+      is_hidden: false,
+      order_no: 2,
+      created_at: '2025-08-15T00:00:00Z',
+    },
+    {
+      id: 'cert-3',
+      user_id: 'user-student-002',
+      type: 'ielts',
+      subject: null,
+      exam_board: 'British Council',
+      grade: 'Band 7.5',
+      year: 2026,
+      certificate_url: null,
+      is_verified: false,
+      verified_by: null,
+      is_hidden: false,
+      order_no: 1,
+      created_at: '2026-03-10T00:00:00Z',
+    },
+    {
+      id: 'cert-4',
+      user_id: 'user-contributor-001',
+      type: 'a_level',
+      subject: 'Physics',
+      exam_board: 'Edexcel',
+      grade: 'A',
+      year: 2023,
+      certificate_url: null,
+      is_verified: true,
+      verified_by: 'user-main-contributor-001',
+      is_hidden: false,
+      order_no: 1,
+      created_at: '2023-08-15T00:00:00Z',
+    },
+    {
+      id: 'cert-5',
+      user_id: 'user-contributor-001',
+      type: 'a_level',
+      subject: 'Mathematics',
+      exam_board: 'Edexcel',
+      grade: 'A*',
+      year: 2023,
+      certificate_url: null,
+      is_verified: true,
+      verified_by: 'user-main-contributor-001',
+      is_hidden: false,
+      order_no: 2,
+      created_at: '2023-08-15T00:00:00Z',
+    },
+  ];
 
 // ── Notifications (Useful Across Features) ──────────────────────────────────
 
@@ -5325,5 +5331,96 @@ export function updateGradeEntry(
   if (data.predicted_grade !== undefined) entry.predicted_grade = data.predicted_grade;
   return { success: true };
 }
+
+// ── Dashboard Statistics Queries ──────────────────────────────────────────────
+
+export function getStudentDashboardStats(userId: string) {
+  const now = new Date();
+  const futureExams = mockExams.filter(e => new Date(e.exam_date) > now);
+  let nextExamStr = '18 days';
+  if (futureExams.length > 0) {
+    futureExams.sort((a, b) => new Date(a.exam_date).getTime() - new Date(b.exam_date).getTime());
+    const diffTime = new Date(futureExams[0].exam_date).getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    nextExamStr = `${diffDays} days`;
+  }
+
+  const userProgress = mockTopicProgress.filter(tp => tp.user_id === userId);
+  let confidenceStr = '72%';
+  if (userProgress.length > 0) {
+    const totalConfidence = userProgress.reduce((sum, tp) => sum + (tp.confidence_level || 0), 0);
+    const avgConfidence = Math.round((totalConfidence / (userProgress.length * 5)) * 100);
+    confidenceStr = `${avgConfidence}%`;
+  }
+
+  return [
+    { label: 'Study Streak', value: '7 days', color: 'orange', key: 'study-streak' },
+    { label: 'Cards Due', value: '24', color: 'violet', key: 'cards-due' },
+    { label: 'Next Exam', value: nextExamStr, color: 'red', key: 'next-exam' },
+    { label: 'Avg. Confidence', value: confidenceStr, color: 'emerald', key: 'avg-confidence' },
+  ];
+}
+
+export function getTeacherDashboardStats(userId: string) {
+  const classrooms = getClassroomsByUser(userId);
+  const studentMembers = mockClassroomMembers.filter(
+    m => classrooms.some(c => c.id === m.classroom_id) && m.role === 'student'
+  );
+  const totalStudents = new Set(studentMembers.map(m => m.user_id)).size;
+
+  const teacherAssignments = mockAssignments.filter(a => a.created_by === userId);
+  const ungradedSubmissions = mockAssignmentSubmissions.filter(
+    s => teacherAssignments.some(a => a.id === s.assignment_id) && s.grade === null
+  );
+  const pendingAssignments = ungradedSubmissions.length || 5;
+
+  const completedCount = mockAssignmentSubmissions.filter(
+    s => teacherAssignments.some(a => a.id === s.assignment_id) && s.grade !== null
+  ).length || 12;
+
+  return [
+    { label: 'Active Classrooms', value: classrooms.length.toString(), color: 'emerald', key: 'active-classrooms' },
+    { label: 'Total Students', value: totalStudents ? totalStudents.toString() : '47', color: 'blue', key: 'total-students' },
+    { label: 'Pending Assignments', value: pendingAssignments.toString(), color: 'amber', key: 'pending-assignments' },
+    { label: 'Completed This Week', value: completedCount.toString(), color: 'violet', key: 'completed-this-week' },
+  ];
+}
+
+export function getContributorDashboardStats(userId: string) {
+  const publishedCurrs = mockCurriculums.filter(c => c.created_by === userId && c.status === 'published').length;
+  const publishedNotes = mockNotes.filter(n => n.contributor_id === userId && n.status === 'approved').length;
+  const totalPublished = publishedCurrs + publishedNotes || 14;
+
+  const pendingNotes = mockNotes.filter(n => n.contributor_id === userId && n.status === 'pending_review').length || 3;
+  const clubsLed = mockClubMembers.filter(m => m.user_id === userId && (m.role === 'admin' || m.role === 'moderator')).length || 2;
+
+  const stat = mockContributorStats.find(s => s.contributor_id === userId);
+  const profileViews = stat ? stat.total_views.toString() : '128';
+
+  return [
+    { label: 'Published', value: totalPublished.toString(), color: 'violet', key: 'published' },
+    { label: 'Pending Review', value: pendingNotes.toString(), color: 'amber', key: 'pending-review' },
+    { label: 'Clubs Led', value: clubsLed.toString(), color: 'sky', key: 'clubs-led' },
+    { label: 'Profile Views', value: profileViews, color: 'pink', key: 'profile-views' },
+  ];
+}
+
+export function getMainContributorDashboardStats(userId: string) {
+  const pendingQueue = mockReviewQueue.filter(q => q.status === 'pending').length;
+  const pendingNotes = mockNotes.filter(n => n.status === 'pending_review').length;
+  const pendingCount = pendingQueue + pendingNotes || 8;
+
+  const approvedCount = mockNotes.filter(n => n.status === 'approved' && n.reviewer_id === userId).length || 15;
+  const rejectedCount = mockNotes.filter(n => n.status === 'rejected' && n.reviewer_id === userId).length || 2;
+  const totalReviewed = mockNotes.filter(n => n.reviewer_id === userId).length || 234;
+
+  return [
+    { label: 'Pending Reviews', value: pendingCount.toString(), color: 'amber', key: 'pending-reviews' },
+    { label: 'Approved This Week', value: approvedCount.toString(), color: 'emerald', key: 'approved-this-week' },
+    { label: 'Rejected This Week', value: rejectedCount.toString(), color: 'red', key: 'rejected-this-week' },
+    { label: 'Total Reviewed', value: totalReviewed.toString(), color: 'violet', key: 'total-reviewed' },
+  ];
+}
+
 
 

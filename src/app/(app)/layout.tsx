@@ -13,14 +13,19 @@ import { PersonaProvider } from '@/context/PersonaContext';
 import NavBar from '@/components/layout/NavBar';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push('/login');
+      return;
     }
-  }, [isAuthenticated, isLoading, router]);
+    // Gate: redirect to onboarding if user hasn't completed it yet
+    if (!isLoading && isAuthenticated && user?.profile?.onboardingCompleted === false) {
+      router.push('/onboarding');
+    }
+  }, [isAuthenticated, isLoading, user, router]);
 
   // Show loading skeleton while checking auth
   if (isLoading) {

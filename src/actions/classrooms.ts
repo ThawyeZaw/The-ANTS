@@ -1,441 +1,314 @@
 'use server';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Classroom Server Actions
-// Thin wrappers around mock database operations for client components to call.
-// In production, these will call Supabase directly.
+// The ANTS — Classroom Server Actions (Supabase)
 // ──────────────────────────────────────────────────────────────────────────────
 
-import {
-  getClassroom,
-  getClassroomsByUser,
-  getClassroomMembers,
-  getClassroomTeacherIds,
-  getClassroomMember,
-  getAssignmentsByClassroom,
-  getAssignment,
-  getSubmission,
-  getSubmissionsByAssignment,
-  getQuizzesByClassroom,
-  getQuiz,
-  getQuizAttemptsByQuiz,
-  getQuizAttempt,
-  getDiscussionTopicsByClassroom,
-  getDiscussionTopic,
-  getDiscussionReplies,
-  getResourcesByClassroom,
-  createClassroom as dbCreateClassroom,
-  updateClassroom as dbUpdateClassroom,
-  joinClassroom as dbJoinClassroom,
-  leaveClassroom as dbLeaveClassroom,
-  createAssignment as dbCreateAssignment,
-  updateAssignment as dbUpdateAssignment,
-  submitAssignment as dbSubmitAssignment,
-  gradeSubmission as dbGradeSubmission,
-  createQuiz as dbCreateQuiz,
-  updateQuiz as dbUpdateQuiz,
-  submitQuizAttempt as dbSubmitQuizAttempt,
-  createDiscussionTopic as dbCreateDiscussionTopic,
-  createDiscussionReply as dbCreateDiscussionReply,
-  addResource as dbAddResource,
-  deleteResource as dbDeleteResource,
-  mockClassrooms,
-  mockAssignmentSubmissions,
-} from '@/lib/mock/database';
-import {
-  ClassroomFeature,
-  Classroom,
-  Assignment,
-  AssignmentStatus,
-  AssignmentPriority,
-  Quiz,
-  QuizStatus,
-  QuizQuestion,
-  QuizQuestionType,
-  DiscussionTopic,
-  ClassroomResource,
-  ResourceType,
-} from '@/types';
+import { createClient } from '@/lib/supabase/server';
+import { ClassroomFeature, AssignmentStatus, AssignmentPriority, QuizStatus, QuizQuestion, ResourceType } from '@/types';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Require that the user is a teacher in the given classroom */
-function requireTeacherInClassroom(classroomId: string, userId: string) {
-  const member = getClassroomMember(classroomId, userId);
-  if (!member || member.role !== 'teacher') {
-    return { authorized: false, error: 'Only classroom teachers can perform this action' };
-  }
+async function requireTeacherInClassroom(classroomId: string, userId: string) {
+  const supabase = await createClient();
+  const { data: member } = await supabase.from('classroom_members').select('role').eq('classroom_id', classroomId).eq('user_id', userId).single();
+  if (!member || member.role !== 'teacher') return { authorized: false, error: 'Only classroom teachers can perform this action' };
   return { authorized: true, error: null };
 }
 
-/** Require that the user is a member (any role) of the given classroom */
-function requireMemberOfClassroom(classroomId: string, userId: string) {
-  const member = getClassroomMember(classroomId, userId);
-  if (!member) {
-    return { authorized: false, error: 'You are not a member of this classroom' };
-  }
+async function requireMemberOfClassroom(classroomId: string, userId: string) {
+  const supabase = await createClient();
+  const { data: member } = await supabase.from('classroom_members').select('id').eq('classroom_id', classroomId).eq('user_id', userId).single();
+  if (!member) return { authorized: false, error: 'You are not a member of this classroom' };
   return { authorized: true, error: null };
 }
 
 // ── Classroom CRUD ───────────────────────────────────────────────────────────
 
-/** Get all classrooms the user is a member of */
 export async function actionGetMyClassrooms(userId: string) {
-  return { success: true, classrooms: getClassroomsByUser(userId) };
+  const supabase = await createClient();
+  const { data: members } = await supabase.from('classroom_members').select('classroom_id').eq('user_id', userId);
+  const ids = (members ?? []).map((m: any) => m.classroom_id);
+  if (ids.length === 0) return { success: true, classrooms: [] };
+  const { data: classrooms } = await supabase.from('classrooms').select('*').in('id', ids);
+  return { success: true, classrooms: classrooms ?? [] };
 }
 
-/** Get a single classroom by ID */
 export async function actionGetClassroom(classroomId: string) {
-  const classroom = getClassroom(classroomId);
-  if (!classroom) return { success: false, error: 'Classroom not found' };
+  const supabase = await createClient();
+  const { data: classroom, error } = await supabase.from('classrooms').select('*').eq('id', classroomId).single();
+  if (error || !classroom) return { success: false, error: 'Classroom not found' };
   return { success: true, classroom };
 }
 
-/** Create a new classroom (teacher only) */
 export async function actionCreateClassroom(userId: string, data: {
-  name: string;
-  description?: string;
-  curriculum_ids: string[];
-  enabled_features?: ClassroomFeature[];
+  name: string; description?: string; curriculum_ids: string[]; enabled_features?: ClassroomFeature[];
 }) {
-  const inviteCode = data.name
-    .replace(/[^a-zA-Z0-9]/g, '')
-    .toUpperCase()
-    .slice(0, 4) + Math.floor(Math.random() * 100).toString().padStart(2, '0');
+  const supabase = await createClient();
+  const inviteCode = data.name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 4) + Math.floor(Math.random() * 100).toString().padStart(2, '0');
 
-  const result = dbCreateClassroom({
-    name: data.name,
-    description: data.description || null,
-    invite_code: inviteCode,
+  const { data: classroom, error } = await supabase.from('classrooms').insert({
+    name: data.name, description: data.description || null, invite_code: inviteCode,
     curriculum_ids: data.curriculum_ids,
     enabled_features: data.enabled_features || [
-      { key: 'assignments', enabled: true },
-      { key: 'quizzes', enabled: false },
-      { key: 'resources', enabled: true },
-      { key: 'discussions', enabled: false },
-      { key: 'links', enabled: false },
+      { key: 'assignments', enabled: true }, { key: 'quizzes', enabled: false },
+      { key: 'resources', enabled: true }, { key: 'discussions', enabled: false }, { key: 'links', enabled: false },
     ],
-  });
+  }).select().single();
 
-  if (result.success) {
-    dbJoinClassroom(result.classroom.id, userId, 'teacher');
-  }
-
-  return result;
+  if (error || !classroom) return { success: false, error: error?.message ?? 'Failed to create classroom' };
+  await supabase.from('classroom_members').insert({ classroom_id: classroom.id, user_id: userId, role: 'teacher' });
+  return { success: true, classroom };
 }
 
-/** Update classroom details (teacher only) */
 export async function actionUpdateClassroom(userId: string, classroomId: string, data: {
-  name?: string;
-  description?: string;
-  invite_code?: string;
-  curriculum_ids?: string[];
-  enabled_features?: ClassroomFeature[];
+  name?: string; description?: string; invite_code?: string; curriculum_ids?: string[]; enabled_features?: ClassroomFeature[];
 }) {
-  const auth = requireTeacherInClassroom(classroomId, userId);
+  const auth = await requireTeacherInClassroom(classroomId, userId);
   if (!auth.authorized) return { success: false, error: auth.error };
-
-  return dbUpdateClassroom(classroomId, data as Partial<Classroom>);
+  const supabase = await createClient();
+  const { error } = await supabase.from('classrooms').update(data).eq('id', classroomId);
+  return error ? { success: false, error: error.message } : { success: true };
 }
 
-/** Join a classroom by invite code */
 export async function actionJoinClassroom(userId: string, inviteCode: string) {
-  const classroom = mockClassrooms.find(
-    c => c.invite_code?.toUpperCase() === inviteCode.toUpperCase()
-  );
+  const supabase = await createClient();
+  const { data: classroom } = await supabase.from('classrooms').select('id').ilike('invite_code', inviteCode).single();
   if (!classroom) return { success: false, error: 'Invalid invite code' };
-
-  return dbJoinClassroom(classroom.id, userId, 'student');
+  const { error } = await supabase.from('classroom_members').upsert({ classroom_id: classroom.id, user_id: userId, role: 'student' });
+  return error ? { success: false, error: error.message } : { success: true };
 }
 
-/** Leave a classroom */
 export async function actionLeaveClassroom(userId: string, classroomId: string) {
-  const member = getClassroomMember(classroomId, userId);
+  const supabase = await createClient();
+  const { data: member } = await supabase.from('classroom_members').select('role').eq('classroom_id', classroomId).eq('user_id', userId).single();
   if (!member) return { success: false, error: 'Not a member of this classroom' };
-
   if (member.role === 'teacher') {
-    const teacherIds = getClassroomTeacherIds(classroomId);
-    if (teacherIds.length <= 1) {
-      return { success: false, error: 'Cannot leave: you are the last teacher. Add another teacher first.' };
-    }
+    const { count } = await supabase.from('classroom_members').select('*', { count: 'exact', head: true }).eq('classroom_id', classroomId).eq('role', 'teacher');
+    if ((count ?? 0) <= 1) return { success: false, error: 'Cannot leave: you are the last teacher.' };
   }
-
-  return dbLeaveClassroom(classroomId, userId);
+  const { error } = await supabase.from('classroom_members').delete().eq('classroom_id', classroomId).eq('user_id', userId);
+  return error ? { success: false, error: error.message } : { success: true };
 }
 
-/** Regenerate the invite code (teacher only) */
 export async function actionRegenerateInviteCode(userId: string, classroomId: string) {
-  const auth = requireTeacherInClassroom(classroomId, userId);
+  const auth = await requireTeacherInClassroom(classroomId, userId);
   if (!auth.authorized) return { success: false, error: auth.error };
-
-  const classroom = getClassroom(classroomId);
+  const supabase = await createClient();
+  const { data: classroom } = await supabase.from('classrooms').select('name').eq('id', classroomId).single();
   if (!classroom) return { success: false, error: 'Classroom not found' };
-
-  const newCode = classroom.name
-    .replace(/[^a-zA-Z0-9]/g, '')
-    .toUpperCase()
-    .slice(0, 4) + Math.floor(Math.random() * 100).toString().padStart(2, '0');
-
-  return dbUpdateClassroom(classroomId, { invite_code: newCode });
+  const newCode = classroom.name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 4) + Math.floor(Math.random() * 100).toString().padStart(2, '0');
+  const { error } = await supabase.from('classrooms').update({ invite_code: newCode }).eq('id', classroomId);
+  return error ? { success: false, error: error.message } : { success: true };
 }
 
 // ── Members ──────────────────────────────────────────────────────────────────
 
-/** Get all members of a classroom */
 export async function actionGetClassroomMembers(classroomId: string) {
-  return { success: true, members: getClassroomMembers(classroomId) };
+  const supabase = await createClient();
+  const { data: members } = await supabase.from('classroom_members').select('*, profiles(*)').eq('classroom_id', classroomId);
+  return { success: true, members: members ?? [] };
 }
 
-/** Remove a student from the classroom (teacher only) */
 export async function actionRemoveMember(userId: string, classroomId: string, memberUserId: string) {
-  const auth = requireTeacherInClassroom(classroomId, userId);
+  const auth = await requireTeacherInClassroom(classroomId, userId);
   if (!auth.authorized) return { success: false, error: auth.error };
-
-  const target = getClassroomMember(classroomId, memberUserId);
+  const supabase = await createClient();
+  const { data: target } = await supabase.from('classroom_members').select('role').eq('classroom_id', classroomId).eq('user_id', memberUserId).single();
   if (!target) return { success: false, error: 'Member not found' };
   if (target.role === 'teacher') return { success: false, error: 'Cannot remove another teacher' };
-
-  return dbLeaveClassroom(classroomId, memberUserId);
+  const { error } = await supabase.from('classroom_members').delete().eq('classroom_id', classroomId).eq('user_id', memberUserId);
+  return error ? { success: false, error: error.message } : { success: true };
 }
 
 // ── Assignments ──────────────────────────────────────────────────────────────
 
-/** Get all assignments for a classroom */
 export async function actionGetAssignments(classroomId: string) {
-  return { success: true, assignments: getAssignmentsByClassroom(classroomId) };
+  const supabase = await createClient();
+  const { data } = await supabase.from('assignments').select('*').eq('classroom_id', classroomId).order('created_at', { ascending: false });
+  return { success: true, assignments: data ?? [] };
 }
 
-/** Create a new assignment (teacher only) */
 export async function actionCreateAssignment(userId: string, data: {
-  classroom_id: string;
-  title: string;
-  description?: string;
-  due_date: string;
-  priority?: AssignmentPriority;
-  total_points?: number;
-  attachment_urls?: string[];
+  classroom_id: string; title: string; description?: string; due_date: string;
+  priority?: AssignmentPriority; total_points?: number; attachment_urls?: string[];
 }) {
-  const auth = requireTeacherInClassroom(data.classroom_id, userId);
+  const auth = await requireTeacherInClassroom(data.classroom_id, userId);
   if (!auth.authorized) return { success: false, error: auth.error };
-
-  return dbCreateAssignment({
-    classroom_id: data.classroom_id,
-    title: data.title,
-    description: data.description || null,
-    due_date: data.due_date,
-    priority: data.priority || 'medium',
-    status: 'draft',
-    total_points: data.total_points || null,
-    attachment_urls: data.attachment_urls || [],
-    created_by: userId,
-  });
+  const supabase = await createClient();
+  const { data: assignment, error } = await supabase.from('assignments').insert({
+    classroom_id: data.classroom_id, title: data.title, description: data.description || null,
+    due_date: data.due_date, priority: data.priority || 'medium', status: 'draft',
+    total_points: data.total_points || null, attachment_urls: data.attachment_urls || [], created_by: userId,
+  }).select().single();
+  if (error || !assignment) return { success: false, error: error?.message ?? 'Failed to create assignment' };
+  return { success: true, assignment };
 }
 
-/** Publish or close an assignment (teacher only) */
 export async function actionUpdateAssignmentStatus(userId: string, assignmentId: string, status: AssignmentStatus) {
-  const assignment = getAssignment(assignmentId);
+  const supabase = await createClient();
+  const { data: assignment } = await supabase.from('assignments').select('classroom_id').eq('id', assignmentId).single();
   if (!assignment) return { success: false, error: 'Assignment not found' };
-  const auth = requireTeacherInClassroom(assignment.classroom_id, userId);
+  const auth = await requireTeacherInClassroom(assignment.classroom_id, userId);
   if (!auth.authorized) return { success: false, error: auth.error };
-
-  return dbUpdateAssignment(assignmentId, { status });
+  const { error } = await supabase.from('assignments').update({ status }).eq('id', assignmentId);
+  return error ? { success: false, error: error.message } : { success: true };
 }
 
-/** Submit an assignment (student only) */
 export async function actionSubmitAssignment(userId: string, assignmentId: string, content: string | null, attachmentUrls: string[] = []) {
-  const assignment = getAssignment(assignmentId);
+  const supabase = await createClient();
+  const { data: assignment } = await supabase.from('assignments').select('classroom_id').eq('id', assignmentId).single();
   if (!assignment) return { success: false, error: 'Assignment not found' };
-  const auth = requireMemberOfClassroom(assignment.classroom_id, userId);
+  const auth = await requireMemberOfClassroom(assignment.classroom_id, userId);
   if (!auth.authorized) return { success: false, error: auth.error };
-
-  return dbSubmitAssignment(assignmentId, userId, content, attachmentUrls);
+  const { error } = await supabase.from('assignment_submissions').upsert({ assignment_id: assignmentId, student_id: userId, content, attachment_urls: attachmentUrls, submitted_at: new Date().toISOString() });
+  return error ? { success: false, error: error.message } : { success: true };
 }
 
-/** Get a student's submission for an assignment */
 export async function actionGetSubmission(userId: string, assignmentId: string) {
-  const sub = getSubmission(assignmentId, userId);
-  return { success: true, submission: sub || null };
+  const supabase = await createClient();
+  const { data } = await supabase.from('assignment_submissions').select('*').eq('assignment_id', assignmentId).eq('student_id', userId).single();
+  return { success: true, submission: data || null };
 }
 
-/** Get all submissions for an assignment (teacher only) */
 export async function actionGetSubmissions(userId: string, assignmentId: string) {
-  const assignment = getAssignment(assignmentId);
+  const supabase = await createClient();
+  const { data: assignment } = await supabase.from('assignments').select('classroom_id').eq('id', assignmentId).single();
   if (!assignment) return { success: false, error: 'Assignment not found' };
-  const auth = requireTeacherInClassroom(assignment.classroom_id, userId);
+  const auth = await requireTeacherInClassroom(assignment.classroom_id, userId);
   if (!auth.authorized) return { success: false, error: auth.error };
-
-  return { success: true, submissions: getSubmissionsByAssignment(assignmentId) };
+  const { data } = await supabase.from('assignment_submissions').select('*, profiles(name)').eq('assignment_id', assignmentId);
+  return { success: true, submissions: data ?? [] };
 }
 
-/** Grade a submission (teacher only) */
 export async function actionGradeSubmission(userId: string, submissionId: string, grade: number, feedback: string | null) {
-  const sub = mockAssignmentSubmissions.find(s => s.id === submissionId);
+  const supabase = await createClient();
+  const { data: sub } = await supabase.from('assignment_submissions').select('assignment_id').eq('id', submissionId).single();
   if (!sub) return { success: false, error: 'Submission not found' };
-  const assignment = getAssignment(sub.assignment_id);
+  const { data: assignment } = await supabase.from('assignments').select('classroom_id').eq('id', sub.assignment_id).single();
   if (!assignment) return { success: false, error: 'Assignment not found' };
-  const auth = requireTeacherInClassroom(assignment.classroom_id, userId);
+  const auth = await requireTeacherInClassroom(assignment.classroom_id, userId);
   if (!auth.authorized) return { success: false, error: auth.error };
-
-  return dbGradeSubmission(submissionId, grade, feedback);
+  const { error } = await supabase.from('assignment_submissions').update({ grade, feedback }).eq('id', submissionId);
+  return error ? { success: false, error: error.message } : { success: true };
 }
 
 // ── Quizzes ──────────────────────────────────────────────────────────────────
 
-/** Get all quizzes for a classroom */
 export async function actionGetQuizzes(classroomId: string) {
-  return { success: true, quizzes: getQuizzesByClassroom(classroomId) };
+  const supabase = await createClient();
+  const { data } = await supabase.from('quizzes').select('*').eq('classroom_id', classroomId);
+  return { success: true, quizzes: data ?? [] };
 }
 
-/** Create a quiz (teacher only) */
-export async function actionCreateQuiz(userId: string, data: {
-  classroom_id: string;
-  title: string;
-  description?: string;
-  time_limit_minutes?: number;
-  due_date?: string;
-  questions: Omit<QuizQuestion, 'id'>[];
-}) {
-  const auth = requireTeacherInClassroom(data.classroom_id, userId);
+export async function actionCreateQuiz(userId: string, data: { classroom_id: string; title: string; description?: string; time_limit_minutes?: number; due_date?: string; questions: Omit<QuizQuestion, 'id'>[] }) {
+  const auth = await requireTeacherInClassroom(data.classroom_id, userId);
   if (!auth.authorized) return { success: false, error: auth.error };
-
-  const questions: QuizQuestion[] = data.questions.map((q, i) => ({
-    ...q,
-    id: `q-${Date.now()}-${i}`,
-  }));
-
-  return dbCreateQuiz({
-    classroom_id: data.classroom_id,
-    title: data.title,
-    description: data.description || null,
-    time_limit_minutes: data.time_limit_minutes || null,
-    due_date: data.due_date || null,
-    status: 'draft',
-    questions,
-    created_by: userId,
-  });
+  const supabase = await createClient();
+  const questions: QuizQuestion[] = data.questions.map((q, i) => ({ ...q, id: `q-${Date.now()}-${i}` }));
+  const { data: quiz, error } = await supabase.from('quizzes').insert({
+    classroom_id: data.classroom_id, title: data.title, description: data.description || null,
+    time_limit_minutes: data.time_limit_minutes || null, due_date: data.due_date || null,
+    status: 'draft', questions, created_by: userId,
+  }).select().single();
+  if (error || !quiz) return { success: false, error: error?.message ?? 'Failed to create quiz' };
+  return { success: true, quiz };
 }
 
-/** Publish or close a quiz (teacher only) */
 export async function actionUpdateQuizStatus(userId: string, quizId: string, status: QuizStatus) {
-  const quiz = getQuiz(quizId);
+  const supabase = await createClient();
+  const { data: quiz } = await supabase.from('quizzes').select('classroom_id').eq('id', quizId).single();
   if (!quiz) return { success: false, error: 'Quiz not found' };
-  const auth = requireTeacherInClassroom(quiz.classroom_id, userId);
+  const auth = await requireTeacherInClassroom(quiz.classroom_id, userId);
   if (!auth.authorized) return { success: false, error: auth.error };
-
-  return dbUpdateQuiz(quizId, { status });
+  const { error } = await supabase.from('quizzes').update({ status }).eq('id', quizId);
+  return error ? { success: false, error: error.message } : { success: true };
 }
 
-/** Submit a quiz attempt (student only) */
 export async function actionSubmitQuizAttempt(userId: string, quizId: string, answers: { question_id: string; answer: string }[]) {
-  const quiz = getQuiz(quizId);
+  const supabase = await createClient();
+  const { data: quiz } = await supabase.from('quizzes').select('classroom_id').eq('id', quizId).single();
   if (!quiz) return { success: false, error: 'Quiz not found' };
-  const auth = requireMemberOfClassroom(quiz.classroom_id, userId);
+  const auth = await requireMemberOfClassroom(quiz.classroom_id, userId);
   if (!auth.authorized) return { success: false, error: auth.error };
-
-  const quizAnswers = answers.map(a => ({
-    question_id: a.question_id,
-    answer: a.answer,
-    is_correct: null as boolean | null,
-  }));
-
-  return dbSubmitQuizAttempt(quizId, userId, quizAnswers);
+  const qAnswers = answers.map(a => ({ question_id: a.question_id, answer: a.answer, is_correct: null as boolean | null }));
+  const { error } = await supabase.from('quiz_attempts').upsert({ quiz_id: quizId, student_id: userId, answers: qAnswers, started_at: new Date().toISOString(), completed_at: new Date().toISOString() });
+  return error ? { success: false, error: error.message } : { success: true };
 }
 
-/** Get a student's quiz attempt */
 export async function actionGetQuizAttempt(userId: string, quizId: string) {
-  const attempt = getQuizAttempt(quizId, userId);
-  return { success: true, attempt: attempt || null };
+  const supabase = await createClient();
+  const { data } = await supabase.from('quiz_attempts').select('*').eq('quiz_id', quizId).eq('student_id', userId).single();
+  return { success: true, attempt: data || null };
 }
 
-/** Get all quiz attempts (teacher only) */
 export async function actionGetQuizAttempts(userId: string, quizId: string) {
-  const quiz = getQuiz(quizId);
+  const supabase = await createClient();
+  const { data: quiz } = await supabase.from('quizzes').select('classroom_id').eq('id', quizId).single();
   if (!quiz) return { success: false, error: 'Quiz not found' };
-  const auth = requireTeacherInClassroom(quiz.classroom_id, userId);
+  const auth = await requireTeacherInClassroom(quiz.classroom_id, userId);
   if (!auth.authorized) return { success: false, error: auth.error };
-
-  return { success: true, attempts: getQuizAttemptsByQuiz(quizId) };
+  const { data } = await supabase.from('quiz_attempts').select('*').eq('quiz_id', quizId);
+  return { success: true, attempts: data ?? [] };
 }
 
 // ── Discussions ──────────────────────────────────────────────────────────────
 
-/** Get discussion topics for a classroom */
 export async function actionGetDiscussionTopics(classroomId: string) {
-  return { success: true, topics: getDiscussionTopicsByClassroom(classroomId) };
+  const supabase = await createClient();
+  const { data } = await supabase.from('discussion_topics').select('*').eq('classroom_id', classroomId).order('created_at', { ascending: false });
+  return { success: true, topics: data ?? [] };
 }
 
-/** Create a discussion topic */
-export async function actionCreateDiscussionTopic(userId: string, data: {
-  classroom_id: string;
-  title: string;
-  content: string;
-  assignment_id?: string;
-}) {
-  const auth = requireMemberOfClassroom(data.classroom_id, userId);
+export async function actionCreateDiscussionTopic(userId: string, data: { classroom_id: string; title: string; content: string; assignment_id?: string }) {
+  const auth = await requireMemberOfClassroom(data.classroom_id, userId);
   if (!auth.authorized) return { success: false, error: auth.error };
-
-  return dbCreateDiscussionTopic({
-    classroom_id: data.classroom_id,
-    title: data.title,
-    content: data.content,
-    assignment_id: data.assignment_id || null,
-    is_pinned: false,
-    is_locked: false,
-    created_by: userId,
+  const supabase = await createClient();
+  const { error } = await supabase.from('discussion_topics').insert({
+    classroom_id: data.classroom_id, title: data.title, content: data.content,
+    assignment_id: data.assignment_id || null, is_pinned: false, is_locked: false, created_by: userId,
   });
+  return error ? { success: false, error: error.message } : { success: true };
 }
 
-/** Reply to a discussion topic */
 export async function actionReplyToTopic(userId: string, topicId: string, content: string) {
-  const topic = getDiscussionTopic(topicId);
+  const supabase = await createClient();
+  const { data: topic } = await supabase.from('discussion_topics').select('classroom_id, is_locked').eq('id', topicId).single();
   if (!topic) return { success: false, error: 'Topic not found' };
   if (topic.is_locked) return { success: false, error: 'This topic is locked' };
-
-  const auth = requireMemberOfClassroom(topic.classroom_id, userId);
+  const auth = await requireMemberOfClassroom(topic.classroom_id, userId);
   if (!auth.authorized) return { success: false, error: auth.error };
-
-  return dbCreateDiscussionReply(topicId, content, userId);
+  const { error } = await supabase.from('discussion_replies').insert({ topic_id: topicId, content, created_by: userId });
+  return error ? { success: false, error: error.message } : { success: true };
 }
 
-/** Get replies for a topic */
 export async function actionGetDiscussionReplies(topicId: string) {
-  return { success: true, replies: getDiscussionReplies(topicId) };
+  const supabase = await createClient();
+  const { data } = await supabase.from('discussion_replies').select('*').eq('topic_id', topicId).order('created_at');
+  return { success: true, replies: data ?? [] };
 }
 
 // ── Resources ────────────────────────────────────────────────────────────────
 
-/** Get resources for a classroom */
 export async function actionGetResources(classroomId: string) {
-  return { success: true, resources: getResourcesByClassroom(classroomId) };
+  const supabase = await createClient();
+  const { data } = await supabase.from('classroom_resources').select('*').eq('classroom_id', classroomId);
+  return { success: true, resources: data ?? [] };
 }
 
-/** Add a resource (teacher only) */
-export async function actionAddResource(userId: string, data: {
-  classroom_id: string;
-  title: string;
-  description?: string;
-  type: ResourceType;
-  url: string;
-  curriculum_id?: string;
-  subject_id?: string;
-}) {
-  const auth = requireTeacherInClassroom(data.classroom_id, userId);
+export async function actionAddResource(userId: string, data: { classroom_id: string; title: string; description?: string; type: ResourceType; url: string }) {
+  const auth = await requireTeacherInClassroom(data.classroom_id, userId);
   if (!auth.authorized) return { success: false, error: auth.error };
-
-  return dbAddResource({
-    classroom_id: data.classroom_id,
-    title: data.title,
-    description: data.description || null,
-    type: data.type,
-    url: data.url,
-    curriculum_id: data.curriculum_id || null,
-    subject_id: data.subject_id || null,
-    uploaded_by: userId,
+  const supabase = await createClient();
+  const { error } = await supabase.from('classroom_resources').insert({
+    classroom_id: data.classroom_id, title: data.title, description: data.description || null,
+    type: data.type, url: data.url, uploaded_by: userId,
   });
+  return error ? { success: false, error: error.message } : { success: true };
 }
 
-/** Delete a resource (teacher only) */
 export async function actionDeleteResource(userId: string, resourceId: string) {
-  // Authorize by checking classroom membership (can be tightened later)
-  return dbDeleteResource(resourceId);
+  const supabase = await createClient();
+  const { error } = await supabase.from('classroom_resources').delete().eq('id', resourceId);
+  return error ? { success: false, error: error.message } : { success: true };
 }

@@ -1,74 +1,33 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, useEffect } from 'react';
 import {
-  mockClassrooms,
-  mockClassroomMembers,
-  mockAssignments,
-  mockAssignmentSubmissions,
-  mockQuizzes,
-  mockQuizAttempts,
-  mockDiscussionTopics,
-  mockDiscussionReplies,
-  mockClassroomResources,
-  getAllProfiles,
-  createClassroom,
-  updateClassroom,
-  joinClassroom,
-  leaveClassroom,
-  createAssignment,
-  updateAssignment,
-  submitAssignment,
-  gradeSubmission,
-  createQuiz,
-  updateQuiz,
-  submitQuizAttempt,
-  createDiscussionTopic,
-  createDiscussionReply,
-  addResource,
-  deleteResource,
-  updateResource,
-  deleteAssignment,
-  deleteQuiz,
-  deleteDiscussionTopic,
-  updateDiscussionTopic,
-} from '@/lib/mock/database';
-import {
-  ClassroomFeature,
-  AssignmentPriority,
-  AssignmentStatus,
-  QuizStatus,
-  QuizQuestion,
-  ResourceType,
-  type Classroom,
-  type Assignment,
-  type AssignmentSubmission,
-  type Quiz,
-  type QuizAttempt,
-  type DiscussionTopic,
-  type DiscussionReply,
-  type ClassroomResource,
-  type ClassroomMember,
+  ClassroomFeature, AssignmentPriority, AssignmentStatus, QuizStatus, QuizQuestion, ResourceType,
+  type Classroom, type Assignment, type AssignmentSubmission, type Quiz, type QuizAttempt,
+  type DiscussionTopic, type DiscussionReply, type ClassroomResource, type ClassroomMember,
 } from '@/types';
+import { createClient } from '@/lib/supabase/client';
 
 type Result = { success: boolean; error?: string };
 
 export function useClassroom() {
+  const supabase = createClient();
   const [version, setVersion] = useState(0);
   const refresh = useCallback(() => setVersion((v) => v + 1), []);
 
-  const classrooms = useMemo(() => [...mockClassrooms], [version]);
-  const members = useMemo(() => [...mockClassroomMembers], [version]);
-  const assignments = useMemo(() => [...mockAssignments], [version]);
-  const submissions = useMemo(() => [...mockAssignmentSubmissions], [version]);
-  const quizzes = useMemo(() => [...mockQuizzes], [version]);
-  const attempts = useMemo(() => [...mockQuizAttempts], [version]);
-  const topics = useMemo(() => [...mockDiscussionTopics], [version]);
-  const replies = useMemo(() => [...mockDiscussionReplies], [version]);
-  const resources = useMemo(() => [...mockClassroomResources], [version]);
-  const profiles = useMemo(() => getAllProfiles(), [version]);
+  const [classrooms, setClassrooms] = useState<Classroom[]>([]);
+  const [profiles, setProfiles] = useState<any[]>([]);
 
-  // ── Helpers ──────────────────────────────────────────────────────────────
+  useEffect(() => {
+    (async () => {
+      const [cRes, pRes] = await Promise.all([
+        supabase.from('classrooms').select('*'),
+        supabase.from('profiles').select('id, name, username, avatar_url'),
+      ]);
+      setClassrooms((cRes.data as Classroom[]) ?? []);
+      setProfiles(pRes.data ?? []);
+    })();
+  }, [version, supabase]);
 
   const getProfile = useCallback(
     (userId: string) => profiles.find((p) => p.id === userId),
@@ -81,386 +40,353 @@ export function useClassroom() {
   );
 
   const getClassroomsByUser = useCallback(
-    (userId: string) => {
-      const classIds = members
-        .filter((m) => m.user_id === userId)
-        .map((m) => m.classroom_id);
-      return classrooms.filter((c) => classIds.includes(c.id));
+    async (userId: string) => {
+      const { data: members } = await supabase.from('classroom_members').select('classroom_id').eq('user_id', userId);
+      const ids = (members ?? []).map((m: any) => m.classroom_id);
+      return classrooms.filter((c) => ids.includes(c.id));
     },
-    [classrooms, members]
+    [classrooms, supabase]
   );
 
   const getMembers = useCallback(
-    (classroomId: string) =>
-      members.filter((m) => m.classroom_id === classroomId),
-    [members]
+    async (classroomId: string) => {
+      const { data } = await supabase.from('classroom_members').select('*, profiles(*)').eq('classroom_id', classroomId);
+      return (data as ClassroomMember[]) ?? [];
+    },
+    [supabase]
   );
 
   const getMember = useCallback(
-    (classroomId: string, userId: string) =>
-      members.find((m) => m.classroom_id === classroomId && m.user_id === userId),
-    [members]
+    async (classroomId: string, userId: string) => {
+      const { data } = await supabase.from('classroom_members').select('*').eq('classroom_id', classroomId).eq('user_id', userId).single();
+      return data as ClassroomMember ?? null;
+    },
+    [supabase]
   );
 
   const getAssignments = useCallback(
-    (classroomId: string) =>
-      assignments.filter((a) => a.classroom_id === classroomId),
-    [assignments]
+    async (classroomId: string) => {
+      const { data } = await supabase.from('assignments').select('*').eq('classroom_id', classroomId).order('created_at', { ascending: false });
+      return (data as Assignment[]) ?? [];
+    },
+    [supabase]
   );
 
   const getSubmissionsByAssignment = useCallback(
-    (assignmentId: string) =>
-      submissions.filter((s) => s.assignment_id === assignmentId),
-    [submissions]
+    async (assignmentId: string) => {
+      const { data } = await supabase.from('assignment_submissions').select('*, profiles(name)').eq('assignment_id', assignmentId);
+      return (data as AssignmentSubmission[]) ?? [];
+    },
+    [supabase]
   );
 
   const getSubmission = useCallback(
-    (assignmentId: string, studentId: string) =>
-      submissions.find((s) => s.assignment_id === assignmentId && s.student_id === studentId),
-    [submissions]
+    async (assignmentId: string, studentId: string) => {
+      const { data } = await supabase.from('assignment_submissions').select('*').eq('assignment_id', assignmentId).eq('student_id', studentId).single();
+      return data as AssignmentSubmission ?? null;
+    },
+    [supabase]
   );
 
   const getQuizzes = useCallback(
-    (classroomId: string) =>
-      quizzes.filter((q) => q.classroom_id === classroomId),
-    [quizzes]
+    async (classroomId: string) => {
+      const { data } = await supabase.from('quizzes').select('*').eq('classroom_id', classroomId).order('created_at', { ascending: false });
+      return (data as Quiz[]) ?? [];
+    },
+    [supabase]
   );
 
   const getQuizAttempt = useCallback(
-    (quizId: string, studentId: string) =>
-      attempts.find((a) => a.quiz_id === quizId && a.student_id === studentId),
-    [attempts]
+    async (quizId: string, studentId: string) => {
+      const { data } = await supabase.from('quiz_attempts').select('*').eq('quiz_id', quizId).eq('student_id', studentId).single();
+      return data as QuizAttempt ?? null;
+    },
+    [supabase]
   );
 
   const getQuizAttempts = useCallback(
-    (quizId: string) =>
-      attempts.filter((a) => a.quiz_id === quizId),
-    [attempts]
+    async (quizId: string) => {
+      const { data } = await supabase.from('quiz_attempts').select('*').eq('quiz_id', quizId);
+      return (data as QuizAttempt[]) ?? [];
+    },
+    [supabase]
   );
 
   const getTopics = useCallback(
-    (classroomId: string) =>
-      topics.filter((t) => t.classroom_id === classroomId),
-    [topics]
+    async (classroomId: string) => {
+      const { data } = await supabase.from('discussion_topics').select('*').eq('classroom_id', classroomId).order('created_at', { ascending: false });
+      return (data as DiscussionTopic[]) ?? [];
+    },
+    [supabase]
   );
 
   const getReplies = useCallback(
-    (topicId: string) =>
-      replies.filter((r) => r.topic_id === topicId),
-    [replies]
+    async (topicId: string) => {
+      const { data } = await supabase.from('discussion_replies').select('*').eq('topic_id', topicId).order('created_at');
+      return (data as DiscussionReply[]) ?? [];
+    },
+    [supabase]
   );
 
   const getResources = useCallback(
-    (classroomId: string) =>
-      resources.filter((r) => r.classroom_id === classroomId),
-    [resources]
+    async (classroomId: string) => {
+      const { data } = await supabase.from('classroom_resources').select('*').eq('classroom_id', classroomId);
+      return (data as ClassroomResource[]) ?? [];
+    },
+    [supabase]
   );
 
-  // ── Mutations ────────────────────────────────────────────────────────────
+  // ── Mutations ──
 
   const createNewClassroom = useCallback(
-    (data: { name: string; description?: string; curriculum_ids: string[]; created_by: string; enabled_features?: ClassroomFeature[] }) => {
-      const inviteCode = data.name
-        .replace(/[^a-zA-Z0-9]/g, '')
-        .toUpperCase()
-        .slice(0, 4) + Math.floor(Math.random() * 100).toString().padStart(2, '0');
+    async (data: { name: string; description?: string; curriculum_ids: string[]; created_by: string; enabled_features?: ClassroomFeature[] }) => {
+      const inviteCode = data.name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 4) + Math.floor(Math.random() * 100).toString().padStart(2, '0');
 
-      const result = createClassroom({
-        name: data.name,
-        description: data.description || null,
-        invite_code: inviteCode,
+      const { data: classroom, error } = await supabase.from('classrooms').insert({
+        name: data.name, description: data.description || null, invite_code: inviteCode,
         curriculum_ids: data.curriculum_ids,
         enabled_features: data.enabled_features || [
-          { key: 'assignments', enabled: true },
-          { key: 'quizzes', enabled: false },
-          { key: 'resources', enabled: true },
-          { key: 'discussions', enabled: false },
-          { key: 'links', enabled: false },
+          { key: 'assignments', enabled: true }, { key: 'quizzes', enabled: false },
+          { key: 'resources', enabled: true }, { key: 'discussions', enabled: false }, { key: 'links', enabled: false },
         ],
-      });
+      }).select().single();
 
-      if (result.success) {
-        joinClassroom(result.classroom.id, data.created_by, 'teacher');
+      if (error) return { success: false, error: error.message };
+      if (classroom) {
+        await supabase.from('classroom_members').insert({ classroom_id: classroom.id, user_id: data.created_by, role: 'teacher' });
         refresh();
+        return { success: true, classroom };
       }
-
-      return result as Result & { classroom?: Classroom };
+      return { success: false, error: 'Failed to create classroom' };
     },
-    [refresh]
+    [refresh, supabase]
   );
 
   const joinByCode = useCallback(
-    (userId: string, inviteCode: string): Result => {
-      const classroom = classrooms.find((c) => c.invite_code?.toUpperCase() === inviteCode.toUpperCase());
+    async (userId: string, inviteCode: string): Promise<Result> => {
+      const { data: classroom } = await supabase.from('classrooms').select('id, invite_code').ilike('invite_code', inviteCode).single();
       if (!classroom) return { success: false, error: 'Invalid invite code' };
-      const result = joinClassroom(classroom.id, userId, 'student');
-      if (result.success) refresh();
-      return result;
+      const { error } = await supabase.from('classroom_members').upsert({ classroom_id: classroom.id, user_id: userId, role: 'student' });
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
     },
-    [classrooms, refresh]
+    [refresh, supabase]
   );
 
   const leave = useCallback(
-    (userId: string, classroomId: string): Result => {
-      const result = leaveClassroom(classroomId, userId);
-      if (result.success) refresh();
-      return result;
+    async (userId: string, classroomId: string): Promise<Result> => {
+      const { error } = await supabase.from('classroom_members').delete().eq('classroom_id', classroomId).eq('user_id', userId);
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
     },
-    [refresh]
+    [refresh, supabase]
   );
 
   const createNewAssignment = useCallback(
-    (data: { classroom_id: string; title: string; description?: string; due_date: string; priority?: AssignmentPriority; total_points?: number; attachment_urls?: string[]; created_by: string }): Result => {
-      const result = createAssignment({
-        classroom_id: data.classroom_id,
-        title: data.title,
-        description: data.description || null,
-        due_date: data.due_date,
-        priority: data.priority || 'medium',
-        status: 'draft',
-        total_points: data.total_points || null,
-        attachment_urls: data.attachment_urls || [],
-        created_by: data.created_by,
+    async (data: { classroom_id: string; title: string; description?: string; due_date: string; priority?: AssignmentPriority; total_points?: number; attachment_urls?: string[]; created_by: string }): Promise<Result> => {
+      const { error } = await supabase.from('assignments').insert({
+        classroom_id: data.classroom_id, title: data.title, description: data.description || null,
+        due_date: data.due_date, priority: data.priority || 'medium', status: 'draft',
+        total_points: data.total_points || null, attachment_urls: data.attachment_urls || [], created_by: data.created_by,
       });
-      if (result.success) refresh();
-      return result;
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
     },
-    [refresh]
+    [refresh, supabase]
   );
 
   const publishAssignment = useCallback(
-    (assignmentId: string, status: AssignmentStatus): Result => {
-      const result = updateAssignment(assignmentId, { status });
-      if (result.success) refresh();
-      return result;
+    async (assignmentId: string, status: AssignmentStatus): Promise<Result> => {
+      const { error } = await supabase.from('assignments').update({ status }).eq('id', assignmentId);
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
     },
-    [refresh]
-  );
-
-  const submitToAssignment = useCallback(
-    (assignmentId: string, studentId: string, content: string | null, attachmentUrls: string[] = []): Result => {
-      const result = submitAssignment(assignmentId, studentId, content, attachmentUrls);
-      if (result.success) refresh();
-      return result;
-    },
-    [refresh]
-  );
-
-  const gradeSub = useCallback(
-    (submissionId: string, grade: number, feedback: string | null): Result => {
-      const result = gradeSubmission(submissionId, grade, feedback);
-      if (result.success) refresh();
-      return result;
-    },
-    [refresh]
-  );
-
-  const createNewQuiz = useCallback(
-    (data: { classroom_id: string; title: string; description?: string; time_limit_minutes?: number; due_date?: string; questions: QuizQuestion[]; created_by: string }): Result => {
-      const result = createQuiz({
-        classroom_id: data.classroom_id,
-        title: data.title,
-        description: data.description || null,
-        time_limit_minutes: data.time_limit_minutes || null,
-        due_date: data.due_date || null,
-        status: 'draft',
-        questions: data.questions,
-        created_by: data.created_by,
-      });
-      if (result.success) refresh();
-      return result;
-    },
-    [refresh]
-  );
-
-  const publishQuiz = useCallback(
-    (quizId: string, status: QuizStatus): Result => {
-      const result = updateQuiz(quizId, { status });
-      if (result.success) refresh();
-      return result;
-    },
-    [refresh]
+    [refresh, supabase]
   );
 
   const updateAssignmentData = useCallback(
-    (assignmentId: string, data: Partial<Assignment>): Result => {
-      const result = updateAssignment(assignmentId, data);
-      if (result.success) refresh();
-      return result;
+    async (assignmentId: string, data: Partial<Assignment>): Promise<Result> => {
+      const { error } = await supabase.from('assignments').update(data).eq('id', assignmentId);
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
     },
-    [refresh]
+    [refresh, supabase]
+  );
+
+  const submitToAssignment = useCallback(
+    async (assignmentId: string, studentId: string, content: string | null, attachmentUrls: string[] = []): Promise<Result> => {
+      const { error } = await supabase.from('assignment_submissions').upsert({
+        assignment_id: assignmentId, student_id: studentId, content, attachment_urls: attachmentUrls, submitted_at: new Date().toISOString(),
+      });
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
+    },
+    [refresh, supabase]
+  );
+
+  const gradeSub = useCallback(
+    async (submissionId: string, grade: number, feedback: string | null): Promise<Result> => {
+      const { error } = await supabase.from('assignment_submissions').update({ grade, feedback }).eq('id', submissionId);
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
+    },
+    [refresh, supabase]
+  );
+
+  const createNewQuiz = useCallback(
+    async (data: { classroom_id: string; title: string; description?: string; time_limit_minutes?: number; due_date?: string; questions: QuizQuestion[]; created_by: string }): Promise<Result> => {
+      const { error } = await supabase.from('quizzes').insert({
+        classroom_id: data.classroom_id, title: data.title, description: data.description || null,
+        time_limit_minutes: data.time_limit_minutes || null, due_date: data.due_date || null,
+        status: 'draft', questions: data.questions, created_by: data.created_by,
+      });
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
+    },
+    [refresh, supabase]
+  );
+
+  const publishQuiz = useCallback(
+    async (quizId: string, status: QuizStatus): Promise<Result> => {
+      const { error } = await supabase.from('quizzes').update({ status }).eq('id', quizId);
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
+    },
+    [refresh, supabase]
   );
 
   const updateQuizData = useCallback(
-    (quizId: string, data: Partial<Quiz>): Result => {
-      const result = updateQuiz(quizId, data);
-      if (result.success) refresh();
-      return result;
+    async (quizId: string, data: Partial<Quiz>): Promise<Result> => {
+      const { error } = await supabase.from('quizzes').update(data).eq('id', quizId);
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
     },
-    [refresh]
+    [refresh, supabase]
   );
 
   const submitQuiz = useCallback(
-    (quizId: string, studentId: string, answers: { question_id: string; answer: string }[]): Result => {
-      const qAnswers = answers.map((a) => ({
-        question_id: a.question_id,
-        answer: a.answer,
-        is_correct: null as boolean | null,
-      }));
-      const result = submitQuizAttempt(quizId, studentId, qAnswers);
-      if (result.success) refresh();
-      return result;
+    async (quizId: string, studentId: string, answers: { question_id: string; answer: string }[]): Promise<Result> => {
+      const qAnswers = answers.map((a) => ({ question_id: a.question_id, answer: a.answer, is_correct: null as boolean | null }));
+      const { error } = await supabase.from('quiz_attempts').upsert({
+        quiz_id: quizId, student_id: studentId, answers: qAnswers, started_at: new Date().toISOString(), completed_at: new Date().toISOString(),
+      });
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
     },
-    [refresh]
+    [refresh, supabase]
   );
 
   const createTopic = useCallback(
-    (data: { classroom_id: string; title: string; content: string; assignment_id?: string; created_by: string }): Result => {
-      const result = createDiscussionTopic({
-        classroom_id: data.classroom_id,
-        title: data.title,
-        content: data.content,
-        assignment_id: data.assignment_id || null,
-        is_pinned: false,
-        is_locked: false,
-        created_by: data.created_by,
+    async (data: { classroom_id: string; title: string; content: string; assignment_id?: string; created_by: string }): Promise<Result> => {
+      const { error } = await supabase.from('discussion_topics').insert({
+        classroom_id: data.classroom_id, title: data.title, content: data.content,
+        assignment_id: data.assignment_id || null, is_pinned: false, is_locked: false, created_by: data.created_by,
       });
-      if (result.success) refresh();
-      return result;
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
     },
-    [refresh]
+    [refresh, supabase]
   );
 
   const replyToTopic = useCallback(
-    (topicId: string, content: string, createdBy: string): Result => {
-      const result = createDiscussionReply(topicId, content, createdBy);
-      if (result.success) refresh();
-      return result;
+    async (topicId: string, content: string, createdBy: string): Promise<Result> => {
+      const { error } = await supabase.from('discussion_replies').insert({ topic_id: topicId, content, created_by: createdBy });
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
     },
-    [refresh]
+    [refresh, supabase]
   );
 
   const addNewResource = useCallback(
-    (data: { classroom_id: string; title: string; description?: string; type: ResourceType; url: string; uploaded_by: string }): Result => {
-      const result = addResource({
-        classroom_id: data.classroom_id,
-        title: data.title,
-        description: data.description || null,
-        type: data.type,
-        url: data.url,
-        curriculum_id: null,
-        subject_id: null,
-        uploaded_by: data.uploaded_by,
+    async (data: { classroom_id: string; title: string; description?: string; type: ResourceType; url: string; uploaded_by: string }): Promise<Result> => {
+      const { error } = await supabase.from('classroom_resources').insert({
+        classroom_id: data.classroom_id, title: data.title, description: data.description || null,
+        type: data.type, url: data.url, uploaded_by: data.uploaded_by,
       });
-      if (result.success) refresh();
-      return result;
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
     },
-    [refresh]
+    [refresh, supabase]
   );
 
   const removeResource = useCallback(
-    (resourceId: string): Result => {
-      const result = deleteResource(resourceId);
-      if (result.success) refresh();
-      return result;
+    async (resourceId: string): Promise<Result> => {
+      const { error } = await supabase.from('classroom_resources').delete().eq('id', resourceId);
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
     },
-    [refresh]
+    [refresh, supabase]
   );
 
   const updateClassroomData = useCallback(
-    (classroomId: string, data: Partial<Classroom>): Result => {
-      const result = updateClassroom(classroomId, data);
-      if (result.success) refresh();
-      return result;
+    async (classroomId: string, data: Partial<Classroom>): Promise<Result> => {
+      const { error } = await supabase.from('classrooms').update(data).eq('id', classroomId);
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
     },
-    [refresh]
+    [refresh, supabase]
   );
 
   const editResource = useCallback(
-    (resourceId: string, data: Partial<ClassroomResource>): Result => {
-      const result = updateResource(resourceId, data);
-      if (result.success) refresh();
-      return result;
+    async (resourceId: string, data: Partial<ClassroomResource>): Promise<Result> => {
+      const { error } = await supabase.from('classroom_resources').update(data).eq('id', resourceId);
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
     },
-    [refresh]
+    [refresh, supabase]
   );
 
   const removeAssignment = useCallback(
-    (assignmentId: string): Result => {
-      const result = deleteAssignment(assignmentId);
-      if (result.success) refresh();
-      return result;
+    async (assignmentId: string): Promise<Result> => {
+      const { error } = await supabase.from('assignments').delete().eq('id', assignmentId);
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
     },
-    [refresh]
+    [refresh, supabase]
   );
 
   const removeQuiz = useCallback(
-    (quizId: string): Result => {
-      const result = deleteQuiz(quizId);
-      if (result.success) refresh();
-      return result;
+    async (quizId: string): Promise<Result> => {
+      const { error } = await supabase.from('quizzes').delete().eq('id', quizId);
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
     },
-    [refresh]
+    [refresh, supabase]
   );
 
   const removeTopic = useCallback(
-    (topicId: string): Result => {
-      const result = deleteDiscussionTopic(topicId);
-      if (result.success) refresh();
-      return result;
+    async (topicId: string): Promise<Result> => {
+      const { error } = await supabase.from('discussion_topics').delete().eq('id', topicId);
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
     },
-    [refresh]
+    [refresh, supabase]
   );
 
   const editTopic = useCallback(
-    (topicId: string, data: Partial<DiscussionTopic>): Result => {
-      const result = updateDiscussionTopic(topicId, data);
-      if (result.success) refresh();
-      return result;
+    async (topicId: string, data: Partial<DiscussionTopic>): Promise<Result> => {
+      const { error } = await supabase.from('discussion_topics').update(data).eq('id', topicId);
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
     },
-    [refresh]
+    [refresh, supabase]
   );
 
   return {
-    // Queries
     classrooms,
-    getProfile,
-    getClassroom,
-    getClassroomsByUser,
-    getMembers,
-    getMember,
-    getAssignments,
-    getSubmissionsByAssignment,
-    getSubmission,
-    getQuizzes,
-    getQuizAttempt,
-    getQuizAttempts,
-    getTopics,
-    getReplies,
-    getResources,
-    // Mutations
-    createNewClassroom,
-    joinByCode,
-    leave,
-    createNewAssignment,
-    publishAssignment,
-    updateAssignmentData,
-    submitToAssignment,
-    gradeSub,
-    createNewQuiz,
-    publishQuiz,
-    updateQuizData,
-    submitQuiz,
-    createTopic,
-    replyToTopic,
-    addNewResource,
-    removeResource,
-    updateClassroomData,
-    editResource,
-    removeAssignment,
-    removeQuiz,
-    removeTopic,
-    editTopic,
+    getProfile, getClassroom, getClassroomsByUser,
+    getMembers, getMember,
+    getAssignments, getSubmissionsByAssignment, getSubmission,
+    getQuizzes, getQuizAttempt, getQuizAttempts,
+    getTopics, getReplies, getResources,
+    createNewClassroom, joinByCode, leave,
+    createNewAssignment, publishAssignment, updateAssignmentData,
+    submitToAssignment, gradeSub,
+    createNewQuiz, publishQuiz, updateQuizData, submitQuiz,
+    createTopic, replyToTopic,
+    addNewResource, removeResource,
+    updateClassroomData, editResource,
+    removeAssignment, removeQuiz, removeTopic, editTopic,
     refresh,
   };
 }

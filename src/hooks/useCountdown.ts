@@ -1,11 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ExamCountdown, Exam } from '@/types';
-import {
-  getUserCountdowns,
-  getExams,
-  createExamCountdown,
-  deleteExamCountdown,
-} from '@/lib/mock/database';
+import { createClient } from '@/lib/supabase/client';
 
 export interface TimeLeft {
   days: number;
@@ -42,17 +37,33 @@ function calculateTimeLeft(targetDate: string | null): TimeLeft {
 export function useCountdown(userId: string | undefined) {
   const [countdowns, setCountdowns] = useState<CountdownWithTime[]>([]);
   const [availableExams, setAvailableExams] = useState<Exam[]>([]);
+  const supabase = createClient();
 
   // Load initial data
   useEffect(() => {
-    if (userId) {
-      const initialCountdowns = getUserCountdowns(userId).map(c => ({
-        ...c,
-        timeLeft: calculateTimeLeft(c.target_date),
-      }));
-      setCountdowns(initialCountdowns);
-    }
-    setAvailableExams(getExams());
+    if (!userId) return;
+
+    const loadData = async () => {
+      const [countdownRes, examRes] = await Promise.all([
+        supabase.from('exam_countdowns').select('*').eq('user_id', userId),
+        supabase.from('exams').select('*'),
+      ]);
+
+      if (countdownRes.data) {
+        setCountdowns(
+          (countdownRes.data as ExamCountdown[]).map((c) => ({
+            ...c,
+            timeLeft: calculateTimeLeft(c.target_date),
+          }))
+        );
+      }
+
+      if (examRes.data) {
+        setAvailableExams(examRes.data as Exam[]);
+      }
+    };
+
+    loadData();
   }, [userId]);
 
   // Timer tick
@@ -69,9 +80,9 @@ export function useCountdown(userId: string | undefined) {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [countdowns.length]); // Only re-run if number of countdowns changes, preventing too many effect re-runs
+  }, [countdowns.length]);
 
-  const handleCreateCountdown = useCallback((
+  const handleCreateCountdown = useCallback(async (
     data: {
       exam_id?: string;
       custom_title?: string;
@@ -90,29 +101,42 @@ export function useCountdown(userId: string | undefined) {
     if (data.exam_id) {
       const exam = availableExams.find(e => e.id === data.exam_id);
       if (exam) {
-        title = title || exam.title || '';
-        target = target || exam.exam_date || '';
+        title = title || exam.subject || '';
+        target = target || exam.date || '';
       }
     }
 
-    const newCountdown = createExamCountdown({
-      user_id: userId,
-      exam_id: data.exam_id || null,
-      custom_title: title || null,
-      target_date: target || null,
-      priority_indicator: data.priority_indicator || 'medium',
-      qualification_group: group || 'Custom',
-    });
+    const { data: newCountdown, error } = await supabase
+      .from('exam_countdowns')
+      .insert({
+        user_id: userId,
+        exam_id: data.exam_id || null,
+        custom_title: title || null,
+        target_date: target || null,
+        priority_indicator: data.priority_indicator || 'medium',
+        qualification_group: group || 'Custom',
+      })
+      .select()
+      .single();
+
+    if (error || !newCountdown) return;
 
     setCountdowns(prev => [
       ...prev,
-      { ...newCountdown, timeLeft: calculateTimeLeft(newCountdown.target_date) }
+      {
+        ...(newCountdown as ExamCountdown),
+        timeLeft: calculateTimeLeft((newCountdown as ExamCountdown).target_date),
+      },
     ]);
   }, [userId, availableExams]);
 
-  const handleDeleteCountdown = useCallback((id: string) => {
-    const res = deleteExamCountdown(id);
-    if (res.success) {
+  const handleDeleteCountdown = useCallback(async (id: string) => {
+    const { error } = await supabase
+      .from('exam_countdowns')
+      .delete()
+      .eq('id', id);
+
+    if (!error) {
       setCountdowns(prev => prev.filter(c => c.id !== id));
     }
   }, []);

@@ -8,12 +8,8 @@
 
 import { useState, useCallback } from 'react';
 import { UserRole } from '@/types';
-import {
-  mockInviteUser,
-  mockVerifyOtp,
-  mockCompleteProfile,
-  getAllProfiles,
-} from '@/lib/mock/database';
+import { createClient } from '@/lib/supabase/client';
+import { signUpAction } from '@/lib/supabase/auth-actions';
 
 export type InviteStep = 1 | 2 | 3;
 
@@ -63,6 +59,8 @@ const INITIAL_PROFILE_DATA: ProfileFormData = {
 };
 
 export function useContributorManager() {
+  const supabase = createClient();
+
   const [state, setState] = useState<ContributorManagerState>({
     currentStep: 1,
     inviteData: { ...INITIAL_INVITE_DATA },
@@ -75,66 +73,69 @@ export function useContributorManager() {
   });
 
   // ── Step 1: Send invite ───────────────────────────────────────────────────
-  const submitInvite = useCallback((data: InviteFormData) => {
+  const submitInvite = useCallback(async (data: InviteFormData) => {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
-    // Simulate network delay
-    setTimeout(() => {
-      const result = mockInviteUser(data.email, data.name, data.role);
+    const tempPassword =
+      Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
 
-      if (!result.success) {
-        setState((prev) => ({
-          ...prev,
-          isLoading: false,
-          error: result.error,
-        }));
-        return;
-      }
+    const result = await signUpAction(data.email, tempPassword, data.name);
 
+    if (!result.success) {
       setState((prev) => ({
         ...prev,
         isLoading: false,
-        inviteData: data,
-        createdUserId: result.userId,
-        currentStep: 2,
-        error: null,
+        error: result.error || 'Failed to send invite.',
       }));
-    }, 800);
+      return;
+    }
+
+    setState((prev) => ({
+      ...prev,
+      isLoading: false,
+      inviteData: data,
+      currentStep: 2,
+      error: null,
+    }));
   }, []);
 
   // ── Step 2: Verify OTP ────────────────────────────────────────────────────
   const verifyOtp = useCallback(
-    (otp: string) => {
+    async (otp: string) => {
       setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
-      // Simulate network delay
-      setTimeout(() => {
-        const isValid = mockVerifyOtp(state.inviteData.email, otp);
+      const { data: verifyData, error } = await supabase.auth.verifyOtp({
+        email: state.inviteData.email,
+        token: otp,
+        type: 'signup',
+      });
 
-        if (!isValid) {
-          setState((prev) => ({
-            ...prev,
-            isLoading: false,
-            error: 'Invalid OTP code. Please try again.',
-          }));
-          return;
-        }
-
+      if (error) {
         setState((prev) => ({
           ...prev,
           isLoading: false,
-          otpCode: otp,
-          currentStep: 3,
-          error: null,
+          error: error.message || 'Invalid OTP code. Please try again.',
         }));
-      }, 600);
+        return;
+      }
+
+      const userId = verifyData.user?.id ?? null;
+
+      setState((prev) => ({
+        ...prev,
+        isLoading: false,
+        otpCode: otp,
+        createdUserId: userId,
+        currentStep: 3,
+        error: null,
+      }));
     },
-    [state.inviteData.email]
+    [state.inviteData.email, supabase]
   );
 
   // ── Step 3: Complete profile ──────────────────────────────────────────────
   const completeProfile = useCallback(
-    (data: ProfileFormData) => {
+    async (data: ProfileFormData) => {
       if (data.password !== data.confirmPassword) {
         setState((prev) => ({
           ...prev,
@@ -161,37 +162,65 @@ export function useContributorManager() {
 
       setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
-      // Simulate network delay
-      setTimeout(() => {
-        const result = mockCompleteProfile(state.createdUserId!, {
-          password: data.password,
-          title: data.title || undefined,
-          bio: data.bio || undefined,
-          website_url: data.website_url || undefined,
-          facebook_url: data.facebook_url || undefined,
-          linkedin_url: data.linkedin_url || undefined,
-          github_url: data.github_url || undefined,
-        });
+      const { error: passwordError } = await supabase.auth.updateUser({
+        password: data.password,
+      });
 
-        if (!result.success) {
-          setState((prev) => ({
-            ...prev,
-            isLoading: false,
-            error: result.error,
-          }));
-          return;
-        }
-
+      if (passwordError) {
         setState((prev) => ({
           ...prev,
           isLoading: false,
-          profileData: data,
-          success: true,
-          error: null,
+          error: passwordError.message,
         }));
-      }, 1000);
+        return;
+      }
+
+      const { error: profileError } = await supabase.from('profiles').upsert({
+        id: state.createdUserId,
+        email: state.inviteData.email,
+        name: state.inviteData.name,
+        role: state.inviteData.role,
+      });
+
+      if (profileError) {
+        setState((prev) => ({
+          ...prev,
+          isLoading: false,
+          error: profileError.message,
+        }));
+        return;
+      }
+
+      const { error: contribError } = await supabase
+        .from('contributor_profiles')
+        .upsert({
+          id: state.createdUserId,
+          title: data.title || null,
+          bio: data.bio || null,
+          website: data.website_url || null,
+          facebook_url: data.facebook_url || null,
+          linkedin: data.linkedin_url || null,
+          github: data.github_url || null,
+        });
+
+      if (contribError) {
+        setState((prev) => ({
+          ...prev,
+          isLoading: false,
+          error: contribError.message,
+        }));
+        return;
+      }
+
+      setState((prev) => ({
+        ...prev,
+        isLoading: false,
+        profileData: data,
+        success: true,
+        error: null,
+      }));
     },
-    [state.createdUserId]
+    [state.inviteData, state.createdUserId, supabase]
   );
 
   // ── Reset to start over ──────────────────────────────────────────────────
@@ -209,9 +238,11 @@ export function useContributorManager() {
   }, []);
 
   // ── Fetch all users (for the table) ───────────────────────────────────────
-  const fetchAllUsers = useCallback(() => {
-    return getAllProfiles();
-  }, []);
+  const fetchAllUsers = useCallback(async () => {
+    const { data, error } = await supabase.from('profiles').select('*');
+    if (error) throw error;
+    return data;
+  }, [supabase]);
 
   return {
     ...state,

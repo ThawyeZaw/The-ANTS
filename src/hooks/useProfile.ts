@@ -3,24 +3,13 @@
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTS — useProfile Hook
 // Fetches public profile data by username for the /profile/[username] page.
-// Now supports projects, activities, and achievements for all roles.
+// Uses Supabase for all data fetching.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect } from 'react';
 import { Profile, ProjectEntry, ActivityEntry, AchievementEntry } from '@/types';
 import { useAuth } from './useAuth';
-import {
-  getProfileByUsername,
-  mockContributorProfiles,
-  mockContributorStats,
-  mockActivityFeed,
-  mockEditorSubmissions,
-  getUserCertifications,
-  getUserClubs,
-  getClubProjects,
-  getMemberContributions,
-  mockClubMembers,
-} from '@/lib/mock/database';
+import { createClient } from '@/lib/supabase/client';
 
 interface ContributorProfileData {
   id: string;
@@ -62,7 +51,7 @@ interface UseProfileReturn {
   projects: ProjectEntry[];
   portfolioActivities: ActivityEntry[];
   achievements: AchievementEntry[];
-  certifications: ReturnType<typeof getUserCertifications>;
+  certifications: any[];
   clubMemberships: ClubMembershipInfo[];
   clubProjects: ProjectEntry[];
   clubActivity: ActivityItem[];
@@ -73,13 +62,15 @@ interface UseProfileReturn {
 
 export function useProfile(username: string): UseProfileReturn {
   const { user } = useAuth();
+  const supabase = createClient();
+
   const [isLoading, setIsLoading] = useState(true);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [contributorProfile, setContributorProfile] = useState<ContributorProfileData | null>(null);
   const [stats, setStats] = useState<ContributorStatsData | null>(null);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [notFound, setNotFound] = useState(false);
-  const [certifications, setCertifications] = useState<ReturnType<typeof getUserCertifications>>([]);
+  const [certifications, setCertifications] = useState<any[]>([]);
   const [clubMemberships, setClubMemberships] = useState<ClubMembershipInfo[]>([]);
   const [clubProjects, setClubProjects] = useState<ProjectEntry[]>([]);
   const [clubActivity, setClubActivity] = useState<ActivityItem[]>([]);
@@ -87,127 +78,208 @@ export function useProfile(username: string): UseProfileReturn {
   const isOwnProfile = !!(user && profile && user.id === profile.id);
 
   useEffect(() => {
-    // Simulate async fetch
-    const timer = setTimeout(() => {
+    let cancelled = false;
+
+    async function fetchProfile() {
+      setIsLoading(true);
+
       // Resolve "me" to the current user's username
       const resolvedUsername = username === 'me' && user
         ? user.profile.username
         : username;
 
-      const foundProfile = getProfileByUsername(resolvedUsername);
-
-      if (!foundProfile) {
-        setProfile(null);
-        setContributorProfile(null);
-        setStats(null);
-        setActivities([]);
+      if (!resolvedUsername) {
         setNotFound(true);
         setIsLoading(false);
         return;
       }
 
+      const { data: profileRow, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('username', resolvedUsername)
+        .single();
+
+      if (error || !profileRow) {
+        if (!cancelled) {
+          setProfile(null);
+          setContributorProfile(null);
+          setStats(null);
+          setActivities([]);
+          setNotFound(true);
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      const foundProfile: Profile = {
+        id: profileRow.id,
+        email: profileRow.email ?? '',
+        name: profileRow.name ?? '',
+        username: profileRow.username ?? '',
+        avatar: profileRow.avatar_url ?? '',
+        role: profileRow.role ?? 'student',
+        bio: profileRow.bio,
+        title: profileRow.title,
+        socialLinks: profileRow.social_links as Profile['socialLinks'],
+        isPublic: profileRow.is_public ?? true,
+        pinnedItemId: profileRow.pinned_item_id,
+        sectionVisibility: profileRow.section_visibility as Profile['sectionVisibility'],
+        projects: profileRow.projects as Profile['projects'],
+        activities: profileRow.activities as Profile['activities'],
+        achievements: profileRow.achievements as Profile['achievements'],
+        certificationIds: profileRow.certification_ids,
+        createdAt: profileRow.created_at,
+      };
+
+      if (cancelled) return;
       setProfile(foundProfile);
 
       // Fetch certifications for the profile user
-      const userCerts = getUserCertifications(foundProfile.id);
-      setCertifications(userCerts);
+      const { data: certs } = await supabase
+        .from('certifications')
+        .select('*')
+        .eq('contributor_id', foundProfile.id);
+      if (!cancelled) setCertifications(certs ?? []);
 
       // Fetch club memberships for the profile user
-      const userClubs = getUserClubs(foundProfile.id);
-      const memberships: ClubMembershipInfo[] = userClubs.map(({ club, membership }) => {
-        const memberCount = mockClubMembers.filter(
-          (m) => m.club_id === club.id && m.membership_status === 'active'
-        ).length;
-        return {
-          id: club.id,
-          name: club.name,
-          role: membership.role,
-          memberCount,
-          joinMode: club.join_mode,
-          custom_domain_slug: club.custom_domain_slug,
-        };
-      });
-      setClubMemberships(memberships);
+      const { data: clubMembers } = await supabase
+        .from('club_members')
+        .select('*, clubs(*)')
+        .eq('user_id', foundProfile.id)
+        .eq('membership_status', 'active');
 
-      // Generate club projects for profile display
-      const clubProjEntries: ProjectEntry[] = [];
-      const clubActivityItems: ActivityItem[] = [];
-      if (foundProfile.showClubProjects !== false) {
-        for (const { club } of userClubs) {
-          const projects = getClubProjects(club.id);
-          for (const p of projects) {
-            if (p.contributors?.includes(foundProfile.id) || p.created_by === foundProfile.id) {
-              clubProjEntries.push({
-                id: `club-${p.id}`,
-                title: p.title,
-                description: p.description || '',
-                technologies: p.tags,
-              });
+      if (!cancelled && clubMembers) {
+        const memberships: ClubMembershipInfo[] = [];
+        for (const cm of clubMembers) {
+          const club = cm.clubs as any;
+          if (!club) continue;
+
+          const { count } = await supabase
+            .from('club_members')
+            .select('*', { count: 'exact', head: true })
+            .eq('club_id', club.id)
+            .eq('membership_status', 'active');
+
+          memberships.push({
+            id: club.id,
+            name: club.name,
+            role: cm.role,
+            memberCount: count ?? 0,
+            joinMode: club.join_mode,
+            custom_domain_slug: club.custom_domain_slug,
+          });
+        }
+        if (!cancelled) setClubMemberships(memberships);
+
+        // Club projects for profile display
+        if (foundProfile.showClubProjects !== false) {
+          const clubProjEntries: ProjectEntry[] = [];
+          const clubActivityItems: ActivityItem[] = [];
+          for (const cm of clubMembers) {
+            const club = cm.clubs as any;
+            if (!club) continue;
+
+            const { data: projects } = await supabase
+              .from('club_projects')
+              .select('*')
+              .eq('club_id', club.id);
+            if (projects) {
+              for (const p of projects) {
+                if (p.contributors?.includes(foundProfile.id) || p.created_by === foundProfile.id) {
+                  clubProjEntries.push({
+                    id: `club-${p.id}`,
+                    title: p.title,
+                    description: p.description || '',
+                    technologies: p.tags,
+                  });
+                }
+              }
+            }
+
+            if (foundProfile.showClubActivity !== false) {
+              const { data: contributions } = await supabase
+                .from('club_member_contributions')
+                .select('*')
+                .eq('club_id', club.id)
+                .eq('user_id', foundProfile.id);
+              if (contributions) {
+                for (const c of contributions) {
+                  clubActivityItems.push({
+                    id: c.id,
+                    activity_type: `club_${c.contribution_type}`,
+                    description: `[${club.name}] ${c.title}`,
+                    created_at: c.created_at,
+                  });
+                }
+              }
             }
           }
-          if (foundProfile.showClubActivity !== false) {
-            const contributions = getMemberContributions(club.id, foundProfile.id);
-            for (const c of contributions) {
-              clubActivityItems.push({
-                id: c.id,
-                activity_type: `club_${c.contribution_type}`,
-                description: `[${club.name}] ${c.title}`,
-                created_at: c.created_at,
-              });
-            }
+          if (!cancelled) {
+            setClubProjects(clubProjEntries);
+            setClubActivity(clubActivityItems);
           }
         }
       }
-      setClubProjects(clubProjEntries);
-      setClubActivity(clubActivityItems);
 
       // Fetch contributor-specific data if applicable
       if (foundProfile.role === 'contributor' || foundProfile.role === 'main_contributor') {
-        const cp = mockContributorProfiles.find((p) => p.id === foundProfile.id);
-        setContributorProfile(cp ?? null);
+        const { data: cp } = await supabase
+          .from('contributor_profiles')
+          .select('*')
+          .eq('id', foundProfile.id)
+          .single();
+        if (!cancelled) {
+          setContributorProfile(cp ? {
+            id: cp.id,
+            title: cp.title,
+            bio: cp.bio,
+            website_url: cp.website,
+            facebook_url: cp.facebook_url,
+            linkedin_url: cp.linkedin,
+            github_url: cp.github,
+          } : null);
+          setStats({
+            published_curriculums: cp?.published_curriculums_count ?? 0,
+            published_resources: cp?.published_notes_count ?? 0,
+            total_views: 0,
+          });
+        }
 
-        const cs = mockContributorStats.find((s) => s.contributor_id === foundProfile.id);
-        setStats(cs ? {
-          published_curriculums: cs.published_curriculums,
-          published_resources: cs.published_resources,
-          total_views: cs.total_views,
-        } : null);
+        // Aggregate activity from editor_submissions
+        const { data: submissions } = await supabase
+          .from('editor_submissions')
+          .select('*')
+          .eq('submitter_id', foundProfile.id)
+          .eq('status', 'approved')
+          .not('reviewed_at', 'is', null);
 
-        // Aggregate activity from mockActivityFeed + mockEditorSubmissions
-        const feedActivities: ActivityItem[] = mockActivityFeed
-          .filter((a) => a.user_id === foundProfile.id)
-          .map((a) => ({
-            id: a.id,
-            activity_type: a.activity_type,
-            description: a.description,
-            created_at: a.created_at,
-          }));
-
-        const submissionActivities: ActivityItem[] = mockEditorSubmissions
-          .filter((s) => s.contributor_id === foundProfile.id && s.status === 'approved' && s.reviewed_at !== null)
-          .map((s) => ({
+        if (!cancelled && submissions) {
+          const submissionActivities: ActivityItem[] = submissions.map((s: any) => ({
             id: s.id,
             activity_type: 'submission_approved' as const,
             description: `Submission approved for ${s.submission_type}`,
             created_at: s.reviewed_at as string,
           }));
-
-        setActivities(
-          [...feedActivities, ...submissionActivities].sort(
+          setActivities(submissionActivities.sort(
             (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-          )
-        );
+          ));
+        }
       } else {
-        setContributorProfile(null);
-        setStats(null);
-        setActivities([]);
+        if (!cancelled) {
+          setContributorProfile(null);
+          setStats(null);
+          setActivities([]);
+        }
       }
 
-      setIsLoading(false);
-    }, 400);
+      if (!cancelled) setIsLoading(false);
+    }
 
-    return () => clearTimeout(timer);
-  }, [username, user]);
+    fetchProfile();
+
+    return () => { cancelled = true; };
+  }, [username, user, supabase]);
 
   return {
     profile,

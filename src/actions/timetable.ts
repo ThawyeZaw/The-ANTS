@@ -1,20 +1,13 @@
 'use server';
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Timetable Server Actions
-// Currently pass-through wrappers around the mock database.
-// Ready for Supabase binding: replace the mock imports with Supabase client calls.
-// ──────────────────────────────────────────────────────────────────────────────
+/**
+ * @deprecated This file is deprecated. All timetable CRUD is handled directly
+ * by useTimetable.ts hook using the Supabase client. Keep this file for
+ * reference only; no new code should import from here.
+ */
 
 import type { TimetableEvent, TimetableEventFormData } from '@/types/timetable';
-import {
-  createTimetableEvent,
-  updateTimetableEvent,
-  deleteTimetableEvent,
-  toggleTimetableEventComplete,
-  moveTimetableEvent,
-  getIntegratedTimetableEvents,
-} from '@/lib/mock/timetable';
+import { createClient } from '@/lib/supabase/server';
 import { combineDateTime } from '@/hooks/useTimetable';
 
 // ---------------------------------------------------------------------------
@@ -28,8 +21,21 @@ export async function fetchTimetableEventsAction(
   showExternalEvents = true
 ): Promise<{ success: true; events: TimetableEvent[] } | { success: false; error: string }> {
   try {
-    const events = getIntegratedTimetableEvents(userId, rangeStart, rangeEnd, { showExternalEvents });
-    return { success: true, events };
+    const supabase = await createClient();
+    let query = supabase
+      .from('timetable_events')
+      .select('*')
+      .eq('user_id', userId)
+      .gte('start_time', rangeStart.toISOString())
+      .lte('start_time', rangeEnd.toISOString());
+
+    if (!showExternalEvents) {
+      query = query.eq('event_source', 'user');
+    }
+
+    const { data, error } = await query;
+    if (error) return { success: false, error: error.message };
+    return { success: true, events: (data as TimetableEvent[]) ?? [] };
   } catch (err) {
     return { success: false, error: `Failed to fetch events: ${String(err)}` };
   }
@@ -44,6 +50,7 @@ export async function createEventAction(
   data: TimetableEventFormData
 ): Promise<{ success: true; event: TimetableEvent } | { success: false; error: string }> {
   try {
+    const supabase = await createClient();
     const { time_mode, date, start_time, end_time, ...rest } = data;
 
     let startIso: string | null = null;
@@ -60,7 +67,8 @@ export async function createEventAction(
       endIso = combineDateTime(date, end_time);
     }
 
-    const result = createTimetableEvent(userId, {
+    const { data: event, error } = await supabase.from('timetable_events').insert({
+      user_id: userId,
       ...rest,
       start_time: startIso,
       end_time: endIso,
@@ -69,9 +77,10 @@ export async function createEventAction(
       completed_at: null,
       event_source: 'user',
       source_id: null,
-    });
+    }).select().single();
 
-    return result;
+    if (error || !event) return { success: false, error: error?.message ?? 'Failed to create event' };
+    return { success: true, event: event as TimetableEvent };
   } catch (err) {
     return { success: false, error: `Failed to create event: ${String(err)}` };
   }
@@ -87,6 +96,7 @@ export async function updateEventAction(
   data: TimetableEventFormData
 ): Promise<{ success: true; event: TimetableEvent } | { success: false; error: string }> {
   try {
+    const supabase = await createClient();
     const { time_mode, date, start_time, end_time, ...rest } = data;
     let startIso: string | null = null;
     let endIso: string | null = null;
@@ -103,12 +113,15 @@ export async function updateEventAction(
     }
 
     const baseId = eventId.includes('::') ? eventId.split('::')[0] : eventId;
-    return updateTimetableEvent(baseId, userId, {
+    const { data: event, error } = await supabase.from('timetable_events').update({
       ...rest,
       start_time: startIso,
       end_time: endIso,
       all_day: allDay,
-    });
+    }).eq('id', baseId).select().single();
+
+    if (error || !event) return { success: false, error: error?.message ?? 'Failed to update event' };
+    return { success: true, event: event as TimetableEvent };
   } catch (err) {
     return { success: false, error: `Failed to update event: ${String(err)}` };
   }
@@ -122,8 +135,10 @@ export async function deleteEventAction(
   eventId: string,
   userId: string
 ): Promise<{ success: true } | { success: false; error: string }> {
+  const supabase = await createClient();
   const baseId = eventId.includes('::') ? eventId.split('::')[0] : eventId;
-  return deleteTimetableEvent(baseId, userId);
+  const { error } = await supabase.from('timetable_events').delete().eq('id', baseId);
+  return error ? { success: false, error: error.message } : { success: true };
 }
 
 // ---------------------------------------------------------------------------
@@ -134,7 +149,18 @@ export async function toggleEventCompleteAction(
   eventId: string,
   userId: string
 ): Promise<{ success: true; event: TimetableEvent } | { success: false; error: string }> {
-  return toggleTimetableEventComplete(eventId, userId);
+  const supabase = await createClient();
+  const { data: existing } = await supabase.from('timetable_events')
+    .select('is_completed').eq('id', eventId).single();
+
+  const newVal = !(existing?.is_completed ?? false);
+  const { data: event, error } = await supabase.from('timetable_events').update({
+    is_completed: newVal,
+    completed_at: newVal ? new Date().toISOString() : null,
+  }).eq('id', eventId).select().single();
+
+  if (error || !event) return { success: false, error: error?.message ?? 'Failed to toggle' };
+  return { success: true, event: event as TimetableEvent };
 }
 
 // ---------------------------------------------------------------------------
@@ -147,5 +173,12 @@ export async function moveEventAction(
   newStartTime: string,
   newEndTime: string | null
 ): Promise<{ success: true; event: TimetableEvent } | { success: false; error: string }> {
-  return moveTimetableEvent(eventId, userId, newStartTime, newEndTime);
+  const supabase = await createClient();
+  const { data: event, error } = await supabase.from('timetable_events').update({
+    start_time: newStartTime,
+    end_time: newEndTime,
+  }).eq('id', eventId).select().single();
+
+  if (error || !event) return { success: false, error: error?.message ?? 'Failed to move event' };
+  return { success: true, event: event as TimetableEvent };
 }
