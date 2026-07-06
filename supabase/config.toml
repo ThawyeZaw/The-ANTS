@@ -42,14 +42,17 @@ health_timeout = "2m"
 major_version = 17
 
 [db.pooler]
-enabled = false
+enabled = true
 # Port to use for the local connection pooler.
 port = 54329
 # Specifies when a server connection can be reused by other clients.
 # Configure one of the supported pooler modes: `transaction`, `session`.
+# transaction mode: connection released back to pool after each transaction (recommended for serverless).
+# session mode: connection held for the full session (needed for prepared statements, NOTAM).
 pool_mode = "transaction"
 # How many server connections to allow per user/database pair.
-default_pool_size = 20
+# Match the remote pool size (15) for local dev parity.
+default_pool_size = 15
 # Maximum number of client connections allowed.
 max_client_conn = 100
 
@@ -117,12 +120,27 @@ enabled = true
 # The maximum file size allowed (e.g. "5MB", "500KB").
 file_size_limit = "50MiB"
 
-# Uncomment to configure local storage buckets
-# [storage.buckets.images]
-# public = false
-# file_size_limit = "50MiB"
-# allowed_mime_types = ["image/png", "image/jpeg"]
-# objects_path = "./images"
+# Storage buckets per spec.md Section 27.2 — 27.4
+
+[storage.buckets.avatars]
+public = true
+file_size_limit = "5MiB"
+allowed_mime_types = ["image/jpeg", "image/png", "image/webp"]
+
+[storage.buckets.notes-images]
+public = false
+file_size_limit = "10MiB"
+allowed_mime_types = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"]
+
+[storage.buckets.role-upgrade-evidence]
+public = false
+file_size_limit = "20MiB"
+allowed_mime_types = ["application/pdf", "image/jpeg", "image/png", "image/webp"]
+
+[storage.buckets.assignment-attachments]
+public = false
+file_size_limit = "50MiB"
+allowed_mime_types = ["application/pdf", "application/zip", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "image/jpeg", "image/png"]
 
 # Allow connections via S3 compatible clients
 [storage.s3_protocol]

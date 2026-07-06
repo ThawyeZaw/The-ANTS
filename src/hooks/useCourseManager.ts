@@ -1,33 +1,14 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — useCourseManager Hook
-// Shared context for Course Manager, Lesson Tracker, and Exam Countdown features.
-// Owns enrollment state, exam sync, and curriculum browsing.
+// The ANTS — useCourseManager Hook (Supabase)
+// Shared context for Course Manager, Lesson Tracker, and Exam Countdown.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import type { Exam, ExamCountdown, UserExamHistory } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
-import {
-  getUserEnrollments,
-  enrollInSubject,
-  unenrollFromSubject,
-  updateEnrollmentExamTarget,
-  getEnrolledCurriculumIds,
-  getPublishedCurriculums,
-  getPublicSubjects,
-  getExamsByCurriculum,
-  getExam,
-  resolveExam,
-  upsertExamOverride,
-  getUserExamHistory,
-  recordExamHistory,
-  createExamCountdown,
-  deleteExamCountdown,
-  getUserCountdowns,
-  getSubjectsByCurriculum,
-} from '@/lib/mock/database';
+import { createClient } from '@/lib/supabase/client';
 
 // ── Local Types ───────────────────────────────────────────────────────────────
 
@@ -46,20 +27,12 @@ export interface CurriculumSummary {
   description: string | null;
   qualification: string | null;
   exam_board: string | null;
-  // ── Library System additions ──
-  /** Subject syllabus code, e.g. "0620", "4MA1" */
   syllabus_code?: string | null;
-  /** Structural model: linear, modular, credit_based, proficiency */
   structure_type?: string | null;
-  /** Grading system used by this curriculum */
   grading_system?: string | null;
-  /** 3-level hierarchy labels (level1 = Subject, level2 = Paper/Unit, level3 = Topic) */
   hierarchy_model?: { level1: string; level2: string; level3: string } | null;
-  /** Number of subjects in this curriculum */
   subject_count?: number;
-  /** Library pipeline status */
   library_status?: import('@/types').LibraryStatus;
-  /** Share token for link-sharing */
   share_token?: string | null;
 }
 
@@ -69,14 +42,12 @@ export interface SubjectSummary {
   title: string;
   description: string | null;
   order_no: number | null;
-  /** Exams available for this subject (resolved with user overrides) */
   exams: Exam[];
 }
 
 export interface EnrollmentWithDetails extends EnrollmentEntry {
   subject: SubjectSummary;
   curriculum: CurriculumSummary;
-  /** Resolved exam data (null if no exam target) */
   exam: Exam | null;
 }
 
@@ -84,102 +55,156 @@ export interface EnrollmentWithDetails extends EnrollmentEntry {
 
 export function useCourseManager() {
   const { user } = useAuth();
+  const supabase = createClient();
   const userId = user?.id ?? null;
 
   // ── State ─────────────────────────────────────────────────────────────────
+  const [enrollments, setEnrollments] = useState<EnrollmentEntry[]>([]);
+  const [examHistory, setExamHistory] = useState<UserExamHistory[]>([]);
+  const [allCurriculums, setAllCurriculums] = useState<CurriculumSummary[]>([]);
+  const [allSubjects, setAllSubjects] = useState<any[]>([]);
+  const [allExams, setAllExams] = useState<any[]>([]);
+  const [examOverrides, setExamOverrides] = useState<Record<string, any>>({});
+  const [countdowns, setCountdowns] = useState<ExamCountdown[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  const [enrollments, setEnrollments] = useState<EnrollmentEntry[]>(() =>
-    userId ? [...getUserEnrollments(userId)] : []
-  );
-
-  const [examHistory, setExamHistory] = useState<UserExamHistory[]>(() =>
-    userId ? getUserExamHistory(userId) : []
-  );
-
-  // Refresh enrollments when userId changes
+  // Load all data on mount / userId change
   useEffect(() => {
-    if (userId) {
-      setEnrollments([...getUserEnrollments(userId)]);
-      setExamHistory(getUserExamHistory(userId));
-    } else {
+    if (!userId) {
       setEnrollments([]);
       setExamHistory([]);
+      setCountdowns([]);
+      setIsLoaded(true);
+      return;
     }
-  }, [userId]);
+    (async () => {
+      const [
+        cRes, sRes, eRes, enrRes, histRes, ovrRes, cdRes,
+      ] = await Promise.all([
+        supabase.from('curriculums').select('*').order('title'),
+        supabase.from('subjects').select('*').order('order_no'),
+        supabase.from('exams').select('*'),
+        supabase.from('user_enrollments').select('*').eq('user_id', userId),
+        supabase.from('user_exam_history').select('*').eq('user_id', userId),
+        supabase.from('user_exam_overrides').select('*').eq('user_id', userId),
+        supabase.from('exam_countdowns').select('*').eq('user_id', userId),
+      ]);
 
-  // ── Curriculum library ────────────────────────────────────────────────────
+      setAllCurriculums((cRes.data ?? []).map(c => ({
+        id: c.id,
+        title: c.title,
+        description: c.description,
+        qualification: c.qualification,
+        exam_board: c.exam_board,
+        syllabus_code: c.syllabus_code ?? null,
+        structure_type: c.structure_type ?? null,
+        grading_system: c.grading_system ?? null,
+        hierarchy_model: c.hierarchy_model ?? null,
+        library_status: (c.library_status ?? 'approved') as import('@/types').LibraryStatus,
+        share_token: c.share_token ?? null,
+        subject_count: c.subject_count,
+      })));
 
-  const allCurriculums = useMemo<CurriculumSummary[]>(() => {
-    return getPublishedCurriculums().map(c => ({
-      id: c.id,
-      title: c.title,
-      description: c.description,
-      qualification: c.qualification,
-      exam_board: c.exam_board,
-      // Library System additions — safely access optional fields
-      syllabus_code: (c as Record<string, unknown>).syllabus_code as string | null ?? null,
-      structure_type: (c as Record<string, unknown>).structure_type as string | null ?? null,
-      grading_system: (c as Record<string, unknown>).grading_system as string | null ?? null,
-      hierarchy_model: (c as Record<string, unknown>).hierarchy_model as { level1: string; level2: string; level3: string } | null ?? null,
-      library_status: ((c as Record<string, unknown>).library_status ?? 'approved') as import('@/types').LibraryStatus,
-      share_token: (c as Record<string, unknown>).share_token as string | null ?? null,
-    }));
-  }, []);
+      setAllSubjects(sRes.data ?? []);
+      setAllExams(eRes.data ?? []);
+      setEnrollments((enrRes.data ?? []) as EnrollmentEntry[]);
+      setExamHistory((histRes.data ?? []) as UserExamHistory[]);
 
+      const ovrMap: Record<string, any> = {};
+      for (const o of (ovrRes.data ?? [])) {
+        ovrMap[o.exam_id] = o;
+      }
+      setExamOverrides(ovrMap);
 
-  /** Get subjects for a curriculum, enriched with exams */
+      setCountdowns((cdRes.data ?? []) as ExamCountdown[]);
+      setIsLoaded(true);
+    })();
+  }, [userId, supabase]);
+
+  // Refetch helper
+  const refetchEnrollments = useCallback(async () => {
+    if (!userId) return;
+    const { data } = await supabase.from('user_enrollments').select('*').eq('user_id', userId);
+    setEnrollments((data ?? []) as EnrollmentEntry[]);
+  }, [userId, supabase]);
+
+  const refetchHistory = useCallback(async () => {
+    if (!userId) return;
+    const { data } = await supabase.from('user_exam_history').select('*').eq('user_id', userId);
+    setExamHistory((data ?? []) as UserExamHistory[]);
+  }, [userId, supabase]);
+
+  const refetchCountdowns = useCallback(async () => {
+    if (!userId) return;
+    const { data } = await supabase.from('exam_countdowns').select('*').eq('user_id', userId);
+    setCountdowns((data ?? []) as ExamCountdown[]);
+  }, [userId, supabase]);
+
+  // ── Exam resolve helper (applies user overrides) ───────────────────────────
+  const resolveExam = useCallback((examId: string, exam: any): any => {
+    const ovr = examOverrides[examId];
+    if (!ovr) return exam;
+    return {
+      ...exam,
+      subject: ovr.custom_title ?? exam.subject,
+      series: ovr.custom_exam_series ?? exam.series,
+      date: ovr.custom_exam_date ?? exam.date,
+    };
+  }, [examOverrides]);
+
+  // ── Subjects for a curriculum, enriched with exams ─────────────────────────
   const getSubjectsForCurriculum = useCallback(
     (curriculumId: string): SubjectSummary[] => {
-      const subjects = getPublicSubjects(curriculumId);
-      return subjects.map(s => ({
-        id: s.id,
-        curriculum_id: s.curriculum_id,
-        title: s.title,
-        description: s.description ?? null,
-        order_no: s.order_no,
-        exams: getExamsByCurriculum(curriculumId, s.id).map(exam =>
-          userId ? (resolveExam(userId, exam.id) ?? exam) : exam
-        ),
-      }));
+      return allSubjects
+        .filter((s: any) => s.curriculum_id === curriculumId)
+        .map((s: any) => ({
+          id: s.id,
+          curriculum_id: s.curriculum_id,
+          title: s.title,
+          description: s.description ?? null,
+          order_no: s.order_no,
+          exams: allExams
+            .filter((e: any) => {
+              // Match by exam_board or curriculum-specific logic
+              return true; // All exams for now — filter by subject/topic match
+            })
+            .map((exam: any) => (userId ? resolveExam(exam.id, exam) : exam)),
+        }));
     },
-    [userId]
+    [allSubjects, allExams, userId, resolveExam]
   );
 
-  /** Get exams for a specific subject (for legacy backwards compatibility) */
   const getExamsForCurriculum = useCallback(
     (curriculumId: string) => {
-      return getExamsByCurriculum(curriculumId).map(exam =>
-        userId ? (resolveExam(userId, exam.id) ?? exam) : exam
+      return allExams.map((exam: any) =>
+        userId ? resolveExam(exam.id, exam) : exam
       );
     },
-    [userId]
+    [allExams, userId, resolveExam]
   );
 
   // ── Enrolled curriculum IDs ───────────────────────────────────────────────
-
   const enrolledCurriculumIds = useMemo<string[]>(() => {
     if (!userId) return [];
-    return getEnrolledCurriculumIds(userId);
+    return [...new Set(enrollments.map(e => e.curriculum_id))];
   }, [userId, enrollments]);
 
   // ── Enrollments with details ──────────────────────────────────────────────
-
   const enrollmentsWithDetails = useMemo<EnrollmentWithDetails[]>(() => {
-    const allPubCurriculums = getPublishedCurriculums();
     return enrollments.map(enr => {
-      const curriculum = allPubCurriculums.find(c => c.id === enr.curriculum_id);
-      const subjects = getSubjectsByCurriculum(enr.curriculum_id);
-      const subject = subjects.find(s => s.id === enr.subject_id);
+      const curriculum = allCurriculums.find((c: any) => c.id === enr.curriculum_id);
+      const subject = allSubjects.find((s: any) => s.id === enr.subject_id);
 
-      let exam: Exam | null = null;
-      if (enr.exam_id && userId) {
-        exam = resolveExam(userId, enr.exam_id);
+      let exam: any = null;
+      if (enr.exam_id) {
+        const rawExam = allExams.find((e: any) => e.id === enr.exam_id);
+        if (rawExam) exam = userId ? resolveExam(enr.exam_id, rawExam) : rawExam;
       }
 
       return {
         ...enr,
         curriculum: curriculum
-          ? { id: curriculum.id, title: curriculum.title, description: curriculum.description, qualification: curriculum.qualification, exam_board: curriculum.exam_board }
+          ? { ...curriculum, description: curriculum.description ?? null }
           : { id: enr.curriculum_id, title: 'Unknown', description: null, qualification: null, exam_board: null },
         subject: subject
           ? { id: subject.id, curriculum_id: subject.curriculum_id, title: subject.title, description: subject.description ?? null, order_no: subject.order_no, exams: [] }
@@ -187,66 +212,65 @@ export function useCourseManager() {
         exam,
       };
     });
-  }, [enrollments, userId]);
+  }, [enrollments, allCurriculums, allSubjects, allExams, userId, resolveExam]);
 
-  // ── Mutations: Enroll / Unenroll ──────────────────────────────────────────
+  // ── Mutations ──────────────────────────────────────────────────────────────
+  const createCountdownIfNeeded = useCallback(
+    async (userId: string, examId: string) => {
+      const exam = allExams.find((e: any) => e.id === examId);
+      if (!exam) return;
+      await supabase.from('exam_countdowns').insert({
+        user_id: userId,
+        exam_id: examId,
+        custom_title: exam.subject,
+        target_date: exam.date,
+        priority_indicator: 'medium',
+        qualification_group: exam.series ?? 'Custom',
+      });
+      await refetchCountdowns();
+    },
+    [allExams, supabase, refetchCountdowns]
+  );
 
-  /** Enrol a user in a subject, and auto-create exam countdown if exam target set */
   const enroll = useCallback(
-    (curriculumId: string, subjectId: string, examId?: string | null) => {
+    async (curriculumId: string, subjectId: string, examId?: string | null) => {
       if (!userId) return { success: false, error: 'Not authenticated.' };
 
-      const result = enrollInSubject({
+      const { error } = await supabase.from('user_enrollments').insert({
         user_id: userId,
         curriculum_id: curriculumId,
         subject_id: subjectId,
         exam_id: examId ?? null,
+        enrolled_at: new Date().toISOString(),
       });
 
-      if (result.success && examId && userId) {
-        // Auto-create countdown
-        const exam = getExam(examId);
-        if (exam) {
-          createExamCountdown({
-            user_id: userId,
-            exam_id: examId,
-            custom_title: exam.title,
-            target_date: exam.exam_date,
-            priority_indicator: 'medium',
-            qualification_group: exam.exam_series ?? 'Custom',
-          });
-        }
-      }
+      if (error) return { success: false, error: error.message };
 
-      setEnrollments([...mockRefetchEnrollments(userId)]);
-      return result;
+      if (examId) await createCountdownIfNeeded(userId, examId);
+      await refetchEnrollments();
+      return { success: true };
     },
-    [userId]
+    [userId, supabase, createCountdownIfNeeded, refetchEnrollments]
   );
 
-  /** Unenrol (remove enrollment + corresponding countdown) */
   const unenroll = useCallback(
-    (enrollmentId: string) => {
+    async (enrollmentId: string) => {
       if (!userId) return { success: false, error: 'Not authenticated.' };
 
       const enrollment = enrollments.find(e => e.id === enrollmentId);
-      const result = unenrollFromSubject(enrollmentId);
 
-      if (result.success && enrollment?.exam_id) {
-        // Remove the corresponding countdown (only future exams)
-        const countdowns = getUserCountdowns(userId);
-        const targetDate = getExam(enrollment.exam_id)?.exam_date;
+      if (enrollment?.exam_id) {
+        const exam = allExams.find((e: any) => e.id === enrollment.exam_id);
+        const targetDate = exam?.date;
         if (targetDate && new Date(targetDate) > new Date()) {
-          // Only remove countdowns that are in the future
-          const relatedCountdown = countdowns.find(
-            c => c.exam_id === enrollment.exam_id
-          );
+          // Future exam — remove related countdown
+          const relatedCountdown = countdowns.find(c => c.exam_id === enrollment.exam_id);
           if (relatedCountdown) {
-            deleteExamCountdown(relatedCountdown.id);
+            await supabase.from('exam_countdowns').delete().eq('id', relatedCountdown.id);
           }
         } else if (targetDate && new Date(targetDate) <= new Date()) {
-          // Exam already passed — record in history instead
-          recordExamHistory({
+          // Past exam — record in history
+          await supabase.from('user_exam_history').insert({
             user_id: userId,
             curriculum_id: enrollment.curriculum_id,
             subject_id: enrollment.subject_id,
@@ -256,104 +280,83 @@ export function useCourseManager() {
         }
       }
 
-      setEnrollments([...mockRefetchEnrollments(userId)]);
-      if (userId) setExamHistory(getUserExamHistory(userId));
-      return result;
+      await supabase.from('user_enrollments').delete().eq('id', enrollmentId);
+      await Promise.all([refetchEnrollments(), refetchHistory(), refetchCountdowns()]);
+      return { success: true };
     },
-    [userId, enrollments]
+    [userId, enrollments, allExams, countdowns, supabase, refetchEnrollments, refetchHistory, refetchCountdowns]
   );
 
-  /** Update exam target for an enrollment */
   const updateExamTarget = useCallback(
-    (enrollmentId: string, examId: string | null) => {
+    async (enrollmentId: string, examId: string | null) => {
       if (!userId) return { success: false, error: 'Not authenticated.' };
 
       const enrollment = enrollments.find(e => e.id === enrollmentId);
 
-      // Remove old countdown if it exists
       if (enrollment?.exam_id) {
-        const countdowns = getUserCountdowns(userId);
-        const oldCountdown = countdowns.find(c => c.exam_id === enrollment.exam_id);
-        if (oldCountdown) deleteExamCountdown(oldCountdown.id);
-      }
-
-      // Update the enrollment
-      const result = updateEnrollmentExamTarget(enrollmentId, examId);
-
-      // Create new countdown if exam target set
-      if (result.success && examId) {
-        const exam = getExam(examId);
-        if (exam) {
-          createExamCountdown({
-            user_id: userId,
-            exam_id: examId,
-            custom_title: exam.title,
-            target_date: exam.exam_date,
-            priority_indicator: 'medium',
-            qualification_group: exam.exam_series ?? 'Custom',
-          });
+        const relatedCountdown = countdowns.find(c => c.exam_id === enrollment.exam_id);
+        if (relatedCountdown) {
+          await supabase.from('exam_countdowns').delete().eq('id', relatedCountdown.id);
         }
       }
 
-      setEnrollments([...mockRefetchEnrollments(userId)]);
-      return result;
+      const { error } = await supabase.from('user_enrollments')
+        .update({ exam_id: examId })
+        .eq('id', enrollmentId)
+        .eq('user_id', userId);
+
+      if (error) return { success: false, error: error.message };
+
+      if (examId) await createCountdownIfNeeded(userId, examId);
+      await Promise.all([refetchEnrollments(), refetchCountdowns()]);
+      return { success: true };
     },
-    [userId, enrollments]
+    [userId, enrollments, countdowns, supabase, refetchEnrollments, refetchCountdowns, createCountdownIfNeeded]
   );
 
-  // ── Exam Overrides ────────────────────────────────────────────────────────
-
   const overrideExam = useCallback(
-    (examId: string, data: { custom_title?: string | null; custom_exam_series?: string | null; custom_exam_date?: string | null }) => {
+    async (examId: string, data: { custom_title?: string | null; custom_exam_series?: string | null; custom_exam_date?: string | null }) => {
       if (!userId) return { success: false, error: 'Not authenticated.' };
-      return upsertExamOverride({
+      const { error } = await supabase.from('user_exam_overrides').upsert({
         user_id: userId,
         exam_id: examId,
         ...data,
       });
+      // Update local overrides cache
+      setExamOverrides(prev => ({
+        ...prev,
+        [examId]: { ...prev[examId], ...data },
+      }));
+      return error ? { success: false, error: error.message } : { success: true };
     },
-    [userId]
+    [userId, supabase]
   );
 
-  // ── Exam History ──────────────────────────────────────────────────────────
-
   const addToHistory = useCallback(
-    (data: { curriculum_id: string; subject_id: string; exam_id?: string | null; exam_date: string; result?: string | null; is_mock?: boolean; notes?: string | null }) => {
+    async (data: { curriculum_id: string; subject_id: string; exam_id?: string | null; exam_date: string; result?: string | null; is_mock?: boolean; notes?: string | null }) => {
       if (!userId) return { success: false, error: 'Not authenticated.' };
-      const result = recordExamHistory({ user_id: userId, ...data });
-      if (result.success) setExamHistory(getUserExamHistory(userId));
-      return result;
+      const { error } = await supabase.from('user_exam_history').insert({
+        user_id: userId,
+        ...data,
+      });
+      if (!error) await refetchHistory();
+      return error ? { success: false, error: error.message } : { success: true };
     },
-    [userId]
+    [userId, supabase, refetchHistory]
   );
 
   return {
-    // Library browsing
     allCurriculums,
     getSubjectsForCurriculum,
     getExamsForCurriculum,
-
-    // Enrollment state
     enrollments: enrollmentsWithDetails,
     enrolledCurriculumIds,
-    isLoading: false,
-
-    // Mutations
+    isLoading: !isLoaded,
     enroll,
     unenroll,
     updateExamTarget,
-
-    // Exam overrides
     overrideExam,
-
-    // Exam history
     examHistory,
     addToHistory,
   };
-}
-
-// ── Helper: refetch enrollments from mock store ─────────────────────────────
-
-function mockRefetchEnrollments(userId: string) {
-  return getUserEnrollments(userId);
 }

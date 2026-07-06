@@ -63,6 +63,7 @@ export default function Button({
         className
       )}
       disabled={disabled || isLoading}
+      suppressHydrationWarning
       {...props}
     >
       {isLoading ? (

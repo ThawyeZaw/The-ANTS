@@ -26,6 +26,9 @@ import { ClubFeatureKey, DEFAULT_CLUB_FEATURES } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 import { useClub } from '@/hooks/useClub';
 import { cn, formatDate, formatRelativeTime, getInitials } from '@/lib/utils';
+import { useRealtimeChat } from '@/hooks/useRealtimeChat';
+import { useRealtimePresence } from '@/hooks/useRealtimePresence';
+import type { ClubMessage, MessageSender } from '@/hooks/useRealtimeChat';
 import MilestoneTracker from './MilestoneTracker';
 import MemberProgressPanel from './MemberProgressPanel';
 
@@ -70,6 +73,21 @@ export default function ClubDetail({ clubId }: { clubId: string }) {
   const [activeTab, setActiveTab] = useState<TabKey>('chat');
   const [feedback, setFeedback] = useState('');
   const club = clubStore.getClub(clubId);
+
+  // ── Realtime chat ─────────────────────────────────────────────────────
+  const {
+    messages: realtimeMessages,
+    senders: realtimeSenders,
+    sendMessage: realtimeSend,
+    isConnected: chatConnected,
+    error: chatError,
+  } = useRealtimeChat(user ? clubId : undefined, user?.id);
+
+  // ── Realtime presence ─────────────────────────────────────────────────
+  const { onlineUsers } = useRealtimePresence(
+    user && clubId ? `club:${clubId}:presence` : undefined,
+    user ? { user_id: user.id, name: user.profile.name, avatar_url: user.profile.avatar } : null
+  );
 
   const members = clubStore.getClubMembers(clubId);
   const activeMembers = members.filter((member) => member.membership_status === 'active');
@@ -203,9 +221,22 @@ export default function ClubDetail({ clubId }: { clubId: string }) {
         <ChatTab
           clubId={club.id}
           isMember={isMember}
-          messages={clubStore.getClubMessages(club.id)}
+          messages={realtimeMessages.length > 0
+            ? realtimeMessages
+            : clubStore.getClubMessages(club.id)}
+          senders={realtimeMessages.length > 0 ? realtimeSenders : undefined}
           getProfile={clubStore.getProfile}
-          onSend={(message) => user ? clubStore.sendMessage(club.id, user.id, message) : { success: false, error: 'Sign in required.' }}
+          onSend={async (message) => {
+            if (!user) return { success: false, error: 'Sign in required.' };
+            // Try realtime send first, fall back to mock
+            const result = await realtimeSend(message);
+            if (!result.success) {
+              return clubStore.sendMessage(club.id, user.id, message);
+            }
+            return result;
+          }}
+          isRealtimeConnected={chatConnected}
+          onlineCount={onlineUsers.length}
         />
       )}
       {activeTab === 'announcements' && (
@@ -308,45 +339,74 @@ function ChatTab({
   clubId,
   isMember,
   messages,
+  senders,
   getProfile,
   onSend,
+  isRealtimeConnected,
+  onlineCount,
 }: {
   clubId: string;
   isMember: boolean;
-  messages: ReturnType<ReturnType<typeof useClub>['getClubMessages']>;
+  messages: ReturnType<ReturnType<typeof useClub>['getClubMessages']> | ClubMessage[];
+  senders?: Map<string, MessageSender>;
   getProfile: ReturnType<typeof useClub>['getProfile'];
-  onSend: (message: string) => { success: boolean; error?: string };
+  onSend: (message: string) => Promise<{ success: boolean; error?: string }>;
+  isRealtimeConnected?: boolean;
+  onlineCount?: number;
 }) {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
-    const result = onSend(message);
-    if (!result.success) {
-      setError(result.error || 'Could not send message.');
-      return;
-    }
-    setMessage('');
-    setError('');
+    const handle = async () => {
+      const result = await onSend(message);
+      if (!result.success) {
+        setError(result.error || 'Could not send message.');
+        return;
+      }
+      setMessage('');
+      setError('');
+    };
+    handle();
   };
 
   return (
     <section className="rounded-xl border border-border bg-background-card p-5">
+      {isRealtimeConnected !== undefined && (
+        <div className="mb-3 flex items-center gap-2 text-xs">
+          <span className={`inline-block h-2 w-2 rounded-full ${isRealtimeConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+          <span className="text-foreground-muted">
+            {isRealtimeConnected ? 'Live' : 'Reconnecting...'}
+          </span>
+          {onlineCount !== undefined && onlineCount > 0 && (
+            <span className="text-foreground-muted ml-2">
+              {onlineCount} online
+            </span>
+          )}
+        </div>
+      )}
       <div className="space-y-4">
         {messages.map((item) => {
-          const profile = getProfile(item.sender_id);
+          // Try realtime sender first, fall back to profile lookup
+          const realtimeSender = senders?.get((item as ClubMessage).sender_id);
+          const mockSender = getProfile((item as any).sender_id || (item as any).user_id);
+          const displayName = realtimeSender?.name || mockSender?.name || 'User';
+          const avatarLetter = getInitials(displayName);
+          const createdAt = (item as any).created_at || '';
+          const content = (item as any).message || (item as any).content || '';
+
           return (
-            <div key={`${clubId}-${item.id}`} className="flex gap-3">
+            <div key={`${clubId}-${(item as any).id}`} className="flex gap-3">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                {getInitials(profile?.name || 'User')}
+                {avatarLetter}
               </div>
               <div className="min-w-0 flex-1 rounded-xl bg-background-secondary px-4 py-3">
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-semibold text-foreground">{profile?.name || 'Unknown user'}</p>
-                  <p className="text-xs text-foreground-muted">{formatRelativeTime(item.created_at)}</p>
+                  <p className="font-semibold text-foreground">{displayName}</p>
+                  <p className="text-xs text-foreground-muted">{formatRelativeTime(createdAt)}</p>
                 </div>
-                <p className="mt-1 text-sm text-foreground-secondary">{item.message}</p>
+                <p className="mt-1 text-sm text-foreground-secondary">{content}</p>
               </div>
             </div>
           );

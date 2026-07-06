@@ -906,7 +906,9 @@ export default function HomePage() {
               color: 'var(--hp-ink-faint)',
             }}
           >
-            © {new Date().getFullYear()} The ANTS. Ace with us! 🐜
+            <span suppressHydrationWarning>
+              © {new Date().getFullYear()} The ANTS. Ace with us! 🐜
+            </span>
           </div>
         </div>
         </footer>

@@ -38,6 +38,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           <input
             ref={ref}
             id={inputId}
+            suppressHydrationWarning
             className={cn(
               'w-full rounded-xl border bg-background-card px-4 py-2.5 text-sm text-foreground',
               'placeholder:text-foreground-muted',

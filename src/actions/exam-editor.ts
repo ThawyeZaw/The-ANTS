@@ -1,26 +1,43 @@
 'use server';
 
-import {
-  submitExamData as dbSubmitExamData,
-  submitExamCalculatorPreset as dbSubmitExamCalculatorPreset,
-  submitExamCountdownProposal as dbSubmitExamCountdownProposal,
-} from '@/lib/mock/database';
+// ──────────────────────────────────────────────────────────────────────────────
+// The ANTS — Exam Editor Server Actions (Supabase)
+// ──────────────────────────────────────────────────────────────────────────────
+
+import { createClient } from '@/lib/supabase/server';
 
 export async function submitExamData(payload: any, contributorId: string) {
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 800));
-
-  return dbSubmitExamData(payload, contributorId);
+  const supabase = await createClient();
+  const { error } = await supabase.from('editor_submissions').insert({
+    contributor_id: contributorId,
+    submission_type: 'exam_data',
+    status: 'pending_review',
+    submitted_data: payload,
+    submitted_at: new Date().toISOString(),
+  });
+  return error ? { success: false, error: error.message } : { success: true };
 }
 
 export async function submitExamCalculatorPreset(payload: any, contributorId: string) {
-  await new Promise((resolve) => setTimeout(resolve, 700));
-
-  return dbSubmitExamCalculatorPreset(payload, contributorId);
+  const supabase = await createClient();
+  const { error } = await supabase.from('editor_submissions').insert({
+    contributor_id: contributorId,
+    submission_type: 'exam_calculator_preset',
+    status: 'pending_review',
+    submitted_data: payload,
+    submitted_at: new Date().toISOString(),
+  });
+  return error ? { success: false, error: error.message } : { success: true };
 }
 
 export async function submitExamCountdownProposal(payload: any, contributorId: string) {
-  await new Promise((resolve) => setTimeout(resolve, 700));
-
-  return dbSubmitExamCountdownProposal(payload, contributorId);
+  const supabase = await createClient();
+  const { error } = await supabase.from('editor_submissions').insert({
+    contributor_id: contributorId,
+    submission_type: 'exam_countdown_proposal',
+    status: 'pending_review',
+    submitted_data: payload,
+    submitted_at: new Date().toISOString(),
+  });
+  return error ? { success: false, error: error.message } : { success: true };
 }

@@ -1,50 +1,36 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — useFlashcardSRS Hook
-// Owner: ZLH
+// The ANTS — useFlashcardSRS Hook (Supabase)
+// SRS study session powered by real card_reviews data.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import type { FlashCard, SRSRating, StudySessionState } from '@/types';
 import { computeNextReview, getNewCardDefaults } from '@/lib/srs/algorithm';
-import { getDueCards, getUserCardReview, upsertCardReview } from '@/lib/mock/database';
+import { createClient } from '@/lib/supabase/client';
 
 export interface UseFlashcardSRSReturn {
-  /** Cards due for this session */
   dueCards: FlashCard[];
-  /** Index of the currently displayed card */
   currentIndex: number;
-  /** Whether the card is currently flipped to the back */
   isFlipped: boolean;
-  /** Whether the card has been flipped during the current view */
   hasFlipped: boolean;
-  /** Whether all due cards have been reviewed */
   sessionComplete: boolean;
-  /** Tally of ratings given during this session */
   ratings: Record<SRSRating, number>;
-  /** Total cards in this session */
   totalCards: number;
-  /** Cards reviewed so far */
   reviewedCount: number;
-  /** The current card object, or null if session is complete */
   currentCard: FlashCard | null;
-
-  /** Flip the current card to reveal the answer */
   flip: () => void;
-  /** Rate the current card and advance to the next */
   rate: (rating: SRSRating) => void;
-  /** Restart the session from scratch (useful for re-review) */
   restartSession: () => void;
-  /** Go to the previous card */
   goBack: () => void;
-  /** Go to the next card */
   goNext: () => void;
-  /** Load due cards for a deck (call on mount or deck change) */
   loadDeck: (deckId: string, userId: string) => void;
 }
 
 export function useFlashcardSRS(): UseFlashcardSRSReturn {
+  const supabase = createClient();
+
   const [state, setState] = useState<StudySessionState>({
     deckId: '',
     dueCards: [],
@@ -58,9 +44,61 @@ export function useFlashcardSRS(): UseFlashcardSRSReturn {
 
   const [userId, setUserId] = useState<string>('');
 
-  const loadDeck = useCallback((deckId: string, uid: string) => {
+  // Cache of existing reviews keyed by card_id for O(1) lookup during rating
+  const [reviewCache, setReviewCache] = useState<Record<string, {
+    interval_days: number;
+    ease_factor: number;
+    repetitions: number;
+  }>>({});
+
+  const loadDeck = useCallback(async (deckId: string, uid: string) => {
     setUserId(uid);
-    const dueCards = getDueCards(deckId, uid);
+
+    // Fetch all cards for this deck
+    const { data: cards } = await supabase
+      .from('cards')
+      .select('*')
+      .eq('deck_id', deckId);
+
+    if (!cards) {
+      setState(prev => ({ ...prev, deckId, dueCards: [], sessionComplete: true, cardRatings: {}, pendingReviews: {} }));
+      return;
+    }
+
+    // Fetch all existing reviews for this user for these cards
+    const cardIds = cards.map(c => c.id);
+    const { data: reviews } = await supabase
+      .from('card_reviews')
+      .select('*')
+      .eq('user_id', uid)
+      .in('card_id', cardIds);
+
+    // Build review cache
+    const cache: Record<string, { interval_days: number; ease_factor: number; repetitions: number }> = {};
+    if (reviews) {
+      for (const r of reviews) {
+        cache[r.card_id] = {
+          interval_days: r.interval,
+          ease_factor: r.ease_factor,
+          repetitions: r.repetitions ?? 0,
+        };
+      }
+    }
+    setReviewCache(cache);
+
+    // Determine due cards: cards with no review OR review next_review_date <= now
+    const now = new Date().toISOString();
+    const dueCards: FlashCard[] = cards.filter(c => {
+      const review = reviews?.find(r => r.card_id === c.id);
+      if (!review) return true; // new card, always due
+      return review.next_review_date && review.next_review_date <= now;
+    }).map(c => ({
+      id: c.id,
+      deck_id: c.deck_id,
+      front: c.front_text,
+      back: c.back_text,
+    }));
+
     setState({
       deckId,
       dueCards,
@@ -71,7 +109,7 @@ export function useFlashcardSRS(): UseFlashcardSRSReturn {
       cardRatings: {},
       pendingReviews: {},
     });
-  }, []);
+  }, [supabase]);
 
   const flip = useCallback(() => {
     setState(prev => ({ ...prev, isFlipped: !prev.isFlipped, hasFlipped: true }));
@@ -79,17 +117,15 @@ export function useFlashcardSRS(): UseFlashcardSRSReturn {
 
   const rate = useCallback((rating: SRSRating) => {
     setState(prev => {
-      if (!prev.isFlipped) return prev; // must flip before rating
+      if (!prev.isFlipped) return prev;
       const card = prev.dueCards[prev.currentIndex];
       if (!card) return prev;
 
-      // Get current SRS state for this card
-      const existingReview = getUserCardReview(card.id, userId);
+      const existingReview = reviewCache[card.id];
       const defaults = getNewCardDefaults();
       const currentInterval = existingReview?.interval_days ?? defaults.interval_days;
       const currentEaseFactor = existingReview?.ease_factor ?? defaults.ease_factor;
 
-      // Compute next SRS values
       const { newInterval, newEaseFactor, nextReviewDate } = computeNextReview(
         rating,
         currentInterval,
@@ -114,11 +150,21 @@ export function useFlashcardSRS(): UseFlashcardSRSReturn {
       const nextIndex = prev.currentIndex + 1;
       const sessionComplete = nextIndex >= prev.dueCards.length;
 
-      // If session complete, persist all cached reviews to DB
+      // Persist to Supabase when session is complete
       if (sessionComplete) {
-        Object.entries(newPendingReviews).forEach(([cardId, review]) => {
-          upsertCardReview(cardId, userId, review);
-        });
+        const upserts = Object.entries(newPendingReviews).map(([cardId, review]) =>
+          supabase.from('card_reviews').upsert({
+            card_id: cardId,
+            user_id: userId,
+            interval: review.interval_days,
+            ease_factor: review.ease_factor,
+            next_review_date: review.next_review_date,
+            quality: review.last_rating,
+            last_review_date: new Date().toISOString(),
+            repetitions: (existingReview?.repetitions ?? 0) + 1,
+          })
+        );
+        Promise.all(upserts);
       }
 
       return {
@@ -131,7 +177,7 @@ export function useFlashcardSRS(): UseFlashcardSRSReturn {
         pendingReviews: newPendingReviews,
       };
     });
-  }, [userId]);
+  }, [userId, reviewCache, supabase]);
 
   const restartSession = useCallback(() => {
     setState(prev => ({
@@ -148,12 +194,7 @@ export function useFlashcardSRS(): UseFlashcardSRSReturn {
   const goBack = useCallback(() => {
     setState(prev => {
       if (prev.currentIndex > 0) {
-        return {
-          ...prev,
-          currentIndex: prev.currentIndex - 1,
-          isFlipped: false,
-          hasFlipped: false,
-        };
+        return { ...prev, currentIndex: prev.currentIndex - 1, isFlipped: false, hasFlipped: false };
       }
       return prev;
     });
@@ -162,12 +203,7 @@ export function useFlashcardSRS(): UseFlashcardSRSReturn {
   const goNext = useCallback(() => {
     setState(prev => {
       if (prev.currentIndex < prev.dueCards.length - 1) {
-        return {
-          ...prev,
-          currentIndex: prev.currentIndex + 1,
-          isFlipped: false,
-          hasFlipped: false,
-        };
+        return { ...prev, currentIndex: prev.currentIndex + 1, isFlipped: false, hasFlipped: false };
       }
       return prev;
     });

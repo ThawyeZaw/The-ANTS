@@ -149,6 +149,16 @@ export type ProfileWidth = 'full' | 'contained';
 /** Profile section layout arrangement */
 export type ProfileSectionLayout = 'layout-a' | 'layout-b' | 'layout-c';
 
+/** A single curriculum selection made during onboarding */
+export interface OnboardingCurriculumSelection {
+  curriculumType: string;
+  subjectIds: string[];
+  subjectNames: string[];
+  examSeries?: string;
+  examYear?: number;
+  examDate?: string; // ISO date string, for IELTS/GED custom dates
+}
+
 /** User profile stored in the `profiles` table */
 export interface Profile {
   id: string;
@@ -187,6 +197,12 @@ export interface Profile {
   showClubActivity?: boolean;
   certificationIds?: string[] | null;
   createdAt: string;
+  // Onboarding fields
+  onboardingCompleted?: boolean;
+  preferredName?: string;
+  timezone?: string;
+  institutionName?: string;
+  onboardingData?: OnboardingCurriculumSelection[];
 }
 
 /** Authenticated user object returned by auth operations */

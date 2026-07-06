@@ -268,15 +268,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(COLOR_STORAGE_KEY, color);
   }, []);
 
-  // Prevent flash of wrong theme
-  if (!mounted) {
-    return (
-      <ThemeContext.Provider value={{ theme: 'light', toggleTheme, setTheme, themeColor: 'indigo', setThemeColor }}>
-        {children}
-      </ThemeContext.Provider>
-    );
-  }
-
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme, setTheme, themeColor, setThemeColor }}>
       {children}

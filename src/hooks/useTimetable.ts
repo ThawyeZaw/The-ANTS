@@ -8,14 +8,7 @@ import type {
   TimetableEventFormData,
   TimetableEventType,
 } from '@/types/timetable';
-import {
-  getIntegratedTimetableEvents,
-  createTimetableEvent,
-  updateTimetableEvent,
-  deleteTimetableEvent,
-  toggleTimetableEventComplete,
-  moveTimetableEvent,
-} from '@/lib/mock/timetable';
+import { createClient } from '@/lib/supabase/client';
 import { ALL_EVENT_TYPES, DEFAULT_TIMETABLE_FILTERS } from '@/constants/timetable';
 
 // ---------------------------------------------------------------------------
@@ -26,7 +19,7 @@ import { ALL_EVENT_TYPES, DEFAULT_TIMETABLE_FILTERS } from '@/constants/timetabl
 function getWeekStart(date: Date): Date {
   const d = new Date(date);
   const day = d.getDay();
-  const diff = day === 0 ? -6 : 1 - day; // adjust for Mon-start week
+  const diff = day === 0 ? -6 : 1 - day;
   d.setDate(d.getDate() + diff);
   d.setHours(0, 0, 0, 0);
   return d;
@@ -60,45 +53,33 @@ export function combineDateTime(dateStr: string, timeStr: string): string {
 // ---------------------------------------------------------------------------
 
 export interface UseTimetableReturn {
-  // State
   view: TimetableView;
   currentDate: Date;
   filters: TimetableFilters;
   events: TimetableEvent[];
   isLoading: boolean;
-
-  // Derived ranges
   weekStart: Date;
   monthStart: Date;
   monthEnd: Date;
-
-  // Navigation
   navigate: (direction: 'prev' | 'next') => void;
   goToToday: () => void;
   goToDate: (date: Date) => void;
   setView: (view: TimetableView) => void;
-
-  // Filters
   setFilters: (filters: TimetableFilters) => void;
   toggleEventTypeFilter: (type: TimetableEventType) => void;
-
-  // Selectors (per view)
   getEventsForDay: (date: Date) => TimetableEvent[];
   getEventsForWeek: (weekStart: Date) => TimetableEvent[];
   getEventsForMonth: (month: Date) => TimetableEvent[];
-
-  // CRUD
   createEvent: (data: TimetableEventFormData) => Promise<{ success: boolean; error?: string }>;
   updateEvent: (id: string, data: TimetableEventFormData) => Promise<{ success: boolean; error?: string }>;
   deleteEvent: (id: string) => Promise<{ success: boolean; error?: string }>;
   toggleComplete: (id: string) => Promise<{ success: boolean; error?: string }>;
   moveEvent: (id: string, newStart: string, newEnd: string | null) => Promise<{ success: boolean; error?: string }>;
-
-  // Computed
   integrationCounts: { exams: number; assignments: number; clubEvents: number; milestones: number };
 }
 
 export function useTimetable(userId: string): UseTimetableReturn {
+  const supabase = createClient();
   const [view, setViewState] = useState<TimetableView>('week');
   const [currentDate, setCurrentDate] = useState<Date>(() => new Date());
   const [filters, setFilters] = useState<TimetableFilters>(DEFAULT_TIMETABLE_FILTERS);
@@ -106,12 +87,10 @@ export function useTimetable(userId: string): UseTimetableReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Derived date values
   const weekStart = useMemo(() => getWeekStart(currentDate), [currentDate]);
   const monthStart = useMemo(() => getMonthStart(currentDate), [currentDate]);
   const monthEnd = useMemo(() => getMonthEnd(currentDate), [currentDate]);
 
-  // Range for data fetching based on view
   const [rangeStart, rangeEnd] = useMemo(() => {
     switch (view) {
       case 'day': {
@@ -129,7 +108,6 @@ export function useTimetable(userId: string): UseTimetableReturn {
         return [s, e];
       }
       case 'month': {
-        // Include extra days for calendar grid padding
         const s = new Date(monthStart);
         s.setDate(s.getDate() - 7);
         const e = new Date(monthEnd);
@@ -139,20 +117,26 @@ export function useTimetable(userId: string): UseTimetableReturn {
     }
   }, [view, currentDate, weekStart, monthStart, monthEnd]);
 
-  // Load events whenever range or filters change
+  // Load events from Supabase whenever range or filters change
   useEffect(() => {
+    let cancelled = false;
     setIsLoading(true);
-    try {
-      const events = getIntegratedTimetableEvents(userId, rangeStart, rangeEnd, {
-        showExternalEvents: filters.showExternalEvents,
-      });
-      setAllEvents(events);
-    } catch (err) {
-      console.error('Failed to load timetable events:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [userId, rangeStart, rangeEnd, filters.showExternalEvents, refreshKey]);
+    (async () => {
+      const { data, error } = await supabase
+        .from('timetable_events')
+        .select('*')
+        .eq('user_id', userId)
+        .gte('start_time', rangeStart.toISOString())
+        .lte('start_time', rangeEnd.toISOString());
+
+      if (!cancelled) {
+        if (error) console.error('Failed to load timetable events:', error);
+        else setAllEvents((data ?? []) as TimetableEvent[]);
+        setIsLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [userId, rangeStart.toISOString(), rangeEnd.toISOString(), filters.showExternalEvents, refreshKey, supabase]);
 
   const refresh = useCallback(() => setRefreshKey(k => k + 1), []);
 
@@ -162,15 +146,9 @@ export function useTimetable(userId: string): UseTimetableReturn {
       const d = new Date(prev);
       const delta = direction === 'next' ? 1 : -1;
       switch (view) {
-        case 'day':
-          d.setDate(d.getDate() + delta);
-          break;
-        case 'week':
-          d.setDate(d.getDate() + delta * 7);
-          break;
-        case 'month':
-          d.setMonth(d.getMonth() + delta);
-          break;
+        case 'day': d.setDate(d.getDate() + delta); break;
+        case 'week': d.setDate(d.getDate() + delta * 7); break;
+        case 'month': d.setMonth(d.getMonth() + delta); break;
       }
       return d;
     });
@@ -180,26 +158,18 @@ export function useTimetable(userId: string): UseTimetableReturn {
   const goToDate = useCallback((date: Date) => setCurrentDate(date), []);
   const setView = useCallback((v: TimetableView) => setViewState(v), []);
 
-  // Filter helpers
   const toggleEventTypeFilter = useCallback((type: TimetableEventType) => {
     setFilters(prev => {
       const current = prev.eventTypes;
       const isActive = current.includes(type);
-      return {
-        ...prev,
-        eventTypes: isActive
-          ? current.filter(t => t !== type)
-          : [...current, type],
-      };
+      return { ...prev, eventTypes: isActive ? current.filter(t => t !== type) : [...current, type] };
     });
   }, []);
 
-  // Apply client-side filters
+  // Client-side filters
   const events = useMemo(() => {
     return allEvents.filter(e => {
-      // Event type filter
       if (!filters.eventTypes.includes(e.event_type)) return false;
-      // Hide completed todos if requested
       if (!filters.showCompleted && e.is_todo && e.is_completed) return false;
       return true;
     });
@@ -221,7 +191,7 @@ export function useTimetable(userId: string): UseTimetableReturn {
     wEnd.setHours(23, 59, 59, 999);
     return events.filter(e => {
       const t = e.start_time || e.end_time;
-      if (!t) return true; // all-day events
+      if (!t) return true;
       const d = new Date(t);
       return d >= wStart && d <= wEnd;
     });
@@ -242,7 +212,6 @@ export function useTimetable(userId: string): UseTimetableReturn {
   const createEvent = useCallback(async (data: TimetableEventFormData): Promise<{ success: boolean; error?: string }> => {
     try {
       const { time_mode, date, start_time, end_time, ...rest } = data;
-
       let startIso: string | null = null;
       let endIso: string | null = null;
       let allDay = false;
@@ -257,7 +226,8 @@ export function useTimetable(userId: string): UseTimetableReturn {
         endIso = combineDateTime(date, end_time);
       }
 
-      const result = createTimetableEvent(userId, {
+      const { error } = await supabase.from('timetable_events').insert({
+        user_id: userId,
         ...rest,
         start_time: startIso,
         end_time: endIso,
@@ -268,11 +238,11 @@ export function useTimetable(userId: string): UseTimetableReturn {
         source_id: null,
       });
       refresh();
-      return { success: result.success };
+      return error ? { success: false, error: error.message } : { success: true };
     } catch (err) {
       return { success: false, error: String(err) };
     }
-  }, [userId, refresh]);
+  }, [userId, refresh, supabase]);
 
   const updateEvent = useCallback(async (eventId: string, data: TimetableEventFormData): Promise<{ success: boolean; error?: string }> => {
     try {
@@ -292,37 +262,45 @@ export function useTimetable(userId: string): UseTimetableReturn {
       }
 
       const baseId = eventId.includes('::') ? eventId.split('::')[0] : eventId;
-      const result = updateTimetableEvent(baseId, userId, {
+      const { error } = await supabase.from('timetable_events').update({
         ...rest,
         start_time: startIso,
         end_time: endIso,
         all_day: allDay,
-      });
+      }).eq('id', baseId);
       refresh();
-      return result;
+      return error ? { success: false, error: error.message } : { success: true };
     } catch (err) {
       return { success: false, error: String(err) };
     }
-  }, [userId, refresh]);
+  }, [userId, refresh, supabase]);
 
   const deleteEvent = useCallback(async (eventId: string): Promise<{ success: boolean; error?: string }> => {
     const baseId = eventId.includes('::') ? eventId.split('::')[0] : eventId;
-    const result = deleteTimetableEvent(baseId, userId);
+    const { error } = await supabase.from('timetable_events').delete().eq('id', baseId);
     refresh();
-    return result;
-  }, [userId, refresh]);
+    return error ? { success: false, error: error.message } : { success: true };
+  }, [refresh, supabase]);
 
   const toggleComplete = useCallback(async (eventId: string): Promise<{ success: boolean; error?: string }> => {
-    const result = toggleTimetableEventComplete(eventId, userId);
+    const { data: existing } = await supabase.from('timetable_events').select('is_completed').eq('id', eventId).single();
+    const newVal = !(existing?.is_completed ?? false);
+    const { error } = await supabase.from('timetable_events').update({
+      is_completed: newVal,
+      completed_at: newVal ? new Date().toISOString() : null,
+    }).eq('id', eventId);
     refresh();
-    return result;
-  }, [userId, refresh]);
+    return error ? { success: false, error: error.message } : { success: true };
+  }, [refresh, supabase]);
 
   const moveEvent = useCallback(async (eventId: string, newStart: string, newEnd: string | null): Promise<{ success: boolean; error?: string }> => {
-    const result = moveTimetableEvent(eventId, userId, newStart, newEnd);
+    const { error } = await supabase.from('timetable_events').update({
+      start_time: newStart,
+      end_time: newEnd,
+    }).eq('id', eventId);
     refresh();
-    return result;
-  }, [userId, refresh]);
+    return error ? { success: false, error: error.message } : { success: true };
+  }, [refresh, supabase]);
 
   // Integration counts for banner
   const integrationCounts = useMemo(() => {
@@ -334,28 +312,12 @@ export function useTimetable(userId: string): UseTimetableReturn {
   }, [allEvents]);
 
   return {
-    view,
-    currentDate,
-    filters,
-    events,
-    isLoading,
-    weekStart,
-    monthStart,
-    monthEnd,
-    navigate,
-    goToToday,
-    goToDate,
-    setView,
-    setFilters,
-    toggleEventTypeFilter,
-    getEventsForDay,
-    getEventsForWeek,
-    getEventsForMonth,
-    createEvent,
-    updateEvent,
-    deleteEvent,
-    toggleComplete,
-    moveEvent,
+    view, currentDate, filters, events, isLoading,
+    weekStart, monthStart, monthEnd,
+    navigate, goToToday, goToDate, setView,
+    setFilters, toggleEventTypeFilter,
+    getEventsForDay, getEventsForWeek, getEventsForMonth,
+    createEvent, updateEvent, deleteEvent, toggleComplete, moveEvent,
     integrationCounts,
   };
 }
