@@ -12,9 +12,9 @@ export async function submitExamData(payload: any, contributorId: string) {
     contributor_id: contributorId,
     submission_type: 'exam_data',
     status: 'pending_review',
-    submitted_data: payload,
     submitted_at: new Date().toISOString(),
-  });
+    ...(payload ? { submitted_data: payload } : {}),
+  } as any);
   return error ? { success: false, error: error.message } : { success: true };
 }
 
@@ -24,9 +24,9 @@ export async function submitExamCalculatorPreset(payload: any, contributorId: st
     contributor_id: contributorId,
     submission_type: 'exam_calculator_preset',
     status: 'pending_review',
-    submitted_data: payload,
     submitted_at: new Date().toISOString(),
-  });
+    ...(payload ? { submitted_data: payload } : {}),
+  } as any);
   return error ? { success: false, error: error.message } : { success: true };
 }
 
@@ -36,8 +36,8 @@ export async function submitExamCountdownProposal(payload: any, contributorId: s
     contributor_id: contributorId,
     submission_type: 'exam_countdown_proposal',
     status: 'pending_review',
-    submitted_data: payload,
     submitted_at: new Date().toISOString(),
-  });
+    ...(payload ? { submitted_data: payload } : {}),
+  } as any);
   return error ? { success: false, error: error.message } : { success: true };
 }

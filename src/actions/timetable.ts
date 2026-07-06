@@ -77,7 +77,7 @@ export async function createEventAction(
       completed_at: null,
       event_source: 'user',
       source_id: null,
-    }).select().single();
+    } as any).select().single();
 
     if (error || !event) return { success: false, error: error?.message ?? 'Failed to create event' };
     return { success: true, event: event as TimetableEvent };
@@ -118,7 +118,7 @@ export async function updateEventAction(
       start_time: startIso,
       end_time: endIso,
       all_day: allDay,
-    }).eq('id', baseId).select().single();
+    } as any).eq('id', baseId).select().single();
 
     if (error || !event) return { success: false, error: error?.message ?? 'Failed to update event' };
     return { success: true, event: event as TimetableEvent };

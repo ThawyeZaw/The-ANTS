@@ -49,7 +49,7 @@ export async function actionCreateClassroom(userId: string, data: {
 
   const { data: classroom, error } = await supabase.from('classrooms').insert({
     name: data.name, description: data.description || null, invite_code: inviteCode,
-    curriculum_ids: data.curriculum_ids,
+    curriculum_ids: data.curriculum_ids, created_by: userId,
     enabled_features: data.enabled_features || [
       { key: 'assignments', enabled: true }, { key: 'quizzes', enabled: false },
       { key: 'resources', enabled: true }, { key: 'discussions', enabled: false }, { key: 'links', enabled: false },
@@ -67,7 +67,7 @@ export async function actionUpdateClassroom(userId: string, classroomId: string,
   const auth = await requireTeacherInClassroom(classroomId, userId);
   if (!auth.authorized) return { success: false, error: auth.error };
   const supabase = await createClient();
-  const { error } = await supabase.from('classrooms').update(data).eq('id', classroomId);
+  const { error } = await supabase.from('classrooms').update(data as any).eq('id', classroomId);
   return error ? { success: false, error: error.message } : { success: true };
 }
 
@@ -209,7 +209,7 @@ export async function actionCreateQuiz(userId: string, data: { classroom_id: str
   const { data: quiz, error } = await supabase.from('quizzes').insert({
     classroom_id: data.classroom_id, title: data.title, description: data.description || null,
     time_limit_minutes: data.time_limit_minutes || null, due_date: data.due_date || null,
-    status: 'draft', questions, created_by: userId,
+    status: 'draft', questions: questions as any, created_by: userId,
   }).select().single();
   if (error || !quiz) return { success: false, error: error?.message ?? 'Failed to create quiz' };
   return { success: true, quiz };
@@ -232,7 +232,7 @@ export async function actionSubmitQuizAttempt(userId: string, quizId: string, an
   const auth = await requireMemberOfClassroom(quiz.classroom_id, userId);
   if (!auth.authorized) return { success: false, error: auth.error };
   const qAnswers = answers.map(a => ({ question_id: a.question_id, answer: a.answer, is_correct: null as boolean | null }));
-  const { error } = await supabase.from('quiz_attempts').upsert({ quiz_id: quizId, student_id: userId, answers: qAnswers, started_at: new Date().toISOString(), completed_at: new Date().toISOString() });
+  const { error } = await supabase.from('quiz_attempts').upsert({ quiz_id: quizId, student_id: userId, answers: qAnswers as any, started_at: new Date().toISOString(), submitted_at: new Date().toISOString() } as any);
   return error ? { success: false, error: error.message } : { success: true };
 }
 

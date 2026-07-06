@@ -151,18 +151,39 @@ export default function ClassroomDetail({ classroomId, currentUserId, userRole }
   const [feedback, setFeedback] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Async data states
+  const [members, setMembers] = useState<ClassroomMember[]>([]);
+  const [member, setMember] = useState<ClassroomMember | null>(null);
+  const [assignments, setAssignments] = useState<any[]>([]);
+  const [quizzes, setQuizzes] = useState<any[]>([]);
+  const [topics, setTopics] = useState<any[]>([]);
+  const [resources, setResources] = useState<any[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const [mem, singleMember, asgn, qz, tp, res] = await Promise.all([
+        c.getMembers(classroomId),
+        c.getMember(classroomId, currentUserId),
+        c.getAssignments(classroomId),
+        c.getQuizzes(classroomId),
+        c.getTopics(classroomId),
+        c.getResources(classroomId),
+      ]);
+      setMembers(mem);
+      setMember(singleMember);
+      setAssignments(asgn);
+      setQuizzes(qz);
+      setTopics(tp);
+      setResources(res);
+    })();
+  }, [classroomId, currentUserId, c]);
+
   const classroom = c.getClassroom(classroomId);
-  const members = c.getMembers(classroomId);
-  const member = c.getMember(classroomId, currentUserId);
   const isTeacher = member?.role === 'teacher';
   const isMember = !!member;
 
-  const assignments = c.getAssignments(classroomId);
-  const quizzes = c.getQuizzes(classroomId);
-  const topics = c.getTopics(classroomId);
-
   // Derived link data
-  const classroomLinks = c.getResources(classroomId)
+  const classroomLinks = resources
     .filter((r) => r.type === 'link')
     .map((r) => ({
       id: r.id,
@@ -184,8 +205,8 @@ export default function ClassroomDetail({ classroomId, currentUserId, userRole }
     ? topics.filter((t) => t.title.toLowerCase().includes(q) || t.content.toLowerCase().includes(q))
     : topics;
   const filteredResources = q
-    ? c.getResources(classroomId).filter((r) => r.title.toLowerCase().includes(q) || (r.description || '').toLowerCase().includes(q))
-    : c.getResources(classroomId);
+    ? resources.filter((r) => r.title.toLowerCase().includes(q) || (r.description || '').toLowerCase().includes(q))
+    : resources;
   const filteredLinks = q
     ? classroomLinks.filter((l) => l.title.toLowerCase().includes(q))
     : classroomLinks;
@@ -257,8 +278,8 @@ export default function ClassroomDetail({ classroomId, currentUserId, userRole }
                 variant="ghost"
                 icon={<LogOut className="h-4 w-4" />}
                 className="text-[var(--error)] hover:text-[var(--error)]"
-                onClick={() => {
-                  const result = c.leave(currentUserId, classroomId);
+                onClick={async () => {
+                  const result = await c.leave(currentUserId, classroomId);
                   if (result.success) {
                     router.push('/classrooms');
                   } else {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MessageSquare, Plus, Pin, Lock, Send, ArrowLeft, Pencil, Trash2, Check, X } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { cn, formatRelativeTime, getInitials } from '@/lib/utils';
@@ -163,7 +163,7 @@ interface DiscussionsPanelProps {
   topics: DiscussionTopic[];
   currentUserId: string;
   getProfile: (userId: string) => { id: string; name: string } | undefined;
-  getReplies: (topicId: string) => DiscussionReply[];
+  getReplies: (topicId: string) => Promise<DiscussionReply[]>;
   onCreateTopic: (title: string, content: string) => void;
   onReply: (topicId: string, content: string) => void;
   onEditTopic?: (topicId: string, data: { title: string; content: string }) => void;
@@ -178,6 +178,19 @@ export default function DiscussionsPanel({
   const [editingTopicId, setEditingTopicId] = useState<string | null>(null);
   const [newTitle, setNewTitle] = useState('');
   const [newContent, setNewContent] = useState('');
+  const [repliesMap, setRepliesMap] = useState<Record<string, DiscussionReply[]>>({});
+
+  useEffect(() => {
+    (async () => {
+      const map: Record<string, DiscussionReply[]> = {};
+      await Promise.all(
+        topics.map(async (t) => {
+          map[t.id] = await getReplies(t.id);
+        })
+      );
+      setRepliesMap(map);
+    })();
+  }, [topics, getReplies]);
 
   const classroomTopics = topics.filter((t) => t.classroom_id === classroomId);
   const selectedTopic = selectedTopicId ? topics.find((t) => t.id === selectedTopicId) : null;
@@ -223,7 +236,7 @@ export default function DiscussionsPanel({
     return (
       <TopicDetailView
         topic={selectedTopic}
-        replies={getReplies(selectedTopic.id)}
+        replies={repliesMap[selectedTopic.id] || []}
         getProfile={getProfile}
         onReply={(c) => onReply(selectedTopic.id, c)}
         onBack={() => setSelectedTopicId(null)}
@@ -269,7 +282,7 @@ export default function DiscussionsPanel({
             <TopicCard
               key={t.id}
               topic={t}
-              replyCount={getReplies(t.id).length}
+              replyCount={(repliesMap[t.id] || []).length}
               authorName={getProfile(t.created_by)?.name || 'Unknown'}
               isOwner={t.created_by === currentUserId}
               onView={setSelectedTopicId}

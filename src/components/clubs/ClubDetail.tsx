@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import BackButton from '@/components/ui/BackButton';
 import {
@@ -72,7 +72,101 @@ export default function ClubDetail({ clubId }: { clubId: string }) {
   const clubStore = useClub();
   const [activeTab, setActiveTab] = useState<TabKey>('chat');
   const [feedback, setFeedback] = useState('');
-  const club = clubStore.getClub(clubId);
+
+  // Async data states
+  const [club, setClub] = useState<any>(null);
+  const [members, setMembers] = useState<any[]>([]);
+  const [membership, setMembership] = useState<any>(null);
+  const [joinRequest, setJoinRequest] = useState<any>(null);
+  const [allJoinRequests, setAllJoinRequests] = useState<any[]>([]);
+  const [leaderProfile, setLeaderProfile] = useState<any>(null);
+  const [curriculumLinkData, setCurriculumLinkData] = useState<any[]>([]);
+  const [subjectLinkData, setSubjectLinkData] = useState<any[]>([]);
+  const [fallbackMessages, setFallbackMessages] = useState<any[]>([]);
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [links, setLinks] = useState<any[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
+  const [milestones, setMilestones] = useState<any[]>([]);
+  const [curriculumMap, setCurriculumMap] = useState<Record<string, any>>({});
+  const [profilesMap, setProfilesMap] = useState<Record<string, any>>({});
+
+  useEffect(() => {
+    (async () => {
+      const clubData = await clubStore.getClub(clubId);
+      setClub(clubData);
+      if (!clubData) return;
+
+      const [
+        membersData, membershipData, joinReqData, joinReqsData,
+        msgsData, annData, linksData, projData, evtData, mileData,
+        currLinksData, subLinksData,
+      ] = await Promise.all([
+        clubStore.getClubMembers(clubId),
+        user ? clubStore.getUserClubMembership(clubId, user.id) : Promise.resolve(null),
+        user ? clubStore.getUserClubJoinRequest(clubId, user.id) : Promise.resolve(null),
+        clubStore.getClubJoinRequests(clubId),
+        clubStore.getClubMessages(clubId),
+        clubStore.getClubAnnouncements(clubId),
+        clubStore.getClubLinks(clubId),
+        clubStore.getClubProjects?.(clubId) ?? Promise.resolve([]),
+        clubStore.getClubEvents?.(clubId) ?? Promise.resolve([]),
+        clubStore.getClubMilestones?.(clubId) ?? Promise.resolve([]),
+        clubStore.getClubCurriculumLinks?.(clubId) ?? Promise.resolve([]),
+        clubStore.getClubSubjectLinks?.(clubId) ?? Promise.resolve([]),
+      ]);
+
+      setMembers(membersData);
+      setMembership(membershipData);
+      setJoinRequest(joinReqData);
+      setAllJoinRequests(joinReqsData);
+      setFallbackMessages(msgsData);
+      setAnnouncements(annData);
+      setLinks(linksData);
+      setProjects(projData);
+      setEvents(evtData);
+      setMilestones(mileData);
+      setCurriculumLinkData(currLinksData);
+      setSubjectLinkData(subLinksData);
+
+      const lp = await clubStore.getProfile(clubData.created_by);
+      setLeaderProfile(lp);
+
+      // Fetch curriculum data for topic tags
+      const curriculumIds = currLinksData.map((l: any) => l.curriculum_id);
+      const cMap: Record<string, any> = {};
+      await Promise.all(
+        curriculumIds.map(async (cid: string) => {
+          cMap[cid] = await clubStore.getCurriculum(cid);
+        })
+      );
+      setCurriculumMap(cMap);
+
+      // Collect all unique user IDs and fetch profiles
+      const allData = [
+        ...membersData,
+        ...msgsData,
+        ...annData,
+        ...linksData,
+        ...joinReqsData,
+        ...projData,
+        ...evtData,
+        ...mileData,
+      ];
+      const userIds = [...new Set([
+        clubData.created_by,
+        ...allData.map((d: any) => d.user_id || d.created_by).filter(Boolean),
+      ])] as string[];
+
+      const pMap: Record<string, any> = {};
+      await Promise.all(
+        userIds.map(async (uid) => {
+          pMap[uid] = await clubStore.getProfile(uid);
+        })
+      );
+      setProfilesMap(pMap);
+    })();
+  }, [clubId, user?.id, clubStore]);
 
   // ── Realtime chat ─────────────────────────────────────────────────────
   const {
@@ -89,37 +183,36 @@ export default function ClubDetail({ clubId }: { clubId: string }) {
     user ? { user_id: user.id, name: user.profile.name, avatar_url: user.profile.avatar } : null
   );
 
-  const members = clubStore.getClubMembers(clubId);
-  const activeMembers = members.filter((member) => member.membership_status === 'active');
-  const currentMembership = user ? clubStore.getUserClubMembership(clubId, user.id) : undefined;
+  const activeMembers = members.filter((member: any) => member.membership_status === 'active');
+  const currentMembership = user ? membership : undefined;
   const isMember = currentMembership?.membership_status === 'active';
   const isAdmin = currentMembership?.role === 'admin' && isMember;
   const isModerator = currentMembership?.role === 'moderator' && isMember;
   const isLeader = isAdmin || isModerator;
-  const pendingRequest = user ? clubStore.getUserClubJoinRequest(clubId, user.id) : undefined;
-  const joinRequests = clubStore.getClubJoinRequests(clubId).filter((request) => request.status === 'pending');
+  const pendingRequest = user ? joinRequest : undefined;
+  const currentJoinRequests = allJoinRequests.filter((request: any) => request.status === 'pending');
 
   // Filter tabs based on enabled features
-  const enabledFeatures = club?.enabled_features || DEFAULT_CLUB_FEATURES;
+  const enabledFeatures: any[] = club?.enabled_features || DEFAULT_CLUB_FEATURES;
   const visibleTabs = tabs.filter((tab) => {
     // Requests is only visible to admins
     if (tab.key === 'requests') return isAdmin;
     // Check if the feature is enabled
     const requiredFeature = TAB_FEATURE_MAP[tab.key] as ClubFeatureKey;
-    const feature = enabledFeatures.find(f => f.key === requiredFeature);
+    const feature = enabledFeatures.find((f: any) => f.key === requiredFeature);
     return feature?.enabled ?? false;
   });
 
   const topicTags = useMemo(() => {
     if (!club) return [];
-    const curriculumTags = clubStore.getClubCurriculumLinks(club.id)
-      .map((link) => clubStore.getCurriculum(link.curriculum_id)?.title)
+    const curriculumTags = curriculumLinkData
+      .map((link: any) => curriculumMap[link.curriculum_id]?.title)
       .filter(Boolean);
-    const subjectTags = clubStore.getClubSubjectLinks(club.id)
-      .map((link) => clubStore.subjects.find((subject) => subject.id === link.subject_id)?.title)
+    const subjectTags = subjectLinkData
+      .map((link: any) => clubStore.subjects.find((subject: any) => subject.id === link.subject_id)?.title)
       .filter(Boolean);
     return [...curriculumTags, ...subjectTags] as string[];
-  }, [club, clubStore]);
+  }, [club, curriculumLinkData, subjectLinkData, curriculumMap, clubStore.subjects]);
 
   if (!club) {
     return (
@@ -132,17 +225,17 @@ export default function ClubDetail({ clubId }: { clubId: string }) {
     );
   }
 
-  const leader = clubStore.getProfile(club.created_by);
+  const leader = leaderProfile;
 
-  const handleJoin = (inviteCode?: string) => {
+  const handleJoin = async (inviteCode?: string) => {
     if (!user) return;
-    const result = clubStore.joinClub(club.id, user.id, inviteCode);
+    const result = await clubStore.joinClub(club.id, user.id, inviteCode);
     setFeedback(result.success ? 'Updated your club membership.' : result.error || 'Could not update membership.');
   };
 
-  const handleLeave = () => {
+  const handleLeave = async () => {
     if (!user) return;
-    const result = clubStore.leave(club.id, user.id);
+    const result = await clubStore.leave(club.id, user.id);
     setFeedback(result.success ? 'You left this club.' : result.error || 'Could not leave club.');
   };
 
@@ -210,8 +303,8 @@ export default function ClubDetail({ clubId }: { clubId: string }) {
           >
             {tab.icon}
             {tab.label}
-            {tab.key === 'requests' && joinRequests.length > 0 && (
-              <span className="rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">{joinRequests.length}</span>
+            {tab.key === 'requests' && currentJoinRequests.length > 0 && (
+              <span className="rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">{currentJoinRequests.length}</span>
             )}
           </button>
         ))}
@@ -223,9 +316,9 @@ export default function ClubDetail({ clubId }: { clubId: string }) {
           isMember={isMember}
           messages={realtimeMessages.length > 0
             ? realtimeMessages
-            : clubStore.getClubMessages(club.id)}
+            : fallbackMessages}
           senders={realtimeMessages.length > 0 ? realtimeSenders : undefined}
-          getProfile={clubStore.getProfile}
+          profiles={profilesMap}
           onSend={async (message) => {
             if (!user) return { success: false, error: 'Sign in required.' };
             // Try realtime send first, fall back to mock
@@ -242,68 +335,72 @@ export default function ClubDetail({ clubId }: { clubId: string }) {
       {activeTab === 'announcements' && (
         <AnnouncementsTab
           isLeader={isLeader}
-          announcements={clubStore.getClubAnnouncements(club.id)}
-          getProfile={clubStore.getProfile}
-          onPost={(title, content) => user ? clubStore.postAnnouncement(club.id, user.id, title, content) : { success: false, error: 'Sign in required.' }}
+          announcements={announcements}
+          profiles={profilesMap}
+          onPost={(title, content) => user ? clubStore.postAnnouncement(club.id, user.id, title, content) : Promise.resolve({ success: false, error: 'Sign in required.' })}
         />
       )}
       {activeTab === 'links' && (
         <LinksTab
           isLeader={isLeader}
-          links={clubStore.getClubLinks(club.id)}
-          getProfile={clubStore.getProfile}
-          onShare={(title, url) => user ? clubStore.shareLink(club.id, user.id, title, url) : { success: false, error: 'Sign in required.' }}
+          links={links}
+          profiles={profilesMap}
+          onShare={(title, url) => user ? clubStore.shareLink(club.id, user.id, title, url) : Promise.resolve({ success: false, error: 'Sign in required.' })}
         />
       )}
       {activeTab === 'members' && (
-        <MembersTab members={activeMembers} getProfile={clubStore.getProfile} />
+        <MembersTab members={activeMembers} profiles={profilesMap} />
       )}
       {activeTab === 'requests' && isLeader && (
         <RequestsTab
-          requests={joinRequests}
-          getProfile={clubStore.getProfile}
+          requests={currentJoinRequests}
+          profiles={profilesMap}
           onReview={(requestId, status) => clubStore.reviewRequest(requestId, status)}
         />
       )}
       {activeTab === 'projects' && (
         <ProjectsTab
           isMember={isMember}
-          projects={clubStore.getClubProjects?.(club.id) ?? []}
-          getProfile={clubStore.getProfile}
-          onAddProject={(title, description) =>
-            user ? clubStore.addClubProject?.(club.id, user.id, title, description) ?? { success: false, error: 'Not implemented' } : { success: false, error: 'Sign in required.' }
-          }
+          projects={projects}
+          profiles={profilesMap}
+          onAddProject={async (title, description) => {
+            if (!user) return { success: false, error: 'Sign in required.' };
+            const result = await clubStore.addClubProject?.(club.id, { created_by: user.id, title, description });
+            return result ?? { success: false, error: 'Not implemented' };
+          }}
         />
       )}
       {activeTab === 'activity_timeline' && (
         <ActivityTimelineTab
           isLeader={isLeader}
-          events={clubStore.getClubEvents?.(club.id) ?? []}
-          getProfile={clubStore.getProfile}
-          onAddEvent={(title, description, date) =>
-            user ? clubStore.addClubEvent?.(club.id, user.id, title, description, date) ?? { success: false, error: 'Not implemented' } : { success: false, error: 'Sign in required.' }
-          }
+          events={events}
+          profiles={profilesMap}
+          onAddEvent={async (title, description, date) => {
+            if (!user) return { success: false, error: 'Sign in required.' };
+            const result = await clubStore.addClubEvent?.(club.id, { created_by: user.id, title, description, event_date: date });
+            return result ?? { success: false, error: 'Not implemented' };
+          }}
         />
       )}
       {activeTab === 'milestones' && (
         <MilestoneTracker
-          milestones={clubStore.getClubMilestones?.(club.id) ?? []}
+          milestones={milestones}
           isLeader={isLeader}
-          onAdd={(title, description, targetDate) =>
-            user
-              ? clubStore.addClubMilestone?.(club.id, user.id, title, description, targetDate) ?? { success: false, error: 'Not implemented' }
-              : { success: false, error: 'Sign in required.' }
-          }
-          onUpdateStatus={(id, status) =>
-            user
-              ? clubStore.updateClubMilestone?.(id, user.id, { status }) ?? { success: false, error: 'Not implemented' }
-              : { success: false, error: 'Sign in required.' }
-          }
-          onDelete={(id) =>
-            user
-              ? clubStore.deleteClubMilestone?.(id, user.id) ?? { success: false, error: 'Not implemented' }
-              : { success: false, error: 'Sign in required.' }
-          }
+          onAdd={async (title, description, targetDate) => {
+            if (!user) return { success: false, error: 'Sign in required.' };
+            const result = await clubStore.addClubMilestone?.(club.id, user.id, title, description, targetDate);
+            return result ?? { success: false, error: 'Not implemented' };
+          }}
+          onUpdateStatus={async (id, status) => {
+            if (!user) return { success: false, error: 'Sign in required.' };
+            const result = await clubStore.updateClubMilestone?.(id, user.id, { status });
+            return result ?? { success: false, error: 'Not implemented' };
+          }}
+          onDelete={async (id) => {
+            if (!user) return { success: false, error: 'Sign in required.' };
+            const result = await clubStore.deleteClubMilestone?.(id, user.id);
+            return result ?? { success: false, error: 'Not implemented' };
+          }}
         />
       )}
     </div>
@@ -340,16 +437,16 @@ function ChatTab({
   isMember,
   messages,
   senders,
-  getProfile,
+  profiles,
   onSend,
   isRealtimeConnected,
   onlineCount,
 }: {
   clubId: string;
   isMember: boolean;
-  messages: ReturnType<ReturnType<typeof useClub>['getClubMessages']> | ClubMessage[];
+  messages: Awaited<ReturnType<ReturnType<typeof useClub>['getClubMessages']>> | ClubMessage[];
   senders?: Map<string, MessageSender>;
-  getProfile: ReturnType<typeof useClub>['getProfile'];
+  profiles: Record<string, any>;
   onSend: (message: string) => Promise<{ success: boolean; error?: string }>;
   isRealtimeConnected?: boolean;
   onlineCount?: number;
@@ -390,7 +487,7 @@ function ChatTab({
         {messages.map((item) => {
           // Try realtime sender first, fall back to profile lookup
           const realtimeSender = senders?.get((item as ClubMessage).sender_id);
-          const mockSender = getProfile((item as any).sender_id || (item as any).user_id);
+          const mockSender = profiles[(item as any).sender_id || (item as any).user_id];
           const displayName = realtimeSender?.name || mockSender?.name || 'User';
           const avatarLetter = getInitials(displayName);
           const createdAt = (item as any).created_at || '';
@@ -432,21 +529,21 @@ function ChatTab({
 function AnnouncementsTab({
   isLeader,
   announcements,
-  getProfile,
+  profiles,
   onPost,
 }: {
   isLeader: boolean;
-  announcements: ReturnType<ReturnType<typeof useClub>['getClubAnnouncements']>;
-  getProfile: ReturnType<typeof useClub>['getProfile'];
-  onPost: (title: string, content: string) => { success: boolean; error?: string };
+  announcements: Awaited<ReturnType<ReturnType<typeof useClub>['getClubAnnouncements']>>;
+  profiles: Record<string, any>;
+  onPost: (title: string, content: string) => Promise<{ success: boolean; error?: string }>;
 }) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [error, setError] = useState('');
 
-  const handlePost = (event: FormEvent) => {
+  const handlePost = async (event: FormEvent) => {
     event.preventDefault();
-    const result = onPost(title, content);
+    const result = await onPost(title, content);
     if (!result.success) {
       setError(result.error || 'Could not post announcement.');
       return;
@@ -477,12 +574,12 @@ function AnnouncementsTab({
         </form>
       )}
       {announcements.map((item) => {
-        const profile = getProfile(item.created_by);
+        const profile = profiles[item.created_by];
         return (
           <article key={item.id} className="rounded-xl border border-border bg-background-card p-5">
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="warning">Pinned</Badge>
-              <span className="text-xs text-foreground-muted">{formatDate(item.created_at)}</span>
+              <span className="text-xs text-foreground-muted">{formatDate(item.created_at ?? '')}</span>
             </div>
             <h2 className="mt-3 text-lg font-bold text-foreground">{item.title}</h2>
             <p className="mt-2 text-sm text-foreground-secondary">{item.content}</p>
@@ -497,21 +594,21 @@ function AnnouncementsTab({
 function LinksTab({
   isLeader,
   links,
-  getProfile,
+  profiles,
   onShare,
 }: {
   isLeader: boolean;
-  links: ReturnType<ReturnType<typeof useClub>['getClubLinks']>;
-  getProfile: ReturnType<typeof useClub>['getProfile'];
-  onShare: (title: string, url: string) => { success: boolean; error?: string };
+  links: Awaited<ReturnType<ReturnType<typeof useClub>['getClubLinks']>>;
+  profiles: Record<string, any>;
+  onShare: (title: string, url: string) => Promise<{ success: boolean; error?: string }>;
 }) {
   const [title, setTitle] = useState('');
   const [url, setUrl] = useState('');
   const [error, setError] = useState('');
 
-  const handleShare = (event: FormEvent) => {
+  const handleShare = async (event: FormEvent) => {
     event.preventDefault();
-    const result = onShare(title, url);
+    const result = await onShare(title, url);
     if (!result.success) {
       setError(result.error || 'Could not share link.');
       return;
@@ -537,7 +634,7 @@ function LinksTab({
       )}
       <div className="grid gap-3 md:grid-cols-2">
         {links.map((item) => {
-          const profile = getProfile(item.shared_by);
+          const profile = profiles[item.shared_by];
           return (
             <a
               key={item.id}
@@ -553,7 +650,7 @@ function LinksTab({
                 </div>
                 <ExternalLink className="h-4 w-4 shrink-0 text-foreground-muted" />
               </div>
-              <p className="mt-4 text-xs text-foreground-muted">Shared by {profile?.name || 'Member'} on {formatDate(item.created_at)}</p>
+              <p className="mt-4 text-xs text-foreground-muted">Shared by {profile?.name || 'Member'} on {formatDate(item.created_at ?? '')}</p>
             </a>
           );
         })}
@@ -564,15 +661,15 @@ function LinksTab({
 
 function MembersTab({
   members,
-  getProfile,
+  profiles,
 }: {
-  members: ReturnType<ReturnType<typeof useClub>['getClubMembers']>;
-  getProfile: ReturnType<typeof useClub>['getProfile'];
+  members: Awaited<ReturnType<ReturnType<typeof useClub>['getClubMembers']>>;
+  profiles: Record<string, any>;
 }) {
   return (
     <section className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
       {members.map((member) => {
-        const profile = getProfile(member.user_id);
+        const profile = profiles[member.user_id];
         return (
           <article key={member.id} className="flex items-center gap-3 rounded-xl border border-border bg-background-card p-4">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
@@ -592,12 +689,12 @@ function MembersTab({
 
 function RequestsTab({
   requests,
-  getProfile,
+  profiles,
   onReview,
 }: {
-  requests: ReturnType<ReturnType<typeof useClub>['getClubJoinRequests']>;
-  getProfile: ReturnType<typeof useClub>['getProfile'];
-  onReview: (requestId: string, status: 'approved' | 'rejected') => { success: boolean; error?: string };
+  requests: Awaited<ReturnType<ReturnType<typeof useClub>['getClubJoinRequests']>>;
+  profiles: Record<string, any>;
+  onReview: (requestId: string, status: 'approved' | 'rejected') => Promise<{ success: boolean; error?: string }>;
 }) {
   if (requests.length === 0) {
     return (
@@ -612,7 +709,7 @@ function RequestsTab({
   return (
     <section className="space-y-3">
       {requests.map((request) => {
-        const profile = getProfile(request.user_id);
+        const profile = profiles[request.user_id];
         return (
           <article key={request.id} className="flex flex-col gap-4 rounded-xl border border-border bg-background-card p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
@@ -653,22 +750,22 @@ interface ClubProject {
 function ProjectsTab({
   isMember,
   projects,
-  getProfile,
+  profiles,
   onAddProject,
 }: {
   isMember: boolean;
   projects: ClubProject[];
-  getProfile: ReturnType<typeof useClub>['getProfile'];
-  onAddProject: (title: string, description: string) => { success: boolean; error?: string };
+  profiles: Record<string, any>;
+  onAddProject: (title: string, description: string) => Promise<{ success: boolean; error?: string }>;
 }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [error, setError] = useState('');
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (!title.trim()) return;
-    const result = onAddProject(title, description);
+    const result = await onAddProject(title, description);
     if (!result.success) {
       setError(result.error || 'Could not add project.');
       return;
@@ -709,7 +806,7 @@ function ProjectsTab({
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
           {projects.map((project) => {
-            const profile = getProfile(project.created_by);
+            const profile = profiles[project.created_by];
             return (
               <article key={project.id} className="rounded-xl border border-border bg-background-card p-5 transition-all hover:-translate-y-0.5 hover:border-border-hover hover:shadow-md">
                 <h2 className="font-semibold text-foreground">{project.title}</h2>
@@ -743,23 +840,23 @@ interface ClubEvent {
 function ActivityTimelineTab({
   isLeader,
   events,
-  getProfile,
+  profiles,
   onAddEvent,
 }: {
   isLeader: boolean;
   events: ClubEvent[];
-  getProfile: ReturnType<typeof useClub>['getProfile'];
-  onAddEvent: (title: string, description: string, date: string) => { success: boolean; error?: string };
+  profiles: Record<string, any>;
+  onAddEvent: (title: string, description: string, date: string) => Promise<{ success: boolean; error?: string }>;
 }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [eventDate, setEventDate] = useState('');
   const [error, setError] = useState('');
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (!title.trim()) return;
-    const result = onAddEvent(title, description, eventDate);
+    const result = await onAddEvent(title, description, eventDate);
     if (!result.success) {
       setError(result.error || 'Could not add event.');
       return;
@@ -801,7 +898,7 @@ function ActivityTimelineTab({
       ) : (
         <div className="space-y-3">
           {sortedEvents.map((event) => {
-            const profile = getProfile(event.created_by);
+            const profile = profiles[event.created_by];
             const isUpcoming = new Date(event.event_date) >= new Date();
             return (
               <div key={event.id} className="flex items-start gap-4 rounded-xl border border-border bg-background-card p-4">
