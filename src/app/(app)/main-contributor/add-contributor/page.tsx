@@ -7,7 +7,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import BackButton from '@/components/ui/BackButton';
-import { useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { UserPlus, ShieldAlert, RotateCcw } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -38,7 +38,11 @@ export default function AddContributorPage() {
   } = useContributorManager();
 
   // Fetch users — re-evaluates when success changes (new user added)
-  const users = useMemo(() => fetchAllUsers(), [fetchAllUsers, success]);
+  const [users, setUsers] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchAllUsers().then(setUsers);
+  }, [fetchAllUsers, success]);
 
   // ── Access Guard ──────────────────────────────────────────────────────────
   if (!user) return null;

@@ -18,9 +18,9 @@ interface Milestone {
 interface MilestoneTrackerProps {
   milestones: Milestone[];
   isLeader: boolean;
-  onAdd: (title: string, description?: string | null, targetDate?: string | null) => { success: boolean; error?: string };
-  onUpdateStatus: (id: string, status: string) => { success: boolean; error?: string };
-  onDelete: (id: string) => { success: boolean; error?: string };
+  onAdd: (title: string, description?: string | null, targetDate?: string | null) => Promise<{ success: boolean; error?: string }>;
+  onUpdateStatus: (id: string, status: string) => Promise<{ success: boolean; error?: string }>;
+  onDelete: (id: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 const statusConfig: Record<string, { icon: React.ReactNode; label: string; color: string }> = {
@@ -43,9 +43,9 @@ export default function MilestoneTracker({ milestones, isLeader, onAdd, onUpdate
   const total = milestones.length;
   const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!title.trim()) return;
-    const result = onAdd(title, description || null, targetDate || null);
+    const result = await onAdd(title, description || null, targetDate || null);
     if (result.success) {
       setTitle('');
       setDescription('');
@@ -54,11 +54,11 @@ export default function MilestoneTracker({ milestones, isLeader, onAdd, onUpdate
     }
   };
 
-  const cycleStatus = (milestone: Milestone) => {
+  const cycleStatus = async (milestone: Milestone) => {
     const order = ['planned', 'in_progress', 'completed'];
     const currentIdx = order.indexOf(milestone.status);
     const nextStatus = order[(currentIdx + 1) % order.length];
-    onUpdateStatus(milestone.id, nextStatus);
+    await onUpdateStatus(milestone.id, nextStatus);
   };
 
   return (
@@ -106,7 +106,7 @@ export default function MilestoneTracker({ milestones, isLeader, onAdd, onUpdate
                   </h4>
                   {isLeader && (
                     <button
-                      onClick={() => onDelete(milestone.id)}
+                      onClick={() => { void onDelete(milestone.id); }}
                       className="flex-shrink-0 rounded p-0.5 text-foreground-muted hover:text-error"
                       title="Delete milestone"
                     >

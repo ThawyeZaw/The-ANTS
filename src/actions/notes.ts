@@ -33,7 +33,7 @@ export async function actionSubmitNoteForReview(noteId: string, contributorId: s
     status: 'pending_review',
     contributor_id: contributorId,
     submitted_at: new Date().toISOString(),
-  }).eq('id', noteId);
+  } as any).eq('id', noteId);
   return error ? { success: false, error: error.message } : { success: true };
 }
 

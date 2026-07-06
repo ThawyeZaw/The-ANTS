@@ -1,7 +1,7 @@
 'use client';
 
 import BackButton from '@/components/ui/BackButton';
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
   BookOpen,
@@ -38,6 +38,46 @@ export default function ClubDiscovery() {
   const [feedback, setFeedback] = useState<Record<string, string>>({});
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
+  const [clubMembersMap, setClubMembersMap] = useState<Record<string, any[]>>({});
+  const [clubCurriculumLinksMap, setClubCurriculumLinksMap] = useState<Record<string, any[]>>({});
+  const [clubSubjectLinksMap, setClubSubjectLinksMap] = useState<Record<string, any[]>>({});
+  const [userMembershipMap, setUserMembershipMap] = useState<Record<string, any>>({});
+  const [userJoinRequestMap, setUserJoinRequestMap] = useState<Record<string, any>>({});
+
+  useEffect(() => {
+    (async () => {
+      const clubs = clubStore.clubs;
+      if (clubs.length === 0) return;
+
+      const membersResults = await Promise.all(clubs.map((c: any) => clubStore.getClubMembers(c.id)));
+      const membersMap: Record<string, any[]> = {};
+      clubs.forEach((c: any, i: number) => { membersMap[c.id] = membersResults[i]; });
+      setClubMembersMap(membersMap);
+
+      const currLinksResults = await Promise.all(clubs.map((c: any) => clubStore.getClubCurriculumLinks(c.id)));
+      const currLinksMap: Record<string, any[]> = {};
+      clubs.forEach((c: any, i: number) => { currLinksMap[c.id] = currLinksResults[i]; });
+      setClubCurriculumLinksMap(currLinksMap);
+
+      const subLinksResults = await Promise.all(clubs.map((c: any) => clubStore.getClubSubjectLinks(c.id)));
+      const subLinksMap: Record<string, any[]> = {};
+      clubs.forEach((c: any, i: number) => { subLinksMap[c.id] = subLinksResults[i]; });
+      setClubSubjectLinksMap(subLinksMap);
+
+      if (user) {
+        const memberships = await Promise.all(clubs.map((c: any) => clubStore.getUserClubMembership(c.id, user.id)));
+        const memMap: Record<string, any> = {};
+        clubs.forEach((c: any, i: number) => { memMap[c.id] = memberships[i]; });
+        setUserMembershipMap(memMap);
+
+        const joinReqs = await Promise.all(clubs.map((c: any) => clubStore.getUserClubJoinRequest(c.id, user.id)));
+        const reqMap: Record<string, any> = {};
+        clubs.forEach((c: any, i: number) => { reqMap[c.id] = joinReqs[i]; });
+        setUserJoinRequestMap(reqMap);
+      }
+    })();
+  }, [clubStore.clubs, user?.id, clubStore]);
+
   const visibleClubs = useMemo(() => {
     const lowered = query.toLowerCase().trim();
     return clubStore.clubs.filter((club) => {
@@ -49,9 +89,9 @@ export default function ClubDiscovery() {
     });
   }, [clubStore.clubs, modeFilter, query]);
 
-  const handleJoin = (clubId: string) => {
+  const handleJoin = async (clubId: string) => {
     if (!user) return;
-    const result = clubStore.joinClub(clubId, user.id, inviteCodes[clubId]);
+    const result = await clubStore.joinClub(clubId, user.id, inviteCodes[clubId]);
     setFeedback((current) => ({
       ...current,
       [clubId]: result.success ? 'Updated your club membership.' : result.error || 'Could not join club.',
@@ -103,15 +143,15 @@ export default function ClubDiscovery() {
 
       <div className="grid gap-4 lg:grid-cols-3">
         {visibleClubs.map((club) => {
-          const member = user ? clubStore.getUserClubMembership(club.id, user.id) : undefined;
-          const request = user ? clubStore.getUserClubJoinRequest(club.id, user.id) : undefined;
-          const members = clubStore.getClubMembers(club.id).filter((item) => item.membership_status === 'active');
-          const leader = clubStore.getProfile(club.created_by);
-          const curriculumNames = clubStore.getClubCurriculumLinks(club.id)
-            .map((link) => clubStore.getCurriculum(link.curriculum_id)?.title)
+          const member = userMembershipMap[club.id];
+          const request = userJoinRequestMap[club.id];
+          const members = (clubMembersMap[club.id] || []).filter((item: any) => item.membership_status === 'active');
+          const leader = clubStore.profiles.find((p: any) => p.id === club.created_by);
+          const curriculumNames = (clubCurriculumLinksMap[club.id] || [])
+            .map((link: any) => (clubStore.curriculums.find((c: any) => c.id === link.curriculum_id) as any)?.title)
             .filter(Boolean);
-          const subjectNames = clubStore.getClubSubjectLinks(club.id)
-            .map((link) => clubStore.subjects.find((subject) => subject.id === link.subject_id)?.title)
+          const subjectNames = (clubSubjectLinksMap[club.id] || [])
+            .map((link: any) => clubStore.subjects.find((subject: any) => subject.id === link.subject_id)?.title)
             .filter(Boolean);
           const isMember = member?.membership_status === 'active';
 
@@ -125,7 +165,7 @@ export default function ClubDiscovery() {
                   <MessageSquare className="h-5 w-5" />
                 </div>
                 <Badge variant={club.join_mode === 'approval_based' ? 'warning' : 'default'}>
-                  {joinModeLabels[club.join_mode]}
+                  {joinModeLabels[club.join_mode as ClubJoinMode]}
                 </Badge>
               </div>
 
@@ -135,10 +175,10 @@ export default function ClubDiscovery() {
                   {club.description}
                 </p>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  {curriculumNames.map((name) => (
+                  {curriculumNames.map((name: string) => (
                     <Badge key={name}>{name}</Badge>
                   ))}
-                  {subjectNames.map((name) => (
+                  {subjectNames.map((name: string) => (
                     <Badge key={name}>{name}</Badge>
                   ))}
                 </div>

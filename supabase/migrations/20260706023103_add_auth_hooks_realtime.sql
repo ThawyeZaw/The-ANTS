@@ -29,7 +29,8 @@ CREATE OR REPLACE FUNCTION public.custom_access_token_hook(event jsonb)
 RETURNS jsonb
 LANGUAGE plpgsql
 STABLE
-AS $$
+SECURITY DEFINER SET search_path = 'public'
+AS $
 DECLARE
     claims jsonb;
     user_role_val text;
@@ -39,7 +40,7 @@ BEGIN
     claims := jsonb_set(claims, '{user_role}', to_jsonb(COALESCE(user_role_val, 'student')));
     RETURN jsonb_set(event, '{claims}', claims);
 END;
-$$;
+$;
 
 -- 1.3 on_auth_user_created trigger
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
