@@ -135,7 +135,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (email: string, password: string) => {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
-        return { success: false, error: error.message };
+        // Defensive: some Supabase errors have empty .message (rate limits, network)
+        const msg = error.message || error.name || 'An unexpected error occurred during sign in.';
+        return { success: false, error: msg === '{}' ? 'An unexpected error occurred during sign in.' : msg };
       }
       return { success: true };
     },
@@ -153,11 +155,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password,
         options: {
           data: { name, username },
+          emailRedirectTo: `${window.location.origin}/auth/confirm`,
         },
       });
 
       if (error) {
-        return { success: false, error: error.message };
+        // Defensive: some Supabase errors have empty .message (rate limits, network, etc.)
+        const msg = error.message || error.name || 'An unexpected error occurred during sign up.';
+        return { success: false, error: msg === '{}' ? 'An unexpected error occurred during sign up.' : msg };
       }
 
       // onAuthStateChange will pick up the session and fetch the profile
