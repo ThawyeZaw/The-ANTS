@@ -15,6 +15,7 @@ export async function signInAction(email: string, password: string) {
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
+    console.error('[signInAction] Supabase error:', JSON.stringify(error, null, 2));
     return { success: false, error: error.message };
   }
 
@@ -41,6 +42,7 @@ export async function signUpAction(
   });
 
   if (error) {
+    console.error('[signUpAction] Supabase error:', JSON.stringify(error, null, 2));
     return { success: false, error: error.message };
   }
 
@@ -100,7 +102,10 @@ export async function inviteUserAction(
   );
 
   if (inviteError) {
-    return { success: false, error: inviteError.message };
+    console.error('[inviteUserAction] Supabase error:', JSON.stringify(inviteError, null, 2));
+    // Defensive: SMTP failures often return empty or {} message
+    const msg = inviteError.message || inviteError.name || 'Failed to send invite email. Please check SMTP configuration.';
+    return { success: false, error: msg === '{}' ? 'Failed to send invite email. Please check SMTP configuration.' : msg };
   }
 
   const userId = data.user?.id;

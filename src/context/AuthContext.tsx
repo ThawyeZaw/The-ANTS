@@ -148,7 +148,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signup = useCallback(
     async (email: string, password: string, name: string, _role: UserRole) => {
       // All signups default to 'student'. Role upgrades handled via role_upgrade_requests.
-      const username = email.split('@')[0];
+      // Append a short random string to the username to ensure uniqueness, as the database has a UNIQUE constraint on it.
+      const baseName = email.split('@')[0];
+      const randomSuffix = Math.random().toString(36).substring(2, 6);
+      const username = `${baseName}_${randomSuffix}`;
 
       const { error } = await supabase.auth.signUp({
         email,
@@ -160,6 +163,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (error) {
+        // Log raw error to console for debugging (visible in Vercel logs)
+        console.error('[signup] Supabase error:', JSON.stringify(error, null, 2));
         // Defensive: some Supabase errors have empty .message (rate limits, network, etc.)
         const msg = error.message || error.name || 'An unexpected error occurred during sign up.';
         return { success: false, error: msg === '{}' ? 'An unexpected error occurred during sign up.' : msg };
