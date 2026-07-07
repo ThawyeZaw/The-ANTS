@@ -3,10 +3,11 @@
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTS — Role Upgrade Form Component
 // Users can request a role upgrade (student → teacher → contributor → main_contributor).
-// Requests are submitted for main contributor approval. No downgrades allowed.
+// Requests are submitted to role_upgrade_requests (real Supabase) for main
+// contributor approval. No downgrades allowed.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   ChevronDown,
   Loader2,
@@ -24,7 +25,11 @@ import { RoleBadge } from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import { ROLE_METADATA, ALL_ROLES, type UserRole } from '@/types';
-import { mockRequestRoleUpgrade, getUserUpgradeRequests } from '@/lib/mock/database';
+import {
+  submitRoleUpgradeRequest,
+  getUserUpgradeRequests,
+  type RoleUpgradeRequest,
+} from '@/actions/role-upgrade';
 
 const ROLE_ICONS: Record<UserRole, React.ReactNode> = {
   student: <GraduationCap className="h-4 w-4" />,
@@ -51,6 +56,18 @@ export default function RoleUpgradeForm() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Existing requests fetched from Supabase
+  const [existingRequests, setExistingRequests] = useState<RoleUpgradeRequest[]>([]);
+  const [requestsLoading, setRequestsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+    setRequestsLoading(true);
+    getUserUpgradeRequests()
+      .then(setExistingRequests)
+      .finally(() => setRequestsLoading(false));
+  }, [user, success]);
+
   if (!user || !currentRole) return null;
 
   // Available roles for upgrade (must be higher than current)
@@ -58,8 +75,6 @@ export default function RoleUpgradeForm() {
     (r) => ROLE_HIERARCHY[r] > ROLE_HIERARCHY[currentRole]
   );
 
-  // Check existing requests
-  const existingRequests = getUserUpgradeRequests(user.id);
   const pendingRequest = existingRequests.find((r) => r.status === 'pending');
   const approvedRequests = existingRequests.filter((r) => r.status === 'approved');
 
@@ -68,16 +83,13 @@ export default function RoleUpgradeForm() {
     setIsSending(true);
     setError(null);
 
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 600));
-
-    const result = mockRequestRoleUpgrade(user.id, selectedRole, reason);
+    const result = await submitRoleUpgradeRequest(selectedRole, reason || undefined);
     if (result.success) {
       setSuccess(true);
       setSelectedRole(null);
       setReason('');
       setIsOpen(false);
-      setTimeout(() => setSuccess(false), 5000);
+      setTimeout(() => setSuccess(false), 6000);
     } else {
       setError(result.error || 'Failed to submit upgrade request.');
     }
@@ -100,15 +112,21 @@ export default function RoleUpgradeForm() {
         </div>
       </div>
 
+      {/* Loading skeleton */}
+      {requestsLoading && (
+        <div className="h-8 rounded-xl bg-background-secondary animate-pulse" />
+      )}
+
       {/* Pending Request Info */}
-      {pendingRequest && (
+      {!requestsLoading && pendingRequest && (
         <div className="p-4 rounded-xl border border-amber-500/30 bg-amber-500/5 animate-fade-in">
           <div className="flex items-start gap-3">
             <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-medium text-foreground">Upgrade Request Pending</p>
               <p className="text-xs text-foreground-muted mt-1">
-                You requested to upgrade to {ROLE_METADATA[pendingRequest.requested_role].displayName}.
+                You requested to upgrade to{' '}
+                {ROLE_METADATA[pendingRequest.requested_role].displayName}.
                 A main contributor will review your request.
               </p>
             </div>
@@ -117,7 +135,7 @@ export default function RoleUpgradeForm() {
       )}
 
       {/* Approved Upgrades Info */}
-      {approvedRequests.length > 0 && (
+      {!requestsLoading && approvedRequests.length > 0 && (
         <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/5 animate-fade-in">
           <div className="flex items-start gap-3">
             <Check className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
@@ -125,7 +143,8 @@ export default function RoleUpgradeForm() {
               <p className="text-sm font-medium text-foreground">Previous Upgrades</p>
               {approvedRequests.map((req) => (
                 <p key={req.id} className="text-xs text-foreground-muted mt-0.5">
-                  {ROLE_METADATA[req.current_role].displayName} → {ROLE_METADATA[req.requested_role].displayName}
+                  {ROLE_METADATA[req.current_role].displayName} →{' '}
+                  {ROLE_METADATA[req.requested_role].displayName}
                 </p>
               ))}
             </div>
@@ -134,7 +153,7 @@ export default function RoleUpgradeForm() {
       )}
 
       {/* Upgrade Request Form */}
-      {!pendingRequest && availableRoles.length > 0 && (
+      {!requestsLoading && !pendingRequest && availableRoles.length > 0 && (
         <div className="border border-border rounded-xl p-4">
           <p className="text-sm font-medium text-foreground mb-3">Request Role Upgrade</p>
           <p className="text-xs text-foreground-muted mb-4">
@@ -221,7 +240,7 @@ export default function RoleUpgradeForm() {
       )}
 
       {/* No upgrades available */}
-      {availableRoles.length === 0 && !pendingRequest && (
+      {!requestsLoading && availableRoles.length === 0 && !pendingRequest && (
         <div className="p-4 rounded-xl border border-border bg-background-secondary text-center">
           <Shield className="h-8 w-8 text-foreground-muted mx-auto mb-2" />
           <p className="text-sm font-medium text-foreground">No Upgrades Available</p>

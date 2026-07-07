@@ -35,6 +35,14 @@ function mapProfile(row: Record<string, unknown>): Profile {
     isPublic: (row.is_public as boolean) ?? true,
     pinnedItemId: (row.pinned_item_id as string) ?? undefined,
     sectionVisibility: (row.section_visibility as Profile['sectionVisibility']) ?? undefined,
+    sectionOrder: (row.section_order as Profile['sectionOrder']) ?? undefined,
+    spacing: (row.spacing as Profile['spacing']) ?? undefined,
+    width: (row.width as Profile['width']) ?? undefined,
+    sectionLayout: (row.section_layout as Profile['sectionLayout']) ?? undefined,
+    showClubMemberships: (row.show_club_memberships as boolean) ?? undefined,
+    showClubProjects: (row.show_club_projects as boolean) ?? undefined,
+    showClubActivity: (row.show_club_activity as boolean) ?? undefined,
+    theme: (row.theme as Profile['theme']) ?? undefined,
     projects: (row.projects as Profile['projects']) ?? undefined,
     activities: (row.activities as Profile['activities']) ?? undefined,
     achievements: (row.achievements as Profile['achievements']) ?? undefined,
@@ -64,7 +72,7 @@ interface AuthContextValue {
   ) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   updateProfile: (
-    data: Partial<Pick<Profile, 'name' | 'bio' | 'title' | 'socialLinks' | 'avatar' | 'isPublic' | 'projects' | 'activities' | 'achievements' | 'pinnedItemId' | 'sectionVisibility'>>
+    data: Partial<Pick<Profile, 'name' | 'bio' | 'title' | 'socialLinks' | 'avatar' | 'isPublic' | 'projects' | 'activities' | 'achievements' | 'pinnedItemId' | 'sectionVisibility' | 'sectionOrder' | 'spacing' | 'width' | 'sectionLayout' | 'showClubMemberships' | 'showClubProjects' | 'showClubActivity' | 'theme'>>
   ) => Promise<{ success: boolean; error?: string }>;
   updateRole: (newRole: UserRole) => Promise<{ success: boolean; error?: string }>;
   completeOnboarding: (data: {
@@ -167,7 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // ── Update Profile ─────────────────────────────────────────────────────
   const updateProfile = useCallback(
     async (
-      data: Partial<Pick<Profile, 'name' | 'bio' | 'title' | 'socialLinks' | 'avatar' | 'isPublic' | 'projects' | 'activities' | 'achievements' | 'pinnedItemId' | 'sectionVisibility'>>
+      data: Partial<Pick<Profile, 'name' | 'bio' | 'title' | 'socialLinks' | 'avatar' | 'isPublic' | 'projects' | 'activities' | 'achievements' | 'pinnedItemId' | 'sectionVisibility' | 'sectionOrder' | 'spacing' | 'width' | 'sectionLayout' | 'showClubMemberships' | 'showClubProjects' | 'showClubActivity' | 'theme'>>
     ) => {
       if (!user) return { success: false, error: 'Not authenticated.' };
 
@@ -184,6 +192,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data.achievements !== undefined) updates.achievements = data.achievements as unknown as TablesUpdate<'profiles'>['achievements'];
       if (data.pinnedItemId !== undefined) updates.pinned_item_id = data.pinnedItemId;
       if (data.sectionVisibility !== undefined) updates.section_visibility = data.sectionVisibility as unknown as TablesUpdate<'profiles'>['section_visibility'];
+      // New layout fields
+      if (data.sectionOrder !== undefined) updates.section_order = data.sectionOrder as unknown as TablesUpdate<'profiles'>['section_order'];
+      if (data.spacing !== undefined) updates.spacing = data.spacing;
+      if (data.width !== undefined) updates.width = data.width;
+      if (data.sectionLayout !== undefined) updates.section_layout = data.sectionLayout;
+      if (data.showClubMemberships !== undefined) updates.show_club_memberships = data.showClubMemberships;
+      if (data.showClubProjects !== undefined) updates.show_club_projects = data.showClubProjects;
+      if (data.showClubActivity !== undefined) updates.show_club_activity = data.showClubActivity;
+      if (data.theme !== undefined) updates.theme = data.theme as unknown as TablesUpdate<'profiles'>['theme'];
 
       const { error } = await supabase
         .from('profiles')

@@ -7,13 +7,14 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useMemo } from 'react';
-import { Search, Users, Filter } from 'lucide-react';
+import { Search, Users, Filter, Loader2, ChevronDown } from 'lucide-react';
 import { cn, getInitials, formatDate } from '@/lib/utils';
 import { UserRole, ROLE_METADATA, ALL_ROLES } from '@/types';
 import type { Profile } from '@/types';
 
 interface UsersTableProps {
   users: Profile[];
+  onRoleChange?: (userId: string, newRole: UserRole) => Promise<void>;
 }
 
 type RoleFilter = UserRole | 'all';
@@ -34,9 +35,20 @@ const AVATAR_GRADIENTS: Record<UserRole, string> = {
   main_contributor: 'from-amber-500 to-orange-400',
 };
 
-export default function UsersTable({ users }: UsersTableProps) {
+export default function UsersTable({ users, onRoleChange }: UsersTableProps) {
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState<RoleFilter>('all');
+  const [changingRoleId, setChangingRoleId] = useState<string | null>(null);
+
+  const handleRoleChange = async (userId: string, newRole: UserRole) => {
+    if (!onRoleChange) return;
+    setChangingRoleId(userId);
+    try {
+      await onRoleChange(userId, newRole);
+    } finally {
+      setChangingRoleId(null);
+    }
+  };
 
   const filteredUsers = useMemo(() => {
     let result = users;
@@ -107,21 +119,24 @@ export default function UsersTable({ users }: UsersTableProps) {
       </div>
 
       {/* Table (desktop) */}
-      <div className="hidden md:block overflow-hidden rounded-xl border border-border">
-        <table className="w-full">
+      <div className="hidden md:block rounded-xl border border-border overflow-visible">
+        <table className="w-full table-fixed">
           <thead>
             <tr className="bg-background-secondary/80">
-              <th className="text-left text-xs font-semibold text-foreground-muted uppercase tracking-wider px-5 py-3">
+              <th className="text-left text-xs font-semibold text-foreground-muted uppercase tracking-wider px-5 py-3 w-[25%]">
                 User
               </th>
-              <th className="text-left text-xs font-semibold text-foreground-muted uppercase tracking-wider px-5 py-3">
+              <th className="text-left text-xs font-semibold text-foreground-muted uppercase tracking-wider px-5 py-3 w-[30%]">
                 Email
               </th>
-              <th className="text-left text-xs font-semibold text-foreground-muted uppercase tracking-wider px-5 py-3">
+              <th className="text-left text-xs font-semibold text-foreground-muted uppercase tracking-wider px-5 py-3 w-[15%]">
                 Role
               </th>
-              <th className="text-left text-xs font-semibold text-foreground-muted uppercase tracking-wider px-5 py-3">
+              <th className="text-left text-xs font-semibold text-foreground-muted uppercase tracking-wider px-5 py-3 w-[15%]">
                 Joined
+              </th>
+              <th className="text-left text-xs font-semibold text-foreground-muted uppercase tracking-wider px-5 py-3 w-[15%]">
+                Actions
               </th>
             </tr>
           </thead>
@@ -186,6 +201,18 @@ export default function UsersTable({ users }: UsersTableProps) {
                       {formatDate(user.createdAt)}
                     </p>
                   </td>
+                  <td className="px-5 py-3.5">
+                    {onRoleChange ? (
+                      <RoleDropdown
+                        userId={user.id}
+                        currentRole={user.role}
+                        isLoading={changingRoleId === user.id}
+                        onChange={handleRoleChange}
+                      />
+                    ) : (
+                      <span className="text-xs text-foreground-muted">—</span>
+                    )}
+                  </td>
                 </tr>
               );
             })}
@@ -237,6 +264,16 @@ export default function UsersTable({ users }: UsersTableProps) {
                   <p className="text-xs text-foreground-muted mt-1">
                     Joined {formatDate(user.createdAt)}
                   </p>
+                  {onRoleChange && (
+                    <div className="mt-2">
+                      <RoleDropdown
+                        userId={user.id}
+                        currentRole={user.role}
+                        isLoading={changingRoleId === user.id}
+                        onChange={handleRoleChange}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -250,6 +287,84 @@ export default function UsersTable({ users }: UsersTableProps) {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// ── Role Dropdown ─────────────────────────────────────────────────────────────
+
+function RoleDropdown({
+  userId,
+  currentRole,
+  isLoading,
+  onChange,
+}: {
+  userId: string;
+  currentRole: UserRole;
+  isLoading: boolean;
+  onChange: (userId: string, newRole: UserRole) => Promise<void>;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        disabled={isLoading}
+        className={cn(
+          'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all border cursor-pointer',
+          'hover:border-primary/50 disabled:opacity-50 disabled:cursor-not-allowed',
+          currentRole === 'student' && 'bg-blue-500/10 text-blue-600 border-blue-500/20',
+          currentRole === 'teacher' && 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
+          currentRole === 'contributor' && 'bg-violet-500/10 text-violet-600 border-violet-500/20',
+          currentRole === 'main_contributor' && 'bg-amber-500/10 text-amber-600 border-amber-500/20'
+        )}
+      >
+        {isLoading ? (
+          <Loader2 className="h-3 w-3 animate-spin" />
+        ) : (
+          <>
+            {ROLE_METADATA[currentRole].displayName}
+            <ChevronDown className="h-3 w-3 opacity-60" />
+          </>
+        )}
+      </button>
+
+      {open && !isLoading && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute left-0 top-full mt-1 z-20 w-44 bg-background-card border border-border rounded-xl shadow-xl overflow-hidden animate-fade-in">
+            {ALL_ROLES.map((role) => (
+              <button
+                key={role}
+                onClick={() => {
+                  onChange(userId, role);
+                  setOpen(false);
+                }}
+                className={cn(
+                  'w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-left transition-colors cursor-pointer',
+                  'hover:bg-background-secondary',
+                  role === currentRole && 'bg-primary/10 text-primary'
+                )}
+              >
+                <span
+                  className={cn(
+                    'w-2 h-2 rounded-full shrink-0',
+                    role === 'student' && 'bg-blue-500',
+                    role === 'teacher' && 'bg-emerald-500',
+                    role === 'contributor' && 'bg-violet-500',
+                    role === 'main_contributor' && 'bg-amber-500'
+                  )}
+                />
+                {ROLE_METADATA[role].displayName}
+                {role === currentRole && (
+                  <span className="ml-auto text-[10px] text-primary/60">current</span>
+                )}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
