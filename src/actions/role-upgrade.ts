@@ -306,20 +306,31 @@ export async function changeUserRole(
 
 /**
  * Fetches all profiles using the service_role client (bypasses RLS).
+ * Merges with Supabase Auth users to determine if they are verified.
  * Used by the Users Table on the add-contributor page.
  */
 export async function getAllUsers() {
   const admin = await createAdminClient();
 
-  const { data, error } = await admin
-    .from('profiles')
-    .select('*')
-    .order('created_at', { ascending: false });
+  const [{ data: profiles, error: profileError }, { data: authData, error: authError }] = await Promise.all([
+    admin.from('profiles').select('*').order('created_at', { ascending: false }),
+    admin.auth.admin.listUsers({ perPage: 1000 })
+  ]);
 
-  if (error) {
-    console.error('[getAllUsers]', error);
+  if (profileError) {
+    console.error('[getAllUsers]', profileError);
     return [];
   }
 
-  return data ?? [];
+  // Create a map of auth users
+  const authUsersMap = new Map((authData?.users || []).map((u: any) => [u.id, u]));
+
+  return (profiles ?? []).map((row: any) => {
+    const authUser = authUsersMap.get(row.id);
+    return {
+      ...row,
+      createdAt: row.created_at, // FIX: Map snake_case to camelCase for the frontend
+      isVerified: !!authUser?.confirmed_at
+    };
+  });
 }

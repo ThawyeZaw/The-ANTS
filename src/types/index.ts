@@ -197,6 +197,7 @@ export interface Profile {
   showClubActivity?: boolean;
   certificationIds?: string[] | null;
   createdAt: string;
+  isVerified?: boolean;
   // Onboarding fields
   onboardingCompleted?: boolean;
   preferredName?: string;
