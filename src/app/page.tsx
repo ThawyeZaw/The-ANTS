@@ -389,11 +389,7 @@ export default function HomePage() {
                 lineHeight: 1.65,
                 color: 'var(--hp-ink-muted)',
               }}
-            >
-              A dynamic, student-led ecosystem of mentors from A-Levels, Polytechnics, Foundation
-              programs, OSSD and top UK universities — helping IGCSE students achieve absolute
-              academic excellence and navigate their future.
-            </p>
+            />
 
             <div
               className="hp-reveal"

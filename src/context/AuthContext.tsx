@@ -87,6 +87,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Listen for auth state changes → fetch profile
   useEffect(() => {
+    // If Supabase isn't configured (env vars missing), render unauthenticated.
+    if (!supabase) {
+      setUser(null);
+      setIsLoading(false);
+      return;
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         if (!session?.user) {
@@ -125,6 +132,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // ── Login ──────────────────────────────────────────────────────────────
   const login = useCallback(
     async (email: string, password: string) => {
+      if (!supabase) {
+        return { success: false, error: 'Supabase is not configured (missing env vars).' };
+      }
+
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
         return { success: false, error: error.message };
@@ -138,6 +149,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signup = useCallback(
     async (email: string, password: string, name: string, _role: UserRole) => {
       // All signups default to 'student'. Role upgrades handled via role_upgrade_requests.
+      if (!supabase) {
+        return { success: false, error: 'Supabase is not configured (missing env vars).' };
+      }
+
       const username = email.split('@')[0];
 
       const { error } = await supabase.auth.signUp({
@@ -160,6 +175,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // ── Logout ─────────────────────────────────────────────────────────────
   const logout = useCallback(async () => {
+    if (!supabase) {
+      setUser(null);
+      return;
+    }
     await supabase.auth.signOut();
     setUser(null);
   }, [supabase]);
@@ -169,6 +188,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (
       data: Partial<Pick<Profile, 'name' | 'bio' | 'title' | 'socialLinks' | 'avatar' | 'isPublic' | 'projects' | 'activities' | 'achievements' | 'pinnedItemId' | 'sectionVisibility'>>
     ) => {
+      if (!supabase) {
+        return { success: false, error: 'Supabase is not configured (missing env vars).' };
+      }
       if (!user) return { success: false, error: 'Not authenticated.' };
 
       // Map camelCase to DB snake_case columns
@@ -213,6 +235,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // ── Request Role Upgrade ───────────────────────────────────────────────
   const updateRole = useCallback(
     async (newRole: UserRole) => {
+      if (!supabase) {
+        return { success: false, error: 'Supabase is not configured (missing env vars).' };
+      }
       if (!user) return { success: false, error: 'Not authenticated.' };
 
       const { error } = await supabase
@@ -241,12 +266,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       institutionName?: string;
       onboardingData?: OnboardingCurriculumSelection[];
     }) => {
+      if (!supabase) {
+        return { success: false, error: 'Supabase is not configured (missing env vars).' };
+      }
       if (!user) return { success: false, error: 'Not authenticated.' };
 
       // Mark onboarding complete on profiles
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({ onboarding_completed: true })
+        .update({ onboarding_completed: true } as any)
         .eq('id', user.id);
 
       if (profileError) return { success: false, error: profileError.message };
@@ -259,8 +287,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           preferred_name: data.preferredName ?? null,
           timezone: data.timezone ?? null,
           institution_name: data.institutionName ?? null,
-          onboarding_data: (data.onboardingData ?? []) as unknown as never,
-        });
+          onboarding_data: data.onboardingData ?? [],
+        } as any);
 
       if (studentError) return { success: false, error: studentError.message };
 

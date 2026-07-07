@@ -113,6 +113,7 @@ export default function HeroVisual() {
               borderRadius: 'var(--hp-radius-md)',
               padding: 20,
               textAlign: 'left',
+              boxShadow: '0 0 20px rgba(34, 197, 94, 0.35), 0 0 40px rgba(34, 197, 94, 0.15)',
             }}
           >
             <div
@@ -175,6 +176,7 @@ export default function HeroVisual() {
               borderRadius: 'var(--hp-radius-md)',
               padding: 20,
               textAlign: 'left',
+              boxShadow: '0 0 20px rgba(34, 197, 94, 0.35), 0 0 40px rgba(34, 197, 94, 0.15)',
             }}
           >
             <div

@@ -144,6 +144,36 @@ export default function LoginForm() {
               </div>
             )}
 
+            {/* Demo credentials (local/dev convenience) */}
+            <div className="mb-5 p-4 rounded-xl bg-background-card border border-border">
+              <p className="text-sm font-semibold text-foreground mb-2">Demo Credentials</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                <div>
+                  <div className="font-medium text-foreground">Student</div>
+                  <div className="text-foreground-muted">thiri@theants.edu</div>
+                  <div className="text-foreground-muted">student123</div>
+                </div>
+                <div>
+                  <div className="font-medium text-foreground">Teacher</div>
+                  <div className="text-foreground-muted">u.kyaw@theants.edu</div>
+                  <div className="text-foreground-muted">teacher123</div>
+                </div>
+                <div>
+                  <div className="font-medium text-foreground">Contributor</div>
+                  <div className="text-foreground-muted">aye.chan@theants.edu</div>
+                  <div className="text-foreground-muted">contributor123</div>
+                </div>
+                <div>
+                  <div className="font-medium text-foreground">Main</div>
+                  <div className="text-foreground-muted">daw.hla@theants.edu</div>
+                  <div className="text-foreground-muted">maincontributor123</div>
+                </div>
+              </div>
+              <p className="text-xs text-foreground-muted mt-3">
+                Note: Supabase env vars must be configured for sign-in to work.
+              </p>
+            </div>
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <Input
                 label="Email"
