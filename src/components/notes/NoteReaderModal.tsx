@@ -5,7 +5,7 @@
 // Slide-over drawer / modal to read notes directly within the library.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { X, CalendarDays, Bookmark, BookmarkCheck, GraduationCap, Zap, FlaskConical, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Note } from '@/types';
@@ -51,7 +51,13 @@ export default function NoteReaderModal({ noteId, onClose, allNotes }: NoteReade
 
   if (!note) return null;
 
-  const isSaved = user ? checkSaved(note.id) : false;
+  const [isSaved, setIsSaved] = useState(false);
+
+  useEffect(() => {
+    if (!user) { setIsSaved(false); return; }
+    checkSaved(note.id).then(setIsSaved);
+  }, [user, note.id, checkSaved]);
+
   const contributor = getProfile(note.contributor_id);
   const curriculum = note.curriculum_id ? mockCurriculums.find((c) => c.id === note.curriculum_id) : null;
   const subject = note.subject_id ? mockSubjects.find((s) => s.id === note.subject_id) : null;

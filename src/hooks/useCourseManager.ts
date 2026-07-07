@@ -99,10 +99,10 @@ export function useCourseManager() {
         syllabus_code: c.syllabus_code ?? null,
         structure_type: c.structure_type ?? null,
         grading_system: c.grading_system ?? null,
-        hierarchy_model: c.hierarchy_model ?? null,
+        hierarchy_model: (c.hierarchy_model ?? null) as { level1: string; level2: string; level3: string } | null,
         library_status: (c.library_status ?? 'approved') as import('@/types').LibraryStatus,
         share_token: c.share_token ?? null,
-        subject_count: c.subject_count,
+        subject_count: c.subject_count ?? undefined,
       })));
 
       setAllSubjects(sRes.data ?? []);

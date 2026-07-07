@@ -278,13 +278,14 @@ export default function ClassroomDetail({ classroomId, currentUserId, userRole }
                 variant="ghost"
                 icon={<LogOut className="h-4 w-4" />}
                 className="text-[var(--error)] hover:text-[var(--error)]"
-                onClick={async () => {
-                  const result = await c.leave(currentUserId, classroomId);
-                  if (result.success) {
-                    router.push('/classrooms');
-                  } else {
-                    setFeedback(result.error || 'Failed to leave');
-                  }
+                onClick={() => {
+                  void c.leave(currentUserId, classroomId).then((result) => {
+                    if (result.success) {
+                      router.push('/classrooms');
+                    } else {
+                      setFeedback(result.error || 'Failed to leave');
+                    }
+                  });
                 }}
               >
                 Leave

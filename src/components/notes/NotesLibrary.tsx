@@ -5,7 +5,7 @@
 // Main notes library page with filtering, search, and save functionality.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { BookOpen, Filter, Plus, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -39,6 +39,20 @@ export default function NotesLibrary() {
   const { notes } = useNotes(filters);
   const { toggleSave, checkSaved } = useSavedNotes(user?.id);
   const { enrolledCurriculumIds } = useCourseManager();
+
+  // Track saved state for displayed notes (checkSaved is async)
+  const [savedNoteIds, setSavedNoteIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!user) { setSavedNoteIds(new Set()); return; }
+    let cancelled = false;
+    Promise.all(notes.map((n) => checkSaved(n.id).then((saved) => ({ id: n.id, saved }))))
+      .then((results) => {
+        if (cancelled) return;
+        setSavedNoteIds(new Set(results.filter((r) => r.saved).map((r) => r.id)));
+      });
+    return () => { cancelled = true; };
+  }, [notes, user, checkSaved]);
 
   // Build a contributor name lookup map
   const contributorNames = useMemo(() => {
@@ -175,7 +189,7 @@ export default function NotesLibrary() {
                 <NoteCard
                   key={note.id}
                   note={note}
-                  isSaved={user ? checkSaved(note.id) : false}
+                  isSaved={user ? savedNoteIds.has(note.id) : false}
                   onToggleSave={toggleSave}
                   contributorName={contributorNames.get(note.contributor_id)}
                   onRead={setActiveNoteId}

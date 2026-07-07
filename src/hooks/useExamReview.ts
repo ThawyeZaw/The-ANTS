@@ -63,7 +63,7 @@ export function usePendingExamSubmissions() {
         status: 'revision_requested',
         reviewed_at: new Date().toISOString(),
         reviewer_id: reviewerId,
-        feedback: { reason: feedback },
+        feedback,
       })
       .eq('id', submissionId);
 

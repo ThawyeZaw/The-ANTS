@@ -152,7 +152,7 @@ export default function CourseManagerWizard() {
     for (const subj of subjectsToEnroll) {
       const key = subjectKey(subj.curriculum_id, subj.subject_id);
       if (!alreadyEnrolledKeys.has(key)) {
-        const result = enroll(subj.curriculum_id, subj.subject_id, subj.exam_id);
+        const result = await enroll(subj.curriculum_id, subj.subject_id, subj.exam_id);
         if (result.success) successCount++;
       }
     }

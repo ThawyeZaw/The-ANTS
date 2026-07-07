@@ -646,7 +646,7 @@ export default function TimetableManager({ userId = 'user-student-001' }: Timeta
                 isDragging={isDragging}
                 onSlotClick={handleSlotClick}
                 onEditEvent={openEditModal}
-                onDeleteEvent={async (id) => { await deleteEvent(id); }}
+                onDeleteEvent={(id) => { void deleteEvent(id); }}
                 onToggleComplete={handleToggleComplete}
               />
             </div>
@@ -661,7 +661,7 @@ export default function TimetableManager({ userId = 'user-student-001' }: Timeta
                 isDragging={isDragging}
                 onSlotClick={handleSlotClick}
                 onEditEvent={openEditModal}
-                onDeleteEvent={async (id) => { await deleteEvent(id); }}
+                onDeleteEvent={(id) => { void deleteEvent(id); }}
                 onToggleComplete={handleToggleComplete}
               />
             </div>
@@ -675,7 +675,7 @@ export default function TimetableManager({ userId = 'user-student-001' }: Timeta
                 zoomLevel={zoomLevel}
                 onDayClick={handleDayClick}
                 onEditEvent={openEditModal}
-                onDeleteEvent={async (id) => { await deleteEvent(id); }}
+                onDeleteEvent={(id) => { void deleteEvent(id); }}
                 onToggleComplete={handleToggleComplete}
               />
             </div>

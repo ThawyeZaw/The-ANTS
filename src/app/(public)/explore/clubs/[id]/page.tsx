@@ -298,9 +298,9 @@ export default function PublicClubDetailPage() {
             <MilestoneTracker
               milestones={milestones}
               isLeader={false}
-              onAdd={() => ({ success: false, error: 'Sign in required.' })}
-              onUpdateStatus={() => ({ success: false, error: 'Sign in required.' })}
-              onDelete={() => ({ success: false, error: 'Sign in required.' })}
+              onAdd={async () => ({ success: false, error: 'Sign in required.' })}
+              onUpdateStatus={async () => ({ success: false, error: 'Sign in required.' })}
+              onDelete={async () => ({ success: false, error: 'Sign in required.' })}
             />
           </section>
         )}
