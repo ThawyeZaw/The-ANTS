@@ -133,6 +133,9 @@ export default function UsersTable({ users, onRoleChange }: UsersTableProps) {
                 Role
               </th>
               <th className="text-left text-xs font-semibold text-foreground-muted uppercase tracking-wider px-5 py-3 w-[15%]">
+                Status
+              </th>
+              <th className="text-left text-xs font-semibold text-foreground-muted uppercase tracking-wider px-5 py-3 w-[15%]">
                 Joined
               </th>
               <th className="text-left text-xs font-semibold text-foreground-muted uppercase tracking-wider px-5 py-3 w-[15%]">
@@ -197,6 +200,18 @@ export default function UsersTable({ users, onRoleChange }: UsersTableProps) {
                     </span>
                   </td>
                   <td className="px-5 py-3.5">
+                    <span
+                      className={cn(
+                        'inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider',
+                        user.isVerified
+                          ? 'bg-emerald-500/10 text-emerald-600'
+                          : 'bg-foreground-muted/10 text-foreground-muted'
+                      )}
+                    >
+                      {user.isVerified ? 'Verified' : 'Invited'}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3.5">
                     <p className="text-sm text-foreground-muted">
                       {formatDate(user.createdAt)}
                     </p>
@@ -248,17 +263,29 @@ export default function UsersTable({ users, onRoleChange }: UsersTableProps) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <p className="font-medium text-foreground truncate">{user.name}</p>
-                    <span
-                      className={cn(
-                        'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold shrink-0',
-                        user.role === 'student' && 'bg-blue-500/10 text-blue-600',
-                        user.role === 'teacher' && 'bg-emerald-500/10 text-emerald-600',
-                        user.role === 'contributor' && 'bg-violet-500/10 text-violet-600',
-                        user.role === 'main_contributor' && 'bg-amber-500/10 text-amber-600'
-                      )}
-                    >
-                      {meta.displayName}
-                    </span>
+                    <div className="flex items-center gap-1">
+                      <span
+                        className={cn(
+                          'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0',
+                          user.isVerified
+                            ? 'bg-emerald-500/10 text-emerald-600'
+                            : 'bg-foreground-muted/10 text-foreground-muted'
+                        )}
+                      >
+                        {user.isVerified ? 'Verified' : 'Invited'}
+                      </span>
+                      <span
+                        className={cn(
+                          'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold shrink-0',
+                          user.role === 'student' && 'bg-blue-500/10 text-blue-600',
+                          user.role === 'teacher' && 'bg-emerald-500/10 text-emerald-600',
+                          user.role === 'contributor' && 'bg-violet-500/10 text-violet-600',
+                          user.role === 'main_contributor' && 'bg-amber-500/10 text-amber-600'
+                        )}
+                      >
+                        {meta.displayName}
+                      </span>
+                    </div>
                   </div>
                   <p className="text-sm text-foreground-muted truncate">{user.email}</p>
                   <p className="text-xs text-foreground-muted mt-1">
