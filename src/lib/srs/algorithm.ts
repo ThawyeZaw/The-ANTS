@@ -23,7 +23,7 @@ const DEFAULT_EASE_FACTOR = 2.5;
 const MIN_INTERVAL = 1; // days
 
 /** Quality score mapping for SM-2 */
-const QUALITY_MAP: Record<SRSRating, number> = {
+export const QUALITY_MAP: Record<SRSRating, number> = {
   again: 1,
   hard: 2,
   good: 3,

@@ -313,9 +313,9 @@ export default function ProfilePage() {
 
       {/* Empty state */}
       {!hasPortfolio && !isContributor && !showStructuredCerts && !showClubs && (
-        <div className="text-center py-16 max-w-lg mx-auto">
-          <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
-            <UserX className="h-5 w-5 text-foreground-muted" />
+        <div className="rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-md p-12 text-center max-w-lg mx-auto">
+          <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/5 flex items-center justify-center mx-auto mb-5">
+            <UserX className="h-7 w-7 text-foreground-muted" />
           </div>
           <h2 className="text-lg font-bold text-foreground mb-2">Portfolio Empty</h2>
           <p className="text-sm text-foreground-secondary leading-relaxed">
@@ -324,7 +324,7 @@ export default function ProfilePage() {
               : `@${profile.username} hasn't added any public portfolio items yet.`}
           </p>
           {isOwnProfile && (
-             <button onClick={() => router.push('/settings/profile')} className="mt-6 px-4 py-2 text-sm font-medium transition-all rounded-lg cursor-pointer" style={{ backgroundColor: 'var(--profile-accent, #6366f1)', color: '#fff' }}>
+             <button onClick={() => router.push('/settings/profile')} className="mt-6 px-5 py-2.5 text-sm font-medium rounded-full bg-primary/20 border border-primary/30 text-primary hover:bg-primary/30 transition-all cursor-pointer backdrop-blur-sm">
                Setup Portfolio
              </button>
           )}
@@ -341,54 +341,48 @@ export default function ProfilePage() {
 
 function ProjectsSection({ projects, profile }: { projects: any[]; profile: Profile }) {
   return (
-    <section>
-      <div className="flex items-center gap-3 mb-6 pb-2 border-b border-white/5">
-        <div className="w-1 h-6 rounded-full" style={{ backgroundColor: 'var(--profile-accent)' }} />
+    <section className="rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-md p-6">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-8 h-8 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
+          <Code2 className="h-4 w-4 text-violet-400" />
+        </div>
         <h2 className="text-lg font-bold text-foreground">Projects</h2>
       </div>
-      <div className="grid gap-5 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2">
         {projects.map((project) => (
-          <div key={project.id} className="group">
-            <div className="flex items-start gap-1 mb-1.5">
-              <div
-                className="w-0.5 h-5 mt-1.5 shrink-0 rounded-full transition-colors group-hover:opacity-100 opacity-40"
-                style={{ backgroundColor: 'var(--profile-accent)' }}
-              />
-              <h3
-                className="font-bold text-foreground text-base ml-1.5 transition-colors group-hover"
-                style={{ '--hover-color': 'var(--profile-accent)' } as React.CSSProperties}
-                onMouseEnter={e => (e.currentTarget.style.color = 'var(--profile-accent)')}
-                onMouseLeave={e => (e.currentTarget.style.color = '')}
-              >
-                {project.title}
-              </h3>
-            </div>
+          <div
+            key={project.id}
+            className="group rounded-xl border border-white/5 bg-white/[0.02] p-4 transition-all duration-300 hover:border-violet-500/20 hover:bg-violet-500/[0.03] hover:shadow-lg hover:shadow-violet-500/5"
+          >
+            <h3 className="font-bold text-foreground text-base group-hover:text-violet-400 transition-colors">
+              {project.title}
+            </h3>
             {project.role && (
-              <p className="text-xs font-medium ml-2.5 -mt-0.5" style={{ color: 'var(--profile-accent)' }}>
+              <p className="text-xs font-medium text-violet-400/80 mt-0.5">
                 {project.role}
               </p>
             )}
-            <p className="text-sm text-foreground-secondary mt-2 ml-2.5 leading-relaxed">
+            <p className="text-sm text-foreground-secondary mt-2 leading-relaxed">
               {project.description}
             </p>
             {project.technologies && project.technologies.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mt-2.5 ml-2.5">
+              <div className="flex flex-wrap gap-1.5 mt-3">
                 {project.technologies.map((tech: string) => (
-                  <span key={tech} className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-background-secondary/50 text-foreground-muted">
+                  <span key={tech} className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-white/[0.04] border border-white/5 text-foreground-muted">
                     {tech}
                   </span>
                 ))}
               </div>
             )}
             {project.links && Object.keys(project.links).length > 0 && (
-              <div className="flex flex-wrap gap-3 mt-2.5 ml-2.5">
+              <div className="flex flex-wrap gap-3 mt-3 pt-3 border-t border-white/5">
                 {project.links.github && (
-                  <a href={project.links.github} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs font-medium text-foreground-muted hover:text-foreground transition-colors">
+                  <a href={project.links.github} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs font-medium text-foreground-muted hover:text-foreground transition-colors">
                     <Code2 className="h-3 w-3" /> Source
                   </a>
                 )}
                 {project.links.live && (
-                  <a href={project.links.live} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs font-medium transition-colors" style={{ color: 'var(--profile-accent)' }}>
+                  <a href={project.links.live} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs font-medium text-violet-400 hover:text-violet-300 transition-colors">
                     <ExternalLink className="h-3 w-3" /> Live Demo
                   </a>
                 )}
@@ -403,31 +397,29 @@ function ProjectsSection({ projects, profile }: { projects: any[]; profile: Prof
 
 function ActivitiesSection({ activities }: { activities: any[]; profile: Profile }) {
   return (
-    <section>
-      <div className="flex items-center gap-3 mb-6 pb-2 border-b border-white/5">
-        <div className="w-1 h-6 rounded-full bg-emerald-500" />
+    <section className="rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-md p-6">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+          <Star className="h-4 w-4 text-emerald-400" />
+        </div>
         <h2 className="text-lg font-bold text-foreground">Activities & CCA</h2>
       </div>
-      <div className="grid gap-5 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2">
         {activities.map((activity) => (
-          <div key={activity.id} className="group">
-            <div className="flex items-start gap-2">
-              <div className="w-7 h-7 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                <Star className="h-3.5 w-3.5 text-emerald-500" />
-              </div>
-              <div className="min-w-0">
-                <h3 className="font-bold text-foreground text-sm">{activity.name}</h3>
-                <p className="text-xs font-medium text-emerald-500/80">
-                  {activity.role} at {activity.organization}
-                </p>
-                <span className="inline-block mt-1 text-[11px] font-mono text-foreground-muted">
-                  {activity.start_date} {activity.end_date ? `— ${activity.end_date}` : '— Present'}
-                </span>
-                {activity.description && (
-                  <p className="text-sm text-foreground-secondary mt-2 leading-relaxed">{activity.description}</p>
-                )}
-              </div>
-            </div>
+          <div
+            key={activity.id}
+            className="group rounded-xl border border-white/5 bg-white/[0.02] p-4 transition-all duration-300 hover:border-emerald-500/20 hover:bg-emerald-500/[0.03]"
+          >
+            <h3 className="font-bold text-foreground text-sm group-hover:text-emerald-400 transition-colors">{activity.name}</h3>
+            <p className="text-xs font-medium text-emerald-400/80 mt-0.5">
+              {activity.role} at {activity.organization}
+            </p>
+            <span className="inline-block mt-2 text-[11px] font-mono text-foreground-muted px-2 py-0.5 rounded-full bg-white/[0.04] border border-white/5">
+              {activity.start_date} {activity.end_date ? `— ${activity.end_date}` : '— Present'}
+            </span>
+            {activity.description && (
+              <p className="text-sm text-foreground-secondary mt-2 leading-relaxed">{activity.description}</p>
+            )}
           </div>
         ))}
       </div>
@@ -437,27 +429,26 @@ function ActivitiesSection({ activities }: { activities: any[]; profile: Profile
 
 function AchievementsSection({ achievements }: { achievements: any[]; profile: Profile }) {
   return (
-    <section>
-      <div className="flex items-center gap-3 mb-6 pb-2 border-b border-white/5">
-        <div className="w-1 h-6 rounded-full bg-amber-500" />
+    <section className="rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-md p-6">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+          <Award className="h-4 w-4 text-amber-400" />
+        </div>
         <h2 className="text-lg font-bold text-foreground">Achievements</h2>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         {achievements.map((achievement) => (
-          <div key={achievement.id} className="flex items-start gap-3 group">
-            <div className="w-7 h-7 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0 mt-0.5">
-              <Award className="h-3.5 w-3.5 text-amber-500" />
-            </div>
-            <div className="min-w-0">
-              <h3 className="font-bold text-foreground text-sm">{achievement.title}</h3>
-              {achievement.description && (
-                <p className="text-sm text-foreground-secondary mt-1 leading-relaxed">{achievement.description}</p>
-              )}
-              <div className="flex flex-wrap items-center gap-2 mt-1.5 text-xs text-foreground-muted">
-                {achievement.issuer && <span>{achievement.issuer}</span>}
-                {achievement.issuer && achievement.date && <span>•</span>}
-                {achievement.date && <span>{achievement.date}</span>}
-              </div>
+          <div
+            key={achievement.id}
+            className="group rounded-xl border border-white/5 bg-white/[0.02] p-4 transition-all duration-300 hover:border-amber-500/20 hover:bg-amber-500/[0.03]"
+          >
+            <h3 className="font-bold text-foreground text-sm group-hover:text-amber-400 transition-colors">{achievement.title}</h3>
+            {achievement.description && (
+              <p className="text-sm text-foreground-secondary mt-1 leading-relaxed">{achievement.description}</p>
+            )}
+            <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-foreground-muted">
+              {achievement.issuer && <span className="px-2 py-0.5 rounded-full bg-white/[0.04] border border-white/5">{achievement.issuer}</span>}
+              {achievement.date && <span className="text-foreground-muted/60">{achievement.date}</span>}
             </div>
           </div>
         ))}
@@ -468,28 +459,28 @@ function AchievementsSection({ achievements }: { achievements: any[]; profile: P
 
 function GradesSection({ grades }: { grades: any[] }) {
   return (
-    <section>
-      <div className="flex items-center gap-3 mb-6 pb-2 border-b border-white/5">
-        <div className="w-1 h-6 rounded-full bg-blue-500" />
+    <section className="rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-md p-6">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+          <GraduationCap className="h-4 w-4 text-blue-400" />
+        </div>
         <h2 className="text-lg font-bold text-foreground">Academic Grades</h2>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         {grades.map((grade) => (
-          <div key={grade.id} className="flex items-start gap-3 group">
-            <div className="w-7 h-7 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0 mt-0.5">
-              <GraduationCap className="h-3.5 w-3.5 text-blue-500" />
-            </div>
-            <div className="min-w-0">
-              <h3 className="font-bold text-foreground text-sm">{grade.title}</h3>
-              {grade.description && (
-                <p className="text-sm text-foreground-secondary mt-1 leading-relaxed">{grade.description}</p>
-              )}
-              {grade.fileUrl && (
-                <a href={grade.fileUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 mt-2 text-xs font-medium transition-colors" style={{ color: '#3b82f6' }}>
-                  View Certificate <ExternalLink className="h-3 w-3" />
-                </a>
-              )}
-            </div>
+          <div
+            key={grade.id}
+            className="group rounded-xl border border-white/5 bg-white/[0.02] p-4 transition-all duration-300 hover:border-blue-500/20 hover:bg-blue-500/[0.03]"
+          >
+            <h3 className="font-bold text-foreground text-sm group-hover:text-blue-400 transition-colors">{grade.title}</h3>
+            {grade.description && (
+              <p className="text-sm text-foreground-secondary mt-1 leading-relaxed">{grade.description}</p>
+            )}
+            {grade.fileUrl && (
+              <a href={grade.fileUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 mt-2 text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors">
+                View Certificate <ExternalLink className="h-3 w-3" />
+              </a>
+            )}
           </div>
         ))}
       </div>
@@ -499,19 +490,24 @@ function GradesSection({ grades }: { grades: any[] }) {
 
 function TestimonialsSection({ testimonials, profile }: { testimonials: any[]; profile: Profile }) {
   return (
-    <section>
-      <div className="flex items-center gap-3 mb-6 pb-2 border-b border-white/5">
-        <div className="w-1 h-6 rounded-full bg-rose-500" />
+    <section className="rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-md p-6">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-8 h-8 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center">
+          <Star className="h-4 w-4 text-rose-400" />
+        </div>
         <h2 className="text-lg font-bold text-foreground">Testimonials</h2>
       </div>
       <div className="space-y-4">
         {testimonials.map((testimonial) => (
-          <div key={testimonial.id} className="pl-4 border-l-2 border-rose-500/20 group hover:border-rose-500/60 transition-colors">
+          <div
+            key={testimonial.id}
+            className="rounded-xl border border-white/5 bg-white/[0.02] p-4 transition-all duration-300 hover:border-rose-500/20 hover:bg-rose-500/[0.03]"
+          >
             <p className="text-sm text-foreground-secondary italic leading-relaxed">
               &ldquo;{testimonial.content}&rdquo;
             </p>
-            <div className="flex items-center gap-2 mt-3">
-              <div className="w-6 h-6 rounded-full bg-rose-500/15 flex items-center justify-center">
+            <div className="flex items-center gap-3 mt-3 pt-3 border-t border-white/5">
+              <div className="w-7 h-7 rounded-full bg-rose-500/15 flex items-center justify-center border border-rose-500/20">
                 <span className="text-[11px] font-bold text-rose-400">
                   {testimonial.fromName.charAt(0)}
                 </span>
@@ -533,31 +529,31 @@ function TestimonialsSection({ testimonials, profile }: { testimonials: any[]; p
 
 function CertificationsSection({ certifications, profile }: { certifications: any[]; profile: Profile }) {
   return (
-    <section>
-      <div className="flex items-center gap-3 mb-6 pb-2 border-b border-white/5">
-        <div className="w-1 h-6 rounded-full bg-teal-500" />
+    <section className="rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-md p-6">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-8 h-8 rounded-lg bg-teal-500/10 border border-teal-500/20 flex items-center justify-center">
+          <GraduationCap className="h-4 w-4 text-teal-400" />
+        </div>
         <h2 className="text-lg font-bold text-foreground">Certifications</h2>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         {certifications.map((cert) => (
-          <div key={cert.id} className="flex items-start gap-3 group p-4 rounded-xl bg-background-secondary/50 hover:bg-background-secondary transition-colors">
-            <div className="w-7 h-7 rounded-full bg-teal-500/10 flex items-center justify-center shrink-0 mt-0.5">
-              <GraduationCap className="h-3.5 w-3.5 text-teal-500" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <h3 className="font-bold text-foreground text-sm">{cert.title}</h3>
-              <p className="text-xs text-foreground-muted mt-0.5">{cert.issuer}{cert.date ? ` · ${cert.date}` : ''}</p>
-              {cert.credentialUrl && (
-                <a
-                  href={cert.credentialUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 mt-2 text-xs font-medium text-teal-500 hover:text-teal-400 transition-colors"
-                >
-                  View Credential <ExternalLink className="h-3 w-3" />
-                </a>
-              )}
-            </div>
+          <div
+            key={cert.id}
+            className="group rounded-xl border border-white/5 bg-white/[0.02] p-4 transition-all duration-300 hover:border-teal-500/20 hover:bg-teal-500/[0.03]"
+          >
+            <h3 className="font-bold text-foreground text-sm group-hover:text-teal-400 transition-colors">{cert.title}</h3>
+            <p className="text-xs text-foreground-muted mt-0.5">{cert.issuer}{cert.date ? ` · ${cert.date}` : ''}</p>
+            {cert.credentialUrl && (
+              <a
+                href={cert.credentialUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 mt-2 text-xs font-medium text-teal-400 hover:text-teal-300 transition-colors"
+              >
+                View Credential <ExternalLink className="h-3 w-3" />
+              </a>
+            )}
           </div>
         ))}
       </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Clock,
   FileText,
@@ -45,7 +45,7 @@ interface AssignmentsPanelProps {
   currentUserId: string;
   isTeacher: boolean;
   getProfile: (userId: string) => { id: string; name: string; role: string } | undefined;
-  getSubmission: (assignmentId: string, studentId: string) => AssignmentSubmission | undefined;
+  getSubmission: (assignmentId: string, studentId: string) => Promise<AssignmentSubmission | null>;
   onCreate: (data: { title: string; description: string; due_date: string; priority: string; total_points: number | null }) => void;
   onPublish: (assignmentId: string) => void;
   onSubmitToAssignment: (assignmentId: string, content: string) => void;
@@ -80,12 +80,25 @@ export default function AssignmentsPanel({
   const [submissionContent, setSubmissionContent] = useState('');
   const [gradeValue, setGradeValue] = useState('');
   const [gradeFeedback, setGradeFeedback] = useState('');
+  const [submissionsMap, setSubmissionsMap] = useState<Record<string, AssignmentSubmission | null>>({});
+
+  useEffect(() => {
+    (async () => {
+      const map: Record<string, AssignmentSubmission | null> = {};
+      await Promise.all(
+        assignments.map(async (a) => {
+          map[a.id] = await getSubmission(a.id, currentUserId);
+        })
+      );
+      setSubmissionsMap(map);
+    })();
+  }, [assignments, currentUserId, getSubmission]);
 
   const classroomAssignments = assignments.filter((a) => a.classroom_id === classroomId);
   const publishedAssignments = classroomAssignments.filter((a) => a.status === 'published');
   const draftAssignments = classroomAssignments.filter((a) => a.status === 'draft');
   const selectedAssignment = selectedId ? assignments.find((a) => a.id === selectedId) : null;
-  const selectedSubmission = selectedAssignment ? getSubmission(selectedAssignment.id, currentUserId) : null;
+  const selectedSubmission = selectedAssignment ? submissionsMap[selectedAssignment.id] ?? null : null;
   const editingAssignment = editingId ? assignments.find((a) => a.id === editingId) : null;
 
   const handleCreateSubmit = (e: React.FormEvent) => {
@@ -301,7 +314,7 @@ export default function AssignmentsPanel({
           </div>
         ) : (
           publishedAssignments.map((a) => {
-            const sub = getSubmission(a.id, currentUserId);
+            const sub = submissionsMap[a.id] ?? null;
             const isDue = new Date(a.due_date) < new Date();
             const isSubmitted = sub?.submitted_at != null;
             const isGraded = sub?.grade != null;

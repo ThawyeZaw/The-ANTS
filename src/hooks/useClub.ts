@@ -208,7 +208,7 @@ export function useClub() {
   }, [refresh, supabase]);
 
   const updateFeatures = useCallback(async (clubId: string, userId: string, features: import('@/types').ClubFeature[]): Promise<Result> => {
-    const { error } = await supabase.from('clubs').update({ features }).eq('id', clubId);
+    const { error } = await supabase.from('clubs').update({ features } as any).eq('id', clubId);
     refresh();
     return error ? { success: false, error: error.message } : { success: true };
   }, [refresh, supabase]);

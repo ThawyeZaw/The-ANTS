@@ -195,9 +195,20 @@ the-ants/
 │   ├── types/                   # Shared TypeScript definitions
 │   ├── constants/               # Static reference data
 │   └── context/                 # React context providers
-├── schema.md                    # Database schema reference
-└── spec.md                      # System specification
+├── spec.md                      # System specification
+├── schema.md                     # Database schema reference
+├── design-system/                # Design system docs (colors, typography, components, accessibility)
+│   ├── README.md                 # Quick start + file index
+│   ├── design-system.md          # Color palette & typography (primary iteration file)
+│   └── ...                       # Component library, interaction flows, etc.
+└── README.md                     # Project README
 ```
+
+---
+
+## Design System
+
+All visual and interaction standards are documented in the [design-system/](./design-system/) folder. See the [design system README](./design-system/README.md) for a quick start guide, and [design-system.md](./design-system/design-system.md) for the color palette and typography decisions.
 
 ---
 

@@ -108,6 +108,7 @@ the-ants/                                 # Project root
 ├── spec.md                               # 🔒 PM — System specification (this file)
 ├── schema.md                             # 🔒 PM — Database schema reference
 ├── README.md                             # 🔒 PM — Project README
+├── design-system/                        # 🔒 PM — Design system documentation (color palette, typography, components, accessibility, etc.)
 ├── supabase/                             # 🔒 PM — Supabase CLI local config
 │   ├── config.toml
 │   ├── seed.sql                          # Dev seed data

@@ -118,18 +118,26 @@ export function useProfile(username: string): UseProfileReturn {
         name: profileRow.name ?? '',
         username: profileRow.username ?? '',
         avatar: profileRow.avatar_url ?? '',
-        role: profileRow.role ?? 'student',
-        bio: profileRow.bio,
-        title: profileRow.title,
-        socialLinks: profileRow.social_links as Profile['socialLinks'],
+        role: (profileRow.role ?? 'student') as Profile['role'],
+        bio: profileRow.bio ?? undefined,
+        title: profileRow.title ?? undefined,
+        socialLinks: profileRow.social_links as unknown as Profile['socialLinks'],
         isPublic: profileRow.is_public ?? true,
-        pinnedItemId: profileRow.pinned_item_id,
-        sectionVisibility: profileRow.section_visibility as Profile['sectionVisibility'],
-        projects: profileRow.projects as Profile['projects'],
-        activities: profileRow.activities as Profile['activities'],
-        achievements: profileRow.achievements as Profile['achievements'],
-        certificationIds: profileRow.certification_ids,
-        createdAt: profileRow.created_at,
+        pinnedItemId: profileRow.pinned_item_id ?? undefined,
+        sectionVisibility: profileRow.section_visibility as unknown as Profile['sectionVisibility'],
+        sectionOrder: (profileRow.section_order as unknown as Profile['sectionOrder']) ?? undefined,
+        spacing: (profileRow.spacing as Profile['spacing']) ?? undefined,
+        width: (profileRow.width as Profile['width']) ?? undefined,
+        sectionLayout: (profileRow.section_layout as Profile['sectionLayout']) ?? undefined,
+        showClubMemberships: (profileRow.show_club_memberships as boolean) ?? undefined,
+        showClubProjects: (profileRow.show_club_projects as boolean) ?? undefined,
+        showClubActivity: (profileRow.show_club_activity as boolean) ?? undefined,
+        theme: (profileRow.theme as unknown as Profile['theme']) ?? undefined,
+        projects: profileRow.projects as unknown as Profile['projects'],
+        activities: profileRow.activities as unknown as Profile['activities'],
+        achievements: profileRow.achievements as unknown as Profile['achievements'],
+        certificationIds: profileRow.certification_ids ?? undefined,
+        createdAt: profileRow.created_at ?? '',
       };
 
       if (cancelled) return;
@@ -139,7 +147,7 @@ export function useProfile(username: string): UseProfileReturn {
       const { data: certs } = await supabase
         .from('certifications')
         .select('*')
-        .eq('contributor_id', foundProfile.id);
+        .eq('user_id', foundProfile.id);
       if (!cancelled) setCertifications(certs ?? []);
 
       // Fetch club memberships for the profile user
@@ -164,7 +172,7 @@ export function useProfile(username: string): UseProfileReturn {
           memberships.push({
             id: club.id,
             name: club.name,
-            role: cm.role,
+            role: cm.role ?? '',
             memberCount: count ?? 0,
             joinMode: club.join_mode,
             custom_domain_slug: club.custom_domain_slug,
@@ -191,7 +199,7 @@ export function useProfile(username: string): UseProfileReturn {
                     id: `club-${p.id}`,
                     title: p.title,
                     description: p.description || '',
-                    technologies: p.tags,
+                    technologies: p.tags ?? undefined,
                   });
                 }
               }
@@ -209,7 +217,7 @@ export function useProfile(username: string): UseProfileReturn {
                     id: c.id,
                     activity_type: `club_${c.contribution_type}`,
                     description: `[${club.name}] ${c.title}`,
-                    created_at: c.created_at,
+                    created_at: c.created_at ?? '',
                   });
                 }
               }
@@ -250,7 +258,7 @@ export function useProfile(username: string): UseProfileReturn {
         const { data: submissions } = await supabase
           .from('editor_submissions')
           .select('*')
-          .eq('submitter_id', foundProfile.id)
+          .eq('contributor_id', foundProfile.id)
           .eq('status', 'approved')
           .not('reviewed_at', 'is', null);
 

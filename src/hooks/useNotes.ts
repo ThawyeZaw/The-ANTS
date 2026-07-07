@@ -5,7 +5,8 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import type { Note, NoteBlock, NoteEditorState, NoteFilters, NoteStatus } from '@/types';
+import type { Note, NoteBlock, NoteEditorState, NoteFilters, NoteStatus, NoteVisibility } from '@/types';
+import type { Json } from '@/types/supabase';
 import { createClient } from '@/lib/supabase/client';
 
 function genId(): string {
@@ -24,12 +25,12 @@ export function useNotes(filters: NoteFilters) {
 
       if (filters.curriculumId) query = query.eq('curriculum_id', filters.curriculumId);
       if (filters.subjectId) query = query.eq('subject_id', filters.subjectId);
-      if (filters.isSyllabusBased !== undefined) query = query.eq('is_syllabus_based', filters.isSyllabusBased);
+      if (filters.isSyllabusBased != null) query = query.eq('is_syllabus_based', filters.isSyllabusBased);
       if (filters.search) query = query.ilike('title', `%${filters.search}%`);
       if (filters.tags.length > 0) query = query.contains('tags', filters.tags);
 
       const { data } = await query.order('created_at', { ascending: false });
-      setNotes((data as Note[]) ?? []);
+      setNotes((data as unknown as Note[]) ?? []);
     })();
   }, [
     filters.curriculumId, filters.subjectId, filters.isSyllabusBased,
@@ -50,7 +51,7 @@ export function useSingleNote(noteId: string) {
     setLoading(true);
     (async () => {
       const { data } = await supabase.from('notes').select('*').eq('id', noteId).single();
-      setNote((data as Note) ?? null);
+      setNote((data as unknown as Note) ?? null);
       setLoading(false);
     })();
   }, [noteId, supabase]);
@@ -70,7 +71,7 @@ export function useSavedNotes(userId: string | undefined) {
     const noteIds = (saved ?? []).map((s: any) => s.note_id);
     if (noteIds.length === 0) { setSavedNotes([]); return; }
     const { data: notes } = await supabase.from('notes').select('*').in('id', noteIds);
-    setSavedNotes((notes as Note[]) ?? []);
+    setSavedNotes((notes as unknown as Note[]) ?? []);
   }, [userId, supabase]);
 
   useEffect(() => { refresh(); }, [refresh]);
@@ -104,7 +105,7 @@ export function useContributorNotes(contributorId: string | undefined) {
   const refresh = useCallback(async () => {
     if (!contributorId) { setNotes([]); return; }
     const { data } = await supabase.from('notes').select('*').eq('contributor_id', contributorId);
-    setNotes((data as Note[]) ?? []);
+    setNotes((data as unknown as Note[]) ?? []);
   }, [contributorId, supabase]);
 
   useEffect(() => { refresh(); }, [refresh]);
@@ -120,7 +121,7 @@ export function usePendingNotes() {
 
   const refresh = useCallback(async () => {
     const { data } = await supabase.from('notes').select('*').eq('status', 'pending_review');
-    setPendingNotes((data as Note[]) ?? []);
+    setPendingNotes((data as unknown as Note[]) ?? []);
   }, [supabase]);
 
   useEffect(() => { refresh(); }, [refresh]);
@@ -169,10 +170,10 @@ export function useNoteEditor(existingNoteId?: string) {
         setState({
           noteId: note.id, title: note.title, summary: note.summary ?? '',
           curriculumId: note.curriculum_id, subjectId: note.subject_id, topicId: note.topic_id,
-          syllabusPoint: note.syllabus_point ?? '', isSyllabusBased: note.is_syllabus_based,
-          examBoard: note.exam_board ?? null, tags: note.tags, blocks: note.blocks,
+          syllabusPoint: note.syllabus_point ?? '', isSyllabusBased: note.is_syllabus_based ?? false,
+          examBoard: null, tags: note.tags ?? [], blocks: note.blocks as unknown as NoteBlock[],
           isDirty: false, isSaving: false,
-          status: note.status as NoteStatus, visibility: note.visibility ?? 'private',
+          status: note.status as NoteStatus, visibility: (note.visibility as NoteVisibility) ?? 'private',
         });
       }
       initialised.current = true;
@@ -247,8 +248,8 @@ export function useNoteEditor(existingNoteId?: string) {
       title: state.title, summary: state.summary,
       curriculum_id: state.curriculumId, subject_id: state.subjectId, topic_id: state.topicId,
       syllabus_point: state.isSyllabusBased ? state.syllabusPoint : null,
-      is_syllabus_based: state.isSyllabusBased, exam_board: state.examBoard,
-      tags: state.tags, blocks: state.blocks, visibility: state.visibility,
+      is_syllabus_based: state.isSyllabusBased,
+      tags: state.tags, blocks: state.blocks as unknown as Json, visibility: state.visibility,
     };
 
     let result: { success: boolean; note?: Note; error?: string };
@@ -259,7 +260,7 @@ export function useNoteEditor(existingNoteId?: string) {
         result = { success: false, error: error.message };
       } else {
         const { data: updated } = await supabase.from('notes').select('*').eq('id', state.noteId).single();
-        result = { success: true, note: updated as Note };
+        result = { success: true, note: updated as unknown as Note };
       }
     } else {
       const { data: created, error } = await supabase.from('notes').insert({
@@ -269,7 +270,7 @@ export function useNoteEditor(existingNoteId?: string) {
         result = { success: false, error: error?.message ?? 'Failed to create note' };
       } else {
         await supabase.from('user_saved_notes').insert({ user_id: contributorId, note_id: created.id });
-        result = { success: true, note: created as Note };
+        result = { success: true, note: created as unknown as Note };
       }
     }
 

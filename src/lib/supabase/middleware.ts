@@ -11,44 +11,51 @@ export async function updateSession(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 
-  // If env vars are missing, don’t crash the middleware; treat as unauthenticated.
+  // If env vars are missing, don't crash the middleware; treat as unauthenticated.
   if (!url || !key) return supabaseResponse
 
-  const supabase = createServerClient(url, key, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll()
+  try {
+    const supabase = createServerClient(url, key, {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet, headers) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          )
+          Object.entries(headers).forEach(([key, value]) =>
+            supabaseResponse.headers.set(key, value)
+          )
+        },
       },
-      setAll(cookiesToSet, headers) {
-        cookiesToSet.forEach(({ name, value, options }) =>
-          supabaseResponse.cookies.set(name, value, options)
-        )
-        Object.entries(headers).forEach(([key, value]) =>
-          supabaseResponse.headers.set(key, value)
-        )
-      },
-    },
-  })
+    })
 
-  // IMPORTANT: Always call getUser() — it validates the token server-side.
-  // Never trust getSession() for authorization.
-  const { data: { user } } = await supabase.auth.getUser()
+    // IMPORTANT: Always call getUser() — it validates the token server-side.
+    // Never trust getSession() for authorization.
+    const { data } = await supabase.auth.getUser()
+    const user = data.user
 
-  // Public routes — accessible without authentication
-  const publicPaths = ['/login', '/signup', '/about', '/explore', '/profile', '/auth', '/onboarding']
-  const isPublicPath = publicPaths.some(
-    (path) => request.nextUrl.pathname === path || request.nextUrl.pathname.startsWith(path + '/')
-  )
-  // Root path is also public
-  const isRootPath = request.nextUrl.pathname === '/'
+    // Public routes — accessible without authentication
+    const publicPaths = ['/login', '/signup', '/about', '/explore', '/profile', '/auth', '/onboarding']
+    const isPublicPath = publicPaths.some(
+      (path) => request.nextUrl.pathname === path || request.nextUrl.pathname.startsWith(path + '/')
+    )
+    // Root path is also public
+    const isRootPath = request.nextUrl.pathname === '/'
 
-  if (!user && !isPublicPath && !isRootPath) {
-    const url = request.nextUrl.clone()
-    const originalPath = request.nextUrl.pathname + request.nextUrl.search
-    url.pathname = '/login'
-    url.searchParams.set('next', originalPath)
-    return NextResponse.redirect(url)
+    if (!user && !isPublicPath && !isRootPath) {
+      const url = request.nextUrl.clone()
+      const originalPath = request.nextUrl.pathname + request.nextUrl.search
+      url.pathname = '/login'
+      url.searchParams.set('next', originalPath)
+      return NextResponse.redirect(url)
+    }
+
+    return supabaseResponse
+  } catch (e) {
+    console.error('updateSession error:', e)
+    // On failure, allow the request through — better than a 500
+    return supabaseResponse
   }
-
-  return supabaseResponse
 }

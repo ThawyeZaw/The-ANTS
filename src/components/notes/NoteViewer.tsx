@@ -19,6 +19,7 @@ import { useSavedNotes } from '@/hooks/useNotes';
 import BlockPreview from './BlockPreview';
 import RelatedContent from '@/components/ui/RelatedContent';
 import { getProfile, mockCurriculums, mockSubjects } from '@/lib/mock/database';
+import { useState, useEffect } from 'react';
 
 interface NoteViewerProps {
   note: Note;
@@ -30,7 +31,13 @@ export default function NoteViewer({ note }: NoteViewerProps) {
   const { isContributor, isMainContributor } = useRole();
   const { toggleSave, checkSaved } = useSavedNotes(user?.id);
 
-  const isSaved = user ? checkSaved(note.id) : false;
+  const [isSaved, setIsSaved] = useState(false);
+
+  useEffect(() => {
+    if (!user) { setIsSaved(false); return; }
+    checkSaved(note.id).then(setIsSaved);
+  }, [user, note.id, checkSaved]);
+
   const isOwner = user?.id === note.contributor_id;
   const canEdit = (isContributor || isMainContributor) && isOwner &&
     (note.status === 'draft' || note.status === 'rejected');

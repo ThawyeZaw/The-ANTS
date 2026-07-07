@@ -8,6 +8,7 @@ import type {
   TimetableEventFormData,
   TimetableEventType,
 } from '@/types/timetable';
+import type { Json } from '@/types/supabase';
 import { createClient } from '@/lib/supabase/client';
 import { ALL_EVENT_TYPES, DEFAULT_TIMETABLE_FILTERS } from '@/constants/timetable';
 
@@ -211,7 +212,7 @@ export function useTimetable(userId: string): UseTimetableReturn {
   // CRUD
   const createEvent = useCallback(async (data: TimetableEventFormData): Promise<{ success: boolean; error?: string }> => {
     try {
-      const { time_mode, date, start_time, end_time, ...rest } = data;
+      const { time_mode, date, start_time, end_time, recurrence_rule, ...rest } = data;
       let startIso: string | null = null;
       let endIso: string | null = null;
       let allDay = false;
@@ -229,6 +230,7 @@ export function useTimetable(userId: string): UseTimetableReturn {
       const { error } = await supabase.from('timetable_events').insert({
         user_id: userId,
         ...rest,
+        recurrence_rule: (recurrence_rule ?? null) as unknown as Json,
         start_time: startIso,
         end_time: endIso,
         all_day: allDay,
@@ -246,7 +248,7 @@ export function useTimetable(userId: string): UseTimetableReturn {
 
   const updateEvent = useCallback(async (eventId: string, data: TimetableEventFormData): Promise<{ success: boolean; error?: string }> => {
     try {
-      const { time_mode, date, start_time, end_time, ...rest } = data;
+      const { time_mode, date, start_time, end_time, recurrence_rule, ...rest } = data;
       let startIso: string | null = null;
       let endIso: string | null = null;
       let allDay = false;
@@ -264,6 +266,7 @@ export function useTimetable(userId: string): UseTimetableReturn {
       const baseId = eventId.includes('::') ? eventId.split('::')[0] : eventId;
       const { error } = await supabase.from('timetable_events').update({
         ...rest,
+        recurrence_rule: (recurrence_rule ?? null) as unknown as Json,
         start_time: startIso,
         end_time: endIso,
         all_day: allDay,

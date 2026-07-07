@@ -66,7 +66,7 @@ export default function InviteForm({ onSubmit, isLoading, error }: InviteFormPro
           Invite a New User
         </h3>
         <p className="text-sm text-foreground-muted mt-1">
-          Enter the person&apos;s details and choose their role
+          They&apos;ll receive a magic link to set their own password and get started
         </p>
       </div>
 
@@ -179,12 +179,12 @@ export default function InviteForm({ onSubmit, isLoading, error }: InviteFormPro
         {isLoading ? (
           <>
             <Loader2 className="w-5 h-5 animate-spin" />
-            Sending Invite…
+            Sending Invite Email…
           </>
         ) : (
           <>
             <Send className="w-5 h-5" />
-            Send Invite
+            Send Invite Email
           </>
         )}
       </button>

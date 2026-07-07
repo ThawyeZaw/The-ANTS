@@ -24,7 +24,7 @@ export function useClassroom() {
         supabase.from('classrooms').select('*'),
         supabase.from('profiles').select('id, name, username, avatar_url'),
       ]);
-      setClassrooms((cRes.data as Classroom[]) ?? []);
+      setClassrooms((cRes.data as unknown as Classroom[]) ?? []);
       setProfiles(pRes.data ?? []);
     })();
   }, [version, supabase]);
@@ -51,7 +51,7 @@ export function useClassroom() {
   const getMembers = useCallback(
     async (classroomId: string) => {
       const { data } = await supabase.from('classroom_members').select('*, profiles(*)').eq('classroom_id', classroomId);
-      return (data as ClassroomMember[]) ?? [];
+      return (data as unknown as ClassroomMember[]) ?? [];
     },
     [supabase]
   );
@@ -59,7 +59,7 @@ export function useClassroom() {
   const getMember = useCallback(
     async (classroomId: string, userId: string) => {
       const { data } = await supabase.from('classroom_members').select('*').eq('classroom_id', classroomId).eq('user_id', userId).single();
-      return data as ClassroomMember ?? null;
+      return data as unknown as ClassroomMember ?? null;
     },
     [supabase]
   );
@@ -67,7 +67,7 @@ export function useClassroom() {
   const getAssignments = useCallback(
     async (classroomId: string) => {
       const { data } = await supabase.from('assignments').select('*').eq('classroom_id', classroomId).order('created_at', { ascending: false });
-      return (data as Assignment[]) ?? [];
+      return (data as unknown as Assignment[]) ?? [];
     },
     [supabase]
   );
@@ -75,7 +75,7 @@ export function useClassroom() {
   const getSubmissionsByAssignment = useCallback(
     async (assignmentId: string) => {
       const { data } = await supabase.from('assignment_submissions').select('*, profiles(name)').eq('assignment_id', assignmentId);
-      return (data as AssignmentSubmission[]) ?? [];
+      return (data as unknown as AssignmentSubmission[]) ?? [];
     },
     [supabase]
   );
@@ -83,7 +83,7 @@ export function useClassroom() {
   const getSubmission = useCallback(
     async (assignmentId: string, studentId: string) => {
       const { data } = await supabase.from('assignment_submissions').select('*').eq('assignment_id', assignmentId).eq('student_id', studentId).single();
-      return data as AssignmentSubmission ?? null;
+      return data as unknown as AssignmentSubmission ?? null;
     },
     [supabase]
   );
@@ -91,7 +91,7 @@ export function useClassroom() {
   const getQuizzes = useCallback(
     async (classroomId: string) => {
       const { data } = await supabase.from('quizzes').select('*').eq('classroom_id', classroomId).order('created_at', { ascending: false });
-      return (data as Quiz[]) ?? [];
+      return (data as unknown as Quiz[]) ?? [];
     },
     [supabase]
   );
@@ -99,7 +99,7 @@ export function useClassroom() {
   const getQuizAttempt = useCallback(
     async (quizId: string, studentId: string) => {
       const { data } = await supabase.from('quiz_attempts').select('*').eq('quiz_id', quizId).eq('student_id', studentId).single();
-      return data as QuizAttempt ?? null;
+      return data as unknown as QuizAttempt ?? null;
     },
     [supabase]
   );
@@ -107,7 +107,7 @@ export function useClassroom() {
   const getQuizAttempts = useCallback(
     async (quizId: string) => {
       const { data } = await supabase.from('quiz_attempts').select('*').eq('quiz_id', quizId);
-      return (data as QuizAttempt[]) ?? [];
+      return (data as unknown as QuizAttempt[]) ?? [];
     },
     [supabase]
   );
@@ -131,7 +131,7 @@ export function useClassroom() {
   const getResources = useCallback(
     async (classroomId: string) => {
       const { data } = await supabase.from('classroom_resources').select('*').eq('classroom_id', classroomId);
-      return (data as ClassroomResource[]) ?? [];
+      return (data as unknown as ClassroomResource[]) ?? [];
     },
     [supabase]
   );
@@ -144,12 +144,12 @@ export function useClassroom() {
 
       const { data: classroom, error } = await supabase.from('classrooms').insert({
         name: data.name, description: data.description || null, invite_code: inviteCode,
-        curriculum_ids: data.curriculum_ids,
+        curriculum_ids: data.curriculum_ids, created_by: data.created_by,
         enabled_features: data.enabled_features || [
           { key: 'assignments', enabled: true }, { key: 'quizzes', enabled: false },
           { key: 'resources', enabled: true }, { key: 'discussions', enabled: false }, { key: 'links', enabled: false },
         ],
-      }).select().single();
+      } as any).select().single();
 
       if (error) return { success: false, error: error.message };
       if (classroom) {
@@ -238,7 +238,7 @@ export function useClassroom() {
       const { error } = await supabase.from('quizzes').insert({
         classroom_id: data.classroom_id, title: data.title, description: data.description || null,
         time_limit_minutes: data.time_limit_minutes || null, due_date: data.due_date || null,
-        status: 'draft', questions: data.questions, created_by: data.created_by,
+        status: 'draft', questions: data.questions as any, created_by: data.created_by,
       });
       if (!error) refresh();
       return error ? { success: false, error: error.message } : { success: true };
@@ -257,7 +257,7 @@ export function useClassroom() {
 
   const updateQuizData = useCallback(
     async (quizId: string, data: Partial<Quiz>): Promise<Result> => {
-      const { error } = await supabase.from('quizzes').update(data).eq('id', quizId);
+      const { error } = await supabase.from('quizzes').update(data as any).eq('id', quizId);
       if (!error) refresh();
       return error ? { success: false, error: error.message } : { success: true };
     },
@@ -268,8 +268,8 @@ export function useClassroom() {
     async (quizId: string, studentId: string, answers: { question_id: string; answer: string }[]): Promise<Result> => {
       const qAnswers = answers.map((a) => ({ question_id: a.question_id, answer: a.answer, is_correct: null as boolean | null }));
       const { error } = await supabase.from('quiz_attempts').upsert({
-        quiz_id: quizId, student_id: studentId, answers: qAnswers, started_at: new Date().toISOString(), completed_at: new Date().toISOString(),
-      });
+        quiz_id: quizId, student_id: studentId, answers: qAnswers as any, started_at: new Date().toISOString(), submitted_at: new Date().toISOString(),
+      } as any);
       if (!error) refresh();
       return error ? { success: false, error: error.message } : { success: true };
     },
@@ -320,7 +320,7 @@ export function useClassroom() {
 
   const updateClassroomData = useCallback(
     async (classroomId: string, data: Partial<Classroom>): Promise<Result> => {
-      const { error } = await supabase.from('classrooms').update(data).eq('id', classroomId);
+      const { error } = await supabase.from('classrooms').update(data as any).eq('id', classroomId);
       if (!error) refresh();
       return error ? { success: false, error: error.message } : { success: true };
     },

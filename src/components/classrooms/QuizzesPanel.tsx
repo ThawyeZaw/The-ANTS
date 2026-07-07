@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Clock, Brain, Award, Plus, Pencil, Trash2 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { cn, formatDate } from '@/lib/utils';
@@ -14,7 +14,7 @@ interface QuizzesPanelProps {
   currentUserId: string;
   isTeacher: boolean;
   curriculumIds: string[];
-  getQuizAttempt: (quizId: string, studentId: string) => QuizAttempt | undefined;
+  getQuizAttempt: (quizId: string, studentId: string) => Promise<QuizAttempt | null>;
   onPublish: (quizId: string) => void;
   onSubmit: (quizId: string, answers: { question_id: string; answer: string }[]) => void;
   onCreate: (data: {
@@ -55,12 +55,26 @@ export default function QuizzesPanel({
   const [takingQuizId, setTakingQuizId] = useState<string | null>(null);
   const [viewingResultId, setViewingResultId] = useState<string | null>(null);
   const [, forceRender] = useState(0);
+  const [attemptMap, setAttemptMap] = useState<Record<string, QuizAttempt | null>>({});
 
   const classroomQuizzes = quizzes.filter((q) => q.classroom_id === classroomId);
+
+  useEffect(() => {
+    (async () => {
+      const map: Record<string, QuizAttempt | null> = {};
+      await Promise.all(
+        classroomQuizzes.map(async (q) => {
+          map[q.id] = await getQuizAttempt(q.id, currentUserId);
+        })
+      );
+      setAttemptMap(map);
+    })();
+  }, [quizzes, currentUserId, getQuizAttempt, classroomId]);
+
   const viewingQuiz = viewingQuizId ? quizzes.find((q) => q.id === viewingQuizId) : null;
   const takingQuiz = takingQuizId ? quizzes.find((q) => q.id === takingQuizId) : null;
   const resultQuiz = viewingResultId ? quizzes.find((q) => q.id === viewingResultId) : null;
-  const resultAttempt = viewingResultId ? getQuizAttempt(viewingResultId, currentUserId) : null;
+  const resultAttempt = viewingResultId ? attemptMap[viewingResultId] ?? null : null;
   const editingQuiz = editingQuizId ? quizzes.find((q) => q.id === editingQuizId) : null;
 
   // ── Modal: Taking Quiz ────────────────────────────────────────────────────
@@ -164,10 +178,10 @@ export default function QuizzesPanel({
                 )}
                 {viewingQuiz.status === 'published' && (
                   <Button onClick={() => { setTakingQuizId(viewingQuiz.id); setViewingQuizId(null); }}>
-                    {getQuizAttempt(viewingQuiz.id, currentUserId) ? 'Retake Quiz' : 'Take Quiz'}
+                    {attemptMap[viewingQuiz.id] ? 'Retake Quiz' : 'Take Quiz'}
                   </Button>
                 )}
-                {getQuizAttempt(viewingQuiz.id, currentUserId) && (
+                {attemptMap[viewingQuiz.id] && (
                   <Button variant="secondary" onClick={() => { setViewingResultId(viewingQuiz.id); setViewingQuizId(null); }}>
                     View Results
                   </Button>
@@ -245,7 +259,7 @@ export default function QuizzesPanel({
         ) : (
           <div className="space-y-2">
             {classroomQuizzes.map((quiz) => {
-              const attempt = getQuizAttempt(quiz.id, currentUserId);
+              const attempt = attemptMap[quiz.id] ?? null;
               const totalPts = quiz.questions.reduce((s, q) => s + q.points, 0);
               const isOwner = quiz.created_by === currentUserId;
               return (

@@ -1,32 +1,58 @@
 'use client';
 
 import BackButton from '@/components/ui/BackButton';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
 import {
   Check,
   Settings,
   Shield,
-  UserCheck,
   X,
 } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { ClubFeature, ClubJoinMode } from '@/types';
+import { type ClubFeature, ClubJoinMode } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 import { useClub } from '@/hooks/useClub';
-import { cn, formatDate, getInitials } from '@/lib/utils';
+import { cn, getInitials } from '@/lib/utils';
+
+type ClubData = Awaited<ReturnType<ReturnType<typeof useClub>['getClub']>>;
+type MembershipData = Awaited<ReturnType<ReturnType<typeof useClub>['getUserClubMembership']>>;
+type MemberData = Awaited<ReturnType<ReturnType<typeof useClub>['getClubMembers']>>[number];
+type ProfileData = Awaited<ReturnType<ReturnType<typeof useClub>['getProfile']>>;
 
 export default function ManageClubPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const { user } = useAuth();
   const clubStore = useClub();
-  const club = clubStore.getClub(params.id);
 
-  // Guard
+  const [club, setClub] = useState<ClubData>(null);
+  const [membership, setMembership] = useState<MembershipData>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      const clubData = await clubStore.getClub(params.id);
+      setClub(clubData);
+      if (clubData && user) {
+        const mem = await clubStore.getUserClubMembership(clubData.id, user.id);
+        setMembership(mem);
+      }
+      setLoading(false);
+    })();
+  }, [params.id, user, clubStore]);
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-2xl rounded-xl border border-border bg-background-card p-8 text-center">
+        <p className="text-foreground-muted">Loading...</p>
+      </div>
+    );
+  }
+
   if (!club) {
     return (
       <div className="mx-auto max-w-2xl rounded-xl border border-border bg-background-card p-8 text-center">
@@ -38,7 +64,6 @@ export default function ManageClubPage() {
     );
   }
 
-  const membership = user ? clubStore.getUserClubMembership(club.id, user.id) : undefined;
   const isMember = membership?.membership_status === 'active';
   const isAdmin = membership?.role === 'admin' && isMember;
   const isModerator = membership?.role === 'moderator' && isMember;
@@ -71,29 +96,45 @@ function ManageClubForm({
   isAdmin,
   onGoBack,
 }: {
-  club: NonNullable<ReturnType<ReturnType<typeof useClub>['getClub']>>;
+  club: NonNullable<ClubData>;
   userId: string;
   isAdmin: boolean;
   onGoBack: () => void;
 }) {
   const clubStore = useClub();
-  const defaultFeatures = (club.enabled_features || []).map(f => ({ ...f }));
-  const members = clubStore.getClubMembers(club.id).filter(m => m.membership_status === 'active');
+  const defaultFeatures = ((club.enabled_features as unknown as ClubFeature[]) || []).map(f => ({ ...f }));
 
   const [tab, setTab] = useState<'features' | 'details' | 'leaders'>('features');
   const [features, setFeatures] = useState<ClubFeature[]>(defaultFeatures);
   const [name, setName] = useState(club.name);
   const [description, setDescription] = useState(club.description || '');
-  const [joinMode, setJoinMode] = useState<ClubJoinMode>(club.join_mode);
+  const [joinMode, setJoinMode] = useState<ClubJoinMode>((club.join_mode as ClubJoinMode) || 'open');
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [members, setMembers] = useState<MemberData[]>([]);
+  const [profiles, setProfiles] = useState<Record<string, ProfileData>>({});
+
+  useEffect(() => {
+    (async () => {
+      const allMembers = await clubStore.getClubMembers(club.id);
+      setMembers(allMembers.filter(m => m.membership_status === 'active'));
+
+      const profileMap: Record<string, ProfileData> = {};
+      await Promise.all(
+        allMembers.map(async (m) => {
+          profileMap[m.user_id] = await clubStore.getProfile(m.user_id);
+        })
+      );
+      setProfiles(profileMap);
+    })();
+  }, [club.id, clubStore]);
 
   const showFeedback = (type: 'success' | 'error', message: string) => {
     setFeedback({ type, message });
     setTimeout(() => setFeedback(null), 3000);
   };
 
-  const handleSaveFeatures = () => {
-    const result = clubStore.updateFeatures(club.id, userId, features);
+  const handleSaveFeatures = async () => {
+    const result = await clubStore.updateFeatures(club.id, userId, features);
     if (result.success) {
       showFeedback('success', 'Feature settings saved.');
     } else {
@@ -101,12 +142,12 @@ function ManageClubForm({
     }
   };
 
-  const handleSaveDetails = () => {
+  const handleSaveDetails = async () => {
     if (!name.trim()) {
       showFeedback('error', 'Club name cannot be empty.');
       return;
     }
-    const result = clubStore.updateClubDetails(club.id, userId, {
+    const result = await clubStore.updateClubDetails(club.id, userId, {
       name: name.trim(),
       description: description.trim() || null,
       join_mode: joinMode,
@@ -276,12 +317,12 @@ function ManageClubForm({
               </p>
               <div className="rounded-xl border border-border bg-background-card divide-y divide-border overflow-hidden">
                 {members.map((member) => {
-                  const profile = clubStore.getProfile(member.user_id);
+                  const profile = profiles[member.user_id];
                   const isSelf = member.user_id === userId;
                   const isLeaderRole = member.role === 'admin' || member.role === 'moderator';
 
-                  const handlePromote = (role: 'admin' | 'moderator') => {
-                    const result = clubStore.promoteMember(club.id, userId, member.user_id, role);
+                  const handlePromote = async (role: 'admin' | 'moderator') => {
+                    const result = await clubStore.promoteMember(club.id, userId, member.user_id, role);
                     if (result.success) {
                       showFeedback('success', `${profile?.name || 'User'} promoted to ${role}.`);
                     } else {
@@ -289,8 +330,8 @@ function ManageClubForm({
                     }
                   };
 
-                  const handleDemote = () => {
-                    const result = clubStore.demoteLeader(club.id, userId, member.user_id);
+                  const handleDemote = async () => {
+                    const result = await clubStore.demoteLeader(club.id, userId, member.user_id);
                     if (result.success) {
                       showFeedback('success', `${profile?.name || 'User'} demoted to member.`);
                     } else {
