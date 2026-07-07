@@ -53,19 +53,19 @@ export default function NotesEditor() {
     ? mockTopics.filter((t) => t.subject_id === state.subjectId)
     : [];
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     if (!user) return;
-    const result = saveDraft(user.id);
+    const result = await saveDraft(user.id);
     setSaveStatus(result.success ? 'saved' : 'error');
     setTimeout(() => setSaveStatus('idle'), 2500);
   }, [user, saveDraft]);
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
     if (!user) return;
     setSubmitStatus('submitting');
     // Auto-save first
-    saveDraft(user.id);
-    const result = submitForReview(user.id);
+    await saveDraft(user.id);
+    const result = await submitForReview(user.id);
     if (result.success) {
       setSubmitStatus('done');
     } else {

@@ -55,26 +55,28 @@ export default function ClassroomsPage() {
         return classroom?.curriculum_ids?.map(() => 'IGCSE Physics') || [];
       }}
       isTeacher={isTeacher}
-      onJoin={async (inviteCode) => {
-        const result = await c.joinByCode(user.id, inviteCode);
-        if (result.success) {
-          setFeedback(`Joined classroom successfully!`);
-        } else {
-          setFeedback(result.error || 'Failed to join classroom.');
-        }
+      onJoin={(inviteCode) => {
+        void c.joinByCode(user.id, inviteCode).then((result) => {
+          if (result.success) {
+            setFeedback(`Joined classroom successfully!`);
+          } else {
+            setFeedback(result.error || 'Failed to join classroom.');
+          }
+        });
       }}
-      onCreate={async (name, description) => {
-        const result = await c.createNewClassroom({
+      onCreate={(name, description) => {
+        void c.createNewClassroom({
           name,
           description,
           curriculum_ids: ['curr-1'],
           created_by: user.id,
+        }).then((result) => {
+          if (result.success) {
+            setFeedback(`Classroom "${name}" created!`);
+          } else {
+            setFeedback(result.error || 'Failed to create classroom.');
+          }
         });
-        if (result.success) {
-          setFeedback(`Classroom "${name}" created!`);
-        } else {
-          setFeedback(result.error || 'Failed to create classroom.');
-        }
       }}
       feedback={feedback}
       onClearFeedback={() => setFeedback('')}

@@ -5,7 +5,7 @@
 // View user's selected/saved notes with search, filtering, and inline reading.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { Bookmark, Filter, BookOpen, X, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -32,6 +32,20 @@ export default function SavedNotesLibrary() {
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
 
   const { savedNotes, toggleSave, checkSaved } = useSavedNotes(user?.id);
+
+  // Track saved state (checkSaved is async)
+  const [savedNoteIds, setSavedNoteIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!user) { setSavedNoteIds(new Set()); return; }
+    let cancelled = false;
+    Promise.all(savedNotes.map((n) => checkSaved(n.id).then((s) => ({ id: n.id, s }))))
+      .then((results) => {
+        if (cancelled) return;
+        setSavedNoteIds(new Set(results.filter((r) => r.s).map((r) => r.id)));
+      });
+    return () => { cancelled = true; };
+  }, [savedNotes, user, checkSaved]);
 
   // Client-side filtering on saved notes for instantaneous response
   const filteredNotes = useMemo(() => {
@@ -168,7 +182,7 @@ export default function SavedNotesLibrary() {
                 <NoteCard
                   key={note.id}
                   note={note}
-                  isSaved={user ? checkSaved(note.id) : false}
+                  isSaved={user ? savedNoteIds.has(note.id) : false}
                   onToggleSave={toggleSave}
                   contributorName={contributorNames.get(note.contributor_id)}
                   onRead={setActiveNoteId}

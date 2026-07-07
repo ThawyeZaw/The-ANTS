@@ -246,7 +246,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Mark onboarding complete on profiles
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({ onboarding_completed: true })
+        .update({ onboarding_completed: true } as any)
         .eq('id', user.id);
 
       if (profileError) return { success: false, error: profileError.message };
@@ -259,8 +259,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           preferred_name: data.preferredName ?? null,
           timezone: data.timezone ?? null,
           institution_name: data.institutionName ?? null,
-          onboarding_data: (data.onboardingData ?? []) as unknown as never,
-        });
+          onboarding_data: data.onboardingData ?? [],
+        } as any);
 
       if (studentError) return { success: false, error: studentError.message };
 

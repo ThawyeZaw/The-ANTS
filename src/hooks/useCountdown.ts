@@ -59,7 +59,7 @@ export function useCountdown(userId: string | undefined) {
       }
 
       if (examRes.data) {
-        setAvailableExams(examRes.data as Exam[]);
+        setAvailableExams(examRes.data as unknown as Exam[]);
       }
     };
 
@@ -99,7 +99,7 @@ export function useCountdown(userId: string | undefined) {
     let group = data.qualification_group;
 
     if (data.exam_id) {
-      const exam = availableExams.find(e => e.id === data.exam_id);
+      const exam = availableExams.find(e => e.id === data.exam_id) as any;
       if (exam) {
         title = title || exam.subject || '';
         target = target || exam.date || '';

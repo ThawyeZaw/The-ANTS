@@ -207,7 +207,7 @@ export default function MyNotesLibrary() {
                 <NoteCard
                   key={note.id}
                   note={note}
-                  isSaved={activeTab === 'saved' ? (user ? checkSaved(note.id) : false) : undefined}
+                  isSaved={activeTab === 'saved' ? true : undefined}
                   onToggleSave={activeTab === 'saved' ? toggleSave : undefined}
                   onEdit={activeTab === 'created' ? (id) => window.location.href = `/editor/notes?id=${id}` : undefined}
                   onDelete={activeTab === 'created' ? (id) => handleDeleteNote(id) : undefined}

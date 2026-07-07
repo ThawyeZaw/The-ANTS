@@ -28,7 +28,6 @@ $;
 CREATE OR REPLACE FUNCTION public.custom_access_token_hook(event jsonb)
 RETURNS jsonb
 LANGUAGE plpgsql
-STABLE
 SECURITY DEFINER SET search_path = 'public'
 AS $
 DECLARE

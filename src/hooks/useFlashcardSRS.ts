@@ -7,7 +7,7 @@
 
 import { useState, useCallback } from 'react';
 import type { FlashCard, SRSRating, StudySessionState } from '@/types';
-import { computeNextReview, getNewCardDefaults } from '@/lib/srs/algorithm';
+import { computeNextReview, getNewCardDefaults, QUALITY_MAP } from '@/lib/srs/algorithm';
 import { createClient } from '@/lib/supabase/client';
 
 export interface UseFlashcardSRSReturn {
@@ -78,8 +78,8 @@ export function useFlashcardSRS(): UseFlashcardSRSReturn {
     if (reviews) {
       for (const r of reviews) {
         cache[r.card_id] = {
-          interval_days: r.interval,
-          ease_factor: r.ease_factor,
+          interval_days: r.interval ?? 0,
+          ease_factor: r.ease_factor ?? 2.5,
           repetitions: r.repetitions ?? 0,
         };
       }
@@ -95,8 +95,9 @@ export function useFlashcardSRS(): UseFlashcardSRSReturn {
     }).map(c => ({
       id: c.id,
       deck_id: c.deck_id,
-      front: c.front_text,
-      back: c.back_text,
+      front_text: c.front_text ?? '',
+      back_text: c.back_text ?? '',
+      created_at: c.created_at ?? '',
     }));
 
     setState({
@@ -159,7 +160,7 @@ export function useFlashcardSRS(): UseFlashcardSRSReturn {
             interval: review.interval_days,
             ease_factor: review.ease_factor,
             next_review_date: review.next_review_date,
-            quality: review.last_rating,
+            quality: QUALITY_MAP[review.last_rating],
             last_review_date: new Date().toISOString(),
             repetitions: (existingReview?.repetitions ?? 0) + 1,
           })
