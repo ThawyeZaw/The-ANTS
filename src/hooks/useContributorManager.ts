@@ -62,10 +62,13 @@ export function useContributorManager() {
     const result = await inviteUserAction(data.email, data.name, data.role);
 
     if (!result.success) {
+      const displayError = result.error && result.error !== '{}'
+        ? result.error
+        : 'Failed to send invite. Please try again.';
       setState((prev) => ({
         ...prev,
         isLoading: false,
-        error: result.error || 'Failed to send invite.',
+        error: displayError,
       }));
       return;
     }

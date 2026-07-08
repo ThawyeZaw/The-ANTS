@@ -230,11 +230,11 @@ export default function SignupForm() {
           </div>
 
           {/* Form error */}
-          {errors.form && (
+          {errors.form ? (
             <div className="mb-5 p-3 rounded-xl bg-error/10 border border-error/20 text-error text-sm animate-fade-in">
-              {errors.form}
+              {errors.form || 'An unexpected error occurred. Please try again.'}
             </div>
-          )}
+          ) : null}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Name */}

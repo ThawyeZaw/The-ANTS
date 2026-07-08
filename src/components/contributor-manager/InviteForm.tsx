@@ -158,12 +158,12 @@ export default function InviteForm({ onSubmit, isLoading, error }: InviteFormPro
       </div>
 
       {/* Error */}
-      {displayError && (
+      {displayError ? (
         <div className="flex items-center gap-2 p-3 rounded-lg bg-error/10 border border-error/20 text-error text-sm animate-fade-in">
           <span>⚠️</span>
-          <span>{displayError}</span>
+          <span>{displayError === '{}' ? 'Failed to send invite. Please try again.' : displayError}</span>
         </div>
-      )}
+      ) : null}
 
       {/* Submit */}
       <button

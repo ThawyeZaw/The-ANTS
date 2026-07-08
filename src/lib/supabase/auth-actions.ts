@@ -15,6 +15,7 @@ export async function signInAction(email: string, password: string) {
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
+    console.error('[signInAction] Supabase error:', JSON.stringify(error, null, 2));
     return { success: false, error: error.message };
   }
 
@@ -36,11 +37,12 @@ export async function signUpAction(
     password,
     options: {
       data: { name, username },
-      // emailRedirectTo for production email confirmation
+      emailRedirectTo: `${getSiteUrl()}/auth/confirm`,
     },
   });
 
   if (error) {
+    console.error('[signUpAction] Supabase error:', JSON.stringify(error, null, 2));
     return { success: false, error: error.message };
   }
 
@@ -53,11 +55,19 @@ export async function signOutAction() {
   redirect('/login');
 }
 
+/** Derive the canonical site URL for auth redirects. */
+function getSiteUrl(): string {
+  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
+  // Vercel auto-sets VERCEL_URL (without protocol) on preview/production deployments
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return 'http://localhost:3000';
+}
+
 export async function resetPasswordAction(email: string) {
   const supabase = await createClient();
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/update-password`,
+    redirectTo: `${getSiteUrl()}/auth/update-password`,
   });
 
   if (error) {
@@ -87,12 +97,15 @@ export async function inviteUserAction(
     email,
     {
       data: { name, username },
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/update-password`,
+      redirectTo: `${getSiteUrl()}/auth/update-password`,
     }
   );
 
   if (inviteError) {
-    return { success: false, error: inviteError.message };
+    console.error('[inviteUserAction] Supabase error:', JSON.stringify(inviteError, null, 2));
+    // Defensive: SMTP failures often return empty or {} message
+    const msg = inviteError.message || inviteError.name || 'Failed to send invite email. Please check SMTP configuration.';
+    return { success: false, error: msg === '{}' ? 'Failed to send invite email. Please check SMTP configuration.' : msg };
   }
 
   const userId = data.user?.id;

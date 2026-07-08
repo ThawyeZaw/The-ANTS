@@ -138,11 +138,11 @@ export default function LoginForm() {
             </div>
 
             {/* Form error */}
-            {errors.form && (
+            {errors.form ? (
               <div className="mb-5 p-3 rounded-xl bg-error/10 border border-error/20 text-error text-sm animate-fade-in">
-                {errors.form}
+                {errors.form || 'An unexpected error occurred. Please try again.'}
               </div>
-            )}
+            ) : null}
 
             {/* Demo credentials (local/dev convenience) */}
             <div className="mb-5 p-4 rounded-xl bg-background-card border border-border">
