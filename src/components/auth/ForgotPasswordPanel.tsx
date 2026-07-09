@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — ForgotPasswordPanel
+// The ANTs — ForgotPasswordPanel
 // Inline collapsible forgot-password panel that lives inside the LoginForm.
 // Calls the existing resetPasswordAction server action.
 // ──────────────────────────────────────────────────────────────────────────────
@@ -49,7 +49,7 @@ export default function ForgotPasswordPanel({ onBack }: ForgotPasswordPanelProps
           </div>
         </div>
         <div>
-          <h3 className="font-semibold text-foreground mb-1">Check your inbox</h3>
+          <h3 className="font-bold text-foreground mb-1">Check your inbox</h3>
           <p className="text-sm text-foreground-muted">
             We sent a password reset link to <span className="text-foreground font-medium">{email}</span>.
             It may take a minute to arrive.
@@ -58,7 +58,7 @@ export default function ForgotPasswordPanel({ onBack }: ForgotPasswordPanelProps
         <button
           type="button"
           onClick={onBack}
-          className="text-sm text-primary hover:underline cursor-pointer font-medium"
+          className="text-sm text-primary hover:underline cursor-pointer font-semibold"
         >
           Back to sign in
         </button>
@@ -69,7 +69,7 @@ export default function ForgotPasswordPanel({ onBack }: ForgotPasswordPanelProps
   return (
     <div className="animate-fade-in-up space-y-4">
       <div className="text-center">
-        <h3 className="font-semibold text-foreground mb-1">Reset your password</h3>
+        <h3 className="font-bold text-foreground mb-1">Reset your password</h3>
         <p className="text-sm text-foreground-muted">
           Enter your email and we'll send you a reset link.
         </p>

@@ -38,7 +38,7 @@ export default function ShareProfileButton({ username, customSlug }: ShareProfil
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `${username}'s Profile - The ANTS`,
+          title: `${username}'s Profile - The ANTs`,
           url: profileUrl,
         });
       } catch {

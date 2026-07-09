@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — NavBar Component (v2 — Library System Redesign)
+// The ANTs — NavBar Component (v2 — Library System Redesign)
 // Restructured groups: Learn | Study | Plan | Library | Community | Contribute | Admin
 // Role-aware floating glassmorphism nav with grouped dropdowns.
 // ──────────────────────────────────────────────────────────────────────────────
@@ -481,8 +481,8 @@ export default function NavBar() {
             className="flex items-center gap-2 shrink-0 group"
           >
             <span className="text-xl group-hover:scale-110 transition-transform duration-200">{'🐜'}</span>
-            <span className="font-bold text-lg bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              The ANTS
+            <span className="font-bold text-lg bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent font-brand">
+              The ANTs
             </span>
           </Link>
 
@@ -577,7 +577,7 @@ export default function NavBar() {
                       className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-foreground-secondary hover:text-foreground hover:bg-background-secondary transition-colors cursor-pointer"
                     >
                       <Info className="h-4 w-4" />
-                      About The ANTS
+                      About <span className="font-brand">The ANTs</span>
                     </Link>
                     <button
                       onClick={handleLogout}

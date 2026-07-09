@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — LessonTracker
+// The ANTs — LessonTracker
 // Main Lesson Tracker page component. Curriculum tabs → subject accordion →
 // per-topic confidence + status cards.
 // Belongs to: src/components/Lessons/  (BMK & ABC)

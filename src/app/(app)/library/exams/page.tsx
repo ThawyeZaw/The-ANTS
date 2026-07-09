@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import ExamsLibraryBrowser from '@/components/library/ExamsLibraryBrowser';
 
 export const metadata = {
-  title: 'Exams Library — The ANTS',
+  title: 'Exams Library — The ANTs',
   description: 'Browse exam dates and papers by board. Add IGCSE, A Level, IELTS and more exams directly to your countdown dashboard.',
 };
 

@@ -80,10 +80,10 @@ export default function ProfileHero({ profile, isOwnProfile }: ProfileHeroProps)
             <p className="text-sm text-primary/70 font-mono mt-1.5">@{profile.username}</p>
           </div>
 
-          {/* The ANTS Org Affiliation */}
+          {/* The ANTs Org Affiliation */}
           <div className="flex items-center gap-1.5 mb-5 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary/80 text-xs font-medium backdrop-blur-sm">
             <BadgeCheck className="h-3.5 w-3.5" />
-            The ANTS Member
+            <span className="font-brand">The ANTs</span> Member
           </div>
 
           {/* Bio — styled quote block */}

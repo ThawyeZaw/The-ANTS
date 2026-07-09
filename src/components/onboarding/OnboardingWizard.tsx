@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Onboarding Wizard
+// The ANTs — Onboarding Wizard
 // 4-step guided setup flow for new users after email confirmation.
 // All steps are optional and skippable.
 // Saves to student_profiles / teacher_profiles and marks onboarding_completed.
@@ -403,7 +403,7 @@ export default function OnboardingWizard() {
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-xl">🐜</span>
-            <span className="font-bold text-foreground hidden sm:inline">The ANTS</span>
+            <span className="font-bold text-foreground hidden sm:inline font-brand">The ANTs</span>
           </div>
 
           {/* Step indicators */}
@@ -458,7 +458,7 @@ export default function OnboardingWizard() {
               <div className="text-center">
                 <div className="text-5xl mb-4">👋</div>
                 <h1 className="text-3xl font-bold text-foreground mb-2">
-                  Hi {user?.profile?.name?.split(' ')[0] ?? 'there'}, welcome to The ANTS!
+                  Hi {user?.profile?.name?.split(' ')[0] ?? 'there'}, welcome to <span className="font-brand">The ANTs</span>!
                 </h1>
                 <p className="text-foreground-muted">
                   Let's personalise your experience. You can always change these later in Settings.

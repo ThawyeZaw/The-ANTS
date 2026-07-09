@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Role Switcher Component
+// The ANTs — Role Switcher Component
 // Dropdown with confirmation dialog for changing the user's role.
 // ──────────────────────────────────────────────────────────────────────────────
 

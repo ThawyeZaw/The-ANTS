@@ -1,6 +1,6 @@
 # 12 — Contribution & Governance
 
-> **How to propose, build, review, and ship additions to the ANTs Design System.**
+> **How to propose, build, review, and ship additions to The ANTs Design System.**
 
 ---
 
@@ -81,7 +81,7 @@ Follow these code conventions:
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — ComponentName
+// The ANTs — ComponentName
 // Brief description of what this component does.
 // ──────────────────────────────────────────────────────────────────────────────
 

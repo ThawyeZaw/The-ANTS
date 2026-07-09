@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Profile Editor Component
+// The ANTs — Profile Editor Component
 // Inline editable profile form for the Settings page.
 // Replaces the read-only AccountInfo component.
 // ──────────────────────────────────────────────────────────────────────────────

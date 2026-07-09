@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — SharedCountdownView
+// The ANTs — SharedCountdownView
 // Displays a shared exam countdown by token.
 // ──────────────────────────────────────────────────────────────────────────────
 

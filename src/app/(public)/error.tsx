@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Public Route Group Error Boundary
+// The ANTs — Public Route Group Error Boundary
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { AlertTriangle, RefreshCw } from 'lucide-react';

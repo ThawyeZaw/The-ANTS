@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Classroom List Page
+// The ANTs — Classroom List Page
 // Shows all classrooms the user is a member of; allows joining and creating.
 // ──────────────────────────────────────────────────────────────────────────────
 

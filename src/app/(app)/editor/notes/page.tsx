@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Notes Editor Page
+// The ANTs — Notes Editor Page
 // Route: /editor/notes — Contributor and Main Contributor only.
 // ──────────────────────────────────────────────────────────────────────────────
 

@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — NotesEditor
+// The ANTs — NotesEditor
 // Split-screen note editor: left = block editor, right = live preview.
 // ──────────────────────────────────────────────────────────────────────────────
 

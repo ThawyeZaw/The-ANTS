@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Invite Form (Step 1)
+// The ANTs — Invite Form (Step 1)
 // Collects name, email, and role to send an invite to a new user.
 // ──────────────────────────────────────────────────────────────────────────────
 

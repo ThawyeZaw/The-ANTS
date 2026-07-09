@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Public Home / Landing Page (redesigned)
+// The ANTs — Public Home / Landing Page (redesigned)
 // Visual redesign based on the-ants-redesign.html mockup.
 // All original copy is preserved verbatim.
 // New components: HeroVisual, BentoFeatures, QualTrail, RoleLadder.
@@ -21,31 +21,33 @@ import QualCarousel from '@/components/homepage/QualCarousel';
 import RoleLadder from '@/components/homepage/RoleLadder';
 import RevealSection from '@/components/homepage/RevealSection';
 import StatsRow from '@/components/homepage/StatsRow';
-import DotGrid from '@/components/homepage/DotGrid';
+import AntTrailPattern from '@/components/homepage/AntTrailPattern';
+import AntHeroAccent from '@/components/homepage/AntHeroAccent';
+import Footer from '@/components/layout/Footer';
 
 // ── Explore card data ─────────────────────────────────────────────────────────
 
 const EXPLORE_CARDS = [
   {
-    title: 'Explore Clubs',
+    title: 'Clubs',
     description:
       'Discover community spaces for subjects, CCAs and projects. Browse clubs and see what members are building.',
     Icon: MessageSquare,
     href: '/explore/clubs',
-    iconBg: 'rgba(60,219,167,0.12)',
-    iconColor: 'var(--hp-brand)',
+      iconBg: 'rgba(var(--hp-brand-rgb), 0.12)',
+      iconColor: 'var(--hp-brand)',
     stats: [
       { value: '120+', label: 'ACTIVE CLUBS' },
       { value: 'Open', label: 'JOIN MODES VARY' },
     ],
   },
   {
-    title: 'Explore Profiles',
+    title: 'Profiles',
     description:
       'Browse student portfolios, projects, CCA activities and verified educators & contributors. View achievements and credentials.',
     Icon: Users,
     href: '/explore/profiles',
-    iconBg: 'rgba(140,127,240,0.14)',
+    iconBg: 'rgba(var(--hp-violet-rgb), 0.14)',
     iconColor: 'var(--hp-violet)',
     stats: [
       { value: '4', label: 'ROLE TYPES' },
@@ -66,7 +68,7 @@ function SectionHead({
   eyebrow: string;
   heading: string;
   gradPhrase: string;
-  subtext: string;
+  subtext?: string;
   align?: 'center' | 'left';
 }) {
   const textAlign = align === 'center' ? 'center' : 'left';
@@ -94,19 +96,21 @@ function SectionHead({
           }}
         >
           {heading.replace(gradPhrase, '').trim()}{' '}
-          <span className="hp-grad">{gradPhrase}</span>
+          <span className="hp-grad hp-neon-stroke">{gradPhrase}</span>
         </h2>
-        <p
-          style={{
-            fontFamily: 'var(--hp-font-body)',
-            fontSize: 16,
-            color: 'var(--hp-ink-muted)',
-            marginTop: 14,
-            lineHeight: 1.65,
-          }}
-        >
-          {subtext}
-        </p>
+        {subtext && (
+          <p
+            style={{
+              fontFamily: 'var(--hp-font-body)',
+              fontSize: 16,
+              color: 'var(--hp-ink-muted)',
+              marginTop: 14,
+              lineHeight: 1.65,
+            }}
+          >
+            {subtext}
+          </p>
+        )}
       </div>
     </RevealSection>
   );
@@ -162,7 +166,7 @@ export default function HomePage() {
             }}
           >
             <Home size={19} strokeWidth={1.8} style={{ color: 'var(--hp-brand)' }} />
-            The ANTS
+            <span className="font-brand">The ANTs</span>
           </div>
 
           {/* Nav links (desktop only) */}
@@ -215,19 +219,19 @@ export default function HomePage() {
                     alignItems: 'center',
                     gap: 6,
                     background: 'var(--hp-brand)',
-                    color: '#06110D',
+                    color: 'var(--hp-btn-text)',
                     border: 'none',
                     borderRadius: 999,
                     padding: '9px 18px',
                     fontFamily: 'var(--hp-font-body)',
-                    fontWeight: 600,
+                    fontWeight: 700,
                     fontSize: 13,
                     cursor: 'pointer',
                     transition: 'transform .18s ease, box-shadow .18s ease',
                   }}
                   onMouseEnter={(e) => {
                     (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)';
-                    (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 12px 28px -10px rgba(60,219,167,0.55)';
+                    (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 12px 28px -10px rgba(var(--hp-brand-rgb), 0.45)';
                   }}
                   onMouseLeave={(e) => {
                     (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)';
@@ -266,12 +270,12 @@ export default function HomePage() {
                       alignItems: 'center',
                       gap: 6,
                       background: 'var(--hp-brand)',
-                      color: '#06110D',
+                      color: 'var(--hp-btn-text)',
                       border: 'none',
                       borderRadius: 999,
                       padding: '9px 18px',
                       fontFamily: 'var(--hp-font-body)',
-                      fontWeight: 600,
+                      fontWeight: 700,
                       fontSize: 13,
                       cursor: 'pointer',
                       transition: 'transform .18s ease, box-shadow .18s ease',
@@ -279,7 +283,7 @@ export default function HomePage() {
                     }}
                     onMouseEnter={(e) => {
                       (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)';
-                      (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 12px 28px -10px rgba(60,219,167,0.55)';
+                      (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 12px 28px -10px rgba(var(--hp-brand-rgb), 0.45)';
                     }}
                     onMouseLeave={(e) => {
                       (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)';
@@ -297,6 +301,7 @@ export default function HomePage() {
 
       {/* ── Hero ────────────────────────────────────────────────────────── */}
       <section
+        className="hp-grid-bg"
         style={{
           paddingTop: 190,
           paddingBottom: 120,
@@ -304,33 +309,121 @@ export default function HomePage() {
           position: 'relative',
         }}
       >
-        {/* Ambient glow blobs */}
-        <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
-          <div
-            style={{
-              position: 'absolute',
-              top: '15%',
-              left: '20%',
-              width: 480,
-              height: 480,
-              borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(60,219,167,0.07) 0%, transparent 70%)',
-              filter: 'blur(40px)',
-            }}
-          />
-          <div
-            style={{
-              position: 'absolute',
-              bottom: '10%',
-              right: '15%',
-              width: 380,
-              height: 380,
-              borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(140,127,240,0.06) 0%, transparent 70%)',
-              filter: 'blur(40px)',
-            }}
-          />
-        </div>
+        <AntTrailPattern variant="mixed" opacity={0.05} />
+        <AntHeroAccent />
+
+        {/* ── Neon accent elements (CSS-rendered, instant load) ──── */}
+        <style>{`
+          .neon-accent {
+            position: absolute;
+            pointer-events: none;
+            z-index: 0;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.22;
+            transition: opacity 0.5s ease, filter 0.5s ease;
+          }
+          /* Gold neon — left side: warm amber glow */
+          .neon-accent-gold {
+            width: clamp(200px, 22vw, 360px);
+            height: clamp(200px, 22vw, 360px);
+            left: -4%;
+            top: 45%;
+            transform: translateY(-50%);
+            background: radial-gradient(
+              circle at 50% 50%,
+              rgba(208, 105, 43, 0.55) 0%,
+              rgba(255, 180, 70, 0.25) 30%,
+              rgba(208, 105, 43, 0.08) 60%,
+              transparent 100%
+            );
+            box-shadow:
+              0 0 60px rgba(208, 105, 43, 0.25),
+              0 0 120px rgba(255, 160, 40, 0.12);
+            animation: neonPulseGold 4s ease-in-out infinite;
+          }
+          /* Blue neon — right side: cool cyan glow */
+          .neon-accent-blue {
+            width: clamp(200px, 22vw, 360px);
+            height: clamp(200px, 22vw, 360px);
+            right: -4%;
+            top: 40%;
+            transform: translateY(-50%);
+            background: radial-gradient(
+              circle at 50% 50%,
+              rgba(91, 158, 255, 0.55) 0%,
+              rgba(91, 158, 255, 0.25) 30%,
+              rgba(0, 200, 255, 0.08) 60%,
+              transparent 100%
+            );
+            box-shadow:
+              0 0 60px rgba(91, 158, 255, 0.25),
+              0 0 120px rgba(0, 180, 255, 0.12);
+            animation: neonPulseBlue 4.5s ease-in-out infinite;
+          }
+          /* Dark mode: stronger glow */
+          [data-theme="dark"] .neon-accent {
+            opacity: 0.32;
+          }
+          [data-theme="dark"] .neon-accent-gold {
+            box-shadow:
+              0 0 80px rgba(255, 140, 40, 0.35),
+              0 0 160px rgba(255, 160, 40, 0.15);
+          }
+          [data-theme="dark"] .neon-accent-blue {
+            box-shadow:
+              0 0 80px rgba(91, 158, 255, 0.35),
+              0 0 160px rgba(0, 180, 255, 0.15);
+          }
+          /* Keyframes: subtle breathing glow */
+          @keyframes neonPulseGold {
+            0%, 100% { opacity: 0.22; transform: translateY(-50%) scale(1); }
+            50%      { opacity: 0.30; transform: translateY(-50%) scale(1.06); }
+          }
+          @keyframes neonPulseBlue {
+            0%, 100% { opacity: 0.22; transform: translateY(-50%) scale(1); }
+            50%      { opacity: 0.30; transform: translateY(-50%) scale(1.05); }
+          }
+          [data-theme="dark"] .neon-accent-gold {
+            animation-name: neonPulseGoldDark;
+          }
+          [data-theme="dark"] .neon-accent-blue {
+            animation-name: neonPulseBlueDark;
+          }
+          @keyframes neonPulseGoldDark {
+            0%, 100% { opacity: 0.32; transform: translateY(-50%) scale(1); }
+            50%      { opacity: 0.42; transform: translateY(-50%) scale(1.08); }
+          }
+          @keyframes neonPulseBlueDark {
+            0%, 100% { opacity: 0.32; transform: translateY(-50%) scale(1); }
+            50%      { opacity: 0.42; transform: translateY(-50%) scale(1.07); }
+          }
+          /* Responsive: smaller on tablet, hidden on mobile */
+          @media (max-width: 900px) {
+            .neon-accent-gold,
+            .neon-accent-blue {
+              width: clamp(140px, 16vw, 220px);
+              height: clamp(140px, 16vw, 220px);
+              opacity: 0.14;
+            }
+            [data-theme="dark"] .neon-accent {
+              opacity: 0.20;
+            }
+          }
+          @media (max-width: 640px) {
+            .neon-accent { display: none; }
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .neon-accent-gold,
+            .neon-accent-blue { animation: none; }
+          }
+        `}</style>
+
+        {/* Gold neon — left side */}
+        <div className="neon-accent neon-accent-gold" aria-hidden="true" />
+
+        {/* Blue neon — right side */}
+        <div className="neon-accent neon-accent-blue" aria-hidden="true" />
 
         <div
           style={{
@@ -350,8 +443,8 @@ export default function HomePage() {
                   gap: 8,
                   padding: '7px 16px',
                   borderRadius: 999,
-                  background: 'rgba(60,219,167,0.09)',
-                  border: '1px solid rgba(60,219,167,0.28)',
+                  background: 'rgba(var(--hp-brand-rgb), 0.08)',
+                  border: '1px solid rgba(var(--hp-brand-rgb), 0.25)',
                   fontFamily: 'var(--hp-font-mono)',
                   fontSize: 12.5,
                   color: 'var(--hp-brand)',
@@ -376,21 +469,10 @@ export default function HomePage() {
               }}
             >
               More than tutors. Your bridge to{' '}
-              <span className="hp-grad">global education.</span>
+              <span className="hp-grad hp-neon-stroke">global education.</span>
             </h1>
 
-            <p
-              className="hp-reveal"
-              style={{
-                fontFamily: 'var(--hp-font-body)',
-                maxWidth: 620,
-                margin: '26px auto 0',
-                fontSize: 17,
-                lineHeight: 1.65,
-                color: 'var(--hp-ink-muted)',
-              }}
-            />
-
+            {/* ── "Learn more about The ANTs" text link ────────────── */}
             <div
               className="hp-reveal"
               style={{
@@ -403,17 +485,39 @@ export default function HomePage() {
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: 6,
-                  marginTop: 22,
+                  gap: 8,
+                  marginTop: 32,
                   fontFamily: 'var(--hp-font-body)',
-                  fontSize: 13,
-                  color: 'var(--hp-ink-faint)',
+                  fontSize: 15,
+                  fontWeight: 600,
+                  color: 'var(--hp-ink)',
+                  textDecoration: 'none',
+                  borderBottom: '1.5px solid var(--hp-border)',
+                  paddingBottom: 4,
+                  transition: 'border-color 0.25s ease, color 0.25s ease',
                 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = 'var(--hp-ink-muted)'; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = 'var(--hp-ink-faint)'; }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderBottomColor = 'var(--hp-brand)';
+                  e.currentTarget.style.color = 'var(--hp-brand)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderBottomColor = 'var(--hp-border)';
+                  e.currentTarget.style.color = 'var(--hp-ink)';
+                }}
               >
-                Learn more about The ANTS
-                <ArrowRight size={13} />
+                <span
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: '50%',
+                    background: 'var(--hp-brand)',
+                    display: 'inline-block',
+                    boxShadow: '0 0 5px var(--hp-brand)',
+                    flexShrink: 0,
+                  }}
+                />
+                Discover what <span className="font-brand hp-neon-stroke">The ANTs</span> is all about
+                <ArrowRight size={15} style={{ flexShrink: 0, marginLeft: 2 }} />
               </Link>
             </div>
 
@@ -423,71 +527,56 @@ export default function HomePage() {
                 display: 'flex',
                 gap: 14,
                 justifyContent: 'center',
+                alignItems: 'center',
                 marginTop: 40,
                 flexWrap: 'wrap',
               }}
             >
               <Link href="/signup">
                 <button
-                  className="hp-btn"
+                  className="hp-btn neon-btn-glow hp-btn-elevated"
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: 8,
                     background: 'var(--hp-brand)',
-                    color: '#06110D',
+                    color: 'var(--hp-btn-text)',
                     border: 'none',
                     borderRadius: 999,
-                    padding: '13px 24px',
+                    padding: '13px 26px',
                     fontFamily: 'var(--hp-font-body)',
-                    fontWeight: 600,
+                    fontWeight: 700,
                     fontSize: 14.5,
                     cursor: 'pointer',
                     whiteSpace: 'nowrap',
+                    transition: 'transform 0.25s ease, box-shadow 0.25s ease',
                   }}
                   onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)';
-                    (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 12px 28px -10px rgba(60,219,167,0.55)';
+                    const el = e.currentTarget as HTMLButtonElement;
+                    el.style.transform = 'translateY(-2px)';
                   }}
                   onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)';
-                    (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
+                    const el = e.currentTarget as HTMLButtonElement;
+                    el.style.transform = 'translateY(0)';
                   }}
                 >
                   Get Started — It's Free →
                 </button>
               </Link>
-              <Link href="/login">
-                <button
-                  className="hp-btn"
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    background: 'transparent',
-                    border: '1px solid var(--hp-border-strong)',
-                    borderRadius: 999,
-                    padding: '13px 24px',
-                    color: 'var(--hp-ink)',
-                    fontFamily: 'var(--hp-font-body)',
-                    fontWeight: 600,
-                    fontSize: 14.5,
-                    cursor: 'pointer',
-                    whiteSpace: 'nowrap',
-                  }}
-                  onMouseEnter={(e) => {
-                    const el = e.currentTarget as HTMLButtonElement;
-                    el.style.background = 'var(--hp-surface)';
-                    el.style.borderColor = 'var(--hp-ink-faint)';
-                  }}
-                  onMouseLeave={(e) => {
-                    const el = e.currentTarget as HTMLButtonElement;
-                    el.style.background = 'transparent';
-                    el.style.borderColor = 'var(--hp-border-strong)';
-                  }}
-                >
-                  Sign In
-                </button>
+              <Link
+                href="/login"
+                style={{
+                  fontFamily: 'var(--hp-font-body)',
+                  fontSize: 14.5,
+                  fontWeight: 500,
+                  color: 'var(--hp-ink-muted)',
+                  textDecoration: 'none',
+                  transition: 'color 0.2s ease',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--hp-ink)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--hp-ink-muted)'; }}
+              >
+                Sign In
               </Link>
             </div>
 
@@ -525,18 +614,19 @@ export default function HomePage() {
       {/* ── Explore Section ──────────────────────────────────────────────── */}
       <section
         id="explore"
+        className="hp-grid-card"
         style={{
           padding: '130px 28px',
           background: 'var(--hp-bg-soft)',
           position: 'relative',
         }}
       >
+        <AntTrailPattern variant="brand" opacity={0.06} />
         <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
           <SectionHead
             eyebrow="Discover"
             heading="Explore clubs & profiles"
             gradPhrase="clubs & profiles"
-            subtext="Browse community clubs, view student portfolios and discover verified educators — no login required."
           />
 
           <RevealSection>
@@ -556,7 +646,7 @@ export default function HomePage() {
               {EXPLORE_CARDS.map((card) => (
                 <Link key={card.title} href={card.href} style={{ display: 'block' }}>
                   <div
-                    className="explore-card-hp"
+                    className="explore-card-hp hp-card-elevated"
                     style={{
                       padding: 32,
                       borderRadius: 'var(--hp-radius-lg)',
@@ -568,6 +658,7 @@ export default function HomePage() {
                   >
                     {/* Icon */}
                     <div
+                      className="hp-icon-elevated"
                       style={{
                         width: 46,
                         height: 46,
@@ -650,43 +741,65 @@ export default function HomePage() {
 
       {/* ── Stats Row (high-impact metrics divider) ──────────────────────── */}
       <section style={{ position: 'relative' }}>
+        <AntTrailPattern variant="brand" opacity={0.04} />
         <StatsRow />
       </section>
 
       {/* ── Features Section ─────────────────────────────────────────────── */}
-      <DotGrid>
-        <section
-          id="features"
-          style={{ padding: '130px 28px', position: 'relative' }}
+      <section
+        id="features"
+        className="hp-grid-bg-strong"
+        style={{ padding: '130px 28px', position: 'relative' }}
+      >
+        <AntTrailPattern variant="mixed" opacity={0.06} />
+        {/* Ant brand accent — small, subtle floating silhouette */}
+        <svg
+          className="hp-ant-float"
+          width="32"
+          height="26"
+          viewBox="0 0 32 26"
+          style={{ top: '12%', right: '4%', animationDelay: '1.5s' }}
+          aria-hidden="true"
         >
+          <line x1="20" y1="9" x2="15" y2="15" stroke="currentColor" strokeWidth="0.7" opacity="0.7" />
+          <line x1="20" y1="9" x2="25" y2="15" stroke="currentColor" strokeWidth="0.7" opacity="0.7" />
+          <line x1="15" y1="8" x2="10" y2="14" stroke="currentColor" strokeWidth="0.7" opacity="0.7" />
+          <line x1="15" y1="8" x2="20" y2="14" stroke="currentColor" strokeWidth="0.7" opacity="0.7" />
+          <line x1="10" y1="6" x2="5" y2="12" stroke="currentColor" strokeWidth="0.7" opacity="0.7" />
+          <line x1="10" y1="6" x2="15" y2="12" stroke="currentColor" strokeWidth="0.7" opacity="0.7" />
+          <path d="M3 5 Q1 1 0 0" stroke="currentColor" strokeWidth="0.6" fill="none" opacity="0.6" />
+          <path d="M3 5 Q3 0 4 -2" stroke="currentColor" strokeWidth="0.6" fill="none" opacity="0.6" />
+          <ellipse cx="4" cy="6" rx="2.5" ry="2" fill="currentColor" opacity="0.85" />
+          <ellipse cx="9" cy="7" rx="2.2" ry="1.8" fill="currentColor" opacity="0.75" />
+          <ellipse cx="14" cy="8" rx="3.2" ry="2.3" fill="currentColor" opacity="0.7" />
+          <ellipse cx="18" cy="9" rx="1.5" ry="1.3" fill="currentColor" opacity="0.5" />
+        </svg>
           <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
             <SectionHead
               eyebrow="F E A T U R E S"
               heading="Everything you need to ace your exams"
               gradPhrase="ace your exams"
-              subtext="A complete toolkit designed specifically for students pursuing international qualifications."
             />
             <BentoFeatures />
-          </div>
-        </section>
-      </DotGrid>
+        </div>
+      </section>
 
       {/* ── Qualifications Section ───────────────────────────────────────── */}
-      <DotGrid>
-        <section
-          id="qualifications"
-          style={{
-            padding: '130px 28px',
-            background: 'var(--hp-bg-soft)',
-            position: 'relative',
-          }}
-        >
+      <section
+        id="qualifications"
+        className="hp-grid-card"
+        style={{
+          padding: '130px 28px',
+          background: 'var(--hp-bg-soft)',
+          position: 'relative',
+        }}
+      >
+        <AntTrailPattern variant="brand" opacity={0.06} />
           <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
             <SectionHead
               eyebrow="Q U A L I F I C A T I O N S"
               heading="Wired into your exam board"
               gradPhrase="exam board"
-              subtext="Our tools understand the difference between CAIE IGCSE and Edexcel IAL — so your grades are always accurate."
             />
             {/* Interactive carousel replaces the static QualTrail on desktop */}
             <div className="hp-quals-carousel">
@@ -704,40 +817,41 @@ export default function HomePage() {
                 .hp-quals-carousel { display: none !important; }
               }
             `}</style>
-          </div>
-        </section>
-      </DotGrid>
+        </div>
+      </section>
 
       {/* ── Roles Section ────────────────────────────────────────────────── */}
-      <DotGrid>
-        <section
-          id="roles"
-          style={{ padding: '130px 28px', position: 'relative' }}
-        >
+      <section
+        id="roles"
+        className="hp-grid-bg"
+        style={{ padding: '130px 28px', position: 'relative' }}
+      >
+        <AntTrailPattern variant="violet" opacity={0.05} />
           <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
             <SectionHead
               eyebrow="F O R   E V E R Y O N E"
               heading="Choose your role"
               gradPhrase="role"
-              subtext="The ANTS adapts to who you are — student, teacher, content creator, or quality gatekeeper."
             />
             <RoleLadder />
-          </div>
-        </section>
-      </DotGrid>
+        </div>
+      </section>
 
       {/* ── CTA Section ──────────────────────────────────────────────────── */}
       <section style={{ padding: '40px 28px 130px', position: 'relative' }}>
+        <AntTrailPattern variant="mixed" opacity={0.08} />
         <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
           <RevealSection>
             <div
+              className="hp-grid-accent"
               style={{
                 borderRadius: 'var(--hp-radius-lg)',
-                background: 'linear-gradient(120deg, var(--hp-brand-deep), var(--hp-brand) 55%, var(--hp-amber) 130%)',
+                background: 'var(--hp-brand-deep)',
                 padding: '70px 40px',
                 textAlign: 'center',
                 position: 'relative',
                 overflow: 'hidden',
+                border: '1px solid var(--hp-border-strong)',
               }}
             >
               {/* Glow blobs */}
@@ -746,14 +860,14 @@ export default function HomePage() {
                   style={{
                     position: 'absolute', top: 0, right: 0,
                     width: 180, height: 180,
-                    background: 'rgba(255,255,255,0.12)', borderRadius: '50%', filter: 'blur(30px)',
+                    background: 'rgba(255,255,255,0.10)', borderRadius: '50%', filter: 'blur(40px)',
                   }}
                 />
                 <div
                   style={{
                     position: 'absolute', bottom: 0, left: 0,
                     width: 140, height: 140,
-                    background: 'rgba(255,255,255,0.10)', borderRadius: '50%', filter: 'blur(30px)',
+                    background: 'rgba(255,255,255,0.08)', borderRadius: '50%', filter: 'blur(40px)',
                   }}
                 />
               </div>
@@ -763,35 +877,44 @@ export default function HomePage() {
                     fontFamily: 'var(--hp-font-display)',
                     fontSize: 'clamp(1.8rem, 3.6vw, 2.6rem)',
                     fontWeight: 560,
-                    color: '#FFFFFF',
+                    color: 'var(--hp-btn-text)',
                     margin: 0,
                     letterSpacing: '-0.01em',
                   }}
                 >
-                  Ready to ace your exams?
+                  Ready to{' '}
+                  <span className="hp-neon-stroke" style={{ color: 'var(--hp-btn-text)' }}>
+                    ace your exams
+                  </span>
+                  ?
                 </h2>
                 <p
                   style={{
                     fontFamily: 'var(--hp-font-body)',
-                    color: 'rgba(255,255,255,0.80)',
+                    color: 'var(--hp-cta-text-muted)',
                     maxWidth: 480,
                     margin: '14px auto 0',
                     fontSize: 16,
                     lineHeight: 1.6,
                   }}
                 >
-                  Join thousands of Myanmar students already using The ANTS to study smarter.
+                  Join thousands of Myanmar students already using{' '}
+                  <span className="font-brand hp-neon-stroke">
+                    The ANTs
+                  </span>{' '}
+                  to study smarter.
                 </p>
                 <Link href="/signup">
                   <button
+                    className="hp-btn-elevated"
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: 8,
                       marginTop: 30,
-                      background: '#FFFFFF',
-                      color: '#0F172A',
-                      border: 'none',
+                      background: 'var(--hp-btn-text)',
+                      color: 'var(--hp-brand-deep)',
+                      border: '1px solid var(--hp-border-strong)',
                       borderRadius: 999,
                       padding: '13px 26px',
                       fontFamily: 'var(--hp-font-body)',
@@ -803,11 +926,9 @@ export default function HomePage() {
                     }}
                     onMouseEnter={(e) => {
                       (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)';
-                      (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 12px 28px -10px rgba(255,255,255,0.35)';
                     }}
                     onMouseLeave={(e) => {
                       (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)';
-                      (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
                     }}
                   >
                     Get Started — It's Free →
@@ -820,95 +941,10 @@ export default function HomePage() {
       </section>
 
       {/* ── Footer ───────────────────────────────────────────────────────── */}
-      <DotGrid>
-        <footer
-          style={{
-            borderTop: '1px solid var(--hp-border)',
-            padding: '56px 28px 40px',
-            background: 'var(--hp-bg-soft)',
-          }}
-        >
-        <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
-          {/* Top row */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              gap: 20,
-            }}
-          >
-            {/* Brand */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                fontFamily: 'var(--hp-font-display)',
-                fontWeight: 600,
-                fontSize: 15,
-                color: 'var(--hp-ink)',
-              }}
-            >
-              🐜 The ANTS
-            </div>
-
-            {/* Nav links */}
-            <div
-              style={{
-                display: 'flex',
-                gap: 22,
-                fontSize: 13.5,
-                color: 'var(--hp-ink-muted)',
-                flexWrap: 'wrap',
-              }}
-              className="hp-foot-links"
-            >
-              <style>{`
-                .hp-foot-links a:hover { color: var(--hp-ink); }
-              `}</style>
-              <a href="#explore">Explore</a>
-              <a href="#features">Features</a>
-              <Link href="/explore/clubs">Clubs</Link>
-              <Link href="/explore/profiles">Profiles</Link>
-              <Link href="/about">About</Link>
-              <Link href="/login">Sign In</Link>
-              <Link href="/signup">Sign Up</Link>
-            </div>
-
-            {/* Credit */}
-            <p
-              style={{
-                fontFamily: 'var(--hp-font-body)',
-                fontSize: 12.5,
-                color: 'var(--hp-ink-faint)',
-                margin: 0,
-              }}
-            >
-              Built with ❤️ for Myanmar students
-            </p>
-          </div>
-
-          {/* Bottom bar */}
-          <div
-            style={{
-              marginTop: 30,
-              paddingTop: 24,
-              borderTop: '1px solid var(--hp-border)',
-              textAlign: 'center',
-              fontFamily: 'var(--hp-font-mono)',
-              fontSize: 12,
-              color: 'var(--hp-ink-faint)',
-            }}
-          >
-            <span suppressHydrationWarning>
-              © {new Date().getFullYear()} The ANTS. Ace with us! 🐜
-            </span>
-          </div>
-        </div>
-        </footer>
-      </DotGrid>
+      <section style={{ position: 'relative' }}>
+        <AntTrailPattern variant="brand" opacity={0.06} />
+        <Footer />
+      </section>
     </div>
   );
 }

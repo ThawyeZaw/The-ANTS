@@ -1,5 +1,5 @@
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Qualification Registry
+// The ANTs — Qualification Registry
 // Central reference for all supported exam boards, qualifications, grading
 // systems, and hierarchy models.
 //

@@ -2,7 +2,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — AIPromptGenerator
+// The ANTs — AIPromptGenerator
 // Guided wizard that generates a structured AI prompt based on contributor input,
 // then parses the AI response into JSON blocks.
 // Supports two modes:

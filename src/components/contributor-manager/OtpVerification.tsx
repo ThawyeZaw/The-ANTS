@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — OTP Verification (Step 2)
+// The ANTs — OTP Verification (Step 2)
 // Premium 6-digit OTP input with auto-focus advance.
 // Mock OTP code: 123456
 // ──────────────────────────────────────────────────────────────────────────────

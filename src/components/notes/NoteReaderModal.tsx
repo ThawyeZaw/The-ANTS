@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — NoteReaderModal
+// The ANTs — NoteReaderModal
 // Slide-over drawer / modal to read notes directly within the library.
 // ──────────────────────────────────────────────────────────────────────────────
 

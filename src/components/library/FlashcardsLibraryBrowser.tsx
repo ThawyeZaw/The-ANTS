@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — FlashcardsLibraryBrowser
+// The ANTs — FlashcardsLibraryBrowser
 // Browse approved flashcard decks, filtered by enrolled courses (smart mode).
 // Contributors can submit their decks. All users can add to their workspace.
 // ──────────────────────────────────────────────────────────────────────────────

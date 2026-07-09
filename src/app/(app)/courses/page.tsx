@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Course Manager Page
+// The ANTs — Course Manager Page
 // Route: /courses — Multi-step wizard for building academic profiles.
 // ──────────────────────────────────────────────────────────────────────────────
 

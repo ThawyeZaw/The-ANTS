@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Settings Page Loading Skeleton
+// The ANTs — Settings Page Loading Skeleton
 // ──────────────────────────────────────────────────────────────────────────────
 
 export default function SettingsLoading() {

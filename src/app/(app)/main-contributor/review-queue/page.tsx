@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Review Queue Page
+// The ANTs — Review Queue Page
 // Route: /main-contributor/review-queue — Main Contributor only.
 // ──────────────────────────────────────────────────────────────────────────────
 

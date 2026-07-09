@@ -1,5 +1,5 @@
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — App Route Group Loading Skeleton
+// The ANTs — App Route Group Loading Skeleton
 // Shown while authenticated pages load.
 // ──────────────────────────────────────────────────────────────────────────────
 

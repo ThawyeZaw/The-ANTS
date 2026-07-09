@@ -15,7 +15,6 @@ Every piece of text in production code must be real, meaningful, and appropriate
 | Context | Example |
 |---|---|
 | Homepage hero heading | "Your Academic Command Centre" |
-| Homepage subtext | "A dynamic, student-led ecosystem of mentors..." |
 | Feature description | "Drag-and-drop weekly planner with colour-coded events..." |
 | Countdown card title | "IGCSE Physics · Paper 1" |
 | Deck name | "Physics Formulas — Mechanics & Forces" |

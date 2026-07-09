@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — SharedNoteView
+// The ANTs — SharedNoteView
 // Displays a shared study note by token.
 // ──────────────────────────────────────────────────────────────────────────────
 

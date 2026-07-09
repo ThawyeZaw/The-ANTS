@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Input Component
+// The ANTs — Input Component
 // Styled text input with label, error display, and optional icon.
 // ──────────────────────────────────────────────────────────────────────────────
 

@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🐜 The ANTS
+# 🐜 The ANTs
 
 ### The Academic Productivity Ecosystem for Myanmar Students
 
@@ -18,11 +18,11 @@
 
 ---
 
-## What is The ANTS?
+## What is The ANTs?
 
-**The ANTS** is an organisation focused on IGCSE, A Level tutoring and CCA activities for Myanmar students pursuing international qualifications. Our platform is a curriculum-focused productivity and learning ecosystem wired directly into exam board criteria — so your timetables, flashcards, and grade calculators understand the difference between a CAIE IGCSE and an Edexcel IAL.
+**The ANTs** is an organisation focused on IGCSE, A Level tutoring and CCA activities for Myanmar students pursuing international qualifications. Our platform is a curriculum-focused productivity and learning ecosystem wired directly into exam board criteria — so your timetables, flashcards, and grade calculators understand the difference between a CAIE IGCSE and an Edexcel IAL.
 
-Whether you're targeting A* in IGCSE or A Levels, IELTS band 7+, or an OSSD diploma, The ANTS keeps your study life organised in one place — and connects you with a vibrant community of learners and contributors.
+Whether you're targeting A* in IGCSE or A Levels, IELTS band 7+, or an OSSD diploma, The ANTs keeps your study life organised in one place — and connects you with a vibrant community of learners and contributors.
 
 ---
 
@@ -120,6 +120,7 @@ Classrooms are virtual learning spaces with full CRUD for educational content. *
 ### 🏠 Explore Pages
 - **Explore Clubs** (`/explore/clubs`): Browse all clubs with search, member counts, and join modes — no login required.
 - **Explore Profiles** (`/explore/profiles`): Discover community members with role-based filters and portfolio previews.
+- **Homepage explore cards** (`/`): Quick-access cards labeled "Clubs" and "Profiles" for direct navigation.
 
 ### ⏳ Exam Countdown
 - Set countdowns for every upcoming exam.
@@ -136,6 +137,7 @@ Classrooms are virtual learning spaces with full CRUD for educational content. *
 - **Connected cascade** — Hero elements (badge, heading, description, CTAs) enter one after another in a natural 80ms stagger rhythm — no manual delays needed.
 - **Floating gradient text** — Key phrases like "global education" gently levitate with a slow 3-second float while the gradient shimmer shifts across 4 seconds.
 - **Theme-synced glow effects** — The nav bar, bento cards, and hover states glow with the brand colour (emerald in dark mode, forest green in light mode), all driven by the same unified cubic-bezier curve.
+- **Brand-distinctive background pattern** — A repeating ant-trail geometric mesh pattern renders across all 7 homepage sections, reinforcing the "colony network" brand metaphor.
 - **Reduced motion respected** — All animations respect `prefers-reduced-motion` — users who prefer less motion see a clean static layout.
 
 ### 🔄 Role System
@@ -171,6 +173,59 @@ Classrooms are virtual learning spaces with full CRUD for educational content. *
 
 ---
 
+## Environment Setup & Security
+
+### 🔐 `.env.local` — Never Commit to Version Control
+
+The project relies on a `.env.local` file in the project root for all credentials. This file is listed in `.gitignore` (via the `.env*` pattern) and must **never** be committed to any Git repository.
+
+### Quick Start (New Team Members)
+
+1. Copy the template:
+   ```bash
+   cp .env.local.example .env.local
+   ```
+
+2. Fill in your actual Supabase credentials from the [Supabase Dashboard](https://supabase.com/dashboard) → Project Settings → API:
+   - `NEXT_PUBLIC_SUPABASE_URL` — Your project URL
+   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` — Your anon/public key
+   - `SUPABASE_SERVICE_ROLE_KEY` — Your `service_role` secret (server-only)
+
+3. Set restrictive file permissions:
+   ```bash
+   # Unix / macOS
+   chmod 600 .env.local
+
+   # Windows (PowerShell as admin)
+   icacls .env.local /inheritance:r /grant:r "%USERNAME%:(R,W)"
+   ```
+
+### Client-Side Protection
+
+- Only environment variables prefixed with `NEXT_PUBLIC_` are accessible in browser code (Next.js standard).
+- A **build-time leak check** (`scripts/check-client-env.js`) scans `.next` build output for any sensitive values in client bundles.
+- A **startup validation** (`src/lib/validateEnv.ts`) runs at app startup to verify all required vars are present and no sensitive values leaked into public prefixes.
+- The existing **health check** (`src/lib/supabase/health.ts`) includes a service-role leak detector.
+
+### Required Variables
+
+| Variable | Required | Client-Exposed | Description |
+|---|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Yes | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Yes | Yes | Anon/publishable API key |
+| `SUPABASE_SERVICE_ROLE_KEY` | No (warn if missing) | **No** | Service role key for admin ops |
+| `DATABASE_URL` | No | **No** | Pooled Postgres connection (port 6543) |
+| `DIRECT_URL` | No | **No** | Direct Postgres connection (port 5432) |
+| `NEXT_PUBLIC_SITE_URL` | No | Yes | Canonical site URL for auth redirects |
+
+### Sharing Secrets Securely
+
+- Use your password manager (1Password, Bitwarden) or encrypted messaging (Signal) to share credential values.
+- Never post `.env.local` contents in Slack, Discord, WhatsApp, or email.
+- Rotate keys immediately if any credential is accidentally exposed.
+
+---
+
 ## Project Structure
 
 ```
@@ -178,9 +233,10 @@ the-ants/
 ├── src/
 │   ├── app/                     # Next.js App Router pages
 │   ├── components/
-│   │   ├── homepage/            # Public landing page components (RevealSection, BentoFeatures, HeroVisual, QualTrail, QualCarousel, RoleLadder, StatsRow, DotGrid, HomepageFonts)
+│   │   ├── homepage/            # Public landing page components (RevealSection, BentoFeatures, HeroVisual, QualCarousel, RoleLadder, AntTrailPattern, StatsRow, DotGrid)
 │   │   ├── ui/                  # Shared atomic components (Button, Badge, BackButton, RelatedContent, etc.)
-│   │   ├── layout/              # NavBar
+│   │   ├── layout/              # NavBar, Footer
+│   │   ├── auth/                # LoginForm, SignupForm
 │   │   ├── classrooms/          # Classroom components (11 files)
 │   │   ├── clubs/               # Club components (ClubDetail, ClubDiscovery)
 │   │   ├── flashcards/          # Flashcard components (11 files)
@@ -200,6 +256,7 @@ the-ants/
 ├── design-system/                # Design system docs (colors, typography, components, accessibility)
 │   ├── README.md                 # Quick start + file index
 │   ├── design-system.md          # Color palette & typography (primary iteration file)
+│   ├── mock-db-audit.md          # Mock database vs schema coverage audit
 │   └── ...                       # Component library, interaction flows, etc.
 └── README.md                     # Project README
 ```
@@ -214,7 +271,7 @@ All visual and interaction standards are documented in the [design-system/](./de
 
 <div align="center">
 
-Built with ❤️ for Myanmar students by The ANTS team
+Built with ❤️ for Myanmar students by The ANTs team
 
 *Ace with us! 🐜*
 

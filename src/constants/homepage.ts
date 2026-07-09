@@ -1,5 +1,5 @@
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Homepage static constants
+// The ANTs — Homepage static constants
 // MVP: hardcoded values. When Supabase is live, swap for server action calls.
 // ──────────────────────────────────────────────────────────────────────────────
 

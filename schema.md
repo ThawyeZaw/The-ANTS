@@ -1,4 +1,4 @@
-# The ANTS — Database Schema Reference
+# The ANTs — Database Schema Reference
 
 > **Quick Sync Check** — This file is the single source of truth for all PostgreSQL table schemas. It must stay in sync with `src/types/index.ts` and `src/lib/mock/database.ts`. When tables, columns, or types change in the code, update this file.
 

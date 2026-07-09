@@ -1,5 +1,5 @@
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Preset Avatar Definitions
+// The ANTs — Preset Avatar Definitions
 // Cute illustrated avatar presets for user profile customization.
 // ──────────────────────────────────────────────────────────────────────────────
 

@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Public Club Discovery Page
+// The ANTs — Public Club Discovery Page
 // Browse all clubs without authentication. Anyone can view this page.
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -48,7 +48,7 @@ export default function ExploreClubsPage() {
             </div>
             <Link href="/signup">
               <Button size="sm" iconRight={<ArrowRight className="h-4 w-4" />}>
-                Join The ANTS
+                Join <span className="font-brand">The ANTs</span>
               </Button>
             </Link>
           </div>

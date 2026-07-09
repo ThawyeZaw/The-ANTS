@@ -198,7 +198,7 @@ Floating glassmorphism navigation with 7 role-aware grouped dropdowns.
 Header (sticky, top-0, z-50, scroll-aware hide/show)
 └── Container (max-w-7xl, px-4, pt-3)
     └── Nav (glass rounded-2xl, animate-glow)
-        ├── Logo (🐜 + gradient "The ANTS")
+        ├── Logo (🐜 + gradient "The ANTs")
         ├── Desktop Groups (md:flex, 7 dropdowns)
         │   ├── Learn: Course Manager, Lesson Tracker, My Workspace
         │   ├── Study: Flashcards, Notes, Pomodoro
@@ -315,21 +315,97 @@ import BentoFeatures from '@/components/homepage/BentoFeatures';
 
 ---
 
-### 14. QualTrail / QualCarousel
+### 14. QualCarousel
 
-Qualification board displays. QualTrail: horizontal row with dashed line. QualCarousel: mobile carousel with chevrons.
+**File:** `src/components/homepage/QualCarousel.tsx`
+
+Non-interactive auto-advancing carousel for qualification board display. Replaces the previous interactive chevron-based carousel.
+
+| Behavior | Detail |
+|---|---|
+| Auto-advance interval | 4.5 seconds |
+| Transition | `carouselSlideIn` keyframe: fade + translateY(12px) + scale(0.98) |
+| Navigation dots | Purely decorative — `<span aria-hidden="true" role="presentation">` |
+| Interaction | None — no click handlers, no pause on hover |
+
+```tsx
+import QualCarousel from '@/components/homepage/QualCarousel';
+<QualCarousel />
+```
+
+Slides are keyed on `current` index for React animation replay on each transition. The component is entirely decorative — users cannot manually navigate between slides.
 
 ---
 
 ### 15. RoleLadder
 
-Visual hierarchy: Student → Teacher → Contributor → Main Contributor. Vertical on desktop, horizontal on mobile.
+**File:** `src/components/homepage/RoleLadder.tsx`
+
+Visual role hierarchy: Student → Teacher → Contributor → Main Contributor. All rungs aligned at the same baseline with approval-flow indicators.
+
+**Redesign highlights:**
+- All role cards share the same baseline — no staircase offsets
+- Between each tier: vertical `↑` (ArrowUp) icon + `🔒` (Lock) icon, indicating "needs approval to rise"
+- Step tags reflect the approval workflow:
+  - Teacher: "Upgrade · requires approval"
+  - Contributor: "Upgrade · requires approval"  
+  - Main Contributor: "Gatekeeper · approves every upgrade"
+- Main Contributor card features a `ShieldCheck` icon for gatekeeper role
+- Bottom note styled as a centered flow pill with "Main Contributor" badge
+
+```tsx
+import RoleLadder from '@/components/homepage/RoleLadder';
+<RoleLadder />
+```
 
 ---
 
-### 16. DotGrid
+### 16. AntTrailPattern
 
-Decorative polka-dot background pattern.
+**File:** `src/components/homepage/AntTrailPattern.tsx`
+
+Brand-distinctive background pattern rendering an ant-trail geometric mesh via SVG data URI. Applied to all 7 homepage sections.
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `variant` | `'brand' \| 'violet' \| 'mixed'` | `'brand'` | Color tint — references `--hp-brand` or `--hp-violet` |
+| `opacity` | `number` | `0.12` | Override base opacity |
+| `fadeEdges` | `boolean` | `true` | Enable CSS mask-image gradient fade at top/bottom edges |
+
+**Pattern Spec:**
+- Tile size: 120px × 120px (responsive: 100px tablet, 80px mobile)
+- 8 nodes (2px radius) + 9 trail lines (0.8px stroke) per tile
+- Inline SVG encoded as URL-encoded data URI (~1.1KB)
+- `currentColor` driven by `color` CSS property for per-variant tinting
+
+**Accessibility:**
+- `aria-hidden="true"` + `role="presentation"` — hidden from assistive technology
+- `pointer-events: none` — never intercepts clicks or focus
+- Hidden entirely in `prefers-reduced-data` mode
+
+```tsx
+import AntTrailPattern from '@/components/homepage/AntTrailPattern';
+<AntTrailPattern variant="mixed" opacity={0.11} />
+<AntTrailPattern variant="brand" opacity={0.14} fadeEdges={false} />
+```
+
+**Section assignment (v1.1):**
+
+| Section | Variant | Opacity |
+|---|---|---|
+| Hero | `mixed` | 0.11 |
+| Explore | `brand` | 0.14 |
+| Stats | `brand` | 0.09 |
+| Features | `mixed` | 0.13 |
+| Qualifications | `brand` | 0.14 |
+| Roles | `violet` | 0.10 |
+| CTA | `mixed` | 0.09 |
+
+---
+
+### 17. DotGrid
+
+Decorative polka-dot background pattern. Used alongside AntTrailPattern in select sections.
 
 ---
 
@@ -423,6 +499,44 @@ Decorative polka-dot background pattern.
 | `CoursesLibraryBrowser` | `src/components/library/CoursesLibraryBrowser.tsx` |
 | `ExamsLibraryBrowser` | `src/components/library/ExamsLibraryBrowser.tsx` |
 | `FlashcardsLibraryBrowser` | `src/components/library/FlashcardsLibraryBrowser.tsx` |
+
+### 10. Footer
+
+**File:** `src/components/layout/Footer.tsx`
+
+Dedicated 4-column responsive footer component replacing the previous inline footer in `page.tsx`.
+
+**Structure:**
+```
+Footer (role="contentinfo", wrapped with DotGrid)
+├── Container (max-w-7xl)
+│   ├── Brand Column — Logo + tagline + social icons (GitHub, Discord, Email)
+│   ├── Quick Links — About, Features, Clubs, Profiles, Blog
+│   ├── Account — Sign In, Sign Up, Dashboard, Settings
+│   └── Contact — Email, Location, Hours, Support
+└── Bottom Bar — Copyright + Privacy/Terms links
+```
+
+**Responsive:**
+| Viewport | Columns |
+|---|---|
+| Desktop (≥860px) | 4 columns |
+| Tablet (501-859px) | 2 columns |
+| Mobile (≤500px) | 1 column |
+
+**Icons:**
+- GitHub: inline SVG (not lucide-react — avoids missing icon issue)
+- Discord: `MessageCircle` (lucide-react)
+- Email: `Mail` (lucide-react)
+
+**Accessibility:** `role="contentinfo"`, `aria-label` on sections, semantic `<nav>` with `role="list"`.
+
+```tsx
+import Footer from '@/components/layout/Footer';
+<Footer />
+```
+
+---
 
 ### Auth
 

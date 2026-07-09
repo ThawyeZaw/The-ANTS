@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — BlockEditor
+// The ANTs — BlockEditor
 // Block-by-block editing panel with add, reorder, delete, duplicate controls.
 // ──────────────────────────────────────────────────────────────────────────────
 

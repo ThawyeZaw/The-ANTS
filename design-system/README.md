@@ -1,4 +1,4 @@
-# The ANTS Design System
+# The ANTs Design System
 
 **Version:** 1.0.0
 **Last Updated:** 2026-07-07
@@ -9,7 +9,7 @@
 
 ## Purpose
 
-The ANTS Design System is the single source of truth for all visual, interaction, and accessibility standards across [The ANTS](https://the-ants.org/) platform. It ensures every developer and designer speaks the same language — from color tokens to component behavior to keyboard navigation.
+The ANTs Design System is the single source of truth for all visual, interaction, and accessibility standards across [The ANTs](https://the-ants.org/) platform. It ensures every developer and designer speaks the same language — from color tokens to component behavior to keyboard navigation.
 
 ---
 

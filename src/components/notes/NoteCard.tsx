@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — NoteCard
+// The ANTs — NoteCard
 // Card component for the Notes Library grid.
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -152,7 +152,7 @@ export default function NoteCard({ note, isSaved = false, onToggleSave, contribu
         {/* ── Footer ── */}
         <div className="flex items-center justify-between pt-2 mt-auto border-t border-border">
           <div className="text-xs text-foreground-muted">
-            {contributorName ? `by ${contributorName}` : 'The ANTS Library'}
+            {contributorName ? `by ${contributorName}` : <><span className="font-brand">The ANTs</span> Library</>}
           </div>
 
           <div className="flex items-center gap-2">

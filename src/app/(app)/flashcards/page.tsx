@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Flashcards Library Shell Page
+// The ANTs — Flashcards Library Shell Page
 // Owner: ZLH
 // ──────────────────────────────────────────────────────────────────────────────
 

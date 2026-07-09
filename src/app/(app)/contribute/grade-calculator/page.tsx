@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Grade Calculator Editor Page
+// The ANTs — Grade Calculator Editor Page
 // Route: /contribute/grade-calculator — Contributor and Main Contributor only.
 // ──────────────────────────────────────────────────────────────────────────────
 

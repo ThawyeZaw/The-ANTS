@@ -1,5 +1,5 @@
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Clubs Page Loading Skeleton
+// The ANTs — Clubs Page Loading Skeleton
 // ──────────────────────────────────────────────────────────────────────────────
 
 export default function ClubsLoading() {

@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — CurriculumLibraryAdmin
+// The ANTs — CurriculumLibraryAdmin
 // Contributor/Main-Contributor interface for managing the curriculum library.
 // ──────────────────────────────────────────────────────────────────────────────
 

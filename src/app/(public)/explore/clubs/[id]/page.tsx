@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Public Club Showcase Page
+// The ANTs — Public Club Showcase Page
 // Polished landing page for each club showing hero, projects, milestones,
 // members, and announcements. No authentication required.
 // ──────────────────────────────────────────────────────────────────────────────
@@ -194,7 +194,7 @@ export default function PublicClubDetailPage() {
             <div className="flex flex-col items-start gap-3 lg:items-end">
               <Link href="/signup">
                 <Button size="lg" iconRight={<ArrowRight className="h-5 w-5" />}>
-                  Join The ANTS
+                  Join <span className="font-brand">The ANTs</span>
                 </Button>
               </Link>
               <button
@@ -406,7 +406,7 @@ export default function PublicClubDetailPage() {
           <p className="text-sm text-foreground-muted mb-4">Ready to join this club?</p>
           <Link href="/signup">
             <Button size="lg" iconRight={<ArrowRight className="h-5 w-5" />}>
-              Join The ANTS — It's Free
+              Join <span className="font-brand">The ANTs</span> — It's Free
             </Button>
           </Link>
         </div>

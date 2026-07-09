@@ -104,7 +104,7 @@ Create these as Figma Effect Styles:
 ## 6. Figma Component Structure
 
 ```
-📁 The ANTS Design System
+📁 The ANTs Design System
 ├── 🎨 Tokens
 │   ├── Colors (Light)
 │   ├── Colors (Dark)

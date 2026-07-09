@@ -1,13 +1,13 @@
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Auth Layout
+// The ANTs — Auth Layout
 // Route group layout for /login and /signup — no NavBar, centered card.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import type { ReactNode } from 'react';
 
 export const metadata = {
-  title: 'The ANTS — Sign In',
-  description: 'Sign in or create an account to access The ANTS academic productivity platform.',
+  title: 'The ANTs — Sign In',
+  description: 'Sign in or create an account to access The ANTs academic productivity platform.',
 };
 
 export default function AuthLayout({ children }: { children: ReactNode }) {

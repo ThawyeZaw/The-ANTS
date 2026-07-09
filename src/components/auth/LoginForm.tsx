@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Login Form Component
+// The ANTs — Login Form Component
 // Premium split-panel login with inline forgot-password, `?next` redirect,
 // and email confirmation error handling.
 // Uses Supabase Auth via AuthContext.
@@ -10,9 +10,9 @@
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Mail, Lock, Eye, EyeOff, ArrowRight, Sparkles, BookOpen, Timer, Calculator } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, Sparkles, BookOpen, Timer, Calculator, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { isValidEmail } from '@/lib/utils';
+import { isValidEmail, humanizeAuthError } from '@/lib/utils';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import ForgotPasswordPanel from './ForgotPasswordPanel';
@@ -61,14 +61,7 @@ export default function LoginForm() {
     const result = await login(email, password);
 
     if (!result.success) {
-      // Friendly message for unconfirmed email
-      if (result.error?.toLowerCase().includes('email not confirmed')) {
-        setErrors({
-          form: "Your email address hasn't been confirmed yet. Please check your inbox and click the confirmation link.",
-        });
-      } else {
-        setErrors({ form: result.error });
-      }
+      setErrors({ form: humanizeAuthError(result.error) });
       setIsLoading(false);
       return;
     }
@@ -77,11 +70,11 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto">
-      <div className="bg-background-card border border-border rounded-2xl shadow-lg overflow-hidden animate-fade-in-up flex flex-col lg:flex-row min-h-[540px]">
+    <div className="w-full max-w-5xl mx-auto auth-corner-accents">
+      <div className="bg-background-card border border-border rounded-2xl shadow-lg overflow-hidden animate-fade-in-up flex flex-col lg:flex-row min-h-[540px] auth-pattern-dots">
 
         {/* ── Left panel: Branding ─────────────────────────────────────── */}
-        <div className="hidden lg:flex lg:w-5/12 relative flex-col justify-between p-8 overflow-hidden"
+        <div className="hidden lg:flex lg:w-5/12 relative flex-col justify-between p-8 overflow-hidden auth-pattern-diag auth-brand-lines"
           style={{
             background: 'linear-gradient(135deg, var(--primary) 0%, color-mix(in srgb, var(--primary) 70%, var(--accent)) 100%)',
           }}
@@ -96,8 +89,8 @@ export default function LoginForm() {
 
           <div className="relative z-10">
             <div className="text-4xl mb-4">🐜</div>
-            <h2 className="text-2xl font-bold text-white mb-2">The ANTS</h2>
-            <p className="text-white/80 text-sm leading-relaxed">
+            <h2 className="text-2xl font-bold text-white mb-2 font-brand text-on-dark">The ANTs</h2>
+            <p className="text-white/90 text-sm leading-relaxed text-on-accent">
               Your all-in-one academic productivity platform for IGCSE, A-Level, and IELTS.
             </p>
           </div>
@@ -110,8 +103,8 @@ export default function LoginForm() {
                   <Icon className="h-4 w-4 text-white" />
                 </div>
                 <div>
-                  <p className="text-white text-sm font-medium">{label}</p>
-                  <p className="text-white/65 text-xs">{desc}</p>
+                  <p className="text-white text-sm font-semibold text-on-accent">{label}</p>
+                  <p className="text-white/75 text-xs">{desc}</p>
                 </div>
               </div>
             ))}
@@ -132,47 +125,18 @@ export default function LoginForm() {
 
           <div className={showForgot ? 'hidden' : 'block'}>
             {/* Header */}
-            <div className="mb-7">
+            <div className="mb-7 auth-header-accent">
               <h1 className="text-2xl font-bold text-foreground">Welcome back</h1>
               <p className="text-sm text-foreground-muted mt-1">Sign in to continue your studies</p>
             </div>
 
             {/* Form error */}
             {errors.form ? (
-              <div className="mb-5 p-3 rounded-xl bg-error/10 border border-error/20 text-error text-sm animate-fade-in">
-                {errors.form || 'An unexpected error occurred. Please try again.'}
+              <div className="mb-5 p-3.5 rounded-xl bg-error/8 border border-error/20 text-error text-sm font-medium animate-fade-in flex items-start gap-2.5">
+                <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                <span>{errors.form}</span>
               </div>
             ) : null}
-
-            {/* Demo credentials (local/dev convenience) */}
-            <div className="mb-5 p-4 rounded-xl bg-background-card border border-border">
-              <p className="text-sm font-semibold text-foreground mb-2">Demo Credentials</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
-                <div>
-                  <div className="font-medium text-foreground">Student</div>
-                  <div className="text-foreground-muted">thiri@theants.edu</div>
-                  <div className="text-foreground-muted">student123</div>
-                </div>
-                <div>
-                  <div className="font-medium text-foreground">Teacher</div>
-                  <div className="text-foreground-muted">u.kyaw@theants.edu</div>
-                  <div className="text-foreground-muted">teacher123</div>
-                </div>
-                <div>
-                  <div className="font-medium text-foreground">Contributor</div>
-                  <div className="text-foreground-muted">aye.chan@theants.edu</div>
-                  <div className="text-foreground-muted">contributor123</div>
-                </div>
-                <div>
-                  <div className="font-medium text-foreground">Main</div>
-                  <div className="text-foreground-muted">daw.hla@theants.edu</div>
-                  <div className="text-foreground-muted">maincontributor123</div>
-                </div>
-              </div>
-              <p className="text-xs text-foreground-muted mt-3">
-                Note: Supabase env vars must be configured for sign-in to work.
-              </p>
-            </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <Input
@@ -214,7 +178,7 @@ export default function LoginForm() {
                   <button
                     type="button"
                     onClick={() => setShowForgot(true)}
-                    className="text-xs text-primary hover:underline cursor-pointer font-medium"
+                    className="text-xs text-primary hover:underline cursor-pointer font-semibold"
                     id="login-forgot-password"
                     suppressHydrationWarning
                   >
@@ -238,7 +202,7 @@ export default function LoginForm() {
             {/* Footer */}
             <p className="text-center text-sm text-foreground-muted mt-6">
               Don&#39;t have an account?{' '}
-              <Link href="/signup" className="text-primary font-medium hover:underline" id="login-to-signup">
+              <Link href="/signup" className="text-primary font-semibold hover:underline" id="login-to-signup">
                 Create one
               </Link>
             </p>

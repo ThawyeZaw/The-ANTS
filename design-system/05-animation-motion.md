@@ -131,6 +131,29 @@ All defined in `src/app/globals.css`.
 /* Both applied to .hp-grad class */
 ```
 
+#### carouselSlideIn — Qualification Board Auto-Advance (QualCarousel)
+
+```css
+@keyframes carouselSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+/* Duration: 0.5s var(--hp-ease-out) */
+/* Usage: QualCarousel slide transitions — non-interactive auto-advancing */
+
+/* Carousel auto-advances every 4.5s. Each slide fades + slides up gently.
+   Slides are keyed on `current` index for React animation replay.
+   Navigation dots are decorative (aria-hidden, no click handlers). */
+```
+
+**Applies to:** QualCarousel component. Purely decorative auto-advancing animation — no user interaction. Replaces the previous interactive chevron-based carousel.
+
 ---
 
 ## 3. Scroll Reveal System (Homepage Only)

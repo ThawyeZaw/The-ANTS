@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — BackButton
+// The ANTs — BackButton
 // Reusable back navigation: tries router.back() first, falls back to href.
 // Use this everywhere instead of ad-hoc back buttons.
 // ──────────────────────────────────────────────────────────────────────────────

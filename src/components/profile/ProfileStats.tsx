@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Profile Stats Component (Premium Glassmorphism)
+// The ANTs — Profile Stats Component (Premium Glassmorphism)
 // Glassmorphism stat cards with icons, gradients, and animated counters.
 // ──────────────────────────────────────────────────────────────────────────────
 

@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import SharedDeckView from '@/components/share/SharedDeckView';
 
 export const metadata = {
-  title: 'Shared Flashcard Deck — The ANTS',
+  title: 'Shared Flashcard Deck — The ANTs',
   description: 'View a shared flashcard deck. Study interactively with spaced repetition.',
 };
 

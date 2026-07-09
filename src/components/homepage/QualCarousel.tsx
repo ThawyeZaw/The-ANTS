@@ -1,46 +1,39 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// QualCarousel — Qualification board carousel
+// QualCarousel — Qualification board auto-advancing showcase
+//
 // Cycles through 6 exam boards (CAIE, Edexcel, OSSD, IELTS, SAT, Duolingo)
-// with minimalist chevron navigation, auto-advance, and dot indicators.
+// with a continuous auto-advance animation. Non-interactive: no chevrons,
+// no clickable dots, no keyboard or mouse input. Dots serve as purely
+// decorative progress indicators.
+//
+// Each slide transition uses a subtle fade + scale animation tied to the
+// current slide index, replaying via React key remounting.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { QUALIFICATION_BOARDS } from '@/constants/homepage';
 import RevealSection from './RevealSection';
 
-const AUTO_ADVANCE_MS = 5000;
+const AUTO_ADVANCE_MS = 4500;
 
 export default function QualCarousel() {
   const [current, setCurrent] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
   const total = QUALIFICATION_BOARDS.length;
 
-  const goTo = useCallback(
-    (index: number) => {
-      setCurrent((index + total) % total);
-    },
-    [total]
-  );
+  const advance = useCallback(() => {
+    setCurrent((prev) => (prev + 1) % total);
+  }, [total]);
 
-  const next = useCallback(() => goTo(current + 1), [current, goTo]);
-  const prev = useCallback(() => goTo(current - 1), [current, goTo]);
-
-  // Auto-advance timer
+  // Continuous auto-advance — no pause on hover
   useEffect(() => {
-    if (isPaused) {
-      if (timerRef.current) clearInterval(timerRef.current);
-      return;
-    }
-    timerRef.current = setInterval(next, AUTO_ADVANCE_MS);
+    timerRef.current = setInterval(advance, AUTO_ADVANCE_MS);
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isPaused, next]);
+  }, [advance]);
 
   const board = QUALIFICATION_BOARDS[current];
 
@@ -52,12 +45,13 @@ export default function QualCarousel() {
           margin: '0 auto',
           position: 'relative',
         }}
-        onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => setIsPaused(false)}
       >
-        {/* Slide card */}
+        {/* Slide card — keyed on current index for animation replay */}
         <div
+          key={current}
+          className="hp-carousel-slide"
           style={{
+            animation: 'carouselSlideIn 0.55s cubic-bezier(0.22, 0.61, 0.36, 1) both',
             background: 'var(--hp-surface)',
             border: '1px solid var(--hp-border)',
             borderRadius: 'var(--hp-radius-lg)',
@@ -65,11 +59,18 @@ export default function QualCarousel() {
             textAlign: 'center',
             position: 'relative',
             overflow: 'hidden',
-            transition: 'border-color 0.3s ease',
           }}
         >
+          <style>{`
+            @keyframes carouselSlideIn {
+              from { opacity: 0; transform: translateY(12px) scale(0.98); }
+              to   { opacity: 1; transform: translateY(0)    scale(1); }
+            }
+          `}</style>
+
           {/* Colored accent bar at top */}
           <div
+            aria-hidden="true"
             style={{
               position: 'absolute',
               top: 0,
@@ -82,7 +83,9 @@ export default function QualCarousel() {
           />
 
           {/* Emoji */}
-          <div style={{ fontSize: 48, marginBottom: 16 }}>{board.emoji}</div>
+          <div aria-hidden="true" style={{ fontSize: 48, marginBottom: 16 }}>
+            {board.emoji}
+          </div>
 
           {/* Board name */}
           <h3
@@ -142,83 +145,10 @@ export default function QualCarousel() {
           </p>
         </div>
 
-        {/* Chevron controls */}
-        <button
-          onClick={prev}
-          aria-label="Previous qualification"
-          style={{
-            position: 'absolute',
-            top: '50%',
-            left: -20,
-            transform: 'translateY(-50%)',
-            width: 44,
-            height: 44,
-            borderRadius: '50%',
-            border: '1px solid var(--hp-border-strong)',
-            background: 'var(--hp-surface)',
-            color: 'var(--hp-ink-muted)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            transition: 'background 0.2s ease, color 0.2s ease, border-color 0.2s ease',
-            zIndex: 2,
-          }}
-          onMouseEnter={(e) => {
-            const el = e.currentTarget as HTMLButtonElement;
-            el.style.background = 'var(--hp-surface-2)';
-            el.style.color = 'var(--hp-ink)';
-            el.style.borderColor = 'var(--hp-ink-faint)';
-          }}
-          onMouseLeave={(e) => {
-            const el = e.currentTarget as HTMLButtonElement;
-            el.style.background = 'var(--hp-surface)';
-            el.style.color = 'var(--hp-ink-muted)';
-            el.style.borderColor = 'var(--hp-border-strong)';
-          }}
-        >
-          <ChevronLeft size={18} strokeWidth={1.8} />
-        </button>
-
-        <button
-          onClick={next}
-          aria-label="Next qualification"
-          style={{
-            position: 'absolute',
-            top: '50%',
-            right: -20,
-            transform: 'translateY(-50%)',
-            width: 44,
-            height: 44,
-            borderRadius: '50%',
-            border: '1px solid var(--hp-border-strong)',
-            background: 'var(--hp-surface)',
-            color: 'var(--hp-ink-muted)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            transition: 'background 0.2s ease, color 0.2s ease, border-color 0.2s ease',
-            zIndex: 2,
-          }}
-          onMouseEnter={(e) => {
-            const el = e.currentTarget as HTMLButtonElement;
-            el.style.background = 'var(--hp-surface-2)';
-            el.style.color = 'var(--hp-ink)';
-            el.style.borderColor = 'var(--hp-ink-faint)';
-          }}
-          onMouseLeave={(e) => {
-            const el = e.currentTarget as HTMLButtonElement;
-            el.style.background = 'var(--hp-surface)';
-            el.style.color = 'var(--hp-ink-muted)';
-            el.style.borderColor = 'var(--hp-border-strong)';
-          }}
-        >
-          <ChevronRight size={18} strokeWidth={1.8} />
-        </button>
-
-        {/* Dot indicators */}
+        {/* Decorative dot indicators — purely visual, non-interactive */}
         <div
+          aria-hidden="true"
+          role="presentation"
           style={{
             display: 'flex',
             justifyContent: 'center',
@@ -227,31 +157,19 @@ export default function QualCarousel() {
           }}
         >
           {QUALIFICATION_BOARDS.map((_, i) => (
-            <button
+            <span
               key={i}
-              onClick={() => goTo(i)}
-              aria-label={`Go to slide ${i + 1}`}
               style={{
+                display: 'inline-block',
                 width: i === current ? 24 : 8,
                 height: 8,
                 borderRadius: 999,
-                border: 'none',
                 background: i === current ? 'var(--hp-brand)' : 'var(--hp-border-strong)',
-                cursor: 'pointer',
-                transition: 'width 0.3s ease, background 0.3s ease',
-                padding: 0,
+                transition: 'width 0.35s ease, background 0.35s ease',
               }}
             />
           ))}
         </div>
-
-        {/* Mobile chevron repositioning */}
-        <style>{`
-          @media (max-width: 640px) {
-            .hp-carousel-chevron-left { left: -12px !important; width: 36px !important; height: 36px !important; }
-            .hp-carousel-chevron-right { right: -12px !important; width: 36px !important; height: 36px !important; }
-          }
-        `}</style>
       </div>
     </RevealSection>
   );

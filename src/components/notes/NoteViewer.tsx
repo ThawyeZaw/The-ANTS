@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — NoteViewer
+// The ANTs — NoteViewer
 // Full-page note renderer for the /library/[noteId] route.
 // ──────────────────────────────────────────────────────────────────────────────
 

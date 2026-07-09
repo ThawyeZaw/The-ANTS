@@ -1,5 +1,5 @@
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — My Notes Loading Skeleton
+// The ANTs — My Notes Loading Skeleton
 // ──────────────────────────────────────────────────────────────────────────────
 
 export default function MyNotesLoading() {

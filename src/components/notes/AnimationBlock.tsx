@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — AnimationBlock
+// The ANTs — AnimationBlock
 // Predefined interactive CSS/JS animations for visual learning,
 // plus custom script rendering for AI/user-generated canvas animations.
 // ──────────────────────────────────────────────────────────────────────────────

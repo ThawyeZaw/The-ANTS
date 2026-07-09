@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — ExamsLibraryBrowser
+// The ANTs — ExamsLibraryBrowser
 // Browse approved exam entries by board. Add to countdown with optional
 // date override. Smart filter for enrolled courses.
 // ──────────────────────────────────────────────────────────────────────────────

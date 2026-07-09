@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import SharedNoteView from '@/components/share/SharedNoteView';
 
 export const metadata = {
-  title: 'Shared Note — The ANTS',
+  title: 'Shared Note — The ANTs',
   description: 'View a shared study note.',
 };
 

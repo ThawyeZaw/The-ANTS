@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Role Upgrade Form Component
+// The ANTs — Role Upgrade Form Component
 // Users can request a role upgrade (student → teacher → contributor → main_contributor).
 // Requests are submitted to role_upgrade_requests (real Supabase) for main
 // contributor approval. No downgrades allowed.

@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — CoursesLibraryBrowser
+// The ANTs — CoursesLibraryBrowser
 // Browse approved curriculum templates, filter by board/qualification.
 // Smart mode shows only boards matching user's enrolled courses.
 // ──────────────────────────────────────────────────────────────────────────────

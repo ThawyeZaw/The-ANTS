@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Authenticated App Shell Layout
+// The ANTs — Authenticated App Shell Layout
 // Wraps all authenticated routes with NavBar and PersonaProvider.
 // Redirects to /login if the user is not authenticated.
 // ──────────────────────────────────────────────────────────────────────────────
@@ -48,7 +48,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <PersonaProvider>
       <div className="min-h-screen bg-background flex flex-col">
         <NavBar />
-        <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-6">
+        <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-6 dash-grid-body">
           {children}
         </main>
       </div>

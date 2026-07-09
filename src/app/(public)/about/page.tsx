@@ -38,7 +38,7 @@ function MissionSection() {
           <span className="text-primary">Your Bridge to Global Education.</span>
         </h1>
         <p className="text-lg text-foreground-secondary leading-relaxed">
-          At The ANTS, our core focus is helping IGCSE students achieve absolute
+          At <span className="font-brand">The ANTs</span>, our core focus is helping IGCSE students achieve absolute
           academic excellence. But we are more than just a traditional tutoring
           service — we are a dynamic, student-led ecosystem designed to help you
           navigate your exams and your future.
@@ -54,7 +54,7 @@ function MissionSection() {
           <h2 className="text-2xl font-bold text-foreground">Who We Are</h2>
         </div>
         <p className="text-foreground-secondary leading-relaxed text-base">
-          Our greatest strength is our community of mentors. The ANTS teaching
+          Our greatest strength is our community of mentors. <span className="font-brand">The ANTs</span> teaching
           team is a diverse, global network of scholars who have successfully
           conquered the academic hurdles you are facing right now. Because our
           tutors come from a wide variety of prestigious academic pathways —
@@ -64,13 +64,13 @@ function MissionSection() {
         </p>
       </div>
 
-      {/* The ANTS Advantage */}
+      {/* The ANTs Advantage */}
       <div className="bg-background-card border border-border rounded-2xl p-8 md:p-10">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center">
             <Compass className="h-5 w-5 text-amber-400" />
           </div>
-          <h2 className="text-2xl font-bold text-foreground">The ANTS Advantage</h2>
+          <h2 className="text-2xl font-bold text-foreground"><span className="font-brand">The ANTs</span> Advantage</h2>
         </div>
         <p className="text-foreground-secondary leading-relaxed text-base">
           When you learn with us, you are not just memorizing a syllabus. You
@@ -88,7 +88,7 @@ function MissionSection() {
           href="/login"
           className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground hover:bg-primary-hover rounded-xl text-sm font-semibold transition-all"
         >
-          Join The ANTS Today
+          Join <span className="font-brand">The ANTs</span> Today
         </Link>
       </div>
     </div>
@@ -134,7 +134,7 @@ function HistorySection() {
         </h2>
         <p className="text-foreground-secondary">
           From a small group of volunteer tutors to a growing ecosystem —
-          here is how The ANTS has evolved.
+          here is how <span className="font-brand">The ANTs</span> has evolved.
         </p>
       </div>
 

@@ -1,5 +1,5 @@
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Profile Editor Loading Skeleton
+// The ANTs — Profile Editor Loading Skeleton
 // ──────────────────────────────────────────────────────────────────────────────
 
 export default function ProfileEditorLoading() {

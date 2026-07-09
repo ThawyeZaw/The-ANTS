@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Step Indicator
+// The ANTs — Step Indicator
 // Visual progress indicator for the 3-step invite flow.
 // ──────────────────────────────────────────────────────────────────────────────
 

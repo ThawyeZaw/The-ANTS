@@ -1,4 +1,4 @@
-# The ANTS — System Specification & Integration Manifest (`spec.md`)
+# The ANTs — System Specification & Integration Manifest (`spec.md`)
 
 ## 1. Project Architecture & Tech Stack
 - **Frontend Framework:** Next.js 16 (App Router)
@@ -518,16 +518,6 @@ Club activity and contributions can appear on a user's public profile portfolio,
 6. **Server Actions Live in `src/actions/`:** Never define a `'use server'` function inside a component file.
 7. **Styling Consistency:** Use Tailwind CSS v4 utility classes with CSS custom properties (`var(--foreground)`, `var(--primary)`, `var(--border)`, etc.). Use `lucide-react` for all icons.
 8. **Respect 🔒 Ownership:** Do not create, edit, or delete files marked with another developer's lock.
-9. **Role Upgrade Constraint:** Users always sign up as `student`. Role upgrades require `main_contributor` approval.
-10. **Supabase Query Pattern:** All Supabase queries must use the `database.ts` facade. Never call `supabase.from()` directly in component code. When transitioning from mock to live data, replace the facade implementation — never change the consumer interface.
-=======
-9. **Role Upgrade Constraint:** Users always sign up as `student`. Role upgrades require `main_contributor` approval.
-10. **Supabase Query Pattern:** All Supabase queries must use the `database.ts` facade. Never call `supabase.from()` directly in component code. When transitioning from mock to live data, replace the facade implementation — never change the consumer interface.
->>>>>>> 23990f5be8b69266496f110f06c9e820e1f68a1b
-=======
-9. **Role Upgrade Constraint:** Users always sign up as `student`. Role upgrades require `main_contributor` approval.
-10. **Supabase Query Pattern:** All Supabase queries must use the `database.ts` facade. Never call `supabase.from()` directly in component code. When transitioning from mock to live data, replace the facade implementation — never change the consumer interface.
-=======
 9. **Role Upgrade Constraint:** Users always sign up as `student`. Role upgrades require `main_contributor` approval.
 10. **Supabase Query Pattern:** All Supabase queries must use the `database.ts` facade. Never call `supabase.from()` directly in component code. When transitioning from mock to live data, replace the facade implementation — never change the consumer interface.
 
@@ -2096,4 +2086,108 @@ Before applying any migration to production:
 - Migrations are never edited after application (immutable).
 - If a change is needed, create a new migration — never modify an existing one.
 - The `supabase/migrations/` folder contains the single source of truth for database schema history.
->>>>>>> 23990f5be8b69266496f110f06c9e820e1f68a1b
+
+---
+
+## 33. Homepage Design System
+
+### 33.1 Overview
+
+The public landing page (`/`) implements a dedicated design layer scoped under the `.hp` CSS class. This system is independent of the authenticated app shell design tokens and provides a distinct, brand-forward visual identity for first-time visitors and unauthenticated users.
+
+### 33.2 CSS Variable Layer
+
+Homepage tokens are defined within `.hp` scope in `src/app/globals.css`:
+
+```css
+.hp {
+  --hp-brand: #3CDBA7;          /* Primary brand — emerald green (dark) */
+  --hp-brand-soft: rgba(60, 219, 167, 0.12);
+  --hp-violet: #8C7FF0;         /* Secondary accent — violet */
+  --hp-bg: #080B11;              /* Default section background */
+  --hp-bg-soft: #0C1119;         /* Alternate section background */
+  --hp-surface: rgba(255, 255, 255, 0.04);  /* Card surface */
+  --hp-border: rgba(255, 255, 255, 0.08);
+  --hp-border-strong: rgba(255, 255, 255, 0.14);
+  --hp-text-primary: #F1F5F9;
+  --hp-text-secondary: #94A3B8;
+}
+```
+
+Dark/light theme variants are controlled via `[data-theme="dark"]` and `[data-theme="light"]` attribute selectors within `.hp`.
+
+### 33.3 Component Inventory
+
+| # | Component | File | Purpose |
+|---|---|---|---|
+| 1 | `HeroVisual` | `src/components/homepage/HeroVisual.tsx` | Decorative widget panel with live-ticking countdown + mini timetable |
+| 2 | `RevealSection` | `src/components/homepage/RevealSection.tsx` | Apple-style scroll-reveal wrapper (IntersectionObserver, 12% threshold) |
+| 3 | `SectionHead` | Inline in `page.tsx` | Section title + optional subtext with `hp-reveal` animation |
+| 4 | `BentoFeatures` | `src/components/homepage/BentoFeatures.tsx` | 4-column responsive bento grid of 8 feature tiles |
+| 5 | `StatsRow` | `src/components/homepage/StatsRow.tsx` | 4-column responsive animated stat blocks |
+| 6 | `QualCarousel` | `src/components/homepage/QualCarousel.tsx` | Non-interactive auto-advancing qualification board carousel (4.5s interval) |
+| 7 | `RoleLadder` | `src/components/homepage/RoleLadder.tsx` | Role hierarchy with baseline-aligned rungs + approval-flow indicators |
+| 8 | `AntTrailPattern` | `src/components/homepage/AntTrailPattern.tsx` | Brand-specific SVG ant-trail geometric mesh background pattern |
+| 9 | `DotGrid` | `src/components/homepage/DotGrid.tsx` | Decorative polka-dot overlay texture |
+| 10 | `Footer` | `src/components/layout/Footer.tsx` | 4-column responsive footer with social links |
+
+### 33.4 Section Architecture
+
+The homepage is composed of 7 sequentially rendered sections within `page.tsx`:
+
+| Order | Section | Background | Pattern | Key Components |
+|---|---|---|---|---|
+| 1 | Hero | `--hp-bg` | AntTrailPattern (`mixed`, 0.11) | HeroVisual, SectionHead, CTA buttons, "Learn more" link |
+| 2 | Explore | `--hp-bg-soft` | AntTrailPattern (`brand`, 0.14) | Club/Profile cards, SectionHead |
+| 3 | Stats | `--hp-bg` | AntTrailPattern (`brand`, 0.09) | StatsRow (AnimatedStat × 4) |
+| 4 | Features | `--hp-bg` | AntTrailPattern (`mixed`, 0.13) + DotGrid | BentoFeatures (8 bento cards) |
+| 5 | Qualifications | `--hp-bg-soft` | AntTrailPattern (`brand`, 0.14) + DotGrid | QualCarousel |
+| 6 | Roles | `--hp-bg` | AntTrailPattern (`violet`, 0.10) + DotGrid | RoleLadder |
+| 7 | CTA | `--hp-bg` | AntTrailPattern (`mixed`, 0.09) | Call-to-action section, Footer |
+
+### 33.5 Ant-Trail Background Pattern
+
+The `AntTrailPattern` component renders a repeating geometric mesh of nodes and connecting lines inspired by ant colony trail networks. It sits at the lowest visual layer in every section.
+
+**Technical implementation:**
+- SVG tile (120×120px) encoded as URL-encoded data URI in `background-image`
+- 8 nodes (2px radius, opacity 0.22) + 9 trail lines (0.8px stroke, opacity 0.12) per tile
+- Responsive tile scaling: 120px (desktop) → 100px (tablet) → 80px (mobile)
+- `currentColor` driven by CSS `color` property — no new CSS tokens required
+- Edge-fade via CSS `mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent)`
+- Bundle size: ~1.6KB gzipped (SVG + component + CSS)
+- Hidden in `prefers-reduced-data` mode
+
+**Visibility calibration (v1.1):**
+- Low: 0.09–0.11 (Stats, CTA)
+- Medium: 0.13–0.14 (Explore, Features, Qualifications)
+- All content sits on solid `--hp-surface` backgrounds above the pattern — zero readability impact
+
+### 33.6 Animation System
+
+All homepage animations use Apple-like cubic-bezier easing curves defined as CSS custom properties:
+
+| Token | Curve | Use Case |
+|---|---|---|
+| `--hp-ease-out` | `cubic-bezier(0, 0, 0.2, 1)` | Entrance animations |
+| `--hp-ease-in` | `cubic-bezier(0.4, 0, 1, 1)` | Exit animations |
+
+**Keyframe inventory:**
+- `hp-float-grad` — 3s float + 4s gradient shimmer on key phrases
+- `carouselSlideIn` — Fade + translateY(12px) + scale(0.98) for QualCarousel slides (4.5s interval)
+- `hp-reveal` / `hp-reveal-card` — Scroll-triggered blur-to-clear + scale entrance via IntersectionObserver
+
+All animations respect `prefers-reduced-motion: reduce`.
+
+### 33.7 Recent Changes (2026-07-07)
+
+| Change | Scope | Impact |
+|---|---|---|
+| Ant-Trail Pattern v1.1 | All 7 sections | Node size +33%, trail stroke +60%, effective visibility 3.4–3.7× higher |
+| Footer extraction | `page.tsx` → `Footer.tsx` | Dedicated 4-column responsive footer component, GitHub link added |
+| QualCarousel redesign | `QualCarousel.tsx` | Interactive (chevrons + dots) → non-interactive auto-advancing (4.5s) |
+| RoleLadder redesign | `RoleLadder.tsx` | Staircase offsets → same baseline; added approval-flow arrows + lock icons |
+| CTA button redesign | Hero section | "Sign In" converted from pill button to text link; reduced visual noise |
+| Explore cards rename | Explore section | "Explore Clubs" → "Clubs", "Explore Profiles" → "Profiles" |
+| Text removals | 5 locations | Removed verbose description blocks; SectionHead subtext made optional |
+| "Learn more" link | Hero section | Redesigned twice: prominent pill → clean text link with arrow |

@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — NoteSubmitModal
+// The ANTs — NoteSubmitModal
 // Confirmation modal for submitting a note to the review queue.
 // ──────────────────────────────────────────────────────────────────────────────
 

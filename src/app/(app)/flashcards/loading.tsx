@@ -1,5 +1,5 @@
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Flashcard Deck Detail Loading Skeleton
+// The ANTs — Flashcard Deck Detail Loading Skeleton
 // ──────────────────────────────────────────────────────────────────────────────
 
 export default function FlashcardLoading() {

@@ -191,7 +191,7 @@ function BentoCard({ feature, index }: { feature: Feature; index: number }) {
       className={big ? 'big-card' : ''}
     >
       <div
-        className="bento-card"
+        className="bento-card hp-card-elevated"
         style={{
           background: 'var(--hp-surface)',
           border: '1px solid var(--hp-border)',
@@ -209,6 +209,7 @@ function BentoCard({ feature, index }: { feature: Feature; index: number }) {
         {/* Top row: icon + optional preview widget */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
           <div
+            className="hp-icon-elevated"
             style={{
               width: 44,
               height: 44,
@@ -287,11 +288,6 @@ export default function BentoFeatures() {
         .bento-features-grid .bento-card:hover {
           border-color: var(--hp-border-strong) !important;
           transform: translateY(-4px);
-          box-shadow: 0 20px 40px -12px rgba(60, 219, 167, 0.18);
-        }
-
-        [data-theme="light"] .bento-features-grid .bento-card:hover {
-          box-shadow: 0 20px 40px -12px rgba(5, 150, 105, 0.15);
         }
 
         @media (max-width: 960px) {
