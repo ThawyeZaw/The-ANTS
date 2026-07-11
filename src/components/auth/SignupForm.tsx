@@ -105,6 +105,11 @@ export default function SignupForm() {
     setIsResending(true);
     setResendMessage('');
     const supabase = createClient();
+    if (!supabase) {
+      setIsResending(false);
+      setResendMessage('Authentication service is not available. Please try again later.');
+      return;
+    }
     const { error } = await supabase.auth.resend({
       type: 'signup',
       email,

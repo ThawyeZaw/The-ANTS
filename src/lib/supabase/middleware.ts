@@ -44,13 +44,8 @@ export async function updateSession(request: NextRequest) {
     // Root path is also public
     const isRootPath = request.nextUrl.pathname === '/'
 
-    if (!user && !isPublicPath && !isRootPath) {
-      const url = request.nextUrl.clone()
-      const originalPath = request.nextUrl.pathname + request.nextUrl.search
-      url.pathname = '/login'
-      url.searchParams.set('next', originalPath)
-      return NextResponse.redirect(url)
-    }
+    // Auth gating is handled client-side in (app)/layout.tsx with loading states.
+    // We skip server-side redirect here to avoid ERR_ABORTED on RSC streams.
 
     return supabaseResponse
   } catch (e) {

@@ -774,13 +774,13 @@ export default function HomePage() {
           <ellipse cx="14" cy="8" rx="3.2" ry="2.3" fill="currentColor" opacity="0.7" />
           <ellipse cx="18" cy="9" rx="1.5" ry="1.3" fill="currentColor" opacity="0.5" />
         </svg>
-          <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
-            <SectionHead
-              eyebrow="F E A T U R E S"
-              heading="Everything you need to ace your exams"
-              gradPhrase="ace your exams"
-            />
-            <BentoFeatures />
+        <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
+          <SectionHead
+            eyebrow="F E A T U R E S"
+            heading="Everything you need to ace your exams"
+            gradPhrase="ace your exams"
+          />
+          <BentoFeatures />
         </div>
       </section>
 
@@ -795,28 +795,28 @@ export default function HomePage() {
         }}
       >
         <AntTrailPattern variant="brand" opacity={0.06} />
-          <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
-            <SectionHead
-              eyebrow="Q U A L I F I C A T I O N S"
-              heading="Wired into your exam board"
-              gradPhrase="exam board"
-            />
-            {/* Interactive carousel replaces the static QualTrail on desktop */}
-            <div className="hp-quals-carousel">
-              <QualCarousel />
-            </div>
-            {/* Keep QualTrail as a static fallback on mobile (hidden when carousel shows) */}
-            <div className="hp-quals-trail-fallback">
-              <QualTrail />
-            </div>
-            <style>{`
-              @media (min-width: 641px) {
-                .hp-quals-trail-fallback { display: none !important; }
-              }
-              @media (max-width: 640px) {
-                .hp-quals-carousel { display: none !important; }
-              }
-            `}</style>
+        <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
+          <SectionHead
+            eyebrow="Q U A L I F I C A T I O N S"
+            heading="Wired into your exam board"
+            gradPhrase="exam board"
+          />
+          {/* Interactive carousel replaces the static QualTrail on desktop */}
+          <div className="hp-quals-carousel">
+            <QualCarousel />
+          </div>
+          {/* Keep QualTrail as a static fallback on mobile (hidden when carousel shows) */}
+          <div className="hp-quals-trail-fallback">
+            <QualTrail />
+          </div>
+          <style>{`
+            @media (min-width: 641px) {
+              .hp-quals-trail-fallback { display: none !important; }
+            }
+            @media (max-width: 640px) {
+              .hp-quals-carousel { display: none !important; }
+            }
+          `}</style>
         </div>
       </section>
 
@@ -827,13 +827,13 @@ export default function HomePage() {
         style={{ padding: '130px 28px', position: 'relative' }}
       >
         <AntTrailPattern variant="violet" opacity={0.05} />
-          <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
-            <SectionHead
-              eyebrow="F O R   E V E R Y O N E"
-              heading="Choose your role"
-              gradPhrase="role"
-            />
-            <RoleLadder />
+        <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
+          <SectionHead
+            eyebrow="F O R   E V E R Y O N E"
+            heading="Choose your role"
+            gradPhrase="role"
+          />
+          <RoleLadder />
         </div>
       </section>
 

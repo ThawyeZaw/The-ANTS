@@ -4,25 +4,13 @@
    The ANTs — Design System
    ────────────────────────────────────────────────────────────────────────────── */
 
-/* ── Queensides Brand Font (fikryalstudio) ──────────────────────────────────── */
-@font-face {
-  font-family: "Queensides";
-  src: url("/fonts/Queensides.ttf") format("truetype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Queensides";
-  src: url("/fonts/Queensides.otf") format("opentype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
+/* ── Queensides Brand Font (fikryalstudio) ────────────────────────────────────
+ * Font files are not bundled; falls through to Quicksand.
+ * ──────────────────────────────────────────────────────────────────────────── */
 
 .font-brand {
-  font-family: "Queensides", var(--font-quicksand), sans-serif;
-  font-weight: 400;
+  font-family: var(--font-quicksand), sans-serif;
+  font-weight: 500;
   letter-spacing: 0.02em;
 }
 
