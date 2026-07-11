@@ -1509,3 +1509,453 @@ a {
     0 0 2px rgba(208, 105, 43, 0.25),
     0 0 6px rgba(208, 105, 43, 0.10);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Dashboard — Three-Column Layout & Carousel System
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Carousel Hero Banner ────────────────────────────────────────────────── */
+.dash-carousel {
+  position: relative;
+  overflow: hidden;
+  border-radius: 2rem;
+}
+
+.dash-carousel-track {
+  display: flex;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+.dash-carousel-slide {
+  min-width: 100%;
+  flex-shrink: 0;
+}
+
+/* ── Carousel Arrow Buttons ──────────────────────────────────────────────── */
+.dash-carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.dash-carousel-arrow:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.15);
+}
+
+.dash-carousel-arrow--left {
+  left: 16px;
+}
+
+.dash-carousel-arrow--right {
+  right: 16px;
+}
+
+/* ── Carousel Pagination Dots ────────────────────────────────────────────── */
+.dash-carousel-dots {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+.dash-carousel-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+}
+
+.dash-carousel-dot--active {
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+  transform: scale(1.2);
+}
+
+/* ── Pill-Shaped Stat Row ────────────────────────────────────────────────── */
+.dash-stat-pill {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  border-radius: 100px;
+  background: var(--background-card);
+  border: 1px solid var(--border);
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+
+.dash-stat-pill:hover {
+  border-color: var(--border-hover);
+  transform: translateX(4px);
+  box-shadow: var(--shadow-md);
+}
+
+.dash-stat-pill__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dash-stat-pill__value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--foreground);
+  line-height: 1;
+}
+
+.dash-stat-pill__label {
+  font-size: 0.8rem;
+  color: var(--foreground-muted);
+  margin-top: 2px;
+}
+
+/* ── Horizontal Info Card (for right column) ─────────────────────────────── */
+.dash-info-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px;
+  border-radius: 1.5rem;
+  background: var(--background-card);
+  border: 1px solid var(--border);
+  transition: all 0.25s ease;
+}
+
+.dash-info-card:hover {
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.dash-info-card__avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.dash-info-card__body {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── Deck Visual Preview Card ────────────────────────────────────────────── */
+.dash-deck-card {
+  position: relative;
+  border-radius: 1.5rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--background-card);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.dash-deck-card:hover {
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-3px);
+}
+
+.dash-deck-card__preview {
+  aspect-ratio: 4/3;
+  position: relative;
+  overflow: hidden;
+}
+
+.dash-deck-card__gradient {
+  position: absolute;
+  inset: 0;
+  opacity: 0.85;
+}
+
+.dash-deck-card__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dash-deck-card__info {
+  padding: 16px;
+}
+
+/* ── Full-width Pill Button ──────────────────────────────────────────────── */
+.dash-pill-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px 24px;
+  border-radius: 100px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: 1px solid var(--border);
+  background: var(--background-card);
+  color: var(--foreground);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.dash-pill-btn:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+  box-shadow: var(--shadow-glow);
+}
+
+.dash-pill-btn--primary {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--primary);
+}
+
+.dash-pill-btn--primary:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+  color: var(--primary-foreground);
+}
+
+/* ── Three-Column Section Headers ────────────────────────────────────────── */
+.dash-col-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.dash-col-header__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--foreground);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dash-col-header__link {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--primary);
+  transition: color 0.2s;
+}
+
+.dash-col-header__link:hover {
+  color: var(--primary-hover);
+}
+
+/* ── Carousel Responsive ─────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .dash-carousel-arrow {
+    width: 36px;
+    height: 36px;
+  }
+  .dash-carousel-arrow--left {
+    left: 8px;
+  }
+  .dash-carousel-arrow--right {
+    right: 8px;
+  }
+  .dash-carousel-dot {
+    width: 8px;
+    height: 8px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Timeline — 3D Isometric Stacking Ripple Effect
+   Layered span cards that fan out on hover with perspective depth.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Container: holds the 3D perspective stack ──────────────────────────── */
+.tl-card-3d {
+  position: relative;
+  width: 100%;
+  perspective: 800px;
+}
+
+.tl-card-3d__stack {
+  position: relative;
+  width: 100%;
+  transform: rotate(-2deg) skewX(-2deg);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.tl-card-3d__stack:hover {
+  transform: rotate(0deg) skewX(0deg) translateY(-6px);
+}
+
+/* ── Card face — the content-bearing front layer ────────────────────────── */
+.tl-card-3d__face {
+  position: relative;
+  z-index: 5;
+  background: var(--background-card);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 20px;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.4s ease,
+              border-color 0.3s ease;
+}
+
+.tl-card-3d__stack:hover .tl-card-3d__face {
+  border-color: var(--primary);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ── Shadow layers — 4 depth planes behind the card ─────────────────────── */
+.tl-card-3d__shadow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 1rem;
+  pointer-events: none;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+              opacity 0.5s ease;
+  z-index: 1;
+}
+
+/* Dark blue / cyan tinted shadow planes */
+.tl-card-3d__shadow--1 { background: var(--primary);              opacity: 0; }
+.tl-card-3d__shadow--2 { background: var(--primary);              opacity: 0; }
+.tl-card-3d__shadow--3 { background: var(--accent);               opacity: 0; }
+.tl-card-3d__shadow--4 { background: var(--primary);              opacity: 0; }
+
+/* Hover: fan out the shadow layers step-wise */
+.tl-card-3d__stack:hover .tl-card-3d__shadow--1 {
+  transform: translate(12px, -12px);
+  opacity: 0.22;
+}
+.tl-card-3d__stack:hover .tl-card-3d__shadow--2 {
+  transform: translate(24px, -24px);
+  opacity: 0.16;
+}
+.tl-card-3d__stack:hover .tl-card-3d__shadow--3 {
+  transform: translate(36px, -36px);
+  opacity: 0.10;
+}
+.tl-card-3d__stack:hover .tl-card-3d__shadow--4 {
+  transform: translate(48px, -48px);
+  opacity: 0.05;
+}
+
+/* ── Corner accent lines on the face card ───────────────────────────────── */
+.tl-card-3d__corner {
+  position: absolute;
+  pointer-events: none;
+  z-index: 6;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.tl-card-3d__corner--tl {
+  top: -1px;
+  left: -1px;
+  width: 32px;
+  height: 32px;
+  border-top: 2px solid var(--primary);
+  border-left: 2px solid var(--primary);
+  border-radius: 1rem 0 0 0;
+}
+
+.tl-card-3d__corner--br {
+  bottom: -1px;
+  right: -1px;
+  width: 32px;
+  height: 32px;
+  border-bottom: 2px solid var(--accent);
+  border-right: 2px solid var(--accent);
+  border-radius: 0 0 1rem 0;
+}
+
+.tl-card-3d__stack:hover .tl-card-3d__corner {
+  opacity: 0.5;
+}
+
+/* ── Connector dot: left-side dot that glows on hover ──────────────────── */
+.tl-card-3d__dot {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--primary);
+  border: 2px solid var(--background);
+  z-index: 10;
+  transition: box-shadow 0.4s ease, transform 0.4s ease;
+}
+
+.tl-card-3d__stack:hover .tl-card-3d__dot {
+  box-shadow: 0 0 12px var(--primary), 0 0 24px rgba(91, 158, 255, 0.3);
+  transform: translate(-50%, -50%) scale(1.3);
+}
+
+/* ── Responsive: reduce effect intensity on small screens ───────────────── */
+@media (max-width: 640px) {
+  .tl-card-3d__stack {
+    transform: rotate(-1deg) skewX(-1deg);
+  }
+
+  .tl-card-3d__stack:hover .tl-card-3d__shadow--1 {
+    transform: translate(8px, -8px);
+  }
+  .tl-card-3d__stack:hover .tl-card-3d__shadow--2 {
+    transform: translate(14px, -14px);
+  }
+  .tl-card-3d__stack:hover .tl-card-3d__shadow--3 {
+    transform: translate(20px, -20px);
+  }
+  .tl-card-3d__stack:hover .tl-card-3d__shadow--4 {
+    transform: translate(26px, -26px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tl-card-3d__stack,
+  .tl-card-3d__stack:hover,
+  .tl-card-3d__face,
+  .tl-card-3d__shadow,
+  .tl-card-3d__dot,
+  .tl-card-3d__corner {
+    transform: none !important;
+    transition: none !important;
+  }
+}

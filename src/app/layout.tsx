@@ -5,10 +5,6 @@ import "./katex-local.css";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { AuthProvider } from "@/context/AuthContext";
 
-// Startup env validation — runs once per cold start, never logs secret values
-import { validateEnv } from "@/lib/validateEnv";
-validateEnv();
-
 
 const quicksand = Quicksand({
   variable: "--font-quicksand",

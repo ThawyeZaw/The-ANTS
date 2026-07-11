@@ -333,7 +333,7 @@ function NavDropdown({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-72 glass rounded-xl p-2 animate-slide-down z-50 shadow-xl">
+        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-72 bg-background-card border border-border rounded-xl p-2 animate-slide-down z-50 shadow-xl">
           {/* Group label header */}
           <div className="px-3 py-1.5 mb-1 border-b border-border/50">
             <p className="text-[10px] font-bold uppercase tracking-widest text-foreground-muted">
@@ -474,11 +474,11 @@ export default function NavBar() {
     <header className={cn('sticky top-0 z-50 w-full transition-transform duration-300', isNavHidden && '-translate-y-full')}>
       {/* Floating NavBar Container */}
       <div className="mx-auto max-w-7xl px-4 pt-3">
-        <nav className="glass rounded-2xl px-4 py-2 flex items-center justify-between animate-glow">
+        <nav className="glass rounded-2xl px-4 py-2 grid grid-cols-[1fr_auto_1fr] items-center">
           {/* ─── Logo + Dashboard ─── */}
           <Link
             href={role ? '/dashboard' : '/'}
-            className="flex items-center gap-2 shrink-0 group"
+            className="flex items-center gap-2 shrink-0 group justify-self-start"
           >
             <span className="text-xl group-hover:scale-110 transition-transform duration-200">{'🐜'}</span>
             <span className="font-bold text-lg bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent font-brand">
@@ -486,8 +486,8 @@ export default function NavBar() {
             </span>
           </Link>
 
-          {/* ─── Desktop Nav Groups ─── */}
-          <div className="hidden md:flex items-center gap-0.5">
+          {/* ─── Desktop Nav Groups (Centered) ─── */}
+          <div className="hidden md:flex items-center gap-0.5 justify-self-center">
             {visibleGroups.map((group) => (
               <NavDropdown
                 key={group.label}
@@ -504,7 +504,7 @@ export default function NavBar() {
           </div>
 
           {/* ─── Right Section ─── */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 justify-self-end">
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
@@ -545,7 +545,7 @@ export default function NavBar() {
                 </button>
 
                 {isUserMenuOpen && (
-                  <div className="absolute top-full right-0 mt-2 w-64 glass rounded-xl p-3 animate-slide-down z-50 shadow-xl">
+                  <div className="absolute top-full right-0 mt-2 w-64 bg-background-card border border-border rounded-xl p-3 animate-slide-down z-50 shadow-xl">
                     <div className="pb-3 mb-3 border-b border-border">
                       <p className="font-semibold text-sm text-foreground">{user.profile.name}</p>
                       <p className="text-xs text-foreground-muted mt-0.5">{user.email}</p>
@@ -604,7 +604,7 @@ export default function NavBar() {
 
         {/* ─── Mobile Menu ─── */}
         {isMobileOpen && (
-          <div className="md:hidden mt-2 glass rounded-2xl p-4 animate-slide-down max-h-[calc(100vh-6rem)] overflow-y-auto shadow-xl">
+          <div className="md:hidden mt-2 bg-background-card border border-border rounded-2xl p-4 animate-slide-down max-h-[calc(100vh-6rem)] overflow-y-auto shadow-xl">
             {visibleGroups.map((group) => (
               <div key={group.label} className="mb-5 last:mb-0">
                 <div className="flex items-center gap-2 mb-2 px-2">

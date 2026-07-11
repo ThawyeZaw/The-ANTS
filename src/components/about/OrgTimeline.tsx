@@ -28,39 +28,58 @@ export default function OrgTimeline({ items }: { items: OrgTimelineItem[] }) {
               }`}
             >
               {/* Dot on the line */}
-              <div className="absolute left-4 md:left-1/2 top-0 w-3 h-3 rounded-full bg-primary border-2 border-background transform -translate-x-1/2 z-10" />
+              <div className="absolute left-4 md:left-1/2 top-6 w-3 h-3 rounded-full bg-primary border-2 border-background transform -translate-x-1/2 z-10" />
 
               {/* Spacer for dot alignment on md+ */}
               <div className="hidden md:block md:w-1/2" />
 
-              {/* Content card */}
+              {/* Content card with 3D stacking ripple */}
               <div
                 className={`ml-10 md:ml-0 md:w-1/2 ${
-                  isLeft ? 'md:pr-10 md:text-right' : 'md:pl-10 md:text-left'
+                  isLeft ? 'md:pr-10' : 'md:pl-10'
                 }`}
               >
-                <div className="bg-background-card border border-border rounded-xl p-5 hover:border-primary/20 transition-colors">
-                  <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-primary/15 text-primary mb-2">
-                    {item.date}
-                  </span>
-                  <h3 className="text-base font-bold text-foreground mb-1.5">
-                    {item.title}
-                  </h3>
-                  <p className="text-sm text-foreground-secondary leading-relaxed">
-                    {item.description}
-                  </p>
-                  {item.imageUrls && item.imageUrls.length > 0 && (
-                    <div className="mt-3 space-y-2">
-                      {item.imageUrls.map((url, i) => (
-                        <img
-                          key={i}
-                          src={url}
-                          alt={`${item.title} - photo ${i + 1}`}
-                          className="rounded-lg w-full max-h-48 object-cover"
-                        />
-                      ))}
+                <div className="tl-card-3d">
+                  <div className="tl-card-3d__stack">
+                    {/* Shadow depth layers */}
+                    <div className="tl-card-3d__shadow tl-card-3d__shadow--4" />
+                    <div className="tl-card-3d__shadow tl-card-3d__shadow--3" />
+                    <div className="tl-card-3d__shadow tl-card-3d__shadow--2" />
+                    <div className="tl-card-3d__shadow tl-card-3d__shadow--1" />
+
+                    {/* Front face card */}
+                    <div className="tl-card-3d__face">
+                      {/* Corner accent brackets */}
+                      <div className="tl-card-3d__corner tl-card-3d__corner--tl" />
+                      <div className="tl-card-3d__corner tl-card-3d__corner--br" />
+
+                      {/* Content */}
+                      <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-primary/15 text-primary mb-2">
+                        {item.date}
+                      </span>
+                      <h3 className="text-base font-bold text-foreground mb-1.5">
+                        {item.title}
+                      </h3>
+                      <p className="text-sm text-foreground-secondary leading-relaxed">
+                        {item.description}
+                      </p>
+                      {item.imageUrls && item.imageUrls.length > 0 && (
+                        <div className="mt-3 space-y-2">
+                          {item.imageUrls.map((url, i) => (
+                            <img
+                              key={i}
+                              src={url}
+                              alt={`${item.title} - photo ${i + 1}`}
+                              className="rounded-lg w-full max-h-48 object-cover"
+                            />
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  )}
+
+                    {/* Connector dot */}
+                    <div className="tl-card-3d__dot" />
+                  </div>
                 </div>
               </div>
             </div>

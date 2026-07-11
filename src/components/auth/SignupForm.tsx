@@ -22,7 +22,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { isValidEmail, checkPasswordStrength, cn, humanizeAuthError } from '@/lib/utils';
+import { isValidEmail, checkPasswordStrength, cn } from '@/lib/utils';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { createClient } from '@/lib/supabase/client';
@@ -91,7 +91,7 @@ export default function SignupForm() {
     const result = await signup(email, password, name.trim(), 'student');
 
     if (!result.success) {
-      setErrors({ form: humanizeAuthError(result.error) });
+      setErrors({ form: result.error || 'An unexpected error occurred.' });
       setIsLoading(false);
       return;
     }

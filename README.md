@@ -122,6 +122,13 @@ Classrooms are virtual learning spaces with full CRUD for educational content. *
 - **Explore Profiles** (`/explore/profiles`): Discover community members with role-based filters and portfolio previews.
 - **Homepage explore cards** (`/`): Quick-access cards labeled "Clubs" and "Profiles" for direct navigation.
 
+### 📊 Role-Aware Dashboards
+- **Unified dashboard router** (`/dashboard`): Automatically redirects users to their role-specific dashboard based on `useRole()`.
+- **Contributor Dashboard** — Three-column layout with carousel hero banner, visual deck preview cards with category-coloured gradients, pill-shaped stat overview rows (Published, Pending Review, Clubs Led, Profile Views), and stacked creator profile + submission cards.
+- **Carousel Hero Banner** — Multi-slide welcome banner with left/right navigation arrows, bottom pagination dots, ambient blurred orbs, and animated glowing node grid — all built on the cyan-to-purple gradient theme.
+- **Centered NavBar** — Logo left, primary navigation links center, user profile dropdown right — using CSS Grid `grid-cols-[1fr_auto_1fr]`.
+- **Solid Dropdown Menus** — All nav dropdowns, user menus, and mobile menus use opaque `bg-background-card` backgrounds for clear readability (no glassmorphism bleed-through).
+
 ### ⏳ Exam Countdown
 - Set countdowns for every upcoming exam.
 - Visual urgency indicators across multiple subjects.
@@ -138,6 +145,7 @@ Classrooms are virtual learning spaces with full CRUD for educational content. *
 - **Floating gradient text** — Key phrases like "global education" gently levitate with a slow 3-second float while the gradient shimmer shifts across 4 seconds.
 - **Theme-synced glow effects** — The nav bar, bento cards, and hover states glow with the brand colour (emerald in dark mode, forest green in light mode), all driven by the same unified cubic-bezier curve.
 - **Brand-distinctive background pattern** — A repeating ant-trail geometric mesh pattern renders across all 7 homepage sections, reinforcing the "colony network" brand metaphor.
+- **3D Isometric Timeline Cards** — "Our Journey" timeline cards feature a spring-animated stacking ripple effect: 4 shadow planes fan out diagonally on hover with corner accent brackets and a glowing connector dot — all using theme-aware primary/accent colours.
 - **Reduced motion respected** — All animations respect `prefers-reduced-motion` — users who prefer less motion see a clean static layout.
 
 ### 🔄 Role System
@@ -173,56 +181,20 @@ Classrooms are virtual learning spaces with full CRUD for educational content. *
 
 ---
 
-## Environment Setup & Security
+## Getting Started
 
-### 🔐 `.env.local` — Never Commit to Version Control
+```bash
+# Install dependencies
+npm install
 
-The project relies on a `.env.local` file in the project root for all credentials. This file is listed in `.gitignore` (via the `.env*` pattern) and must **never** be committed to any Git repository.
+# Create .env.local with your Supabase credentials (URL + anon key)
+# Never commit this file — it's .gitignore'd
 
-### Quick Start (New Team Members)
+# Start dev server
+npm run dev
+```
 
-1. Copy the template:
-   ```bash
-   cp .env.local.example .env.local
-   ```
-
-2. Fill in your actual Supabase credentials from the [Supabase Dashboard](https://supabase.com/dashboard) → Project Settings → API:
-   - `NEXT_PUBLIC_SUPABASE_URL` — Your project URL
-   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` — Your anon/public key
-   - `SUPABASE_SERVICE_ROLE_KEY` — Your `service_role` secret (server-only)
-
-3. Set restrictive file permissions:
-   ```bash
-   # Unix / macOS
-   chmod 600 .env.local
-
-   # Windows (PowerShell as admin)
-   icacls .env.local /inheritance:r /grant:r "%USERNAME%:(R,W)"
-   ```
-
-### Client-Side Protection
-
-- Only environment variables prefixed with `NEXT_PUBLIC_` are accessible in browser code (Next.js standard).
-- A **build-time leak check** (`scripts/check-client-env.js`) scans `.next` build output for any sensitive values in client bundles.
-- A **startup validation** (`src/lib/validateEnv.ts`) runs at app startup to verify all required vars are present and no sensitive values leaked into public prefixes.
-- The existing **health check** (`src/lib/supabase/health.ts`) includes a service-role leak detector.
-
-### Required Variables
-
-| Variable | Required | Client-Exposed | Description |
-|---|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Yes | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Yes | Yes | Anon/publishable API key |
-| `SUPABASE_SERVICE_ROLE_KEY` | No (warn if missing) | **No** | Service role key for admin ops |
-| `DATABASE_URL` | No | **No** | Pooled Postgres connection (port 6543) |
-| `DIRECT_URL` | No | **No** | Direct Postgres connection (port 5432) |
-| `NEXT_PUBLIC_SITE_URL` | No | Yes | Canonical site URL for auth redirects |
-
-### Sharing Secrets Securely
-
-- Use your password manager (1Password, Bitwarden) or encrypted messaging (Signal) to share credential values.
-- Never post `.env.local` contents in Slack, Discord, WhatsApp, or email.
-- Rotate keys immediately if any credential is accidentally exposed.
+Visit `http://localhost:3000`. The app runs against the mock database in dev mode — no Supabase connection needed to explore UI and features.
 
 ---
 
@@ -233,9 +205,10 @@ the-ants/
 ├── src/
 │   ├── app/                     # Next.js App Router pages
 │   ├── components/
-│   │   ├── homepage/            # Public landing page components (RevealSection, BentoFeatures, HeroVisual, QualCarousel, RoleLadder, AntTrailPattern, StatsRow, DotGrid)
+│   │   ├── about/               # About page components (OrgTimeline)
+│   │   ├── homepage/            # Public landing page components (BentoFeatures, HeroVisual, QualCarousel, RoleLadder, AntTrailPattern, AntHeroAccent, StatsRow, DotGrid, QualTrail, RevealSection, HomepageFonts)
 │   │   ├── ui/                  # Shared atomic components (Button, Badge, BackButton, RelatedContent, etc.)
-│   │   ├── layout/              # NavBar, Footer
+│   │   ├── layout/              # NavBar, Footer, DashboardLayout
 │   │   ├── auth/                # LoginForm, SignupForm
 │   │   ├── classrooms/          # Classroom components (11 files)
 │   │   ├── clubs/               # Club components (ClubDetail, ClubDiscovery)
