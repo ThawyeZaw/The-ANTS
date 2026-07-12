@@ -1,5 +1,5 @@
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Classrooms Page Loading Skeleton
+// The ANTs — Classrooms Page Loading Skeleton
 // ──────────────────────────────────────────────────────────────────────────────
 
 export default function ClassroomsLoading() {

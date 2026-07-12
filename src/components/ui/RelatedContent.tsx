@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — RelatedContent
+// The ANTs — RelatedContent
 // Content-aware cross-feature linking: shows related flashcards and notes
 // based on curriculum, subject, and/or topic context.
 // ──────────────────────────────────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — App Route Group Error Boundary
+// The ANTs — App Route Group Error Boundary
 // Catches errors within authenticated pages and shows a branded fallback.
 // ──────────────────────────────────────────────────────────────────────────────
 

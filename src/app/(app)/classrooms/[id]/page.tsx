@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Classroom Detail Page
+// The ANTs — Classroom Detail Page
 // Shows a single classroom with tabs for assignments, quizzes, discussions, etc.
 // ──────────────────────────────────────────────────────────────────────────────
 

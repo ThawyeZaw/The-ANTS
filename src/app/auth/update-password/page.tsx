@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Update Password Page
+// The ANTs — Update Password Page
 // Landing page for Supabase password-reset email links.
 // The URL contains a code fragment that Supabase SSR resolves automatically.
 // ──────────────────────────────────────────────────────────────────────────────

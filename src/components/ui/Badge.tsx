@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Badge Component
+// The ANTs — Badge Component
 // Color-coded badge for roles, statuses, and labels.
 // ──────────────────────────────────────────────────────────────────────────────
 

@@ -1,107 +1,128 @@
 @import "tailwindcss";
 
 /* ──────────────────────────────────────────────────────────────────────────────
-   The ANTS — Design System
+   The ANTs — Design System
    ────────────────────────────────────────────────────────────────────────────── */
+
+/* ── Queensides Brand Font (fikryalstudio) ────────────────────────────────────
+ * Font files are not bundled; falls through to Quicksand.
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+.font-brand {
+  font-family: var(--font-quicksand), sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
 
 /* ── Light Theme (default) ────────────────────────────────────────────────── */
 :root {
   /* Backgrounds */
-  --background: #fafbfc;
-  --background-secondary: #f1f3f5;
-  --background-card: #ffffff;
-  --background-elevated: #ffffff;
+  --background: #FFFDF9;
+  --background-secondary: #F5F1EA;
+  --background-card: #FFFFFF;
+  --background-elevated: #FFFFFF;
 
-  /* Foregrounds */
-  --foreground: #0f172a;
-  --foreground-secondary: #475569;
-  --foreground-muted: #94a3b8;
+  /* Foregrounds — calibrated for WCAG 2.1 AA (≥4.5:1 body, ≥3:1 large) */
+  --foreground: #1A1C20;       /* ~15.9:1 on white  */
+  --foreground-secondary: #3A3D44; /* ~8.5:1 on white   */
+  --foreground-muted: #4B4E56;     /* ~7.0:1 on white — boosted from #5E6169 */
 
   /* Borders */
-  --border: #e2e8f0;
-  --border-hover: #cbd5e1;
+  --border: rgba(59, 108, 181, 0.12);
+  --border-hover: rgba(59, 108, 181, 0.22);
 
-  /* Primary — Indigo/Violet */
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
-  --primary-light: #e0e7ff;
-  --primary-foreground: #ffffff;
+  /* Primary — Refined Blue (≥4.5:1 on white for link text) */
+  --primary: #3361A0;           /* ~5.3:1 on white — boosted from #3B6CB5 */
+  --primary-hover: #264773;     /* ~8:1 on white */
+  --primary-light: rgba(51, 97, 160, 0.10);
+  --primary-foreground: #FFFFFF;
 
-  /* Accent — Emerald */
-  --accent: #10b981;
-  --accent-hover: #059669;
-  --accent-light: #d1fae5;
-  --accent-foreground: #ffffff;
+  /* Accent — Green (specialized: success, highlights) */
+  --accent: #28BF7F;
+  --accent-hover: #1FA06A;
+  --accent-light: rgba(40, 191, 127, 0.10);
+  --accent-foreground: #FFFFFF;
 
   /* Semantic */
-  --success: #22c55e;
-  --warning: #f59e0b;
-  --error: #ef4444;
-  --info: #3b82f6;
+  --success: #28BF7F;
+  --warning: #D0692B;
+  --error: #DC3545;
+  --info: #3B6CB5;
 
   /* Role Colors */
-  --role-student: #3b82f6;
-  --role-teacher: #10b981;
-  --role-contributor: #8b5cf6;
-  --role-main-contributor: #f59e0b;
+  --role-student: #3B6CB5;
+  --role-teacher: #28BF7F;
+  --role-contributor: #7847C7;
+  --role-main-contributor: #D0692B;
 
   /* Glassmorphism */
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.3);
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(59, 108, 181, 0.10);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
 
   /* NavBar */
   --nav-height: 4rem;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
-  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.15);
+  /* Shadow Elevation System */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.14);
+  --shadow-glow: 0 0 24px rgba(59, 108, 181, 0.16);
+
+  /* Interactive Hover Shadows */
+  --shadow-hover-sm: 0 4px 12px rgba(0, 0, 0, 0.10);
+  --shadow-hover-md: 0 8px 24px rgba(0, 0, 0, 0.14);
 }
 
 /* ── Dark Theme ───────────────────────────────────────────────────────────── */
 [data-theme="dark"] {
-  --background: #141923;
-  --background-secondary: #1c2333;
-  --background-card: #232d3f;
-  --background-elevated: #2a3450;
+  --background: #060B14;
+  --background-secondary: #090E1A;
+  --background-card: #0C1220;
+  --background-elevated: #111827;
 
-  --foreground: #f1f5f9;
-  --foreground-secondary: #94a3b8;
-  --foreground-muted: #718096;
+  --foreground: #E8EDF4;
+  --foreground-secondary: #B8C4D6;
+  --foreground-muted: #94A3B8;     /* ~7.5:1 on dark bg — lightened from #7D8BA3 */
 
-  --border: #2e3d55;
-  --border-hover: #3d5070;
+  --border: rgba(91, 158, 255, 0.10);
+  --border-hover: rgba(91, 158, 255, 0.20);
 
-  --primary: #818cf8;
-  --primary-hover: #6366f1;
-  --primary-light: rgba(99, 102, 241, 0.15);
-  --primary-foreground: #ffffff;
+  --primary: #5B9EFF;
+  --primary-hover: #3B7DD8;
+  --primary-light: rgba(91, 158, 255, 0.12);
+  --primary-foreground: #060B14;
 
-  --accent: #34d399;
-  --accent-hover: #10b981;
-  --accent-light: rgba(16, 185, 129, 0.15);
-  --accent-foreground: #ffffff;
+  --accent: #28FFBF;
+  --accent-hover: #06FF00;
+  --accent-light: rgba(40, 255, 191, 0.10);
+  --accent-foreground: #060B14;
 
-  --success: #4ade80;
-  --warning: #fbbf24;
-  --error: #f87171;
-  --info: #60a5fa;
+  --success: #28FFBF;
+  --warning: #FFB347;
+  --error: #F87171;
+  --info: #5B9EFF;
 
-  --role-student: #60a5fa;
-  --role-teacher: #34d399;
-  --role-contributor: #a78bfa;
-  --role-main-contributor: #fbbf24;
+  --role-student: #5B9EFF;
+  --role-teacher: #28FFBF;
+  --role-contributor: #B98FFF;
+  --role-main-contributor: #FFB347;
 
-  --glass-bg: rgba(15, 23, 42, 0.75);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --glass-bg: rgba(6, 11, 20, 0.80);
+  --glass-border: rgba(91, 158, 255, 0.08);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
-  --shadow-glow: 0 0 20px rgba(129, 140, 248, 0.2);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.20);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.30);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.40);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.50);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.60);
+  --shadow-glow: 0 0 24px rgba(91, 158, 255, 0.22);
+
+  --shadow-hover-sm: 0 4px 12px rgba(0, 0, 0, 0.40);
+  --shadow-hover-md: 0 8px 24px rgba(0, 0, 0, 0.50);
 }
 
 /* ── Tailwind v4 Theme Registration ───────────────────────────────────────── */
@@ -133,7 +154,16 @@
   --color-role-main-contributor: var(--role-main-contributor);
   --color-glass-bg: var(--glass-bg);
   --color-glass-border: var(--glass-border);
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  /* Shadow tokens */
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
+  --shadow-glow: var(--shadow-glow);
+  --shadow-hover-sm: var(--shadow-hover-sm);
+  --shadow-hover-md: var(--shadow-hover-md);
+  --font-sans: "Quicksand", var(--font-quicksand), sans-serif;
   --font-mono: var(--font-geist-mono);
 }
 
@@ -144,15 +174,42 @@
 
 html {
   scroll-behavior: smooth;
+  font-size: 110%; /* +10% base size for improved readability — scales via rem */
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0.012em;
   transition: background-color 0.3s ease, color 0.3s ease;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Quicksand subheading defaults ───────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+/* ── Strong emphasis for CTA and interactive text ────────────────────────── */
+.cta-text {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* ── Text on complex backgrounds: prevents visual blending ───────────────── */
+/*    Use on white/light text placed over gradients, patterns, or images.      */
+.text-on-dark {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.18), 0 0 1px rgba(0, 0, 0, 0.08);
+}
+.text-on-accent {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
 /* ── Scrollbar (dark theme friendly) ──────────────────────────────────────── */
@@ -241,11 +298,11 @@ body {
 
   0%,
   100% {
-    box-shadow: 0 0 20px rgba(99, 102, 241, 0.15);
+    box-shadow: 0 0 20px rgba(77, 166, 255, 0.15);
   }
 
   50% {
-    box-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
+    box-shadow: 0 0 30px rgba(77, 166, 255, 0.30);
   }
 }
 
@@ -366,8 +423,9 @@ a {
 }
 
 /* ──────────────────────────────────────────────────────────────────────────────
-   Homepage-scoped design tokens (.hp)
+   Homepage-scoped design tokens (.hp) — Neon Theme
    Applied only to app/page.tsx — does NOT affect the authenticated app.
+   Palette: neon cyan (#00FFFF) + hot pink (#FF69B4) + soft purple (#B366FF)
    Light and dark variants toggle via [data-theme] on <html>.
    ────────────────────────────────────────────────────────────────────────────── */
 .hp {
@@ -378,69 +436,180 @@ a {
 
   /* Fonts — loaded via HomepageFonts client component */
   --hp-font-display: 'Fraunces', Georgia, serif;
-  --hp-font-body: 'Inter', var(--font-inter), -apple-system, sans-serif;
+  --hp-font-body: 'Quicksand', var(--font-quicksand), sans-serif;
   --hp-font-mono: 'JetBrains Mono', 'Courier New', monospace;
 
   /* Layout */
   --hp-maxw: 1180px;
 
-  /* ── Dark theme (default — also used when data-theme is not yet set) ── */
-  --hp-bg: #080B11;
-  --hp-bg-soft: #0C1119;
-  --hp-surface: #121926;
-  --hp-surface-2: #161E2C;
-  --hp-border: rgba(148, 163, 184, 0.14);
-  --hp-border-strong: rgba(148, 163, 184, 0.26);
-  --hp-ink: #F3F6FB;
-  --hp-ink-muted: #9AA7BD;
-  --hp-ink-faint: #5C6880;
-  --hp-brand: #3CDBA7;
-  --hp-brand-deep: #1E9E78;
-  --hp-amber: #F2B84B;
-  --hp-amber-deep: #C98F2A;
-  --hp-violet: #8C7FF0;
+  /* Neon core palette (shared reference) */
+  --neon-cyan: #5B9EFF;
+  --neon-cyan-dim: #3B7DD8;
+  --neon-pink: #FF7EB3;
+  --neon-pink-dim: #E06095;
+  --neon-purple: #B98FFF;
+  --neon-blur-radius: 5px;
+  --neon-glow-cyan: 0 0 4px #5B9EFF, 0 0 8px rgba(91, 158, 255, 0.5), 0 0 14px rgba(91, 158, 255, 0.25);
+  --neon-glow-pink: 0 0 4px #FF7EB3, 0 0 8px rgba(255, 126, 179, 0.5), 0 0 14px rgba(255, 126, 179, 0.25);
+  --neon-glow-purple: 0 0 4px #B98FFF, 0 0 8px rgba(185, 143, 255, 0.4), 0 0 12px rgba(185, 143, 255, 0.20);
 
-  background: var(--hp-bg);
-  color: var(--hp-ink);
-}
-
-/* ── Light theme override (when data-theme is toggled to "light") ───────────── */
-[data-theme="light"] .hp {
-  --hp-bg: #F8FAFC;
-  --hp-bg-soft: #F1F5F9;
+  /* ── Light Mode (default) — Warm paper + refined tones ──────────────── */
+  --hp-bg: #FFFDF9;
+  --hp-bg-soft: #F5F1EA;
   --hp-surface: #FFFFFF;
-  --hp-surface-2: #F8FAFC;
-  --hp-border: rgba(15, 23, 42, 0.10);
-  --hp-border-strong: rgba(15, 23, 42, 0.18);
-  --hp-ink: #0F172A;
-  --hp-ink-muted: #475569;
-  --hp-ink-faint: #94A3B8;
-  --hp-brand: #059669;
-  --hp-brand-deep: #047857;
-  --hp-amber: #D97706;
-  --hp-amber-deep: #B45309;
-  --hp-violet: #7C3AED;
+  --hp-surface-2: #FAF8F4;
+  --hp-surface-hover: #F0ECE5;
+  --hp-border: rgba(59, 108, 181, 0.10);
+  --hp-border-strong: rgba(59, 108, 181, 0.18);
+  --hp-ink: #1A1C20;
+  --hp-ink-muted: #3D4048;
+  --hp-ink-faint: #54575E;
+  --hp-brand: #3B6CB5;
+  --hp-brand-deep: #2C5282;
+  --hp-brand-rgb: 59, 108, 181;
+  --hp-amber: #D0692B;
+  --hp-amber-deep: #A84E1F;
+  --hp-amber-rgb: 208, 105, 43;
+  --hp-violet: #7847C7;
+  --hp-violet-rgb: 120, 71, 199;
+  --hp-btn-text: #FFFFFF;
+  --hp-cta-text-muted: rgba(255, 255, 255, 0.88);
+
+  /* Grid line colours for light mode — boosted to match dark-mode visual weight */
+  --hp-grid-color: rgba(59, 108, 181, 0.12);
+  --hp-grid-color-strong: rgba(59, 108, 181, 0.20);
+  --hp-grid-color-card: rgba(59, 108, 181, 0.08);
+  --hp-grid-color-dense: rgba(59, 108, 181, 0.17);
+  --hp-grid-color-accent: rgba(59, 108, 181, 0.24);
+
+  /* ── Light-mode elevation shadows (prominent, clear layering) ───────── */
+  --hp-shadow-btn:
+    0 1px 3px rgba(0, 0, 0, 0.08),
+    0 4px 12px rgba(0, 0, 0, 0.10),
+    0 8px 24px rgba(0, 0, 0, 0.06);
+  --hp-shadow-btn-hover:
+    0 2px 6px rgba(0, 0, 0, 0.12),
+    0 8px 20px rgba(59, 108, 181, 0.18),
+    0 16px 36px rgba(0, 0, 0, 0.08);
+  --hp-shadow-card:
+    0 1px 3px rgba(0, 0, 0, 0.06),
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    0 10px 30px rgba(0, 0, 0, 0.04);
+  --hp-shadow-card-hover:
+    0 2px 6px rgba(0, 0, 0, 0.10),
+    0 8px 22px rgba(59, 108, 181, 0.12),
+    0 16px 36px rgba(0, 0, 0, 0.07);
+  --hp-shadow-icon:
+    0 1px 3px rgba(0, 0, 0, 0.06),
+    0 3px 8px rgba(0, 0, 0, 0.08);
 
   background: var(--hp-bg);
   color: var(--hp-ink);
 }
 
-/* ── Dark theme explicit override (higher specificity for toggled state) ────── */
+/* ── Light mode explicit (same as default) ──────────────────────────────── */
+[data-theme="light"] .hp {
+  --hp-bg: #FFFDF9;
+  --hp-bg-soft: #F5F1EA;
+  --hp-surface: #FFFFFF;
+  --hp-surface-2: #FAF8F4;
+  --hp-surface-hover: #F0ECE5;
+  --hp-border: rgba(59, 108, 181, 0.10);
+  --hp-border-strong: rgba(59, 108, 181, 0.18);
+  --hp-ink: #1A1C20;
+  --hp-ink-muted: #3D4048;
+  --hp-ink-faint: #54575E;
+  --hp-brand: #3B6CB5;
+  --hp-brand-deep: #2C5282;
+  --hp-brand-rgb: 59, 108, 181;
+  --hp-amber: #D0692B;
+  --hp-amber-deep: #A84E1F;
+  --hp-amber-rgb: 208, 105, 43;
+  --hp-violet: #7847C7;
+  --hp-violet-rgb: 120, 71, 199;
+  --hp-btn-text: #FFFFFF;
+  --hp-cta-text-muted: rgba(255, 255, 255, 0.88);
+
+  --hp-grid-color: rgba(59, 108, 181, 0.12);
+  --hp-grid-color-strong: rgba(59, 108, 181, 0.20);
+  --hp-grid-color-card: rgba(59, 108, 181, 0.08);
+  --hp-grid-color-dense: rgba(59, 108, 181, 0.17);
+  --hp-grid-color-accent: rgba(59, 108, 181, 0.24);
+
+  --hp-shadow-btn:
+    0 1px 3px rgba(0, 0, 0, 0.08),
+    0 4px 12px rgba(0, 0, 0, 0.10),
+    0 8px 24px rgba(0, 0, 0, 0.06);
+  --hp-shadow-btn-hover:
+    0 2px 6px rgba(0, 0, 0, 0.12),
+    0 8px 20px rgba(59, 108, 181, 0.18),
+    0 16px 36px rgba(0, 0, 0, 0.08);
+  --hp-shadow-card:
+    0 1px 3px rgba(0, 0, 0, 0.06),
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    0 10px 30px rgba(0, 0, 0, 0.04);
+  --hp-shadow-card-hover:
+    0 2px 6px rgba(0, 0, 0, 0.10),
+    0 8px 22px rgba(59, 108, 181, 0.12),
+    0 16px 36px rgba(0, 0, 0, 0.07);
+  --hp-shadow-icon:
+    0 1px 3px rgba(0, 0, 0, 0.06),
+    0 3px 8px rgba(0, 0, 0, 0.08);
+
+  background: var(--hp-bg);
+  color: var(--hp-ink);
+}
+
+/* ── Dark / Neon theme — Nighttime study optimized ───────────────────────── */
 [data-theme="dark"] .hp {
-  --hp-bg: #080B11;
-  --hp-bg-soft: #0C1119;
-  --hp-surface: #121926;
-  --hp-surface-2: #161E2C;
-  --hp-border: rgba(148, 163, 184, 0.14);
-  --hp-border-strong: rgba(148, 163, 184, 0.26);
-  --hp-ink: #F3F6FB;
-  --hp-ink-muted: #9AA7BD;
-  --hp-ink-faint: #5C6880;
-  --hp-brand: #3CDBA7;
-  --hp-brand-deep: #1E9E78;
-  --hp-amber: #F2B84B;
-  --hp-amber-deep: #C98F2A;
-  --hp-violet: #8C7FF0;
+  /* Deep indigo-black base (reduces eye strain vs pure #000) */
+  --hp-bg: #060B14;
+  --hp-bg-soft: #090E1A;
+  --hp-surface: #0C1220;
+  --hp-surface-2: #111827;
+  --hp-surface-hover: #161E30;
+  --hp-border: rgba(91, 158, 255, 0.08);
+  --hp-border-strong: rgba(91, 158, 255, 0.16);
+  --hp-ink: #E8EDF4;
+  --hp-ink-muted: #B0BFD4;
+  --hp-ink-faint: #7A8FA8;
+  /* Softer neon blue — calibrated for prolonged nighttime reading */
+  --hp-brand: #5B9EFF;
+  --hp-brand-deep: #3B7DD8;
+  --hp-brand-rgb: 91, 158, 255;
+  --hp-amber: #FF7EB3;
+  --hp-amber-deep: #E06095;
+  --hp-amber-rgb: 255, 126, 179;
+  --hp-violet: #B98FFF;
+  --hp-violet-rgb: 185, 143, 255;
+  --hp-btn-text: #060B14;
+  --hp-cta-text-muted: rgba(6, 11, 20, 0.78);
+
+  /* Grid line colours — clearly visible neon grid for nighttime study */
+  --hp-grid-color: rgba(91, 158, 255, 0.09);
+  --hp-grid-color-strong: rgba(91, 158, 255, 0.16);
+  --hp-grid-color-card: rgba(91, 158, 255, 0.06);
+  --hp-grid-color-dense: rgba(91, 158, 255, 0.13);
+  --hp-grid-color-accent: rgba(91, 158, 255, 0.20);
+
+  /* Dark-mode elevation shadows (deep, minimal glow) */
+  --hp-shadow-btn:
+    0 2px 8px rgba(0, 0, 0, 0.40),
+    0 4px 16px rgba(0, 0, 0, 0.30);
+  --hp-shadow-btn-hover:
+    0 4px 14px rgba(0, 0, 0, 0.50),
+    0 8px 24px rgba(91, 158, 255, 0.18),
+    0 16px 40px rgba(0, 0, 0, 0.35);
+  --hp-shadow-card:
+    0 2px 8px rgba(0, 0, 0, 0.35),
+    0 4px 16px rgba(0, 0, 0, 0.25);
+  --hp-shadow-card-hover:
+    0 4px 14px rgba(0, 0, 0, 0.45),
+    0 8px 24px rgba(91, 158, 255, 0.10),
+    0 16px 36px rgba(0, 0, 0, 0.30);
+  --hp-shadow-icon:
+    0 1px 4px rgba(0, 0, 0, 0.30),
+    0 2px 8px rgba(0, 0, 0, 0.20);
 
   background: var(--hp-bg);
   color: var(--hp-ink);
@@ -537,20 +706,26 @@ a {
   }
 }
 
-/* ── Homepage sticky nav (theme-aware background + glow) ──────────────────────── */
+/* ── Homepage sticky nav (grid-line glow) ────────────────────────────────── */
 .hp-nav {
-  background: rgba(18, 25, 38, 0.78);
-  box-shadow: 0 8px 32px rgba(60, 219, 167, 0.12), 0 0 0 1px rgba(60, 219, 167, 0.06);
+  background: rgba(255, 253, 249, 0.94);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(59, 108, 181, 0.10);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 [data-theme="light"] .hp-nav {
-  background: rgba(248, 250, 252, 0.85);
-  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.06), 0 0 0 1px rgba(5, 150, 105, 0.06);
+  background: rgba(255, 253, 249, 0.94);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(59, 108, 181, 0.10);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 [data-theme="dark"] .hp-nav {
-  background: rgba(18, 25, 38, 0.78);
-  box-shadow: 0 8px 32px rgba(60, 219, 167, 0.12), 0 0 0 1px rgba(60, 219, 167, 0.06);
+  background: rgba(6, 11, 20, 0.90);
+  box-shadow: 0 0 24px rgba(91, 158, 255, 0.12), 0 0 0 1px rgba(91, 158, 255, 0.20);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
 }
 
 /* ── Homepage spaced typography utility ──────────────────────────────────────── */
@@ -558,14 +733,62 @@ a {
   letter-spacing: 0.18em;
 }
 
-/* ── Homepage gradient text helper ──────────────────────────────────────────── */
+/* ── Homepage gradient text helper (neon cyan → pink → purple) ─────────── */
 .hp-grad {
-  background: linear-gradient(100deg, var(--hp-amber) 0%, var(--hp-brand) 65%);
+  background: linear-gradient(100deg, var(--hp-amber) 0%, var(--hp-brand) 40%, var(--hp-violet) 80%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
   background-size: 200% 200%;
-  animation: hp-float-grad 3s ease-in-out infinite, hp-shimmer-grad 4s ease-in-out infinite;
+  animation: hp-float-grad 3s ease-in-out infinite, hp-shimmer-grad 5s ease-in-out infinite;
+}
+
+[data-theme="dark"] .hp-grad {
+  filter: drop-shadow(0 0 5px rgba(91, 158, 255, 0.20));
+}
+
+/* ── Neon glow utility classes (dark mode only) ────────────────────────────── */
+[data-theme="dark"] .neon-cyan {
+  color: var(--hp-brand);
+  text-shadow: var(--neon-glow-cyan);
+}
+[data-theme="dark"] .neon-pink {
+  color: var(--hp-amber);
+  text-shadow: var(--neon-glow-pink);
+}
+[data-theme="dark"] .neon-purple {
+  color: var(--hp-violet);
+  text-shadow: var(--neon-glow-purple);
+}
+
+/* Light mode: neon text gets a dark outline for WCAG 2.1 AA (4.5:1) readability */
+[data-theme="light"] .neon-text-outline {
+  text-shadow:
+    -1px -1px 0 rgba(0, 0, 0, 0.75),
+     1px -1px 0 rgba(0, 0, 0, 0.75),
+    -1px  1px 0 rgba(0, 0, 0, 0.75),
+     1px  1px 0 rgba(0, 0, 0, 0.75),
+    0 0 4px currentColor;
+}
+
+/* Grid-line glow utilities — scoped to dark mode only */
+[data-theme="dark"] .neon-btn-glow {
+  box-shadow: var(--neon-glow-cyan);
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+[data-theme="dark"] .neon-btn-glow:hover {
+  box-shadow: 0 0 6px var(--hp-brand), 0 0 12px rgba(91, 158, 255, 0.35), 0 0 24px rgba(91, 158, 255, 0.18);
+  transform: translateY(-2px);
+}
+
+/* Grid-line card border glow — scoped to dark mode only */
+[data-theme="dark"] .neon-card {
+  border: 1px solid rgba(91, 158, 255, 0.08);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+[data-theme="dark"] .neon-card:hover {
+  border-color: rgba(91, 158, 255, 0.30);
+  box-shadow: 0 0 12px rgba(91, 158, 255, 0.08), 0 0 24px rgba(91, 158, 255, 0.04);
 }
 
 /* ── Gentle floating motion for gradient text ───────────────────────────────── */
@@ -587,7 +810,7 @@ a {
   font-size: 11px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--hp-amber);
+  color: var(--hp-brand);
   font-weight: 600;
   display: inline-flex;
   align-items: center;
@@ -598,7 +821,7 @@ a {
   content: "";
   width: 14px;
   height: 1px;
-  background: var(--hp-amber);
+  background: var(--hp-brand);
   display: inline-block;
   flex-shrink: 0;
 }
@@ -643,7 +866,7 @@ a {
 
 .hp-flip-back {
   background: var(--hp-brand);
-  color: #06110D;
+  color: #FFFFFF;
   transform: rotateY(180deg);
   font-weight: 600;
 }
@@ -690,33 +913,16 @@ a {
   }
 }
 
-/* ── Mobile carousel chevron sizing ──────────────────────────────────────────── */
-.hp-carousel-chevron-left {
-  left: -20px;
-}
-
-.hp-carousel-chevron-right {
-  right: -20px;
-}
-
-@media (max-width: 640px) {
-  .hp-carousel-chevron-left {
-    left: -12px !important;
-    width: 36px !important;
-    height: 36px !important;
-  }
-  .hp-carousel-chevron-right {
-    right: -12px !important;
-    width: 36px !important;
-    height: 36px !important;
-  }
-}
-
 /* ── Role ladder ─────────────────────────────────────────────────────────────── */
 .hp-ladder {
   display: flex;
-  align-items: flex-end;
+  align-items: stretch;
   gap: 0;
+}
+
+.hp-rung {
+  display: flex;
+  flex-direction: column;
 }
 
 @media (max-width: 900px) {
@@ -734,5 +940,1010 @@ a {
     height: 34px;
     transform: rotate(90deg);
     margin: 0 auto;
+  }
+}
+
+/* ── Ant-trail pattern — responsive tile scaling ───────────────────────────── */
+.hp-ant-pattern {
+  background-size: 120px 120px;
+}
+
+@media (max-width: 1023px) {
+  .hp-ant-pattern {
+    background-size: 100px 100px;
+  }
+}
+
+@media (max-width: 640px) {
+  .hp-ant-pattern {
+    background-size: 80px 80px;
+  }
+}
+
+@media (prefers-reduced-data: reduce) {
+  .hp-ant-pattern {
+    background-image: none !important;
+  }
+}
+
+/* ── Grid Line Background Patterns ──────────────────────────────────────────── */
+/* Grid colour adapts via --hp-grid-color set per theme */
+
+.hp-grid-bg {
+  background-image:
+    linear-gradient(var(--hp-grid-color, rgba(91, 158, 255, 0.09)) 1px, transparent 1px),
+    linear-gradient(90deg, var(--hp-grid-color, rgba(91, 158, 255, 0.09)) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.hp-grid-bg-strong {
+  background-image:
+    linear-gradient(var(--hp-grid-color-strong, rgba(91, 158, 255, 0.16)) 1px, transparent 1px),
+    linear-gradient(90deg, var(--hp-grid-color-strong, rgba(91, 158, 255, 0.16)) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Fine grid for card surfaces */
+.hp-grid-card {
+  background-image:
+    linear-gradient(var(--hp-grid-color-card, rgba(91, 158, 255, 0.06)) 1px, transparent 1px),
+    linear-gradient(90deg, var(--hp-grid-color-card, rgba(91, 158, 255, 0.06)) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Dense grid for CTA / hero emphasis areas */
+.hp-grid-dense {
+  background-image:
+    linear-gradient(var(--hp-grid-color-dense, rgba(91, 158, 255, 0.13)) 1px, transparent 1px),
+    linear-gradient(90deg, var(--hp-grid-color-dense, rgba(91, 158, 255, 0.13)) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* Brand accent grid: stronger grid lines for cards/surfaces that need contrast */
+.hp-grid-accent {
+  background-image:
+    linear-gradient(var(--hp-grid-color-accent, rgba(91, 158, 255, 0.20)) 1px, transparent 1px),
+    linear-gradient(90deg, var(--hp-grid-color-accent, rgba(91, 158, 255, 0.20)) 1px, transparent 1px);
+  background-size: 36px 36px;
+}
+
+@media (max-width: 640px) {
+  .hp-grid-bg,
+  .hp-grid-bg-strong,
+  .hp-grid-card,
+  .hp-grid-dense,
+  .hp-grid-accent {
+    background-size: 24px 24px;
+  }
+}
+
+@media (prefers-reduced-data: reduce) {
+  .hp-grid-bg,
+  .hp-grid-bg-strong,
+  .hp-grid-card,
+  .hp-grid-dense,
+  .hp-grid-accent {
+    background-image: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Dashboard — Grid Line Pattern System
+   Applies a cohesive grid-line visual framework across all dashboard pages.
+   Uses pure CSS gradients — zero HTTP requests, theme-aware, accessible.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Dashboard grid colour tokens (tied to theme via CSS vars) ───────────── */
+:root {
+  --dash-grid-color: rgba(59, 108, 181, 0.06);
+  --dash-grid-color-strong: rgba(59, 108, 181, 0.10);
+  --dash-welcome-dot: rgba(255, 255, 255, 0.30);
+  --dash-welcome-line: rgba(255, 255, 255, 0.12);
+}
+[data-theme="dark"] {
+  --dash-grid-color: rgba(91, 158, 255, 0.05);
+  --dash-grid-color-strong: rgba(91, 158, 255, 0.09);
+  --dash-welcome-dot: rgba(255, 255, 255, 0.25);
+  --dash-welcome-line: rgba(255, 255, 255, 0.10);
+}
+
+/* ── Dashboard body: subtle large-scale grid ─────────────────────────────── */
+.dash-grid-body {
+  background-image:
+    linear-gradient(var(--dash-grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--dash-grid-color) 1px, transparent 1px);
+  background-size: 72px 72px;
+  background-position: center center;
+}
+
+/* ── Dashboard-section grid (card containers): tighter grid ──────────────── */
+.dash-grid-section {
+  background-image:
+    linear-gradient(var(--dash-grid-color-strong) 1px, transparent 1px),
+    linear-gradient(90deg, var(--dash-grid-color-strong) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ── Welcome Banner Unique Pattern System ────────────────────────────────── */
+/*    Multi-layer geometric pattern with animated intersection highlights.    */
+
+/* Layer 1: Diamond-grid line pattern over the gradient */
+.dash-welcome-pattern {
+  position: relative;
+}
+.dash-welcome-pattern::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.55;
+  background-image:
+    repeating-linear-gradient(
+      60deg,
+      var(--dash-welcome-line) 0px,
+      var(--dash-welcome-line) 1px,
+      transparent 1px,
+      transparent 28px
+    ),
+    repeating-linear-gradient(
+      -60deg,
+      var(--dash-welcome-line) 0px,
+      var(--dash-welcome-line) 1px,
+      transparent 1px,
+      transparent 28px
+    );
+  border-radius: inherit;
+}
+
+/* Layer 2: Glowing dot nodes at grid intersections */
+.dash-welcome-pattern::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0.70;
+  background-image:
+    radial-gradient(circle, var(--dash-welcome-dot) 1.8px, transparent 2px);
+  background-size: 28px 28px;
+  background-position:
+    0px 0px,
+    14px 14px;
+  border-radius: inherit;
+}
+
+/* Layer 3: Animated pulsing nodes — CSS custom property driven */
+@keyframes dashNodePulse {
+  0%, 100% { opacity: 0.35; transform: scale(0.8); }
+  50%      { opacity: 0.85; transform: scale(1.3); }
+}
+
+.dash-welcome-nodes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.dash-welcome-node {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 0 6px rgba(255, 255, 255, 0.7),
+    0 0 14px rgba(255, 255, 255, 0.25);
+  animation: dashNodePulse 3s ease-in-out infinite;
+}
+
+/* ── Welcome card enhanced shadow for depth ──────────────────────────────── */
+.dash-welcome-shadow {
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.12),
+    0 12px 48px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+}
+
+[data-theme="dark"] .dash-welcome-shadow {
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.40),
+    0 12px 48px rgba(0, 0, 0, 0.30),
+    0 0 40px rgba(91, 158, 255, 0.08),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+}
+
+/* ── Stats cards: subtle grid overlay ────────────────────────────────────── */
+.dash-stat-grid {
+  background-image:
+    linear-gradient(var(--dash-grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--dash-grid-color) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: center center;
+}
+
+/* ── Responsive adjustments ──────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .dash-grid-body {
+    background-size: 48px 48px;
+  }
+  .dash-grid-section {
+    background-size: 32px 32px;
+  }
+  .dash-welcome-pattern::before {
+    background-size: 0 0, 0 0; /* hide complex pattern on small screens */
+  }
+  .dash-welcome-pattern::after {
+    background-size: 20px 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-welcome-node {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-data: reduce) {
+  .dash-grid-body,
+  .dash-grid-section,
+  .dash-welcome-pattern::before,
+  .dash-welcome-pattern::after,
+  .dash-stat-grid {
+    background-image: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Auth Form — Subtle Line Pattern Enhancements
+   Uses CSS-only SVG patterns — zero HTTP requests, theme-aware, accessible.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Auth pattern token: ultra-low opacity accent for line overlays ──────── */
+:root {
+  --auth-pattern-opacity: 0.04;
+  --auth-pattern-color: 59, 108, 181;
+}
+[data-theme="dark"] {
+  --auth-pattern-opacity: 0.05;
+  --auth-pattern-color: 91, 158, 255;
+}
+
+/* ── 1. Subtle dot-grid overlay for form card backgrounds ────────────────── */
+/*    Provides a refined, barely-visible texture behind form content.          */
+.auth-pattern-dots {
+  position: relative;
+}
+.auth-pattern-dots::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: var(--auth-pattern-opacity);
+  background-image: radial-gradient(
+    circle,
+    rgb(var(--auth-pattern-color)) 0.5px,
+    transparent 0.5px
+  );
+  background-size: 20px 20px;
+}
+
+/* ── 2. Subtle diagonal line texture for branding panels ─────────────────── */
+/*    Adds a sophisticated diagonal weave that never distracts from content.  */
+.auth-pattern-diag {
+  position: relative;
+}
+.auth-pattern-diag::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.06;
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.08) 0px,
+    rgba(255, 255, 255, 0.08) 1px,
+    transparent 1px,
+    transparent 16px
+  );
+}
+
+/* ── 3. Horizontal line-separators between form sections ─────────────────── */
+/*    Frames input groups, reinforcing visual hierarchy without borders.       */
+.auth-divider {
+  position: relative;
+}
+.auth-divider::before {
+  content: "";
+  display: block;
+  width: 100%;
+  height: 1px;
+  margin: 0 0 20px 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--border) 20%,
+    var(--border) 80%,
+    transparent 100%
+  );
+}
+
+/* ── 4. Decorative corner accents on the form card ──────────────────────── */
+/*    Two subtle L-shaped brackets in opposite corners, pure-css.              */
+.auth-corner-accents {
+  position: relative;
+}
+.auth-corner-accents::before,
+.auth-corner-accents::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+  width: 48px;
+  height: 48px;
+  opacity: 0.10;
+  transition: opacity 0.3s ease;
+}
+.auth-corner-accents::before {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid rgb(var(--auth-pattern-color));
+  border-left: 2px solid rgb(var(--auth-pattern-color));
+  border-radius: 16px 0 0 0;
+}
+.auth-corner-accents::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid rgb(var(--auth-pattern-color));
+  border-right: 2px solid rgb(var(--auth-pattern-color));
+  border-radius: 0 0 16px 0;
+}
+
+/* ── 5. Form-section framing: subtle vertical accent line ────────────────── */
+/*    A 2px-thin accent line beside the form header to anchor visual focus.    */
+.auth-header-accent {
+  position: relative;
+  padding-left: 16px;
+}
+.auth-header-accent::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 3px;
+  border-radius: 2px;
+  background: linear-gradient(
+    180deg,
+    var(--primary) 0%,
+    var(--accent) 100%
+  );
+  opacity: 0.55;
+}
+
+/* ── 6. Subtle geometric accent lines on the branding panel ──────────────── */
+/*    Thin horizontal and vertical accent lines for professional framing.      */
+.auth-brand-lines::before {
+  content: "";
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  width: 60px;
+  height: 60px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.12;
+  background:
+    linear-gradient(to right, rgba(255,255,255,0.8) 1px, transparent 1px) 0 0 / 20px 60px,
+    linear-gradient(to bottom, rgba(255,255,255,0.8) 1px, transparent 1px) 0 0 / 60px 20px,
+    linear-gradient(to right, rgba(255,255,255,0.4) 1px, transparent 1px) 0 40px / 60px 20px,
+    linear-gradient(to bottom, rgba(255,255,255,0.4) 1px, transparent 1px) 40px 0 / 20px 60px;
+}
+
+/* ── Responsive adjustments ────────────────────────────────────────────────── */
+@media (max-width: 1023px) {
+  .auth-corner-accents::before,
+  .auth-corner-accents::after {
+    width: 32px;
+    height: 32px;
+  }
+  .auth-corner-accents::before { border-radius: 12px 0 0 0; }
+  .auth-corner-accents::after  { border-radius: 0 0 12px 0; }
+}
+
+@media (max-width: 639px) {
+  .auth-pattern-dots::before {
+    background-size: 16px 16px;
+  }
+  .auth-header-accent {
+    padding-left: 12px;
+  }
+  .auth-header-accent::before {
+    width: 2px;
+    top: 3px;
+    bottom: 3px;
+  }
+}
+
+/* ── Accessibility: respect user motion/data preferences ─────────────────── */
+@media (prefers-reduced-data: reduce) {
+  .auth-pattern-dots::before,
+  .auth-pattern-diag::after {
+    background-image: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Light-mode elevation utilities (DO NOT affect dark mode)
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Button elevation ───────────────────────────────────────────────────── */
+.hp .hp-btn-elevated,
+[data-theme="light"] .hp .hp-btn-elevated {
+  box-shadow: var(--hp-shadow-btn) !important;
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.hp .hp-btn-elevated:hover,
+[data-theme="light"] .hp .hp-btn-elevated:hover {
+  box-shadow: var(--hp-shadow-btn-hover) !important;
+  transform: translateY(-2px);
+}
+
+/* ── Card elevation (features, explore, roles) ──────────────────────────── */
+.hp .hp-card-elevated,
+[data-theme="light"] .hp .hp-card-elevated {
+  box-shadow: var(--hp-shadow-card);
+  border: 1px solid var(--hp-border);
+  transition: box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
+}
+
+.hp .hp-card-elevated:hover,
+[data-theme="light"] .hp .hp-card-elevated:hover {
+  box-shadow: var(--hp-shadow-card-hover);
+  border-color: var(--hp-border-strong);
+  transform: translateY(-3px);
+}
+
+/* ── Icon container elevation ───────────────────────────────────────────── */
+.hp .hp-icon-elevated,
+[data-theme="light"] .hp .hp-icon-elevated {
+  box-shadow: var(--hp-shadow-icon);
+}
+
+/* ── Bento card light-mode hover ────────────────────────────────────────── */
+.hp .bento-features-grid .bento-card:hover,
+[data-theme="light"] .hp .bento-features-grid .bento-card:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05),
+              0 8px 22px rgba(59, 108, 181, 0.10),
+              0 16px 36px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Ant-themed brand accent — animated ant silhouette for hero section
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* Subtle ant-shaped trail path — 4-segment dash moving along */
+@keyframes antWalk {
+  0%   { stroke-dashoffset: 60; }
+  100% { stroke-dashoffset: 0; }
+}
+
+/* Floating ant silhouette container */
+.hp-ant-float {
+  position: absolute;
+  pointer-events: none;
+  color: var(--hp-brand);
+  opacity: 0.16;
+  animation: hp-ant-bob 5s ease-in-out infinite;
+}
+
+[data-theme="light"] .hp-ant-float,
+.hp-ant-float {
+  color: var(--hp-brand);
+  opacity: 0.18;
+}
+
+[data-theme="dark"] .hp-ant-float {
+  color: var(--hp-brand);
+  opacity: 0.14;
+}
+
+@keyframes hp-ant-bob {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25%      { transform: translateY(-8px) rotate(1deg); }
+  50%      { transform: translateY(-4px) rotate(-1deg); }
+  75%      { transform: translateY(-12px) rotate(0.5deg); }
+}
+
+/* Simple ant shape via CSS — 3 body segments + legs + antennae */
+.hp-ant-dot    { border-radius: 50%; display: inline-block; background: var(--hp-ink-faint); }
+.hp-ant-leg    { position: absolute; height: 1px; background: var(--hp-ink-faint); transform-origin: left center; }
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Neon stroke effects — calibrated for nighttime study comfort
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* Dark mode: soft text-shadow glow on key brand phrases */
+[data-theme="dark"] .hp-neon-stroke {
+  text-shadow:
+    0 0 8px rgba(91, 158, 255, 0.35),
+    0 0 18px rgba(91, 158, 255, 0.15);
+}
+
+/* Light mode: subtle outline effect for visibility on warm backgrounds */
+[data-theme="light"] .hp-neon-stroke,
+.hp-neon-stroke {
+  text-shadow:
+    0 0 2px rgba(59, 108, 181, 0.25),
+    0 0 6px rgba(59, 108, 181, 0.10);
+}
+
+/* Amber/pink neon variant — for alternate emphasis */
+[data-theme="dark"] .hp-neon-stroke-amber {
+  text-shadow:
+    0 0 8px rgba(255, 126, 179, 0.30),
+    0 0 16px rgba(255, 126, 179, 0.12);
+}
+
+[data-theme="light"] .hp-neon-stroke-amber,
+.hp-neon-stroke-amber {
+  text-shadow:
+    0 0 2px rgba(208, 105, 43, 0.25),
+    0 0 6px rgba(208, 105, 43, 0.10);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Dashboard — Three-Column Layout & Carousel System
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Carousel Hero Banner ────────────────────────────────────────────────── */
+.dash-carousel {
+  position: relative;
+  overflow: hidden;
+  border-radius: 2rem;
+}
+
+.dash-carousel-track {
+  display: flex;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+.dash-carousel-slide {
+  min-width: 100%;
+  flex-shrink: 0;
+}
+
+/* ── Carousel Arrow Buttons ──────────────────────────────────────────────── */
+.dash-carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.dash-carousel-arrow:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.15);
+}
+
+.dash-carousel-arrow--left {
+  left: 16px;
+}
+
+.dash-carousel-arrow--right {
+  right: 16px;
+}
+
+/* ── Carousel Pagination Dots ────────────────────────────────────────────── */
+.dash-carousel-dots {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+.dash-carousel-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+}
+
+.dash-carousel-dot--active {
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+  transform: scale(1.2);
+}
+
+/* ── Pill-Shaped Stat Row ────────────────────────────────────────────────── */
+.dash-stat-pill {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  border-radius: 100px;
+  background: var(--background-card);
+  border: 1px solid var(--border);
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+
+.dash-stat-pill:hover {
+  border-color: var(--border-hover);
+  transform: translateX(4px);
+  box-shadow: var(--shadow-md);
+}
+
+.dash-stat-pill__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dash-stat-pill__value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--foreground);
+  line-height: 1;
+}
+
+.dash-stat-pill__label {
+  font-size: 0.8rem;
+  color: var(--foreground-muted);
+  margin-top: 2px;
+}
+
+/* ── Horizontal Info Card (for right column) ─────────────────────────────── */
+.dash-info-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px;
+  border-radius: 1.5rem;
+  background: var(--background-card);
+  border: 1px solid var(--border);
+  transition: all 0.25s ease;
+}
+
+.dash-info-card:hover {
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.dash-info-card__avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.dash-info-card__body {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── Deck Visual Preview Card ────────────────────────────────────────────── */
+.dash-deck-card {
+  position: relative;
+  border-radius: 1.5rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--background-card);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.dash-deck-card:hover {
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-3px);
+}
+
+.dash-deck-card__preview {
+  aspect-ratio: 4/3;
+  position: relative;
+  overflow: hidden;
+}
+
+.dash-deck-card__gradient {
+  position: absolute;
+  inset: 0;
+  opacity: 0.85;
+}
+
+.dash-deck-card__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dash-deck-card__info {
+  padding: 16px;
+}
+
+/* ── Full-width Pill Button ──────────────────────────────────────────────── */
+.dash-pill-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px 24px;
+  border-radius: 100px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: 1px solid var(--border);
+  background: var(--background-card);
+  color: var(--foreground);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.dash-pill-btn:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+  box-shadow: var(--shadow-glow);
+}
+
+.dash-pill-btn--primary {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--primary);
+}
+
+.dash-pill-btn--primary:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+  color: var(--primary-foreground);
+}
+
+/* ── Three-Column Section Headers ────────────────────────────────────────── */
+.dash-col-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.dash-col-header__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--foreground);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dash-col-header__link {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--primary);
+  transition: color 0.2s;
+}
+
+.dash-col-header__link:hover {
+  color: var(--primary-hover);
+}
+
+/* ── Carousel Responsive ─────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .dash-carousel-arrow {
+    width: 36px;
+    height: 36px;
+  }
+  .dash-carousel-arrow--left {
+    left: 8px;
+  }
+  .dash-carousel-arrow--right {
+    right: 8px;
+  }
+  .dash-carousel-dot {
+    width: 8px;
+    height: 8px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Timeline — 3D Isometric Stacking Ripple Effect
+   Layered span cards that fan out on hover with perspective depth.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Container: holds the 3D perspective stack ──────────────────────────── */
+.tl-card-3d {
+  position: relative;
+  width: 100%;
+  perspective: 800px;
+}
+
+.tl-card-3d__stack {
+  position: relative;
+  width: 100%;
+  transform: rotate(-2deg) skewX(-2deg);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.tl-card-3d__stack:hover {
+  transform: rotate(0deg) skewX(0deg) translateY(-6px);
+}
+
+/* ── Card face — the content-bearing front layer ────────────────────────── */
+.tl-card-3d__face {
+  position: relative;
+  z-index: 5;
+  background: var(--background-card);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 20px;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.4s ease,
+              border-color 0.3s ease;
+}
+
+.tl-card-3d__stack:hover .tl-card-3d__face {
+  border-color: var(--primary);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ── Shadow layers — 4 depth planes behind the card ─────────────────────── */
+.tl-card-3d__shadow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 1rem;
+  pointer-events: none;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+              opacity 0.5s ease;
+  z-index: 1;
+}
+
+/* Dark blue / cyan tinted shadow planes */
+.tl-card-3d__shadow--1 { background: var(--primary);              opacity: 0; }
+.tl-card-3d__shadow--2 { background: var(--primary);              opacity: 0; }
+.tl-card-3d__shadow--3 { background: var(--accent);               opacity: 0; }
+.tl-card-3d__shadow--4 { background: var(--primary);              opacity: 0; }
+
+/* Hover: fan out the shadow layers step-wise */
+.tl-card-3d__stack:hover .tl-card-3d__shadow--1 {
+  transform: translate(12px, -12px);
+  opacity: 0.22;
+}
+.tl-card-3d__stack:hover .tl-card-3d__shadow--2 {
+  transform: translate(24px, -24px);
+  opacity: 0.16;
+}
+.tl-card-3d__stack:hover .tl-card-3d__shadow--3 {
+  transform: translate(36px, -36px);
+  opacity: 0.10;
+}
+.tl-card-3d__stack:hover .tl-card-3d__shadow--4 {
+  transform: translate(48px, -48px);
+  opacity: 0.05;
+}
+
+/* ── Corner accent lines on the face card ───────────────────────────────── */
+.tl-card-3d__corner {
+  position: absolute;
+  pointer-events: none;
+  z-index: 6;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.tl-card-3d__corner--tl {
+  top: -1px;
+  left: -1px;
+  width: 32px;
+  height: 32px;
+  border-top: 2px solid var(--primary);
+  border-left: 2px solid var(--primary);
+  border-radius: 1rem 0 0 0;
+}
+
+.tl-card-3d__corner--br {
+  bottom: -1px;
+  right: -1px;
+  width: 32px;
+  height: 32px;
+  border-bottom: 2px solid var(--accent);
+  border-right: 2px solid var(--accent);
+  border-radius: 0 0 1rem 0;
+}
+
+.tl-card-3d__stack:hover .tl-card-3d__corner {
+  opacity: 0.5;
+}
+
+/* ── Connector dot: left-side dot that glows on hover ──────────────────── */
+.tl-card-3d__dot {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--primary);
+  border: 2px solid var(--background);
+  z-index: 10;
+  transition: box-shadow 0.4s ease, transform 0.4s ease;
+}
+
+.tl-card-3d__stack:hover .tl-card-3d__dot {
+  box-shadow: 0 0 12px var(--primary), 0 0 24px rgba(91, 158, 255, 0.3);
+  transform: translate(-50%, -50%) scale(1.3);
+}
+
+/* ── Responsive: reduce effect intensity on small screens ───────────────── */
+@media (max-width: 640px) {
+  .tl-card-3d__stack {
+    transform: rotate(-1deg) skewX(-1deg);
+  }
+
+  .tl-card-3d__stack:hover .tl-card-3d__shadow--1 {
+    transform: translate(8px, -8px);
+  }
+  .tl-card-3d__stack:hover .tl-card-3d__shadow--2 {
+    transform: translate(14px, -14px);
+  }
+  .tl-card-3d__stack:hover .tl-card-3d__shadow--3 {
+    transform: translate(20px, -20px);
+  }
+  .tl-card-3d__stack:hover .tl-card-3d__shadow--4 {
+    transform: translate(26px, -26px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tl-card-3d__stack,
+  .tl-card-3d__stack:hover,
+  .tl-card-3d__face,
+  .tl-card-3d__shadow,
+  .tl-card-3d__dot,
+  .tl-card-3d__corner {
+    transform: none !important;
+    transition: none !important;
   }
 }

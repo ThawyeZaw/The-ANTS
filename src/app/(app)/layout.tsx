@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Authenticated App Shell Layout
+// The ANTs — Authenticated App Shell Layout
 // Wraps all authenticated routes with NavBar and PersonaProvider.
 // Redirects to /login if the user is not authenticated.
 // ──────────────────────────────────────────────────────────────────────────────

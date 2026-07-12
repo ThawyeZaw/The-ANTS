@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Signup Form Component
+// The ANTs — Signup Form Component
 // Simplified public registration: name, email, password.
 // All new accounts default to 'student'. Higher roles require approval.
 // After signup, shows an email confirmation screen (Supabase email confirm is ON).
@@ -19,6 +19,7 @@ import {
   User,
   MailCheck,
   RefreshCw,
+  AlertCircle,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { isValidEmail, checkPasswordStrength, cn } from '@/lib/utils';
@@ -90,7 +91,7 @@ export default function SignupForm() {
     const result = await signup(email, password, name.trim(), 'student');
 
     if (!result.success) {
-      setErrors({ form: result.error });
+      setErrors({ form: result.error || 'An unexpected error occurred.' });
       setIsLoading(false);
       return;
     }
@@ -104,6 +105,11 @@ export default function SignupForm() {
     setIsResending(true);
     setResendMessage('');
     const supabase = createClient();
+    if (!supabase) {
+      setIsResending(false);
+      setResendMessage('Authentication service is not available. Please try again later.');
+      return;
+    }
     const { error } = await supabase.auth.resend({
       type: 'signup',
       email,
@@ -155,7 +161,7 @@ export default function SignupForm() {
               type="button"
               onClick={handleResend}
               disabled={isResending}
-              className="flex items-center gap-2 mx-auto text-sm text-primary hover:underline cursor-pointer font-medium mb-4 disabled:opacity-50"
+              className="flex items-center gap-2 mx-auto text-sm text-primary hover:underline cursor-pointer font-semibold mb-4 disabled:opacity-50"
               id="signup-resend-email"
             >
               <RefreshCw className={cn('h-3.5 w-3.5', isResending && 'animate-spin')} />
@@ -166,7 +172,7 @@ export default function SignupForm() {
           <div className="border-t border-border pt-4">
             <p className="text-xs text-foreground-muted">
               Already confirmed?{' '}
-              <Link href="/login" className="text-primary font-medium hover:underline" id="signup-confirmed-login">
+              <Link href="/login" className="text-primary font-semibold hover:underline" id="signup-confirmed-login">
                 Sign in
               </Link>
             </p>
@@ -178,11 +184,11 @@ export default function SignupForm() {
 
   // ── Registration form ─────────────────────────────────────────────────────
   return (
-    <div className="w-full max-w-5xl mx-auto">
-      <div className="bg-background-card border border-border rounded-2xl shadow-lg overflow-hidden animate-fade-in-up flex flex-col lg:flex-row min-h-[560px]">
+    <div className="w-full max-w-5xl mx-auto auth-corner-accents">
+      <div className="bg-background-card border border-border rounded-2xl shadow-lg overflow-hidden animate-fade-in-up flex flex-col lg:flex-row min-h-[560px] auth-pattern-dots">
 
         {/* ── Left panel: Branding ───────────────────────────────────── */}
-        <div className="hidden lg:flex lg:w-5/12 relative flex-col justify-between p-8 overflow-hidden"
+        <div className="hidden lg:flex lg:w-5/12 relative flex-col justify-between p-8 overflow-hidden auth-pattern-diag auth-brand-lines"
           style={{
             background: 'linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 60%, var(--primary)) 100%)',
           }}
@@ -194,8 +200,8 @@ export default function SignupForm() {
 
           <div className="relative z-10">
             <div className="text-4xl mb-4">🐜</div>
-            <h2 className="text-2xl font-bold text-white mb-2">Join The ANTS</h2>
-            <p className="text-white/80 text-sm leading-relaxed">
+            <h2 className="text-2xl font-bold text-white mb-2">Join <span className="font-brand text-on-dark">The ANTs</span></h2>
+            <p className="text-white/90 text-sm leading-relaxed text-on-accent">
               Start your academic journey with tools built specifically for UK curriculum students worldwide.
             </p>
           </div>
@@ -209,7 +215,7 @@ export default function SignupForm() {
             ].map(({ emoji, text }) => (
               <div key={text} className="flex items-center gap-3">
                 <span className="text-lg">{emoji}</span>
-                <p className="text-white/85 text-sm">{text}</p>
+                <p className="text-white/90 text-sm font-medium text-on-accent">{text}</p>
               </div>
             ))}
           </div>
@@ -222,7 +228,7 @@ export default function SignupForm() {
             <div className="text-3xl mb-2">🐜</div>
           </div>
 
-          <div className="mb-7">
+          <div className="mb-7 auth-header-accent">
             <h1 className="text-2xl font-bold text-foreground">Create your account</h1>
             <p className="text-sm text-foreground-muted mt-1">
               Free forever. No credit card required.
@@ -231,8 +237,9 @@ export default function SignupForm() {
 
           {/* Form error */}
           {errors.form ? (
-            <div className="mb-5 p-3 rounded-xl bg-error/10 border border-error/20 text-error text-sm animate-fade-in">
-              {errors.form || 'An unexpected error occurred. Please try again.'}
+            <div className="mb-5 p-3.5 rounded-xl bg-error/8 border border-error/20 text-error text-sm font-medium animate-fade-in flex items-start gap-2.5">
+              <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+              <span>{errors.form}</span>
             </div>
           ) : null}
 
@@ -346,7 +353,7 @@ export default function SignupForm() {
 
           <p className="text-center text-sm text-foreground-muted mt-5">
             Already have an account?{' '}
-            <Link href="/login" className="text-primary font-medium hover:underline" id="signup-to-login">
+            <Link href="/login" className="text-primary font-semibold hover:underline" id="signup-to-login">
               Sign in
             </Link>
           </p>

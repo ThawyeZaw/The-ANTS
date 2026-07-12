@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — NoteFilters
+// The ANTs — NoteFilters
 // Sidebar/header filter panel for the Notes Library.
 // ──────────────────────────────────────────────────────────────────────────────
 

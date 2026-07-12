@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import OnboardingWizard from '@/components/onboarding/OnboardingWizard';
 
 export const metadata = {
-  title: 'Set Up Your Account — The ANTS',
+  title: 'Set Up Your Account — The ANTs',
   description: 'Personalise your ANTS experience in a few quick steps.',
 };
 

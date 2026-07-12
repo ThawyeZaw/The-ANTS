@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — AnimatedStat
+// The ANTs — AnimatedStat
 // Count-up animation triggered once when the element scrolls into view.
 // Uses requestAnimationFrame for a smooth 60fps ease-out effect.
 // ──────────────────────────────────────────────────────────────────────────────
@@ -108,9 +108,9 @@ export default function AnimatedStat({ endValue, label, suffix = '' }: AnimatedS
       <div
         style={{
           fontFamily: 'var(--hp-font-mono)',
-          fontSize: 10.5,
+          fontSize: 11.5,
           letterSpacing: '0.18em',
-          color: 'var(--hp-ink-faint)',
+          color: 'var(--hp-ink-muted)',
           fontWeight: 500,
         }}
       >

@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Button Component
+// The ANTs — Button Component
 // Reusable button with variants, sizes, loading state, and icon support.
 // ──────────────────────────────────────────────────────────────────────────────
 

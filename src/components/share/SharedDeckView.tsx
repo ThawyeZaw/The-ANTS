@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — SharedDeckView
+// The ANTs — SharedDeckView
 // Displays a shared flashcard deck by token.
 // ──────────────────────────────────────────────────────────────────────────────
 

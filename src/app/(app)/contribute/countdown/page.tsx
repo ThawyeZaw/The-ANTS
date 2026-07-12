@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Countdown Editor Page
+// The ANTs — Countdown Editor Page
 // Route: /contribute/countdown — Contributor and Main Contributor only.
 // ──────────────────────────────────────────────────────────────────────────────
 

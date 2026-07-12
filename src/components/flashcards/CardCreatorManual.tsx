@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — CardCreatorManual Component
+// The ANTs — CardCreatorManual Component
 // Owner: ZLH
 // ──────────────────────────────────────────────────────────────────────────────
 

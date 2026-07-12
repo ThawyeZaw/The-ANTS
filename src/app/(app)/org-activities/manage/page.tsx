@@ -140,7 +140,7 @@ export default function ManageOrgPage() {
           <div>
             <BackButton href="/org-activities" label="Back" />
             <h1 className="text-2xl md:text-3xl font-bold text-foreground">Manage Timeline & Activities</h1>
-            <p className="text-sm text-foreground-secondary mt-1">Add milestones, events, workshops, and more to The ANTS timeline.</p>
+            <p className="text-sm text-foreground-secondary mt-1">Add milestones, events, workshops, and more to <span className="font-brand">The ANTs</span> timeline.</p>
           </div>
           <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground hover:bg-primary-hover rounded-xl text-sm font-semibold transition-all cursor-pointer">
             <Plus className="h-4 w-4" /> New Item

@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — CourseManagerWizard
+// The ANTs — CourseManagerWizard
 // Multi-step wizard: Select curriculum → Select subjects → Set exam targets → Confirm
 // ──────────────────────────────────────────────────────────────────────────────
 

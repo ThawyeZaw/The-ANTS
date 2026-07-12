@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Avatar Image Component
+// The ANTs — Avatar Image Component
 // Renders preset illustrated avatars or uploaded images or fallback initials.
 // ──────────────────────────────────────────────────────────────────────────────
 

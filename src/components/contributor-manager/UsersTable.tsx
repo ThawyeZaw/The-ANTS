@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Users Table
+// The ANTs — Users Table
 // Filterable, searchable table of all users with role badges.
 // Responsive: cards on mobile, table on desktop.
 // ──────────────────────────────────────────────────────────────────────────────

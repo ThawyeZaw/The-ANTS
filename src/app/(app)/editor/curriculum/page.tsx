@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Curriculum Library Admin Page
+// The ANTs — Curriculum Library Admin Page
 // Route: /editor/curriculum — Contributor and Main Contributor only.
 // ──────────────────────────────────────────────────────────────────────────────
 

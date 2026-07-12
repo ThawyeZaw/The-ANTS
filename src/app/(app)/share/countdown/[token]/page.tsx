@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import SharedCountdownView from '@/components/share/SharedCountdownView';
 
 export const metadata = {
-  title: 'Shared Exam Countdown — The ANTS',
+  title: 'Shared Exam Countdown — The ANTs',
   description: 'View a shared exam countdown timer.',
 };
 

@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — SavedNotesLibrary
+// The ANTs — SavedNotesLibrary
 // View user's selected/saved notes with search, filtering, and inline reading.
 // ──────────────────────────────────────────────────────────────────────────────
 

@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Public Profile Page (All Roles)
+// The ANTs — Public Profile Page (All Roles)
 // Displays a user's public profile with projects, activities, achievements, 
 // academic grades, and role-specific stats. Supports theme, layout, and section
 // ordering customization.

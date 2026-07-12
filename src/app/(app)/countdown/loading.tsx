@@ -1,5 +1,5 @@
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Countdown Page Loading Skeleton
+// The ANTs — Countdown Page Loading Skeleton
 // ──────────────────────────────────────────────────────────────────────────────
 
 export default function CountdownLoading() {

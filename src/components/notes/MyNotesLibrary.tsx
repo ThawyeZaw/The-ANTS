@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — MyNotesLibrary
+// The ANTs — MyNotesLibrary
 // View user's created notes and saved notes with search, filtering, and inline reading.
 // ──────────────────────────────────────────────────────────────────────────────
 

@@ -1,12 +1,12 @@
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Onboarding Layout
+// The ANTs — Onboarding Layout
 // Route group layout for /onboarding — no NavBar, clean progress-bar header.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import type { ReactNode } from 'react';
 
 export const metadata = {
-  title: 'Welcome — The ANTS',
+  title: 'Welcome — The ANTs',
   description: 'Set up your ANTS account to personalise your study experience.',
 };
 

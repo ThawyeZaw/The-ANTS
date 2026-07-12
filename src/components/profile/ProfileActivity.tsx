@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Profile Activity Component
+// The ANTs — Profile Activity Component
 // Flowing timeline — no card containers, just a connected stream.
 // ──────────────────────────────────────────────────────────────────────────────
 

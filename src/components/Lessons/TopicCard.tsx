@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — TopicCard
+// The ANTs — TopicCard
 // Per-topic interactive card: confidence star rating + status toggle.
 // Belongs to: src/components/Lessons/  (BMK & ABC)
 // ──────────────────────────────────────────────────────────────────────────────

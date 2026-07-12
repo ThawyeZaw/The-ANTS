@@ -1,6 +1,12 @@
-# The ANTS — Database Schema Reference
+# The ANTs — Database Schema Reference
 
 > **Quick Sync Check** — This file is the single source of truth for all PostgreSQL table schemas. It must stay in sync with `src/types/index.ts` and `src/lib/mock/database.ts`. When tables, columns, or types change in the code, update this file.
+>
+> **Last audit (2026-07-09):** 51 tables defined. Cross-referenced against `src/types/index.ts` and `src/lib/mock/database.ts`.
+> - **10 tables lack TypeScript types** — `student_profiles`, `teacher_profiles`, `curriculums`, `subjects`, `user_curriculums`, `topic_progress`, `resources` (general), `editor_submissions`, `pomodoro_sessions`, `grade_entries`. These are support/auxiliary tables — their data is embedded in other types or accessed via JSONB fields in the facade.
+> - **6 tables have column drift** — `decks`, `exams`, `notes`, `exam_countdowns`, `topics`, `card_reviews`. The TypeScript types have evolved with library-system features (`exam_board`, `visibility`, `share_token`, `library_status`, `syllabus_code` etc.) that are not yet reflected in this schema doc.
+> - **`contributor_profiles`** has column naming drift (`website` vs `website_url`, `linkedin` vs `linkedin_url`, `github` vs `github_url`) between schema and TypeScript.
+> - **Mock DB coverage:** Core domains (classrooms, clubs, flashcards, notes, profiles, review queue) are fully covered. 18 auxiliary domains have partial or no CRUD functions — see `design-system/mock-db-audit.md` for details.
 
 ---
 

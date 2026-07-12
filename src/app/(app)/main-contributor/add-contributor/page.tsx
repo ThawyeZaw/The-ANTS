@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Add Contributor Page
+// The ANTs — Add Contributor Page
 // Main Contributor only — invite flow via Supabase Admin API + Users Table.
 // The main contributor enters name, email, and role; Supabase sends the new
 // user a magic-link email so they can set their own password.
@@ -122,7 +122,7 @@ export default function AddContributorPage() {
                 <p className="text-sm text-foreground-muted mt-1.5">
                   A magic-link email has been sent to{' '}
                   <span className="font-semibold text-foreground">{invitedEmail}</span>.
-                  They&apos;ll click it to set their password and join The ANTS.
+                  They&apos;ll click it to set their password and join <span className="font-brand">The ANTs</span>.
                 </p>
               </div>
               <div className={cn(

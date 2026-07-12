@@ -5,7 +5,7 @@ import { Settings } from 'lucide-react';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Edit Profile | The ANTS',
+  title: 'Edit Profile | The ANTs',
   description: 'Manage your portfolio, activities, and public profile.',
 };
 

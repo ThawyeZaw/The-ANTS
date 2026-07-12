@@ -1,4 +1,4 @@
-# The ANTS — System Specification & Integration Manifest (`spec.md`)
+# The ANTs — System Specification & Integration Manifest (`spec.md`)
 
 ## 1. Project Architecture & Tech Stack
 - **Frontend Framework:** Next.js 16 (App Router)
@@ -108,6 +108,7 @@ the-ants/                                 # Project root
 ├── spec.md                               # 🔒 PM — System specification (this file)
 ├── schema.md                             # 🔒 PM — Database schema reference
 ├── README.md                             # 🔒 PM — Project README
+├── design-system/                        # 🔒 PM — Design system documentation (color palette, typography, components, accessibility, etc.)
 ├── supabase/                             # 🔒 PM — Supabase CLI local config
 │   ├── config.toml
 │   ├── seed.sql                          # Dev seed data
@@ -517,9 +518,6 @@ Club activity and contributions can appear on a user's public profile portfolio,
 6. **Server Actions Live in `src/actions/`:** Never define a `'use server'` function inside a component file.
 7. **Styling Consistency:** Use Tailwind CSS v4 utility classes with CSS custom properties (`var(--foreground)`, `var(--primary)`, `var(--border)`, etc.). Use `lucide-react` for all icons.
 8. **Respect 🔒 Ownership:** Do not create, edit, or delete files marked with another developer's lock.
-<<<<<<< HEAD
-9. **Role Upgrade Constraint:** Users always sign up as `student`. Role upgrades require `main_contributor` approval.
-=======
 9. **Role Upgrade Constraint:** Users always sign up as `student`. Role upgrades require `main_contributor` approval.
 10. **Supabase Query Pattern:** All Supabase queries must use the `database.ts` facade. Never call `supabase.from()` directly in component code. When transitioning from mock to live data, replace the facade implementation — never change the consumer interface.
 
@@ -2088,4 +2086,234 @@ Before applying any migration to production:
 - Migrations are never edited after application (immutable).
 - If a change is needed, create a new migration — never modify an existing one.
 - The `supabase/migrations/` folder contains the single source of truth for database schema history.
->>>>>>> 23990f5be8b69266496f110f06c9e820e1f68a1b
+
+---
+
+## 33. Homepage Design System
+
+### 33.1 Overview
+
+The public landing page (`/`) implements a dedicated design layer scoped under the `.hp` CSS class. This system is independent of the authenticated app shell design tokens and provides a distinct, brand-forward visual identity for first-time visitors and unauthenticated users.
+
+### 33.2 CSS Variable Layer
+
+Homepage tokens are defined within `.hp` scope in `src/app/globals.css`:
+
+```css
+.hp {
+  --hp-brand: #3CDBA7;          /* Primary brand — emerald green (dark) */
+  --hp-brand-soft: rgba(60, 219, 167, 0.12);
+  --hp-violet: #8C7FF0;         /* Secondary accent — violet */
+  --hp-bg: #080B11;              /* Default section background */
+  --hp-bg-soft: #0C1119;         /* Alternate section background */
+  --hp-surface: rgba(255, 255, 255, 0.04);  /* Card surface */
+  --hp-border: rgba(255, 255, 255, 0.08);
+  --hp-border-strong: rgba(255, 255, 255, 0.14);
+  --hp-text-primary: #F1F5F9;
+  --hp-text-secondary: #94A3B8;
+}
+```
+
+Dark/light theme variants are controlled via `[data-theme="dark"]` and `[data-theme="light"]` attribute selectors within `.hp`.
+
+### 33.3 Component Inventory
+
+| # | Component | File | Purpose |
+|---|---|---|---|
+| 1 | `HeroVisual` | `src/components/homepage/HeroVisual.tsx` | Decorative widget panel with live-ticking countdown + mini timetable |
+| 2 | `RevealSection` | `src/components/homepage/RevealSection.tsx` | Apple-style scroll-reveal wrapper (IntersectionObserver, 12% threshold) |
+| 3 | `SectionHead` | Inline in `page.tsx` | Section title + optional subtext with `hp-reveal` animation |
+| 4 | `BentoFeatures` | `src/components/homepage/BentoFeatures.tsx` | 4-column responsive bento grid of 8 feature tiles |
+| 5 | `StatsRow` | `src/components/homepage/StatsRow.tsx` | 4-column responsive animated stat blocks |
+| 6 | `QualCarousel` | `src/components/homepage/QualCarousel.tsx` | Non-interactive auto-advancing qualification board carousel (4.5s interval) |
+| 7 | `RoleLadder` | `src/components/homepage/RoleLadder.tsx` | Role hierarchy with baseline-aligned rungs + approval-flow indicators |
+| 8 | `AntTrailPattern` | `src/components/homepage/AntTrailPattern.tsx` | Brand-specific SVG ant-trail geometric mesh background pattern |
+| 9 | `DotGrid` | `src/components/homepage/DotGrid.tsx` | Decorative polka-dot overlay texture |
+| 10 | `Footer` | `src/components/layout/Footer.tsx` | 4-column responsive footer with social links |
+
+### 33.4 Section Architecture
+
+The homepage is composed of 7 sequentially rendered sections within `page.tsx`:
+
+| Order | Section | Background | Pattern | Key Components |
+|---|---|---|---|---|
+| 1 | Hero | `--hp-bg` | AntTrailPattern (`mixed`, 0.11) | HeroVisual, SectionHead, CTA buttons, "Learn more" link |
+| 2 | Explore | `--hp-bg-soft` | AntTrailPattern (`brand`, 0.14) | Club/Profile cards, SectionHead |
+| 3 | Stats | `--hp-bg` | AntTrailPattern (`brand`, 0.09) | StatsRow (AnimatedStat × 4) |
+| 4 | Features | `--hp-bg` | AntTrailPattern (`mixed`, 0.13) + DotGrid | BentoFeatures (8 bento cards) |
+| 5 | Qualifications | `--hp-bg-soft` | AntTrailPattern (`brand`, 0.14) + DotGrid | QualCarousel |
+| 6 | Roles | `--hp-bg` | AntTrailPattern (`violet`, 0.10) + DotGrid | RoleLadder |
+| 7 | CTA | `--hp-bg` | AntTrailPattern (`mixed`, 0.09) | Call-to-action section, Footer |
+
+### 33.5 Ant-Trail Background Pattern
+
+The `AntTrailPattern` component renders a repeating geometric mesh of nodes and connecting lines inspired by ant colony trail networks. It sits at the lowest visual layer in every section.
+
+**Technical implementation:**
+- SVG tile (120×120px) encoded as URL-encoded data URI in `background-image`
+- 8 nodes (2px radius, opacity 0.22) + 9 trail lines (0.8px stroke, opacity 0.12) per tile
+- Responsive tile scaling: 120px (desktop) → 100px (tablet) → 80px (mobile)
+- `currentColor` driven by CSS `color` property — no new CSS tokens required
+- Edge-fade via CSS `mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent)`
+- Bundle size: ~1.6KB gzipped (SVG + component + CSS)
+- Hidden in `prefers-reduced-data` mode
+
+**Visibility calibration (v1.1):**
+- Low: 0.09–0.11 (Stats, CTA)
+- Medium: 0.13–0.14 (Explore, Features, Qualifications)
+- All content sits on solid `--hp-surface` backgrounds above the pattern — zero readability impact
+
+### 33.6 Animation System
+
+All homepage animations use Apple-like cubic-bezier easing curves defined as CSS custom properties:
+
+| Token | Curve | Use Case |
+|---|---|---|
+| `--hp-ease-out` | `cubic-bezier(0, 0, 0.2, 1)` | Entrance animations |
+| `--hp-ease-in` | `cubic-bezier(0.4, 0, 1, 1)` | Exit animations |
+
+**Keyframe inventory:**
+- `hp-float-grad` — 3s float + 4s gradient shimmer on key phrases
+- `carouselSlideIn` — Fade + translateY(12px) + scale(0.98) for QualCarousel slides (4.5s interval)
+- `hp-reveal` / `hp-reveal-card` — Scroll-triggered blur-to-clear + scale entrance via IntersectionObserver
+
+All animations respect `prefers-reduced-motion: reduce`.
+
+### 33.7 Recent Changes (2026-07-07)
+
+| Change | Scope | Impact |
+|---|---|---|
+| Ant-Trail Pattern v1.1 | All 7 sections | Node size +33%, trail stroke +60%, effective visibility 3.4–3.7× higher |
+| Footer extraction | `page.tsx` → `Footer.tsx` | Dedicated 4-column responsive footer component, GitHub link added |
+| QualCarousel redesign | `QualCarousel.tsx` | Interactive (chevrons + dots) → non-interactive auto-advancing (4.5s) |
+| RoleLadder redesign | `RoleLadder.tsx` | Staircase offsets → same baseline; added approval-flow arrows + lock icons |
+| CTA button redesign | Hero section | "Sign In" converted from pill button to text link; reduced visual noise |
+| Explore cards rename | Explore section | "Explore Clubs" → "Clubs", "Explore Profiles" → "Profiles" |
+| Text removals | 5 locations | Removed verbose description blocks; SectionHead subtext made optional |
+| "Learn more" link | Hero section | Redesigned twice: prominent pill → clean text link with arrow |
+
+---
+
+## 34. Dashboard & UI Enhancement Changelog (2026-07-11)
+
+### 34.1 Overview
+
+Major dashboard redesign for the Contributor role, introducing a three-column carousel-driven layout with heavily rounded card designs, pill-shaped interactive elements, and a 3D isometric timeline effect. All changes maintain the existing dark-mode colour scheme (`--background: #060B14`, `--primary: #5B9EFF`, `--accent: #28FFBF`) and are fully backward-compatible with other role dashboards.
+
+### 34.2 Changes Summary
+
+| Change | File(s) | Scope | Impact |
+|---|---|---|---|
+| **Contributor Dashboard Redesign** | `src/app/(app)/contributor/page.tsx` | Full rewrite | Three-column layout replaces stacked 2/3 + 1/3 |
+| **DashboardLayout — Three-Column Variant** | `src/components/layout/DashboardLayout.tsx` | Extended | New `layoutVariant='three-column'` prop; carousel hero; three equal columns |
+| **Carousel Hero Banner** | `DashboardLayout.tsx`, `globals.css` | New | Multi-slide hero with arrows, pagination dots, ambient orbs, animated nodes |
+| **NavBar Centering** | `src/components/layout/NavBar.tsx` | Refactored | Grid layout `grid-cols-[1fr_auto_1fr]` — logo left, links center, profile right |
+| **Solid Dropdown Backgrounds** | `NavBar.tsx` | Fixed | All three dropdown menus (nav, user, mobile) use `bg-background-card` instead of transparent `glass` |
+| **3D Isometric Timeline Cards** | `src/components/about/OrgTimeline.tsx`, `globals.css` | Redesigned | 4 shadow layers fan out on hover; corner accent brackets; glowing connector dot; spring easing |
+| **CSS Design System Expansion** | `src/app/globals.css` | Extended | 290+ lines: `.dash-carousel`, `.dash-stat-pill`, `.dash-info-card`, `.dash-deck-card`, `.dash-pill-btn`, `.tl-card-3d` families |
+
+### 34.3 Contributor Dashboard — Three-Column Layout
+
+**Left Column — "My Decks":**
+- Vertical visual preview cards with category-coloured gradient backgrounds (Physics → blue, Biology → emerald, Chemistry → violet, etc.)
+- Card info footer: category badge, card count, visibility icon
+- Full-width pill-shaped "+ Create Deck" button (primary colour, `border-radius: 100px`)
+
+**Middle Column — "Stat Overview":**
+- 4 pill-shaped rows (`.dash-stat-pill`) with `border-radius: 100px`
+- Each pill: circular icon on left (coloured background), stat value + label on right
+- Hover: `translateX(4px)` slide + shadow elevation
+- Stats: Published (violet), Pending Review (amber), Clubs Led (sky), Profile Views (pink)
+
+**Right Column — "Creator Profile" + "My Submissions":**
+- Horizontal stacked info cards (`.dash-info-card`) with `border-radius: 1.5rem`
+- Profile card: gradient avatar initial + title + bio + social links
+- Submission cards: status-coloured file icon avatar + title + status badge + block count
+
+### 34.4 Carousel Hero Banner
+
+- 3 default slides: "Welcome back", "At a Glance", "Make an Impact"
+- `.dash-carousel` container with `border-radius: 2rem` and `overflow: hidden`
+- Track uses flex layout with `translateX(-${currentSlide * 100}%)` transition
+- Left/right arrow buttons: 44px circles, `rgba(255,255,255,0.15)` glass, `backdrop-filter: blur(8px)`
+- Pagination dots: 10px circles at bottom center; active dot scales 1.2× with glow
+- Carousel slides configurable via `carouselSlides` prop; arrows/dots hidden when only 1 slide
+
+### 34.5 NavBar Centering & Solid Dropdowns
+
+**Grid-Based Centering:**
+```
+grid grid-cols-[1fr_auto_1fr] items-center
+  Logo (justify-self-start)
+  Nav Groups (justify-self-center)
+  User Section (justify-self-end)
+```
+
+**Solid Dropdown Backgrounds:**
+| Dropdown | Old Class | New Class |
+|---|---|---|
+| Nav group dropdown | `glass rounded-xl` | `bg-background-card border border-border rounded-xl` |
+| User menu | `glass rounded-xl` | `bg-background-card border border-border rounded-xl` |
+| Mobile menu | `glass rounded-2xl` | `bg-background-card border border-border rounded-2xl` |
+
+In dark mode, `--background-card` resolves to `#0C1220` — a solid deep navy that prevents text bleed-through.
+
+### 34.6 3D Isometric Timeline Cards
+
+**`OrgTimeline.tsx`** refactored from a flat `<div>` to a layered stacking structure:
+
+```
+.tl-card-3d > .tl-card-3d__stack
+  ├── .tl-card-3d__shadow--4  (z-index: 1)
+  ├── .tl-card-3d__shadow--3
+  ├── .tl-card-3d__shadow--2
+  ├── .tl-card-3d__shadow--1
+  ├── .tl-card-3d__face        (z-index: 5)
+  │   ├── .tl-card-3d__corner--tl (top-left primary bracket)
+  │   ├── .tl-card-3d__corner--br (bottom-right accent bracket)
+  │   └── [content: date badge, title, description, images]
+  └── .tl-card-3d__dot         (z-index: 10, left-side glow dot)
+```
+
+**Default state:** Stack rotated `-2deg` with `skewX(-2deg)` for isometric angle.
+
+**Hover state (spring easing `cubic-bezier(0.34, 1.56, 0.64, 1)`):**
+| Layer | Transform | Opacity |
+|---|---|---|
+| Shadow 1 | `translate(12px, -12px)` | 0.22 (primary) |
+| Shadow 2 | `translate(24px, -24px)` | 0.16 (primary) |
+| Shadow 3 | `translate(36px, -36px)` | 0.10 (accent) |
+| Shadow 4 | `translate(48px, -48px)` | 0.05 (primary) |
+| Face card | `rotate(0) skewX(0) translateY(-6px)` | Border → `var(--primary)` |
+| Corners | — | Fade in to 0.5 opacity |
+| Dot | `scale(1.3)` + glow | `box-shadow: 0 0 12px var(--primary)` |
+
+**Accessibility:** All transforms/transitions disabled in `prefers-reduced-motion: reduce`.
+
+### 34.7 Backward Compatibility
+
+All existing dashboards (student, teacher, main-contributor) continue to use the default `layoutVariant` and pass `stats`, `mainContent`, and `sidebarContent` — their rendering is completely unchanged. The new `layoutVariant`, `leftColumn`, `middleColumn`, `rightColumn`, and `carouselSlides` props are all optional.
+
+### 34.8 New CSS Class Registry
+
+| Class Family | Purpose | Defined In |
+|---|---|---|
+| `.dash-carousel`, `__track`, `__slide`, `__arrow`, `__dots`, `__dot` | Carousel hero banner | `globals.css` L1514–1578 |
+| `.dash-stat-pill`, `__icon`, `__value`, `__label` | Pill-shaped stat rows | `globals.css` L1580–1615 |
+| `.dash-info-card`, `__avatar`, `__body` | Horizontal info cards | `globals.css` L1617–1660 |
+| `.dash-deck-card`, `__preview`, `__gradient`, `__overlay`, `__info` | Deck visual preview cards | `globals.css` L1662–1708 |
+| `.dash-pill-btn`, `--primary` | Full-width pill buttons | `globals.css` L1710–1745 |
+| `.dash-col-header`, `__title`, `__link` | Three-column section headers | `globals.css` L1747–1770 |
+| `.tl-card-3d`, `__stack`, `__face`, `__shadow`, `__corner`, `__dot` | 3D timeline ripple effect | `globals.css` L1800–1962 |
+
+### 34.9 Mock Data Coverage
+
+The contributor dashboard relies on the following mock data functions (all in `src/lib/mock/database.ts`):
+- `getContributorDashboardStats(userId)` — Returns `[{ label, value, color, key }]` for Published, Pending Review, Clubs Led, Profile Views
+- `mockDecks` — Array of `Deck` objects with `owner_id`, `name`, `category`, `visibility`, `exam_board`, `syllabus_code`
+- `getCardsByDeck(deckId)` — Returns cards array for card count display
+- `mockContributorProfiles` — Contributor profile with `title`, `bio`, `website_url`, `github_url`, `linkedin_url`
+- `useContributorNotes(userId)` — Hook returning contributor's notes with `status`, `title`, `blocks`
+- `mockTimelineItems` (OrgTimelineItem[]) — Timeline entries with `title`, `description`, `date`, `imageUrls`
+
+All mock data is fully covered and requires no backend changes.

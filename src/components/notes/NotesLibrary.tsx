@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — NotesLibrary
+// The ANTs — NotesLibrary
 // Main notes library page with filtering, search, and save functionality.
 // ──────────────────────────────────────────────────────────────────────────────
 

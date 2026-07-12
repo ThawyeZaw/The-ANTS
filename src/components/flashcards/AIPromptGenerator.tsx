@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — AIPromptGenerator Component
+// The ANTs — AIPromptGenerator Component
 // Owner: ZLH
 // ──────────────────────────────────────────────────────────────────────────────
 

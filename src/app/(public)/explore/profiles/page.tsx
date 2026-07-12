@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Public Profile Discovery Page
+// The ANTs — Public Profile Discovery Page
 // Browse all public profiles with role-based filtering.
 // Anyone can view this page without authentication.
 // ──────────────────────────────────────────────────────────────────────────────
@@ -73,7 +73,7 @@ function ExploreProfilesContent() {
             </div>
             <Link href="/signup">
               <Button size="sm" iconRight={<ArrowRight className="h-4 w-4" />}>
-                Join The ANTS
+                Join <span className="font-brand">The ANTs</span>
               </Button>
             </Link>
           </div>

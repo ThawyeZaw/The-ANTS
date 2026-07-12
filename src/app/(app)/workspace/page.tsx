@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import MyWorkspace from '@/components/workspace/MyWorkspace';
 
 export const metadata = {
-  title: 'My Workspace — The ANTS',
+  title: 'My Workspace — The ANTs',
   description: 'Your personal study hub. Access all your courses, notes, flashcard decks, and exam countdowns in one place.',
 };
 

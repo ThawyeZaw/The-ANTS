@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — ReviewQueue
+// The ANTs — ReviewQueue
 // Main-contributor interface for reviewing all pending submissions.
 // Tabbed view by submission type with approve/reject/edit functionality.
 // ──────────────────────────────────────────────────────────────────────────────

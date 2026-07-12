@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Individual Note View Page
+// The ANTs — Individual Note View Page
 // Route: /library/[noteId] — accessible to all authenticated users.
 // ──────────────────────────────────────────────────────────────────────────────
 

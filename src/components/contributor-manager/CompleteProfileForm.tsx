@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Complete Profile Form (Step 3)
+// The ANTs — Complete Profile Form (Step 3)
 // After OTP verification, the invited user fills in their profile details.
 // ──────────────────────────────────────────────────────────────────────────────
 

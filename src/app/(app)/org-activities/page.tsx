@@ -72,7 +72,7 @@ export default function OrgActivitiesPage() {
           <div>
             <BackButton href="/dashboard" label="Back" />
             <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-              The ANTS Activities
+              <span className="font-brand">The ANTs</span> Activities
             </h1>
             <p className="text-sm text-foreground-secondary mt-1">
               Browse past events, workshops, competitions, and community activities.

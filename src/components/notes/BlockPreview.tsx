@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — BlockPreview
+// The ANTs — BlockPreview
 // Renders a single NoteBlock. Used in both the viewer and the editor preview pane.
 // ──────────────────────────────────────────────────────────────────────────────
 

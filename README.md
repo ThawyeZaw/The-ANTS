@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🐜 The ANTS
+# 🐜 The ANTs
 
 ### The Academic Productivity Ecosystem for Myanmar Students
 
@@ -18,11 +18,11 @@
 
 ---
 
-## What is The ANTS?
+## What is The ANTs?
 
-**The ANTS** is an organisation focused on IGCSE, A Level tutoring and CCA activities for Myanmar students pursuing international qualifications. Our platform is a curriculum-focused productivity and learning ecosystem wired directly into exam board criteria — so your timetables, flashcards, and grade calculators understand the difference between a CAIE IGCSE and an Edexcel IAL.
+**The ANTs** is an organisation focused on IGCSE, A Level tutoring and CCA activities for Myanmar students pursuing international qualifications. Our platform is a curriculum-focused productivity and learning ecosystem wired directly into exam board criteria — so your timetables, flashcards, and grade calculators understand the difference between a CAIE IGCSE and an Edexcel IAL.
 
-Whether you're targeting A* in IGCSE or A Levels, IELTS band 7+, or an OSSD diploma, The ANTS keeps your study life organised in one place — and connects you with a vibrant community of learners and contributors.
+Whether you're targeting A* in IGCSE or A Levels, IELTS band 7+, or an OSSD diploma, The ANTs keeps your study life organised in one place — and connects you with a vibrant community of learners and contributors.
 
 ---
 
@@ -120,6 +120,14 @@ Classrooms are virtual learning spaces with full CRUD for educational content. *
 ### 🏠 Explore Pages
 - **Explore Clubs** (`/explore/clubs`): Browse all clubs with search, member counts, and join modes — no login required.
 - **Explore Profiles** (`/explore/profiles`): Discover community members with role-based filters and portfolio previews.
+- **Homepage explore cards** (`/`): Quick-access cards labeled "Clubs" and "Profiles" for direct navigation.
+
+### 📊 Role-Aware Dashboards
+- **Unified dashboard router** (`/dashboard`): Automatically redirects users to their role-specific dashboard based on `useRole()`.
+- **Contributor Dashboard** — Three-column layout with carousel hero banner, visual deck preview cards with category-coloured gradients, pill-shaped stat overview rows (Published, Pending Review, Clubs Led, Profile Views), and stacked creator profile + submission cards.
+- **Carousel Hero Banner** — Multi-slide welcome banner with left/right navigation arrows, bottom pagination dots, ambient blurred orbs, and animated glowing node grid — all built on the cyan-to-purple gradient theme.
+- **Centered NavBar** — Logo left, primary navigation links center, user profile dropdown right — using CSS Grid `grid-cols-[1fr_auto_1fr]`.
+- **Solid Dropdown Menus** — All nav dropdowns, user menus, and mobile menus use opaque `bg-background-card` backgrounds for clear readability (no glassmorphism bleed-through).
 
 ### ⏳ Exam Countdown
 - Set countdowns for every upcoming exam.
@@ -136,6 +144,8 @@ Classrooms are virtual learning spaces with full CRUD for educational content. *
 - **Connected cascade** — Hero elements (badge, heading, description, CTAs) enter one after another in a natural 80ms stagger rhythm — no manual delays needed.
 - **Floating gradient text** — Key phrases like "global education" gently levitate with a slow 3-second float while the gradient shimmer shifts across 4 seconds.
 - **Theme-synced glow effects** — The nav bar, bento cards, and hover states glow with the brand colour (emerald in dark mode, forest green in light mode), all driven by the same unified cubic-bezier curve.
+- **Brand-distinctive background pattern** — A repeating ant-trail geometric mesh pattern renders across all 7 homepage sections, reinforcing the "colony network" brand metaphor.
+- **3D Isometric Timeline Cards** — "Our Journey" timeline cards feature a spring-animated stacking ripple effect: 4 shadow planes fan out diagonally on hover with corner accent brackets and a glowing connector dot — all using theme-aware primary/accent colours.
 - **Reduced motion respected** — All animations respect `prefers-reduced-motion` — users who prefer less motion see a clean static layout.
 
 ### 🔄 Role System
@@ -171,6 +181,23 @@ Classrooms are virtual learning spaces with full CRUD for educational content. *
 
 ---
 
+## Getting Started
+
+```bash
+# Install dependencies
+npm install
+
+# Create .env.local with your Supabase credentials (URL + anon key)
+# Never commit this file — it's .gitignore'd
+
+# Start dev server
+npm run dev
+```
+
+Visit `http://localhost:3000`. The app runs against the mock database in dev mode — no Supabase connection needed to explore UI and features.
+
+---
+
 ## Project Structure
 
 ```
@@ -178,9 +205,11 @@ the-ants/
 ├── src/
 │   ├── app/                     # Next.js App Router pages
 │   ├── components/
-│   │   ├── homepage/            # Public landing page components (RevealSection, BentoFeatures, HeroVisual, QualTrail, QualCarousel, RoleLadder, StatsRow, DotGrid, HomepageFonts)
+│   │   ├── about/               # About page components (OrgTimeline)
+│   │   ├── homepage/            # Public landing page components (BentoFeatures, HeroVisual, QualCarousel, RoleLadder, AntTrailPattern, AntHeroAccent, StatsRow, DotGrid, QualTrail, RevealSection, HomepageFonts)
 │   │   ├── ui/                  # Shared atomic components (Button, Badge, BackButton, RelatedContent, etc.)
-│   │   ├── layout/              # NavBar
+│   │   ├── layout/              # NavBar, Footer, DashboardLayout
+│   │   ├── auth/                # LoginForm, SignupForm
 │   │   ├── classrooms/          # Classroom components (11 files)
 │   │   ├── clubs/               # Club components (ClubDetail, ClubDiscovery)
 │   │   ├── flashcards/          # Flashcard components (11 files)
@@ -195,15 +224,27 @@ the-ants/
 │   ├── types/                   # Shared TypeScript definitions
 │   ├── constants/               # Static reference data
 │   └── context/                 # React context providers
-├── schema.md                    # Database schema reference
-└── spec.md                      # System specification
+├── spec.md                      # System specification
+├── schema.md                     # Database schema reference
+├── design-system/                # Design system docs (colors, typography, components, accessibility)
+│   ├── README.md                 # Quick start + file index
+│   ├── design-system.md          # Color palette & typography (primary iteration file)
+│   ├── mock-db-audit.md          # Mock database vs schema coverage audit
+│   └── ...                       # Component library, interaction flows, etc.
+└── README.md                     # Project README
 ```
+
+---
+
+## Design System
+
+All visual and interaction standards are documented in the [design-system/](./design-system/) folder. See the [design system README](./design-system/README.md) for a quick start guide, and [design-system.md](./design-system/design-system.md) for the color palette and typography decisions.
 
 ---
 
 <div align="center">
 
-Built with ❤️ for Myanmar students by The ANTS team
+Built with ❤️ for Myanmar students by The ANTs team
 
 *Ace with us! 🐜*
 

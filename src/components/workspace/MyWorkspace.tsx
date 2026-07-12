@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — MyWorkspace
+// The ANTs — MyWorkspace
 // Unified personal hub with 4 tabs: My Courses, My Notes, My Decks, My Exams.
 // Replaces fragmented views across /my-notes, /flashcards (personal), /countdown.
 // ──────────────────────────────────────────────────────────────────────────────

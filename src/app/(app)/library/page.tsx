@@ -1,5 +1,5 @@
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Notes Library Page
+// The ANTs — Notes Library Page
 // Route: /library — accessible to all authenticated users.
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -8,7 +8,7 @@ import type { Metadata } from 'next';
 import NotesLibrary from '@/components/notes/NotesLibrary';
 
 export const metadata: Metadata = {
-  title: 'Notes Library — The ANTS',
+  title: 'Notes Library — The ANTs',
   description: 'Browse, search, and save curriculum-aligned study notes created by expert contributors.',
 };
 

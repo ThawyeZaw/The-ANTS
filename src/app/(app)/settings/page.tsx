@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Settings Page
+// The ANTs — Settings Page
 // Lets users edit their profile, change their role, and personalise appearance.
 // ──────────────────────────────────────────────────────────────────────────────
 
