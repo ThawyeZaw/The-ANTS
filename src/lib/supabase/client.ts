@@ -6,15 +6,17 @@ import { createBrowserClient } from '@supabase/ssr'
 import type { Database } from '@/types/supabase'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-export type AppSupabaseClient = SupabaseClient<Database> | null
+export type AppSupabaseClient = SupabaseClient<Database>
 
 export function createClient(): AppSupabaseClient {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 
-  // In development (or misconfigured environments) these might be missing.
-  // Avoid crashing the whole app; let AuthProvider render as unauthenticated.
-  if (!url || !key) return null
+  if (!url || !key) {
+    throw new Error(
+      'Missing Supabase environment variables: NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY must be set.',
+    )
+  }
 
   return createBrowserClient<Database>(url, key)
 }
