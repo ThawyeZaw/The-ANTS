@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import CoursesLibraryBrowser from '@/components/library/CoursesLibraryBrowser';
 
 export const metadata = {
-  title: 'Courses Library — The ANTs',
+  title: 'Courses — The ANTs',
   description: 'Browse verified curriculum templates from CAIE, Edexcel, IELTS and more. Add to your account and auto-populate your Lesson Tracker and Grade Calculator.',
 };
 

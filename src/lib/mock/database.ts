@@ -408,6 +408,22 @@ export function mockSignup(
   };
 }
 
+// ── User ID Resolution ─────────────────────────────────────────────────────
+
+/**
+ * Resolve a user ID for mock data lookups.
+ * When an auth user signs in with Supabase, they get a real UUID
+ * (e.g. "61b370c5-...") that doesn't match any mock record.
+ * This helper maps unknown IDs to a default mock user so all
+ * dashboard stats, saved notes, and personal data still render.
+ */
+function _mockUserId(userId: string, fallback = 'user-student-001'): string {
+  // If this ID already exists in mock profiles, it's a known mock user
+  if (mockProfiles.some((p) => p.id === userId)) return userId;
+  // Otherwise it's a real Supabase auth UUID — fall back to a mock user
+  return fallback;
+}
+
 // ── Profile Queries ──────────────────────────────────────────────────────────
 
 /** Get a single profile by user ID */
@@ -4527,7 +4543,8 @@ export function getNoteById(noteId: string): Note | undefined {
 
 /** Get all notes created by a specific contributor (all statuses) */
 export function getNotesByContributor(contributorId: string): Note[] {
-  return mockNotes.filter((n) => n.contributor_id === contributorId);
+  const effectiveId = _mockUserId(contributorId, 'user-contributor-001');
+  return mockNotes.filter((n) => n.contributor_id === effectiveId);
 }
 
 /** Get all notes pending review (for main contributor review queue) */
@@ -4710,15 +4727,17 @@ export function deleteNote(
 
 /** Get all notes saved by a user */
 export function getUserSavedNotes(userId: string): Note[] {
+  const effectiveId = _mockUserId(userId);
   const savedIds = mockUserSavedNotes
-    .filter((s) => s.user_id === userId)
+    .filter((s) => s.user_id === effectiveId)
     .map((s) => s.note_id);
   return mockNotes.filter((n) => savedIds.includes(n.id));
 }
 
 /** Check if a user has saved a specific note */
 export function isNoteSaved(userId: string, noteId: string): boolean {
-  return mockUserSavedNotes.some((s) => s.user_id === userId && s.note_id === noteId);
+  const effectiveId = _mockUserId(userId);
+  return mockUserSavedNotes.some((s) => s.user_id === effectiveId && s.note_id === noteId);
 }
 
 /** Save a note to a user's dashboard */
@@ -4726,7 +4745,8 @@ export function saveNote(
   userId: string,
   noteId: string
 ): { success: true } | { success: false; error: string } {
-  if (isNoteSaved(userId, noteId)) {
+  const effectiveId = _mockUserId(userId);
+  if (isNoteSaved(effectiveId, noteId)) {
     return { success: false, error: 'Note already saved.' };
   }
   const note = mockNotes.find((n) => n.id === noteId);
@@ -4735,7 +4755,7 @@ export function saveNote(
   }
   mockUserSavedNotes.push({
     id: `usn-${Date.now()}`,
-    user_id: userId,
+    user_id: effectiveId,
     note_id: noteId,
     saved_at: new Date().toISOString(),
   });
@@ -4747,8 +4767,9 @@ export function unsaveNote(
   userId: string,
   noteId: string
 ): { success: true } | { success: false; error: string } {
+  const effectiveId = _mockUserId(userId);
   const idx = mockUserSavedNotes.findIndex(
-    (s) => s.user_id === userId && s.note_id === noteId
+    (s) => s.user_id === effectiveId && s.note_id === noteId
   );
   if (idx < 0) return { success: false, error: 'Saved note not found.' };
   mockUserSavedNotes.splice(idx, 1);
@@ -5096,7 +5117,8 @@ export function getDecksByEnrolledCourses(userId: string): Deck[] {
  * Falls back to all public approved notes.
  */
 export function getNotesByEnrolledCourses(userId: string): Note[] {
-  const userEnrollments = getUserEnrollments(userId);
+  const effectiveId = _mockUserId(userId);
+  const userEnrollments = getUserEnrollments(effectiveId);
   const allPublicNotes = mockNotes.filter(n => n.status === 'approved' && n.visibility === 'public');
 
   if (userEnrollments.length === 0) return allPublicNotes;
@@ -5345,7 +5367,8 @@ export function getStudentDashboardStats(userId: string) {
     nextExamStr = `${diffDays} days`;
   }
 
-  const userProgress = mockTopicProgress.filter(tp => tp.user_id === userId);
+  const effectiveId = _mockUserId(userId);
+  const userProgress = mockTopicProgress.filter(tp => tp.user_id === effectiveId);
   let confidenceStr = '72%';
   if (userProgress.length > 0) {
     const totalConfidence = userProgress.reduce((sum, tp) => sum + (tp.confidence_level || 0), 0);
@@ -5387,14 +5410,15 @@ export function getTeacherDashboardStats(userId: string) {
 }
 
 export function getContributorDashboardStats(userId: string) {
-  const publishedCurrs = mockCurriculums.filter(c => c.created_by === userId && c.status === 'published').length;
-  const publishedNotes = mockNotes.filter(n => n.contributor_id === userId && n.status === 'approved').length;
+  const effectiveId = _mockUserId(userId, 'user-contributor-001');
+  const publishedCurrs = mockCurriculums.filter(c => c.created_by === effectiveId && c.status === 'published').length;
+  const publishedNotes = mockNotes.filter(n => n.contributor_id === effectiveId && n.status === 'approved').length;
   const totalPublished = publishedCurrs + publishedNotes || 14;
 
-  const pendingNotes = mockNotes.filter(n => n.contributor_id === userId && n.status === 'pending_review').length || 3;
-  const clubsLed = mockClubMembers.filter(m => m.user_id === userId && (m.role === 'admin' || m.role === 'moderator')).length || 2;
+  const pendingNotes = mockNotes.filter(n => n.contributor_id === effectiveId && n.status === 'pending_review').length || 3;
+  const clubsLed = mockClubMembers.filter(m => m.user_id === effectiveId && (m.role === 'admin' || m.role === 'moderator')).length || 2;
 
-  const stat = mockContributorStats.find(s => s.contributor_id === userId);
+  const stat = mockContributorStats.find(s => s.contributor_id === effectiveId);
   const profileViews = stat ? stat.total_views.toString() : '128';
 
   return [

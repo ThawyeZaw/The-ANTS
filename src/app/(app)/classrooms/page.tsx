@@ -21,18 +21,25 @@ export default function ClassroomsPage() {
 
   useEffect(() => {
     if (!user) return;
+    let cancelled = false;
     (async () => {
-      const userClassrooms = await c.getClassroomsByUser(user.id);
-      setClassrooms(userClassrooms);
+      try {
+        const userClassrooms = await c.getClassroomsByUser(user.id);
+        if (cancelled) return;
+        setClassrooms(userClassrooms);
 
-      const map: Record<string, ClassroomMember[]> = {};
-      await Promise.all(
-        userClassrooms.map(async (cls) => {
-          map[cls.id] = await c.getMembers(cls.id);
-        })
-      );
-      setMembersMap(map);
+        const map: Record<string, ClassroomMember[]> = {};
+        await Promise.all(
+          userClassrooms.map(async (cls) => {
+            map[cls.id] = await c.getMembers(cls.id);
+          })
+        );
+        if (!cancelled) setMembersMap(map);
+      } catch {
+        // fetch aborted by navigation — safe to ignore
+      }
     })();
+    return () => { cancelled = true; };
   }, [user, c]);
 
   if (!user) return null;

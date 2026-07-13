@@ -167,6 +167,9 @@ export default function DashboardLayout({
                     <div className="dash-welcome-node" style={{ top: '80%', left: '84%', animationDelay: '0.5s' }} />
                   </div>
 
+                  {/* Glass overlay — frosted panel atop the gradient */}
+                  <div className="dash-welcome-glass absolute inset-0 z-[4] rounded-[2rem] pointer-events-none" aria-hidden="true" />
+
                   {/* Content — left side text, right side open for illustration */}
                   <div className="relative z-10 flex items-center gap-8">
                     <div className="flex-1">

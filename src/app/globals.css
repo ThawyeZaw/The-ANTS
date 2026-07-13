@@ -1156,6 +1156,70 @@ a {
     0 0 0 1px rgba(255, 255, 255, 0.08) inset;
 }
 
+/* ── Glass Gradient Overlay — frosted glass panel atop welcome gradient ─── */
+/*    Sits as an absolute child between the pattern layers (z:1-3) and the   */
+/*    content (z:10). Uses a translucent radial highlight + crisp border to   */
+/*    simulate frosted glass over the gradient backdrop.                      */
+/*    No DOM restructuring required — pure CSS glass illusion.                */
+/* ──────────────────────────────────────────────────────────────────────────── */
+
+.dash-welcome-glass {
+  /* Inner glass highlight — diagonal radial glow across the card surface */
+  background:
+    radial-gradient(
+      ellipse 80% 50% at 30% 20%,
+      rgba(255, 255, 255, 0.16) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 50% 40% at 85% 80%,
+      rgba(255, 255, 255, 0.06) 0%,
+      transparent 50%
+    );
+
+  /* Glass edge — crisp semi-transparent inner border */
+  border: 1px solid rgba(255, 255, 255, 0.18);
+
+  /* Subtle inner glow around the perimeter */
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.10);
+}
+
+[data-theme="dark"] .dash-welcome-glass {
+  background:
+    radial-gradient(
+      ellipse 80% 50% at 30% 20%,
+      rgba(91, 158, 255, 0.10) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 50% 40% at 85% 80%,
+      rgba(40, 255, 191, 0.06) 0%,
+      transparent 50%
+    );
+
+  border: 1px solid rgba(255, 255, 255, 0.10);
+
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+/* Only enable backdrop-filter when supported (Safari, Chrome 76+) for quality */
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .dash-welcome-glass {
+    backdrop-filter: blur(12px) saturate(120%);
+    -webkit-backdrop-filter: blur(12px) saturate(120%);
+  }
+}
+
+/* ── Responsive: lighter blur on small screens for performance ──────────── */
+@media (max-width: 640px) {
+  @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+    .dash-welcome-glass {
+      backdrop-filter: blur(6px) saturate(105%);
+      -webkit-backdrop-filter: blur(6px) saturate(105%);
+    }
+  }
+}
+
 /* ── Stats cards: subtle grid overlay ────────────────────────────────────── */
 .dash-stat-grid {
   background-image:
@@ -1408,6 +1472,34 @@ a {
   box-shadow: var(--hp-shadow-card-hover);
   border-color: var(--hp-border-strong);
   transform: translateY(-3px);
+}
+
+/* ── HeroVisual inner panels — subtle floating shadow ──────────────────── */
+.hp-panel-float {
+  transition: box-shadow 0.35s var(--hp-ease-out), transform 0.35s var(--hp-ease-out);
+}
+
+.hp-panel-float:hover {
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.10),
+    0 10px 28px rgba(0, 0, 0, 0.07),
+    0 20px 50px rgba(0, 0, 0, 0.05) !important;
+  transform: translateY(-2px);
+}
+
+[data-theme="dark"] .hp-panel-float {
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.18),
+    0 6px 18px rgba(0, 0, 0, 0.14),
+    0 14px 40px rgba(0, 0, 0, 0.10) !important;
+}
+
+[data-theme="dark"] .hp-panel-float:hover {
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.28),
+    0 10px 28px rgba(0, 0, 0, 0.20),
+    0 20px 50px rgba(0, 0, 0, 0.14) !important;
+  transform: translateY(-2px);
 }
 
 /* ── Icon container elevation ───────────────────────────────────────────── */
@@ -1945,5 +2037,88 @@ a {
   .tl-card-3d__corner {
     transform: none !important;
     transition: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   NavBar — SVG Icon Hover Draw Animation
+   When hovering over a nav-group button, the icon stroke "draws" itself on
+   using a stroke-dasharray wipe effect. Respects prefers-reduced-motion.
+   ───────────────────────────────────────────────────────────────────────────────
+   Technique:
+     • stroke-dasharray: 2000 — safely exceeds the length of any path within a
+       24×24 viewBox, so the "hidden" state (offset: 2000) covers everything.
+     • Transition-based reveal instead of animation to prevent the re-hover
+       "jump to hidden" glitch — we transition from 0 → 2000 on enter and
+       2000 → 0 on leave, creating a round-trip draw effect.
+     • will-change + translateZ(0) layer promotion for GPU-accelerated
+       60fps painting on desktop and mobile.
+     • stroke-width transition adds a subtle thickness cue during hover.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.nav-icon-btn .nav-icon-draw svg {
+  /* GPU layer promotion — isolates painting to the compositor thread */
+  will-change: transform, stroke-dashoffset;
+  transform: translateZ(0);
+}
+
+.nav-icon-btn .nav-icon-draw svg path,
+.nav-icon-btn .nav-icon-draw svg circle,
+.nav-icon-btn .nav-icon-draw svg line,
+.nav-icon-btn .nav-icon-draw svg rect,
+.nav-icon-btn .nav-icon-draw svg polyline,
+.nav-icon-btn .nav-icon-draw svg polygon {
+  /* Use a very large dasharray so offset 2000 fully hides any path in a 24×24 viewBox */
+  stroke-dasharray: 2000;
+  stroke-dashoffset: 2000;
+  stroke-width: 1.5;
+
+  /* Round-trip transition: draws out on leave, draws in on enter */
+  transition: stroke-dashoffset 400ms cubic-bezier(0.25, 0.1, 0.25, 1),
+              stroke-width 300ms ease-out;
+}
+
+.nav-icon-btn:hover .nav-icon-draw svg path,
+.nav-icon-btn:hover .nav-icon-draw svg circle,
+.nav-icon-btn:hover .nav-icon-draw svg line,
+.nav-icon-btn:hover .nav-icon-draw svg rect,
+.nav-icon-btn:hover .nav-icon-draw svg polyline,
+.nav-icon-btn:hover .nav-icon-draw svg polygon {
+  stroke-dashoffset: 0;
+  stroke-width: 2.25;
+}
+
+/* When the dropdown is open, keep the icon fully drawn */
+.nav-icon-btn[aria-expanded="true"] .nav-icon-draw svg path,
+.nav-icon-btn[aria-expanded="true"] .nav-icon-draw svg circle,
+.nav-icon-btn[aria-expanded="true"] .nav-icon-draw svg line,
+.nav-icon-btn[aria-expanded="true"] .nav-icon-draw svg rect,
+.nav-icon-btn[aria-expanded="true"] .nav-icon-draw svg polyline,
+.nav-icon-btn[aria-expanded="true"] .nav-icon-draw svg polygon {
+  stroke-dashoffset: 0;
+  stroke-width: 2.25;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-icon-btn .nav-icon-draw svg path,
+  .nav-icon-btn .nav-icon-draw svg circle,
+  .nav-icon-btn .nav-icon-draw svg line,
+  .nav-icon-btn .nav-icon-draw svg rect,
+  .nav-icon-btn .nav-icon-draw svg polyline,
+  .nav-icon-btn .nav-icon-draw svg polygon {
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+    stroke-width: 1.5;
+    transition: none;
+
+    /* Re-enable default hover stroke width for accessibility */
+  }
+  .nav-icon-btn:hover .nav-icon-draw svg path,
+  .nav-icon-btn:hover .nav-icon-draw svg circle,
+  .nav-icon-btn:hover .nav-icon-draw svg line,
+  .nav-icon-btn:hover .nav-icon-draw svg rect,
+  .nav-icon-btn:hover .nav-icon-draw svg polyline,
+  .nav-icon-btn:hover .nav-icon-draw svg polygon {
+    stroke-width: 2;
   }
 }

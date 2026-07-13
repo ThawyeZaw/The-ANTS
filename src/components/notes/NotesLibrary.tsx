@@ -5,7 +5,7 @@
 // Main notes library page with filtering, search, and save functionality.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { BookOpen, Filter, Plus, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -13,11 +13,17 @@ import type { NoteFilters } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 import { useCourseManager } from '@/hooks/useCourseManager';
 
-import { useNotes, useSavedNotes } from '@/hooks/useNotes';
 import NoteCard from './NoteCard';
 import NoteFiltersPanel from './NoteFilters';
 import NoteReaderModal from './NoteReaderModal';
-import { getProfile } from '@/lib/mock/database';
+import {
+  getNotes,
+  getProfile,
+  getUserSavedNotes,
+  saveNote,
+  unsaveNote,
+  isNoteSaved,
+} from '@/lib/mock/database';
 
 const DEFAULT_FILTERS: NoteFilters = {
   search: '',
@@ -30,29 +36,46 @@ const DEFAULT_FILTERS: NoteFilters = {
 export default function NotesLibrary() {
   const { user } = useAuth();
 
-
   const [filters, setFilters] = useState<NoteFilters>(DEFAULT_FILTERS);
   const [showFilters, setShowFilters] = useState(false);
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
   const [showEnrolledOnly, setShowEnrolledOnly] = useState(false);
+  const [savedNoteIds, setSavedNoteIds] = useState<Set<string>>(new Set());
+  const [toggleKey, setToggleKey] = useState(0);
 
-  const { notes } = useNotes(filters);
-  const { toggleSave, checkSaved } = useSavedNotes(user?.id);
   const { enrolledCurriculumIds } = useCourseManager();
 
-  // Track saved state for displayed notes (checkSaved is async)
-  const [savedNoteIds, setSavedNoteIds] = useState<Set<string>>(new Set());
+  // Get notes from mock database with applied filters
+  const notes = useMemo(() => {
+    return getNotes({
+      curriculumId: filters.curriculumId ?? undefined,
+      subjectId: filters.subjectId ?? undefined,
+      isSyllabusBased: filters.isSyllabusBased ?? undefined,
+      search: filters.search || undefined,
+      tags: filters.tags.length > 0 ? filters.tags : undefined,
+    });
+  }, [filters.curriculumId, filters.subjectId, filters.isSyllabusBased, filters.search, JSON.stringify(filters.tags), toggleKey]);
 
+  // Track saved state for displayed notes
   useEffect(() => {
     if (!user) { setSavedNoteIds(new Set()); return; }
-    let cancelled = false;
-    Promise.all(notes.map((n) => checkSaved(n.id).then((saved) => ({ id: n.id, saved }))))
-      .then((results) => {
-        if (cancelled) return;
-        setSavedNoteIds(new Set(results.filter((r) => r.saved).map((r) => r.id)));
-      });
-    return () => { cancelled = true; };
-  }, [notes, user, checkSaved]);
+    const savedNotes = getUserSavedNotes(user.id);
+    setSavedNoteIds(new Set(savedNotes.map(n => n.id)));
+  }, [user, notes.length, toggleKey]);
+
+  // Toggle save using mock database
+  const toggleSave = useCallback(async (noteId: string) => {
+    if (!user) return;
+    const saved = isNoteSaved(user.id, noteId);
+    if (saved) {
+      unsaveNote(user.id, noteId);
+      setSavedNoteIds(prev => { const next = new Set(prev); next.delete(noteId); return next; });
+    } else {
+      saveNote(user.id, noteId);
+      setSavedNoteIds(prev => new Set([...prev, noteId]));
+    }
+    setToggleKey(k => k + 1);
+  }, [user]);
 
   // Build a contributor name lookup map
   const contributorNames = useMemo(() => {

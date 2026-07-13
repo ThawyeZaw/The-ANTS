@@ -10,6 +10,7 @@ import {
   Music2,
   Link2,
   BadgeCheck,
+  Star,
 } from 'lucide-react';
 import { RoleBadge } from '@/components/ui/Badge';
 import AvatarImage from '@/components/ui/AvatarImage';
@@ -45,6 +46,7 @@ interface ProfileHeroProps {
 
 export default function ProfileHero({ profile, isOwnProfile }: ProfileHeroProps) {
   const visibleLinks = (profile.socialLinks || []).filter(link => link.visible && link.url);
+  const isContributor = profile.role === 'contributor' || profile.role === 'main_contributor';
 
   return (
     <div className="relative">
@@ -54,13 +56,13 @@ export default function ProfileHero({ profile, isOwnProfile }: ProfileHeroProps)
         <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
         <div className="flex flex-col items-center text-center py-12 px-6">
-          {/* Avatar with gradient ring and glow */}
+          {/* Avatar with gold-gradient ring and glow */}
           <div className="shrink-0 mb-8 relative">
             {/* Glow effect */}
-            <div className="absolute inset-0 rounded-full bg-primary/20 blur-2xl scale-110" />
-            {/* Gradient ring */}
-            <div className="relative rounded-full p-[3px] bg-gradient-to-br from-primary via-violet-500 to-amber-500 shadow-lg shadow-primary/20">
-              <div className="rounded-full p-[2px] bg-background">
+            <div className="absolute inset-0 rounded-full bg-amber-500/15 blur-2xl scale-125" />
+            {/* Gold gradient ring */}
+            <div className="relative rounded-full p-[3px] bg-gradient-to-br from-amber-400 via-orange-400 to-rose-500 shadow-lg shadow-amber-500/20">
+              <div className="rounded-full p-[2px] bg-[#1a1a1a]">
                 <AvatarImage avatar={profile.avatar} name={profile.name} size="xl" />
               </div>
             </div>
@@ -81,9 +83,17 @@ export default function ProfileHero({ profile, isOwnProfile }: ProfileHeroProps)
           </div>
 
           {/* The ANTs Org Affiliation */}
-          <div className="flex items-center gap-1.5 mb-5 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary/80 text-xs font-medium backdrop-blur-sm">
-            <BadgeCheck className="h-3.5 w-3.5" />
-            <span className="font-brand">The ANTs</span> Member
+          <div className={`flex items-center gap-1.5 mb-5 px-4 py-1.5 rounded-full text-xs font-medium backdrop-blur-sm ${
+            isContributor
+              ? 'bg-amber-500/10 border border-amber-500/20 text-amber-400/80'
+              : 'bg-primary/10 border border-primary/20 text-primary/80'
+          }`}>
+            {isContributor ? (
+              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+            ) : (
+              <BadgeCheck className="h-3.5 w-3.5" />
+            )}
+            <span className="font-brand">{isContributor ? 'The ANTs Verified Contributor' : 'The ANTs Member'}</span>
           </div>
 
           {/* Bio — styled quote block */}

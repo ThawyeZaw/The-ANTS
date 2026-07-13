@@ -211,7 +211,7 @@ export default function ExamsLibraryBrowser() {
             <BookMarked size={12} /> Official Exam Dates · Contributor-verified
           </div>
           <h1 className="text-2xl md:text-3xl font-extrabold text-[var(--foreground)] tracking-tight">
-            Exams Library
+            Exams
           </h1>
           <p className="max-w-xl text-sm md:text-base text-[var(--foreground-secondary)]">
             Browse official exam dates and papers by board. Fixed-date exams (IGCSE, A Level) have pre-filled dates — you can still override them. IELTS and OSSD require you to pick your personal date.

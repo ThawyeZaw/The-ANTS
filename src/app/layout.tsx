@@ -41,6 +41,7 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${quicksand.variable} h-full`}
+      data-scroll-behavior="smooth"
       suppressHydrationWarning
     >
       <body
