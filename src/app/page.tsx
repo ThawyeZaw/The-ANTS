@@ -694,9 +694,8 @@ export default function HomePage() {
               {EXPLORE_CARDS.map((card, i) => (
                 <Link key={card.title} href={card.href} style={{ display: 'block' }}>
                   <div
-                    className="explore-card-hp hp-card-elevated hp-reveal"
+                    className="explore-card-hp hp-card-elevated"
                     style={{
-                      '--hp-delay': `${i * 120}ms`,
                       padding: 32,
                       borderRadius: 'var(--hp-radius-lg)',
                       background: 'var(--hp-surface)',

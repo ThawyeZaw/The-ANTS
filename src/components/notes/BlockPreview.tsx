@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ExternalLink } from 'lucide-react';
 import type { NoteBlock } from '@/types';
 import AnimationBlockComponent from './AnimationBlock';
+import { useKaTeXStyles } from '@/hooks/useKaTeXStyles';
 
 interface BlockPreviewProps {
   block: NoteBlock;
@@ -213,6 +214,7 @@ function TableRenderer({ rows }: { rows: string[][] }) {
 // ── Main BlockPreview ─────────────────────────────────────────────────────────
 
 export default function BlockPreview({ block }: BlockPreviewProps) {
+  useKaTeXStyles();
   switch (block.type) {
     case 'heading': {
       const Tag = (`h${block.level}`) as 'h1' | 'h2' | 'h3';

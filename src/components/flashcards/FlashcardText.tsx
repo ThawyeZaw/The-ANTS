@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef } from 'react';
+import { useKaTeXStyles } from '@/hooks/useKaTeXStyles';
 
 interface FlashcardTextProps {
   text: string;
@@ -76,6 +77,7 @@ function LatexSegment({ expression, display }: { expression: string; display: bo
 }
 
 export default function FlashcardText({ text, className }: FlashcardTextProps) {
+  useKaTeXStyles();
   const segments = useMemo(() => parseFlashcardText(text), [text]);
 
   return (
