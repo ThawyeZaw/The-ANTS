@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function TimetablePage() {
   return (
     <div className="h-screen overflow-hidden">
-      <TimetableManager userId="user-student-001" />
+      <TimetableManager />
     </div>
   );
 }

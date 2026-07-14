@@ -30,12 +30,9 @@ Whether you're targeting A* in IGCSE or A Levels, IELTS band 7+, or an OSSD dipl
 
 | Exam Board | Qualifications |
 |---|---|
-| 🎓 **Cambridge CAIE** | IGCSE, A Levels  |
+| 🎓 **Cambridge CAIE** | IGCSE, A Levels |
 | 📘 **Pearson Edexcel** | IGCSE, International A Level (IAL) |
-| 🍁 **OSSD** | Ontario Secondary School Diploma |
 | 🌍 **IELTS** | Academic & General Training |
-| 📝 **SAT** | College Board SAT (Math + Reading/Writing) |
-| 💬 **Duolingo** | Duolingo English Test (DET) |
 
 ---
 
@@ -205,25 +202,37 @@ the-ants/
 ├── src/
 │   ├── app/                     # Next.js App Router pages
 │   ├── components/
-│   │   ├── about/               # About page components (OrgTimeline)
-│   │   ├── homepage/            # Public landing page components (BentoFeatures, HeroVisual, QualCarousel, RoleLadder, AntTrailPattern, AntHeroAccent, StatsRow, DotGrid, QualTrail, RevealSection, HomepageFonts)
-│   │   ├── ui/                  # Shared atomic components (Button, Badge, BackButton, RelatedContent, etc.)
+│   │   ├── about/               # About page components (OrgTimeline, TeamMemberCard)
+│   │   ├── homepage/            # Public landing page components (RevealSection, BentoFeatures, HeroVisual, QualTrail, QualCarousel, RoleLadder, StatsRow, DotGrid, AntTrailPattern, AntHeroAccent, HomepageFonts)
+│   │   ├── ui/                  # Shared atomic components (Button, Badge, BackButton, AvatarImage, AnimatedStat, RelatedContent, etc.)
 │   │   ├── layout/              # NavBar, Footer, DashboardLayout
 │   │   ├── auth/                # LoginForm, SignupForm
+│   │   ├── settings/            # ProfileEditor, AdvancedProfileEditor, CertificationEditor, RoleUpgradeForm, RoleSwitcher
+│   │   ├── profile/             # Profile components (ProfileHero, ProfileActivity, ProfileStats, ContributorPublicProfile, etc.)
 │   │   ├── classrooms/          # Classroom components (11 files)
-│   │   ├── clubs/               # Club components (ClubDetail, ClubDiscovery)
+│   │   ├── clubs/               # Club components (ClubDetail, ClubDiscovery, MilestoneTracker)
 │   │   ├── flashcards/          # Flashcard components (11 files)
 │   │   ├── notes/               # Notes components (13 files)
 │   │   ├── countdown/           # Exam countdown components
+│   │   ├── contributor-manager/ # Invite flow components
+│   │   ├── exam-data/           # Exam data components
+│   │   ├── exam-editor/         # Exam editor components
+│   │   ├── review-queue/        # Review queue components
+│   │   ├── share/               # Shared view components
+│   │   ├── workspace/           # Workspace components
+│   │   ├── timetable/           # Timetable view components
+│   │   ├── onboarding/          # Onboarding wizard
 │   │   └── ...                  # Other feature components
-│   ├── hooks/                   # Custom React hooks
+│   ├── hooks/                   # Custom React hooks (useAuth, useRole, useTimetable, useClassroom, useFlashcardSRS, etc.)
 │   ├── actions/                 # Next.js Server Actions
 │   ├── lib/                     # Infrastructure & utilities
 │   │   ├── mock/database.ts     # Single mock data facade
 │   │   └── quiz-ai.ts           # AI quiz prompt/parser
 │   ├── types/                   # Shared TypeScript definitions
 │   ├── constants/               # Static reference data
-│   └── context/                 # React context providers
+│   └── context/                 # React context providers (AuthContext, PersonaContext, ThemeContext)
+├── The-ANTS-1/                  # Legacy / alternative asset directory
+├── proxy.ts                     # Route protection + post-login redirect
 ├── spec.md                      # System specification
 ├── schema.md                     # Database schema reference
 ├── design-system/                # Design system docs (colors, typography, components, accessibility)

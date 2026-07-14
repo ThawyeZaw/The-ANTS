@@ -197,7 +197,7 @@ export default function MyNotesLibrary() {
                   className="mt-2 flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary/95 transition-all shadow-md shadow-primary/20"
                 >
                   <BookOpen className="h-4 w-4" />
-                  Browse Notes Library
+                  Browse Notes
                 </Link>
               )}
             </div>

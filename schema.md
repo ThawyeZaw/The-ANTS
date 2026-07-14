@@ -2,10 +2,10 @@
 
 > **Quick Sync Check** — This file is the single source of truth for all PostgreSQL table schemas. It must stay in sync with `src/types/index.ts` and `src/lib/mock/database.ts`. When tables, columns, or types change in the code, update this file.
 >
-> **Last audit (2026-07-09):** 51 tables defined. Cross-referenced against `src/types/index.ts` and `src/lib/mock/database.ts`.
+> **Last audit (2026-07-13):** 55 tables defined. Cross-referenced against `src/types/index.ts` and `src/lib/mock/database.ts`.
 > - **10 tables lack TypeScript types** — `student_profiles`, `teacher_profiles`, `curriculums`, `subjects`, `user_curriculums`, `topic_progress`, `resources` (general), `editor_submissions`, `pomodoro_sessions`, `grade_entries`. These are support/auxiliary tables — their data is embedded in other types or accessed via JSONB fields in the facade.
 > - **6 tables have column drift** — `decks`, `exams`, `notes`, `exam_countdowns`, `topics`, `card_reviews`. The TypeScript types have evolved with library-system features (`exam_board`, `visibility`, `share_token`, `library_status`, `syllabus_code` etc.) that are not yet reflected in this schema doc.
-> - **`contributor_profiles`** has column naming drift (`website` vs `website_url`, `linkedin` vs `linkedin_url`, `github` vs `github_url`) between schema and TypeScript.
+> - **`contributor_profiles`** columns synced (`website_url`, `linkedin_url`, `github_url`).
 > - **Mock DB coverage:** Core domains (classrooms, clubs, flashcards, notes, profiles, review queue) are fully covered. 18 auxiliary domains have partial or no CRUD functions — see `design-system/mock-db-audit.md` for details.
 
 ---
@@ -80,10 +80,10 @@
 | `id` | `uuid` | Primary |
 | `title` | `text` |  Nullable |
 | `bio` | `text` |  Nullable |
-| `website` | `text` |  Nullable |
+| `website_url` | `text` |  Nullable |
 | `facebook_url` | `text` |  Nullable |
-| `linkedin` | `text` |  Nullable |
-| `github` | `text` |  Nullable |
+| `linkedin_url` | `text` |  Nullable |
+| `github_url` | `text` |  Nullable |
 | `verification_documents_url` | `text` |  Nullable |
 | `specialisations` | `text[]` |  Nullable |
 | `qualifications` | `text[]` |  Nullable |
@@ -969,3 +969,74 @@
 | `user_id` | `uuid` | |
 | `note_id` | `uuid` | |
 | `saved_at` | `timestamp` | |
+
+---
+
+## Table `exam_schedules`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `user_id` | `uuid` | |
+| `exam_board` | `text` | |
+| `subject` | `text` | |
+| `level` | `text` | |
+| `exam_date` | `date` | |
+| `session` | `text` | Nullable (morning/afternoon) |
+| `paper_code` | `text` | Nullable |
+| `notes` | `text` | Nullable |
+| `created_at` | `timestamp` | Default: now() |
+| `updated_at` | `timestamp` | Nullable |
+
+---
+
+## Table `notifications`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `user_id` | `uuid` | |
+| `type` | `text` | |
+| `title` | `text` | |
+| `message` | `text` | Nullable |
+| `link_url` | `text` | Nullable |
+| `is_read` | `bool` | Default: false |
+| `created_at` | `timestamp` | Default: now() |
+
+---
+
+## Table `activity_feed`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `user_id` | `uuid` | |
+| `actor_id` | `uuid` | Nullable |
+| `activity_type` | `text` | |
+| `description` | `text` | |
+| `metadata` | `jsonb` | Nullable |
+| `created_at` | `timestamp` | Default: now() |
+
+---
+
+## Table `role_upgrade_applications`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `user_id` | `uuid` | |
+| `requested_role` | `user_role` | |
+| `reason` | `text` | Nullable |
+| `status` | `application_status` | Default: pending |
+| `reviewed_by` | `uuid` | Nullable |
+| `admin_notes` | `text` | Nullable |
+| `created_at` | `timestamp` | Default: now() |
+| `updated_at` | `timestamp` | Nullable |

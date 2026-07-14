@@ -104,10 +104,11 @@ This directory tree is the **absolute source of truth** for file placement. AI A
 
 ```text
 the-ants/                                 # Project root
-├── middleware.ts                         # 🔒 PM — Route protection + post-login redirect to /dashboard
+├── proxy.ts                              # 🔒 PM — Route protection + post-login redirect to /dashboard
 ├── spec.md                               # 🔒 PM — System specification (this file)
 ├── schema.md                             # 🔒 PM — Database schema reference
 ├── README.md                             # 🔒 PM — Project README
+├── The-ANTS-1/                           # 🔒 PM — Legacy / alternative asset directory (BridgesSection)
 ├── design-system/                        # 🔒 PM — Design system documentation (color palette, typography, components, accessibility, etc.)
 ├── supabase/                             # 🔒 PM — Supabase CLI local config
 │   ├── config.toml
@@ -190,39 +191,42 @@ the-ants/                                 # Project root
     │           └── [username]/page.tsx   # 🔒 PM — Authenticated user profile
     │
     ├── components/                       # UI components
-    │   ├── homepage/                     # 🔒 PM (TYZ) — Public landing page components (RevealSection, BentoFeatures, HeroVisual, QualTrail, QualCarousel, RoleLadder, StatsRow, DotGrid, HomepageFonts)
+    │   ├── about/                        # 🔒 PM — About page components (OrgTimeline, TeamMemberCard)
+    │   ├── homepage/                     # 🔒 PM (TYZ) — Public landing page components (RevealSection, BentoFeatures, HeroVisual, QualTrail, QualCarousel, RoleLadder, StatsRow, DotGrid, AntTrailPattern, AntHeroAccent, HomepageFonts)
     │   ├── ui/                           # 🔒 PM — Shared atomic components
     │   │   ├── Button.tsx
-    │   │   ├── Modal.tsx
     │   │   ├── Input.tsx
     │   │   ├── Badge.tsx
-    │   │   ├── ProgressBar.tsx
+    │   │   ├── AvatarImage.tsx           # LQIP-aware avatar component
+    │   │   ├── AnimatedStat.tsx          # Count-up stat animation
     │   │   ├── BackButton.tsx            # Reusable back navigation button
     │   │   └── RelatedContent.tsx        # Cross-feature linking (related flashcards/notes by topic/curriculum)
     │   ├── layout/                       # 🔒 PM — Global shell
-    │   │   ├── NavBar.tsx                # Creative floating glassmorphism nav with scroll-hide behavior
-    │   │   └── AuthModal.tsx
+    │   │   ├── NavBar.tsx                # Centered CSS Grid nav with scroll-hide, solid dropdowns, theme toggle
+    │   │   └── Footer.tsx                # Global footer
     │   ├── auth/                         # 🔒 PM — Login & signup forms
     │   │   ├── LoginForm.tsx
     │   │   └── SignupForm.tsx
     │   ├── settings/                     # 🔒 PM
     │   │   ├── AdvancedProfileEditor.tsx
     │   │   ├── ProfileEditor.tsx
+    │   │   ├── CertificationEditor.tsx
     │   │   ├── RoleUpgradeForm.tsx
     │   │   └── RoleSwitcher.tsx
-    │   ├── profile/                      # 🔒 PM — Public profile components
+    │   ├── profile/                      # 🔒 PM — Profile components
     │   │   ├── ProfileHero.tsx
     │   │   ├── ProfileActivity.tsx
-    │   │   └── ProfileStats.tsx
+    │   │   ├── ProfileStats.tsx
+    │   │   ├── ContributorPublicProfile.tsx  # Full contributor profile view
+    │   │   ├── CertificationSection.tsx      # Certifications display
+    │   │   ├── ClubMembershipsPanel.tsx      # Club membership showcase
+    │   │   └── ShareProfileButton.tsx        # Profile sharing
     │   ├── contributor-manager/          # 🔒 PM
     │   │   ├── CompleteProfileForm.tsx
     │   │   ├── InviteForm.tsx
     │   │   ├── OtpVerification.tsx
     │   │   ├── StepIndicator.tsx
     │   │   └── UsersTable.tsx
-    │   ├── explore/                      # 🔒 PM
-    │   │   ├── ClubCard.tsx
-    │   │   └── ProfileCard.tsx
     │   ├── Lessons/                      # 🔒 BMK & ABC
     │   │   ├── LessonTracker.tsx
     │   │   └── TopicCard.tsx
@@ -283,12 +287,19 @@ the-ants/                                 # Project root
     │   ├── useClub.ts                    # 🔒 AKT
     │   ├── useClassroom.ts               # 🔒 BMK & ABC — Classroom state (CRUD, assignments, quizzes, discussions, resources)
     │   ├── useCountdown.ts               # 🔒 ZLH
-    │   └── useNotes.ts                   # Notes library + editor state
+    │   ├── useNotes.ts                   # Notes library + editor state
+    │   ├── useLessons.ts                 # 🔒 BMK & ABC — Lesson tracking state
+    │   ├── useCourseManager.ts           # 🔒 BMK & ABC — Course manager state
+    │   ├── useExamReview.ts              # 🔒 ZLH — Exam data review
+    │   ├── useRealtimeChat.ts            # 🔒 AKT — Real-time club chat
+    │   ├── useRealtimeClassroom.ts       # 🔒 BMK & ABC — Real-time classroom events
+    │   ├── useRealtimePresence.ts        # 🔒 PM — User presence tracking
+    │   └── useZoomToFit.ts               # 🔒 PM — Canvas zoom utility
     │
     ├── context/                          # Global React Context Providers
-    │   ├── AuthContext.tsx               # 🔒 PM — Supabase session
+    │   ├── AuthContext.tsx               # 🔒 PM — Supabase session + auth lifecycle
     │   ├── PersonaContext.tsx            # 🔒 PM — User Role State
-    │   └── TimerContext.tsx              # 🔒 PPP — Global Pomodoro state
+    │   └── ThemeContext.tsx              # 🔒 PM — Theme toggle (light/dark)
     │
     ├── actions/                          # Next.js Server Actions
     │   ├── timetable.ts                  # 🔒 PPP
@@ -301,20 +312,30 @@ the-ants/                                 # Project root
     │   └── notes.ts                      # Notes server actions
     │
     ├── constants/                        # Static reference data
+    │   ├── homepage.ts                   # 🔒 PM — Homepage stats & qualification boards
+    │   ├── avatars.tsx                   # 🔒 PM — Avatar SVG components
     │   ├── qualifications.ts             # 🔒 PM — Exam boards, subjects, series
-    │   ├── gradeBoundaries.ts            # 🔒 AKT — Official boundary tables
     │   ├── timetable.ts                  # 🔒 PPP
     │   └── pomodoro.ts                   # 🔒 PPP
     │
     ├── lib/                              # Infrastructure clients & utilities (🔒 PM)
     │   ├── supabase/
     │   │   ├── client.ts                 # Browser-side Supabase client
-    │   │   └── server.ts                 # Server-side Supabase client
+    │   │   ├── server.ts                 # Server-side Supabase client
+    │   │   ├── auth-actions.ts           # Auth helper actions
+    │   │   ├── middleware.ts             # Supabase middleware client
+    │   │   ├── pool.ts                   # Connection pool manager
+    │   │   ├── realtime.ts               # Realtime subscriptions
+    │   │   └── health.ts                 # Health check endpoint
     │   ├── mock/
-    │   │   └── database.ts               # MVP: Typed mock data facade (ALL features import from here)
+    │   │   ├── database.ts               # MVP: Typed mock data facade (ALL features import from here)
+    │   │   └── timetable.ts              # Timetable-specific mock data
     │   ├── srs/
     │   │   └── algorithm.ts              # SM-2 / FSRS core algorithm
+    │   ├── timetable/
+    │   │   └── layout.ts                 # Timetable layout utilities
     │   ├── quiz-ai.ts                    # Quiz AI prompt generator & response parser
+    │   ├── validateEnv.ts                # Environment variable validation
     │   └── utils.ts                      # General helpers (cn, date formatting, getInitials, generateUsername)
     │
     └── types/                            # TypeScript Definitions (🔒 PM)
@@ -329,10 +350,11 @@ the-ants/                                 # Project root
 The authenticated app shell uses a **single NavBar** component (`src/components/layout/NavBar.tsx`).
 
 ### Design
-- **Style:** Creative floating pill-shaped bar with glassmorphism (frosted blur background, subtle glow borders)
-- **Interaction:** Grouped dropdown menus on click/hover
+- **Style:** Centered CSS Grid layout (`grid-cols-[1fr_auto_1fr]`) — logo left, nav links center, profile right
+- **Interaction:** Solid dropdown menus (opaque `bg-background-card` — no glassmorphism bleed-through)
 - **Behaviour:** Role-aware — nav links render only for the roles that can access them.
 - **Scroll Hide:** NavBar hides on scroll down (after 80px threshold) with `-translate-y-full` transition (300ms), and reappears on scroll up. Uses `requestAnimationFrame` throttling.
+- **Theme Toggle:** Integrated sun/moon toggle button switches between light and dark themes
 
 ### Nav Groups & Role Visibility
 
@@ -346,7 +368,7 @@ The authenticated app shell uses a **single NavBar** component (`src/components/
 | **Review** | Gatekeeper / Review Queue, Role Upgrade Requests | ❌ | ❌ | ❌ | ✅ |
 | **Profile** | My Public Profile | ✅ | ✅ | ✅ | ✅ |
 
-### Post-Login Redirect (middleware.ts)
+### Post-Login Redirect (proxy.ts)
 All roles redirect to `/dashboard` after login. The dashboard uses `useRole()` to render role-appropriate content.
 
 ---

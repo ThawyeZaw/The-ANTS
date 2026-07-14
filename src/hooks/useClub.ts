@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 type Result = { success: boolean; error?: string };
 
 export function useClub() {
-  const supabase = createClient();
+  const supabase = createClient()!;
   const [version, setVersion] = useState(0);
   const refresh = useCallback(() => setVersion((current) => current + 1), []);
 

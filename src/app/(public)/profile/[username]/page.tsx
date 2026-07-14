@@ -19,10 +19,8 @@ import {
   Star,
   GraduationCap,
   Code2,
-  Camera,
-  Music2,
-  Globe,
-  Link2,
+  BookOpen,
+  Layers,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
@@ -32,7 +30,13 @@ import ProfileActivity from '@/components/profile/ProfileActivity';
 import CertificationSection from '@/components/profile/CertificationSection';
 import ClubMembershipsPanel from '@/components/profile/ClubMembershipsPanel';
 import { PROFILE_THEME_PRESETS, type Profile } from '@/types';
-import { cn } from '@/lib/utils';
+import { cn, formatDate, formatRelativeTime } from '@/lib/utils';
+import {
+  getNotesByContributor,
+  getLibraryDecks,
+  mockCurriculums,
+  mockSubjects,
+} from '@/lib/mock/database';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -181,6 +185,50 @@ export default function ProfilePage() {
   const hasPortfolio = orderedSections.length > 0;
   const isContributor = profile?.role === 'contributor' || profile?.role === 'main_contributor';
 
+  // ── Mock data for contributor stats & published works ──────────────────────
+  const mockNotes = useMemo(() => {
+    if (!profile || !isContributor) return [];
+    return getNotesByContributor(profile.id).filter(
+      (n) => n.visibility === 'public' && n.status === 'approved'
+    );
+  }, [profile, isContributor]);
+
+  const mockDecks = useMemo(() => {
+    if (!profile || !isContributor) return [];
+    return getLibraryDecks().filter((d) => d.owner_id === profile.id && d.is_public);
+  }, [profile, isContributor]);
+
+  const curriculumMap = useMemo(() => {
+    const map: Record<string, (typeof mockCurriculums)[number]> = {};
+    for (const c of mockCurriculums) map[c.id] = c;
+    return map;
+  }, []);
+
+  const subjectMap = useMemo(() => {
+    const map: Record<string, (typeof mockSubjects)[number]> = {};
+    for (const s of mockSubjects) map[s.id] = s;
+    return map;
+  }, []);
+
+  // Merge real stats with mock counts for a better UX
+  const effectiveStats = useMemo(() => {
+    const mockCounts = {
+      published_curriculums: mockCurriculums.filter(
+        (c) => c.created_by === profile?.id
+      ).length,
+      published_resources: mockNotes.length,
+      total_views: stats?.total_views ?? 0,
+    };
+    // Use mock counts if Supabase returned zero
+    return {
+      published_curriculums: mockCounts.published_curriculums || stats?.published_curriculums || 0,
+      published_resources: mockCounts.published_resources || stats?.published_resources || 0,
+      total_views: stats?.total_views ?? 0,
+    };
+  }, [stats, mockNotes, profile, mockCurriculums]);
+
+  const showPublishedWorks = isContributor && (mockNotes.length > 0 || mockDecks.length > 0);
+
   // ── Layout classes ────────────────────────────────────────────────────────
   const spacingClass = profile?.spacing === 'spacious' ? 'space-y-10' : 'space-y-6';
   const widthClass = profile?.width === 'full' ? 'max-w-7xl' : 'max-w-5xl';
@@ -220,8 +268,122 @@ export default function ProfilePage() {
       <ProfileHero profile={profile} isOwnProfile={isOwnProfile} />
 
       {/* Stats (contributor/main_contributor only) */}
-      {isContributor && stats && (
-        <ProfileStats stats={stats} memberSince={profile.createdAt} />
+      {isContributor && (
+        <ProfileStats stats={effectiveStats} memberSince={profile.createdAt} />
+      )}
+
+      {/* ── Published Works (Contributor) ─── */}
+      {showPublishedWorks && (
+        <>
+          {/* Published Notes */}
+          {mockNotes.length > 0 && (
+            <section>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                  <BookOpen className="h-4 w-4 text-amber-400" />
+                </div>
+                <h2 className="text-lg font-bold text-foreground">
+                  Published Notes
+                  <span className="ml-2 text-sm font-normal text-foreground-muted font-mono">
+                    {mockNotes.length}
+                  </span>
+                </h2>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {mockNotes.map((note) => {
+                  const curriculum = note.curriculum_id ? curriculumMap[note.curriculum_id] : null;
+                  const subject = note.subject_id ? subjectMap[note.subject_id] : null;
+                  return (
+                    <article
+                      key={note.id}
+                      className="group relative rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-md overflow-hidden transition-all duration-300 hover:border-white/20 hover:bg-white/[0.06]"
+                    >
+                      <div
+                        className={`h-1 w-full bg-gradient-to-r ${
+                          note.curriculum_id === 'curr-igcse-cie' ? 'from-rose-600 via-red-500 to-orange-400'
+                          : note.curriculum_id === 'curr-igcse-edx' ? 'from-blue-700 via-blue-500 to-cyan-400'
+                          : note.curriculum_id === 'curr-ial-edx' ? 'from-purple-700 via-violet-500 to-fuchsia-400'
+                          : note.curriculum_id === 'curr-ielts' ? 'from-emerald-600 via-green-500 to-teal-400'
+                          : 'from-slate-600 via-slate-500 to-slate-400'
+                        }`}
+                      />
+                      <div className="p-5">
+                        {subject && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium mb-2.5 ring-1 ring-inset ring-white/15 text-white/50">
+                            <BookOpen className="h-3 w-3 opacity-70" />
+                            {subject.title}
+                          </span>
+                        )}
+                        <h3 className="text-sm font-semibold text-foreground leading-snug mb-1.5 group-hover:text-amber-400 transition-colors">
+                          {note.title}
+                        </h3>
+                        {note.summary && (
+                          <p className="text-xs text-foreground-secondary leading-relaxed line-clamp-2 mb-3">
+                            {note.summary}
+                          </p>
+                        )}
+                        <div className="flex items-center justify-between text-[10px] text-foreground-muted font-mono pt-2 border-t border-white/5">
+                          <span className="flex items-center gap-1">
+                            <Layers className="h-3 w-3" />
+                            {curriculum?.title ?? 'General'}
+                          </span>
+                          <span>{formatRelativeTime(note.created_at)}</span>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* Published Decks */}
+          {mockDecks.length > 0 && (
+            <section>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
+                  <Layers className="h-4 w-4 text-orange-400" />
+                </div>
+                <h2 className="text-lg font-bold text-foreground">
+                  Flashcard Decks
+                  <span className="ml-2 text-sm font-normal text-foreground-muted font-mono">
+                    {mockDecks.length}
+                  </span>
+                </h2>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {mockDecks.map((deck) => (
+                  <article
+                    key={deck.id}
+                    className="group relative rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-md overflow-hidden transition-all duration-300 hover:border-white/20 hover:bg-white/[0.06]"
+                  >
+                    <div className="h-1 w-full bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500" />
+                    <div className="p-5">
+                      <div className="flex items-center gap-2 mb-2.5">
+                        <span className="text-lg">{deck.category === 'IELTS' ? '🌍' : deck.category === 'Biology' ? '🧬' : deck.category === 'Physics' ? '⚡' : deck.category === 'Chemistry' ? '🧪' : deck.category === 'Mathematics' ? '📐' : '📚'}</span>
+                        <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded-full ring-1 ring-inset ring-white/10 text-foreground-muted">
+                          {deck.category}
+                        </span>
+                      </div>
+                      <h3 className="text-sm font-semibold text-foreground leading-snug mb-1.5 group-hover:text-orange-400 transition-colors">
+                        {deck.name}
+                      </h3>
+                      {deck.description && (
+                        <p className="text-xs text-foreground-secondary leading-relaxed line-clamp-2 mb-3">
+                          {deck.description}
+                        </p>
+                      )}
+                      <div className="flex items-center text-[10px] text-foreground-muted font-mono pt-2 border-t border-white/5">
+                        <span>{deck.category ?? 'Study'} deck</span>
+                        <span className="ml-auto">{formatDate(deck.created_at)}</span>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
+        </>
       )}
 
       {/* ── Pinned Item Section ─── */}

@@ -13,21 +13,23 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
-import { useSavedNotes } from '@/hooks/useNotes';
 import { getAllNavItems } from '@/components/layout/NavBar';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import {
   getStudentDashboardStats,
   mockExams,
   mockClubAnnouncements,
+  getUserSavedNotes,
 } from '@/lib/mock/database';
 
 export default function StudentDashboard() {
   const { user } = useAuth();
   const { role, isStudent } = useRole();
   const router = useRouter();
-  const { savedNotes } = useSavedNotes(user?.id);
   const [recentPages, setRecentPages] = useState<any[]>([]);
+
+  // Get saved notes from mock database
+  const savedNotes = user ? getUserSavedNotes(user.id) : [];
 
   useEffect(() => {
     if (role && !isStudent) {

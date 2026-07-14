@@ -17,7 +17,6 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
-import { useContributorNotes } from '@/hooks/useNotes';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { cn } from '@/lib/utils';
 import {
@@ -25,6 +24,7 @@ import {
   mockDecks,
   mockContributorProfiles,
   getCardsByDeck,
+  getNotesByContributor,
 } from '@/lib/mock/database';
 
 // ── Category-to-gradient mapping for deck visual preview cards ───────────────
@@ -49,7 +49,9 @@ export default function ContributorDashboard() {
   const { user } = useAuth();
   const { role, isContributor } = useRole();
   const router = useRouter();
-  const { notes: contributorNotes } = useContributorNotes(user?.id);
+
+  // Get contributor notes from mock database
+  const contributorNotes = user ? getNotesByContributor(user.id) : [];
 
   useEffect(() => {
     if (role && !isContributor) {

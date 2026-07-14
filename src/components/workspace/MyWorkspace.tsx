@@ -69,7 +69,7 @@ function CoursesTab({ enrollments }: { enrollments: ReturnType<typeof useCourseM
       <EmptyState
         icon={GraduationCap}
         title="No courses yet"
-        description="Browse the Courses Library to add verified curriculum templates. Adding a course auto-populates your Lesson Tracker and Grade Calculator."
+        description="Browse Courses to add verified curriculum templates. Adding a course auto-populates your Lesson Tracker and Grade Calculator."
         cta="Browse Library"
         ctaHref="/library/courses"
       />
@@ -170,8 +170,8 @@ function NotesTab({ notes, savedNotes }: { notes: Note[]; savedNotes: Note[] }) 
       <EmptyState
         icon={NotebookPen}
         title="No notes yet"
-        description="Create your own study notes with AI assistance, or browse the Notes Library to save approved notes to your workspace."
-        cta="Browse Notes Library"
+        description="Create your own study notes with AI assistance, or browse Notes to save approved notes to your workspace."
+        cta="Browse Notes"
         ctaHref="/library"
       />
     );
@@ -280,8 +280,8 @@ function DecksTab({ userId }: { userId: string }) {
       <EmptyState
         icon={Layers}
         title="No flashcard decks yet"
-        description="Create your own deck or add approved decks from the Flashcards Library. All decks support spaced repetition (SRS)."
-        cta="Browse Flashcards Library"
+        description="Create your own deck or add approved decks from Flashcards. All decks support spaced repetition (SRS)."
+        cta="Browse Flashcards"
         ctaHref="/library/flashcards"
       />
     );
@@ -373,8 +373,8 @@ function ExamsTab({ countdowns }: { countdowns: ReturnType<typeof useCountdown>[
       <EmptyState
         icon={Clock}
         title="No exam countdowns yet"
-        description="Browse the Exams Library to add official exam dates, or create custom countdowns for any event."
-        cta="Browse Exams Library"
+        description="Browse Exams to add official exam dates, or create custom countdowns for any event."
+        cta="Browse Exams"
         ctaHref="/library/exams"
       />
     );

@@ -183,12 +183,60 @@ export default function HomePage() {
             <style>{`
               .hp-nav-links { display: flex; align-items: center; }
               @media (max-width: 820px) { .hp-nav-links { display: none !important; } }
-              .hp-nav-links a:hover { color: var(--hp-ink); }
+
+              /* ── Nav link fill-on-hover effect ── */
+              .hp-nav-item {
+                position: relative;
+                display: inline-block;
+                cursor: pointer;
+                text-decoration: none;
+                font-family: var(--hp-font-body);
+                font-size: 14px;
+                font-weight: 500;
+                color: var(--hp-ink-muted);
+                padding: 6px 2px;
+                transition: color 0.3s ease;
+              }
+
+              .hp-nav-linktext {
+                position: relative;
+                z-index: 2;
+                transition: color 0.3s ease;
+              }
+
+              .hp-nav-linktext::before {
+                display: inline-block;
+                content: attr(data-text);
+                position: absolute;
+                top: 0;
+                left: 0;
+                overflow: hidden;
+                max-width: 0%;
+                white-space: nowrap;
+                color: var(--hp-brand);
+                transition: max-width 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+              }
+
+              .hp-nav-item:hover .hp-nav-linktext {
+                color: transparent;
+              }
+
+              .hp-nav-item:hover .hp-nav-linktext::before {
+                max-width: 100%;
+              }
             `}</style>
-            <a href="#explore">Explore</a>
-            <a href="#features">Features</a>
-            <a href="#qualifications">Boards</a>
-            <a href="#roles">Roles</a>
+            <a className="hp-nav-item" href="#explore">
+              <span className="hp-nav-linktext" data-text="Explore">Explore</span>
+            </a>
+            <a className="hp-nav-item" href="#features">
+              <span className="hp-nav-linktext" data-text="Features">Features</span>
+            </a>
+            <a className="hp-nav-item" href="#qualifications">
+              <span className="hp-nav-linktext" data-text="Boards">Boards</span>
+            </a>
+            <a className="hp-nav-item" href="#roles">
+              <span className="hp-nav-linktext" data-text="Roles">Roles</span>
+            </a>
           </div>
 
           {/* CTA area */}
@@ -643,7 +691,7 @@ export default function HomePage() {
                 .explore-card-hp:hover { border-color: var(--hp-border-strong) !important; transform: translateY(-3px) !important; }
               `}</style>
 
-              {EXPLORE_CARDS.map((card) => (
+              {EXPLORE_CARDS.map((card, i) => (
                 <Link key={card.title} href={card.href} style={{ display: 'block' }}>
                   <div
                     className="explore-card-hp hp-card-elevated"
@@ -654,7 +702,7 @@ export default function HomePage() {
                       border: '1px solid var(--hp-border)',
                       transition: 'border-color .2s ease, transform .2s ease',
                       height: '100%',
-                    }}
+                    } as React.CSSProperties}
                   >
                     {/* Icon */}
                     <div

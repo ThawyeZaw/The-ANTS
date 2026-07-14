@@ -142,7 +142,7 @@ export default function DeckLibrary({ userId }: DeckLibraryProps) {
           className="flex items-center gap-2 rounded-xl bg-violet-500/10 px-4 py-2 text-sm font-semibold text-violet-600 dark:text-violet-400 transition-all hover:bg-violet-500/20 self-start sm:self-center"
         >
           <BookMarked className="h-4 w-4" aria-hidden="true" />
-          Browse Flashcards Library
+          Browse Flashcards
         </Link>
 
         {/* Search */}
