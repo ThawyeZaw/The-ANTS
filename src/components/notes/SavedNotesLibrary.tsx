@@ -21,6 +21,7 @@ const DEFAULT_FILTERS: NoteFilters = {
   search: '',
   curriculumId: null,
   subjectId: null,
+  topicId: null,
   isSyllabusBased: null,
   tags: [],
 };
@@ -60,8 +61,8 @@ export default function SavedNotesLibrary() {
       }
       // Curriculum
       if (filters.curriculumId && note.curriculum_id !== filters.curriculumId) return false;
-      // Subject
       if (filters.subjectId && note.subject_id !== filters.subjectId) return false;
+      if (filters.topicId && note.topic_id !== filters.topicId) return false;
       // Spec-based
       if (filters.isSyllabusBased !== null && note.is_syllabus_based !== filters.isSyllabusBased) return false;
       // Tags

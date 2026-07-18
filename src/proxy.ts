@@ -1,16 +1,16 @@
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Next.js Root Middleware
+// The ANTS — Next.js Root Proxy (replaces deprecated middleware)
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { NextResponse } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 import type { NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   try {
     return await updateSession(request)
   } catch (e) {
-    console.error('Middleware error:', e)
+    console.error('Proxy error:', e)
     // On failure, allow the request through — better than a 500
     return NextResponse.next({ request })
   }

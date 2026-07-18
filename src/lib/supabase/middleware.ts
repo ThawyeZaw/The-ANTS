@@ -44,6 +44,8 @@ export async function updateSession(request: NextRequest) {
     // Root path is also public
     const isRootPath = request.nextUrl.pathname === '/'
 
+    // Auth gating — redirect unauthenticated users to /login
+    // Done server-side BEFORE the RSC stream starts, so no ERR_ABORTED.
     if (!user && !isPublicPath && !isRootPath) {
       const url = request.nextUrl.clone()
       const originalPath = request.nextUrl.pathname + request.nextUrl.search

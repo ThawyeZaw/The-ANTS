@@ -12,8 +12,8 @@ import { useCourseManager } from '@/hooks/useCourseManager';
 import BackButton from '@/components/ui/BackButton';
 import CourseManagerWizard from '@/components/courses/CourseManagerWizard';
 import {
-  BookOpen, GraduationCap, Clock, ArrowRight, Pencil,
-  Trash2, Target, Plus, Sparkles,
+  BookOpen, GraduationCap, ArrowRight,
+  Trash2, Plus, Sparkles,
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -30,7 +30,7 @@ function OnboardingBanner() {
         Build Your Academic Profile
       </h2>
       <p className="text-sm text-foreground-muted max-w-md mx-auto leading-relaxed">
-        Set up your course manager by selecting your curricula, subjects, and exam targets.
+        Set up your course manager by selecting your curricula and subjects.
         This will unlock lesson tracking, exam countdowns, and personalised study tools.
       </p>
     </div>
@@ -91,16 +91,6 @@ function EnrolledSubjects() {
                     <BookOpen className="h-4 w-4 text-foreground-muted" />
                     <div>
                       <p className="text-sm font-medium text-foreground">{enr.subject.title}</p>
-                      {enr.exam ? (
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <Clock className="h-3 w-3 text-amber-500" />
-                          <span className="text-xs text-amber-600">
-                            {enr.exam.exam_series} — {new Date(enr.exam.exam_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                          </span>
-                        </div>
-                      ) : (
-                        <p className="text-xs text-foreground-muted mt-0.5">No exam target</p>
-                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -160,7 +150,7 @@ export default function CourseManagerPage() {
           Course Manager
         </h1>
         <p className="text-foreground-muted mt-2 max-w-2xl text-sm leading-relaxed">
-          Build your academic profile by selecting curricula, subjects, and exam targets.
+          Build your academic profile by selecting curricula and subjects.
         </p>
       </div>
 

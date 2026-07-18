@@ -116,3 +116,44 @@ export function generateUsername(name: string): string {
     .trim();
   return slug || `user${Date.now()}`;
 }
+
+/**
+ * Translate a raw Supabase auth error string into a user-friendly message.
+ * Falls back to the original error message for unrecognised errors.
+ */
+export function humanizeAuthError(error?: string): string {
+  if (!error) return 'An unexpected error occurred. Please try again.';
+
+  const msg = error.toLowerCase();
+
+  // Login / sign-in errors
+  if (msg.includes('invalid login credentials') || msg.includes('invalid email or password')) {
+    return 'Invalid email or password. Please try again.';
+  }
+  if (msg.includes('email not confirmed')) {
+    return 'Please check your inbox and confirm your email before signing in.';
+  }
+
+  // Sign-up errors
+  if (msg.includes('user already registered') || msg.includes('already registered') || msg.includes('already exists')) {
+    return 'An account with this email already exists. Please sign in instead.';
+  }
+  if (msg.includes('password') && msg.includes('at least')) {
+    return 'Password must be at least 8 characters.';
+  }
+
+  // Rate limiting / network
+  if (msg.includes('rate limit') || msg.includes('too many requests')) {
+    return 'Too many attempts. Please wait a moment and try again.';
+  }
+  if (msg.includes('network') || msg.includes('fetch failed') || msg.includes('timeout')) {
+    return 'A network error occurred. Please check your connection and try again.';
+  }
+
+  // Config / env
+  if (msg.includes('not configured') || msg.includes('missing env')) {
+    return 'Authentication is temporarily unavailable. Please try again later.';
+  }
+
+  return error;
+}

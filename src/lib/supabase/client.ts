@@ -10,10 +10,8 @@ export type AppSupabaseClient = SupabaseClient<Database> | null
 
 export function createClient(): AppSupabaseClient {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 
-  // In development (or misconfigured environments) these might be missing.
-  // Avoid crashing the whole app; let AuthProvider render as unauthenticated.
   if (!url || !key) return null
 
   return createBrowserClient<Database>(url, key)

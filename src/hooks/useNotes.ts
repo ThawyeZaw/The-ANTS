@@ -25,6 +25,7 @@ export function useNotes(filters: NoteFilters) {
 
       if (filters.curriculumId) query = query.eq('curriculum_id', filters.curriculumId);
       if (filters.subjectId) query = query.eq('subject_id', filters.subjectId);
+      if (filters.topicId) query = query.eq('topic_id', filters.topicId);
       if (filters.isSyllabusBased != null) query = query.eq('is_syllabus_based', filters.isSyllabusBased);
       if (filters.search) query = query.ilike('title', `%${filters.search}%`);
       if (filters.tags.length > 0) query = query.contains('tags', filters.tags);
