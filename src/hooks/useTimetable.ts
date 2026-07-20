@@ -80,8 +80,7 @@ export interface UseTimetableReturn {
 }
 
 export function useTimetable(userId: string): UseTimetableReturn {
-  const supabase = createClient();
-  if (!supabase) return;
+  const supabase = createClient()!;
   const [view, setViewState] = useState<TimetableView>('week');
   const [currentDate, setCurrentDate] = useState<Date>(() => new Date());
   const [filters, setFilters] = useState<TimetableFilters>(DEFAULT_TIMETABLE_FILTERS);

@@ -62,8 +62,7 @@ interface UseProfileReturn {
 
 export function useProfile(username: string): UseProfileReturn {
   const { user } = useAuth();
-  const supabase = createClient();
-  if (!supabase) return;
+  const supabase = createClient()!;
 
   const [isLoading, setIsLoading] = useState(true);
   const [profile, setProfile] = useState<Profile | null>(null);

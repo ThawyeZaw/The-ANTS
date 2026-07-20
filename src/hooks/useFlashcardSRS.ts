@@ -29,8 +29,7 @@ export interface UseFlashcardSRSReturn {
 }
 
 export function useFlashcardSRS(): UseFlashcardSRSReturn {
-  const supabase = createClient();
-  if (!supabase) return;
+  const supabase = createClient()!;
 
   const [state, setState] = useState<StudySessionState>({
     deckId: '',

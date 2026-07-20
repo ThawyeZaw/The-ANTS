@@ -12,14 +12,13 @@ import { createClient } from '@/lib/supabase/client';
 import type { UserNote } from '@/types';
 
 // Helper to bypass Supabase generated types for tables not yet in types/supabase.ts
-function userNotes(supabase: ReturnType<typeof createClient>): any {
+function userNotes(supabase: any): any {
   return (supabase as any).from('user_notes');
 }
 
 export function useUserNotes(topicId?: string | null) {
   const { user } = useAuth();
-  const supabase = createClient();
-  if (!supabase) return;
+  const supabase = createClient()!;
   const userId = user?.id ?? null;
   const [notes, setNotes] = useState<UserNote[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -91,8 +90,7 @@ export function useUserNotes(topicId?: string | null) {
 
 export function useSingleUserNote(noteId: string | null) {
   const { user } = useAuth();
-  const supabase = createClient();
-  if (!supabase) return;
+  const supabase = createClient()!;
   const [note, setNote] = useState<UserNote | null>(null);
   const [isLoading, setIsLoading] = useState(!!noteId);
 

@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { X, Globe, Lock, Layers } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useLessonContext } from '@/context/LessonContext';
-import { QUALIFICATION_REGISTRY, LIVE_QUALIFICATIONS } from '@/constants/qualifications';
+import { LIVE_QUALIFICATIONS } from '@/constants/qualifications';
 import type { Deck } from '@/types';
 
 const SUGGESTED_CATEGORIES = [
@@ -25,8 +25,7 @@ interface CreateDeckModalProps {
 }
 
 export default function CreateDeckModal({ userId, onClose, onCreated }: CreateDeckModalProps) {
-  const supabase = createClient();
-  if (!supabase) return;
+  const supabase = createClient()!;
   const { enrolledCurriculums } = useLessonContext();
 
   const [name, setName] = useState('');

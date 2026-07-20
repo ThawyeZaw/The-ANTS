@@ -15,7 +15,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+import type { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -45,13 +45,12 @@ export function useRealtimeClassroom(
 ): UseRealtimeClassroomReturn {
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const channelRef = useRef<ReturnType<ReturnType<typeof createClient>['channel']> | null>(null);
+  const channelRef = useRef<RealtimeChannel | null>(null);
 
   useEffect(() => {
     if (!classroomId) return;
 
-    const supabase = createClient();
-    if (!supabase) return;
+    const supabase = createClient()!;
     let cancelled = false;
 
     const channelName = `classroom:${classroomId}`;

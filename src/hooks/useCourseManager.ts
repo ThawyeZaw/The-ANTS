@@ -55,7 +55,7 @@ export interface EnrollmentWithDetails extends EnrollmentEntry {
 
 export function useCourseManager() {
   const { user } = useAuth();
-  const supabase = createClient();
+  const supabase = createClient()!;
   const userId = user?.id ?? null;
 
   // ── State ─────────────────────────────────────────────────────────────────

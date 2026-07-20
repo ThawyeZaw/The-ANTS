@@ -7,6 +7,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useCallback, useMemo } from 'react';
+import Link from 'next/link';
 import {
   BookOpen, ChevronRight, ChevronLeft, Check,
   GraduationCap, Sparkles, CheckSquare, Square,
@@ -218,12 +219,12 @@ export default function CourseManagerWizard({ onComplete }: { onComplete?: () =>
             Browse verified curriculum templates, filter by exam board, and auto-populate your Lesson Tracker.
           </p>
         </div>
-        <button
-          onClick={() => router.push('/library/courses')}
+        <Link
+          href="/library/courses"
           className="shrink-0 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold transition-all cursor-pointer shadow-lg shadow-emerald-500/20"
         >
           Browse Library
-        </button>
+        </Link>
       </div>
     </div>
   );

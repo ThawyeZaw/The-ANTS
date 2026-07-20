@@ -23,8 +23,7 @@ interface DeckLibraryProps {
 
 export default function DeckLibrary({ userId }: DeckLibraryProps) {
   const router = useRouter();
-  const supabase = createClient();
-  if (!supabase) return;
+  const supabase = createClient()!;
   const { enrolledCurriculumIds, enrolledSubjectIds } = useLessonContext();
 
   const [searchQuery, setSearchQuery] = useState('');

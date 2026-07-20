@@ -122,8 +122,7 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
 
   const handleSwitchSession = useCallback(async (subjectId: string, examId: string) => {
     // Update exam_countdowns for the subject
-    const supabase = createClient();
-    if (!supabase) return;
+    const supabase = createClient()!;
     const exam = autoCountdowns.find(cd => cd.subjectId === subjectId)?.exam;
     if (!exam) return;
 

@@ -46,8 +46,7 @@ export function createPostgresChangesChannel<T extends Record<string, unknown>>(
     onDelete?: ChangesCallback<T>;
   }
 ): RealtimeChannel {
-  const supabase = createClient();
-  if (!supabase) return;
+  const supabase = createClient()!;
   const { channelName, table, filter, events = ['INSERT'] } = options;
 
   const channel = supabase.channel(channelName, {
@@ -101,8 +100,7 @@ export function createPresenceChannel(
   channelName: string,
   initialState: UserPresenceState
 ): RealtimeChannel {
-  const supabase = createClient();
-  if (!supabase) return;
+  const supabase = createClient()!;
   const channel = supabase.channel(channelName, {
     config: { presence: { key: initialState.user_id } },
   });

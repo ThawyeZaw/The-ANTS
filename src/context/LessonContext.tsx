@@ -100,7 +100,7 @@ const LessonContext = createContext<LessonContextValue | undefined>(undefined);
 
 export function LessonProvider({ children }: { children: ReactNode }) {
   const { user } = useAuthContext();
-  const supabase = createClient();
+  const supabase = createClient()!;
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -178,7 +178,7 @@ export function LessonProvider({ children }: { children: ReactNode }) {
       // Group by subject_id, keep only the first (earliest) per subject
       const nextExamBySubject = new Map<string, any>();
       for (const exam of (nextExams ?? [])) {
-        if (!nextExamBySubject.has(exam.subject_id)) {
+        if (exam.subject_id && !nextExamBySubject.has(exam.subject_id)) {
           nextExamBySubject.set(exam.subject_id, exam);
         }
       }
