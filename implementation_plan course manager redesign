@@ -1,0 +1,538 @@
+# Course Manager — Full Redesign Implementation Plan
+
+## Background & Goal
+
+The Course Manager becomes the **central academic hub** of The ANTs. A student sets up their courses once, and every other feature — Lesson Tracker, Exam Countdowns, Notes, and Flashcards — automatically adapts to show only relevant content for their selected curricula and subjects.
+
+---
+
+## Resolved Decisions
+
+| # | Question | Decision |
+|---|---|---|
+| 1a | Countdown scope per subject | **Single next upcoming session** (`exam_date > NOW()` ORDER BY date ASC LIMIT 1). User can manually switch to a later session via a dropdown on the card. |
+| 1b | Subject → Exam lookup logic | **Only auto-generate if a concrete `exams` table record exists** for that `subject_id`. If no match: show a friendly placeholder UI ("Timetable not released yet — we'll update this automatically"). No fake countdowns. |
+| 2 | `useLessons` hook | **Delete it.** Replace all usages with `useLessonContext()`. Eliminates duplicate Supabase queries. |
+| 3 | Filter persistence | **`localStorage`** — selected curriculum/subject filters persist across page refreshes and new browser tabs. |
+| 4 | Mock flashcard data | **Auto-migrate** via a one-shot script. Reads mock `decks` + `cards` from `lib/mock/database.ts` and upserts them into Supabase. No manual work needed. |
+
+---
+
+## Bugs Found During Analysis
+
+| Bug | File & Line | Root Cause | Fix |
+|---|---|---|---|
+| Lesson Tracker shows nothing | `useLessons.ts` L80 | Queries `user_curriculums` (old/wrong table name) | Change to `user_enrollments` |
+| Every subject shows all exams | `useCourseManager.ts` L169 | `return true` — no filter applied | Filter by `e.subject_id === subject.id` |
+| Flashcard decks not persisted to Supabase | `DeckLibrary.tsx`, `CreateDeckModal.tsx` | Uses `lib/mock/database` functions | Migrate to Supabase queries |
+| Countdowns only created when `exam_id` is explicitly passed | `useCourseManager.ts` `enroll()` | No fallback exam lookup on plain subject enrollment | Auto-lookup next exam by `subject_id` |
+
+---
+
+## Database Analysis — No New Tables Required
+
+The existing schema fully supports all 5 user flows:
+
+```
+curriculums  ──┐
+               ├──> subjects ──> topics
+               │          └──> exams (subject_id FK)
+               └──> notes (curriculum_id + subject_id FKs)
+
+user_enrollments (user_id, curriculum_id, subject_id, exam_id?)
+topic_progress   (user_id, topic_id, status, confidence_level)
+exam_countdowns  (user_id, exam_id, target_date, custom_title, qualification_group)
+decks            (owner_id, curriculum_id, subject_id, name, is_public)
+cards            (deck_id, front_text, back_text)
+```
+
+All reads use the `authenticated` role with `user_id = auth.uid()` predicates. Public tables (`curriculums`, `subjects`, `topics`, `exams`) are already readable by all authenticated users.
+
+---
+
+## User Flows (New)
+
+```
+Flow 1 — Select Curriculum
+  User visits /courses
+  → Multi-select curriculum cards (qualification + exam board badges)
+  → Selections saved to localStorage + LessonContext
+
+Flow 2 — Select Subjects
+  (Wizard Step 2 — only shows subjects belonging to selected curricula)
+  → Multi-select subjects with "Select All" per curriculum
+  → On confirm: INSERT into user_enrollments for each new subject
+
+Flow 3 — Exam Countdown (Auto)
+  After each new enrollment:
+  → Query: SELECT * FROM exams WHERE subject_id = ? AND date > NOW()
+           ORDER BY date ASC LIMIT 1
+  → Match found: INSERT into exam_countdowns with that exam's date
+  → No match: Show placeholder "Timetable not released yet"
+  → Session switcher: user can pull later sessions from the same subject
+
+Flow 4 — Lesson Tracker (Connected)
+  /lessons reads from LessonContext (enrolled subjects from user_enrollments)
+  → Multi-subject filter bar at top (chip toggles, localStorage-persisted)
+  → Only shows subjects the user selected in Course Manager
+
+Flow 5a — Notes (Official tab filter)
+  /my-notes → Official tab
+  → Toggle: "Filter by my courses"
+  → When on: filters notes where curriculum_id ∈ enrolledCurriculumIds
+                               OR subject_id   ∈ enrolledSubjectIds
+  → Zero new Supabase queries — uses LessonContext enrolled IDs
+
+Flow 5b — Flashcards (Course-aware)
+  /flashcards reads decks from Supabase (migrated from mock)
+  → Toggle: "My Courses Only"
+  → When on: filters decks by curriculum_id / subject_id from LessonContext
+  → Create Deck modal pre-fills curriculum/subject from enrolled courses
+```
+
+---
+
+## Architecture
+
+```
+LessonContext (extended — single source of truth)
+├── enrolledCurriculums[]          ← from user_enrollments JOIN curriculums/subjects/topics
+├── enrolledCurriculumIds[]        ← derived
+├── enrolledSubjectIds[]           ← derived
+├── selectedCurriculumIds[]        ← user filter, persisted to localStorage
+├── selectedSubjectIds[]           ← user filter, persisted to localStorage
+├── setSelectedCurriculumIds()
+├── setSelectedSubjectIds()
+├── countdowns[]                   ← auto-derived: next exam per enrolled subject
+├── countdownsLoading
+├── progressRecords[]              ← topic_progress
+└── updateProgress()
+
+Consumers (all read from one context, zero duplicate fetches):
+├── /courses          — Course Manager page (new dashboard)
+├── /lessons          — Lesson Tracker (subject filter bar)
+├── /countdown        — Auto + Custom countdown sections
+├── /my-notes         — Official notes course filter toggle
+└── /flashcards       — Supabase decks + course filter
+```
+
+---
+
+## Proposed Changes
+
+---
+
+### Phase 1 — Foundation
+
+---
+
+#### [MODIFY] [LessonContext.tsx](file:///c:/Users/ACER/Documents/The-ANTS/src/context/LessonContext.tsx)
+
+**What changes:**
+- Add `selectedCurriculumIds` and `selectedSubjectIds` state with `localStorage` persistence.
+- Add `enrolledCurriculumIds` and `enrolledSubjectIds` derived values.
+- Add `countdowns` array: for each enrolled subject, fetch the single next upcoming exam from the `exams` table using a batch `IN` query. If no exam found for a subject, store a `{subjectId, hasTimetable: false}` sentinel.
+- Fix the fetch to use `user_enrollments` (already correct in `LessonContext`, but verify).
+- Expose all new fields via the context value.
+
+**New context interface additions:**
+```ts
+enrolledCurriculumIds: string[];
+enrolledSubjectIds: string[];
+selectedCurriculumIds: string[];
+selectedSubjectIds: string[];
+setSelectedCurriculumIds: (ids: string[]) => void;
+setSelectedSubjectIds: (ids: string[]) => void;
+countdowns: SubjectCountdown[];         // auto-derived
+countdownsLoading: boolean;
+```
+
+**localStorage persistence pattern:**
+```ts
+const [selectedCurriculumIds, _setSelected] = useState<string[]>(() => {
+  if (typeof window === 'undefined') return [];
+  try { return JSON.parse(localStorage.getItem('cm_curricula') ?? '[]'); }
+  catch { return []; }
+});
+const setSelectedCurriculumIds = (ids: string[]) => {
+  localStorage.setItem('cm_curricula', JSON.stringify(ids));
+  _setSelected(ids);
+};
+```
+
+**Auto-countdown batch query (single round trip):**
+```ts
+// After loading enrollments — fetch next exam for each enrolled subject
+const enrolledSubjectIds = [...new Set(enrollments.map(e => e.subject_id))];
+const { data: nextExams } = await supabase
+  .from('exams')
+  .select('*')
+  .in('subject_id', enrolledSubjectIds)
+  .gt('date', new Date().toISOString().split('T')[0])
+  .order('date', { ascending: true });
+
+// Group by subject_id, keep only the first (earliest) per subject
+const nextExamBySubject = new Map<string, any>();
+for (const exam of (nextExams ?? [])) {
+  if (!nextExamBySubject.has(exam.subject_id)) {
+    nextExamBySubject.set(exam.subject_id, exam);
+  }
+}
+// Build SubjectCountdown array
+const countdowns = enrolledSubjectIds.map(sid => ({
+  subjectId: sid,
+  exam: nextExamBySubject.get(sid) ?? null,   // null = no timetable yet
+}));
+```
+
+---
+
+#### [MODIFY] [useCourseManager.ts](file:///c:/Users/ACER/Documents/The-ANTS/src/hooks/useCourseManager.ts)
+
+**Fix 1 — Exam filter in `getSubjectsForCurriculum`:**
+```ts
+// Before (line ~169):
+.filter((e: any) => {
+  return true; // All exams for now — filter by subject/topic match
+})
+
+// After:
+.filter((e: any) => e.subject_id === s.id)
+```
+
+**Fix 2 — Auto-countdown in `enroll()`:**
+```ts
+const enroll = async (curriculumId, subjectId, examId?) => {
+  const { error } = await supabase.from('user_enrollments').insert({
+    user_id: userId, curriculum_id: curriculumId,
+    subject_id: subjectId, exam_id: examId ?? null,
+    enrolled_at: new Date().toISOString(),
+  });
+  if (error) return { success: false, error: error.message };
+
+  if (examId) {
+    await createCountdownIfNeeded(userId, examId);
+  } else {
+    // Auto-lookup: find the single next upcoming exam for this subject
+    const { data: nextExam } = await supabase
+      .from('exams')
+      .select('*')
+      .eq('subject_id', subjectId)
+      .gt('date', new Date().toISOString().split('T')[0])
+      .order('date', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (nextExam) {
+      await createCountdownIfNeeded(userId, nextExam.id);
+    }
+    // If nextExam is null: enrollment succeeds but no countdown created.
+    // UI shows placeholder for this subject.
+  }
+
+  await refetchEnrollments();
+  return { success: true };
+};
+```
+
+---
+
+#### [DELETE] [useLessons.ts](file:///c:/Users/ACER/Documents/The-ANTS/src/hooks/useLessons.ts)
+
+Delete this file. All its data is now provided by `LessonContext`. Removing it eliminates duplicate Supabase queries on every `/lessons` page load.
+
+---
+
+### Phase 2 — Course Manager Page Redesign
+
+---
+
+#### [MODIFY] [courses/page.tsx](file:///c:/Users/ACER/Documents/The-ANTS/src/app/(app)/courses/page.tsx)
+
+Full redesign. Replace the current minimal layout with a 3-section dashboard.
+
+**Section A — Wizard Panel (collapsible)**
+- Opens automatically for users with 0 enrollments.
+- Collapsed by default for returning users (with "Add / Edit Courses" button to re-open).
+- Embeds the updated `CourseManagerWizard`.
+
+**Section B — Enrolled Subjects Dashboard**
+- Renders one card per enrolled subject, grouped under their curriculum.
+- Each subject card contains:
+  - Subject name + qualification badge
+  - Topic progress ring/bar (`completed topics / total topics`)
+  - Exam countdown badge:
+    - If exam found: `"47 days"` countdown label + session name (e.g. "May/June 2025")
+    - If no timetable: `"Timetable pending"` grey badge
+  - **Session switcher**: small "Switch session" link — opens a dropdown querying `exams` for all upcoming sessions for that `subject_id`
+  - Quick action row: `[View Lessons]` `[View Notes]` `[View Flashcards]` buttons (each links to the relevant page with curriculum/subject pre-selected)
+  - `[Remove]` trash icon — calls `unenroll()`
+
+**Section C — Exam Countdown Strip**
+- Horizontal scrollable row of the next 3–4 upcoming countdowns.
+- Each item: subject name, days remaining (large number), exam session label.
+- Empty state: "No upcoming exams tracked yet."
+- Footer link: `"View all countdowns →"` to `/countdown`.
+
+---
+
+#### [MODIFY] [CourseManagerWizard.tsx](file:///c:/Users/ACER/Documents/The-ANTS/src/components/courses/CourseManagerWizard.tsx)
+
+**Changes:**
+- Step 1: After selecting curricula, sync `setSelectedCurriculumIds()` on `LessonContext` (localStorage-persisted).
+- Step 2: Add "Select All subjects" checkbox per curriculum group. On subject toggle, sync `setSelectedSubjectIds()` on context.
+- Step 3 (Confirm): Show summary + note about auto-countdown creation.
+- `handleConfirm`: Call updated `enroll()` which now auto-looks up the next exam per subject.
+- After save: close wizard panel and show the dashboard with newly enrolled subjects.
+
+---
+
+### Phase 3 — Consumer Features
+
+---
+
+#### [MODIFY] [LessonTracker.tsx](file:///c:/Users/ACER/Documents/The-ANTS/src/components/Lessons/LessonTracker.tsx)
+
+**Remove `useLessons()`** — replace with `useLessonContext()`:
+```ts
+// Before:
+import { useLessons } from '@/hooks/useLessons';
+const { enrolledCurriculums, ... } = useLessons();
+
+// After:
+import { useLessonContext } from '@/context/LessonContext';
+const { enrolledCurriculums, selectedSubjectIds, setSelectedSubjectIds, ... } = useLessonContext();
+```
+
+**Add subject filter bar** (below curriculum tabs, above subject accordion):
+- Renders pill/chip buttons for each subject in the active curriculum.
+- "All" chip is selected by default.
+- Selecting specific chips narrows the accordion list to those subjects.
+- Filter state uses `selectedSubjectIds` from context — automatically localStorage-persisted.
+
+**Display subjects**: filter the accordion to only subjects where `subject.id` is in `selectedSubjectIds` (or all if "All" is selected).
+
+---
+
+#### [MODIFY] [CountdownManager.tsx](file:///c:/Users/ACER/Documents/The-ANTS/src/components/countdown/CountdownManager.tsx)
+
+**New layout — two distinct sections:**
+
+**Section 1 — "Enrolled Subjects" (auto-generated)**
+- Reads from `useLessonContext().countdowns`.
+- For each enrolled subject:
+  - **Match found**: renders a `CountdownCard` with the exam data.
+  - **No match**: renders a `PendingTimetableCard` — grey card with "Timetable not released yet — we'll update this automatically."
+  - **Session switcher**: each matched card has a small "Switch session" button. On click: queries Supabase for all upcoming exams for that `subject_id`, shows a dropdown. On selection: updates the `exam_countdowns` record.
+
+**Section 2 — "Custom" (manually added)**
+- Existing `CountdownCard` and `AddCountdownModal` behaviour — unchanged.
+
+**Top banner:**
+```
+"3 of your enrolled subjects have upcoming exams tracked.  [Manage courses →]"
+```
+
+---
+
+#### [MODIFY] [my-notes/page.tsx](file:///c:/Users/ACER/Documents/The-ANTS/src/app/(app)/my-notes/page.tsx)
+
+**In the Official tab only** — add a filter toggle above the note grid:
+
+```tsx
+// New state
+const [filterByCourses, setFilterByCourses] = useState(false);
+const { enrolledCurriculumIds, enrolledSubjectIds } = useLessonContext();
+
+// Filter logic
+const displayedOfficialNotes = filterByCourses
+  ? officialNotes.filter(n =>
+      enrolledCurriculumIds.includes(n.curriculum_id ?? '') ||
+      enrolledSubjectIds.includes(n.subject_id ?? '')
+    )
+  : officialNotes;
+```
+
+**Toggle UI:**
+```tsx
+<button onClick={() => setFilterByCourses(v => !v)}
+  className={filterByCourses ? 'active styles' : 'inactive styles'}>
+  <BookOpen size={14} />
+  {filterByCourses ? 'Showing: My Courses' : 'Filter by My Courses'}
+</button>
+```
+
+> [!IMPORTANT]
+> Zero changes to existing notes hooks (`useSavedNotes`, `useContributorNotes`, `useNotes`). Purely a display filter.
+
+---
+
+#### [MODIFY] [DeckLibrary.tsx](file:///c:/Users/ACER/Documents/The-ANTS/src/components/flashcards/DeckLibrary.tsx)
+
+**Migrate from mock → Supabase:**
+```ts
+// Remove:
+import { getDecksByUser } from '@/lib/mock/database';
+const [decks, setDecks] = useState<Deck[]>(getDecksByUser(userId));
+
+// Add:
+const supabase = createClient();
+const [decks, setDecks] = useState<Deck[]>([]);
+
+useEffect(() => {
+  supabase.from('decks').select('*').eq('owner_id', userId)
+    .then(({ data }) => setDecks((data ?? []) as Deck[]));
+}, [userId]);
+
+const refreshDecks = async () => {
+  const { data } = await supabase.from('decks').select('*').eq('owner_id', userId);
+  setDecks((data ?? []) as Deck[]);
+};
+```
+
+**Also migrate `handleDelete` and `handleClone`** to use Supabase instead of mock functions.
+
+**Add course filter toggle:**
+```ts
+const { enrolledCurriculumIds, enrolledSubjectIds } = useLessonContext();
+const [filterByCourses, setFilterByCourses] = useState(false);
+
+const filteredDecks = (filterByCourses
+  ? decks.filter(d =>
+      enrolledCurriculumIds.includes(d.curriculum_id ?? '') ||
+      enrolledSubjectIds.includes(d.subject_id ?? '')
+    )
+  : decks
+).filter(/* existing search filter */);
+```
+
+---
+
+#### [MODIFY] [CreateDeckModal.tsx](file:///c:/Users/ACER/Documents/The-ANTS/src/components/flashcards/CreateDeckModal.tsx)
+
+**Replace mock data sources:**
+```ts
+// Remove:
+import { mockCurriculums, mockSubjects } from '@/lib/mock/database';
+import { createDeck } from '@/lib/mock/database';
+
+// Add:
+import { useLessonContext } from '@/context/LessonContext';
+const { enrolledCurriculums } = useLessonContext();
+```
+
+**Curriculum dropdown** — uses `enrolledCurriculums` (real data, pre-filtered to what the user is studying).
+
+**Subject dropdown** — uses `enrolledCurriculums.find(c => c.id === curriculumId)?.subjects ?? []`.
+
+**Create deck** — replace `createDeck()` mock with a real Supabase insert:
+```ts
+const supabase = createClient();
+const { data: newDeck, error } = await supabase.from('decks').insert({
+  owner_id: userId, name, description, category,
+  curriculum_id: curriculumId || null,
+  subject_id: subjectId || null,
+  is_public: visibility === 'public',
+}).select().single();
+if (newDeck) onCreated(newDeck as Deck);
+```
+
+---
+
+### Phase 4 — Data Migration
+
+---
+
+#### [NEW] `scripts/migrate-mock-decks.ts`
+
+One-shot migration script. Run once during implementation.
+
+```ts
+// Pseudocode:
+import { mockDecks, mockCards } from '../src/lib/mock/database';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+
+// Upsert decks
+await supabase.from('decks').upsert(
+  mockDecks.map(d => ({
+    id: d.id, owner_id: d.owner_id, name: d.name,
+    description: d.description, category: d.category,
+    curriculum_id: d.curriculum_id, subject_id: d.subject_id,
+    is_public: d.is_public, created_at: d.created_at,
+  })),
+  { onConflict: 'id' }
+);
+
+// Upsert cards
+await supabase.from('cards').upsert(
+  mockCards.map(c => ({
+    id: c.id, deck_id: c.deck_id,
+    front_text: c.front_text, back_text: c.back_text,
+    created_at: c.created_at,
+  })),
+  { onConflict: 'id' }
+);
+```
+
+Logs success/failure per batch. After running, the mock functions in `DeckLibrary` and `CreateDeckModal` can be fully replaced.
+
+---
+
+## Execution Order
+
+```
+Phase 1 — Foundation (data layer fixes)
+  1.1  Fix useCourseManager.ts — exam filter bug
+  1.2  Fix useCourseManager.ts — auto-countdown logic in enroll()
+  1.3  Extend LessonContext.tsx — selectedIds, localStorage, countdowns batch query
+  1.4  Delete useLessons.ts
+
+Phase 2 — Course Manager Redesign (UI)
+  2.1  Redesign courses/page.tsx — 3-section dashboard
+  2.2  Update CourseManagerWizard.tsx — context sync + Select All
+
+Phase 3 — Consumer Features (UI)
+  3.1  Update LessonTracker.tsx — remove useLessons, add subject filter bar
+  3.2  Update CountdownManager.tsx — auto vs custom sections + session switcher
+  3.3  Update my-notes/page.tsx — official notes course filter toggle
+  3.4  Migrate DeckLibrary.tsx — Supabase + course filter
+  3.5  Migrate CreateDeckModal.tsx — real data
+
+Phase 4 — Data
+  4.1  Write + run migrate-mock-decks.ts
+```
+
+---
+
+## Files Changed Summary
+
+| File | Change |
+|---|---|
+| `src/context/LessonContext.tsx` | MODIFY — add selectedIds, localStorage, batch countdown query |
+| `src/hooks/useCourseManager.ts` | MODIFY — fix exam filter + auto-countdown on enroll |
+| `src/hooks/useLessons.ts` | DELETE — replaced by LessonContext |
+| `src/app/(app)/courses/page.tsx` | MODIFY — full 3-section dashboard redesign |
+| `src/components/courses/CourseManagerWizard.tsx` | MODIFY — context sync, Select All, updated confirm |
+| `src/components/Lessons/LessonTracker.tsx` | MODIFY — switch to context, add subject filter bar |
+| `src/components/countdown/CountdownManager.tsx` | MODIFY — auto section + custom section + session switcher |
+| `src/app/(app)/my-notes/page.tsx` | MODIFY — official notes course filter toggle |
+| `src/components/flashcards/DeckLibrary.tsx` | MODIFY — Supabase migration + course filter |
+| `src/components/flashcards/CreateDeckModal.tsx` | MODIFY — real curricula/subjects + Supabase insert |
+| `scripts/migrate-mock-decks.ts` | NEW — one-shot mock → Supabase data migration |
+
+---
+
+## Verification Checklist
+
+1. **Enrollment**: Enroll in a curriculum + subject → confirm `user_enrollments` row in Supabase dashboard.
+2. **Auto-countdown (match)**: Enroll in a subject that has an exam record → `/countdown` shows auto-generated countdown card.
+3. **Auto-countdown (no match)**: Enroll in a subject with no exam record → placeholder card shown, no crash.
+4. **Session switcher**: Click "Switch session" on a countdown card → dropdown shows upcoming sessions → selecting one updates the countdown.
+5. **Lesson Tracker**: Navigate to `/lessons` → enrolled subjects display correctly, topic progress loads.
+6. **Subject filter bar**: Select only "Chemistry" chip → only Chemistry topics shown in accordion.
+7. **localStorage**: Select curricula/subjects → hard refresh → selections are preserved.
+8. **Notes filter**: Toggle "Filter by my courses" in Official tab → only notes matching enrolled IDs shown.
+9. **Flashcard persistence**: Create a new deck → hard refresh → deck still appears (Supabase, not mock).
+10. **No duplicate fetch**: Open Network tab → `/lessons` makes only one call for enrollment data (not two).

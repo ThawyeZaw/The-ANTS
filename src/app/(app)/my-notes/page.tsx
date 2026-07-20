@@ -12,7 +12,7 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  BookOpen, Plus, Lock, Landmark, AlertTriangle, ShieldCheck, PenLine,
+  BookOpen, Plus, Lock, Landmark, AlertTriangle, ShieldCheck, PenLine, Filter,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { UserNote } from '@/types';
@@ -45,7 +45,7 @@ export default function MyNotesPage() {
   const [readerNoteId, setReaderNoteId] = useState<string | null>(null);
 
   // ── Resolve subject / topic names for personal note badges ──
-  const { enrolledCurriculums } = useLessonContext();
+  const { enrolledCurriculums, enrolledCurriculumIds, enrolledSubjectIds } = useLessonContext();
   const nameLookup = useMemo(() => {
     const subjects = new Map<string, string>();
     const topics = new Map<string, string>();
@@ -58,12 +58,22 @@ export default function MyNotesPage() {
     return { subjects, topics };
   }, [enrolledCurriculums]);
 
+  // ── Official notes course filter ──
+  const [filterByCourses, setFilterByCourses] = useState(false);
+
   const officialNotes = useMemo(() => {
     // Contributors see their created notes merged with their saved notes (no dupes)
     const map = new Map(createdOfficialNotes.map((n) => [n.id, n]));
     savedNotes.forEach((n) => { if (!map.has(n.id)) map.set(n.id, n); });
-    return [...map.values()];
-  }, [createdOfficialNotes, savedNotes]);
+    const all = [...map.values()];
+    if (filterByCourses) {
+      return all.filter(n =>
+        (n.curriculum_id && enrolledCurriculumIds.includes(n.curriculum_id)) ||
+        (n.subject_id && enrolledSubjectIds.includes(n.subject_id))
+      );
+    }
+    return all;
+  }, [createdOfficialNotes, savedNotes, filterByCourses, enrolledCurriculumIds, enrolledSubjectIds]);
 
   const savedIds = useMemo(() => new Set(savedNotes.map((n) => n.id)), [savedNotes]);
 
@@ -185,6 +195,22 @@ export default function MyNotesPage() {
               <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
               Official notes are written and reviewed by Contributors. Browse the library and save the ones you need.
             </div>
+          )}
+
+          {/* Course filter toggle */}
+          {enrolledCurriculumIds.length > 0 && (
+            <button
+              onClick={() => setFilterByCourses(v => !v)}
+              className={cn(
+                'inline-flex items-center gap-1.5 self-start rounded-lg px-3 py-1.5 text-xs font-medium border transition-all',
+                filterByCourses
+                  ? 'bg-primary/10 border-primary/30 text-primary'
+                  : 'border-border text-foreground-muted hover:border-border-hover'
+              )}
+            >
+              <Filter className="h-3 w-3" />
+              {filterByCourses ? 'Showing: My Courses' : 'Filter by My Courses'}
+            </button>
           )}
 
           {officialNotes.length === 0 ? (

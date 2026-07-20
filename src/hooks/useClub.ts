@@ -8,6 +8,7 @@ type Result = { success: boolean; error?: string };
 
 export function useClub() {
   const supabase = createClient();
+  if (!supabase) return;
   const [version, setVersion] = useState(0);
   const refresh = useCallback(() => setVersion((current) => current + 1), []);
 

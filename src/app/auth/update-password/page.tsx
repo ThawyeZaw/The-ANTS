@@ -36,6 +36,7 @@ export default function UpdatePasswordPage() {
 
     setIsLoading(true);
     const supabase = createClient();
+    if (!supabase) { setError('Unable to connect. Please try again.'); setIsLoading(false); return; }
     const { error: updateError } = await supabase.auth.updateUser({ password });
     setIsLoading(false);
 

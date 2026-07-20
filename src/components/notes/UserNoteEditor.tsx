@@ -32,6 +32,7 @@ function genId(): string {
 export default function UserNoteEditor() {
   const { user } = useAuth();
   const supabase = createClient();
+  if (!supabase) return;
   const router = useRouter();
   const searchParams = useSearchParams();
   const existingId = searchParams.get('id');

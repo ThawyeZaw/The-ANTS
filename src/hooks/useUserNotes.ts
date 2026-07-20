@@ -19,6 +19,7 @@ function userNotes(supabase: ReturnType<typeof createClient>): any {
 export function useUserNotes(topicId?: string | null) {
   const { user } = useAuth();
   const supabase = createClient();
+  if (!supabase) return;
   const userId = user?.id ?? null;
   const [notes, setNotes] = useState<UserNote[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -91,6 +92,7 @@ export function useUserNotes(topicId?: string | null) {
 export function useSingleUserNote(noteId: string | null) {
   const { user } = useAuth();
   const supabase = createClient();
+  if (!supabase) return;
   const [note, setNote] = useState<UserNote | null>(null);
   const [isLoading, setIsLoading] = useState(!!noteId);
 

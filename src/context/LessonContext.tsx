@@ -59,10 +59,28 @@ export interface CurriculumItem {
   subjects: SubjectItem[];
 }
 
+export interface SubjectCountdown {
+  subjectId: string;
+  exam: {
+    id: string;
+    subject_id: string;
+    subject: string;
+    series: string | null;
+    date: string;
+    duration_minutes: number | null;
+  } | null; // null = no timetable released yet
+}
+
 export interface LessonContextValue {
   enrolledCurriculums: CurriculumItem[];
+  enrolledCurriculumIds: string[];
+  enrolledSubjectIds: string[];
   activeCurriculumId: string | null;
   setActiveCurriculumId: (id: string | null) => void;
+  selectedCurriculumIds: string[];
+  selectedSubjectIds: string[];
+  setSelectedCurriculumIds: (ids: string[]) => void;
+  setSelectedSubjectIds: (ids: string[]) => void;
   subjects: SubjectItem[];
   topics: TopicItem[];
   progressRecords: TopicProgressRecord[];
@@ -70,6 +88,8 @@ export interface LessonContextValue {
     topicId: string,
     patch: Partial<Pick<TopicProgressRecord, 'confidence_level' | 'status'>>
   ) => Promise<void>;
+  countdowns: SubjectCountdown[];
+  countdownsLoading: boolean;
   refetch: () => Promise<void>;
   isLoading: boolean;
 }
@@ -94,6 +114,31 @@ export function LessonProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const loadedRef = useRef(false);
 
+  // ── Filter selection state (localStorage-persisted) ──────────────────────
+  const [selectedCurriculumIds, _setSelectedCurriculumIds] = useState<string[]>(() => {
+    if (typeof window === 'undefined') return [];
+    try { return JSON.parse(localStorage.getItem('cm_curricula') ?? '[]'); }
+    catch { return []; }
+  });
+  const setSelectedCurriculumIds = (ids: string[]) => {
+    localStorage.setItem('cm_curricula', JSON.stringify(ids));
+    _setSelectedCurriculumIds(ids);
+  };
+
+  const [selectedSubjectIds, _setSelectedSubjectIds] = useState<string[]>(() => {
+    if (typeof window === 'undefined') return [];
+    try { return JSON.parse(localStorage.getItem('cm_subjects') ?? '[]'); }
+    catch { return []; }
+  });
+  const setSelectedSubjectIds = (ids: string[]) => {
+    localStorage.setItem('cm_subjects', JSON.stringify(ids));
+    _setSelectedSubjectIds(ids);
+  };
+
+  // ── Auto-countdown state ────────────────────────────────────────────────
+  const [countdowns, setCountdowns] = useState<SubjectCountdown[]>([]);
+  const [countdownsLoading, setCountdownsLoading] = useState(false);
+
   const fetchData = useCallback(async () => {
     if (!userId || !supabase) {
       setProgressRecords([]);
@@ -115,8 +160,36 @@ export function LessonProvider({ children }: { children: ReactNode }) {
     setAllCurriculums(cRes.data ?? []);
     setAllSubjects(sRes.data ?? []);
     setAllTopics(tRes.data ?? []);
-    setEnrollments(eRes.data ?? []);
+    const enrollmentData = eRes.data ?? [];
+    setEnrollments(enrollmentData);
     setProgressRecords((pRes.data ?? []) as TopicProgressRecord[]);
+
+    // ── Derive countdowns: batch query next exam per enrolled subject ────
+    const enrolledSubjectIds = [...new Set(enrollmentData.map((e: any) => e.subject_id))];
+    if (enrolledSubjectIds.length > 0) {
+      setCountdownsLoading(true);
+      const { data: nextExams } = await supabase!
+        .from('exams')
+        .select('*')
+        .in('subject_id', enrolledSubjectIds)
+        .gt('date', new Date().toISOString().split('T')[0])
+        .order('date', { ascending: true });
+
+      // Group by subject_id, keep only the first (earliest) per subject
+      const nextExamBySubject = new Map<string, any>();
+      for (const exam of (nextExams ?? [])) {
+        if (!nextExamBySubject.has(exam.subject_id)) {
+          nextExamBySubject.set(exam.subject_id, exam);
+        }
+      }
+      const cds: SubjectCountdown[] = enrolledSubjectIds.map(sid => ({
+        subjectId: sid,
+        exam: nextExamBySubject.get(sid) ?? null,
+      }));
+      setCountdowns(cds);
+      setCountdownsLoading(false);
+    }
+
     setIsLoading(false);
   }, [userId, supabase]);
 
@@ -179,6 +252,16 @@ export function LessonProvider({ children }: { children: ReactNode }) {
       })
       .filter((c): c is CurriculumItem => c !== null);
   }, [userId, allCurriculums, allSubjects, allTopics, enrollments]);
+
+  // ── Derived enrolled IDs (for cross-feature filtering) ────────────────
+  const enrolledCurriculumIds = useMemo(
+    () => [...new Set(enrollments.map((e) => e.curriculum_id))],
+    [enrollments]
+  );
+  const enrolledSubjectIds = useMemo(
+    () => [...new Set(enrollments.map((e) => e.subject_id))],
+    [enrollments]
+  );
 
   const activeCurriculumIdFromUrl = searchParams.get('curriculum') ?? null;
 
@@ -253,12 +336,20 @@ export function LessonProvider({ children }: { children: ReactNode }) {
     <LessonContext.Provider
       value={{
         enrolledCurriculums,
+        enrolledCurriculumIds,
+        enrolledSubjectIds,
         activeCurriculumId,
         setActiveCurriculumId,
+        selectedCurriculumIds,
+        selectedSubjectIds,
+        setSelectedCurriculumIds,
+        setSelectedSubjectIds,
         subjects,
         topics,
         progressRecords,
         updateProgress,
+        countdowns,
+        countdownsLoading,
         refetch: fetchData,
         isLoading,
       }}

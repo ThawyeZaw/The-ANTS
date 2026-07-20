@@ -51,6 +51,7 @@ export function useRealtimeClassroom(
     if (!classroomId) return;
 
     const supabase = createClient();
+    if (!supabase) return;
     let cancelled = false;
 
     const channelName = `classroom:${classroomId}`;

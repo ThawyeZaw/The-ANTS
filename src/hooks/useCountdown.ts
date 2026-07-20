@@ -38,6 +38,7 @@ export function useCountdown(userId: string | undefined) {
   const [countdowns, setCountdowns] = useState<CountdownWithTime[]>([]);
   const [availableExams, setAvailableExams] = useState<Exam[]>([]);
   const supabase = createClient();
+  if (!supabase) return;
 
   // Load initial data
   useEffect(() => {

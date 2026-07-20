@@ -105,6 +105,7 @@ export default function SignupForm() {
     setIsResending(true);
     setResendMessage('');
     const supabase = createClient();
+    if (!supabase) { setIsResending(false); setResendMessage('Connection failed.'); return; }
     const { error } = await supabase.auth.resend({
       type: 'signup',
       email,

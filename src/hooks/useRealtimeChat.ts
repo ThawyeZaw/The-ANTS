@@ -56,6 +56,7 @@ export function useRealtimeChat(
 
   const channelRef = useRef<RealtimeChannel | null>(null);
   const supabase = createClient();
+  if (!supabase) return;
 
   // ── Subscribe to club messages ─────────────────────────────────────────
   useEffect(() => {

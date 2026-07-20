@@ -12,6 +12,7 @@ type Result = { success: boolean; error?: string };
 
 export function useClassroom() {
   const supabase = createClient();
+  if (!supabase) return;
   const [version, setVersion] = useState(0);
   const refresh = useCallback(() => setVersion((v) => v + 1), []);
 

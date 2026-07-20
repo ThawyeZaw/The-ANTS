@@ -47,6 +47,7 @@ export function createPostgresChangesChannel<T extends Record<string, unknown>>(
   }
 ): RealtimeChannel {
   const supabase = createClient();
+  if (!supabase) return;
   const { channelName, table, filter, events = ['INSERT'] } = options;
 
   const channel = supabase.channel(channelName, {
@@ -101,6 +102,7 @@ export function createPresenceChannel(
   initialState: UserPresenceState
 ): RealtimeChannel {
   const supabase = createClient();
+  if (!supabase) return;
   const channel = supabase.channel(channelName, {
     config: { presence: { key: initialState.user_id } },
   });

@@ -2,18 +2,20 @@
 
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTs — DeckLibrary Component
-// Owner: ZLH
+// Migrated from mock data to Supabase. Includes course filter via LessonContext.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useState } from 'react';
-import { Search, Plus, Layers, BookOpen, Brain, Globe, Sparkles } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Search, Plus, Layers, Sparkles, Filter as FilterIcon } from 'lucide-react';
 import type { Deck } from '@/types';
-import { getDecksByUser, getPublicDecks, cloneDeck, deleteDeck } from '@/lib/mock/database';
 import DeckCard from './DeckCard';
 import CreateDeckModal from './CreateDeckModal';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { BookMarked } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
+import { useLessonContext } from '@/context/LessonContext';
+import { cn } from '@/lib/utils';
 
 interface DeckLibraryProps {
   userId: string;
@@ -21,29 +23,47 @@ interface DeckLibraryProps {
 
 export default function DeckLibrary({ userId }: DeckLibraryProps) {
   const router = useRouter();
+  const supabase = createClient();
+  if (!supabase) return;
+  const { enrolledCurriculumIds, enrolledSubjectIds } = useLessonContext();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-
-  // Helper to fetch and deduplicate decks
-  const getUniqueDecks = () => {
-    return getDecksByUser(userId);
-  };
-
-  const [decks, setDecks] = useState<Deck[]>(getUniqueDecks);
+  const [decks, setDecks] = useState<Deck[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [filterByCourses, setFilterByCourses] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  // Refresh local list from DB
-  const refreshDecks = () => {
-    setDecks(getUniqueDecks());
-  };
+  // ── Fetch decks from Supabase ────────────────────────────────────────────
+  const fetchDecks = useCallback(async () => {
+    if (!userId) return;
+    const { data, error } = await supabase
+      .from('decks')
+      .select('*')
+      .eq('owner_id', userId)
+      .order('created_at', { ascending: false });
+    if (!error) setDecks((data ?? []) as Deck[]);
+    setIsLoading(false);
+  }, [userId, supabase]);
+
+  useEffect(() => {
+    fetchDecks();
+  }, [fetchDecks]);
 
   const showToast = (message: string, type: 'success' | 'error') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
 
-  // Filter logic
-  const displayedDecks = decks;
+  // ── Filter & search ────────────────────────────────────────────────────
+  let displayedDecks = decks;
+  if (filterByCourses) {
+    displayedDecks = displayedDecks.filter(d =>
+      (d.curriculum_id && enrolledCurriculumIds.includes(d.curriculum_id)) ||
+      (d.subject_id && enrolledSubjectIds.includes(d.subject_id))
+    );
+  }
+
   const filteredDecks = displayedDecks.filter(deck => {
     const query = searchQuery.toLowerCase().trim();
     if (!query) return true;
@@ -54,6 +74,7 @@ export default function DeckLibrary({ userId }: DeckLibraryProps) {
     );
   });
 
+  // ── Handlers ────────────────────────────────────────────────────────────
   const handleStudy = (deckId: string) => {
     router.push(`/flashcards/${deckId}?mode=study`);
   };
@@ -62,33 +83,45 @@ export default function DeckLibrary({ userId }: DeckLibraryProps) {
     router.push(`/flashcards/${deckId}?mode=edit`);
   };
 
-  const handleClone = (deckId: string) => {
-    const res = cloneDeck(deckId, userId);
-    if (res.success) {
-      showToast('Deck cloned successfully to your collection!', 'success');
-      refreshDecks();
+  const handleClone = async (deckId: string) => {
+    const original = decks.find(d => d.id === deckId);
+    if (!original) return;
+    const { data, error } = await supabase
+      .from('decks')
+      .insert({
+        owner_id: userId,
+        name: `${original.name} (copy)`,
+        description: original.description,
+        category: original.category,
+        curriculum_id: original.curriculum_id,
+        subject_id: original.subject_id,
+        is_public: false,
+      })
+      .select()
+      .single();
+    if (error) {
+      showToast('Failed to clone deck.', 'error');
     } else {
-      showToast(res.error || 'Failed to clone deck.', 'error');
+      showToast('Deck cloned successfully!', 'success');
+      fetchDecks();
     }
   };
 
-  const handleDelete = (deckId: string) => {
-    if (confirm('Are you sure you want to delete this deck? All review progress and cards in it will be lost.')) {
-      const res = deleteDeck(deckId);
-      if (res.success) {
-        showToast('Deck deleted successfully.', 'success');
-        refreshDecks();
-      } else {
-        showToast(res.error || 'Failed to delete deck.', 'error');
-      }
+  const handleDelete = async (deckId: string) => {
+    if (!confirm('Are you sure you want to delete this deck? All review progress and cards in it will be lost.')) return;
+    const { error } = await supabase.from('decks').delete().eq('id', deckId).eq('owner_id', userId);
+    if (error) {
+      showToast('Failed to delete deck.', 'error');
+    } else {
+      showToast('Deck deleted successfully.', 'success');
+      fetchDecks();
     }
   };
 
   const handleDeckCreated = (newDeck: Deck) => {
     setIsCreateModalOpen(false);
     showToast(`Deck "${newDeck.name}" created successfully!`, 'success');
-    refreshDecks();
-    // Redirect to edit mode so they can add cards immediately
+    fetchDecks();
     router.push(`/flashcards/${newDeck.id}?mode=edit`);
   };
 
@@ -130,20 +163,38 @@ export default function DeckLibrary({ userId }: DeckLibraryProps) {
             </button>
           </div>
         </div>
-        {/* Background glow styling decor */}
+        {/* Background glow */}
         <div className="absolute top-0 right-0 -mr-16 -mt-16 h-48 w-48 rounded-full bg-violet-400/20 blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 -ml-16 -mb-16 h-48 w-48 rounded-full bg-cyan-400/20 blur-3xl pointer-events-none" />
       </div>
 
       {/* Controls & Search */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[var(--border)] pb-4">
-        <Link
-          href="/library/flashcards"
-          className="flex items-center gap-2 rounded-xl bg-violet-500/10 px-4 py-2 text-sm font-semibold text-violet-600 dark:text-violet-400 transition-all hover:bg-violet-500/20 self-start sm:self-center"
-        >
-          <BookMarked className="h-4 w-4" aria-hidden="true" />
-          Browse Flashcards Library
-        </Link>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Link
+            href="/library/flashcards"
+            className="flex items-center gap-2 rounded-xl bg-violet-500/10 px-4 py-2 text-sm font-semibold text-violet-600 dark:text-violet-400 transition-all hover:bg-violet-500/20"
+          >
+            <BookMarked className="h-4 w-4" aria-hidden="true" />
+            Browse Library
+          </Link>
+
+          {/* Course filter toggle */}
+          {enrolledCurriculumIds.length > 0 && (
+            <button
+              onClick={() => setFilterByCourses(v => !v)}
+              className={cn(
+                'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium border transition-all',
+                filterByCourses
+                  ? 'bg-primary/10 border-primary/30 text-primary'
+                  : 'border-border text-foreground-muted hover:border-border-hover'
+              )}
+            >
+              <FilterIcon className="h-3 w-3" />
+              {filterByCourses ? 'Showing: My Courses' : 'My Courses Only'}
+            </button>
+          )}
+        </div>
 
         {/* Search */}
         <div className="relative max-w-xs w-full">
@@ -160,7 +211,11 @@ export default function DeckLibrary({ userId }: DeckLibraryProps) {
       </div>
 
       {/* Deck Grid */}
-      {filteredDecks.length > 0 ? (
+      {isLoading ? (
+        <div className="flex items-center justify-center py-24">
+          <div className="h-8 w-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+        </div>
+      ) : filteredDecks.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredDecks.map(deck => (
             <DeckCard
@@ -184,7 +239,9 @@ export default function DeckLibrary({ userId }: DeckLibraryProps) {
           <p className="mb-6 max-w-sm text-sm text-[var(--foreground-secondary)]">
             {searchQuery
               ? `No decks matching "${searchQuery}". Try another search query.`
-              : "You haven't created or added any flashcard decks yet."}
+              : filterByCourses
+                ? "No decks found for your enrolled courses."
+                : "You haven't created or added any flashcard decks yet."}
           </p>
           {!searchQuery && (
             <button

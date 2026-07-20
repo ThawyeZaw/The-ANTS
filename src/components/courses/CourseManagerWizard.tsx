@@ -7,14 +7,14 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useCallback, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   BookOpen, ChevronRight, ChevronLeft, Check,
-  GraduationCap, Sparkles,
+  GraduationCap, Sparkles, CheckSquare, Square,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useCourseManager } from '@/hooks/useCourseManager';
+import { useLessonContext } from '@/context/LessonContext';
 import type { CurriculumSummary, SubjectSummary } from '@/hooks/useCourseManager';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -29,9 +29,8 @@ interface SelectedSubject {
 
 // ── Component ────────────────────────────────────────────────────────────────
 
-export default function CourseManagerWizard() {
+export default function CourseManagerWizard({ onComplete }: { onComplete?: () => void }) {
   const { user } = useAuth();
-  const router = useRouter();
 
   const {
     allCurriculums,
@@ -40,6 +39,8 @@ export default function CourseManagerWizard() {
     enrollments,
     enrolledCurriculumIds,
   } = useCourseManager();
+
+  const { setSelectedCurriculumIds: syncSelectedCurricula, setSelectedSubjectIds: syncSelectedSubjects, refetch: refetchContext } = useLessonContext();
 
   const [step, setStep] = useState<Step>(1);
   const [selectedCurriculumIds, setSelectedCurriculumIds] = useState<Set<string>>(new Set(enrolledCurriculumIds));
@@ -136,9 +137,18 @@ export default function CourseManagerWizard() {
       }
     }
 
+    // Sync selections to LessonContext (localStorage-persisted)
+    syncSelectedCurricula([...selectedCurriculumIds]);
+    syncSelectedSubjects(
+      subjectsToEnroll.map(s => s.subject_id)
+    );
+
+    // Refresh LessonContext so EnrolledSubjectsDashboard + Lesson Tracker pick up new enrollments
+    await refetchContext();
+
     setEnrolling(false);
-    router.push('/lessons');
-  }, [user, selectedSubjects, selectedCurriculumIds, enrollments, enroll, router]);
+    onComplete?.();
+  }, [user, selectedSubjects, selectedCurriculumIds, enrollments, enroll, syncSelectedCurricula, syncSelectedSubjects, onComplete, refetchContext]);
 
   // ── Step content renderers ────────────────────────────────────────────────
 
@@ -253,10 +263,42 @@ export default function CourseManagerWizard() {
                       <p className="text-xs text-primary mt-1">{selectedCount} subject{selectedCount !== 1 ? 's' : ''} selected</p>
                     )}
                   </div>
-                  <ChevronRight className={cn(
-                    'h-5 w-5 text-foreground-muted transition-transform',
-                    isExpanded && 'rotate-90'
-                  )} />
+                  <div className="flex items-center gap-3">
+                    {/* Select All / Deselect All */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const allSelected = subjects.every(s => selectedSubjects.has(subjectKey(curriculum.id, s.id)));
+                        for (const subject of subjects) {
+                          const key = subjectKey(curriculum.id, subject.id);
+                          if (allSelected) {
+                            // Deselect all
+                            setSelectedSubjects(prev => {
+                              const next = new Map(prev);
+                              next.delete(key);
+                              return next;
+                            });
+                          } else if (!selectedSubjects.has(key)) {
+                            // Select all
+                            setSelectedSubjects(prev => {
+                              const next = new Map(prev);
+                              next.set(key, { curriculum_id: curriculum.id, subject_id: subject.id, subject });
+                              return next;
+                            });
+                          }
+                        }
+                      }}
+                      className="text-xs font-medium text-primary hover:text-primary-hover transition-colors px-2 py-1 rounded-lg hover:bg-primary/10"
+                    >
+                      {subjects.every(s => selectedSubjects.has(subjectKey(curriculum.id, s.id)))
+                        ? 'Deselect All'
+                        : 'Select All'}
+                    </button>
+                    <ChevronRight className={cn(
+                      'h-5 w-5 text-foreground-muted transition-transform',
+                      isExpanded && 'rotate-90'
+                    )} />
+                  </div>
                 </button>
 
                 {isExpanded && (
