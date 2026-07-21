@@ -177,7 +177,7 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
             className="flex items-center gap-2 rounded-xl bg-amber-500/10 px-4 py-2 text-sm font-semibold text-amber-600 dark:text-amber-400 transition-all hover:bg-amber-500/20"
           >
             <BookMarked className="h-4 w-4" aria-hidden="true" />
-            Browse Exams Library
+            Browse Exams
           </Link>
           <button
             onClick={() => setIsModalOpen(true)}

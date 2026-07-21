@@ -110,48 +110,69 @@ These tokens power the authenticated application (dashboard, flashcards, classro
 
 These tokens power the public landing page. They are isolated from app tokens.
 
-### 2.1 Dark / Neon Theme (Default — `.hp`)
+### 2.1 Dark / Neon Theme (`[data-theme="dark"] .hp`) — Nighttime Study
 
 | Token | Value | Usage |
 |---|---|---|
-| `--hp-bg` | `#0F172A` | Page background (midnight blue) |
-| `--hp-bg-soft` | `#121212` | Section backgrounds (matte black) |
-| `--hp-surface` | `#1A1F2E` | Card surfaces |
-| `--hp-surface-2` | `#242A3D` | Elevated surfaces (charcoal) |
-| `--hp-border` | `rgba(0,255,255,0.08)` | Default borders (cyan-tinted) |
-| `--hp-border-strong` | `rgba(0,255,255,0.16)` | Strong borders |
-| `--hp-ink` | `#F1F5F9` | Primary text |
-| `--hp-ink-muted` | `#94A3B8` | Secondary text |
-| `--hp-ink-faint` | `#64748B` | Tertiary text |
-| `--hp-brand` | `#00FFFF` | Neon cyan (primary accent) |
-| `--hp-brand-deep` | `#00CCCC` | Cyan darker variant |
-| `--hp-amber` | `#FF69B4` | Hot pink accent |
-| `--hp-amber-deep` | `#E05590` | Pink darker variant |
-| `--hp-violet` | `#B366FF` | Neon purple secondary accent |
-| `--neon-glow-cyan` | `0 0 4px #00FFFF, 0 0 8px rgba(0,255,255,0.6), 0 0 18px rgba(0,255,255,0.3)` | Cyan glow shadow |
-| `--neon-glow-pink` | `0 0 4px #FF69B4, 0 0 8px rgba(255,105,180,0.6), 0 0 18px rgba(255,105,180,0.3)` | Pink glow shadow |
-| `--neon-glow-purple` | `0 0 4px #B366FF, 0 0 8px rgba(179,102,255,0.5), 0 0 16px rgba(179,102,255,0.25)` | Purple glow shadow |
+| `--hp-bg` | `#060B14` | Page background (deep indigo-black) |
+| `--hp-bg-soft` | `#090E1A` | Section backgrounds |
+| `--hp-surface` | `#0C1220` | Card surfaces |
+| `--hp-surface-2` | `#111827` | Elevated surfaces |
+| `--hp-surface-hover` | `#161E30` | Hover state surfaces |
+| `--hp-border` | `rgba(91,158,255,0.08)` | Default borders (blue-tinted) |
+| `--hp-border-strong` | `rgba(91,158,255,0.16)` | Strong borders |
+| `--hp-ink` | `#E8EDF4` | Primary text |
+| `--hp-ink-muted` | `#B0BFD4` | Secondary text |
+| `--hp-ink-faint` | `#7A8FA8` | Tertiary text |
+| `--hp-brand` | `#5B9EFF` | Soft neon blue (primary accent) |
+| `--hp-brand-deep` | `#3B7DD8` | Blue darker variant |
+| `--hp-amber` | `#FF7EB3` | Pink accent |
+| `--hp-amber-deep` | `#E06095` | Pink darker variant |
+| `--hp-violet` | `#B98FFF` | Neon purple secondary accent |
+| `--hp-btn-text` | `#060B14` | Text on brand buttons |
+| `--hp-cta-text-muted` | `rgba(6,11,20,0.78)` | Muted CTA text |
 
-### 2.2 Light Theme Override (`[data-theme="light"] .hp`) — Signature Beige
+### 2.2 Light Theme (`.hp` Default) — Warm Paper + Refined Tones
 
-| Token | Light Value | WCAG on `#EDE8D0` |
+| Token | Value | WCAG on `#FFFDF9` |
 |---|---|---|
-| `--hp-bg` | `#EDE8D0` | — (background) |
-| `--hp-bg-soft` | `#E3DEC5` | — |
-| `--hp-surface` | `#F5F1E4` | — |
-| `--hp-surface-2` | `#FCFAF5` | — |
-| `--hp-border` | `rgba(45,46,41,0.10)` | — |
-| `--hp-border-strong` | `rgba(45,46,41,0.18)` | — |
-| `--hp-ink` | `#2D2E29` | 10.99:1 AAA |
-| `--hp-ink-muted` | `#4B4D46` | 7.05:1 AAA |
-| `--hp-ink-faint` | `#666860` | 4.61:1 AA |
-| `--hp-brand` | `#1B6B8F` | 4.74:1 AA |
-| `--hp-brand-deep` | `#155A78` | 6.20:1 AA |
-| `--hp-amber` | `#B45309` | 5.02:1 AA |
-| `--hp-amber-deep` | `#92400E` | 7.80:1 AAA |
-| `--hp-violet` | `#5B21B6` | 8.12:1 AAA |
+| `--hp-bg` | `#FFFDF9` | — (background) |
+| `--hp-bg-soft` | `#F5F1EA` | — |
+| `--hp-surface` | `#FFFFFF` | — |
+| `--hp-surface-2` | `#FAF8F4` | — |
+| `--hp-surface-hover` | `#F0ECE5` | — |
+| `--hp-border` | `rgba(59,108,181,0.10)` | — |
+| `--hp-border-strong` | `rgba(59,108,181,0.18)` | — |
+| `--hp-ink` | `#1A1C20` | 17.21:1 AAA |
+| `--hp-ink-muted` | `#3D4048` | 8.37:1 AAA |
+| `--hp-ink-faint` | `#54575E` | 5.87:1 AA |
+| `--hp-brand` | `#3B6CB5` | 5.01:1 AA |
+| `--hp-brand-deep` | `#2C5282` | 7.56:1 AAA |
+| `--hp-amber` | `#D0692B` | 4.50:1 AA |
+| `--hp-amber-deep` | `#A84E1F` | 6.97:1 AA |
+| `--hp-violet` | `#7847C7` | 7.85:1 AAA |
+| `--hp-btn-text` | `#FFFFFF` | — |
+| `--hp-cta-text-muted` | `rgba(255,255,255,0.88)` | — |
 
-### 2.3 Homepage Layout Tokens
+### 2.3 Neon Glow Effects
+
+| Token | CSS Value | Usage |
+|---|---|---|
+| `--neon-glow-cyan` | `0 0 4px #5B9EFF, 0 0 8px rgba(91,158,255,0.5), 0 0 14px rgba(91,158,255,0.25)` | Brand glow shadow |
+| `--neon-glow-pink` | `0 0 4px #FF7EB3, 0 0 8px rgba(255,126,179,0.5), 0 0 14px rgba(255,126,179,0.25)` | Amber/pink glow shadow |
+| `--neon-glow-purple` | `0 0 4px #B98FFF, 0 0 8px rgba(185,143,255,0.4), 0 0 12px rgba(185,143,255,0.20)` | Violet glow shadow |
+
+### 2.4 Homepage Grid Colors
+
+| Token | Light Value | Dark Value | Usage |
+|---|---|---|---|
+| `--hp-grid-color` | `rgba(59,108,181,0.12)` | `rgba(91,158,255,0.09)` | Grid line base |
+| `--hp-grid-color-strong` | `rgba(59,108,181,0.20)` | `rgba(91,158,255,0.16)` | Strong grid lines |
+| `--hp-grid-color-card` | `rgba(59,108,181,0.08)` | `rgba(91,158,255,0.06)` | Grid on cards |
+| `--hp-grid-color-dense` | `rgba(59,108,181,0.17)` | `rgba(91,158,255,0.13)` | Dense grid areas |
+| `--hp-grid-color-accent` | `rgba(59,108,181,0.24)` | `rgba(91,158,255,0.20)` | Accent grid lines |
+
+### 2.5 Homepage Layout Tokens
 
 | Token | Value | Usage |
 |---|---|---|

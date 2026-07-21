@@ -110,11 +110,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        const { data: profileRow } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
+        let profileRow: Record<string, unknown> | null = null;
+        try {
+          const result = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          profileRow = result.data;
+        } catch {
+          // fetch aborted by navigation — safe to ignore
+        }
 
         if (profileRow) {
           setUser({

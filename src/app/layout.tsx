@@ -1,13 +1,8 @@
 import type { Metadata } from "next";
 import { Quicksand } from "next/font/google";
 import "./globals.css";
-import "./katex-local.css";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { AuthProvider } from "@/context/AuthContext";
-
-// Startup env validation — runs once per cold start, never logs secret values
-import { validateEnv } from "@/lib/validateEnv";
-validateEnv();
 
 
 const quicksand = Quicksand({
@@ -45,6 +40,7 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${quicksand.variable} h-full`}
+      data-scroll-behavior="smooth"
       suppressHydrationWarning
     >
       <body

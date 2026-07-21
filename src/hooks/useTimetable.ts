@@ -10,6 +10,7 @@ import type {
 } from '@/types/timetable';
 import type { Json } from '@/types/supabase';
 import { createClient } from '@/lib/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { ALL_EVENT_TYPES, DEFAULT_TIMETABLE_FILTERS } from '@/constants/timetable';
 
 // ---------------------------------------------------------------------------

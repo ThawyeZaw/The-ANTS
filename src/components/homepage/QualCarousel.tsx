@@ -3,17 +3,14 @@
 // ──────────────────────────────────────────────────────────────────────────────
 // QualCarousel — Qualification board auto-advancing showcase
 //
-// Cycles through 6 exam boards (CAIE, Edexcel, OSSD, IELTS, SAT, Duolingo)
-// with a continuous auto-advance animation. Non-interactive: no chevrons,
-// no clickable dots, no keyboard or mouse input. Dots serve as purely
-// decorative progress indicators.
-//
-// Each slide transition uses a subtle fade + scale animation tied to the
-// current slide index, replaying via React key remounting.
+// Cycles through 3 active exam boards (CAIE, Edexcel, IELTS) with
+// continuous auto-advance. Boards switch instantaneously — no slide
+// animation. Upcoming boards (OSSD, SAT, Duolingo) appear as
+// "Coming Soon" chips below.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { QUALIFICATION_BOARDS } from '@/constants/homepage';
+import { QUALIFICATION_BOARDS, UPCOMING_BOARDS } from '@/constants/homepage';
 import RevealSection from './RevealSection';
 
 const AUTO_ADVANCE_MS = 4500;
@@ -46,12 +43,9 @@ export default function QualCarousel() {
           position: 'relative',
         }}
       >
-        {/* Slide card — keyed on current index for animation replay */}
+        {/* Slide card — content switches instantaneously */}
         <div
-          key={current}
-          className="hp-carousel-slide"
           style={{
-            animation: 'carouselSlideIn 0.55s cubic-bezier(0.22, 0.61, 0.36, 1) both',
             background: 'var(--hp-surface)',
             border: '1px solid var(--hp-border)',
             borderRadius: 'var(--hp-radius-lg)',
@@ -61,12 +55,6 @@ export default function QualCarousel() {
             overflow: 'hidden',
           }}
         >
-          <style>{`
-            @keyframes carouselSlideIn {
-              from { opacity: 0; transform: translateY(12px) scale(0.98); }
-              to   { opacity: 1; transform: translateY(0)    scale(1); }
-            }
-          `}</style>
 
           {/* Colored accent bar at top */}
           <div
@@ -168,6 +156,70 @@ export default function QualCarousel() {
                 transition: 'width 0.35s ease, background 0.35s ease',
               }}
             />
+          ))}
+        </div>
+
+        {/* Coming Soon boards */}
+        <div
+          style={{
+            display: 'flex',
+            gap: 12,
+            justifyContent: 'center',
+            flexWrap: 'wrap',
+            marginTop: 32,
+          }}
+        >
+          {UPCOMING_BOARDS.map((board) => (
+            <div
+              key={board.name}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                background: 'var(--hp-surface)',
+                border: '1px dashed var(--hp-border-strong)',
+                borderRadius: 999,
+                padding: '8px 18px 8px 14px',
+                opacity: 0.7,
+                transition: 'opacity 0.2s ease, border-color 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                const el = e.currentTarget as HTMLDivElement;
+                el.style.opacity = '1';
+                el.style.borderColor = 'var(--hp-amber)';
+              }}
+              onMouseLeave={(e) => {
+                const el = e.currentTarget as HTMLDivElement;
+                el.style.opacity = '0.7';
+                el.style.borderColor = 'var(--hp-border-strong)';
+              }}
+            >
+              <span style={{ fontSize: 18 }}>{board.emoji}</span>
+              <span
+                style={{
+                  fontFamily: 'var(--hp-font-display)',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: 'var(--hp-ink)',
+                }}
+              >
+                {board.name}
+              </span>
+              <span
+                style={{
+                  fontFamily: 'var(--hp-font-mono)',
+                  fontSize: 10.5,
+                  padding: '2px 9px',
+                  borderRadius: 999,
+                  background: 'var(--hp-amber)',
+                  color: 'var(--hp-bg)',
+                  fontWeight: 600,
+                  letterSpacing: '0.04em',
+                }}
+              >
+                COMING SOON
+              </span>
+            </div>
           ))}
         </div>
       </div>

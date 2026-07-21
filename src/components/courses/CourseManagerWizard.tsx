@@ -213,7 +213,7 @@ export default function CourseManagerWizard({ onComplete }: { onComplete?: () =>
         <div>
           <h3 className="text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-2">
             <BookOpen size={18} />
-            Explore the Courses Library
+            Explore Courses
           </h3>
           <p className="text-sm text-emerald-600/80 dark:text-emerald-400/80 mt-1 max-w-md">
             Browse verified curriculum templates, filter by exam board, and auto-populate your Lesson Tracker.

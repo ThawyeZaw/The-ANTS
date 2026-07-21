@@ -263,7 +263,7 @@ export default function CoursesLibraryBrowser() {
               <BookMarked size={12} /> Verified by Contributors
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold text-[var(--foreground)] tracking-tight">
-              Courses Library
+              Courses
             </h1>
             <p className="max-w-xl text-sm md:text-base text-[var(--foreground-secondary)]">
               Browse verified curriculum templates from CAIE, Edexcel, IELTS and more.

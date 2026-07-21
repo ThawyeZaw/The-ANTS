@@ -230,7 +230,7 @@ export default function FlashcardsLibraryBrowser() {
               <BookMarked size={12} /> Board-tagged · Contributor-approved
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold text-[var(--foreground)] tracking-tight">
-              Flashcards Library
+              Flashcards
             </h1>
             <p className="max-w-xl text-sm md:text-base text-[var(--foreground-secondary)]">
               Browse decks tagged by exam board and syllabus code. Add any deck to your workspace instantly — your SRS progress starts fresh.

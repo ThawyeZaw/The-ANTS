@@ -12,7 +12,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Sparkles, BookOpen, Timer, Calculator, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { isValidEmail, humanizeAuthError } from '@/lib/utils';
+import { isValidEmail } from '@/lib/utils';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import ForgotPasswordPanel from './ForgotPasswordPanel';
@@ -61,7 +61,7 @@ export default function LoginForm() {
     const result = await login(email, password);
 
     if (!result.success) {
-      setErrors({ form: humanizeAuthError(result.error) });
+      setErrors({ form: result.error || 'An unexpected error occurred.' });
       setIsLoading(false);
       return;
     }

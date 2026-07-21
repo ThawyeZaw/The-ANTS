@@ -104,10 +104,11 @@ This directory tree is the **absolute source of truth** for file placement. AI A
 
 ```text
 the-ants/                                 # Project root
-├── middleware.ts                         # 🔒 PM — Route protection + post-login redirect to /dashboard
+├── proxy.ts                              # 🔒 PM — Route protection + post-login redirect to /dashboard
 ├── spec.md                               # 🔒 PM — System specification (this file)
 ├── schema.md                             # 🔒 PM — Database schema reference
 ├── README.md                             # 🔒 PM — Project README
+├── The-ANTS-1/                           # 🔒 PM — Legacy / alternative asset directory (BridgesSection)
 ├── design-system/                        # 🔒 PM — Design system documentation (color palette, typography, components, accessibility, etc.)
 ├── supabase/                             # 🔒 PM — Supabase CLI local config
 │   ├── config.toml
@@ -190,39 +191,42 @@ the-ants/                                 # Project root
     │           └── [username]/page.tsx   # 🔒 PM — Authenticated user profile
     │
     ├── components/                       # UI components
-    │   ├── homepage/                     # 🔒 PM (TYZ) — Public landing page components (RevealSection, BentoFeatures, HeroVisual, QualTrail, QualCarousel, RoleLadder, StatsRow, DotGrid, HomepageFonts)
+    │   ├── about/                        # 🔒 PM — About page components (OrgTimeline, TeamMemberCard)
+    │   ├── homepage/                     # 🔒 PM (TYZ) — Public landing page components (RevealSection, BentoFeatures, HeroVisual, QualTrail, QualCarousel, RoleLadder, StatsRow, DotGrid, AntTrailPattern, AntHeroAccent, HomepageFonts)
     │   ├── ui/                           # 🔒 PM — Shared atomic components
     │   │   ├── Button.tsx
-    │   │   ├── Modal.tsx
     │   │   ├── Input.tsx
     │   │   ├── Badge.tsx
-    │   │   ├── ProgressBar.tsx
+    │   │   ├── AvatarImage.tsx           # LQIP-aware avatar component
+    │   │   ├── AnimatedStat.tsx          # Count-up stat animation
     │   │   ├── BackButton.tsx            # Reusable back navigation button
     │   │   └── RelatedContent.tsx        # Cross-feature linking (related flashcards/notes by topic/curriculum)
     │   ├── layout/                       # 🔒 PM — Global shell
-    │   │   ├── NavBar.tsx                # Creative floating glassmorphism nav with scroll-hide behavior
-    │   │   └── AuthModal.tsx
+    │   │   ├── NavBar.tsx                # Centered CSS Grid nav with scroll-hide, solid dropdowns, theme toggle
+    │   │   └── Footer.tsx                # Global footer
     │   ├── auth/                         # 🔒 PM — Login & signup forms
     │   │   ├── LoginForm.tsx
     │   │   └── SignupForm.tsx
     │   ├── settings/                     # 🔒 PM
     │   │   ├── AdvancedProfileEditor.tsx
     │   │   ├── ProfileEditor.tsx
+    │   │   ├── CertificationEditor.tsx
     │   │   ├── RoleUpgradeForm.tsx
     │   │   └── RoleSwitcher.tsx
-    │   ├── profile/                      # 🔒 PM — Public profile components
+    │   ├── profile/                      # 🔒 PM — Profile components
     │   │   ├── ProfileHero.tsx
     │   │   ├── ProfileActivity.tsx
-    │   │   └── ProfileStats.tsx
+    │   │   ├── ProfileStats.tsx
+    │   │   ├── ContributorPublicProfile.tsx  # Full contributor profile view
+    │   │   ├── CertificationSection.tsx      # Certifications display
+    │   │   ├── ClubMembershipsPanel.tsx      # Club membership showcase
+    │   │   └── ShareProfileButton.tsx        # Profile sharing
     │   ├── contributor-manager/          # 🔒 PM
     │   │   ├── CompleteProfileForm.tsx
     │   │   ├── InviteForm.tsx
     │   │   ├── OtpVerification.tsx
     │   │   ├── StepIndicator.tsx
     │   │   └── UsersTable.tsx
-    │   ├── explore/                      # 🔒 PM
-    │   │   ├── ClubCard.tsx
-    │   │   └── ProfileCard.tsx
     │   ├── Lessons/                      # 🔒 BMK & ABC
     │   │   ├── LessonTracker.tsx
     │   │   └── TopicCard.tsx
@@ -283,12 +287,19 @@ the-ants/                                 # Project root
     │   ├── useClub.ts                    # 🔒 AKT
     │   ├── useClassroom.ts               # 🔒 BMK & ABC — Classroom state (CRUD, assignments, quizzes, discussions, resources)
     │   ├── useCountdown.ts               # 🔒 ZLH
-    │   └── useNotes.ts                   # Notes library + editor state
+    │   ├── useNotes.ts                   # Notes library + editor state
+    │   ├── useLessons.ts                 # 🔒 BMK & ABC — Lesson tracking state
+    │   ├── useCourseManager.ts           # 🔒 BMK & ABC — Course manager state
+    │   ├── useExamReview.ts              # 🔒 ZLH — Exam data review
+    │   ├── useRealtimeChat.ts            # 🔒 AKT — Real-time club chat
+    │   ├── useRealtimeClassroom.ts       # 🔒 BMK & ABC — Real-time classroom events
+    │   ├── useRealtimePresence.ts        # 🔒 PM — User presence tracking
+    │   └── useZoomToFit.ts               # 🔒 PM — Canvas zoom utility
     │
     ├── context/                          # Global React Context Providers
-    │   ├── AuthContext.tsx               # 🔒 PM — Supabase session
+    │   ├── AuthContext.tsx               # 🔒 PM — Supabase session + auth lifecycle
     │   ├── PersonaContext.tsx            # 🔒 PM — User Role State
-    │   └── TimerContext.tsx              # 🔒 PPP — Global Pomodoro state
+    │   └── ThemeContext.tsx              # 🔒 PM — Theme toggle (light/dark)
     │
     ├── actions/                          # Next.js Server Actions
     │   ├── timetable.ts                  # 🔒 PPP
@@ -301,20 +312,30 @@ the-ants/                                 # Project root
     │   └── notes.ts                      # Notes server actions
     │
     ├── constants/                        # Static reference data
+    │   ├── homepage.ts                   # 🔒 PM — Homepage stats & qualification boards
+    │   ├── avatars.tsx                   # 🔒 PM — Avatar SVG components
     │   ├── qualifications.ts             # 🔒 PM — Exam boards, subjects, series
-    │   ├── gradeBoundaries.ts            # 🔒 AKT — Official boundary tables
     │   ├── timetable.ts                  # 🔒 PPP
     │   └── pomodoro.ts                   # 🔒 PPP
     │
     ├── lib/                              # Infrastructure clients & utilities (🔒 PM)
     │   ├── supabase/
     │   │   ├── client.ts                 # Browser-side Supabase client
-    │   │   └── server.ts                 # Server-side Supabase client
+    │   │   ├── server.ts                 # Server-side Supabase client
+    │   │   ├── auth-actions.ts           # Auth helper actions
+    │   │   ├── middleware.ts             # Supabase middleware client
+    │   │   ├── pool.ts                   # Connection pool manager
+    │   │   ├── realtime.ts               # Realtime subscriptions
+    │   │   └── health.ts                 # Health check endpoint
     │   ├── mock/
-    │   │   └── database.ts               # MVP: Typed mock data facade (ALL features import from here)
+    │   │   ├── database.ts               # MVP: Typed mock data facade (ALL features import from here)
+    │   │   └── timetable.ts              # Timetable-specific mock data
     │   ├── srs/
     │   │   └── algorithm.ts              # SM-2 / FSRS core algorithm
+    │   ├── timetable/
+    │   │   └── layout.ts                 # Timetable layout utilities
     │   ├── quiz-ai.ts                    # Quiz AI prompt generator & response parser
+    │   ├── validateEnv.ts                # Environment variable validation
     │   └── utils.ts                      # General helpers (cn, date formatting, getInitials, generateUsername)
     │
     └── types/                            # TypeScript Definitions (🔒 PM)
@@ -329,10 +350,11 @@ the-ants/                                 # Project root
 The authenticated app shell uses a **single NavBar** component (`src/components/layout/NavBar.tsx`).
 
 ### Design
-- **Style:** Creative floating pill-shaped bar with glassmorphism (frosted blur background, subtle glow borders)
-- **Interaction:** Grouped dropdown menus on click/hover
+- **Style:** Centered CSS Grid layout (`grid-cols-[1fr_auto_1fr]`) — logo left, nav links center, profile right
+- **Interaction:** Solid dropdown menus (opaque `bg-background-card` — no glassmorphism bleed-through)
 - **Behaviour:** Role-aware — nav links render only for the roles that can access them.
 - **Scroll Hide:** NavBar hides on scroll down (after 80px threshold) with `-translate-y-full` transition (300ms), and reappears on scroll up. Uses `requestAnimationFrame` throttling.
+- **Theme Toggle:** Integrated sun/moon toggle button switches between light and dark themes
 
 ### Nav Groups & Role Visibility
 
@@ -346,7 +368,7 @@ The authenticated app shell uses a **single NavBar** component (`src/components/
 | **Review** | Gatekeeper / Review Queue, Role Upgrade Requests | ❌ | ❌ | ❌ | ✅ |
 | **Profile** | My Public Profile | ✅ | ✅ | ✅ | ✅ |
 
-### Post-Login Redirect (middleware.ts)
+### Post-Login Redirect (proxy.ts)
 All roles redirect to `/dashboard` after login. The dashboard uses `useRole()` to render role-appropriate content.
 
 ---
@@ -2191,3 +2213,129 @@ All animations respect `prefers-reduced-motion: reduce`.
 | Explore cards rename | Explore section | "Explore Clubs" → "Clubs", "Explore Profiles" → "Profiles" |
 | Text removals | 5 locations | Removed verbose description blocks; SectionHead subtext made optional |
 | "Learn more" link | Hero section | Redesigned twice: prominent pill → clean text link with arrow |
+
+---
+
+## 34. Dashboard & UI Enhancement Changelog (2026-07-11)
+
+### 34.1 Overview
+
+Major dashboard redesign for the Contributor role, introducing a three-column carousel-driven layout with heavily rounded card designs, pill-shaped interactive elements, and a 3D isometric timeline effect. All changes maintain the existing dark-mode colour scheme (`--background: #060B14`, `--primary: #5B9EFF`, `--accent: #28FFBF`) and are fully backward-compatible with other role dashboards.
+
+### 34.2 Changes Summary
+
+| Change | File(s) | Scope | Impact |
+|---|---|---|---|
+| **Contributor Dashboard Redesign** | `src/app/(app)/contributor/page.tsx` | Full rewrite | Three-column layout replaces stacked 2/3 + 1/3 |
+| **DashboardLayout — Three-Column Variant** | `src/components/layout/DashboardLayout.tsx` | Extended | New `layoutVariant='three-column'` prop; carousel hero; three equal columns |
+| **Carousel Hero Banner** | `DashboardLayout.tsx`, `globals.css` | New | Multi-slide hero with arrows, pagination dots, ambient orbs, animated nodes |
+| **NavBar Centering** | `src/components/layout/NavBar.tsx` | Refactored | Grid layout `grid-cols-[1fr_auto_1fr]` — logo left, links center, profile right |
+| **Solid Dropdown Backgrounds** | `NavBar.tsx` | Fixed | All three dropdown menus (nav, user, mobile) use `bg-background-card` instead of transparent `glass` |
+| **3D Isometric Timeline Cards** | `src/components/about/OrgTimeline.tsx`, `globals.css` | Redesigned | 4 shadow layers fan out on hover; corner accent brackets; glowing connector dot; spring easing |
+| **CSS Design System Expansion** | `src/app/globals.css` | Extended | 290+ lines: `.dash-carousel`, `.dash-stat-pill`, `.dash-info-card`, `.dash-deck-card`, `.dash-pill-btn`, `.tl-card-3d` families |
+
+### 34.3 Contributor Dashboard — Three-Column Layout
+
+**Left Column — "My Decks":**
+- Vertical visual preview cards with category-coloured gradient backgrounds (Physics → blue, Biology → emerald, Chemistry → violet, etc.)
+- Card info footer: category badge, card count, visibility icon
+- Full-width pill-shaped "+ Create Deck" button (primary colour, `border-radius: 100px`)
+
+**Middle Column — "Stat Overview":**
+- 4 pill-shaped rows (`.dash-stat-pill`) with `border-radius: 100px`
+- Each pill: circular icon on left (coloured background), stat value + label on right
+- Hover: `translateX(4px)` slide + shadow elevation
+- Stats: Published (violet), Pending Review (amber), Clubs Led (sky), Profile Views (pink)
+
+**Right Column — "Creator Profile" + "My Submissions":**
+- Horizontal stacked info cards (`.dash-info-card`) with `border-radius: 1.5rem`
+- Profile card: gradient avatar initial + title + bio + social links
+- Submission cards: status-coloured file icon avatar + title + status badge + block count
+
+### 34.4 Carousel Hero Banner
+
+- 3 default slides: "Welcome back", "At a Glance", "Make an Impact"
+- `.dash-carousel` container with `border-radius: 2rem` and `overflow: hidden`
+- Track uses flex layout with `translateX(-${currentSlide * 100}%)` transition
+- Left/right arrow buttons: 44px circles, `rgba(255,255,255,0.15)` glass, `backdrop-filter: blur(8px)`
+- Pagination dots: 10px circles at bottom center; active dot scales 1.2× with glow
+- Carousel slides configurable via `carouselSlides` prop; arrows/dots hidden when only 1 slide
+
+### 34.5 NavBar Centering & Solid Dropdowns
+
+**Grid-Based Centering:**
+```
+grid grid-cols-[1fr_auto_1fr] items-center
+  Logo (justify-self-start)
+  Nav Groups (justify-self-center)
+  User Section (justify-self-end)
+```
+
+**Solid Dropdown Backgrounds:**
+| Dropdown | Old Class | New Class |
+|---|---|---|
+| Nav group dropdown | `glass rounded-xl` | `bg-background-card border border-border rounded-xl` |
+| User menu | `glass rounded-xl` | `bg-background-card border border-border rounded-xl` |
+| Mobile menu | `glass rounded-2xl` | `bg-background-card border border-border rounded-2xl` |
+
+In dark mode, `--background-card` resolves to `#0C1220` — a solid deep navy that prevents text bleed-through.
+
+### 34.6 3D Isometric Timeline Cards
+
+**`OrgTimeline.tsx`** refactored from a flat `<div>` to a layered stacking structure:
+
+```
+.tl-card-3d > .tl-card-3d__stack
+  ├── .tl-card-3d__shadow--4  (z-index: 1)
+  ├── .tl-card-3d__shadow--3
+  ├── .tl-card-3d__shadow--2
+  ├── .tl-card-3d__shadow--1
+  ├── .tl-card-3d__face        (z-index: 5)
+  │   ├── .tl-card-3d__corner--tl (top-left primary bracket)
+  │   ├── .tl-card-3d__corner--br (bottom-right accent bracket)
+  │   └── [content: date badge, title, description, images]
+  └── .tl-card-3d__dot         (z-index: 10, left-side glow dot)
+```
+
+**Default state:** Stack rotated `-2deg` with `skewX(-2deg)` for isometric angle.
+
+**Hover state (spring easing `cubic-bezier(0.34, 1.56, 0.64, 1)`):**
+| Layer | Transform | Opacity |
+|---|---|---|
+| Shadow 1 | `translate(12px, -12px)` | 0.22 (primary) |
+| Shadow 2 | `translate(24px, -24px)` | 0.16 (primary) |
+| Shadow 3 | `translate(36px, -36px)` | 0.10 (accent) |
+| Shadow 4 | `translate(48px, -48px)` | 0.05 (primary) |
+| Face card | `rotate(0) skewX(0) translateY(-6px)` | Border → `var(--primary)` |
+| Corners | — | Fade in to 0.5 opacity |
+| Dot | `scale(1.3)` + glow | `box-shadow: 0 0 12px var(--primary)` |
+
+**Accessibility:** All transforms/transitions disabled in `prefers-reduced-motion: reduce`.
+
+### 34.7 Backward Compatibility
+
+All existing dashboards (student, teacher, main-contributor) continue to use the default `layoutVariant` and pass `stats`, `mainContent`, and `sidebarContent` — their rendering is completely unchanged. The new `layoutVariant`, `leftColumn`, `middleColumn`, `rightColumn`, and `carouselSlides` props are all optional.
+
+### 34.8 New CSS Class Registry
+
+| Class Family | Purpose | Defined In |
+|---|---|---|
+| `.dash-carousel`, `__track`, `__slide`, `__arrow`, `__dots`, `__dot` | Carousel hero banner | `globals.css` L1514–1578 |
+| `.dash-stat-pill`, `__icon`, `__value`, `__label` | Pill-shaped stat rows | `globals.css` L1580–1615 |
+| `.dash-info-card`, `__avatar`, `__body` | Horizontal info cards | `globals.css` L1617–1660 |
+| `.dash-deck-card`, `__preview`, `__gradient`, `__overlay`, `__info` | Deck visual preview cards | `globals.css` L1662–1708 |
+| `.dash-pill-btn`, `--primary` | Full-width pill buttons | `globals.css` L1710–1745 |
+| `.dash-col-header`, `__title`, `__link` | Three-column section headers | `globals.css` L1747–1770 |
+| `.tl-card-3d`, `__stack`, `__face`, `__shadow`, `__corner`, `__dot` | 3D timeline ripple effect | `globals.css` L1800–1962 |
+
+### 34.9 Mock Data Coverage
+
+The contributor dashboard relies on the following mock data functions (all in `src/lib/mock/database.ts`):
+- `getContributorDashboardStats(userId)` — Returns `[{ label, value, color, key }]` for Published, Pending Review, Clubs Led, Profile Views
+- `mockDecks` — Array of `Deck` objects with `owner_id`, `name`, `category`, `visibility`, `exam_board`, `syllabus_code`
+- `getCardsByDeck(deckId)` — Returns cards array for card count display
+- `mockContributorProfiles` — Contributor profile with `title`, `bio`, `website_url`, `github_url`, `linkedin_url`
+- `useContributorNotes(userId)` — Hook returning contributor's notes with `status`, `title`, `blocks`
+- `mockTimelineItems` (OrgTimelineItem[]) — Timeline entries with `title`, `description`, `date`, `imageUrls`
+
+All mock data is fully covered and requires no backend changes.

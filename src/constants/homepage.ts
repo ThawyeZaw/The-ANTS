@@ -5,13 +5,13 @@
 
 /** High-impact stats displayed in the StatsRow component */
 export const HOMEPAGE_STATS = [
-  { value: '6', label: 'EXAM BOARDS' },
-  { value: '4', label: 'USER ROLES' },
+  { value: '3', label: 'EXAM BOARDS' },
+  { value: '3', label: 'COMING SOON' },
   { value: '120+', label: 'ACTIVE CLUBS' },
   { value: '100+', label: 'STUDENTS' },
 ] as const;
 
-/** Qualification boards data for the carousel */
+/** Qualification boards actively supported on the platform */
 export const QUALIFICATION_BOARDS = [
   {
     name: 'Cambridge CAIE',
@@ -28,31 +28,32 @@ export const QUALIFICATION_BOARDS = [
     description: 'UK-based qualifications with a strong international presence.',
   },
   {
-    name: 'OSSD',
-    qualifications: ['Ontario Secondary School Diploma'],
-    color: '#D4AA00',
-    emoji: '🍁',
-    description: 'Canadian high school diploma recognized worldwide.',
-  },
-  {
     name: 'IELTS',
     qualifications: ['Academic', 'General Training'],
     color: '#003A70',
     emoji: '🌍',
     description: 'The world\'s most popular English language proficiency test.',
   },
+] as const;
+
+/** Qualification boards currently in development */
+export const UPCOMING_BOARDS = [
+  {
+    name: 'OSSD',
+    qualifications: ['Ontario Secondary School Diploma'],
+    color: '#D4AA00',
+    emoji: '🍁',
+  },
   {
     name: 'SAT',
     qualifications: ['Math', 'Reading & Writing'],
     color: '#041E42',
     emoji: '📝',
-    description: 'Standardized college admissions test for US universities.',
   },
   {
     name: 'Duolingo',
     qualifications: ['Duolingo English Test (DET)'],
     color: '#58CC02',
     emoji: '💬',
-    description: 'Convenient, affordable English certification accepted by 5000+ institutions.',
   },
 ] as const;

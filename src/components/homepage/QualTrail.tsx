@@ -12,10 +12,7 @@ import RevealSection from './RevealSection';
 const QUALIFICATIONS = [
   { name: 'Cambridge CAIE', sub: 'IGCSE & A Levels',      emoji: '🎓' },
   { name: 'Pearson Edexcel', sub: 'IGCSE & IAL',          emoji: '📘' },
-  { name: 'OSSD',            sub: 'Ontario Diploma',       emoji: '🍁' },
   { name: 'IELTS',           sub: 'Academic & General',    emoji: '🌍' },
-  { name: 'SAT',             sub: 'Math + Reading/Writing',emoji: '📝' },
-  { name: 'Duolingo',        sub: 'English Test (DET)',    emoji: '💬' },
 ];
 
 export default function QualTrail() {

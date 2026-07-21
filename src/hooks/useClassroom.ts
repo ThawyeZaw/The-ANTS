@@ -19,6 +19,7 @@ export function useClassroom() {
   const [profiles, setProfiles] = useState<any[]>([]);
 
   useEffect(() => {
+    if (!supabase) return;
     (async () => {
       const [cRes, pRes] = await Promise.all([
         supabase.from('classrooms').select('*'),
@@ -41,6 +42,7 @@ export function useClassroom() {
 
   const getClassroomsByUser = useCallback(
     async (userId: string) => {
+      if (!supabase) return [];
       const { data: members } = await supabase.from('classroom_members').select('classroom_id').eq('user_id', userId);
       const ids = (members ?? []).map((m: any) => m.classroom_id);
       return classrooms.filter((c) => ids.includes(c.id));
@@ -50,6 +52,7 @@ export function useClassroom() {
 
   const getMembers = useCallback(
     async (classroomId: string) => {
+      if (!supabase) return [];
       const { data } = await supabase.from('classroom_members').select('*, profiles(*)').eq('classroom_id', classroomId);
       return (data as unknown as ClassroomMember[]) ?? [];
     },
@@ -58,6 +61,7 @@ export function useClassroom() {
 
   const getMember = useCallback(
     async (classroomId: string, userId: string) => {
+      if (!supabase) return null;
       const { data } = await supabase.from('classroom_members').select('*').eq('classroom_id', classroomId).eq('user_id', userId).single();
       return data as unknown as ClassroomMember ?? null;
     },
@@ -66,6 +70,7 @@ export function useClassroom() {
 
   const getAssignments = useCallback(
     async (classroomId: string) => {
+      if (!supabase) return [];
       const { data } = await supabase.from('assignments').select('*').eq('classroom_id', classroomId).order('created_at', { ascending: false });
       return (data as unknown as Assignment[]) ?? [];
     },
@@ -74,6 +79,7 @@ export function useClassroom() {
 
   const getSubmissionsByAssignment = useCallback(
     async (assignmentId: string) => {
+      if (!supabase) return [];
       const { data } = await supabase.from('assignment_submissions').select('*, profiles(name)').eq('assignment_id', assignmentId);
       return (data as unknown as AssignmentSubmission[]) ?? [];
     },
@@ -82,6 +88,7 @@ export function useClassroom() {
 
   const getSubmission = useCallback(
     async (assignmentId: string, studentId: string) => {
+      if (!supabase) return null;
       const { data } = await supabase.from('assignment_submissions').select('*').eq('assignment_id', assignmentId).eq('student_id', studentId).single();
       return data as unknown as AssignmentSubmission ?? null;
     },
@@ -90,6 +97,7 @@ export function useClassroom() {
 
   const getQuizzes = useCallback(
     async (classroomId: string) => {
+      if (!supabase) return [];
       const { data } = await supabase.from('quizzes').select('*').eq('classroom_id', classroomId).order('created_at', { ascending: false });
       return (data as unknown as Quiz[]) ?? [];
     },
@@ -98,6 +106,7 @@ export function useClassroom() {
 
   const getQuizAttempt = useCallback(
     async (quizId: string, studentId: string) => {
+      if (!supabase) return null;
       const { data } = await supabase.from('quiz_attempts').select('*').eq('quiz_id', quizId).eq('student_id', studentId).single();
       return data as unknown as QuizAttempt ?? null;
     },
@@ -106,6 +115,7 @@ export function useClassroom() {
 
   const getQuizAttempts = useCallback(
     async (quizId: string) => {
+      if (!supabase) return [];
       const { data } = await supabase.from('quiz_attempts').select('*').eq('quiz_id', quizId);
       return (data as unknown as QuizAttempt[]) ?? [];
     },
@@ -114,6 +124,7 @@ export function useClassroom() {
 
   const getTopics = useCallback(
     async (classroomId: string) => {
+      if (!supabase) return [];
       const { data } = await supabase.from('discussion_topics').select('*').eq('classroom_id', classroomId).order('created_at', { ascending: false });
       return (data as DiscussionTopic[]) ?? [];
     },
@@ -122,6 +133,7 @@ export function useClassroom() {
 
   const getReplies = useCallback(
     async (topicId: string) => {
+      if (!supabase) return [];
       const { data } = await supabase.from('discussion_replies').select('*').eq('topic_id', topicId).order('created_at');
       return (data as DiscussionReply[]) ?? [];
     },
@@ -130,6 +142,7 @@ export function useClassroom() {
 
   const getResources = useCallback(
     async (classroomId: string) => {
+      if (!supabase) return [];
       const { data } = await supabase.from('classroom_resources').select('*').eq('classroom_id', classroomId);
       return (data as unknown as ClassroomResource[]) ?? [];
     },
@@ -140,6 +153,7 @@ export function useClassroom() {
 
   const createNewClassroom = useCallback(
     async (data: { name: string; description?: string; curriculum_ids: string[]; created_by: string; enabled_features?: ClassroomFeature[] }) => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
       const inviteCode = data.name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 4) + Math.floor(Math.random() * 100).toString().padStart(2, '0');
 
       const { data: classroom, error } = await supabase.from('classrooms').insert({
@@ -164,6 +178,7 @@ export function useClassroom() {
 
   const joinByCode = useCallback(
     async (userId: string, inviteCode: string): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
       const { data: classroom } = await supabase.from('classrooms').select('id, invite_code').ilike('invite_code', inviteCode).single();
       if (!classroom) return { success: false, error: 'Invalid invite code' };
       const { error } = await supabase.from('classroom_members').upsert({ classroom_id: classroom.id, user_id: userId, role: 'student' });
@@ -175,6 +190,7 @@ export function useClassroom() {
 
   const leave = useCallback(
     async (userId: string, classroomId: string): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
       const { error } = await supabase.from('classroom_members').delete().eq('classroom_id', classroomId).eq('user_id', userId);
       if (!error) refresh();
       return error ? { success: false, error: error.message } : { success: true };
@@ -184,6 +200,7 @@ export function useClassroom() {
 
   const createNewAssignment = useCallback(
     async (data: { classroom_id: string; title: string; description?: string; due_date: string; priority?: AssignmentPriority; total_points?: number; attachment_urls?: string[]; created_by: string }): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
       const { error } = await supabase.from('assignments').insert({
         classroom_id: data.classroom_id, title: data.title, description: data.description || null,
         due_date: data.due_date, priority: data.priority || 'medium', status: 'draft',
@@ -197,6 +214,7 @@ export function useClassroom() {
 
   const publishAssignment = useCallback(
     async (assignmentId: string, status: AssignmentStatus): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
       const { error } = await supabase.from('assignments').update({ status }).eq('id', assignmentId);
       if (!error) refresh();
       return error ? { success: false, error: error.message } : { success: true };
@@ -206,6 +224,7 @@ export function useClassroom() {
 
   const updateAssignmentData = useCallback(
     async (assignmentId: string, data: Partial<Assignment>): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
       const { error } = await supabase.from('assignments').update(data).eq('id', assignmentId);
       if (!error) refresh();
       return error ? { success: false, error: error.message } : { success: true };
@@ -215,6 +234,7 @@ export function useClassroom() {
 
   const submitToAssignment = useCallback(
     async (assignmentId: string, studentId: string, content: string | null, attachmentUrls: string[] = []): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
       const { error } = await supabase.from('assignment_submissions').upsert({
         assignment_id: assignmentId, student_id: studentId, content, attachment_urls: attachmentUrls, submitted_at: new Date().toISOString(),
       });
@@ -226,6 +246,7 @@ export function useClassroom() {
 
   const gradeSub = useCallback(
     async (submissionId: string, grade: number, feedback: string | null): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
       const { error } = await supabase.from('assignment_submissions').update({ grade, feedback }).eq('id', submissionId);
       if (!error) refresh();
       return error ? { success: false, error: error.message } : { success: true };
@@ -235,6 +256,7 @@ export function useClassroom() {
 
   const createNewQuiz = useCallback(
     async (data: { classroom_id: string; title: string; description?: string; time_limit_minutes?: number; due_date?: string; questions: QuizQuestion[]; created_by: string }): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
       const { error } = await supabase.from('quizzes').insert({
         classroom_id: data.classroom_id, title: data.title, description: data.description || null,
         time_limit_minutes: data.time_limit_minutes || null, due_date: data.due_date || null,
@@ -248,6 +270,7 @@ export function useClassroom() {
 
   const publishQuiz = useCallback(
     async (quizId: string, status: QuizStatus): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
       const { error } = await supabase.from('quizzes').update({ status }).eq('id', quizId);
       if (!error) refresh();
       return error ? { success: false, error: error.message } : { success: true };
@@ -257,6 +280,7 @@ export function useClassroom() {
 
   const updateQuizData = useCallback(
     async (quizId: string, data: Partial<Quiz>): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
       const { error } = await supabase.from('quizzes').update(data as any).eq('id', quizId);
       if (!error) refresh();
       return error ? { success: false, error: error.message } : { success: true };
@@ -266,6 +290,7 @@ export function useClassroom() {
 
   const submitQuiz = useCallback(
     async (quizId: string, studentId: string, answers: { question_id: string; answer: string }[]): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
       const qAnswers = answers.map((a) => ({ question_id: a.question_id, answer: a.answer, is_correct: null as boolean | null }));
       const { error } = await supabase.from('quiz_attempts').upsert({
         quiz_id: quizId, student_id: studentId, answers: qAnswers as any, started_at: new Date().toISOString(), submitted_at: new Date().toISOString(),
@@ -278,6 +303,7 @@ export function useClassroom() {
 
   const createTopic = useCallback(
     async (data: { classroom_id: string; title: string; content: string; assignment_id?: string; created_by: string }): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
       const { error } = await supabase.from('discussion_topics').insert({
         classroom_id: data.classroom_id, title: data.title, content: data.content,
         assignment_id: data.assignment_id || null, is_pinned: false, is_locked: false, created_by: data.created_by,
@@ -290,6 +316,7 @@ export function useClassroom() {
 
   const replyToTopic = useCallback(
     async (topicId: string, content: string, createdBy: string): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
       const { error } = await supabase.from('discussion_replies').insert({ topic_id: topicId, content, created_by: createdBy });
       if (!error) refresh();
       return error ? { success: false, error: error.message } : { success: true };
@@ -299,6 +326,7 @@ export function useClassroom() {
 
   const addNewResource = useCallback(
     async (data: { classroom_id: string; title: string; description?: string; type: ResourceType; url: string; uploaded_by: string }): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
       const { error } = await supabase.from('classroom_resources').insert({
         classroom_id: data.classroom_id, title: data.title, description: data.description || null,
         type: data.type, url: data.url, uploaded_by: data.uploaded_by,
@@ -311,6 +339,7 @@ export function useClassroom() {
 
   const removeResource = useCallback(
     async (resourceId: string): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
       const { error } = await supabase.from('classroom_resources').delete().eq('id', resourceId);
       if (!error) refresh();
       return error ? { success: false, error: error.message } : { success: true };
@@ -320,6 +349,7 @@ export function useClassroom() {
 
   const updateClassroomData = useCallback(
     async (classroomId: string, data: Partial<Classroom>): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
       const { error } = await supabase.from('classrooms').update(data as any).eq('id', classroomId);
       if (!error) refresh();
       return error ? { success: false, error: error.message } : { success: true };
@@ -329,6 +359,7 @@ export function useClassroom() {
 
   const editResource = useCallback(
     async (resourceId: string, data: Partial<ClassroomResource>): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
       const { error } = await supabase.from('classroom_resources').update(data).eq('id', resourceId);
       if (!error) refresh();
       return error ? { success: false, error: error.message } : { success: true };
@@ -338,6 +369,7 @@ export function useClassroom() {
 
   const removeAssignment = useCallback(
     async (assignmentId: string): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
       const { error } = await supabase.from('assignments').delete().eq('id', assignmentId);
       if (!error) refresh();
       return error ? { success: false, error: error.message } : { success: true };
@@ -347,6 +379,7 @@ export function useClassroom() {
 
   const removeQuiz = useCallback(
     async (quizId: string): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
       const { error } = await supabase.from('quizzes').delete().eq('id', quizId);
       if (!error) refresh();
       return error ? { success: false, error: error.message } : { success: true };
@@ -356,6 +389,7 @@ export function useClassroom() {
 
   const removeTopic = useCallback(
     async (topicId: string): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
       const { error } = await supabase.from('discussion_topics').delete().eq('id', topicId);
       if (!error) refresh();
       return error ? { success: false, error: error.message } : { success: true };
@@ -365,6 +399,7 @@ export function useClassroom() {
 
   const editTopic = useCallback(
     async (topicId: string, data: Partial<DiscussionTopic>): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
       const { error } = await supabase.from('discussion_topics').update(data).eq('id', topicId);
       if (!error) refresh();
       return error ? { success: false, error: error.message } : { success: true };

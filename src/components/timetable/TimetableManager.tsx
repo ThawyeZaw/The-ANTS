@@ -68,7 +68,7 @@ interface TimetableManagerProps {
   userId?: string;
 }
 
-export default function TimetableManager({ userId = 'user-student-001' }: TimetableManagerProps) {
+export default function TimetableManager(_props: TimetableManagerProps) {
   const {
     view,
     currentDate,
@@ -90,7 +90,7 @@ export default function TimetableManager({ userId = 'user-student-001' }: Timeta
     toggleComplete,
     moveEvent,
     integrationCounts,
-  } = useTimetable(userId);
+  } = useTimetable();
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);

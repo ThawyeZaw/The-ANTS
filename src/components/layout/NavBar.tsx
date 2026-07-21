@@ -1,8 +1,8 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTs — NavBar Component (v2 — Library System Redesign)
-// Restructured groups: Learn | Study | Plan | Library | Community | Contribute | Admin
+// The ANTs — NavBar Component (v3 — Unified Learn)
+// Groups: Learn (3-section dropdown) | Plan | Library | Community | Contribute | Admin
 // Role-aware floating glassmorphism nav with grouped dropdowns.
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -39,7 +39,6 @@ import {
   BookMarked,
   FlaskConical,
   NotebookPen,
-  Sparkles,
   ScrollText,
   SquareStack,
   Briefcase,
@@ -61,10 +60,17 @@ interface NavItem {
   badge?: string; // e.g. "Soon" or "New"
 }
 
+interface NavSection {
+  label: string;
+  items: NavItem[];
+  accentColor?: string;
+}
+
 interface NavGroupDef {
   label: string;
   icon: React.ReactNode;
-  items: NavItem[];
+  items?: NavItem[];           // flat list (backward-compatible)
+  sections?: NavSection[];     // sectioned variant — renders with dividers
   allowedRoles: UserRole[];
   accentColor?: string; // CSS var or tailwind colour for the group indicator
 }
@@ -74,53 +80,63 @@ const ALL_ROLES: UserRole[] = ['student', 'teacher', 'contributor', 'main_contri
 const NAV_GROUPS: NavGroupDef[] = [
   {
     label: 'Learn',
-    icon: <GraduationCap className="h-4 w-4" />,
+    icon: <BookOpen className="h-4 w-4" />,
     allowedRoles: ALL_ROLES,
     accentColor: 'var(--color-emerald-500, #10b981)',
-    items: [
+    sections: [
       {
-        label: 'Course Manager',
-        href: '/courses',
-        icon: <BookOpen className="h-4 w-4" />,
-        description: 'Manage enrolled qualifications & subjects',
+        label: 'Courses & Progress',
+        accentColor: 'var(--color-emerald-500, #10b981)',
+        items: [
+          {
+            label: 'Course Manager',
+            href: '/courses',
+            icon: <BookOpen className="h-4 w-4" />,
+            description: 'Manage enrolled qualifications & subjects',
+          },
+          {
+            label: 'Lesson Tracker',
+            href: '/lessons',
+            icon: <ClipboardCheck className="h-4 w-4" />,
+            description: 'Track topic confidence & progress',
+          },
+        ],
       },
       {
-        label: 'Lesson Tracker',
-        href: '/lessons',
-        icon: <ClipboardCheck className="h-4 w-4" />,
-        description: 'Track topic confidence & progress',
+        label: 'Create',
+        accentColor: 'var(--color-amber-500, #f59e0b)',
+        items: [
+          {
+            label: 'My Workspace',
+            href: '/workspace',
+            icon: <Briefcase className="h-4 w-4" />,
+            description: 'All your notes, decks, courses & exams',
+          },
+          {
+            label: 'Notes',
+            href: '/my-notes',
+            icon: <NotebookPen className="h-4 w-4" />,
+            description: 'Your created & saved study notes',
+          },
+        ],
       },
       {
-        label: 'My Workspace',
-        href: '/workspace',
-        icon: <Briefcase className="h-4 w-4" />,
-        description: 'All your notes, decks, courses & exams',
-      },
-    ],
-  },
-  {
-    label: 'Study',
-    icon: <Sparkles className="h-4 w-4" />,
-    allowedRoles: ALL_ROLES,
-    accentColor: 'var(--color-violet-500, #8b5cf6)',
-    items: [
-      {
-        label: 'Flashcards',
-        href: '/flashcards',
-        icon: <Layers className="h-4 w-4" />,
-        description: 'Spaced-repetition study sessions',
-      },
-      {
-        label: 'Notes',
-        href: '/my-notes',
-        icon: <NotebookPen className="h-4 w-4" />,
-        description: 'Your created & saved study notes',
-      },
-      {
-        label: 'Pomodoro Timer',
-        href: '/pomodoro',
-        icon: <Timer className="h-4 w-4" />,
-        description: 'Focus sessions with ambient music',
+        label: 'Practice & Focus',
+        accentColor: 'var(--color-violet-500, #8b5cf6)',
+        items: [
+          {
+            label: 'Flashcards',
+            href: '/flashcards',
+            icon: <Layers className="h-4 w-4" />,
+            description: 'Spaced-repetition study sessions',
+          },
+          {
+            label: 'Pomodoro Timer',
+            href: '/pomodoro',
+            icon: <Timer className="h-4 w-4" />,
+            description: 'Focus sessions with ambient music',
+          },
+        ],
       },
     ],
   },
@@ -157,25 +173,25 @@ const NAV_GROUPS: NavGroupDef[] = [
     accentColor: 'var(--color-amber-500, #f59e0b)',
     items: [
       {
-        label: 'Courses Library',
+        label: 'Courses',
         href: '/library/courses',
         icon: <ScrollText className="h-4 w-4" />,
         description: 'Browse verified curriculum templates',
       },
       {
-        label: 'Flashcards Library',
+        label: 'Flashcards',
         href: '/library/flashcards',
         icon: <SquareStack className="h-4 w-4" />,
         description: 'Browse contributor-approved decks',
       },
       {
-        label: 'Notes Library',
+        label: 'Notes',
         href: '/library',
         icon: <Library className="h-4 w-4" />,
         description: 'Browse verified study notes',
       },
       {
-        label: 'Exams Library',
+        label: 'Exams',
         href: '/library/exams',
         icon: <FlaskConical className="h-4 w-4" />,
         description: 'Browse exam dates & papers by board',
@@ -296,8 +312,13 @@ function NavDropdown({
   const ref = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 
+  // Resolve all items — supports flat or sectioned groups
+  const allItems: NavItem[] = group.sections
+    ? group.sections.flatMap((s) => s.items ?? [])
+    : (group.items ?? []);
+
   // Check if any item in this group is the current page
-  const isActive = group.items.some(item => pathname.startsWith(item.href));
+  const isActive = allItems.length > 0 && allItems.some(item => pathname && item.href && pathname.startsWith(item.href));
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -315,14 +336,15 @@ function NavDropdown({
     <div ref={ref} className="relative">
       <button
         onClick={onToggle}
+        aria-expanded={isOpen}
         className={cn(
-          'flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer',
+          'nav-icon-btn flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer',
           isOpen || isActive
             ? 'bg-primary/10 text-primary'
             : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary'
         )}
       >
-        {group.icon}
+        <span className="nav-icon-draw">{group.icon}</span>
         <span className="hidden lg:inline">{group.label}</span>
         <ChevronDown
           className={cn(
@@ -333,50 +355,108 @@ function NavDropdown({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-72 glass rounded-xl p-2 animate-slide-down z-50 shadow-xl">
-          {/* Group label header */}
-          <div className="px-3 py-1.5 mb-1 border-b border-border/50">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-foreground-muted">
-              {group.label}
-            </p>
-          </div>
-          {group.items.map((item) => {
-            const isItemActive = pathname.startsWith(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={onClose}
-                className={cn(
-                  'flex items-start gap-3 px-3 py-2.5 rounded-lg transition-colors duration-150 group',
-                  isItemActive
-                    ? 'bg-primary/10 text-primary'
-                    : 'hover:bg-background-secondary'
+        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-72 bg-background-card border border-border rounded-xl p-2 animate-slide-down z-50 shadow-xl">
+          {group.sections ? (
+            /* ── Sectioned layout with horizontal dividers ── */
+            group.sections.map((section, si) => (
+              <div key={section.label}>
+                {/* Section header */}
+                <div className="px-3 pt-2 pb-1.5">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-foreground-muted">
+                    {section.label}
+                  </p>
+                </div>
+                {/* Section items */}
+                {section.items.map((item) => {
+                  const isItemActive = pathname.startsWith(item.href);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={onClose}
+                      className={cn(
+                        'flex items-start gap-3 px-3 py-2.5 rounded-lg transition-colors duration-150 group',
+                        isItemActive
+                          ? 'bg-primary/10 text-primary'
+                          : 'hover:bg-background-secondary'
+                      )}
+                    >
+                      <div className={cn(
+                        'mt-0.5 transition-colors shrink-0',
+                        isItemActive ? 'text-primary' : 'text-foreground-muted group-hover:text-primary'
+                      )}>
+                        {item.icon}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className={cn(
+                            'text-sm font-medium',
+                            isItemActive ? 'text-primary' : 'text-foreground'
+                          )}>{item.label}</p>
+                          {item.badge && (
+                            <span className="text-[9px] font-bold uppercase tracking-wide bg-primary/15 text-primary px-1.5 py-0.5 rounded-full">
+                              {item.badge}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-foreground-muted leading-tight mt-0.5">{item.description}</p>
+                      </div>
+                    </Link>
+                  );
+                })}
+                {/* Divider between sections */}
+                {si < group.sections!.length - 1 && (
+                  <div className="mx-3 my-1 h-px bg-border/50" />
                 )}
-              >
-                <div className={cn(
-                  'mt-0.5 transition-colors shrink-0',
-                  isItemActive ? 'text-primary' : 'text-foreground-muted group-hover:text-primary'
-                )}>
-                  {item.icon}
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className={cn(
-                      'text-sm font-medium',
-                      isItemActive ? 'text-primary' : 'text-foreground'
-                    )}>{item.label}</p>
-                    {item.badge && (
-                      <span className="text-[9px] font-bold uppercase tracking-wide bg-primary/15 text-primary px-1.5 py-0.5 rounded-full">
-                        {item.badge}
-                      </span>
+              </div>
+            ))
+          ) : (
+            /* ── Flat layout (backward-compatible) ── */
+            <>
+              <div className="px-3 py-1.5 mb-1 border-b border-border/50">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-foreground-muted">
+                  {group.label}
+                </p>
+              </div>
+              {(group.items ?? []).map((item) => {
+                const isItemActive = pathname.startsWith(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={onClose}
+                    className={cn(
+                      'flex items-start gap-3 px-3 py-2.5 rounded-lg transition-colors duration-150 group',
+                      isItemActive
+                        ? 'bg-primary/10 text-primary'
+                        : 'hover:bg-background-secondary'
                     )}
-                  </div>
-                  <p className="text-xs text-foreground-muted leading-tight mt-0.5">{item.description}</p>
-                </div>
-              </Link>
-            );
-          })}
+                  >
+                    <div className={cn(
+                      'mt-0.5 transition-colors shrink-0',
+                      isItemActive ? 'text-primary' : 'text-foreground-muted group-hover:text-primary'
+                    )}>
+                      {item.icon}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className={cn(
+                          'text-sm font-medium',
+                          isItemActive ? 'text-primary' : 'text-foreground'
+                        )}>{item.label}</p>
+                        {item.badge && (
+                          <span className="text-[9px] font-bold uppercase tracking-wide bg-primary/15 text-primary px-1.5 py-0.5 rounded-full">
+                            {item.badge}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-foreground-muted leading-tight mt-0.5">{item.description}</p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </>
+          )}
         </div>
       )}
     </div>
@@ -385,7 +465,12 @@ function NavDropdown({
 
 // ── Helper to flatten nav items ───────────────────────────────────────────────
 export const getAllNavItems = () => {
-  return NAV_GROUPS.flatMap(group => group.items);
+  return NAV_GROUPS.flatMap(group => {
+    if (group.sections) {
+      return group.sections.flatMap(s => s.items ?? []);
+    }
+    return group.items ?? [];
+  }).filter(Boolean);
 };
 
 // ── Main NavBar ──────────────────────────────────────────────────────────────
@@ -445,7 +530,7 @@ export default function NavBar() {
   useEffect(() => {
     if (!pathname || pathname === '/dashboard' || pathname === '/') return;
     const allItems = getAllNavItems();
-    const isValidItem = allItems.some(item => pathname.startsWith(item.href));
+    const isValidItem = allItems.length > 0 && allItems.some(item => item?.href && pathname.startsWith(item.href));
     if (!isValidItem && !pathname.startsWith('/profile')) return;
     try {
       const recentStr = localStorage.getItem('recentPages');
@@ -474,11 +559,11 @@ export default function NavBar() {
     <header className={cn('sticky top-0 z-50 w-full transition-transform duration-300', isNavHidden && '-translate-y-full')}>
       {/* Floating NavBar Container */}
       <div className="mx-auto max-w-7xl px-4 pt-3">
-        <nav className="glass rounded-2xl px-4 py-2 flex items-center justify-between animate-glow">
+        <nav className="glass rounded-2xl px-4 py-2 grid grid-cols-[1fr_auto_1fr] items-center">
           {/* ─── Logo + Dashboard ─── */}
           <Link
             href={role ? '/dashboard' : '/'}
-            className="flex items-center gap-2 shrink-0 group"
+            className="flex items-center gap-2 shrink-0 group justify-self-start"
           >
             <span className="text-xl group-hover:scale-110 transition-transform duration-200">{'🐜'}</span>
             <span className="font-bold text-lg bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent font-brand">
@@ -486,8 +571,8 @@ export default function NavBar() {
             </span>
           </Link>
 
-          {/* ─── Desktop Nav Groups ─── */}
-          <div className="hidden md:flex items-center gap-0.5">
+          {/* ─── Desktop Nav Groups (Centered) ─── */}
+          <div className="hidden md:flex items-center gap-0.5 justify-self-center">
             {visibleGroups.map((group) => (
               <NavDropdown
                 key={group.label}
@@ -504,7 +589,7 @@ export default function NavBar() {
           </div>
 
           {/* ─── Right Section ─── */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 justify-self-end">
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
@@ -545,7 +630,7 @@ export default function NavBar() {
                 </button>
 
                 {isUserMenuOpen && (
-                  <div className="absolute top-full right-0 mt-2 w-64 glass rounded-xl p-3 animate-slide-down z-50 shadow-xl">
+                  <div className="absolute top-full right-0 mt-2 w-64 bg-background-card border border-border rounded-xl p-3 animate-slide-down z-50 shadow-xl">
                     <div className="pb-3 mb-3 border-b border-border">
                       <p className="font-semibold text-sm text-foreground">{user.profile.name}</p>
                       <p className="text-xs text-foreground-muted mt-0.5">{user.email}</p>
@@ -604,7 +689,7 @@ export default function NavBar() {
 
         {/* ─── Mobile Menu ─── */}
         {isMobileOpen && (
-          <div className="md:hidden mt-2 glass rounded-2xl p-4 animate-slide-down max-h-[calc(100vh-6rem)] overflow-y-auto shadow-xl">
+          <div className="md:hidden mt-2 bg-background-card border border-border rounded-2xl p-4 animate-slide-down max-h-[calc(100vh-6rem)] overflow-y-auto shadow-xl">
             {visibleGroups.map((group) => (
               <div key={group.label} className="mb-5 last:mb-0">
                 <div className="flex items-center gap-2 mb-2 px-2">
@@ -613,32 +698,73 @@ export default function NavBar() {
                     {group.label}
                   </p>
                 </div>
-                {group.items.map((item) => {
-                  const isItemActive = pathname.startsWith(item.href);
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setIsMobileOpen(false)}
-                      className={cn(
-                        'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors mb-0.5',
-                        isItemActive
-                          ? 'bg-primary/10 text-primary'
-                          : 'hover:bg-background-secondary'
+                {group.sections ? (
+                  group.sections.map((section, si) => (
+                    <div key={section.label}>
+                      {/* Section sub-header */}
+                      <p className="text-[10px] font-bold text-foreground-muted/60 uppercase tracking-widest px-3 pt-1 pb-0.5">
+                        {section.label}
+                      </p>
+                      {section.items.map((item) => {
+                        const isItemActive = pathname.startsWith(item.href);
+                        return (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            onClick={() => setIsMobileOpen(false)}
+                            className={cn(
+                              'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors mb-0.5',
+                              isItemActive
+                                ? 'bg-primary/10 text-primary'
+                                : 'hover:bg-background-secondary'
+                            )}
+                          >
+                            <span className={isItemActive ? 'text-primary' : 'text-foreground-muted'}>
+                              {item.icon}
+                            </span>
+                            <div>
+                              <p className={cn('text-sm font-medium', isItemActive ? 'text-primary' : 'text-foreground')}>
+                                {item.label}
+                              </p>
+                              <p className="text-xs text-foreground-muted">{item.description}</p>
+                            </div>
+                          </Link>
+                        );
+                      })}
+                      {/* Divider between sections on mobile */}
+                      {si < group.sections!.length - 1 && (
+                        <div className="mx-2 my-1.5 h-px bg-border/40" />
                       )}
-                    >
-                      <span className={isItemActive ? 'text-primary' : 'text-foreground-muted'}>
-                        {item.icon}
-                      </span>
-                      <div>
-                        <p className={cn('text-sm font-medium', isItemActive ? 'text-primary' : 'text-foreground')}>
-                          {item.label}
-                        </p>
-                        <p className="text-xs text-foreground-muted">{item.description}</p>
-                      </div>
-                    </Link>
-                  );
-                })}
+                    </div>
+                  ))
+                ) : (
+                  (group.items ?? []).map((item) => {
+                    const isItemActive = pathname.startsWith(item.href);
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setIsMobileOpen(false)}
+                        className={cn(
+                          'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors mb-0.5',
+                          isItemActive
+                            ? 'bg-primary/10 text-primary'
+                            : 'hover:bg-background-secondary'
+                        )}
+                      >
+                        <span className={isItemActive ? 'text-primary' : 'text-foreground-muted'}>
+                          {item.icon}
+                        </span>
+                        <div>
+                          <p className={cn('text-sm font-medium', isItemActive ? 'text-primary' : 'text-foreground')}>
+                            {item.label}
+                          </p>
+                          <p className="text-xs text-foreground-muted">{item.description}</p>
+                        </div>
+                      </Link>
+                    );
+                  })
+                )}
               </div>
             ))}
             {/* Mobile user actions */}

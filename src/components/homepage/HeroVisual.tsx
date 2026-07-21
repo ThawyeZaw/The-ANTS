@@ -107,12 +107,18 @@ export default function HeroVisual() {
         >
           {/* ── Mini countdown ── */}
           <div
+            className="hp-panel-float"
             style={{
               background: 'var(--hp-bg-soft)',
               border: '1px solid var(--hp-border)',
               borderRadius: 'var(--hp-radius-md)',
               padding: 20,
               textAlign: 'left',
+              boxShadow:
+                '0 1px 3px rgba(0,0,0,0.06), ' +
+                '0 6px 18px rgba(0,0,0,0.05), ' +
+                '0 14px 40px rgba(0,0,0,0.04)',
+              transition: 'box-shadow 0.35s var(--hp-ease-out), transform 0.35s var(--hp-ease-out)',
             }}
           >
             <div
@@ -169,12 +175,18 @@ export default function HeroVisual() {
 
           {/* ── Mini timetable ── */}
           <div
+            className="hp-panel-float"
             style={{
               background: 'var(--hp-bg-soft)',
               border: '1px solid var(--hp-border)',
               borderRadius: 'var(--hp-radius-md)',
               padding: 20,
               textAlign: 'left',
+              boxShadow:
+                '0 1px 3px rgba(0,0,0,0.06), ' +
+                '0 6px 18px rgba(0,0,0,0.05), ' +
+                '0 14px 40px rgba(0,0,0,0.04)',
+              transition: 'box-shadow 0.35s var(--hp-ease-out), transform 0.35s var(--hp-ease-out)',
             }}
           >
             <div

@@ -1,6 +1,6 @@
 # Mock Database vs Schema Audit
 
-**Date:** 2026-07-07
+**Date:** 2026-07-13
 **Scope:** `src/lib/mock/database.ts` vs `schema.md`
 **Purpose:** Identify gaps between MVP mock data facade and target PostgreSQL schema. No fixes applied — identification only.
 
@@ -23,15 +23,11 @@
 ## Gap 1: `timetable_events` — Missing from Mock Database
 
 **Severity:** Medium
-**Schema reference:** `schema.md` line 624, RLS policy at line 1480
+**Schema reference:** `schema.md` line 631, RLS policy at line 1480
 
 The `timetable_events` table is defined in the schema with a rich column set (event_type enum, recurrence_rule JSONB, cross-feature virtual events, etc.) but has **no corresponding mock data or query functions** in `src/lib/mock/database.ts`.
 
 **Mitigation:** The timetable feature uses its own separate mock module at `src/lib/mock/timetable.ts` rather than the central `database.ts` facade. This is an architectural inconsistency — all other features use the unified facade.
-
-**Recommendation:** Either:
-- A) Migrate `mock/timetable.ts` into `mock/database.ts` for consistency, or
-- B) Document this as an intentional exception in the timetable spec (Section 12.6 already references `src/lib/mock/timetable.ts`).
 
 ---
 
@@ -42,10 +38,6 @@ The `timetable_events` table is defined in the schema with a rich column set (ev
 
 The mock database defines `mockNotifications` with fields (`id`, `user_id`, `title`, `message`, `type`, `is_read`, `created_at`) but `schema.md` has **no corresponding `notifications` table**.
 
-**Status:** This is a planned feature not yet spec'd. The mock data anticipates a future notification system (currently MVP uses NavBar badge counts only).
-
-**Recommendation:** Add a `notifications` table to `schema.md` when the notification feature is spec'd (referenced in Sections 17, 19, 22 for reminders, review status, and upgrade status).
-
 ---
 
 ## Gap 3: `activity_feed` — Mock Data Without Schema Table
@@ -55,10 +47,6 @@ The mock database defines `mockNotifications` with fields (`id`, `user_id`, `tit
 
 The mock database defines `mockActivityFeed` with fields (`id`, `user_id`, `activity_type`, `description`, `created_at`) but `schema.md` has **no corresponding `activity_feed` table**.
 
-**Status:** Used by role landing pages for recent activity display. Currently in-memory only.
-
-**Recommendation:** Add an `activity_feed` table to `schema.md` when the activity tracking feature is formalized.
-
 ---
 
 ## Gap 4: `exam_schedules` — Referenced in RLS But Not in Table List
@@ -66,9 +54,7 @@ The mock database defines `mockActivityFeed` with fields (`id`, `user_id`, `acti
 **Severity:** Low
 **RLS reference:** `schema.md` lines 1497-1499
 
-The RLS policy section (25.7) defines policies for `exam_schedules` (contributor_all, public_select), but the main schema table list (Section 6 / schema.md tables) does not include an `exam_schedules` table definition. It is also referenced in Section 30 (Seed Data Strategy, order 15).
-
-**Recommendation:** Add `exam_schedules` table definition to the schema table list.
+The RLS policy section (25.7) defines policies for `exam_schedules` (contributor_all, public_select), but the main schema table list (Section 6 / schema.md tables) does not include an `exam_schedules` table definition.
 
 ---
 
@@ -79,7 +65,30 @@ The RLS policy section (25.7) defines policies for `exam_schedules` (contributor
 
 The RLS policy section (25.9) defines policies for `role_upgrade_applications`, but the main table list only includes `role_upgrade_requests`. It also appears in the migration strategy (Section 32, order 9).
 
-**Recommendation:** Add `role_upgrade_applications` table definition or clarify that `role_upgrade_requests` serves both purposes.
+---
+
+## Gap 6: `contributor_profiles` — Column Naming Drift
+
+**Severity:** Low
+**Schema vs TypeScript:** The schema defines `website`, `linkedin`, `github` but the TypeScript types and mock data use `website_url`, `linkedin_url`, `github_url`.
+
+---
+
+## Gap 7: Library Columns Missing from Schema
+
+**Severity:** Low
+**Affected tables:** `decks`, `exams`, `notes`, `exam_countdowns`, `topics`, `card_reviews`
+
+The TypeScript types have evolved with library-system features (`exam_board`, `visibility`, `share_token`, `library_status`, `syllabus_code` etc.) that are not yet reflected in the schema doc.
+
+---
+
+## New in Mock Database (2026-07-13)
+
+| Addition | Description |
+|---|---|
+| `_mockUserId()` helper | Maps unknown Supabase auth UUIDs to a fallback mock user ID, enabling real auth sessions to render mock data |
+| Mock user ID resolution | Applied to `getNotesByContributor`, `getUserSavedNotes`, `isNoteSaved`, `saveNote`, `unsaveNote`, `getNotesByEnrolledCourses` — all now use `_mockUserId()` for robust fallback |
 
 ---
 
