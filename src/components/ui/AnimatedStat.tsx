@@ -27,7 +27,7 @@ function easeOutCubic(t: number): number {
 }
 
 export default function AnimatedStat({ endValue, label, suffix = '' }: AnimatedStatProps) {
-  const [displayValue, setDisplayValue] = useState(0);
+  const [displayValue, setDisplayValue] = useState(endValue);
   const [hasAnimated, setHasAnimated] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 

@@ -6,6 +6,7 @@ import { CountdownCard } from './CountdownCard';
 import { AddCountdownModal } from './AddCountdownModal';
 import { Plus, Timer, BookMarked } from 'lucide-react';
 import Link from 'next/link';
+import EmptyState from '@/components/ui/EmptyState';
 
 interface CountdownManagerProps {
   userId: string;
@@ -59,19 +60,13 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
       </div>
 
       {sortedGroups.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--border)] bg-[var(--background-secondary)]/70 py-20 text-center backdrop-blur-md">
-          <Timer className="h-16 w-16 text-[var(--foreground-secondary)] mb-4" />
-          <h3 className="text-xl font-medium text-[var(--foreground)] mb-2">No Countdowns Yet</h3>
-          <p className="text-[var(--foreground-secondary)] max-w-sm mb-6">Keep track of your exam dates by adding your first countdown timer.</p>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 rounded-lg bg-[var(--background-secondary)]/80 px-6 py-3 text-sm font-medium text-[var(--foreground)] transition-all hover:bg-[var(--background-secondary)] focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:outline-none"
-            aria-label="Create your first exam countdown"
-          >
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            Create Countdown
-          </button>
-        </div>
+        <EmptyState
+          icon={Timer}
+          heading="No Countdowns Yet"
+          description="Keep track of your exam dates by adding your first countdown timer."
+          actionLabel="Create Countdown"
+          onAction={() => setIsModalOpen(true)}
+        />
       ) : (
         <div className="space-y-10">
           {sortedGroups.map(group => {

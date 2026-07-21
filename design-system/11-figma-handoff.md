@@ -10,29 +10,29 @@ Create these as Figma Color Styles:
 
 | Figma Style Name | CSS Variable | Light Hex | Dark Hex |
 |---|---|---|---|
-| `background/default` | `--background` | `#FAFBFC` | `#141923` |
-| `background/secondary` | `--background-secondary` | `#F1F3F5` | `#1C2333` |
-| `background/card` | `--background-card` | `#FFFFFF` | `#232D3F` |
-| `background/elevated` | `--background-elevated` | `#FFFFFF` | `#2A3450` |
-| `text/primary` | `--foreground` | `#0F172A` | `#F1F5F9` |
-| `text/secondary` | `--foreground-secondary` | `#475569` | `#94A3B8` |
-| `text/muted` | `--foreground-muted` | `#94A3B8` | `#718096` |
-| `border/default` | `--border` | `#E2E8F0` | `#2E3D55` |
-| `border/hover` | `--border-hover` | `#CBD5E1` | `#3D5070` |
-| `primary/default` | `--primary` | `#6366F1` | `#818CF8` |
-| `primary/hover` | `--primary-hover` | `#4F46E5` | `#6366F1` |
-| `primary/light` | `--primary-light` | `#E0E7FF` | `rgba(99,102,241,0.15)` |
-| `accent/default` | `--accent` | `#10B981` | `#34D399` |
-| `accent/hover` | `--accent-hover` | `#059669` | `#10B981` |
-| `accent/light` | `--accent-light` | `#D1FAE5` | `rgba(16,185,129,0.15)` |
-| `semantic/success` | `--success` | `#22C55E` | `#4ADE80` |
-| `semantic/warning` | `--warning` | `#F59E0B` | `#FBBF24` |
-| `semantic/error` | `--error` | `#EF4444` | `#F87171` |
-| `semantic/info` | `--info` | `#3B82F6` | `#60A5FA` |
-| `role/student` | `--role-student` | `#3B82F6` | `#60A5FA` |
-| `role/teacher` | `--role-teacher` | `#10B981` | `#34D399` |
-| `role/contributor` | `--role-contributor` | `#8B5CF6` | `#A78BFA` |
-| `role/main-contributor` | `--role-main-contributor` | `#F59E0B` | `#FBBF24` |
+| `background/default` | `--background` | `#FFFFFF` | `#1A1B17` |
+| `background/secondary` | `--background-secondary` | `#E6F4E3` | `#1F211C` |
+| `background/card` | `--background-card` | `#FFFFFF` | `#252722` |
+| `background/elevated` | `--background-elevated` | `#FFFFFF` | `#2B2D28` |
+| `text/primary` | `--foreground` | `#2D2E29` | `#F0F0EB` |
+| `text/secondary` | `--foreground-secondary` | `#353831` | `#C8C9C3` |
+| `text/muted` | `--foreground-muted` | `#6B6D67` | `#8A8B86` |
+| `border/default` | `--border` | `#D8DBD0` | `#353731` |
+| `border/hover` | `--border-hover` | `#BFC2B5` | `#4A4C46` |
+| `primary/default` | `--primary` | `#3B7DB8` | `#6AADDE` |
+| `primary/hover` | `--primary-hover` | `#5298D3` | `#5298D3` |
+| `primary/light` | `--primary-light` | `rgba(59,125,184,0.10)` | `rgba(106,173,222,0.12)` |
+| `accent/default` | `--accent` | `#28BF7F` | `#28FFBF` |
+| `accent/hover` | `--accent-hover` | `#1FA06A` | `#06FF00` |
+| `accent/light` | `--accent-light` | `rgba(40,191,127,0.10)` | `rgba(40,255,191,0.10)` |
+| `semantic/success` | `--success` | `#28BF7F` | `#28FFBF` |
+| `semantic/warning` | `--warning` | `#F2B84B` | `#F2B84B` |
+| `semantic/error` | `--error` | `#DC3545` | `#F87171` |
+| `semantic/info` | `--info` | `#3B7DB8` | `#6AADDE` |
+| `role/student` | `--role-student` | `#5B6CBF` | `#8B9CFF` |
+| `role/teacher` | `--role-teacher` | `#E8853B` | `#FFA560` |
+| `role/contributor` | `--role-contributor` | `#8C00FF` | `#B066FF` |
+| `role/main-contributor` | `--role-main-contributor` | `#F2B84B` | `#F2B84B` |
 
 ---
 
@@ -42,14 +42,14 @@ Create these as Figma Text Styles:
 
 | Style Name | Font | Size | Weight | Line Height | Letter Spacing |
 |---|---|---|---|---|---|
-| `heading/h1` | Inter | 30px | Bold (700) | 36px (1.2) | 0 |
-| `heading/h2` | Inter | 24px | SemiBold (600) | 31px (1.3) | 0 |
-| `heading/h3` | Inter | 18px | SemiBold (600) | 25px (1.4) | 0 |
-| `body/default` | Inter | 14px | Regular (400) | 22px (1.6) | 0 |
-| `body/large` | Inter | 16px | Regular (400) | 26px (1.65) | 0 |
-| `caption/default` | Inter | 12px | Regular (400) | 17px (1.4) | 0 |
-| `caption/bold` | Inter | 12px | Medium (500) | 17px (1.4) | 0 |
-| `micro/uppercase` | Inter | 10px | Medium (500) | 13px (1.3) | 0.1em |
+| `heading/h1` | Quicksand | 30px | Bold (700) | 36px (1.2) | 0 |
+| `heading/h2` | Quicksand | 24px | SemiBold (600) | 31px (1.3) | 0 |
+| `heading/h3` | Quicksand | 18px | SemiBold (600) | 25px (1.4) | 0 |
+| `body/default` | Quicksand | 14px | Regular (400) | 22px (1.6) | 0 |
+| `body/large` | Quicksand | 16px | Regular (400) | 26px (1.65) | 0 |
+| `caption/default` | Quicksand | 12px | Regular (400) | 17px (1.4) | 0 |
+| `caption/bold` | Quicksand | 12px | Medium (500) | 17px (1.4) | 0 |
+| `micro/uppercase` | Quicksand | 10px | Medium (500) | 13px (1.3) | 0.1em |
 | `mono/countdown` | Geist Mono | 30px | Bold (700) | 36px (1.2) | 0 |
 | `homepage/hero` | Fraunces | 48px (clamp) | 560 | 52px (1.08) | -0.01em |
 | `homepage/section` | Fraunces | 36px (clamp) | 560 | 41px (1.15) | -0.01em |
@@ -63,11 +63,11 @@ Create these as Figma Effect Styles:
 
 | Style Name | Value |
 |---|---|
-| `shadow/sm` | Drop shadow: `0px 1px 2px rgba(0,0,0,0.05)` |
-| `shadow/md` | Drop shadow: `0px 4px 12px rgba(0,0,0,0.08)` |
-| `shadow/lg` | Drop shadow: `0px 8px 24px rgba(0,0,0,0.12)` |
-| `shadow/glow-indigo` | Drop shadow: `0px 0px 20px rgba(99,102,241,0.15)` |
-| `glass/background` | Background blur: 16px. Background: `rgba(255,255,255,0.7)` |
+| `shadow/sm` | Drop shadow: `0px 2px 8px rgba(45,46,41,0.06)` |
+| `shadow/md` | Drop shadow: `0px 4px 16px rgba(45,46,41,0.08)` |
+| `shadow/lg` | Drop shadow: `0px 8px 32px rgba(45,46,41,0.10)` |
+| `shadow/glow-primary` | Drop shadow: `0px 0px 24px rgba(59,125,184,0.18)` |
+| `glass/background` | Background blur: 16px. Background: `rgba(255,255,255,0.75)` |
 
 ---
 

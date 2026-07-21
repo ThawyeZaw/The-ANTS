@@ -58,11 +58,11 @@ These tokens power the authenticated application (dashboard, flashcards, classro
 | `--primary` | `#3B7DB8` | `#6AADDE` | Buttons, links, focus rings |
 | `--primary-hover` | `#5298D3` | `#5298D3` | Button hover state |
 | `--primary-light` | `rgba(59,125,184,0.10)` | `rgba(106,173,222,0.12)` | Tinted backgrounds |
-| `--primary-foreground` | `#FFFFFF` | `#1A1B17` | Text on primary bg |
+| `--primary-foreground` | `#FFFFFF` | `#000000` | Text on primary bg |
 | `--accent` | `#28BF7F` | `#28FFBF` | Success indicators, accent |
 | `--accent-hover` | `#1FA06A` | `#06FF00` | Accent hover state |
 | `--accent-light` | `rgba(40,191,127,0.10)` | `rgba(40,255,191,0.10)` | Accent tint backgrounds |
-| `--accent-foreground` | `#FFFFFF` | `#1A1B17` | Text on accent bg |
+| `--accent-foreground` | `#FFFFFF` | `#000000` | Text on accent bg |
 
 ### 1.5 Semantic Colors
 
@@ -77,8 +77,8 @@ These tokens power the authenticated application (dashboard, flashcards, classro
 
 | Token | Light Value | Dark Value | Usage |
 |---|---|---|---|
-| `--role-student` | `#3B7DB8` | `#6AADDE` | Student badge (Steel Blue) |
-| `--role-teacher` | `#28BF7F` | `#28FFBF` | Teacher badge (Green) |
+| `--role-student` | `#5B6CBF` | `#8B9CFF` | Student badge (Blue-Violet) |
+| `--role-teacher` | `#E8853B` | `#FFA560` | Teacher badge (Warm Orange) |
 | `--role-contributor` | `#8C00FF` | `#B066FF` | Contributor badge (Purple) |
 | `--role-main-contributor` | `#F2B84B` | `#F2B84B` | Main contributor badge (Amber) |
 

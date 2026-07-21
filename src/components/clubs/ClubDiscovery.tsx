@@ -19,7 +19,9 @@ import Input from '@/components/ui/Input';
 import { useAuth } from '@/hooks/useAuth';
 import { useClub } from '@/hooks/useClub';
 import { useRole } from '@/hooks/useRole';
+import type { Club } from '@/types';
 import { ClubJoinMode } from '@/types';
+import EmptyState from '@/components/ui/EmptyState';
 import { cn, formatDate } from '@/lib/utils';
 
 const joinModeLabels: Record<ClubJoinMode, string> = {
@@ -234,11 +236,11 @@ export default function ClubDiscovery() {
       </div>
 
       {visibleClubs.length === 0 && (
-        <div className="rounded-xl border border-border bg-background-card p-8 text-center">
-          <BookOpen className="mx-auto h-8 w-8 text-foreground-muted" />
-          <p className="mt-3 font-semibold text-foreground">No clubs found</p>
-          <p className="text-sm text-foreground-muted">Try a different search or join model.</p>
-        </div>
+        <EmptyState
+          icon={BookOpen}
+          heading="No clubs found"
+          description="Try a different search or join model."
+        />
       )}
 
       {isCreateOpen && user && (

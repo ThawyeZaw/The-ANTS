@@ -28,11 +28,14 @@ Whether you're targeting A* in IGCSE or A Levels, IELTS band 7+, or an OSSD dipl
 
 ## Supported Qualifications
 
-| Exam Board | Qualifications |
-|---|---|
-| 🎓 **Cambridge CAIE** | IGCSE, A Levels |
-| 📘 **Pearson Edexcel** | IGCSE, International A Level (IAL) |
-| 🌍 **IELTS** | Academic & General Training |
+| Exam Board | Qualifications | Status |
+|---|---|---|
+| 🎓 **Cambridge CAIE** | IGCSE, A Levels | Live |
+| 📘 **Pearson Edexcel** | IGCSE, International A Level (IAL) | Live |
+| 🌍 **IELTS** | Academic & General Training | Live |
+| 🍁 **OSSD** | Ontario Secondary School Diploma | Coming Soon |
+| 📝 **SAT** | Math, Reading & Writing | Coming Soon |
+| 💬 **Duolingo** | Duolingo English Test (DET) | Coming Soon |
 
 ---
 
