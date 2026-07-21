@@ -91,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const supabase = createClient();
+  const supabase = createClient()!;
 
   // Listen for auth state changes → fetch profile
   useEffect(() => {

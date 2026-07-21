@@ -17,7 +17,7 @@ function genId(): string {
 
 export function useNotes(filters: NoteFilters) {
   const [notes, setNotes] = useState<Note[]>([]);
-  const supabase = createClient();
+  const supabase = createClient()!;
 
   useEffect(() => {
     (async () => {
@@ -25,6 +25,7 @@ export function useNotes(filters: NoteFilters) {
 
       if (filters.curriculumId) query = query.eq('curriculum_id', filters.curriculumId);
       if (filters.subjectId) query = query.eq('subject_id', filters.subjectId);
+      if (filters.topicId) query = query.eq('topic_id', filters.topicId);
       if (filters.isSyllabusBased != null) query = query.eq('is_syllabus_based', filters.isSyllabusBased);
       if (filters.search) query = query.ilike('title', `%${filters.search}%`);
       if (filters.tags.length > 0) query = query.contains('tags', filters.tags);
@@ -45,7 +46,7 @@ export function useNotes(filters: NoteFilters) {
 export function useSingleNote(noteId: string) {
   const [note, setNote] = useState<Note | null>(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+  const supabase = createClient()!;
 
   useEffect(() => {
     setLoading(true);
@@ -63,7 +64,7 @@ export function useSingleNote(noteId: string) {
 
 export function useSavedNotes(userId: string | undefined) {
   const [savedNotes, setSavedNotes] = useState<Note[]>([]);
-  const supabase = createClient();
+  const supabase = createClient()!;
 
   const refresh = useCallback(async () => {
     if (!userId) { setSavedNotes([]); return; }
@@ -100,7 +101,7 @@ export function useSavedNotes(userId: string | undefined) {
 
 export function useContributorNotes(contributorId: string | undefined) {
   const [notes, setNotes] = useState<Note[]>([]);
-  const supabase = createClient();
+  const supabase = createClient()!;
 
   const refresh = useCallback(async () => {
     if (!contributorId) { setNotes([]); return; }
@@ -117,7 +118,7 @@ export function useContributorNotes(contributorId: string | undefined) {
 
 export function usePendingNotes() {
   const [pendingNotes, setPendingNotes] = useState<Note[]>([]);
-  const supabase = createClient();
+  const supabase = createClient()!;
 
   const refresh = useCallback(async () => {
     const { data } = await supabase.from('notes').select('*').eq('status', 'pending_review');
@@ -160,7 +161,7 @@ const EMPTY_EDITOR: NoteEditorState = {
 export function useNoteEditor(existingNoteId?: string) {
   const [state, setState] = useState<NoteEditorState>(EMPTY_EDITOR);
   const initialised = useRef(false);
-  const supabase = createClient();
+  const supabase = createClient()!;
 
   useEffect(() => {
     if (!existingNoteId || initialised.current) return;

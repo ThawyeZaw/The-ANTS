@@ -1137,33 +1137,39 @@ export type Database = {
           created_at: string | null
           curriculum_id: string | null
           description: string | null
+          exam_board: string | null
           id: string
           is_public: boolean | null
           name: string | null
           owner_id: string
           subject_id: string | null
+          syllabus_code: string | null
         }
         Insert: {
           category?: string | null
           created_at?: string | null
           curriculum_id?: string | null
           description?: string | null
+          exam_board?: string | null
           id?: string
           is_public?: boolean | null
           name?: string | null
           owner_id: string
           subject_id?: string | null
+          syllabus_code?: string | null
         }
         Update: {
           category?: string | null
           created_at?: string | null
           curriculum_id?: string | null
           description?: string | null
+          exam_board?: string | null
           id?: string
           is_public?: boolean | null
           name?: string | null
           owner_id?: string
           subject_id?: string | null
+          syllabus_code?: string | null
         }
         Relationships: [
           {

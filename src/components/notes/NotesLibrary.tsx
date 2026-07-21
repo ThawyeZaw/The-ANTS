@@ -29,6 +29,7 @@ const DEFAULT_FILTERS: NoteFilters = {
   search: '',
   curriculumId: null,
   subjectId: null,
+  topicId: null,
   isSyllabusBased: null,
   tags: [],
 };

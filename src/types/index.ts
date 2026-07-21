@@ -319,6 +319,7 @@ export interface NoteFilters {
   search: string;
   curriculumId: string | null;
   subjectId: string | null;
+  topicId: string | null;
   isSyllabusBased: boolean | null;
   tags: string[];
 }
@@ -449,6 +450,23 @@ export type NoteBlock =
   | CodeBlock
   | TableBlock
   | DividerBlock;
+
+/** Personal user note stored in `user_notes` table — private, owner-only */
+export interface UserNote {
+  id: string;
+  user_id: string;
+  topic_id: string | null;
+  subject_id: string | null;
+  curriculum_id: string | null;
+  title: string;
+  content: string | null;
+  blocks: NoteBlock[];
+  tags: string[];
+  color: string | null;
+  is_pinned: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
 export interface Note {
   id: string;
@@ -1254,6 +1272,8 @@ export interface Deck {
   curriculum_id: string | null;
   /** Optional link to a specific subject within a curriculum */
   subject_id: string | null;
+  /** Optional link to a topic/lesson within a subject */
+  topic_id: string | null;
   name: string;
   description: string | null;
   /** Free-text category tag, e.g. "Biology", "History", "Custom" */

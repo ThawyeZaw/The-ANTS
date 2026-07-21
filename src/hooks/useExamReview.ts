@@ -14,7 +14,7 @@ export interface ExamReviewSubmission {
 
 export function usePendingExamSubmissions() {
   const [submissions, setSubmissions] = useState<ExamReviewSubmission[]>([]);
-  const supabase = createClient();
+  const supabase = createClient()!;
 
   const refresh = useCallback(async () => {
     const { data } = await supabase

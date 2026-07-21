@@ -55,7 +55,7 @@ export interface EnrollmentWithDetails extends EnrollmentEntry {
 
 export function useCourseManager() {
   const { user } = useAuth();
-  const supabase = createClient();
+  const supabase = createClient()!;
   const userId = user?.id ?? null;
 
   // ── State ─────────────────────────────────────────────────────────────────
@@ -164,10 +164,7 @@ export function useCourseManager() {
           description: s.description ?? null,
           order_no: s.order_no,
           exams: allExams
-            .filter((e: any) => {
-              // Match by exam_board or curriculum-specific logic
-              return true; // All exams for now — filter by subject/topic match
-            })
+            .filter((e: any) => e.subject_id === s.id)
             .map((exam: any) => (userId ? resolveExam(exam.id, exam) : exam)),
         }));
     },
@@ -246,7 +243,23 @@ export function useCourseManager() {
 
       if (error) return { success: false, error: error.message };
 
-      if (examId) await createCountdownIfNeeded(userId, examId);
+      if (examId) {
+        await createCountdownIfNeeded(userId, examId);
+      } else {
+        // Auto-lookup: find the single next upcoming exam for this subject
+        const { data: nextExam } = await supabase
+          .from('exams')
+          .select('*')
+          .eq('subject_id', subjectId)
+          .gt('date', new Date().toISOString().split('T')[0])
+          .order('date', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+
+        if (nextExam) {
+          await createCountdownIfNeeded(userId, nextExam.id);
+        }
+      }
       await refetchEnrollments();
       return { success: true };
     },
