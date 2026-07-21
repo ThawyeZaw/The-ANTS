@@ -246,38 +246,9 @@ export default function Footer() {
             <span suppressHydrationWarning>
               © {new Date().getFullYear()} <span className="font-brand">The ANTs</span>. All rights reserved.
             </span>
-            <div style={{ display: 'flex', gap: 18 }}>
-              <a
-                href="#"
-                style={{
-                  color: 'var(--hp-ink-faint)',
-                  textDecoration: 'none',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = 'var(--hp-ink-muted)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = 'var(--hp-ink-faint)';
-                }}
-              >
-                Privacy
-              </a>
-              <a
-                href="#"
-                style={{
-                  color: 'var(--hp-ink-faint)',
-                  textDecoration: 'none',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = 'var(--hp-ink-muted)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = 'var(--hp-ink-faint)';
-                }}
-              >
-                Terms
-              </a>
-            </div>
+            <span>
+              <span className="font-brand">The ANTs</span>
+            </span>
           </div>
         </div>
       </footer>

@@ -48,7 +48,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <PersonaProvider>
       <div className="min-h-screen bg-background flex flex-col">
         <NavBar />
-        <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-6">
+        <main id="main-content" className="flex-1 w-full max-w-7xl mx-auto px-4 py-6">
           {children}
         </main>
       </div>

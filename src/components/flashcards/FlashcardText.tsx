@@ -81,7 +81,7 @@ export default function FlashcardText({ text, className }: FlashcardTextProps) {
   const segments = useMemo(() => parseFlashcardText(text), [text]);
 
   return (
-    <div className={className}>
+    <div className={`text-base ${className ?? ''}`}>
       {segments.map((segment, index) => {
         if (segment.type === 'text') {
           return (

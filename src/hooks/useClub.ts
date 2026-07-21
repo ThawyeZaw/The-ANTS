@@ -17,6 +17,7 @@ export function useClub() {
   const [profiles, setProfiles] = useState<any[]>([]);
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       const [cRes, sRes, pRes, clubsRes] = await Promise.all([
         supabase.from('curriculums').select('*'),
@@ -24,11 +25,13 @@ export function useClub() {
         supabase.from('profiles').select('id, name, username, avatar_url'),
         supabase.from('clubs').select('*'),
       ]);
+      if (cancelled) return;
       setCurriculums(cRes.data ?? []);
       setSubjects(sRes.data ?? []);
       setProfiles(pRes.data ?? []);
       setClubs(clubsRes.data ?? []);
     })();
+    return () => { cancelled = true; };
   }, [version, supabase]);
 
   const getClub = useCallback(async (clubId: string) => {
@@ -82,8 +85,12 @@ export function useClub() {
   }, [supabase]);
 
   const getProfile = useCallback(async (userId: string) => {
-    const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
-    return data;
+    try {
+      const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
+      return data;
+    } catch {
+      return null;
+    }
   }, [supabase]);
 
   const getUserClubMembership = useCallback(async (clubId: string, userId: string) => {

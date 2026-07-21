@@ -11,6 +11,7 @@ import { createDeck } from '@/lib/mock/database';
 import { mockCurriculums, mockSubjects } from '@/lib/mock/database';
 import { QUALIFICATION_REGISTRY, LIVE_QUALIFICATIONS } from '@/constants/qualifications';
 import type { Deck } from '@/types';
+import { useFocusTrap } from '@/lib/hooks/useFocusTrap';
 
 const SUGGESTED_CATEGORIES = [
   'Physics', 'Chemistry', 'Biology', 'Mathematics', 'History',
@@ -35,6 +36,8 @@ export default function CreateDeckModal({ userId, onClose, onCreated }: CreateDe
   const [syllabusCode, setSyllabusCode] = useState('');
   const [visibility, setVisibility] = useState<'private' | 'public' | 'link'>('private');
   const [error, setError] = useState('');
+
+  const containerRef = useFocusTrap(true);
 
   const availableSubjects = curriculumId
     ? mockSubjects.filter(s => s.curriculum_id === curriculumId)
@@ -71,6 +74,7 @@ export default function CreateDeckModal({ userId, onClose, onCreated }: CreateDe
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
+        ref={containerRef}
         className="animate-fade-in-up w-full max-w-lg rounded-2xl border border-[var(--border)] bg-[var(--background-card)] p-6 shadow-[var(--shadow-lg)]"
         style={{ maxHeight: '90vh', overflowY: 'auto' }}
       >
