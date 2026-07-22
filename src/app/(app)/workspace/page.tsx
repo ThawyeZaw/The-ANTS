@@ -1,17 +1,18 @@
-import { Suspense } from 'react';
-import MyWorkspace from '@/components/workspace/MyWorkspace';
+'use client';
 
-export const metadata = {
-  title: 'My Workspace — The ANTs',
-  description: 'Your personal study hub. Access all your courses, notes, flashcard decks, and exam countdowns in one place.',
-};
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function WorkspacePage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace('/dashboard');
+  }, [router]);
+
   return (
-    <main className="min-h-screen p-4 md:p-6 lg:p-8">
-      <Suspense>
-        <MyWorkspace />
-      </Suspense>
+    <main className="flex items-center justify-center min-h-[60vh]">
+      <p className="text-sm text-[var(--foreground-muted)]">Redirecting to dashboard...</p>
     </main>
   );
 }

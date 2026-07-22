@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -10,11 +10,14 @@ import {
   Megaphone,
   Clock,
   Users,
+  Star,
+  CheckSquare,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
 import ClassroomCard from '@/components/classrooms/ClassroomCard';
-import DashboardLayout from '@/components/layout/DashboardLayout';
+import MyWorkspace from '@/components/workspace/MyWorkspace';
+import { cn } from '@/lib/utils';
 import {
   getTeacherDashboardStats,
   getClassroomsByUser,
@@ -26,6 +29,27 @@ import {
   mockExams,
   mockClubAnnouncements,
 } from '@/lib/mock/database';
+
+// ── Icon & Color maps (replicated from DashboardLayout — PM-locked) ──────────
+
+const iconMap: Record<string, React.ReactNode> = {
+  'active-classrooms': <GraduationCap className="h-5 w-5" />,
+  'total-students': <Users className="h-5 w-5" />,
+  'pending-assignments': <FileText className="h-5 w-5" />,
+  'completed-this-week': <CheckSquare className="h-5 w-5" />,
+};
+
+const colorMap: Record<string, string> = {
+  orange: 'text-orange-500 bg-orange-500/10 dark:text-orange-400 dark:bg-orange-500/20',
+  violet: 'text-violet-500 bg-violet-500/10 dark:text-violet-400 dark:bg-violet-500/20',
+  red: 'text-red-500 bg-red-500/10 dark:text-red-400 dark:bg-red-500/20',
+  emerald: 'text-emerald-500 bg-emerald-500/10 dark:text-emerald-400 dark:bg-emerald-500/20',
+  mint: 'text-blue-500 bg-blue-500/10 dark:text-blue-300 dark:bg-blue-500/20',
+  amber: 'text-amber-500 bg-amber-500/10 dark:text-amber-400 dark:bg-amber-500/20',
+  teal: 'text-teal-500 bg-teal-500/10 dark:text-teal-400 dark:bg-teal-500/20',
+  pink: 'text-pink-500 bg-pink-500/10 dark:text-pink-400 dark:bg-pink-500/20',
+  sky: 'text-sky-500 bg-sky-500/10 dark:text-sky-400 dark:bg-sky-500/20',
+};
 
 export default function TeacherDashboard() {
   const { user } = useAuth();
@@ -44,11 +68,8 @@ export default function TeacherDashboard() {
   const welcomeSubtitle = "Your classrooms are waiting. Here's your teaching overview for today.";
   const stats = getTeacherDashboardStats(user.id);
 
-  // Fetch Teacher Classrooms
   const teacherClassrooms = getClassroomsByUser(user.id);
   const teacherClassIds = teacherClassrooms.map(c => c.id);
-
-  // Filter assignments for this teacher's classrooms
   const activeAssignments = mockAssignments.filter(a => teacherClassIds.includes(a.classroom_id));
 
   const mainContent = (
@@ -144,7 +165,6 @@ export default function TeacherDashboard() {
 
   const sidebarContent = (
     <div className="space-y-6">
-      {/* Club Announcements */}
       <div className="glass rounded-2xl p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold flex items-center gap-2 text-foreground text-lg">
@@ -165,7 +185,6 @@ export default function TeacherDashboard() {
         </div>
       </div>
 
-      {/* Upcoming Exams */}
       <div className="glass rounded-2xl p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold flex items-center gap-2 text-foreground text-lg">
@@ -194,12 +213,53 @@ export default function TeacherDashboard() {
   );
 
   return (
-    <DashboardLayout
-      firstName={firstName}
-      welcomeSubtitle={welcomeSubtitle}
-      stats={stats}
-      mainContent={mainContent}
-      sidebarContent={sidebarContent}
-    />
+    <div className="space-y-6 animate-fade-in" data-scroll-behavior="smooth">
+      {/* Welcome Card */}
+      <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-primary to-accent p-6 md:p-8 text-white">
+        <div className="flex items-center gap-6">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-white/70">Welcome back</p>
+            <h1 className="mt-0.5 text-2xl md:text-3xl font-bold">{firstName} 👋</h1>
+            <p className="mt-1 text-sm text-white/70 max-w-md">{welcomeSubtitle}</p>
+          </div>
+          <div className="hidden sm:flex items-center justify-center shrink-0">
+            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white/15 border border-white/20 flex items-center justify-center text-4xl">
+              🐜
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Grid */}
+      {stats && stats.length > 0 && (
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {stats.map((stat) => (
+            <div
+              key={stat.key}
+              className="glass rounded-2xl p-5 transition-all duration-300 hover:-translate-y-0.5"
+            >
+              <div className={cn('inline-flex p-2 rounded-xl mb-3', colorMap[stat.color] || 'text-foreground bg-foreground/10')}>
+                {iconMap[stat.key] || <Star className="h-5 w-5" />}
+              </div>
+              <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+              <p className="text-sm text-foreground-muted mt-0.5">{stat.label}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Workspace — upper position */}
+      <Suspense fallback={<div className="flex items-center justify-center py-16 text-[var(--foreground-muted)]">Loading workspace...</div>}>
+        <MyWorkspace />
+      </Suspense>
+
+      {/* Original dashboard content — below workspace */}
+      <div className="border-t border-[var(--border)] pt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="space-y-6 lg:col-span-2">{mainContent}</div>
+          <div className="space-y-6 lg:col-span-1">{sidebarContent}</div>
+        </div>
+      </div>
+    </div>
   );
 }

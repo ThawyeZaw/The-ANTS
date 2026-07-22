@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
-import DashboardLayout from '@/components/layout/DashboardLayout';
+import MyWorkspace from '@/components/workspace/MyWorkspace';
 import { cn } from '@/lib/utils';
 import {
   getContributorDashboardStats,
@@ -50,7 +50,6 @@ export default function ContributorDashboard() {
   const { role, isContributor } = useRole();
   const router = useRouter();
 
-  // Get contributor notes from mock database
   const contributorNotes = user ? getNotesByContributor(user.id) : [];
 
   useEffect(() => {
@@ -65,10 +64,8 @@ export default function ContributorDashboard() {
   const welcomeSubtitle = "Your contributions are making a difference. Here's your creator overview.";
   const stats = getContributorDashboardStats(user.id);
 
-  // Decks owned by this contributor
   const myDecks = mockDecks.filter(d => d.owner_id === user.id);
 
-  // Contributor profile details
   const profileDetails = mockContributorProfiles.find(p => p.id === user.id) || {
     title: user.profile.title || 'Contributor',
     bio: user.profile.bio || 'Building curriculum resources for students.',
@@ -82,14 +79,52 @@ export default function ContributorDashboard() {
     router.push(`/flashcards/${deckId}`);
   };
 
-  const handleEditDeck = (deckId: string) => {
-    router.push(`/editor/flashcards?id=${deckId}`);
-  };
+  // ── Carousel (replicated from DashboardLayout — PM-locked) ──────────────────
+
+  const slides = [
+    {
+      greeting: 'Welcome back',
+      nameLine: `${firstName} 👋`,
+      subtitle: welcomeSubtitle,
+    },
+    {
+      greeting: 'Your Dashboard',
+      nameLine: 'At a Glance',
+      subtitle: 'Track your contributions, decks, and profile performance in one place.',
+    },
+    {
+      greeting: 'Keep Creating',
+      nameLine: 'Make an Impact',
+      subtitle: 'Every note, deck, and resource you create helps students across Myanmar.',
+    },
+  ];
+
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const resetTimer = useCallback(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    if (slides.length <= 1) return;
+    intervalRef.current = setInterval(() => {
+      setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
+    }, 5000);
+  }, []);
+
+  useEffect(() => {
+    resetTimer();
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [resetTimer]);
+
+  const handleDotClick = useCallback((index: number) => {
+    setCurrentSlide(index);
+    resetTimer();
+  }, [resetTimer]);
 
   // ── LEFT COLUMN: My Decks ──────────────────────────────────────────────────
   const leftColumn = (
     <>
-      {/* Section Header */}
       <div className="dash-col-header">
         <h2 className="dash-col-header__title">
           <Layers className="h-5 w-5 text-blue-500" />
@@ -100,7 +135,6 @@ export default function ContributorDashboard() {
         </Link>
       </div>
 
-      {/* Deck Visual Preview Cards */}
       {myDecks.length === 0 ? (
         <div className="rounded-[1.5rem] border border-dashed border-border bg-background-secondary/50 p-6 text-center text-foreground-muted">
           <p className="text-sm font-medium">No decks created yet</p>
@@ -115,7 +149,6 @@ export default function ContributorDashboard() {
                 onClick={() => handleStudyDeck(deck.id)}
                 className="dash-deck-card w-full text-left"
               >
-                {/* Gradient Preview */}
                 <div className="dash-deck-card__preview">
                   <div className={cn('dash-deck-card__gradient', getDeckGradient(deck.category))} />
                   <div className="dash-deck-card__overlay">
@@ -124,7 +157,6 @@ export default function ContributorDashboard() {
                     </span>
                   </div>
                 </div>
-                {/* Info Footer */}
                 <div className="dash-deck-card__info flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     {deck.category && (
@@ -147,7 +179,6 @@ export default function ContributorDashboard() {
         </div>
       )}
 
-      {/* Full-width Pill Button */}
       <Link href="/flashcards" className="dash-pill-btn dash-pill-btn--primary mt-2">
         <Plus className="h-4 w-4" />
         Create Deck
@@ -155,7 +186,7 @@ export default function ContributorDashboard() {
     </>
   );
 
-  // ── MIDDLE COLUMN: Stat Overview (Pill-Shaped Rows) ─────────────────────────
+  // ── MIDDLE COLUMN: Stat Overview ────────────────────────────────────────────
   const statIconMap: Record<string, { icon: React.ReactNode; bgClass: string }> = {
     published: {
       icon: <Star className="h-5 w-5" />,
@@ -177,7 +208,6 @@ export default function ContributorDashboard() {
 
   const middleColumn = (
     <>
-      {/* Section Header */}
       <div className="dash-col-header">
         <h2 className="dash-col-header__title">
           <Star className="h-5 w-5 text-amber-500" />
@@ -185,7 +215,6 @@ export default function ContributorDashboard() {
         </h2>
       </div>
 
-      {/* Stat Pill Rows */}
       <div className="space-y-3">
         {stats.map((stat) => {
           const iconConfig = statIconMap[stat.key] ?? {
@@ -211,7 +240,6 @@ export default function ContributorDashboard() {
   // ── RIGHT COLUMN: Creator Profile + My Submissions ─────────────────────────
   const rightColumn = (
     <>
-      {/* Creator Profile Card */}
       <div className="dash-col-header">
         <h2 className="dash-col-header__title">
           <User className="h-5 w-5 text-purple-500" />
@@ -220,17 +248,14 @@ export default function ContributorDashboard() {
       </div>
 
       <div className="dash-info-card">
-        {/* Avatar */}
         <div className="dash-info-card__avatar bg-gradient-to-br from-purple-500 to-violet-600 text-white">
           {firstName.charAt(0).toUpperCase()}
         </div>
-        {/* Body */}
         <div className="dash-info-card__body">
           <h4 className="font-semibold text-sm text-foreground">{profileDetails.title}</h4>
           <p className="text-xs text-foreground-muted mt-1 leading-relaxed line-clamp-3">
             {profileDetails.bio}
           </p>
-          {/* Social Links */}
           {(profileDetails.website_url || profileDetails.github_url || profileDetails.linkedin_url) && (
             <div className="flex gap-3 mt-2 pt-2 border-t border-border">
               {profileDetails.website_url && (
@@ -253,7 +278,6 @@ export default function ContributorDashboard() {
         </div>
       </div>
 
-      {/* My Submissions Section */}
       <div className="dash-col-header mt-4">
         <h2 className="dash-col-header__title">
           <FileText className="h-5 w-5 text-violet-500" />
@@ -285,7 +309,6 @@ export default function ContributorDashboard() {
               href={note.status === 'draft' || note.status === 'rejected' ? `/editor/notes?id=${note.id}` : `/library/${note.id}`}
               className="dash-info-card group cursor-pointer"
             >
-              {/* Status Badge Avatar */}
               <div className={cn(
                 'dash-info-card__avatar text-xs font-bold',
                 note.status === 'approved' && 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
@@ -295,7 +318,6 @@ export default function ContributorDashboard() {
               )}>
                 <FileText className="h-5 w-5" />
               </div>
-              {/* Body */}
               <div className="dash-info-card__body">
                 <h4 className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors line-clamp-1">
                   {note.title}
@@ -318,7 +340,6 @@ export default function ContributorDashboard() {
         </div>
       )}
 
-      {/* View All Submissions */}
       {contributorNotes.length > 4 && (
         <Link href="/my-notes" className="dash-pill-btn mt-2">
           View All Submissions
@@ -328,13 +349,72 @@ export default function ContributorDashboard() {
   );
 
   return (
-    <DashboardLayout
-      firstName={firstName}
-      welcomeSubtitle={welcomeSubtitle}
-      layoutVariant="three-column"
-      leftColumn={leftColumn}
-      middleColumn={middleColumn}
-      rightColumn={rightColumn}
-    />
+    <div className="flex flex-col h-full animate-fade-in" data-scroll-behavior="smooth">
+      {/* ── Carousel Hero (replicated from DashboardLayout — PM-locked) ────── */}
+      <div className="dash-carousel">
+        <div
+          className="dash-carousel-track"
+          style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+        >
+          {slides.map((slide, idx) => (
+            <div key={idx} className="dash-carousel-slide">
+              <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-primary to-accent p-6 md:p-8 text-white">
+                <div className="flex items-center gap-6">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-white/70">{slide.greeting}</p>
+                    <h1 className="mt-0.5 text-2xl md:text-3xl font-bold">{slide.nameLine}</h1>
+                    <p className="mt-1 text-sm text-white/70 max-w-md">{slide.subtitle}</p>
+                  </div>
+                  <div className="hidden sm:flex items-center justify-center shrink-0">
+                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white/15 border border-white/20 flex items-center justify-center text-4xl">
+                      🐜
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Pagination Dots */}
+        {slides.length > 1 && (
+          <div className="dash-carousel-dots">
+            {slides.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleDotClick(idx)}
+                className={cn(
+                  'dash-carousel-dot',
+                  idx === currentSlide && 'dash-carousel-dot--active'
+                )}
+                aria-label={`Go to slide ${idx + 1}`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Workspace — upper position (between carousel and three columns) */}
+      <div className="mt-6">
+        <Suspense fallback={<div className="flex items-center justify-center py-16 text-[var(--foreground-muted)]">Loading workspace...</div>}>
+          <MyWorkspace />
+        </Suspense>
+      </div>
+
+      {/* Three-Column Content — moved below workspace */}
+      <div className="border-t border-[var(--border)] pt-8 mt-8 flex-1 min-h-0">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full">
+          <div className="space-y-4 overflow-y-auto min-h-0 pr-1 pt-1">
+            {leftColumn}
+          </div>
+          <div className="space-y-4 overflow-y-auto min-h-0 pr-1 pt-1">
+            {middleColumn}
+          </div>
+          <div className="space-y-4 overflow-y-auto min-h-0 pr-1 pt-1">
+            {rightColumn}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
