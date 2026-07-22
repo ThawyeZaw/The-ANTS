@@ -15,8 +15,9 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
+import { useCourseManager } from '@/hooks/useCourseManager';
 import {
-  getLibraryDecks, getDecksByEnrolledCourses, cloneDeck, submitToLibrary,
+  getLibraryDecks, cloneDeck, submitToLibrary,
   getDecksByUser
 } from '@/lib/mock/database';
 import { QUALIFICATION_REGISTRY } from '@/constants/qualifications';
@@ -136,6 +137,7 @@ export default function FlashcardsLibraryBrowser() {
   const { user } = useAuth();
   const { role } = useRole();
   const router = useRouter();
+  const { enrolledCurriculumIds, allCurriculums } = useCourseManager();
 
   const [smartFilter, setSmartFilter] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -148,13 +150,25 @@ export default function FlashcardsLibraryBrowser() {
     setTimeout(() => setToast(null), 3500);
   };
 
+  // Compute enrolled exam boards from useCourseManager (sync with Course Browser enrollments)
+  const enrolledBoards = useMemo(() => {
+    if (!enrolledCurriculumIds || enrolledCurriculumIds.length === 0) return new Set<string>();
+    const boards = new Set<string>();
+    for (const c of allCurriculums) {
+      if (enrolledCurriculumIds.includes(c.id) && c.exam_board) {
+        boards.add(c.exam_board);
+      }
+    }
+    return boards;
+  }, [enrolledCurriculumIds, allCurriculums]);
+
   // Get library decks (smart or all)
   const libraryDecks = useMemo(() => {
-    if (!user) return getLibraryDecks();
-    return smartFilter
-      ? getDecksByEnrolledCourses(user.id)
-      : getLibraryDecks();
-  }, [user, smartFilter]);
+    const allDecks = getLibraryDecks();
+    if (!smartFilter || !user || enrolledBoards.size === 0) return allDecks;
+    const filtered = allDecks.filter(d => d.exam_board && enrolledBoards.has(d.exam_board));
+    return filtered.length > 0 ? filtered : allDecks;
+  }, [user, smartFilter, enrolledBoards]);
 
   // User's owned deck IDs
   const ownedDeckIds = useMemo(() => {

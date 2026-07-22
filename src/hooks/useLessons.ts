@@ -73,18 +73,32 @@ export function useLessons() {
     }
 
     (async () => {
-      const [cRes, sRes, tRes, eRes, pRes] = await Promise.all([
+      const [cRes, sRes, tRes, ucRes, ueRes, pRes] = await Promise.all([
         supabase.from('curriculums').select('*').order('title'),
         supabase.from('subjects').select('*').order('order_no'),
         supabase.from('topics').select('*').order('order_no'),
         supabase.from('user_curriculums').select('*').eq('user_id', userId),
+        supabase.from('user_enrollments').select('*').eq('user_id', userId),
         supabase.from('topic_progress').select('*').eq('user_id', userId),
       ]);
 
       setAllCurriculums(cRes.data ?? []);
       setAllSubjects(sRes.data ?? []);
       setAllTopics(tRes.data ?? []);
-      setEnrollments(eRes.data ?? []);
+
+      // Merge enrollments from user_curriculums + user_enrollments (sync CourseBrowser ↔ Lesson Tracker)
+      const ucData = ucRes.data ?? [];
+      const ueData = ueRes.data ?? [];
+      const merged: any[] = [...ucData];
+      const existingKeys = new Set(ucData.map((e: any) => `${e.curriculum_id}::${e.subject_id}`));
+      for (const enrollment of ueData) {
+        const key = `${enrollment.curriculum_id}::${enrollment.subject_id}`;
+        if (!existingKeys.has(key)) {
+          merged.push(enrollment);
+        }
+      }
+      setEnrollments(merged);
+
       setProgressRecords((pRes.data ?? []) as TopicProgressRecord[]);
       setIsLoaded(true);
     })();
