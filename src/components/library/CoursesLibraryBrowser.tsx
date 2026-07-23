@@ -2,34 +2,44 @@
 
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTs — CoursesLibraryBrowser
-// Browse approved curriculum templates, filter by board/qualification.
-// Smart mode shows only boards matching user's enrolled courses.
+// Single-page reactive experience. Select subjects → cards auto-sort by match.
+// Matched boards are promoted; non-matching boards collapse into a disclosure.
+// Subject chips have distinct selected state with Check icon for instant feedback.
+// State persists via URL query param (shallow, non-navigating).
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useMemo, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  Search, Filter, BookOpen, Star, ChevronRight,
-  Sparkles, ScrollText, Check, Users, Layers,
-  GraduationCap, Globe, Lock, BookMarked,
+  Search, BookOpen, Star, ChevronRight,
+  Sparkles, Check, Layers,
+  GraduationCap, Globe, BookMarked, Info, ChevronDown, ChevronUp, ScrollText,
 } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
-import { useRole } from '@/hooks/useRole';
 import { useCourseManager } from '@/hooks/useCourseManager';
-import { getPublishedCurriculums, getPublicSubjects, autoPopulateLessonTracker, autoPopulateGradeCalculator } from '@/lib/mock/database';
-import { QUALIFICATION_REGISTRY, LIVE_QUALIFICATIONS } from '@/constants/qualifications';
+import { QUALIFICATION_REGISTRY } from '@/constants/qualifications';
+import { buildSubjectBoardMap } from '@/lib/subject-board-mapping';
 import { cn } from '@/lib/utils';
 import type { CurriculumSummary } from '@/hooks/useCourseManager';
 
-// ── Course Card ───────────────────────────────────────────────────────────────
+// ── Types ────────────────────────────────────────────────────────────────────
 
-interface CourseCardProps {
-  curriculum: CurriculumSummary & { subjectCount: number; isEnrolled: boolean };
-  onAdd: (id: string) => void;
-  isAdding: boolean;
+interface EnrichedCurriculum extends CurriculumSummary {
+  subjectCount: number;
+  isEnrolled: boolean;
+  matchCount: number; // how many selected subjects this curriculum has
+  matchedSubjectTitles: string[];
 }
 
-function CourseCard({ curriculum, onAdd, isAdding }: CourseCardProps) {
+// ── Exam Board Card ──────────────────────────────────────────────────────────
+
+interface ExamBoardCardProps {
+  curriculum: EnrichedCurriculum;
+  onSelectSubjects: (id: string) => void;
+  totalSelected: number;
+  isTopMatch: boolean;
+}
+
+function ExamBoardCard({ curriculum, onSelectSubjects, totalSelected, isTopMatch }: ExamBoardCardProps) {
   const qualKey = curriculum.exam_board && curriculum.qualification
     ? `${curriculum.exam_board}_${curriculum.qualification}` as keyof typeof QUALIFICATION_REGISTRY
     : null;
@@ -44,18 +54,22 @@ function CourseCard({ curriculum, onAdd, isAdding }: CourseCardProps) {
     scaled: '145–200 Scale',
   };
 
-  const hierarchyLabel = curriculum.hierarchy_model
-    ? `${curriculum.hierarchy_model.level1} → ${curriculum.hierarchy_model.level2} → ${curriculum.hierarchy_model.level3}`
-    : 'Subject → Paper → Topic';
+  const hasSelection = totalSelected > 0;
+  const matchesAll = curriculum.matchCount === totalSelected;
+  const partialMatch = hasSelection && curriculum.matchCount > 0 && !matchesAll;
+  const noMatch = hasSelection && curriculum.matchCount === 0;
 
   return (
-    <div className={cn(
-      'group relative flex flex-col rounded-2xl border bg-[var(--background-card)] p-5 transition-all duration-300',
-      'hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 hover:border-[var(--primary)]/30',
-      curriculum.isEnrolled
-        ? 'border-[var(--primary)]/30 bg-[var(--primary)]/5'
-        : 'border-[var(--border)]'
-    )}>
+    <div
+      className={cn(
+        'group relative flex flex-col rounded-2xl border p-5 transition-all duration-300',
+        'hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5',
+        isTopMatch && 'border-[var(--primary)]/40 shadow-[var(--shadow-glow)]',
+        !isTopMatch && curriculum.isEnrolled && 'border-[var(--primary)]/30 bg-[var(--primary)]/5',
+        !isTopMatch && !curriculum.isEnrolled && 'border-[var(--border)] bg-[var(--background-card)] hover:border-[var(--primary)]/30',
+        noMatch && 'opacity-70 hover:opacity-100',
+      )}
+    >
       {/* Enrolled badge */}
       {curriculum.isEnrolled && (
         <div className="absolute top-3 right-3 flex items-center gap-1 rounded-full bg-[var(--primary)]/15 px-2 py-0.5 text-[10px] font-bold text-[var(--primary)]">
@@ -92,42 +106,59 @@ function CourseCard({ curriculum, onAdd, isAdding }: CourseCardProps) {
         </p>
       )}
 
-      {/* Stats row */}
-      <div className="flex flex-wrap gap-3 mb-4 text-xs text-[var(--foreground-muted)]">
-        <span className="flex items-center gap-1">
+      {/* Subject count / match badge */}
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        {/* Match badge — only shown when subjects are selected */}
+        {matchesAll && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--accent)]/15 px-2.5 py-1 text-xs font-bold text-[var(--accent)]">
+            <Check size={11} />
+            All {curriculum.matchCount} subject{curriculum.matchCount !== 1 ? 's' : ''} match
+          </span>
+        )}
+        {partialMatch && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--amber-500)]/15 px-2.5 py-1 text-xs font-semibold text-[var(--amber-500)]">
+            {curriculum.matchCount} of {totalSelected} subjects match
+          </span>
+        )}
+
+        {/* Total subjects available (always shown when no match info) */}
+        <span className="flex items-center gap-1 text-xs text-[var(--foreground-muted)]">
           <Layers size={12} />
-          {curriculum.subjectCount} subject{curriculum.subjectCount !== 1 ? 's' : ''}
+          {curriculum.subjectCount} subject{curriculum.subjectCount !== 1 ? 's' : ''} available
         </span>
+
         {curriculum.grading_system && (
-          <span className="flex items-center gap-1">
+          <span className="flex items-center gap-1 text-xs text-[var(--foreground-muted)]">
             <Star size={12} />
             {gradingLabel[curriculum.grading_system] ?? curriculum.grading_system}
           </span>
         )}
-        {curriculum.structure_type && (
-          <span className="flex items-center gap-1 capitalize">
-            <BookOpen size={12} />
-            {curriculum.structure_type}
-          </span>
-        )}
       </div>
 
-      {/* Hierarchy model */}
-      <div className="flex items-center gap-1 text-[10px] text-[var(--foreground-muted)] bg-[var(--background-secondary)] rounded-lg px-2.5 py-1.5 mb-4 font-mono">
-        <ScrollText size={11} className="shrink-0" />
-        <span>{hierarchyLabel}</span>
-      </div>
+      {/* Matched subjects list (when subjects selected and there are matches) */}
+      {hasSelection && curriculum.matchedSubjectTitles.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-4">
+          {curriculum.matchedSubjectTitles.map(title => (
+            <span
+              key={title}
+              className="rounded-md bg-[var(--primary)]/10 px-2 py-0.5 text-[11px] font-medium text-[var(--primary)]"
+            >
+              {title}
+            </span>
+          ))}
+        </div>
+      )}
 
-      {/* Add button */}
+      {/* Select subjects button */}
       <button
         id={`add-course-${curriculum.id}`}
-        onClick={() => onAdd(curriculum.id)}
-        disabled={curriculum.isEnrolled || isAdding}
+        onClick={() => onSelectSubjects(curriculum.id)}
+        disabled={curriculum.isEnrolled}
         className={cn(
-          'mt-auto w-full flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition-all',
+          'mt-auto w-full flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition-all cursor-pointer',
           curriculum.isEnrolled
             ? 'bg-[var(--primary)]/10 text-[var(--primary)] cursor-default'
-            : 'bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] hover:shadow-[var(--shadow-glow)] cursor-pointer'
+            : 'bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] hover:shadow-[var(--shadow-glow)]'
         )}
       >
         {curriculum.isEnrolled ? (
@@ -135,12 +166,10 @@ function CourseCard({ curriculum, onAdd, isAdding }: CourseCardProps) {
             <Check size={15} />
             Added to My Courses
           </>
-        ) : isAdding ? (
-          <span className="animate-pulse">Adding…</span>
         ) : (
           <>
             <GraduationCap size={15} />
-            Add to My Courses
+            Select Subjects
             <ChevronRight size={14} className="opacity-60 group-hover:translate-x-0.5 transition-transform" />
           </>
         )}
@@ -149,37 +178,107 @@ function CourseCard({ curriculum, onAdd, isAdding }: CourseCardProps) {
   );
 }
 
-// ── Main Component ────────────────────────────────────────────────────────────
+// ── Main Component ───────────────────────────────────────────────────────────
 
 export default function CoursesLibraryBrowser() {
-  const { user } = useAuth();
-  const { role } = useRole();
   const router = useRouter();
-  const { allCurriculums, enrolledCurriculumIds, enroll, getSubjectsForCurriculum } = useCourseManager();
+  const searchParams = useSearchParams();
+  const { allCurriculums, enrolledCurriculumIds, getSubjectsForCurriculum } = useCourseManager();
+
+  // ── Local state ───────────────────────────────────────────────────────────
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedBoard, setSelectedBoard] = useState<string>('all');
-  const [selectedQual, setSelectedQual] = useState<string>('all');
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState<Set<string>>(new Set());
   const [smartFilter, setSmartFilter] = useState(true);
-  const [addingId, setAddingId] = useState<string | null>(null);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [showOtherBoards, setShowOtherBoards] = useState(false);
 
-  const showToast = (message: string, type: 'success' | 'error') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3500);
-  };
+  // ── URL sync: hydrate from query param on mount ──────────────────────────
 
-  // Enrich curriculums with subject counts and enrollment status
-  const enrichedCurriculums = useMemo(() => {
+  useEffect(() => {
+    const subjectsParam = searchParams.get('subjects');
+    if (!subjectsParam) return;
+    const ids = subjectsParam.split(',').map(s => s.trim()).filter(Boolean);
+    if (ids.length === 0) return;
+    // Validate against the mapping (built later, but we can do a simple set)
+    setSelectedSubjectIds(new Set(ids));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ── URL sync: write selection to query param (shallow, non-navigating) ──
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (selectedSubjectIds.size > 0) {
+      params.set('subjects', Array.from(selectedSubjectIds).join(','));
+    } else {
+      params.delete('subjects');
+    }
+    const newParamsStr = params.toString();
+    const currentPath = window.location.pathname;
+    const newUrl = newParamsStr ? `${currentPath}?${newParamsStr}` : currentPath;
+    if (newUrl !== `${currentPath}?${searchParams.toString()}` && newUrl !== currentPath) {
+      router.replace(newUrl, { scroll: false });
+    }
+  }, [selectedSubjectIds, searchParams, router]);
+
+  // ── Derived data ─────────────────────────────────────────────────────────
+
+  // Build flat subject list across all curricula
+  const allSubjectsList = useMemo(() => {
+    const seen = new Map<string, { id: string; title: string; examBoards: Set<string> }>();
+    for (const c of allCurriculums) {
+      const subjects = getSubjectsForCurriculum(c.id);
+      for (const s of subjects) {
+        const existing = seen.get(s.title);
+        if (existing) {
+          if (c.exam_board) existing.examBoards.add(c.exam_board);
+        } else {
+          seen.set(s.title, {
+            id: s.id,
+            title: s.title,
+            examBoards: new Set(c.exam_board ? [c.exam_board] : []),
+          });
+        }
+      }
+    }
+    return Array.from(seen.values()).sort((a, b) => a.title.localeCompare(b.title));
+  }, [allCurriculums, getSubjectsForCurriculum]);
+
+  // Build subject→board mapping (for match computation)
+  const subjectBoardMap = useMemo(
+    () => buildSubjectBoardMap(allCurriculums, getSubjectsForCurriculum),
+    [allCurriculums, getSubjectsForCurriculum],
+  );
+
+  // Enrich curriculums with subject counts, enrollment, AND match data
+  const enrichedCurriculums = useMemo((): EnrichedCurriculum[] => {
+    const selectedIds = Array.from(selectedSubjectIds);
     return allCurriculums.map(c => {
       const subjects = getSubjectsForCurriculum(c.id);
+      const subjectIds = new Set(subjects.map(s => s.id));
+
+      // Compute match: how many selected subjects are in this curriculum?
+      let matchCount = 0;
+      const matchedSubjectTitles: string[] = [];
+      if (selectedIds.length > 0) {
+        for (const sId of selectedIds) {
+          if (subjectIds.has(sId)) {
+            matchCount++;
+            const subj = subjects.find(s => s.id === sId);
+            if (subj) matchedSubjectTitles.push(subj.title);
+          }
+        }
+      }
+
       return {
         ...c,
         subjectCount: subjects.length,
         isEnrolled: enrolledCurriculumIds.includes(c.id),
+        matchCount,
+        matchedSubjectTitles,
       };
     });
-  }, [allCurriculums, enrolledCurriculumIds, getSubjectsForCurriculum]);
+  }, [allCurriculums, enrolledCurriculumIds, selectedSubjectIds, getSubjectsForCurriculum]);
 
   // Get enrolled boards for smart filter
   const enrolledBoards = useMemo(() => {
@@ -187,22 +286,19 @@ export default function CoursesLibraryBrowser() {
     return new Set(enrolledCurriculums.map(c => c.exam_board).filter(Boolean));
   }, [enrichedCurriculums]);
 
-  // Filter logic
-  const filteredCurriculums = useMemo(() => {
+  // Split enriched curriculums: matched (all subjects) vs non-matching vs rest
+  const { matchedCurriculums, nonMatchingCurriculums, filteredCurriculums } = useMemo(() => {
+    const selectedIds = Array.from(selectedSubjectIds);
+    const hasSelection = selectedIds.length > 0;
+
     let list = enrichedCurriculums;
 
+    // Smart filter
     if (smartFilter && enrolledBoards.size > 0) {
       list = list.filter(c => c.exam_board && enrolledBoards.has(c.exam_board));
     }
 
-    if (selectedBoard !== 'all') {
-      list = list.filter(c => c.exam_board === selectedBoard);
-    }
-
-    if (selectedQual !== 'all') {
-      list = list.filter(c => c.qualification === selectedQual);
-    }
-
+    // Search filter
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       list = list.filter(c =>
@@ -214,46 +310,62 @@ export default function CoursesLibraryBrowser() {
       );
     }
 
-    return list;
-  }, [enrichedCurriculums, smartFilter, enrolledBoards, selectedBoard, selectedQual, searchQuery]);
+    // When subjects selected: split into matched + non-matching
+    let matched: EnrichedCurriculum[] = [];
+    let nonMatching: EnrichedCurriculum[] = [];
 
-  // All unique boards + qualifications for filter dropdowns
-  const allBoards = useMemo(() => [...new Set(allCurriculums.map(c => c.exam_board).filter(Boolean))], [allCurriculums]);
-  const allQuals = useMemo(() => [...new Set(allCurriculums.map(c => c.qualification).filter(Boolean))], [allCurriculums]);
-
-  const handleAdd = async (curriculumId: string) => {
-    if (!user) return;
-    setAddingId(curriculumId);
-    try {
-      // Enroll in all subjects of this curriculum
-      const subjects = getSubjectsForCurriculum(curriculumId);
-      for (const subject of subjects) {
-        enroll(curriculumId, subject.id, null);
+    if (hasSelection) {
+      for (const c of list) {
+        if (c.matchCount === selectedIds.length) {
+          matched.push(c);
+        } else {
+          nonMatching.push(c);
+        }
       }
-      // Auto-populate lesson tracker and grade calculator
-      autoPopulateLessonTracker(user.id, curriculumId);
-      autoPopulateGradeCalculator(user.id, curriculumId);
-
-      showToast('Course added! Lesson Tracker and Grade Calculator have been populated.', 'success');
-      setTimeout(() => router.push('/courses'), 1500);
-    } catch {
-      showToast('Failed to add course. Please try again.', 'error');
-    } finally {
-      setAddingId(null);
+      // Sort matched by matchCount desc, then alphabetically
+      matched.sort((a, b) => {
+        if (b.matchCount !== a.matchCount) return b.matchCount - a.matchCount;
+        return a.title.localeCompare(b.title);
+      });
+      // Sort non-matching by matchCount desc for the disclosure
+      nonMatching.sort((a, b) => {
+        if (b.matchCount !== a.matchCount) return b.matchCount - a.matchCount;
+        return a.title.localeCompare(b.title);
+      });
+    } else {
+      // No subjects selected — all curriculums are "matched"
+      matched = list;
     }
+
+    return { matchedCurriculums: matched, nonMatchingCurriculums: nonMatching, filteredCurriculums: list };
+  }, [enrichedCurriculums, smartFilter, enrolledBoards, selectedSubjectIds, searchQuery]);
+
+  const totalSelected = selectedSubjectIds.size;
+  const hasSelection = totalSelected > 0;
+  const hasMatches = matchedCurriculums.length > 0;
+  const hasNonMatching = nonMatchingCurriculums.length > 0;
+  const totalBoards = new Set(allCurriculums.map(c => c.exam_board).filter(Boolean)).size;
+
+  // ── Handlers ──────────────────────────────────────────────────────────────
+
+  const toggleSubject = (id: string) => {
+    setSelectedSubjectIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+    setShowOtherBoards(false); // reset disclosure when selection changes
   };
+
+  const handleSelectSubjects = (curriculumId: string) => {
+    router.push(`/courses?curriculum=${encodeURIComponent(curriculumId)}`);
+  };
+
+  // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
-      {/* Toast */}
-      {toast && (
-        <div className={cn(
-          'fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold shadow-lg animate-slide-in-right',
-          toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-        )}>
-          {toast.message}
-        </div>
-      )}
 
       {/* Hero */}
       <div className="relative overflow-hidden rounded-3xl border border-[var(--border)] bg-gradient-to-br from-emerald-500/10 via-cyan-500/5 to-blue-500/10 p-6 md:p-8">
@@ -276,7 +388,7 @@ export default function CoursesLibraryBrowser() {
               <p className="text-xs text-[var(--foreground-muted)]">Curricula</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-[var(--foreground)]">{LIVE_QUALIFICATIONS.length}</p>
+              <p className="text-2xl font-bold text-[var(--foreground)]">{totalBoards}</p>
               <p className="text-xs text-[var(--foreground-muted)]">Boards</p>
             </div>
           </div>
@@ -289,7 +401,6 @@ export default function CoursesLibraryBrowser() {
       <div className="flex flex-col gap-4">
         {/* Smart toggle + search */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          {/* Smart filter toggle */}
           <button
             id="smart-filter-toggle"
             onClick={() => setSmartFilter(!smartFilter)}
@@ -304,7 +415,6 @@ export default function CoursesLibraryBrowser() {
             {smartFilter ? 'For My Courses' : 'Browse All'}
           </button>
 
-          {/* Search */}
           <div className="relative flex-1">
             <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--foreground-muted)] pointer-events-none" />
             <input
@@ -318,76 +428,172 @@ export default function CoursesLibraryBrowser() {
           </div>
         </div>
 
-        {/* Board + Qual filters */}
-        <div className="flex flex-wrap gap-2 items-center">
-          <Filter size={14} className="text-[var(--foreground-muted)]" />
-          <select
-            id="board-filter"
-            value={selectedBoard}
-            onChange={e => setSelectedBoard(e.target.value)}
-            className="rounded-lg border border-[var(--border)] bg-[var(--background-secondary)] px-3 py-1.5 text-sm text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none cursor-pointer"
-          >
-            <option value="all">All Boards</option>
-            {allBoards.map(b => <option key={b} value={b!}>{b}</option>)}
-          </select>
-          <select
-            id="qual-filter"
-            value={selectedQual}
-            onChange={e => setSelectedQual(e.target.value)}
-            className="rounded-lg border border-[var(--border)] bg-[var(--background-secondary)] px-3 py-1.5 text-sm text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none cursor-pointer"
-          >
-            <option value="all">All Qualifications</option>
-            {allQuals.map(q => <option key={q} value={q!}>{q}</option>)}
-          </select>
-          <span className="text-xs text-[var(--foreground-muted)] ml-1">
-            {filteredCurriculums.length} result{filteredCurriculums.length !== 1 ? 's' : ''}
+        {/* ── Single explainer (replaces per-card hierarchy strip) ───────── */}
+        <div className="flex items-start gap-2 rounded-xl border border-[var(--primary)]/20 bg-[var(--primary)]/5 px-4 py-2.5 text-xs text-[var(--foreground-secondary)]">
+          <Info size={14} className="shrink-0 mt-0.5 text-[var(--primary)]" />
+          <span>
+            <strong>Select your subjects below</strong> to automatically see matching exam boards sorted by relevance.{' '}
+            <span className="text-[var(--foreground-muted)]">
+              <ScrollText size={11} className="inline-block mr-0.5" />
+              Each curriculum follows a Subject → Paper → Topic hierarchy for your lessons.
+            </span>
           </span>
+        </div>
+
+        {/* ── Subject selection chips ────────────────────────────────────── */}
+        <div className="flex flex-wrap gap-2 items-center">
+          {allSubjectsList.map(subject => {
+            const isSelected = selectedSubjectIds.has(subject.id);
+            return (
+              <button
+                key={subject.id}
+                type="button"
+                aria-pressed={isSelected}
+                onClick={() => toggleSubject(subject.id)}
+                className={cn(
+                  'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-medium transition-all duration-200 focus-ring',
+                  isSelected
+                    ? 'bg-[var(--primary)] text-[var(--primary-foreground)] shadow-sm'
+                    : 'bg-[var(--background-card)] border border-[var(--border)] text-[var(--foreground-secondary)] hover:border-[var(--border-hover)] hover:bg-[var(--background-secondary)]'
+                )}
+              >
+                {isSelected && <Check className="h-3.5 w-3.5" aria-hidden="true" />}
+                {subject.title}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* ── Selected-subjects summary bar ──────────────────────────────── */}
+        {hasSelection && (
+          <div className="flex items-center gap-3 text-sm" aria-live="polite">
+            <span className="font-semibold text-[var(--foreground)]">
+              {totalSelected} subject{totalSelected !== 1 ? 's' : ''} selected
+            </span>
+            <button
+              onClick={() => setSelectedSubjectIds(new Set())}
+              className="text-xs text-[var(--foreground-muted)] hover:text-[var(--foreground)] underline underline-offset-2 transition-colors cursor-pointer"
+            >
+              Clear all
+            </button>
+          </div>
+        )}
+
+        {/* ── State-aware status line ────────────────────────────────────── */}
+        <div className="text-xs" aria-live="polite">
+          {!hasSelection ? (
+            <span className="text-[var(--foreground-muted)]">
+              Showing all {totalBoards} exam boards — select subjects above to filter to your matches
+            </span>
+          ) : hasMatches ? (
+            <span className="text-[var(--foreground-muted)]">
+              <span className="font-semibold text-[var(--primary)]">{matchedCurriculums.length}</span> of{' '}
+              {totalBoards} boards match all {totalSelected} selected subject{totalSelected !== 1 ? 's' : ''}
+            </span>
+          ) : (
+            <span className="text-[var(--foreground-muted)]">
+              No single exam board covers all {totalSelected} selected subjects
+            </span>
+          )}
         </div>
       </div>
 
-      {/* Qualification guide chips */}
-      <div className="flex flex-wrap gap-2">
-        {LIVE_QUALIFICATIONS.map(q => (
+      {/* ── Zero-match empty state ────────────────────────────────────────── */}
+      {hasSelection && !hasMatches && (
+        <div className="flex flex-col items-center rounded-3xl border border-dashed border-[var(--amber-500)]/30 bg-[var(--amber-500)]/5 p-6 sm:p-8 text-center">
+          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--amber-500)]/10 text-[var(--amber-500)]">
+            <Info size={20} />
+          </div>
+          <h3 className="mb-1 text-base font-bold text-[var(--foreground)]">
+            No single exam board covers all {totalSelected} selected subjects
+          </h3>
+          <p className="mb-4 max-w-sm text-sm text-[var(--foreground-secondary)]">
+            Try removing one, or view boards that partially match below.
+          </p>
           <button
-            key={q.key}
-            onClick={() => {
-              setSelectedBoard(q.boardCode);
-              setSelectedQual(q.shortLabel);
-              setSmartFilter(false);
-            }}
-            className={cn(
-              'flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border transition-all cursor-pointer',
-              selectedBoard === q.boardCode && selectedQual === q.shortLabel
-                ? `${q.colorClass} border-current`
-                : 'border-[var(--border)] text-[var(--foreground-secondary)] hover:border-[var(--primary)]/40'
-            )}
+            onClick={() => setSelectedSubjectIds(new Set())}
+            className="rounded-xl bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--primary-hover)] transition-all cursor-pointer focus-ring"
           >
-            {q.boardCode} · {q.shortLabel}
+            Clear selection
           </button>
-        ))}
-        {(selectedBoard !== 'all' || selectedQual !== 'all' || searchQuery) && (
-          <button
-            onClick={() => { setSelectedBoard('all'); setSelectedQual('all'); setSearchQuery(''); }}
-            className="text-xs text-[var(--foreground-muted)] hover:text-[var(--foreground)] px-3 py-1.5 rounded-full border border-dashed border-[var(--border)] transition-all cursor-pointer"
-          >
-            Clear filters
-          </button>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Grid */}
-      {filteredCurriculums.length > 0 ? (
+      {/* ── Partial match boards (zero-match fallback) ────────────────────── */}
+      {hasSelection && !hasMatches && hasNonMatching && (
+        <div className="w-full">
+          <div className="flex items-center gap-3 mb-4">
+            <p className="text-sm font-semibold text-[var(--foreground)]">
+              Boards that partially match ({nonMatchingCurriculums.length}):
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {nonMatchingCurriculums.map(c => (
+              <ExamBoardCard
+                key={c.id}
+                curriculum={c}
+                onSelectSubjects={handleSelectSubjects}
+                totalSelected={totalSelected}
+                isTopMatch={false}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Matched curriculum grid ───────────────────────────────────────── */}
+      {hasMatches && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filteredCurriculums.map(c => (
-            <CourseCard
+          {matchedCurriculums.map((c, idx) => (
+            <ExamBoardCard
               key={c.id}
               curriculum={c}
-              onAdd={handleAdd}
-              isAdding={addingId === c.id}
+              onSelectSubjects={handleSelectSubjects}
+              totalSelected={totalSelected}
+              // Top match = highest matchCount tier
+              isTopMatch={hasSelection && c.matchCount === totalSelected && idx === 0}
             />
           ))}
         </div>
-      ) : (
+      )}
+
+      {/* ── "Other boards" disclosure (non-matching) ──────────────────────── */}
+      {hasSelection && hasMatches && hasNonMatching && (
+        <div className="border border-[var(--border)] rounded-2xl overflow-hidden">
+          <button
+            onClick={() => setShowOtherBoards(!showOtherBoards)}
+            className="w-full flex items-center justify-between px-5 py-3 text-left bg-[var(--background-card)] hover:bg-[var(--background-secondary)] transition-colors cursor-pointer focus-ring"
+            aria-expanded={showOtherBoards}
+            aria-controls="other-boards-section"
+          >
+            <span className="text-sm font-medium text-[var(--foreground)]">
+              {nonMatchingCurriculums.length} other exam board{nonMatchingCurriculums.length !== 1 ? 's' : ''}{' '}
+              that don&apos;t cover all your selected subjects
+            </span>
+            {showOtherBoards ? (
+              <ChevronUp size={16} className="text-[var(--foreground-muted)]" />
+            ) : (
+              <ChevronDown size={16} className="text-[var(--foreground-muted)]" />
+            )}
+          </button>
+          {showOtherBoards && (
+            <div id="other-boards-section" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4 bg-[var(--background-secondary)]/50">
+              {nonMatchingCurriculums.map(c => (
+                <ExamBoardCard
+                  key={c.id}
+                  curriculum={c}
+                  onSelectSubjects={handleSelectSubjects}
+                  totalSelected={totalSelected}
+                  isTopMatch={false}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── No results (no selection, empty search) ──────────────────────── */}
+      {!hasSelection && filteredCurriculums.length === 0 && (
         <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-[var(--border)] bg-[var(--background-card)] p-16 text-center">
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--background-secondary)] text-[var(--foreground-muted)]">
             <BookOpen size={28} />
@@ -399,7 +605,7 @@ export default function CoursesLibraryBrowser() {
               : 'No curricula match your current filters. Try clearing some filters.'}
           </p>
           <button
-            onClick={() => { setSmartFilter(false); setSelectedBoard('all'); setSelectedQual('all'); setSearchQuery(''); }}
+            onClick={() => { setSmartFilter(false); setSelectedSubjectIds(new Set()); setSearchQuery(''); }}
             className="rounded-xl bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--primary-hover)] transition-all cursor-pointer"
           >
             Browse All Curricula

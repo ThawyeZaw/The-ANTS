@@ -3,15 +3,18 @@
 
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTs — AIPromptGenerator
-// Guided wizard that generates a structured AI prompt based on contributor input,
-// then parses the AI response into JSON blocks.
-// Supports two modes:
-//   - generate: Create new note content from a topic
-//   - convert:  Convert existing note text into block format
+// Collapsed from a 4-step modal wizard into a single fluid panel.
+//
+// Flow: Form (mode toggle + fields) → on submit, prompt reveals inline with
+// Copy button → paste AI response → Parse & Insert → optional inline block
+// preview → Import. All in one scrollable panel — no Back/Next step tracker.
+//
+// Reuses buildGeneratePrompt, buildConvertPrompt, parseAIResponse, FORMAT_MARKERS,
+// and MERMAID_KEYWORDS from the original implementation unmodified.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState } from 'react';
-import { Sparkles, Copy, CheckCheck, ChevronRight, X, AlertCircle, FileText } from 'lucide-react';
+import { Sparkles, Copy, CheckCheck, X, AlertCircle, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AIPromptContext, NoteStyle, NoteBlock, PromptType } from '@/types';
 import { mockCurriculums, mockSubjects } from '@/lib/mock/database';
@@ -20,8 +23,6 @@ interface AIPromptGeneratorProps {
   onImportBlocks: (blocks: NoteBlock[]) => void;
   onClose: () => void;
 }
-
-type Step = 'context' | 'prompt' | 'response' | 'preview';
 
 function genId() {
   return `blk-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
@@ -198,7 +199,6 @@ function parseAIResponse(text: string): NoteBlock[] {
       const code = codeLines.join('\n');
 
       if (lang === 'animation') {
-        // Transform animation code blocks into AnimationBlock with script
         blocks.push({
           type: 'animation',
           id: genId(),
@@ -216,7 +216,6 @@ function parseAIResponse(text: string): NoteBlock[] {
       const mermaidLines: string[] = [];
       while (i < lines.length) {
         const l = lines[i].trim();
-        // Stop at blank lines, block delimiters, or headings
         if (l === '' || l.startsWith('```') || l.startsWith('#') || l.startsWith('$$') ||
             l.startsWith('|') || l === '---' || l.startsWith('<svg')) break;
         mermaidLines.push(lines[i]);
@@ -315,18 +314,11 @@ function parseAIResponse(text: string): NoteBlock[] {
 
 const STYLES: NoteStyle[] = ['concise', 'detailed', 'eli5', 'academic'];
 
-const PROMPT_TYPE_OPTIONS: { value: PromptType; label: string; icon: React.ReactNode; desc: string }[] = [
-  { value: 'generate', label: 'Generate New Note', icon: <Sparkles className="h-4 w-4" />, desc: 'AI creates fresh content from a topic description' },
-  { value: 'convert',  label: 'Convert Existing Note', icon: <FileText className="h-4 w-4" />, desc: 'Reformat your existing note text into blocks' },
-];
-
-// ── Main component ────────────────────────────────────────────────────────────
-
 export default function AIPromptGenerator({ onImportBlocks, onClose }: AIPromptGeneratorProps) {
-  const [step, setStep] = useState<Step>('context');
   const [copied, setCopied] = useState(false);
   const [aiResponse, setAiResponse] = useState('');
   const [parsedBlocks, setParsedBlocks] = useState<NoteBlock[]>([]);
+  const [showPrompt, setShowPrompt] = useState(false);
 
   const [ctx, setCtx] = useState<AIPromptContext>({
     curriculum: '',
@@ -344,7 +336,7 @@ export default function AIPromptGenerator({ onImportBlocks, onClose }: AIPromptG
     ? buildGeneratePrompt(ctx)
     : buildConvertPrompt(ctx);
 
-  const canProceed = ctx.curriculum.trim() && ctx.subject.trim() && ctx.topic.trim();
+  const canGeneratePrompt = ctx.curriculum.trim() && ctx.subject.trim() && ctx.topic.trim();
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(prompt);
@@ -355,7 +347,6 @@ export default function AIPromptGenerator({ onImportBlocks, onClose }: AIPromptG
   const handleParse = () => {
     const blocks = parseAIResponse(aiResponse);
     setParsedBlocks(blocks);
-    setStep('preview');
   };
 
   const handleImport = () => {
@@ -363,45 +354,84 @@ export default function AIPromptGenerator({ onImportBlocks, onClose }: AIPromptG
     onClose();
   };
 
-  const steps: { id: Step; label: string }[] = [
-    { id: 'context',  label: 'Context' },
-    { id: 'prompt',   label: 'Prompt' },
-    { id: 'response', label: 'Paste Response' },
-    { id: 'preview',  label: 'Preview' },
-  ];
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+      <div className="w-full max-w-xl bg-[var(--background-card)] border border-[var(--border)] rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)] bg-gradient-to-r from-violet-500/10 to-purple-500/5 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-violet-500/15 text-violet-500">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="font-bold text-[var(--foreground)] text-sm">AI Note Generator</h2>
+              <p className="text-xs text-[var(--foreground-muted)]">Generate or convert content using your preferred AI tool</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-[var(--background-secondary)] text-[var(--foreground-muted)] hover:text-[var(--foreground)] transition-colors cursor-pointer focus-ring" aria-label="Close">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
 
-  const stepIdx = steps.findIndex((s) => s.id === step);
-
-  const renderContextForm = () => {
-    if (ctx.promptType === 'convert') {
-      // Convert mode: show textarea for pasting existing notes + minimal metadata
-      return (
-        <div className="space-y-4">
-          <div>
-            <label className="text-xs font-medium text-foreground-muted uppercase tracking-wide mb-1.5 block">
-              Your Existing Note Content *
-            </label>
-            <textarea
-              value={ctx.userNoteContent}
-              onChange={(e) => setCtx((p) => ({ ...p, userNoteContent: e.target.value }))}
-              rows={12}
-              placeholder="Paste your existing note text here. It can include LaTeX, tables, headings, bullet points — the AI will convert it into our block format."
-              className="w-full px-4 py-3 rounded-xl bg-background-secondary border border-border text-sm text-foreground focus:outline-none focus:border-primary/60 transition-all resize-y font-mono"
-            />
+        {/* Body — scrollable single panel */}
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+          {/* ── Mode toggle ── */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setCtx((p) => ({ ...p, promptType: 'generate' }))}
+              className={cn(
+                'flex-1 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer focus-ring border flex items-center justify-center gap-2',
+                ctx.promptType === 'generate'
+                  ? 'border-violet-500 bg-violet-500/10 text-violet-600 dark:text-violet-400'
+                  : 'border-[var(--border)] bg-[var(--background-secondary)] text-[var(--foreground-muted)] hover:text-[var(--foreground)]'
+              )}
+            >
+              <Sparkles className="h-4 w-4" />
+              Generate New
+            </button>
+            <button
+              onClick={() => setCtx((p) => ({ ...p, promptType: 'convert' }))}
+              className={cn(
+                'flex-1 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer focus-ring border flex items-center justify-center gap-2',
+                ctx.promptType === 'convert'
+                  ? 'border-violet-500 bg-violet-500/10 text-violet-600 dark:text-violet-400'
+                  : 'border-[var(--border)] bg-[var(--background-secondary)] text-[var(--foreground-muted)] hover:text-[var(--foreground)]'
+              )}
+            >
+              <FileText className="h-4 w-4" />
+              Convert Existing
+            </button>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs font-medium text-foreground-muted uppercase tracking-wide mb-1 block">Curriculum</label>
+          {/* ── Convert mode: note content textarea ── */}
+          {ctx.promptType === 'convert' && (
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-[var(--foreground-muted)] uppercase tracking-wide">
+                Your Existing Note Content
+              </label>
+              <textarea
+                value={ctx.userNoteContent}
+                onChange={(e) => setCtx((p) => ({ ...p, userNoteContent: e.target.value }))}
+                rows={8}
+                placeholder="Paste your existing note text here. It can include LaTeX, tables, headings, bullet points — the AI will convert it into our block format."
+                className="w-full px-3 py-2.5 rounded-xl bg-[var(--background-secondary)] border border-[var(--border)] text-sm text-[var(--foreground)] focus:outline-none focus:border-violet-500/60 transition-all resize-y font-mono"
+              />
+            </div>
+          )}
+
+          {/* ── Metadata fields ── */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-[var(--foreground-muted)] uppercase tracking-wide block">Curriculum</label>
               <select
                 value={ctx.curriculum}
                 onChange={(e) => {
                   const curr = mockCurriculums.find((c) => c.qualification === e.target.value);
                   setCtx((p) => ({ ...p, curriculum: e.target.value, examBoard: curr?.exam_board ?? '' }));
                 }}
-                className="w-full px-3 py-2.5 rounded-xl bg-background-secondary border border-border text-sm text-foreground focus:outline-none focus:border-primary/60 transition-all"
+                className="w-full px-3 py-2 rounded-xl bg-[var(--background-secondary)] border border-[var(--border)] text-sm text-[var(--foreground)] focus:outline-none focus:border-violet-500/60 transition-all"
               >
-                <option value="">Select…</option>
+                <option value="">Select...</option>
                 {[...new Set(mockCurriculums.map((c) => c.qualification))].map((q) => (
                   <option key={q} value={q}>{q}</option>
                 ))}
@@ -409,55 +439,57 @@ export default function AIPromptGenerator({ onImportBlocks, onClose }: AIPromptG
               </select>
               {ctx.curriculum === 'Other' && (
                 <input type="text" placeholder="e.g. IB, AP Chemistry"
-                  className="mt-2 w-full px-3 py-2 rounded-xl bg-background-secondary border border-border text-sm focus:outline-none focus:border-primary/60"
+                  className="mt-1.5 w-full px-3 py-2 rounded-xl bg-[var(--background-secondary)] border border-[var(--border)] text-sm focus:outline-none focus:border-violet-500/60"
                   onChange={(e) => setCtx((p) => ({ ...p, curriculum: e.target.value }))} />
               )}
             </div>
 
-            <div>
-              <label className="text-xs font-medium text-foreground-muted uppercase tracking-wide mb-1 block">Exam Board</label>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-[var(--foreground-muted)] uppercase tracking-wide block">Exam Board</label>
               <input type="text" value={ctx.examBoard} placeholder="e.g. CAIE, Edexcel"
                 onChange={(e) => setCtx((p) => ({ ...p, examBoard: e.target.value }))}
-                className="w-full px-3 py-2.5 rounded-xl bg-background-secondary border border-border text-sm text-foreground focus:outline-none focus:border-primary/60 transition-all"
+                className="w-full px-3 py-2 rounded-xl bg-[var(--background-secondary)] border border-[var(--border)] text-sm text-[var(--foreground)] focus:outline-none focus:border-violet-500/60 transition-all"
               />
             </div>
           </div>
 
-          <div>
-            <label className="text-xs font-medium text-foreground-muted uppercase tracking-wide mb-1 block">Subject *</label>
-            <input type="text" value={ctx.subject} placeholder="e.g. Physics, Biology, Mathematics"
-              onChange={(e) => setCtx((p) => ({ ...p, subject: e.target.value }))}
-              className="w-full px-3 py-2.5 rounded-xl bg-background-secondary border border-border text-sm text-foreground focus:outline-none focus:border-primary/60 transition-all"
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-[var(--foreground-muted)] uppercase tracking-wide block">Subject</label>
+              <input type="text" value={ctx.subject} placeholder="e.g. Physics, Mathematics"
+                onChange={(e) => setCtx((p) => ({ ...p, subject: e.target.value }))}
+                className="w-full px-3 py-2 rounded-xl bg-[var(--background-secondary)] border border-[var(--border)] text-sm text-[var(--foreground)] focus:outline-none focus:border-violet-500/60 transition-all"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-[var(--foreground-muted)] uppercase tracking-wide block">Topic</label>
+              <input type="text" value={ctx.topic} placeholder="e.g. Forces and Motion"
+                onChange={(e) => setCtx((p) => ({ ...p, topic: e.target.value }))}
+                className="w-full px-3 py-2 rounded-xl bg-[var(--background-secondary)] border border-[var(--border)] text-sm text-[var(--foreground)] focus:outline-none focus:border-violet-500/60 transition-all"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="text-xs font-medium text-foreground-muted uppercase tracking-wide mb-1 block">Topic *</label>
-            <input type="text" value={ctx.topic} placeholder="e.g. Forces and Motion, Cell Biology"
-              onChange={(e) => setCtx((p) => ({ ...p, topic: e.target.value }))}
-              className="w-full px-3 py-2.5 rounded-xl bg-background-secondary border border-border text-sm text-foreground focus:outline-none focus:border-primary/60 transition-all"
-            />
-          </div>
-
-          <div>
-            <label className="text-xs font-medium text-foreground-muted uppercase tracking-wide mb-1 block">Syllabus Point (optional)</label>
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-[var(--foreground-muted)] uppercase tracking-wide block">Syllabus Point (optional)</label>
             <input type="text" value={ctx.syllabusPoint} placeholder="e.g. 1.5.3 — Newton's Third Law"
               onChange={(e) => setCtx((p) => ({ ...p, syllabusPoint: e.target.value }))}
-              className="w-full px-3 py-2.5 rounded-xl bg-background-secondary border border-border text-sm text-foreground focus:outline-none focus:border-primary/60 transition-all"
+              className="w-full px-3 py-2 rounded-xl bg-[var(--background-secondary)] border border-[var(--border)] text-sm text-[var(--foreground)] focus:outline-none focus:border-violet-500/60 transition-all"
             />
           </div>
 
-          <div>
-            <label className="text-xs font-medium text-foreground-muted uppercase tracking-wide mb-1 block">Style Preference</label>
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-[var(--foreground-muted)] uppercase tracking-wide block">Style</label>
             <div className="flex gap-2">
               {STYLES.map((s) => (
                 <button key={s}
                   onClick={() => setCtx((p) => ({ ...p, style: s }))}
                   className={cn(
-                    'flex-1 py-2 rounded-xl border text-sm font-medium transition-all cursor-pointer',
+                    'flex-1 py-2 rounded-xl border text-sm font-medium transition-all cursor-pointer focus-ring',
                     ctx.style === s
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border bg-background-secondary text-foreground-muted hover:border-border-hover'
+                      ? 'border-violet-500 bg-violet-500/10 text-violet-600 dark:text-violet-400'
+                      : 'border-[var(--border)] bg-[var(--background-secondary)] text-[var(--foreground-muted)] hover:text-[var(--foreground)] hover:border-[var(--border-hover)]'
                   )}
                 >
                   {s === 'eli5' ? 'ELI5' : s.charAt(0).toUpperCase() + s.slice(1)}
@@ -465,317 +497,122 @@ export default function AIPromptGenerator({ onImportBlocks, onClose }: AIPromptG
               ))}
             </div>
           </div>
-        </div>
-      );
-    }
 
-    // Generate mode: show existing form
-    return (
-      <div className="space-y-4">
-        <p className="text-sm text-foreground-muted">Fill in the details about this note. The more specific you are, the better the AI output.</p>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="text-xs font-medium text-foreground-muted uppercase tracking-wide mb-1 block">Curriculum *</label>
-            <select
-              id="ai-curriculum"
-              value={ctx.curriculum}
-              onChange={(e) => {
-                const curr = mockCurriculums.find((c) => c.qualification === e.target.value);
-                setCtx((p) => ({ ...p, curriculum: e.target.value, examBoard: curr?.exam_board ?? '' }));
-              }}
-              className="w-full px-3 py-2.5 rounded-xl bg-background-secondary border border-border text-sm text-foreground focus:outline-none focus:border-primary/60 transition-all"
-            >
-              <option value="">Select…</option>
-              {[...new Set(mockCurriculums.map((c) => c.qualification))].map((q) => (
-                <option key={q} value={q}>{q}</option>
-              ))}
-              <option value="Other">Other (type below)</option>
-            </select>
-            {ctx.curriculum === 'Other' && (
-              <input type="text" placeholder="e.g. IB, AP Chemistry"
-                className="mt-2 w-full px-3 py-2 rounded-xl bg-background-secondary border border-border text-sm focus:outline-none focus:border-primary/60"
-                onChange={(e) => setCtx((p) => ({ ...p, curriculum: e.target.value }))} />
-            )}
-          </div>
-
-          <div>
-            <label className="text-xs font-medium text-foreground-muted uppercase tracking-wide mb-1 block">Exam Board</label>
-            <input type="text" value={ctx.examBoard} placeholder="e.g. CAIE, Edexcel"
-              onChange={(e) => setCtx((p) => ({ ...p, examBoard: e.target.value }))}
-              className="w-full px-3 py-2.5 rounded-xl bg-background-secondary border border-border text-sm text-foreground focus:outline-none focus:border-primary/60 transition-all"
+          {/* Additional context */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-[var(--foreground-muted)] uppercase tracking-wide block">Additional Context (optional)</label>
+            <textarea value={ctx.additionalContext}
+              onChange={(e) => setCtx((p) => ({ ...p, additionalContext: e.target.value }))}
+              rows={2}
+              placeholder="e.g. Focus on common exam mistakes, include a worked example..."
+              className="w-full px-3 py-2 rounded-xl bg-[var(--background-secondary)] border border-[var(--border)] text-sm text-[var(--foreground)] focus:outline-none focus:border-violet-500/60 transition-all resize-none"
             />
           </div>
-        </div>
 
-        <div>
-          <label className="text-xs font-medium text-foreground-muted uppercase tracking-wide mb-1 block">Subject *</label>
-          <input type="text" value={ctx.subject} placeholder="e.g. Physics, Biology, Mathematics"
-            onChange={(e) => setCtx((p) => ({ ...p, subject: e.target.value }))}
-            className="w-full px-3 py-2.5 rounded-xl bg-background-secondary border border-border text-sm text-foreground focus:outline-none focus:border-primary/60 transition-all"
-          />
-        </div>
-
-        <div>
-          <label className="text-xs font-medium text-foreground-muted uppercase tracking-wide mb-1 block">Topic *</label>
-          <input type="text" value={ctx.topic} placeholder="e.g. Forces and Motion, Cell Biology"
-            onChange={(e) => setCtx((p) => ({ ...p, topic: e.target.value }))}
-            className="w-full px-3 py-2.5 rounded-xl bg-background-secondary border border-border text-sm text-foreground focus:outline-none focus:border-primary/60 transition-all"
-          />
-        </div>
-
-        <div>
-          <label className="text-xs font-medium text-foreground-muted uppercase tracking-wide mb-1 block">Syllabus Point (optional)</label>
-          <input type="text" value={ctx.syllabusPoint} placeholder="e.g. 1.5.3 — Newton's Third Law"
-            onChange={(e) => setCtx((p) => ({ ...p, syllabusPoint: e.target.value }))}
-            className="w-full px-3 py-2.5 rounded-xl bg-background-secondary border border-border text-sm text-foreground focus:outline-none focus:border-primary/60 transition-all"
-          />
-        </div>
-
-        <div>
-          <label className="text-xs font-medium text-foreground-muted uppercase tracking-wide mb-1 block">Style Preference</label>
-          <div className="flex gap-2">
-            {STYLES.map((s) => (
-              <button key={s}
-                onClick={() => setCtx((p) => ({ ...p, style: s }))}
-                className={cn(
-                  'flex-1 py-2 rounded-xl border text-sm font-medium transition-all cursor-pointer',
-                  ctx.style === s
-                    ? 'border-primary bg-primary/10 text-primary'
-                    : 'border-border bg-background-secondary text-foreground-muted hover:border-border-hover'
-                )}
-              >
-                {s === 'eli5' ? 'ELI5' : s.charAt(0).toUpperCase() + s.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <label className="text-xs font-medium text-foreground-muted uppercase tracking-wide mb-1 block">Additional Context (optional)</label>
-          <textarea value={ctx.additionalContext}
-            onChange={(e) => setCtx((p) => ({ ...p, additionalContext: e.target.value }))}
-            rows={2}
-            placeholder="e.g. Focus on common exam mistakes, include a worked example…"
-            className="w-full px-3 py-2.5 rounded-xl bg-background-secondary border border-border text-sm text-foreground focus:outline-none focus:border-primary/60 transition-all resize-none"
-          />
-        </div>
-      </div>
-    );
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-2xl bg-background-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-gradient-to-r from-violet-500/10 to-purple-500/5">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-violet-500/15 text-violet-500">
-              <Sparkles className="h-5 w-5" />
-            </div>
-            <div>
-              <h2 className="font-bold text-foreground">AI Note Generator</h2>
-              <p className="text-xs text-foreground-muted">Generate or convert note content using your preferred AI tool</p>
-            </div>
-          </div>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-background-secondary text-foreground-muted hover:text-foreground transition-colors cursor-pointer">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        {/* Step progress */}
-        <div className="flex items-center gap-0 px-6 py-3 border-b border-border overflow-x-auto">
-          {steps.map((s, idx) => (
-            <div key={s.id} className="flex items-center shrink-0">
-              <div className={cn(
-                'flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-full transition-colors',
-                idx === stepIdx ? 'bg-primary text-white' :
-                idx < stepIdx ? 'text-primary' : 'text-foreground-muted'
-              )}>
-                <span className={cn(
-                  'w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold',
-                  idx < stepIdx ? 'bg-primary text-white' : ''
-                )}>
-                  {idx < stepIdx ? '✓' : idx + 1}
-                </span>
-                {s.label}
-              </div>
-              {idx < steps.length - 1 && (
-                <ChevronRight className="h-3 w-3 text-foreground-muted mx-1" />
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
-
-          {/* ── Step 1: Context + Prompt Type Selector ── */}
-          {step === 'context' && (
-            <div className="space-y-5">
-              {/* Prompt type selector */}
-              <div>
-                <label className="text-xs font-medium text-foreground-muted uppercase tracking-wide mb-2 block">
-                  What do you want to do?
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  {PROMPT_TYPE_OPTIONS.map((opt) => (
-                    <button
-                      key={opt.value}
-                      onClick={() => setCtx((p) => ({ ...p, promptType: opt.value }))}
-                      className={cn(
-                        'flex flex-col items-start gap-1.5 p-4 rounded-xl border text-left transition-all cursor-pointer',
-                        ctx.promptType === opt.value
-                          ? 'border-primary bg-primary/5 text-foreground'
-                          : 'border-border bg-background-secondary text-foreground-muted hover:border-border-hover hover:text-foreground'
-                      )}
-                    >
-                      <span className={cn(
-                        'p-1.5 rounded-lg',
-                        ctx.promptType === opt.value ? 'bg-primary/10 text-primary' : 'bg-background-card'
-                      )}>
-                        {opt.icon}
-                      </span>
-                      <span className="text-sm font-semibold">{opt.label}</span>
-                      <span className="text-xs opacity-70">{opt.desc}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {renderContextForm()}
-            </div>
+          {/* ── Generate Prompt button ── */}
+          {!showPrompt && (
+            <button
+              onClick={() => setShowPrompt(true)}
+              disabled={!canGeneratePrompt || (ctx.promptType === 'convert' && !ctx.userNoteContent?.trim())}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer focus-ring"
+            >
+              <Sparkles className="h-4 w-4" />
+              Generate Prompt
+            </button>
           )}
 
-          {/* ── Step 2: Generated Prompt ── */}
-          {step === 'prompt' && (
-            <div className="space-y-3">
-              <div className="flex items-start gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs text-amber-600">
+          {/* ── Generated prompt (revealed inline) ── */}
+          {showPrompt && (
+            <div className="space-y-3 border border-violet-500/20 rounded-2xl bg-violet-500/5 p-4">
+              <div className="flex items-start gap-2 p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs text-amber-600">
                 <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
-                Copy this prompt, paste it into ChatGPT, Gemini, or Claude, then come back and paste the response in the next step.
+                Copy this prompt, paste it into ChatGPT, Gemini, or Claude, then paste the AI's response below.
               </div>
+
               <div className="relative">
-                <pre className="bg-background-secondary border border-border rounded-xl p-4 text-xs text-foreground-secondary whitespace-pre-wrap font-mono leading-relaxed max-h-80 overflow-y-auto">
+                <pre className="bg-[var(--background-secondary)] border border-[var(--border)] rounded-xl p-3 text-xs text-[var(--foreground-secondary)] whitespace-pre-wrap font-mono leading-relaxed max-h-48 overflow-y-auto">
                   {prompt}
                 </pre>
                 <button
-                  id="ai-copy-prompt"
                   onClick={handleCopy}
-                  className="absolute top-3 right-3 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary/90 transition-colors cursor-pointer"
+                  className="absolute top-2 right-2 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-violet-500 text-white text-xs font-medium hover:bg-violet-600 transition-colors cursor-pointer focus-ring"
                 >
-                  {copied ? <><CheckCheck className="h-3.5 w-3.5" /> Copied!</> : <><Copy className="h-3.5 w-3.5" /> Copy</>}
+                  {copied ? <><CheckCheck className="h-3.5 w-3.5" /> Copied</> : <><Copy className="h-3.5 w-3.5" /> Copy</>}
                 </button>
               </div>
-            </div>
-          )}
 
-          {/* ── Step 3: Paste AI Response ── */}
-          {step === 'response' && (
-            <div className="space-y-3">
-              <p className="text-sm text-foreground-muted">Paste the AI's response below. The parser will convert it into editable blocks.</p>
-              <textarea
-                id="ai-response-input"
-                value={aiResponse}
-                onChange={(e) => setAiResponse(e.target.value)}
-                rows={14}
-                placeholder="Paste the AI-generated note content here…"
-                className="w-full px-4 py-3 rounded-xl bg-background-secondary border border-border text-sm text-foreground focus:outline-none focus:border-primary/60 transition-all resize-none font-mono"
-              />
-              {aiResponse && (
-                <p className="text-xs text-foreground-muted">
-                  ~{aiResponse.split('\n').filter(Boolean).length} lines detected
-                </p>
+              {/* ── Paste AI response ── */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-[var(--foreground-muted)] uppercase tracking-wide block">
+                  Paste AI Response
+                </label>
+                <textarea
+                  value={aiResponse}
+                  onChange={(e) => setAiResponse(e.target.value)}
+                  rows={8}
+                  placeholder="Paste the AI-generated note content here..."
+                  className="w-full px-3 py-2.5 rounded-xl bg-[var(--background-secondary)] border border-[var(--border)] text-sm text-[var(--foreground)] focus:outline-none focus:border-violet-500/60 transition-all resize-none font-mono"
+                />
+
+                {aiResponse.trim() && (
+                  <button
+                    onClick={handleParse}
+                    className="w-full py-2.5 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 text-white text-sm font-medium hover:opacity-90 transition-all cursor-pointer focus-ring"
+                  >
+                    Parse &amp; Preview Blocks
+                  </button>
+                )}
+              </div>
+
+              {/* ── Parsed block preview (inline) ── */}
+              {parsedBlocks.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-xs text-emerald-600">
+                    <CheckCheck className="h-4 w-4 shrink-0" />
+                    Parsed {parsedBlocks.length} blocks. Review below, then import.
+                  </div>
+                  <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                    {parsedBlocks.map((block, i) => (
+                      <div key={block.id} className="flex items-start gap-2 p-2.5 bg-[var(--background-secondary)] rounded-xl border border-[var(--border)] text-sm">
+                        <span className="text-xs text-[var(--foreground-muted)] font-mono mt-0.5 shrink-0">#{i + 1}</span>
+                        <div className="min-w-0">
+                          <span className={cn(
+                            'text-xs font-medium px-1.5 py-0.5 rounded mr-1.5',
+                            block.type === 'latex' ? 'bg-violet-500/10 text-violet-500' :
+                            block.type === 'heading' ? 'bg-[var(--primary)]/10 text-[var(--primary)]' :
+                            block.type === 'code' ? 'bg-slate-700 text-slate-300' :
+                            block.type === 'animation' ? 'bg-purple-500/10 text-purple-500' :
+                            'bg-[var(--background-card)] text-[var(--foreground-muted)]'
+                          )}>
+                            {block.type}{block.type === 'code' && 'code' in block && 'language' in block ? ` (${(block as { language: string }).language})` : ''}
+                          </span>
+                          <span className="text-[var(--foreground-secondary)] text-xs truncate">
+                            {'text' in block ? (block.text as string).slice(0, 80) :
+                             'expression' in block ? (block.expression as string).slice(0, 60) :
+                             'label' in block ? (block.label as string) :
+                             'script' in block ? '[Canvas Animation]' :
+                             'code' in block ? (block.code as string).slice(0, 60) : '...'}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    onClick={handleImport}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-medium hover:opacity-90 transition-all cursor-pointer focus-ring"
+                  >
+                    <CheckCheck className="h-4 w-4" />
+                    Import {parsedBlocks.length} Blocks to Editor
+                  </button>
+                </div>
               )}
             </div>
           )}
-
-          {/* ── Step 4: Preview parsed blocks ── */}
-          {step === 'preview' && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-xs text-emerald-600">
-                <CheckCheck className="h-4 w-4 shrink-0" />
-                Parsed {parsedBlocks.length} blocks. Click "Import to Editor" to add them to your note.
-              </div>
-              <div className="space-y-2 max-h-72 overflow-y-auto">
-                {parsedBlocks.map((block, i) => (
-                  <div key={block.id} className="flex items-start gap-3 p-3 bg-background-secondary rounded-xl border border-border text-sm">
-                    <span className="text-xs text-foreground-muted font-mono mt-0.5 shrink-0">#{i + 1}</span>
-                    <div className="min-w-0">
-                      <span className={cn(
-                        'text-xs font-medium px-1.5 py-0.5 rounded mr-2',
-                        block.type === 'latex' ? 'bg-violet-500/10 text-violet-500' :
-                        block.type === 'heading' ? 'bg-primary/10 text-primary' :
-                        block.type === 'code' ? 'bg-slate-700 text-slate-300' :
-                        block.type === 'animation' ? 'bg-purple-500/10 text-purple-500' :
-                        'bg-background-card text-foreground-muted'
-                      )}>
-                        {block.type}{block.type === 'code' && 'code' in block && 'language' in block ? ` (${(block as { language: string }).language})` : ''}
-                      </span>
-                      <span className="text-foreground-secondary text-xs truncate">
-                        {'text' in block ? (block.text as string).slice(0, 80) :
-                         'expression' in block ? (block.expression as string).slice(0, 60) :
-                         'label' in block ? (block.label as string) :
-                         'script' in block ? '[Canvas Animation]' :
-                         'code' in block ? (block.code as string).slice(0, 60) : '…'}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
-
-        {/* Footer actions */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-background-secondary">
-          <button
-            onClick={() => {
-              const prev: Record<Step, Step | null> = { context: null, prompt: 'context', response: 'prompt', preview: 'response' };
-              const p = prev[step];
-              if (p) setStep(p);
-            }}
-            disabled={step === 'context'}
-            className="px-4 py-2 rounded-xl border border-border text-sm font-medium text-foreground-muted hover:text-foreground hover:border-border-hover disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
-          >
-            Back
-          </button>
-
-          {step === 'context' && (
-            <button
-              id="ai-next-to-prompt"
-              onClick={() => setStep('prompt')}
-              disabled={
-                !canProceed ||
-                (ctx.promptType === 'convert' && !ctx.userNoteContent?.trim())
-              }
-              className="flex items-center gap-2 px-5 py-2 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
-            >
-              Generate Prompt <Sparkles className="h-4 w-4" />
-            </button>
-          )}
-          {step === 'prompt' && (
-            <button id="ai-next-to-response" onClick={() => setStep('response')}
-              className="px-5 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-colors cursor-pointer">
-              I've pasted into AI →
-            </button>
-          )}
-          {step === 'response' && (
-            <button id="ai-parse-response" onClick={handleParse} disabled={!aiResponse.trim()}
-              className="px-5 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer">
-              Parse Response →
-            </button>
-          )}
-          {step === 'preview' && (
-            <button id="ai-import-blocks" onClick={handleImport}
-              className="flex items-center gap-2 px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-medium hover:opacity-90 transition-all cursor-pointer">
-              <CheckCheck className="h-4 w-4" />
-              Import to Editor
-            </button>
-          )}
-        </div>
-
       </div>
     </div>
   );
 }
+
+// Re-export for backward compatibility with any module that imports these
+export { buildGeneratePrompt, buildConvertPrompt, parseAIResponse, FORMAT_MARKERS, MERMAID_KEYWORDS };

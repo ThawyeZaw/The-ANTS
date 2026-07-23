@@ -2,20 +2,20 @@
 
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTs — MyNotesLibrary
-// View user's created notes and saved notes with search, filtering, and inline reading.
+// Personal notes workspace — only displays notes created by the logged-in user.
+// To access notes from other contributors, users must save them from the Library.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
-import { Bookmark, Filter, BookOpen, X, Edit3, Plus } from 'lucide-react';
+import { Filter, BookOpen, X, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { NoteFilters, Note } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
-import { useSavedNotes } from '@/hooks/useNotes';
 import NoteCard from './NoteCard';
 import NoteFiltersPanel from './NoteFilters';
 import NoteReaderModal from './NoteReaderModal';
-import { getProfile, getNotesByContributor, deleteNote } from '@/lib/mock/database';
+import { getNotesByContributor, deleteNote } from '@/lib/mock/database';
 
 const DEFAULT_FILTERS: NoteFilters = {
   search: '',
@@ -30,13 +30,9 @@ export default function MyNotesLibrary() {
   const [filters, setFilters] = useState<NoteFilters>(DEFAULT_FILTERS);
   const [showFilters, setShowFilters] = useState(false);
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
-  
-  const [activeTab, setActiveTab] = useState<'created' | 'saved'>('created');
   const [createdNotes, setCreatedNotes] = useState<Note[]>([]);
 
-  const { savedNotes, toggleSave, checkSaved } = useSavedNotes(user?.id);
-
-  // Load created notes
+  // Load only notes created by the current user
   useEffect(() => {
     if (user?.id) {
       setCreatedNotes(getNotesByContributor(user.id));
@@ -55,11 +51,9 @@ export default function MyNotesLibrary() {
     }
   };
 
-  const currentNotesList = activeTab === 'created' ? createdNotes : savedNotes;
-
-  // Client-side filtering
+  // Client-side filtering (only on user's own created notes)
   const filteredNotes = useMemo(() => {
-    return currentNotesList.filter((note) => {
+    return createdNotes.filter((note) => {
       if (filters.search) {
         const q = filters.search.toLowerCase();
         const matchesTitle = note.title.toLowerCase().includes(q);
@@ -74,19 +68,7 @@ export default function MyNotesLibrary() {
 
       return true;
     });
-  }, [currentNotesList, filters]);
-
-  // Build a contributor name lookup map
-  const contributorNames = useMemo(() => {
-    const map = new Map<string, string>();
-    currentNotesList.forEach((n) => {
-      if (!map.has(n.contributor_id)) {
-        const profile = getProfile(n.contributor_id);
-        if (profile) map.set(n.contributor_id, profile.name);
-      }
-    });
-    return map;
-  }, [currentNotesList]);
+  }, [createdNotes, filters]);
 
   const activeFilterCount = [
     filters.curriculumId,
@@ -105,42 +87,34 @@ export default function MyNotesLibrary() {
           <div>
             <h1 className="text-2xl font-bold text-foreground">My Notes</h1>
             <p className="text-sm text-foreground-muted">
-              {filteredNotes.length} note{filteredNotes.length !== 1 ? 's' : ''} in this view
+              {filteredNotes.length} note{filteredNotes.length !== 1 ? 's' : ''} created by you
             </p>
           </div>
         </div>
 
-        <Link
-          href="/editor/notes"
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-white font-medium rounded-xl text-sm hover:bg-primary/95 transition-all shadow-md shadow-primary/20 shrink-0"
-        >
-          <Plus className="h-4 w-4" />
-          Create Note
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/library"
+            className="flex items-center gap-2 px-4 py-2 border border-border text-foreground-secondary font-medium rounded-xl text-sm hover:bg-background-secondary transition-all shrink-0"
+          >
+            <BookOpen className="h-4 w-4" />
+            Browse Library
+          </Link>
+          <Link
+            href="/editor/notes"
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white font-medium rounded-xl text-sm hover:bg-primary/95 transition-all shadow-md shadow-primary/20 shrink-0"
+          >
+            <Plus className="h-4 w-4" />
+            Create Note
+          </Link>
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        {/* Tab switcher */}
-        <div className="flex border-b border-border/60 shrink-0">
-          <button
-            onClick={() => setActiveTab('created')}
-            className={cn(
-              "px-4 py-2 border-b-2 font-medium text-sm transition-all -mb-px cursor-pointer",
-              activeTab === 'created' ? "border-primary text-primary font-semibold" : "border-transparent text-foreground-muted hover:text-foreground hover:border-border"
-            )}
-          >
-            Created by Me
-          </button>
-          <button
-            onClick={() => setActiveTab('saved')}
-            className={cn(
-              "px-4 py-2 border-b-2 font-medium text-sm transition-all -mb-px cursor-pointer",
-              activeTab === 'saved' ? "border-primary text-primary font-semibold" : "border-transparent text-foreground-muted hover:text-foreground hover:border-border"
-            )}
-          >
-            Saved Notes
-          </button>
-        </div>
+        {/* Section label */}
+        <p className="text-sm font-medium text-foreground-muted">
+          Showing only notes you have personally created
+        </p>
 
         <div className="flex items-center gap-2">
           {/* Filter toggle (mobile) */}
@@ -182,23 +156,30 @@ export default function MyNotesLibrary() {
         <main className="flex-1 min-w-0">
           {filteredNotes.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-4 py-20 text-center bg-background-card border border-dashed border-border rounded-2xl">
-              <div className="text-5xl">{activeTab === 'created' ? '📝' : '🔖'}</div>
+              <div className="text-5xl">📝</div>
               <p className="text-lg font-semibold text-foreground">No notes found</p>
               <p className="text-foreground-muted text-sm max-w-xs">
                 {filters.search
                   ? `No notes match "${filters.search}".`
-                  : activeTab === 'created' 
-                    ? "You haven't created any notes yet."
-                    : "You haven't saved any study notes yet. Explore the library to add notes to your dashboard!"}
+                  : "You haven't created any notes yet. Create your first note or browse the library to save notes from other contributors."}
               </p>
-              {activeTab === 'saved' && !filters.search && (
-                <Link
-                  href="/library"
-                  className="mt-2 flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary/95 transition-all shadow-md shadow-primary/20"
-                >
-                  <BookOpen className="h-4 w-4" />
-                  Browse Notes
-                </Link>
+              {!filters.search && (
+                <div className="flex gap-2 mt-2">
+                  <Link
+                    href="/editor/notes"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary/95 transition-all shadow-md shadow-primary/20"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Create Note
+                  </Link>
+                  <Link
+                    href="/library"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border text-foreground-secondary text-sm font-medium hover:bg-background-secondary transition-all"
+                  >
+                    <BookOpen className="h-4 w-4" />
+                    Browse Library
+                  </Link>
+                </div>
               )}
             </div>
           ) : (
@@ -207,11 +188,8 @@ export default function MyNotesLibrary() {
                 <NoteCard
                   key={note.id}
                   note={note}
-                  isSaved={activeTab === 'saved' ? true : undefined}
-                  onToggleSave={activeTab === 'saved' ? toggleSave : undefined}
-                  onEdit={activeTab === 'created' ? (id) => window.location.href = `/editor/notes?id=${id}` : undefined}
-                  onDelete={activeTab === 'created' ? (id) => handleDeleteNote(id) : undefined}
-                  contributorName={contributorNames.get(note.contributor_id)}
+                  onEdit={(id) => window.location.href = `/editor/notes?id=${id}`}
+                  onDelete={(id) => handleDeleteNote(id)}
                   onRead={setActiveNoteId}
                 />
               ))}
@@ -224,7 +202,7 @@ export default function MyNotesLibrary() {
       <NoteReaderModal
         noteId={activeNoteId}
         onClose={() => setActiveNoteId(null)}
-        allNotes={currentNotesList}
+        allNotes={createdNotes}
       />
     </div>
   );

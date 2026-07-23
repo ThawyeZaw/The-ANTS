@@ -1,14 +1,30 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — useCourseManager Hook (Supabase)
+// The ANTS — useCourseManager Hook (Mock Facade)
 // Shared context for Course Manager, Lesson Tracker, and Exam Countdown.
+// All data flows through src/lib/mock/database.ts — no direct Supabase calls.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import type { Exam, ExamCountdown, UserExamHistory } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
-import { createClient } from '@/lib/supabase/client';
+import {
+  mockCurriculums,
+  mockSubjects,
+  mockExams,
+  mockUserEnrollments,
+  mockUserExamOverrides,
+  mockUserExamHistory,
+  mockExamCountdowns,
+  enrollInSubject,
+  unenrollFromSubject,
+  updateEnrollmentExamTarget,
+  createExamCountdown,
+  deleteExamCountdown,
+  upsertExamOverride,
+  persistExamHistory,
+} from '@/lib/mock/database';
 
 // ── Local Types ───────────────────────────────────────────────────────────────
 
@@ -55,92 +71,76 @@ export interface EnrollmentWithDetails extends EnrollmentEntry {
 
 export function useCourseManager() {
   const { user } = useAuth();
-  const supabase = createClient();
   const userId = user?.id ?? null;
 
-  // ── State ─────────────────────────────────────────────────────────────────
-  const [enrollments, setEnrollments] = useState<EnrollmentEntry[]>([]);
-  const [examHistory, setExamHistory] = useState<UserExamHistory[]>([]);
-  const [allCurriculums, setAllCurriculums] = useState<CurriculumSummary[]>([]);
-  const [allSubjects, setAllSubjects] = useState<any[]>([]);
-  const [allExams, setAllExams] = useState<any[]>([]);
-  const [examOverrides, setExamOverrides] = useState<Record<string, any>>({});
-  const [countdowns, setCountdowns] = useState<ExamCountdown[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  // Load all data on mount / userId change
-  useEffect(() => {
-    if (!userId) {
-      setEnrollments([]);
-      setExamHistory([]);
-      setCountdowns([]);
-      setIsLoaded(true);
-      return;
+  // Data is loaded synchronously from the mock facade — always ready.
+  const isLoaded = true;
+
+  // ── Curriculum data ────────────────────────────────────────────────────────
+
+  const allCurriculums = useMemo<CurriculumSummary[]>(() => {
+    return mockCurriculums.map(c => ({
+      id: c.id,
+      title: c.title,
+      description: c.description,
+      qualification: c.qualification,
+      exam_board: c.exam_board,
+      syllabus_code: (c as any).syllabus_code ?? null,
+      structure_type: (c as any).structure_type ?? null,
+      grading_system: (c as any).grading_system ?? null,
+      hierarchy_model: ((c as any).hierarchy_model ?? null) as { level1: string; level2: string; level3: string } | null,
+      library_status: ((c as any).library_status ?? 'approved') as import('@/types').LibraryStatus,
+      share_token: (c as any).share_token ?? null,
+      subject_count: (c as any).subject_count ?? undefined,
+    }));
+  }, []);
+
+  // ── Enrollments ────────────────────────────────────────────────────────────
+
+  const enrollments = useMemo<EnrollmentEntry[]>(() => {
+    if (!userId) return [];
+    return mockUserEnrollments
+      .filter(e => e.user_id === userId)
+      .map(e => ({
+        ...e,
+        exam_id: e.exam_id ?? null,
+      })) as EnrollmentEntry[];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, refreshKey]);
+
+  // ── Exam overrides ─────────────────────────────────────────────────────────
+
+  const examOverrides = useMemo<Record<string, any>>(() => {
+    if (!userId) return {};
+    const ovrMap: Record<string, any> = {};
+    for (const o of mockUserExamOverrides) {
+      if (o.user_id === userId) ovrMap[o.exam_id] = o;
     }
-    (async () => {
-      const [
-        cRes, sRes, eRes, enrRes, histRes, ovrRes, cdRes,
-      ] = await Promise.all([
-        supabase.from('curriculums').select('*').order('title'),
-        supabase.from('subjects').select('*').order('order_no'),
-        supabase.from('exams').select('*'),
-        supabase.from('user_enrollments').select('*').eq('user_id', userId),
-        supabase.from('user_exam_history').select('*').eq('user_id', userId),
-        supabase.from('user_exam_overrides').select('*').eq('user_id', userId),
-        supabase.from('exam_countdowns').select('*').eq('user_id', userId),
-      ]);
+    return ovrMap;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, refreshKey]);
 
-      setAllCurriculums((cRes.data ?? []).map(c => ({
-        id: c.id,
-        title: c.title,
-        description: c.description,
-        qualification: c.qualification,
-        exam_board: c.exam_board,
-        syllabus_code: c.syllabus_code ?? null,
-        structure_type: c.structure_type ?? null,
-        grading_system: c.grading_system ?? null,
-        hierarchy_model: (c.hierarchy_model ?? null) as { level1: string; level2: string; level3: string } | null,
-        library_status: (c.library_status ?? 'approved') as import('@/types').LibraryStatus,
-        share_token: c.share_token ?? null,
-        subject_count: c.subject_count ?? undefined,
-      })));
+  // ── Exam history ───────────────────────────────────────────────────────────
 
-      setAllSubjects(sRes.data ?? []);
-      setAllExams(eRes.data ?? []);
-      setEnrollments((enrRes.data ?? []) as EnrollmentEntry[]);
-      setExamHistory((histRes.data ?? []) as UserExamHistory[]);
+  const examHistory = useMemo<UserExamHistory[]>(() => {
+    if (!userId) return [];
+    return mockUserExamHistory
+      .filter(e => e.user_id === userId) as UserExamHistory[];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, refreshKey]);
 
-      const ovrMap: Record<string, any> = {};
-      for (const o of (ovrRes.data ?? [])) {
-        ovrMap[o.exam_id] = o;
-      }
-      setExamOverrides(ovrMap);
+  // ── Countdowns ─────────────────────────────────────────────────────────────
 
-      setCountdowns((cdRes.data ?? []) as ExamCountdown[]);
-      setIsLoaded(true);
-    })();
-  }, [userId, supabase]);
-
-  // Refetch helper
-  const refetchEnrollments = useCallback(async () => {
-    if (!userId) return;
-    const { data } = await supabase.from('user_enrollments').select('*').eq('user_id', userId);
-    setEnrollments((data ?? []) as EnrollmentEntry[]);
-  }, [userId, supabase]);
-
-  const refetchHistory = useCallback(async () => {
-    if (!userId) return;
-    const { data } = await supabase.from('user_exam_history').select('*').eq('user_id', userId);
-    setExamHistory((data ?? []) as UserExamHistory[]);
-  }, [userId, supabase]);
-
-  const refetchCountdowns = useCallback(async () => {
-    if (!userId) return;
-    const { data } = await supabase.from('exam_countdowns').select('*').eq('user_id', userId);
-    setCountdowns((data ?? []) as ExamCountdown[]);
-  }, [userId, supabase]);
+  const countdowns = useMemo<ExamCountdown[]>(() => {
+    if (!userId) return [];
+    return mockExamCountdowns.filter(c => c.user_id === userId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, refreshKey]);
 
   // ── Exam resolve helper (applies user overrides) ───────────────────────────
+
   const resolveExam = useCallback((examId: string, exam: any): any => {
     const ovr = examOverrides[examId];
     if (!ovr) return exam;
@@ -153,9 +153,10 @@ export function useCourseManager() {
   }, [examOverrides]);
 
   // ── Subjects for a curriculum, enriched with exams ─────────────────────────
+
   const getSubjectsForCurriculum = useCallback(
     (curriculumId: string): SubjectSummary[] => {
-      return allSubjects
+      return mockSubjects
         .filter((s: any) => s.curriculum_id === curriculumId)
         .map((s: any) => ({
           id: s.id,
@@ -163,41 +164,39 @@ export function useCourseManager() {
           title: s.title,
           description: s.description ?? null,
           order_no: s.order_no,
-          exams: allExams
-            .filter((e: any) => {
-              // Match by exam_board or curriculum-specific logic
-              return true; // All exams for now — filter by subject/topic match
-            })
-            .map((exam: any) => (userId ? resolveExam(exam.id, exam) : exam)),
+          exams: mockExams
+            .map((exam) => (userId ? resolveExam(exam.id, exam) : exam)),
         }));
     },
-    [allSubjects, allExams, userId, resolveExam]
+    [userId, resolveExam]
   );
 
   const getExamsForCurriculum = useCallback(
-    (curriculumId: string) => {
-      return allExams.map((exam: any) =>
+    (_curriculumId: string) => {
+      return mockExams.map((exam) =>
         userId ? resolveExam(exam.id, exam) : exam
       );
     },
-    [allExams, userId, resolveExam]
+    [userId, resolveExam]
   );
 
   // ── Enrolled curriculum IDs ───────────────────────────────────────────────
+
   const enrolledCurriculumIds = useMemo<string[]>(() => {
     if (!userId) return [];
     return [...new Set(enrollments.map(e => e.curriculum_id))];
   }, [userId, enrollments]);
 
   // ── Enrollments with details ──────────────────────────────────────────────
+
   const enrollmentsWithDetails = useMemo<EnrollmentWithDetails[]>(() => {
     return enrollments.map(enr => {
-      const curriculum = allCurriculums.find((c: any) => c.id === enr.curriculum_id);
-      const subject = allSubjects.find((s: any) => s.id === enr.subject_id);
+      const curriculum = mockCurriculums.find((c: any) => c.id === enr.curriculum_id);
+      const subject = mockSubjects.find((s: any) => s.id === enr.subject_id);
 
       let exam: any = null;
       if (enr.exam_id) {
-        const rawExam = allExams.find((e: any) => e.id === enr.exam_id);
+        const rawExam = mockExams.find((e: any) => e.id === enr.exam_id);
         if (rawExam) exam = userId ? resolveExam(enr.exam_id, rawExam) : rawExam;
       }
 
@@ -207,142 +206,148 @@ export function useCourseManager() {
           ? { ...curriculum, description: curriculum.description ?? null }
           : { id: enr.curriculum_id, title: 'Unknown', description: null, qualification: null, exam_board: null },
         subject: subject
-          ? { id: subject.id, curriculum_id: subject.curriculum_id, title: subject.title, description: subject.description ?? null, order_no: subject.order_no, exams: [] }
+          ? { id: subject.id, curriculum_id: (subject as any).curriculum_id, title: subject.title, description: subject.description ?? null, order_no: (subject as any).order_no ?? null, exams: [] }
           : { id: enr.subject_id, curriculum_id: enr.curriculum_id, title: 'Unknown', description: null, order_no: null, exams: [] },
         exam,
       };
     });
-  }, [enrollments, allCurriculums, allSubjects, allExams, userId, resolveExam]);
+  }, [enrollments, userId, resolveExam]);
 
   // ── Mutations ──────────────────────────────────────────────────────────────
+
   const createCountdownIfNeeded = useCallback(
-    async (userId: string, examId: string) => {
-      const exam = allExams.find((e: any) => e.id === examId);
+    (targetUserId: string, examId: string) => {
+      const exam = mockExams.find((e: any) => e.id === examId);
       if (!exam) return;
-      await supabase.from('exam_countdowns').insert({
-        user_id: userId,
+      createExamCountdown({
+        user_id: targetUserId,
         exam_id: examId,
-        custom_title: exam.subject,
-        target_date: exam.date,
+        custom_title: (exam as any).subject ?? null,
+        target_date: (exam as any).date ?? new Date().toISOString(),
         priority_indicator: 'medium',
-        qualification_group: exam.series ?? 'Custom',
+        qualification_group: (exam as any).series ?? 'Custom',
       });
-      await refetchCountdowns();
     },
-    [allExams, supabase, refetchCountdowns]
+    []
   );
 
   const enroll = useCallback(
     async (curriculumId: string, subjectId: string, examId?: string | null) => {
       if (!userId) return { success: false, error: 'Not authenticated.' };
 
-      const { error } = await supabase.from('user_enrollments').insert({
+      const result = enrollInSubject({
         user_id: userId,
         curriculum_id: curriculumId,
         subject_id: subjectId,
         exam_id: examId ?? null,
-        enrolled_at: new Date().toISOString(),
       });
 
-      if (error) return { success: false, error: error.message };
+      if (!result.success) return result;
 
-      if (examId) await createCountdownIfNeeded(userId, examId);
-      await refetchEnrollments();
+      if (examId) createCountdownIfNeeded(userId, examId);
+      setRefreshKey(k => k + 1);
       return { success: true };
     },
-    [userId, supabase, createCountdownIfNeeded, refetchEnrollments]
+    [userId, createCountdownIfNeeded]
   );
 
   const unenroll = useCallback(
     async (enrollmentId: string) => {
       if (!userId) return { success: false, error: 'Not authenticated.' };
 
-      const enrollment = enrollments.find(e => e.id === enrollmentId);
+      const enrollment = mockUserEnrollments.find(e => e.id === enrollmentId && e.user_id === userId);
 
       if (enrollment?.exam_id) {
-        const exam = allExams.find((e: any) => e.id === enrollment.exam_id);
-        const targetDate = exam?.date;
+        const exam = mockExams.find((e: any) => e.id === enrollment.exam_id);
+        const targetDate = exam ? (exam as any).date : null;
         if (targetDate && new Date(targetDate) > new Date()) {
           // Future exam — remove related countdown
-          const relatedCountdown = countdowns.find(c => c.exam_id === enrollment.exam_id);
-          if (relatedCountdown) {
-            await supabase.from('exam_countdowns').delete().eq('id', relatedCountdown.id);
-          }
+          const relatedCountdown = mockExamCountdowns.find(
+            c => c.exam_id === enrollment.exam_id && c.user_id === userId
+          );
+          if (relatedCountdown) deleteExamCountdown(relatedCountdown.id);
         } else if (targetDate && new Date(targetDate) <= new Date()) {
           // Past exam — record in history
-          await supabase.from('user_exam_history').insert({
+          mockUserExamHistory.push({
+            id: `eh-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
             user_id: userId,
             curriculum_id: enrollment.curriculum_id,
             subject_id: enrollment.subject_id,
             exam_id: enrollment.exam_id,
             exam_date: targetDate,
+            result: null,
+            is_mock: false,
+            notes: null,
+            recorded_at: new Date().toISOString(),
           });
+          persistExamHistory();
         }
       }
 
-      await supabase.from('user_enrollments').delete().eq('id', enrollmentId);
-      await Promise.all([refetchEnrollments(), refetchHistory(), refetchCountdowns()]);
+      unenrollFromSubject(enrollmentId);
+      setRefreshKey(k => k + 1);
       return { success: true };
     },
-    [userId, enrollments, allExams, countdowns, supabase, refetchEnrollments, refetchHistory, refetchCountdowns]
+    [userId]
   );
 
   const updateExamTarget = useCallback(
     async (enrollmentId: string, examId: string | null) => {
       if (!userId) return { success: false, error: 'Not authenticated.' };
 
-      const enrollment = enrollments.find(e => e.id === enrollmentId);
+      const enrollment = mockUserEnrollments.find(e => e.id === enrollmentId && e.user_id === userId);
 
       if (enrollment?.exam_id) {
-        const relatedCountdown = countdowns.find(c => c.exam_id === enrollment.exam_id);
-        if (relatedCountdown) {
-          await supabase.from('exam_countdowns').delete().eq('id', relatedCountdown.id);
-        }
+        const relatedCountdown = mockExamCountdowns.find(
+          c => c.exam_id === enrollment.exam_id && c.user_id === userId
+        );
+        if (relatedCountdown) deleteExamCountdown(relatedCountdown.id);
       }
 
-      const { error } = await supabase.from('user_enrollments')
-        .update({ exam_id: examId })
-        .eq('id', enrollmentId)
-        .eq('user_id', userId);
+      const result = updateEnrollmentExamTarget(enrollmentId, examId);
+      if (!result.success) return result;
 
-      if (error) return { success: false, error: error.message };
-
-      if (examId) await createCountdownIfNeeded(userId, examId);
-      await Promise.all([refetchEnrollments(), refetchCountdowns()]);
+      if (examId) createCountdownIfNeeded(userId, examId);
+      setRefreshKey(k => k + 1);
       return { success: true };
     },
-    [userId, enrollments, countdowns, supabase, refetchEnrollments, refetchCountdowns, createCountdownIfNeeded]
+    [userId, createCountdownIfNeeded]
   );
 
   const overrideExam = useCallback(
     async (examId: string, data: { custom_title?: string | null; custom_exam_series?: string | null; custom_exam_date?: string | null }) => {
       if (!userId) return { success: false, error: 'Not authenticated.' };
-      const { error } = await supabase.from('user_exam_overrides').upsert({
+      upsertExamOverride({
         user_id: userId,
         exam_id: examId,
         ...data,
       });
-      // Update local overrides cache
-      setExamOverrides(prev => ({
-        ...prev,
-        [examId]: { ...prev[examId], ...data },
-      }));
-      return error ? { success: false, error: error.message } : { success: true };
+      setRefreshKey(k => k + 1);
+      return { success: true };
     },
-    [userId, supabase]
+    [userId]
   );
 
   const addToHistory = useCallback(
     async (data: { curriculum_id: string; subject_id: string; exam_id?: string | null; exam_date: string; result?: string | null; is_mock?: boolean; notes?: string | null }) => {
       if (!userId) return { success: false, error: 'Not authenticated.' };
-      const { error } = await supabase.from('user_exam_history').insert({
+      mockUserExamHistory.push({
+        id: `eh-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
         user_id: userId,
-        ...data,
+        curriculum_id: data.curriculum_id,
+        subject_id: data.subject_id,
+        exam_id: data.exam_id ?? null,
+        exam_date: data.exam_date,
+        result: data.result ?? null,
+        is_mock: data.is_mock ?? false,
+        notes: data.notes ?? null,
+        recorded_at: new Date().toISOString(),
       });
-      if (!error) await refetchHistory();
-      return error ? { success: false, error: error.message } : { success: true };
+      persistExamHistory();
+      setRefreshKey(k => k + 1);
+      return { success: true };
     },
-    [userId, supabase, refetchHistory]
+    [userId]
   );
 
   return {

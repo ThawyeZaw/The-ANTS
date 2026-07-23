@@ -25,6 +25,7 @@ export default function NoteReaderModal({ noteId, onClose, allNotes }: NoteReade
   const { user } = useAuth();
   const { toggleSave, checkSaved } = useSavedNotes(user?.id);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isSaved, setIsSaved] = useState(false);
 
   const note = allNotes.find((n) => n.id === noteId);
 
@@ -49,14 +50,12 @@ export default function NoteReaderModal({ noteId, onClose, allNotes }: NoteReade
     };
   }, [noteId]);
 
-  if (!note) return null;
-
-  const [isSaved, setIsSaved] = useState(false);
-
   useEffect(() => {
-    if (!user) { setIsSaved(false); return; }
+    if (!user || !note) { setIsSaved(false); return; }
     checkSaved(note.id).then(setIsSaved);
-  }, [user, note.id, checkSaved]);
+  }, [user, note, checkSaved]);
+
+  if (!note) return null;
 
   const contributor = getProfile(note.contributor_id);
   const curriculum = note.curriculum_id ? mockCurriculums.find((c) => c.id === note.curriculum_id) : null;

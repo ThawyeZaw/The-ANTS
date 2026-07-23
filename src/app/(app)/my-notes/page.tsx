@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import MyNotesLibrary from '@/components/notes/MyNotesLibrary';
 
 export default function MyNotesPage() {
-  redirect('/workspace?tab=notes');
+  return <MyNotesLibrary />;
 }

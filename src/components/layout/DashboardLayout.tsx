@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import {
   Flame,
@@ -19,8 +19,6 @@ import {
   CheckCircle,
   XCircle,
   ShieldCheck,
-  ChevronLeft,
-  ChevronRight,
 } from 'lucide-react';
 
 interface StatItem {
@@ -124,24 +122,35 @@ export default function DashboardLayout({
   const slides = carouselSlides ?? buildDefaultSlides(firstName, welcomeSubtitle);
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  const goToPrev = useCallback(() => {
-    setCurrentSlide((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
+  // ── Auto-sliding ────────────────────────────────────────────────────────
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const resetTimer = useCallback(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    if (slides.length <= 1) return;
+    intervalRef.current = setInterval(() => {
+      setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
+    }, 5000);
   }, [slides.length]);
 
-  const goToNext = useCallback(() => {
-    setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
-  }, [slides.length]);
+  useEffect(() => {
+    resetTimer();
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [resetTimer]);
 
-  const goToSlide = useCallback((index: number) => {
+  const handleDotClick = useCallback((index: number) => {
     setCurrentSlide(index);
-  }, []);
+    resetTimer();
+  }, [resetTimer]);
 
   // ── Three-Column Layout ────────────────────────────────────────────────────
   if (layoutVariant === 'three-column') {
     return (
-      <div className="space-y-6 animate-fade-in" data-scroll-behavior="smooth">
-        {/* ── Carousel Hero Banner ──────────────────────────────────────────── */}
-        <div className="dash-carousel dash-welcome-shadow">
+      <div className="flex flex-col h-full animate-fade-in" data-scroll-behavior="smooth">
+        {/* ── Compact Hero Banner ──────────────────────────────────────────── */}
+        <div className="dash-carousel">
           {/* Track */}
           <div
             className="dash-carousel-track"
@@ -149,37 +158,15 @@ export default function DashboardLayout({
           >
             {slides.map((slide, idx) => (
               <div key={idx} className="dash-carousel-slide">
-                <div className="dash-welcome-pattern relative overflow-hidden rounded-[2rem] bg-linear-to-br from-primary to-accent p-8 md:p-12 text-white min-h-[240px]">
-                  {/* Ambient blurred orbs */}
-                  <div className="absolute top-0 right-0 h-64 w-64 translate-x-1/2 -translate-y-1/2 rounded-full bg-white/10 blur-3xl" />
-                  <div className="absolute bottom-0 left-0 h-48 w-48 -translate-x-1/4 translate-y-1/4 rounded-full bg-white/8 blur-3xl" />
-                  <div className="absolute top-1/2 left-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/5 blur-3xl" />
-
-                  {/* Glowing nodes */}
-                  <div className="dash-welcome-nodes" aria-hidden="true">
-                    <div className="dash-welcome-node" style={{ top: '15%', left: '12%', animationDelay: '0s' }} />
-                    <div className="dash-welcome-node" style={{ top: '15%', left: '48%', animationDelay: '0.6s' }} />
-                    <div className="dash-welcome-node" style={{ top: '15%', left: '84%', animationDelay: '1.2s' }} />
-                    <div className="dash-welcome-node" style={{ top: '50%', left: '12%', animationDelay: '0.8s' }} />
-                    <div className="dash-welcome-node" style={{ top: '50%', left: '84%', animationDelay: '1.6s' }} />
-                    <div className="dash-welcome-node" style={{ top: '80%', left: '12%', animationDelay: '0.3s' }} />
-                    <div className="dash-welcome-node" style={{ top: '80%', left: '48%', animationDelay: '1.0s' }} />
-                    <div className="dash-welcome-node" style={{ top: '80%', left: '84%', animationDelay: '0.5s' }} />
-                  </div>
-
-                  {/* Glass overlay — frosted panel atop the gradient */}
-                  <div className="dash-welcome-glass absolute inset-0 z-[4] rounded-[2rem] pointer-events-none" aria-hidden="true" />
-
-                  {/* Content — left side text, right side open for illustration */}
-                  <div className="relative z-10 flex items-center gap-8">
-                    <div className="flex-1">
+                <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-primary to-accent p-6 md:p-8 text-white">
+                  <div className="flex items-center gap-6">
+                    <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-white/70">{slide.greeting}</p>
-                      <h1 className="mt-1 text-3xl md:text-4xl font-bold text-on-dark">{slide.nameLine}</h1>
-                      <p className="mt-2 max-w-md text-white/70">{slide.subtitle}</p>
+                      <h1 className="mt-0.5 text-2xl md:text-3xl font-bold">{slide.nameLine}</h1>
+                      <p className="mt-1 text-sm text-white/70 max-w-md">{slide.subtitle}</p>
                     </div>
-                    {/* Right side — open for avatar/illustration */}
-                    <div className="hidden lg:flex items-center justify-center shrink-0">
-                      <div className="w-36 h-36 md:w-44 md:h-44 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-6xl">
+                    <div className="hidden sm:flex items-center justify-center shrink-0">
+                      <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white/15 border border-white/20 flex items-center justify-center text-4xl">
                         🐜
                       </div>
                     </div>
@@ -189,63 +176,45 @@ export default function DashboardLayout({
             ))}
           </div>
 
-          {/* Left Arrow */}
+          {/* Pagination Dots */}
           {slides.length > 1 && (
-            <>
-              <button
-                onClick={goToPrev}
-                className="dash-carousel-arrow dash-carousel-arrow--left"
-                aria-label="Previous slide"
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </button>
-              {/* Right Arrow */}
-              <button
-                onClick={goToNext}
-                className="dash-carousel-arrow dash-carousel-arrow--right"
-                aria-label="Next slide"
-              >
-                <ChevronRight className="h-5 w-5" />
-              </button>
-              {/* Pagination Dots */}
-              <div className="dash-carousel-dots">
-                {slides.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => goToSlide(idx)}
-                    className={cn(
-                      'dash-carousel-dot',
-                      idx === currentSlide && 'dash-carousel-dot--active'
-                    )}
-                    aria-label={`Go to slide ${idx + 1}`}
-                  />
-                ))}
-              </div>
-            </>
+            <div className="dash-carousel-dots">
+              {slides.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleDotClick(idx)}
+                  className={cn(
+                    'dash-carousel-dot',
+                    idx === currentSlide && 'dash-carousel-dot--active'
+                  )}
+                  aria-label={`Go to slide ${idx + 1}`}
+                />
+              ))}
+            </div>
           )}
         </div>
 
         {/* Alert Banner if present */}
         {alertBanner && (
-          <div className="animate-slide-down">
+          <div className="animate-slide-down shrink-0">
             {alertBanner}
           </div>
         )}
 
-        {/* ── Three-Column Content Grid ─────────────────────────────────────── */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* ── Three-Column Content Grid — fills remaining viewport ────────── */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 min-h-0 mt-6">
           {/* Left Column */}
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-y-auto min-h-0">
             {leftColumn}
           </div>
 
           {/* Middle Column */}
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-y-auto min-h-0">
             {middleColumn}
           </div>
 
           {/* Right Column */}
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-y-auto min-h-0">
             {rightColumn}
           </div>
         </div>
@@ -256,31 +225,21 @@ export default function DashboardLayout({
   // ── Default Layout (original) ───────────────────────────────────────────────
   return (
     <div className="space-y-6 animate-fade-in" data-scroll-behavior="smooth">
-      {/* Welcome Card — redesigned with unique diamond-grid pattern, glowing nodes & enhanced depth */}
-      <div className="dash-welcome-pattern dash-welcome-shadow relative overflow-hidden rounded-2xl bg-linear-to-br from-primary to-accent p-8 text-white">
-        {/* Ambient blurred orbs for depth */}
-        <div className="absolute top-0 right-0 h-64 w-64 translate-x-1/2 -translate-y-1/2 rounded-full bg-white/10 blur-3xl" />
-        <div className="absolute bottom-0 left-0 h-48 w-48 -translate-x-1/4 translate-y-1/4 rounded-full bg-white/8 blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/5 blur-3xl" />
-
-        {/* Animated glowing node highlights — focal point grid intersections */}
-        <div className="dash-welcome-nodes" aria-hidden="true">
-          <div className="dash-welcome-node" style={{ top: '15%', left: '12%', animationDelay: '0s' }} />
-          <div className="dash-welcome-node" style={{ top: '15%', left: '48%', animationDelay: '0.6s' }} />
-          <div className="dash-welcome-node" style={{ top: '15%', left: '84%', animationDelay: '1.2s' }} />
-          <div className="dash-welcome-node" style={{ top: '50%', left: '12%', animationDelay: '0.8s' }} />
-          <div className="dash-welcome-node" style={{ top: '50%', left: '84%', animationDelay: '1.6s' }} />
-          <div className="dash-welcome-node" style={{ top: '80%', left: '12%', animationDelay: '0.3s' }} />
-          <div className="dash-welcome-node" style={{ top: '80%', left: '48%', animationDelay: '1.0s' }} />
-          <div className="dash-welcome-node" style={{ top: '80%', left: '84%', animationDelay: '0.5s' }} />
-        </div>
-
-        <div className="relative z-10">
-          <p className="text-sm font-medium text-white/70">Welcome back</p>
-          <h1 className="mt-1 text-3xl font-bold">{firstName} 👋</h1>
-          <p className="mt-2 max-w-md text-white/70">
-            {welcomeSubtitle}
-          </p>
+      {/* Welcome Card — clean gradient, no patterns */}
+      <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-primary to-accent p-6 md:p-8 text-white">
+        <div className="flex items-center gap-6">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-white/70">Welcome back</p>
+            <h1 className="mt-0.5 text-2xl md:text-3xl font-bold">{firstName} 👋</h1>
+            <p className="mt-1 text-sm text-white/70 max-w-md">
+              {welcomeSubtitle}
+            </p>
+          </div>
+          <div className="hidden sm:flex items-center justify-center shrink-0">
+            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white/15 border border-white/20 flex items-center justify-center text-4xl">
+              🐜
+            </div>
+          </div>
         </div>
       </div>
 
