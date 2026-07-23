@@ -2,37 +2,36 @@
 
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTs — CourseManagerWizard
-// Multi-step wizard: Select curriculum → Select subjects → Set exam targets → Confirm
+// 3-step wizard: Select curriculum → Select subjects → Confirm
+// Exam targets have been removed. Tracking is automatic from subject metadata.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useCallback, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
-  BookOpen, ChevronRight, ChevronLeft, Check, Clock,
-  GraduationCap, Sparkles, X, Target, ShieldAlert,
+  BookOpen, ChevronRight, ChevronLeft, Check,
+  GraduationCap, Sparkles, CheckSquare, Square,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useCourseManager } from '@/hooks/useCourseManager';
-import type { CurriculumSummary, SubjectSummary, EnrollmentEntry } from '@/hooks/useCourseManager';
-import type { Exam } from '@/types';
+import { useLessonContext } from '@/context/LessonContext';
+import type { CurriculumSummary, SubjectSummary } from '@/hooks/useCourseManager';
 
-// ── Step Types ───────────────────────────────────────────────────────────────
+// ── Types ────────────────────────────────────────────────────────────────────
 
-type Step = 1 | 2 | 3 | 4;
+type Step = 1 | 2 | 3;
 
 interface SelectedSubject {
   curriculum_id: string;
   subject_id: string;
   subject: SubjectSummary;
-  exam_id: string | null;
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
 
-export default function CourseManagerWizard() {
+export default function CourseManagerWizard({ onComplete }: { onComplete?: () => void }) {
   const { user } = useAuth();
-  const router = useRouter();
 
   const {
     allCurriculums,
@@ -42,13 +41,15 @@ export default function CourseManagerWizard() {
     enrolledCurriculumIds,
   } = useCourseManager();
 
+  const { setSelectedCurriculumIds: syncSelectedCurricula, setSelectedSubjectIds: syncSelectedSubjects, refetch: refetchContext } = useLessonContext();
+
   const [step, setStep] = useState<Step>(1);
   const [selectedCurriculumIds, setSelectedCurriculumIds] = useState<Set<string>>(new Set(enrolledCurriculumIds));
   const [selectedSubjects, setSelectedSubjects] = useState<Map<string, SelectedSubject>>(new Map());
   const [expandedCurriculum, setExpandedCurriculum] = useState<string | null>(null);
   const [enrolling, setEnrolling] = useState(false);
 
-  // For users with existing enrollments, pre-populate state
+  // Pre-populate for users with existing enrollments
   useMemo(() => {
     if (enrollments.length > 0 && selectedCurriculumIds.size === 0) {
       setSelectedCurriculumIds(new Set(enrolledCurriculumIds));
@@ -70,10 +71,6 @@ export default function CourseManagerWizard() {
     ).length;
   }, [selectedSubjects, selectedCurriculumIds]);
 
-  const subjectsWithExamTargets = useMemo(() => {
-    return [...selectedSubjects.values()].filter(s => s.exam_id !== null);
-  }, [selectedSubjects]);
-
   // ── Handlers ──────────────────────────────────────────────────────────────
 
   const toggleCurriculum = useCallback((id: string) => {
@@ -81,7 +78,6 @@ export default function CourseManagerWizard() {
       const next = new Set(prev);
       if (next.has(id)) {
         next.delete(id);
-        // Remove subjects for this curriculum
         setSelectedSubjects(prevSubjects => {
           const nextSubjects = new Map(prevSubjects);
           for (const [key, val] of nextSubjects) {
@@ -107,20 +103,7 @@ export default function CourseManagerWizard() {
           curriculum_id: curriculumId,
           subject_id: subject.id,
           subject,
-          exam_id: null,
         });
-      }
-      return next;
-    });
-  }, []);
-
-  const setExamTarget = useCallback((curriculumId: string, subjectId: string, examId: string | null) => {
-    const key = subjectKey(curriculumId, subjectId);
-    setSelectedSubjects(prev => {
-      const next = new Map(prev);
-      const existing = next.get(key);
-      if (existing) {
-        next.set(key, { ...existing, exam_id: examId });
       }
       return next;
     });
@@ -128,7 +111,6 @@ export default function CourseManagerWizard() {
 
   const canProceedStep1 = selectedCurriculumIds.size > 0;
   const canProceedStep2 = selectedSubjectCount > 0;
-  const canProceedStep3 = true; // Exam targets are optional
 
   const goToStep = (nextStep: Step) => setStep(nextStep);
 
@@ -142,7 +124,6 @@ export default function CourseManagerWizard() {
       s => selectedCurriculumIds.has(s.curriculum_id)
     );
 
-    // Check which are already enrolled
     const alreadyEnrolledKeys = new Set(
       enrollments.map(e => subjectKey(e.curriculum_id, e.subject_id))
     );
@@ -152,14 +133,23 @@ export default function CourseManagerWizard() {
     for (const subj of subjectsToEnroll) {
       const key = subjectKey(subj.curriculum_id, subj.subject_id);
       if (!alreadyEnrolledKeys.has(key)) {
-        const result = await enroll(subj.curriculum_id, subj.subject_id, subj.exam_id);
+        const result = await enroll(subj.curriculum_id, subj.subject_id);
         if (result.success) successCount++;
       }
     }
 
+    // Sync selections to LessonContext (localStorage-persisted)
+    syncSelectedCurricula([...selectedCurriculumIds]);
+    syncSelectedSubjects(
+      subjectsToEnroll.map(s => s.subject_id)
+    );
+
+    // Refresh LessonContext so EnrolledSubjectsDashboard + Lesson Tracker pick up new enrollments
+    await refetchContext();
+
     setEnrolling(false);
-    router.push('/lessons');
-  }, [user, selectedSubjects, selectedCurriculumIds, enrollments, enroll, router]);
+    onComplete?.();
+  }, [user, selectedSubjects, selectedCurriculumIds, enrollments, enroll, syncSelectedCurricula, syncSelectedSubjects, onComplete, refetchContext]);
 
   // ── Step content renderers ────────────────────────────────────────────────
 
@@ -229,16 +219,15 @@ export default function CourseManagerWizard() {
             Browse verified curriculum templates, filter by exam board, and auto-populate your Lesson Tracker.
           </p>
         </div>
-        <button
-          onClick={() => router.push('/library/courses')}
+        <Link
+          href="/library/courses"
           className="shrink-0 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold transition-all cursor-pointer shadow-lg shadow-emerald-500/20"
         >
           Browse Library
-        </button>
+        </Link>
       </div>
     </div>
   );
-
 
   const renderStep2 = () => (
     <div className="space-y-6">
@@ -275,10 +264,42 @@ export default function CourseManagerWizard() {
                       <p className="text-xs text-primary mt-1">{selectedCount} subject{selectedCount !== 1 ? 's' : ''} selected</p>
                     )}
                   </div>
-                  <ChevronRight className={cn(
-                    'h-5 w-5 text-foreground-muted transition-transform',
-                    isExpanded && 'rotate-90'
-                  )} />
+                  <div className="flex items-center gap-3">
+                    {/* Select All / Deselect All */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const allSelected = subjects.every(s => selectedSubjects.has(subjectKey(curriculum.id, s.id)));
+                        for (const subject of subjects) {
+                          const key = subjectKey(curriculum.id, subject.id);
+                          if (allSelected) {
+                            // Deselect all
+                            setSelectedSubjects(prev => {
+                              const next = new Map(prev);
+                              next.delete(key);
+                              return next;
+                            });
+                          } else if (!selectedSubjects.has(key)) {
+                            // Select all
+                            setSelectedSubjects(prev => {
+                              const next = new Map(prev);
+                              next.set(key, { curriculum_id: curriculum.id, subject_id: subject.id, subject });
+                              return next;
+                            });
+                          }
+                        }
+                      }}
+                      className="text-xs font-medium text-primary hover:text-primary-hover transition-colors px-2 py-1 rounded-lg hover:bg-primary/10"
+                    >
+                      {subjects.every(s => selectedSubjects.has(subjectKey(curriculum.id, s.id)))
+                        ? 'Deselect All'
+                        : 'Select All'}
+                    </button>
+                    <ChevronRight className={cn(
+                      'h-5 w-5 text-foreground-muted transition-transform',
+                      isExpanded && 'rotate-90'
+                    )} />
+                  </div>
                 </button>
 
                 {isExpanded && (
@@ -335,95 +356,12 @@ export default function CourseManagerWizard() {
     return (
       <div className="space-y-6">
         <div className="text-center mb-8">
-          <div className="inline-flex rounded-2xl bg-primary/10 p-4 text-primary mb-4">
-            <Target className="h-8 w-8" />
-          </div>
-          <h2 className="text-2xl font-bold text-foreground">Set Exam Targets</h2>
-          <p className="mt-2 text-sm text-foreground-muted max-w-md mx-auto">
-            Assign an exam series to each subject to enable countdown timers.
-            You can skip this and add exam targets later.
-          </p>
-        </div>
-
-        {subjectsList.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-foreground-muted">No subjects selected. Go back and select at least one.</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {subjectsList.map(item => {
-              const curriculum = selectedCurriculums.find(c => c.id === item.curriculum_id);
-              const exams = item.subject.exams;
-
-              return (
-                <div key={subjectKey(item.curriculum_id, item.subject_id)}
-                  className="rounded-2xl border border-border bg-background-card p-5">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="rounded-xl bg-primary/10 p-2 text-primary">
-                      <BookOpen className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">{item.subject.title}</p>
-                      <p className="text-xs text-foreground-muted">
-                        {curriculum?.qualification} — {curriculum?.exam_board}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Exam series selection */}
-                  <select
-                    value={item.exam_id ?? ''}
-                    onChange={(e) => setExamTarget(item.curriculum_id, item.subject_id, e.target.value || null)}
-                    className="w-full rounded-lg border border-border bg-background-secondary p-3 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                  >
-                    <option value="">No exam target (skip for now)</option>
-                    {exams.map(exam => (
-                      <option key={exam.id} value={exam.id}>
-                        {exam.exam_series} — {new Date(exam.exam_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                      </option>
-                    ))}
-                  </select>
-
-                  {exams.length === 0 && (
-                    <p className="text-xs text-foreground-muted mt-2">
-                      No exams available for this subject. Exam data may not have been added yet.
-                    </p>
-                  )}
-
-                  {item.exam_id && (() => {
-                    const exam = exams.find(e => e.id === item.exam_id);
-                    if (!exam) return null;
-                    const daysLeft = Math.ceil((new Date(exam.exam_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-                    return (
-                      <div className="mt-3 flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-2">
-                        <Clock className="h-4 w-4 text-primary" />
-                        <span className="text-sm text-primary font-medium">
-                          {daysLeft > 0 ? `${daysLeft} days until exam` : 'Exam has passed'}
-                        </span>
-                      </div>
-                    );
-                  })()}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderStep4 = () => {
-    const subjectsList = [...selectedSubjects.values()].filter(s => selectedCurriculumIds.has(s.curriculum_id));
-
-    return (
-      <div className="space-y-6">
-        <div className="text-center mb-8">
           <div className="inline-flex rounded-2xl bg-emerald-500/10 p-4 text-emerald-500 mb-4">
             <Check className="h-8 w-8" />
           </div>
           <h2 className="text-2xl font-bold text-foreground">Review &amp; Confirm</h2>
           <p className="mt-2 text-sm text-foreground-muted max-w-md mx-auto">
-            Review your selections before saving. Your course manager will sync with the lesson tracker.
+            Review your selections before saving. Your course manager will sync with the lesson tracker automatically.
           </p>
         </div>
 
@@ -442,18 +380,8 @@ export default function CourseManagerWizard() {
                     <p className="text-sm text-foreground-muted">No subjects selected.</p>
                   ) : (
                     curriculumSubjects.map(subj => (
-                      <div key={subj.subject_id} className="flex items-center justify-between rounded-lg bg-background-secondary px-3 py-2.5">
+                      <div key={subj.subject_id} className="flex items-center rounded-lg bg-background-secondary px-3 py-2.5">
                         <span className="text-sm text-foreground">{subj.subject.title}</span>
-                        {subj.exam_id ? (
-                          <span className="text-xs font-medium text-primary bg-primary/10 rounded-full px-2 py-0.5">
-                            {(() => {
-                              const exam = subj.subject.exams.find(e => e.id === subj.exam_id);
-                              return exam?.exam_series ?? 'Exam set';
-                            })()}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-foreground-muted">No exam target</span>
-                        )}
                       </div>
                     ))
                   )}
@@ -474,10 +402,6 @@ export default function CourseManagerWizard() {
             <p className="text-xs text-foreground-muted mt-1">Subjects</p>
           </div>
           <div className="rounded-xl border border-border bg-background-card p-4 text-center">
-            <p className="text-2xl font-bold text-amber-500">{subjectsWithExamTargets.length}</p>
-            <p className="text-xs text-foreground-muted mt-1">Exam Targets</p>
-          </div>
-          <div className="rounded-xl border border-border bg-background-card p-4 text-center">
             <p className="text-2xl font-bold text-emerald-500">{subjectsList.length}</p>
             <p className="text-xs text-foreground-muted mt-1">To Enrol</p>
           </div>
@@ -491,7 +415,6 @@ export default function CourseManagerWizard() {
   if (!user) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center px-4 text-center">
-        <ShieldAlert className="h-12 w-12 text-amber-500 mb-4" />
         <h2 className="text-xl font-bold text-foreground">Authentication Required</h2>
         <p className="mt-2 text-sm text-foreground-muted">Please log in to access the Course Manager.</p>
       </div>
@@ -503,8 +426,7 @@ export default function CourseManagerWizard() {
   const steps = [
     { num: 1, label: 'Curricula' },
     { num: 2, label: 'Subjects' },
-    { num: 3, label: 'Exam Targets' },
-    { num: 4, label: 'Confirm' },
+    { num: 3, label: 'Confirm' },
   ];
 
   return (
@@ -515,7 +437,7 @@ export default function CourseManagerWizard() {
           <div key={s.num} className="flex items-center gap-2">
             <button
               onClick={() => {
-                if (s.num < step || (s.num === 1)) goToStep(s.num as Step);
+                if (s.num < step || s.num === 1) goToStep(s.num as Step);
               }}
               className={cn(
                 'flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition-all',
@@ -549,7 +471,6 @@ export default function CourseManagerWizard() {
         {step === 1 && renderStep1()}
         {step === 2 && renderStep2()}
         {step === 3 && renderStep3()}
-        {step === 4 && renderStep4()}
       </div>
 
       {/* Navigation buttons */}
@@ -569,13 +490,12 @@ export default function CourseManagerWizard() {
         </button>
 
         <div className="flex items-center gap-3">
-          {step < 4 ? (
+          {step < 3 ? (
             <button
               onClick={() => goToStep((step + 1) as Step)}
               disabled={
                 (step === 1 && !canProceedStep1) ||
-                (step === 2 && !canProceedStep2) ||
-                (step === 3 && !canProceedStep3)
+                (step === 2 && !canProceedStep2)
               }
               className={cn(
                 'inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-all duration-200',

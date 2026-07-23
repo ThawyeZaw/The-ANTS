@@ -64,7 +64,7 @@ export function useRealtimePresence(
   useEffect(() => {
     if (!channelName || !currentUser) return;
 
-    const supabase = createClient();
+    const supabase = createClient()!;
     let cancelled = false;
 
     const channel = supabase.channel(channelName, {

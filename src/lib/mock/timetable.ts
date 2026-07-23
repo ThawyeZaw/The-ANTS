@@ -8,8 +8,6 @@ import {
   mockExamCountdowns,
   mockExams,
   mockAssignments,
-  mockClubEvents,
-  mockClubMilestones,
   mockClubMembers,
 } from '@/lib/mock/database';
 
@@ -459,72 +457,12 @@ export function getAssignmentVirtualEvents(userId: string): TimetableEvent[] {
 }
 
 /**
- * Build read-only virtual timetable events from club events (for a given user).
- * Only from clubs the user is an active member of.
+ * Get club IDs for clubs the user is a member of.
  */
-export function getClubEventVirtualEvents(userId: string): TimetableEvent[] {
-  const userClubIds = mockClubMembers
-    .filter(m => m.user_id === userId && m.membership_status === 'active')
+export function getUserClubIds(userId: string): string[] {
+  return mockClubMembers
+    .filter(m => m.user_id === userId)
     .map(m => m.club_id);
-
-  return mockClubEvents
-    .filter(ce => userClubIds.includes(ce.club_id))
-    .map(ce => ({
-      id: `virtual-club-evt-${ce.id}`,
-      user_id: userId,
-      title: `🐜 ${ce.title}`,
-      description: ce.description,
-      event_type: 'club_event' as TimetableEventType,
-      subject: null,
-      location: null,
-      start_time: ce.event_date,
-      end_time: ce.event_date,
-      all_day: false,
-      is_recurring: false,
-      recurrence_rule: null,
-      color_code: '#ec4899',
-      is_todo: false,
-      is_completed: false,
-      completed_at: null,
-      event_source: 'club_event' as TimetableEventSource,
-      source_id: ce.id,
-      metadata: { club_id: ce.club_id },
-      created_at: ce.created_at,
-    }));
-}
-
-/**
- * Build read-only virtual timetable events from club milestones with target dates.
- */
-export function getClubMilestoneVirtualEvents(userId: string): TimetableEvent[] {
-  const userClubIds = mockClubMembers
-    .filter(m => m.user_id === userId && m.membership_status === 'active')
-    .map(m => m.club_id);
-
-  return mockClubMilestones
-    .filter(ms => userClubIds.includes(ms.club_id) && ms.target_date)
-    .map(ms => ({
-      id: `virtual-milestone-${ms.id}`,
-      user_id: userId,
-      title: `🏆 ${ms.title}`,
-      description: ms.description,
-      event_type: 'deadline' as TimetableEventType,
-      subject: null,
-      location: null,
-      start_time: null,
-      end_time: ms.target_date ?? null,
-      all_day: false,
-      is_recurring: false,
-      recurrence_rule: null,
-      color_code: '#f59e0b',
-      is_todo: false,
-      is_completed: ms.status === 'completed',
-      completed_at: ms.completed_at ?? null,
-      event_source: 'club_milestone' as TimetableEventSource,
-      source_id: ms.id,
-      metadata: { club_id: ms.club_id, status: ms.status },
-      created_at: ms.created_at,
-    }));
 }
 
 // ---------------------------------------------------------------------------
@@ -586,8 +524,6 @@ export function getIntegratedTimetableEvents(
   if (!showExternalEvents) return userEvents;
 
   const examEvents = getExamCountdownVirtualEvents(userId);
-  const clubEvents = getClubEventVirtualEvents(userId);
-  const milestoneEvents = getClubMilestoneVirtualEvents(userId);
 
   // assignment events via inline require to avoid circular import
   let assignmentEvents: TimetableEvent[] = [];
@@ -598,7 +534,7 @@ export function getIntegratedTimetableEvents(
   }
 
   // Filter external events to range
-  const allExternal = [...examEvents, ...assignmentEvents, ...clubEvents, ...milestoneEvents];
+  const allExternal = [...examEvents, ...assignmentEvents];
   const filteredExternal = allExternal.filter(e => {
     const d = e.start_time ? new Date(e.start_time) : e.end_time ? new Date(e.end_time) : null;
     return d ? (d >= rangeStart && d <= rangeEnd) : false;
@@ -718,8 +654,6 @@ export function getTimetableIntegrationSummary(userId: string): {
   milestoneCount: number;
 } {
   const examEvents = getExamCountdownVirtualEvents(userId);
-  const clubEvents = getClubEventVirtualEvents(userId);
-  const milestones = getClubMilestoneVirtualEvents(userId);
 
   let assignmentCount = 0;
   try {
@@ -729,7 +663,7 @@ export function getTimetableIntegrationSummary(userId: string): {
   return {
     examCount: examEvents.length,
     assignmentCount,
-    clubEventCount: clubEvents.length,
-    milestoneCount: milestones.length,
+    clubEventCount: 0,
+    milestoneCount: 0,
   };
 }

@@ -1,17 +1,16 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTs — CreateDeckModal Component
-// Owner: ZLH
+// The ANTs — CreateDeckModal Component (Supabase)
+// Migrated from mock data. Uses LessonContext for curriculum/subject selection.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState } from 'react';
 import { X, Globe, Lock, Layers } from 'lucide-react';
-import { createDeck } from '@/lib/mock/database';
-import { mockCurriculums, mockSubjects } from '@/lib/mock/database';
-import { QUALIFICATION_REGISTRY, LIVE_QUALIFICATIONS } from '@/constants/qualifications';
+import { createClient } from '@/lib/supabase/client';
+import { useLessonContext } from '@/context/LessonContext';
+import { LIVE_QUALIFICATIONS } from '@/constants/qualifications';
 import type { Deck } from '@/types';
-import { useFocusTrap } from '@/lib/hooks/useFocusTrap';
 
 const SUGGESTED_CATEGORIES = [
   'Physics', 'Chemistry', 'Biology', 'Mathematics', 'History',
@@ -26,6 +25,9 @@ interface CreateDeckModalProps {
 }
 
 export default function CreateDeckModal({ userId, onClose, onCreated }: CreateDeckModalProps) {
+  const supabase = createClient()!;
+  const { enrolledCurriculums } = useLessonContext();
+
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
@@ -35,36 +37,49 @@ export default function CreateDeckModal({ userId, onClose, onCreated }: CreateDe
   const [examBoard, setExamBoard] = useState('');
   const [syllabusCode, setSyllabusCode] = useState('');
   const [visibility, setVisibility] = useState<'private' | 'public' | 'link'>('private');
+  const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState('');
 
-  const containerRef = useFocusTrap(true);
-
-  const availableSubjects = curriculumId
-    ? mockSubjects.filter(s => s.curriculum_id === curriculumId)
-    : [];
+  // Subjects for the selected curriculum (from enrolled curriculums)
+  const selectedCurriculum = enrolledCurriculums.find(c => c.id === curriculumId);
+  const availableSubjects = selectedCurriculum?.subjects ?? [];
 
   const finalCategory = category === 'Custom' ? customCategory : category;
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) {
       setError('Deck name is required.');
       return;
     }
-    const deck = createDeck({
-      owner_id: userId,
-      name: name.trim(),
-      description: description.trim() || undefined,
-      category: finalCategory.trim() || undefined,
-      curriculum_id: curriculumId || undefined,
-      subject_id: subjectId || undefined,
-      exam_board: examBoard || undefined,
-      syllabus_code: syllabusCode || undefined,
-      visibility: visibility,
-      is_public: visibility === 'public',
-      library_status: null,
-    });
-    onCreated(deck);
+
+    setIsCreating(true);
+    setError('');
+
+    const { data: newDeck, error: insertError } = await supabase
+      .from('decks')
+      .insert({
+        owner_id: userId,
+        name: name.trim(),
+        description: description.trim() || null,
+        category: finalCategory.trim() || null,
+        curriculum_id: curriculumId || null,
+        subject_id: subjectId || null,
+        exam_board: examBoard || null,
+        syllabus_code: syllabusCode || null,
+        is_public: visibility === 'public',
+      })
+      .select()
+      .single();
+
+    setIsCreating(false);
+
+    if (insertError) {
+      setError(insertError.message);
+      return;
+    }
+
+    onCreated(newDeck as Deck);
   }
 
   return (
@@ -74,7 +89,6 @@ export default function CreateDeckModal({ userId, onClose, onCreated }: CreateDe
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
-        ref={containerRef}
         className="animate-fade-in-up w-full max-w-lg rounded-2xl border border-[var(--border)] bg-[var(--background-card)] p-6 shadow-[var(--shadow-lg)]"
         style={{ maxHeight: '90vh', overflowY: 'auto' }}
       >
@@ -163,7 +177,7 @@ export default function CreateDeckModal({ userId, onClose, onCreated }: CreateDe
             )}
           </div>
 
-          {/* Curriculum & Subject */}
+          {/* Curriculum & Subject (from enrolled courses) */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1.5 block text-sm font-semibold text-[var(--foreground)]">
@@ -176,7 +190,7 @@ export default function CreateDeckModal({ userId, onClose, onCreated }: CreateDe
                 className="w-full rounded-xl border border-[var(--border)] bg-[var(--background-secondary)] px-3 py-2.5 text-sm text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 transition-all"
               >
                 <option value="">None</option>
-                {mockCurriculums.map(c => (
+                {enrolledCurriculums.map(c => (
                   <option key={c.id} value={c.id}>{c.title}</option>
                 ))}
               </select>
@@ -299,9 +313,10 @@ export default function CreateDeckModal({ userId, onClose, onCreated }: CreateDe
             <button
               type="submit"
               id="create-deck-submit"
-              className="flex-1 rounded-xl bg-[var(--primary)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[var(--primary-hover)] transition-colors shadow-[var(--shadow-md)]"
+              disabled={isCreating}
+              className="flex-1 rounded-xl bg-[var(--primary)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[var(--primary-hover)] transition-colors shadow-[var(--shadow-md)] disabled:opacity-50"
             >
-              Create Deck
+              {isCreating ? 'Creating...' : 'Create Deck'}
             </button>
           </div>
         </form>

@@ -37,7 +37,7 @@ function calculateTimeLeft(targetDate: string | null): TimeLeft {
 export function useCountdown(userId: string | undefined) {
   const [countdowns, setCountdowns] = useState<CountdownWithTime[]>([]);
   const [availableExams, setAvailableExams] = useState<Exam[]>([]);
-  const supabase = createClient();
+  const supabase = createClient()!;
 
   // Load initial data
   useEffect(() => {

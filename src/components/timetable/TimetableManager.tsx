@@ -16,6 +16,7 @@ import {
   Maximize2,
 } from 'lucide-react';
 import type { TimetableEvent, TimetableView, TimetableEventFormData, TimetableEventType } from '@/types/timetable';
+import { useAuth } from '@/hooks/useAuth';
 import { useTimetable, formatDateLocal, combineDateTime } from '@/hooks/useTimetable';
 import { useZoomToFit } from '@/hooks/useZoomToFit';
 import { DEFAULT_TIMETABLE_FILTERS, GRID_TOTAL_HOURS, GRID_START_HOUR, GRID_END_HOUR, SNAP_MINUTES, EVENT_TYPE_CONFIG } from '@/constants/timetable';
@@ -68,7 +69,9 @@ interface TimetableManagerProps {
   userId?: string;
 }
 
-export default function TimetableManager(_props: TimetableManagerProps) {
+export default function TimetableManager(props: TimetableManagerProps) {
+  const { user } = useAuth();
+  const userId = props.userId ?? user?.id ?? '';
   const {
     view,
     currentDate,
@@ -90,7 +93,7 @@ export default function TimetableManager(_props: TimetableManagerProps) {
     toggleComplete,
     moveEvent,
     integrationCounts,
-  } = useTimetable();
+  } = useTimetable(userId);
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);

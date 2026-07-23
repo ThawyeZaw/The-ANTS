@@ -6,10 +6,11 @@
 // Redirects to /login if the user is not authenticated.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { PersonaProvider } from '@/context/PersonaContext';
+import { LessonProvider } from '@/context/LessonContext';
 import NavBar from '@/components/layout/NavBar';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -46,12 +47,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <PersonaProvider>
-      <div className="min-h-screen bg-background flex flex-col">
-        <NavBar />
-        <main id="main-content" className="flex-1 w-full max-w-7xl mx-auto px-4 py-6">
-          {children}
-        </main>
-      </div>
+      <Suspense fallback={null}>
+        <LessonProvider>
+          <div className="min-h-screen bg-background flex flex-col">
+            <NavBar />
+            <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-6 dash-grid-body">
+              {children}
+            </main>
+          </div>
+        </LessonProvider>
+      </Suspense>
     </PersonaProvider>
   );
 }
