@@ -118,6 +118,20 @@ export function generateUsername(name: string): string {
 }
 
 /**
+ * Generate a short random club slug (e.g., "cs-2x9k").
+ * Format: 2 random letters + "-" + 4 random alphanumeric chars.
+ */
+export function generateClubSlug(): string {
+  const letters = 'abcdefghijklmnopqrstuvwxyz';
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let slug = '';
+  for (let i = 0; i < 2; i++) slug += letters[Math.floor(Math.random() * letters.length)];
+  slug += '-';
+  for (let i = 0; i < 4; i++) slug += chars[Math.floor(Math.random() * chars.length)];
+  return slug;
+}
+
+/**
  * Translate a raw Supabase auth error string into a user-friendly message.
  * Falls back to the original error message for unrecognised errors.
  */

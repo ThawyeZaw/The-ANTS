@@ -40,7 +40,7 @@ interface ClubMembershipInfo {
   role: string;
   memberCount: number;
   joinMode: string;
-  custom_domain_slug?: string | null;
+  custom_slug?: string | null;
 }
 
 interface UseProfileReturn {
@@ -150,48 +150,77 @@ export function useProfile(username: string): UseProfileReturn {
         .eq('user_id', foundProfile.id);
       if (!cancelled) setCertifications(certs ?? []);
 
-      // Fetch club memberships for the profile user
+      // Fetch club memberships, leaderships, and created clubs for the profile user
       const { data: clubMembers } = await supabase
         .from('club_members')
         .select('*, clubs(*)')
-        .eq('user_id', foundProfile.id)
-        .eq('membership_status', 'active');
+        .eq('user_id', foundProfile.id);
 
-      if (!cancelled && clubMembers) {
-        const memberships: ClubMembershipInfo[] = [];
-        for (const cm of clubMembers) {
-          const club = cm.clubs as any;
-          if (!club) continue;
+      const { data: clubLeaders } = await supabase
+        .from('club_leaders')
+        .select('*, clubs(*)')
+        .eq('user_id', foundProfile.id);
 
-          const { count } = await supabase
+      const { data: createdClubs } = await supabase
+        .from('clubs')
+        .select('*')
+        .eq('created_by', foundProfile.id);
+
+      if (!cancelled) {
+        const clubMap = new Map<string, ClubMembershipInfo>();
+
+        // Helper to build membership entry
+        const buildEntry = async (club: any, role: string) => {
+          const { count: memberCount } = await supabase
             .from('club_members')
             .select('*', { count: 'exact', head: true })
-            .eq('club_id', club.id)
-            .eq('membership_status', 'active');
-
-          memberships.push({
+            .eq('club_id', club.id);
+          const { count: leaderCount } = await supabase
+            .from('club_leaders')
+            .select('*', { count: 'exact', head: true })
+            .eq('club_id', club.id);
+          return {
             id: club.id,
             name: club.name,
-            role: cm.role ?? '',
-            memberCount: count ?? 0,
-            joinMode: club.join_mode,
-            custom_domain_slug: club.custom_domain_slug,
-          });
+            role,
+            memberCount: (memberCount ?? 0) + (leaderCount ?? 0),
+            joinMode: 'open' as string,
+            custom_slug: club.custom_slug,
+          };
+        };
+
+        for (const cm of (clubMembers ?? [])) {
+          const club = cm.clubs as any;
+          if (!club || clubMap.has(club.id)) continue;
+          clubMap.set(club.id, await buildEntry(club, 'member'));
         }
-        if (!cancelled) setClubMemberships(memberships);
+
+        for (const l of (clubLeaders ?? [])) {
+          const club = l.clubs as any;
+          if (!club || clubMap.has(club.id)) continue;
+          clubMap.set(club.id, await buildEntry(club, 'leader'));
+        }
+
+        for (const club of (createdClubs ?? [])) {
+          if (clubMap.has(club.id)) continue;
+          clubMap.set(club.id, await buildEntry(club, 'admin'));
+        }
+
+        const allClubIds = Array.from(clubMap.keys());
+        setClubMemberships(Array.from(clubMap.values()));
 
         // Club projects for profile display
         if (foundProfile.showClubProjects !== false) {
           const clubProjEntries: ProjectEntry[] = [];
-          const clubActivityItems: ActivityItem[] = [];
-          for (const cm of clubMembers) {
-            const club = cm.clubs as any;
-            if (!club) continue;
+          for (const clubId of allClubIds) {
+            // Fetch the club name for context
+            const clubData = clubMap.get(clubId);
+            if (!clubData) continue;
 
             const { data: projects } = await supabase
               .from('club_projects')
               .select('*')
-              .eq('club_id', club.id);
+              .eq('club_id', clubId);
             if (projects) {
               for (const p of projects) {
                 if (p.contributors?.includes(foundProfile.id) || p.created_by === foundProfile.id) {
@@ -204,28 +233,9 @@ export function useProfile(username: string): UseProfileReturn {
                 }
               }
             }
-
-            if (foundProfile.showClubActivity !== false) {
-              const { data: contributions } = await supabase
-                .from('club_member_contributions')
-                .select('*')
-                .eq('club_id', club.id)
-                .eq('user_id', foundProfile.id);
-              if (contributions) {
-                for (const c of contributions) {
-                  clubActivityItems.push({
-                    id: c.id,
-                    activity_type: `club_${c.contribution_type}`,
-                    description: `[${club.name}] ${c.title}`,
-                    created_at: c.created_at ?? '',
-                  });
-                }
-              }
-            }
           }
           if (!cancelled) {
             setClubProjects(clubProjEntries);
-            setClubActivity(clubActivityItems);
           }
         }
       }

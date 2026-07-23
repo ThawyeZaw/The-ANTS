@@ -16,14 +16,7 @@ import {
   UserRole,
   Club,
   ClubAnnouncement,
-  ClubCurriculum,
-  ClubJoinMode,
-  ClubJoinRequest,
-  ClubLink,
   ClubMember,
-  ClubMessage,
-  ClubSubject,
-  ClubFeature,
   Deck,
   FlashCard,
   CardReview,
@@ -42,7 +35,6 @@ import {
   OrgTeamMember,
   OrgTimelineItem,
   OrgTimelineItemFormData,
-  DEFAULT_CLUB_FEATURES,
   Note,
   Classroom,
   ClassroomMember,
@@ -1791,103 +1783,70 @@ export const mockClubs: Club[] = [
     id: 'club-1',
     name: 'Science Enthusiasts',
     description: 'For students who love science, experiments, and exam-smart explanations.',
-    created_by: 'user-contributor-001',
-    join_mode: 'open',
-    invite_code: null,
-    enabled_features: [
-      { key: 'chat', enabled: true, public_visible: true },
-      { key: 'announcements', enabled: true, public_visible: true },
-      { key: 'links', enabled: true, public_visible: true },
-      { key: 'members', enabled: true, public_visible: true },
-      { key: 'projects', enabled: true, public_visible: false },
-      { key: 'activity_timeline', enabled: true, public_visible: true },
-      { key: 'leaderboard', enabled: false, public_visible: false },
-    ],
-    cover_image_url: null,
     tagline: 'Where curiosity meets discovery — explore, experiment, excel.',
-    custom_domain_slug: 'science-enthusiasts',
-    is_showcase: true,
+    cover_image_url: null,
+    accent_color: '#6366f1',
+    custom_slug: 'science-enthusiasts',
+    field: 'science',
+    created_by: 'user-contributor-001',
     created_at: '2025-10-01T00:00:00Z',
+    updated_at: null,
   },
   {
     id: 'club-2',
     name: 'A Level Chemistry Circle',
     description: 'Weekly problem solving, revision prompts, and resource drops for serious Chemistry learners.',
-    created_by: 'user-contributor-002',
-    join_mode: 'approval_based',
-    invite_code: null,
-    enabled_features: [
-      { key: 'chat', enabled: true, public_visible: true },
-      { key: 'announcements', enabled: true, public_visible: true },
-      { key: 'links', enabled: true, public_visible: true },
-      { key: 'members', enabled: true, public_visible: true },
-      { key: 'projects', enabled: false, public_visible: false },
-      { key: 'activity_timeline', enabled: false, public_visible: false },
-      { key: 'leaderboard', enabled: true, public_visible: true },
-    ],
-    cover_image_url: null,
     tagline: 'Master the elements — one reaction at a time.',
-    custom_domain_slug: 'chemistry-circle',
-    is_showcase: false,
+    cover_image_url: null,
+    accent_color: '#10b981',
+    custom_slug: 'chemistry-circle',
+    field: 'science',
+    created_by: 'user-contributor-002',
     created_at: '2026-02-14T00:00:00Z',
+    updated_at: null,
   },
   {
     id: 'club-3',
     name: 'Exam Sprint Studio',
     description: 'Invite-only sprint room for mock exam accountability and focused revision planning.',
-    created_by: 'user-main-contributor-001',
-    join_mode: 'invite_link',
-    invite_code: 'SPRINT26',
-    enabled_features: [
-      { key: 'chat', enabled: true, public_visible: false },
-      { key: 'announcements', enabled: false, public_visible: false },
-      { key: 'links', enabled: false, public_visible: false },
-      { key: 'members', enabled: true, public_visible: false },
-      { key: 'projects', enabled: false, public_visible: false },
-      { key: 'activity_timeline', enabled: true, public_visible: false },
-      { key: 'leaderboard', enabled: false, public_visible: false },
-    ],
-    cover_image_url: null,
     tagline: 'Sprint to success — focused revision, real results.',
-    custom_domain_slug: 'exam-sprint',
-    is_showcase: false,
+    cover_image_url: null,
+    accent_color: '#f59e0b',
+    custom_slug: 'exam-sprint',
+    field: 'other',
+    created_by: 'user-main-contributor-001',
     created_at: '2026-04-05T00:00:00Z',
+    updated_at: null,
   },
 ];
 
 export const mockClubMembers: ClubMember[] = [
   // Club 1 - Multiple leaders
-  { id: 'clm-1', club_id: 'club-1', user_id: 'user-contributor-001', role: 'admin', membership_status: 'active', joined_at: '2025-10-01T00:00:00Z' },
-  { id: 'clm-2', club_id: 'club-1', user_id: 'user-teacher-001', role: 'moderator', membership_status: 'active', joined_at: '2026-03-10T00:00:00Z' },
-  { id: 'clm-3', club_id: 'club-1', user_id: 'user-student-001', role: 'member', membership_status: 'active', joined_at: '2026-01-15T00:00:00Z' },
-  { id: 'clm-4', club_id: 'club-1', user_id: 'user-student-002', role: 'member', membership_status: 'active', joined_at: '2026-05-20T00:00:00Z' },
+  { id: 'clm-1', club_id: 'club-1', user_id: 'user-contributor-001', joined_at: '2025-10-01T00:00:00Z' },
+  { id: 'clm-2', club_id: 'club-1', user_id: 'user-teacher-001', joined_at: '2026-03-10T00:00:00Z' },
+  { id: 'clm-3', club_id: 'club-1', user_id: 'user-student-001', joined_at: '2026-01-15T00:00:00Z' },
+  { id: 'clm-4', club_id: 'club-1', user_id: 'user-student-002', joined_at: '2026-05-20T00:00:00Z' },
 
   // Club 2 - Multiple admins
-  { id: 'clm-5', club_id: 'club-2', user_id: 'user-contributor-002', role: 'admin', membership_status: 'active', joined_at: '2026-02-14T00:00:00Z' },
-  { id: 'clm-6', club_id: 'club-2', user_id: 'user-contributor-003', role: 'admin', membership_status: 'active', joined_at: '2026-03-01T00:00:00Z' },
-  { id: 'clm-7', club_id: 'club-2', user_id: 'user-teacher-002', role: 'moderator', membership_status: 'active', joined_at: '2026-04-10T00:00:00Z' },
-  { id: 'clm-8', club_id: 'club-2', user_id: 'user-student-003', role: 'member', membership_status: 'active', joined_at: '2026-05-05T00:00:00Z' },
+  { id: 'clm-5', club_id: 'club-2', user_id: 'user-contributor-002', joined_at: '2026-02-14T00:00:00Z' },
+  { id: 'clm-6', club_id: 'club-2', user_id: 'user-contributor-003', joined_at: '2026-03-01T00:00:00Z' },
+  { id: 'clm-7', club_id: 'club-2', user_id: 'user-teacher-002', joined_at: '2026-04-10T00:00:00Z' },
+  { id: 'clm-8', club_id: 'club-2', user_id: 'user-student-003', joined_at: '2026-05-05T00:00:00Z' },
 
   // Club 3 - Single admin with moderators
-  { id: 'clm-9', club_id: 'club-3', user_id: 'user-main-contributor-001', role: 'admin', membership_status: 'active', joined_at: '2026-04-05T00:00:00Z' },
-  { id: 'clm-10', club_id: 'club-3', user_id: 'user-contributor-004', role: 'moderator', membership_status: 'active', joined_at: '2026-05-15T00:00:00Z' },
-  { id: 'clm-11', club_id: 'club-3', user_id: 'user-student-004', role: 'member', membership_status: 'active', joined_at: '2026-06-01T00:00:00Z' },
+  { id: 'clm-9', club_id: 'club-3', user_id: 'user-main-contributor-001', joined_at: '2026-04-05T00:00:00Z' },
+  { id: 'clm-10', club_id: 'club-3', user_id: 'user-contributor-004', joined_at: '2026-05-15T00:00:00Z' },
+  { id: 'clm-11', club_id: 'club-3', user_id: 'user-student-004', joined_at: '2026-06-01T00:00:00Z' },
   // Club 4 - Literary Society
-  { id: 'clm-12', club_id: 'club-4', user_id: 'user-teacher-002', role: 'admin', membership_status: 'active', joined_at: '2026-05-10T00:00:00Z' },
-  { id: 'clm-13', club_id: 'club-4', user_id: 'user-student-001', role: 'member', membership_status: 'active', joined_at: '2026-05-12T00:00:00Z' },
-  { id: 'clm-14', club_id: 'club-4', user_id: 'user-student-002', role: 'member', membership_status: 'active', joined_at: '2026-05-15T00:00:00Z' },
+  { id: 'clm-12', club_id: 'club-4', user_id: 'user-teacher-002', joined_at: '2026-05-10T00:00:00Z' },
+  { id: 'clm-13', club_id: 'club-4', user_id: 'user-student-001', joined_at: '2026-05-12T00:00:00Z' },
+  { id: 'clm-14', club_id: 'club-4', user_id: 'user-student-002', joined_at: '2026-05-15T00:00:00Z' },
   // Club 5 - Math Olympiad
-  { id: 'clm-15', club_id: 'club-5', user_id: 'user-teacher-001', role: 'admin', membership_status: 'active', joined_at: '2026-06-01T00:00:00Z' },
-  { id: 'clm-16', club_id: 'club-5', user_id: 'user-student-001', role: 'member', membership_status: 'active', joined_at: '2026-06-05T00:00:00Z' },
+  { id: 'clm-15', club_id: 'club-5', user_id: 'user-teacher-001', joined_at: '2026-06-01T00:00:00Z' },
+  { id: 'clm-16', club_id: 'club-5', user_id: 'user-student-001', joined_at: '2026-06-05T00:00:00Z' },
 ];
 
-export const mockClubMessages: ClubMessage[] = [
-  { id: 'cmsg-1', club_id: 'club-1', sender_id: 'user-student-001', message: 'Hi everyone! Anyone revising forces this week?', created_at: '2026-06-10T10:00:00Z' },
-  { id: 'cmsg-2', club_id: 'club-1', sender_id: 'user-contributor-001', message: 'Yes. I will drop a compact question set later today.', created_at: '2026-06-10T10:12:00Z' },
-  { id: 'cmsg-3', club_id: 'club-2', sender_id: 'user-contributor-002', message: 'Welcome to the Chemistry Circle. Post your hardest equilibrium question here.', created_at: '2026-06-12T09:30:00Z' },
-  { id: 'cmsg-4', club_id: 'club-4', sender_id: 'user-student-002', message: 'Has anyone read the new Murakami book? The prose is stunning.', created_at: '2026-06-20T14:00:00Z' },
-  { id: 'cmsg-5', club_id: 'club-5', sender_id: 'user-teacher-001', message: 'This week: AMC 10 problems 15-20. Come prepared with solutions.', created_at: '2026-06-22T16:00:00Z' },
-];
+
 
 export const mockClubAnnouncements: ClubAnnouncement[] = [
   { id: 'cann-1', club_id: 'club-1', created_by: 'user-contributor-001', title: 'Science Fair', content: 'Bring one idea and one question to this month\'s science fair prep session.', created_at: '2026-06-01T00:00:00Z' },
@@ -1896,14 +1855,9 @@ export const mockClubAnnouncements: ClubAnnouncement[] = [
   { id: 'cann-4', club_id: 'club-5', created_by: 'user-teacher-001', title: 'Olympiad Bootcamp', content: 'Summer intensive begins July 5. 4 weeks of daily problem sets and 2 mock contests.', created_at: '2026-06-25T00:00:00Z' },
 ];
 
-export const mockClubLinks: ClubLink[] = [
-  { id: 'clink-1', club_id: 'club-1', title: 'Physics Simulations', url: 'https://phet.colorado.edu/', shared_by: 'user-contributor-001', created_at: '2026-05-01T00:00:00Z' },
-  { id: 'clink-2', club_id: 'club-2', title: 'Chemguide', url: 'https://www.chemguide.co.uk/', shared_by: 'user-contributor-002', created_at: '2026-05-22T00:00:00Z' },
-  { id: 'clink-3', club_id: 'club-4', title: 'Poetry Foundation', url: 'https://www.poetryfoundation.org/', shared_by: 'user-teacher-002', created_at: '2026-06-10T00:00:00Z' },
-  { id: 'clink-4', club_id: 'club-5', title: 'AOPS Wiki', url: 'https://artofproblemsolving.com/wiki/', shared_by: 'user-contributor-001', created_at: '2026-06-12T00:00:00Z' },
-];
 
-// ── Club Projects & Events ─────────────────────────────────────────────────
+
+// ── Club Projects ──────────────────────────────────────────────────────────
 
 export const mockClubProjects: {
   id: string;
@@ -1968,144 +1922,6 @@ export const mockClubProjects: {
       tags: ['physics', 'latex', 'template', 'igcse'],
       created_at: '2026-06-01T00:00:00Z',
       updated_at: null,
-    },
-  ];
-
-export const mockClubEvents: {
-  id: string;
-  club_id: string;
-  created_by: string;
-  title: string;
-  description: string | null;
-  event_date: string;
-  created_at: string;
-}[] = [
-    {
-      id: 'ce-1',
-      club_id: 'club-1',
-      created_by: 'user-contributor-001',
-      title: 'Physics Olympiad Prep Session',
-      description: 'Group study session covering past Olympiad problems — bring your own solutions to discuss.',
-      event_date: '2026-07-10T14:00:00Z',
-      created_at: '2026-06-25T08:00:00Z',
-    },
-    {
-      id: 'ce-2',
-      club_id: 'club-2',
-      created_by: 'user-contributor-002',
-      title: 'Chemistry Lab Safety Workshop',
-      description: 'Mandatory refresher on lab safety protocols before the summer practical sessions.',
-      event_date: '2026-07-05T10:00:00Z',
-      created_at: '2026-06-20T09:00:00Z',
-    },
-    {
-      id: 'ce-3',
-      club_id: 'club-4',
-      created_by: 'user-teacher-002',
-      title: 'Poetry Reading Night',
-      description: 'Open mic session — read your own work or a favourite poem. All genres welcome.',
-      event_date: '2026-07-15T18:00:00Z',
-      created_at: '2026-06-22T12:00:00Z',
-    },
-    {
-      id: 'ce-4',
-      club_id: 'club-5',
-      created_by: 'user-contributor-001',
-      title: 'Mock Olympiad Round 1',
-      description: 'Timed mock competition under real Olympiad conditions. Prizes for top 3!',
-      event_date: '2026-07-20T09:00:00Z',
-      created_at: '2026-06-18T10:00:00Z',
-    },
-  ];
-
-// ── Club Milestones ─────────────────────────────────────────────────────────
-
-export const mockClubMilestones: {
-  id: string;
-  club_id: string;
-  title: string;
-  description: string | null;
-  status: string;
-  target_date?: string | null;
-  completed_at?: string | null;
-  created_by: string;
-  created_at: string;
-  order_no?: number | null;
-}[] = [
-    // Club 1 milestones
-    {
-      id: 'cms-1',
-      club_id: 'club-1',
-      title: 'Launch Physics Demo App',
-      description: 'Complete and publish the Newton\'s Laws interactive demo app.',
-      status: 'completed',
-      target_date: '2026-06-01T00:00:00Z',
-      completed_at: '2026-06-01T00:00:00Z',
-      created_by: 'user-contributor-001',
-      created_at: '2026-04-01T00:00:00Z',
-      order_no: 1,
-    },
-    {
-      id: 'cms-2',
-      club_id: 'club-1',
-      title: 'Reach 50 Club Members',
-      description: 'Grow the community to 50 active members through outreach and events.',
-      status: 'in_progress',
-      target_date: '2026-08-01T00:00:00Z',
-      completed_at: null,
-      created_by: 'user-contributor-001',
-      created_at: '2026-04-01T00:00:00Z',
-      order_no: 2,
-    },
-    {
-      id: 'cms-3',
-      club_id: 'club-1',
-      title: 'Host Monthly Science Fair',
-      description: 'Organize a monthly science fair where members present projects and experiments.',
-      status: 'planned',
-      target_date: '2026-09-01T00:00:00Z',
-      completed_at: null,
-      created_by: 'user-contributor-001',
-      created_at: '2026-05-15T00:00:00Z',
-      order_no: 3,
-    },
-    // Club 2 milestones
-    {
-      id: 'cms-4',
-      club_id: 'club-2',
-      title: 'Complete Organic Chemistry Deck',
-      description: 'Finish and publish the comprehensive IGCSE organic chemistry flashcard deck.',
-      status: 'completed',
-      target_date: '2026-05-20T00:00:00Z',
-      completed_at: '2026-05-20T00:00:00Z',
-      created_by: 'user-contributor-002',
-      created_at: '2026-04-10T00:00:00Z',
-      order_no: 1,
-    },
-    {
-      id: 'cms-5',
-      club_id: 'club-2',
-      title: 'Lab Safety Workshop',
-      description: 'Conduct the mandatory lab safety refresher workshop before summer practicals.',
-      status: 'completed',
-      target_date: '2026-07-05T00:00:00Z',
-      completed_at: '2026-07-05T00:00:00Z',
-      created_by: 'user-contributor-002',
-      created_at: '2026-06-01T00:00:00Z',
-      order_no: 2,
-    },
-    // Club 3 milestones
-    {
-      id: 'cms-6',
-      club_id: 'club-3',
-      title: 'First Mock Exam Sprint',
-      description: 'Complete the first full mock exam sprint with all members.',
-      status: 'in_progress',
-      target_date: '2026-07-15T00:00:00Z',
-      completed_at: null,
-      created_by: 'user-main-contributor-001',
-      created_at: '2026-06-01T00:00:00Z',
-      order_no: 1,
     },
   ];
 
@@ -2190,11 +2006,6 @@ export function getClubProjects(clubId: string) {
   return mockClubProjects.filter((p) => p.club_id === clubId);
 }
 
-/** Get all events for a club */
-export function getClubEvents(clubId: string) {
-  return mockClubEvents.filter((e) => e.club_id === clubId);
-}
-
 /** Add a project to a club */
 export function addClubProject(
   clubId: string,
@@ -2203,7 +2014,7 @@ export function addClubProject(
   description: string
 ): { success: true; id: string } | { success: false; error: string } {
   const member = mockClubMembers.find(
-    (m) => m.club_id === clubId && m.user_id === userId && m.membership_status === 'active'
+    (m) => m.club_id === clubId && m.user_id === userId
   );
   if (!member) return { success: false, error: 'You must be a member to add projects.' };
 
@@ -2219,245 +2030,6 @@ export function addClubProject(
   return { success: true, id };
 }
 
-/** Add an event to a club */
-export function addClubEvent(
-  clubId: string,
-  userId: string,
-  title: string,
-  description: string,
-  eventDate: string
-): { success: true; id: string } | { success: false; error: string } {
-  const member = mockClubMembers.find(
-    (m) => m.club_id === clubId && m.user_id === userId && (m.role === 'admin' || m.role === 'moderator')
-  );
-  if (!member) return { success: false, error: 'Only club leaders can schedule events.' };
-
-  const id = `ce-${Date.now()}`;
-  mockClubEvents.push({
-    id,
-    club_id: clubId,
-    created_by: userId,
-    title,
-    description: description || null,
-    event_date: eventDate || new Date().toISOString(),
-    created_at: new Date().toISOString(),
-  });
-  return { success: true, id };
-}
-
-/**
- * Update the enabled features for a club.
- * Only club admins can modify this.
- */
-export function mockUpdateClubFeatures(
-  clubId: string,
-  userId: string,
-  features: ClubFeature[]
-): { success: true; club: Club } | { success: false; error: string } {
-  const club = mockClubs.find((c) => c.id === clubId);
-  if (!club) return { success: false, error: 'Club not found.' };
-
-  const member = mockClubMembers.find(
-    (m) => m.club_id === clubId && m.user_id === userId && m.role === 'admin'
-  );
-  if (!member) return { success: false, error: 'Only club admins can manage features.' };
-
-  club.enabled_features = features;
-  return { success: true, club: { ...club } };
-}
-
-/**
- * Update club details (name, description, join mode, invite code).
- * Only club admins can modify club details.
- */
-export function updateClubDetails(
-  clubId: string,
-  userId: string,
-  updates: {
-    name?: string;
-    description?: string | null;
-    join_mode?: ClubJoinMode;
-    invite_code?: string | null;
-  }
-): { success: true; club: Club } | { success: false; error: string } {
-  const club = mockClubs.find((c) => c.id === clubId);
-  if (!club) return { success: false, error: 'Club not found.' };
-
-  const member = mockClubMembers.find(
-    (m) => m.club_id === clubId && m.user_id === userId && m.role === 'admin'
-  );
-  if (!member) return { success: false, error: 'Only club admins can modify club details.' };
-
-  if (updates.name !== undefined) club.name = updates.name;
-  if (updates.description !== undefined) club.description = updates.description;
-  if (updates.join_mode !== undefined) club.join_mode = updates.join_mode;
-  if (updates.invite_code !== undefined) club.invite_code = updates.invite_code;
-
-  return { success: true, club: { ...club } };
-}
-
-/**
- * Promote a user to a leadership role (admin or moderator).
- * Only admins can promote users.
- */
-export function promoteClubMember(
-  clubId: string,
-  adminUserId: string,
-  targetUserId: string,
-  newRole: 'admin' | 'moderator'
-): { success: true; member: ClubMember } | { success: false; error: string } {
-  const club = mockClubs.find((c) => c.id === clubId);
-  if (!club) return { success: false, error: 'Club not found.' };
-
-  const admin = mockClubMembers.find(
-    (m) => m.club_id === clubId && m.user_id === adminUserId && m.role === 'admin'
-  );
-  if (!admin) return { success: false, error: 'Only club admins can promote members.' };
-
-  const targetMember = mockClubMembers.find(
-    (m) => m.club_id === clubId && m.user_id === targetUserId && m.membership_status === 'active'
-  );
-  if (!targetMember) return { success: false, error: 'Target user is not an active member of this club.' };
-
-  targetMember.role = newRole;
-  return { success: true, member: { ...targetMember } };
-}
-
-/**
- * Demote a leader to a regular member.
- * Only admins can demote users.
- * Admins cannot demote themselves (need another admin to do it).
- */
-export function demoteClubLeader(
-  clubId: string,
-  adminUserId: string,
-  targetUserId: string
-): { success: true; member: ClubMember } | { success: false; error: string } {
-  const club = mockClubs.find((c) => c.id === clubId);
-  if (!club) return { success: false, error: 'Club not found.' };
-
-  const admin = mockClubMembers.find(
-    (m) => m.club_id === clubId && m.user_id === adminUserId && m.role === 'admin'
-  );
-  if (!admin) return { success: false, error: 'Only club admins can demote leaders.' };
-
-  if (adminUserId === targetUserId) {
-    return { success: false, error: 'Admins cannot demote themselves.' };
-  }
-
-  const targetMember = mockClubMembers.find(
-    (m) => m.club_id === clubId && m.user_id === targetUserId && m.membership_status === 'active'
-  );
-  if (!targetMember) return { success: false, error: 'Target user is not an active member of this club.' };
-
-  if (targetMember.role !== 'admin' && targetMember.role !== 'moderator') {
-    return { success: false, error: 'Target user is not a leader.' };
-  }
-
-  targetMember.role = 'member';
-  return { success: true, member: { ...targetMember } };
-}
-
-// ── Club Milestones ─────────────────────────────────────────────────────────
-
-/** Get all milestones for a club */
-export function getClubMilestones(clubId: string) {
-  return mockClubMilestones
-    .filter((m) => m.club_id === clubId)
-    .sort((a, b) => (a.order_no ?? 0) - (b.order_no ?? 0));
-}
-
-/** Add a milestone to a club */
-export function addClubMilestone(
-  clubId: string,
-  userId: string,
-  title: string,
-  description?: string | null,
-  targetDate?: string | null
-): { success: true; id: string } | { success: false; error: string } {
-  const member = mockClubMembers.find(
-    (m) => m.club_id === clubId && m.user_id === userId && (m.role === 'admin' || m.role === 'moderator')
-  );
-  if (!member) return { success: false, error: 'Only club leaders can add milestones.' };
-
-  const id = `cms-${Date.now()}`;
-  mockClubMilestones.push({
-    id,
-    club_id: clubId,
-    title,
-    description: description || null,
-    status: 'planned',
-    target_date: targetDate || null,
-    completed_at: null,
-    created_by: userId,
-    created_at: new Date().toISOString(),
-    order_no: mockClubMilestones.filter((m) => m.club_id === clubId).length + 1,
-  });
-  return { success: true, id };
-}
-
-/** Update a milestone status or details */
-export function updateClubMilestone(
-  milestoneId: string,
-  userId: string,
-  updates: {
-    title?: string;
-    description?: string | null;
-    status?: string;
-    target_date?: string | null;
-    order_no?: number | null;
-  }
-): { success: true } | { success: false; error: string } {
-  const milestone = mockClubMilestones.find((m) => m.id === milestoneId);
-  if (!milestone) return { success: false, error: 'Milestone not found.' };
-
-  const member = mockClubMembers.find(
-    (m) => m.club_id === milestone.club_id && m.user_id === userId && (m.role === 'admin' || m.role === 'moderator')
-  );
-  if (!member) return { success: false, error: 'Only club leaders can update milestones.' };
-
-  if (updates.title !== undefined) milestone.title = updates.title;
-  if (updates.description !== undefined) milestone.description = updates.description;
-  if (updates.status !== undefined) {
-    milestone.status = updates.status;
-    if (updates.status === 'completed' && !milestone.completed_at) {
-      milestone.completed_at = new Date().toISOString();
-      // Auto-record contribution
-      mockMemberContributions.push({
-        id: `cmc-${Date.now()}`,
-        club_id: milestone.club_id,
-        user_id: userId,
-        contribution_type: 'milestone_completed',
-        title: `Completed milestone: ${milestone.title}`,
-        metadata: { milestone_id: milestone.id },
-        created_at: new Date().toISOString(),
-      });
-    }
-  }
-  if (updates.target_date !== undefined) milestone.target_date = updates.target_date;
-  if (updates.order_no !== undefined) milestone.order_no = updates.order_no;
-
-  return { success: true };
-}
-
-/** Delete a club milestone */
-export function deleteClubMilestone(
-  milestoneId: string,
-  userId: string
-): { success: true } | { success: false; error: string } {
-  const idx = mockClubMilestones.findIndex((m) => m.id === milestoneId);
-  if (idx === -1) return { success: false, error: 'Milestone not found.' };
-
-  const milestone = mockClubMilestones[idx];
-  const member = mockClubMembers.find(
-    (m) => m.club_id === milestone.club_id && m.user_id === userId && (m.role === 'admin' || m.role === 'moderator')
-  );
-  if (!member) return { success: false, error: 'Only club leaders can delete milestones.' };
-
-  mockClubMilestones.splice(idx, 1);
-  return { success: true };
-}
-
 // ── Club Member Contributions ────────────────────────────────────────────────
 
 /** Get member contributions for a club, optionally filtered by user */
@@ -2469,98 +2041,7 @@ export function getMemberContributions(clubId: string, userId?: string) {
   return contributions.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 }
 
-/** Get aggregated contribution stats per member for a club */
-export function getClubMemberProgress(clubId: string): {
-  userId: string;
-  contributionCount: number;
-  projectCount: number;
-  eventCount: number;
-  milestoneCount: number;
-}[] {
-  const contributions = mockMemberContributions.filter((c) => c.club_id === clubId);
-  const userMap = new Map<string, { contributionCount: number; projectCount: number; eventCount: number; milestoneCount: number }>();
 
-  for (const c of contributions) {
-    if (!userMap.has(c.user_id)) {
-      userMap.set(c.user_id, { contributionCount: 0, projectCount: 0, eventCount: 0, milestoneCount: 0 });
-    }
-    const stats = userMap.get(c.user_id)!;
-    stats.contributionCount++;
-    if (c.contribution_type === 'project') stats.projectCount++;
-    if (c.contribution_type === 'event') stats.eventCount++;
-    if (c.contribution_type === 'milestone_completed') stats.milestoneCount++;
-  }
-
-  return Array.from(userMap.entries()).map(([userId, stats]) => ({ userId, ...stats }));
-}
-
-/** Manually log a member contribution (club leaders only) */
-export function addMemberContribution(
-  clubId: string,
-  userId: string,
-  targetUserId: string,
-  contributionType: string,
-  title: string,
-  description?: string | null
-): { success: true; id: string } | { success: false; error: string } {
-  const member = mockClubMembers.find(
-    (m) => m.club_id === clubId && m.user_id === userId && (m.role === 'admin' || m.role === 'moderator')
-  );
-  if (!member) return { success: false, error: 'Only club leaders can log contributions.' };
-
-  const id = `cmc-${Date.now()}`;
-  mockMemberContributions.push({
-    id,
-    club_id: clubId,
-    user_id: targetUserId,
-    contribution_type: contributionType,
-    title,
-    description: description || null,
-    metadata: null,
-    created_at: new Date().toISOString(),
-  });
-  return { success: true, id };
-}
-
-// ── Club Showcase Management ─────────────────────────────────────────────────
-
-/** Update club showcase / landing page settings */
-export function updateClubShowcase(
-  clubId: string,
-  userId: string,
-  updates: {
-    cover_image_url?: string | null;
-    tagline?: string | null;
-    custom_domain_slug?: string | null;
-    is_showcase?: boolean;
-  }
-): { success: true; club: Club } | { success: false; error: string } {
-  const club = mockClubs.find((c) => c.id === clubId);
-  if (!club) return { success: false, error: 'Club not found.' };
-
-  const member = mockClubMembers.find(
-    (m) => m.club_id === clubId && m.user_id === userId && m.role === 'admin'
-  );
-  if (!member) return { success: false, error: 'Only club admins can update showcase settings.' };
-
-  if (updates.cover_image_url !== undefined) club.cover_image_url = updates.cover_image_url;
-  if (updates.tagline !== undefined) club.tagline = updates.tagline;
-  if (updates.custom_domain_slug !== undefined) club.custom_domain_slug = updates.custom_domain_slug;
-  if (updates.is_showcase !== undefined) club.is_showcase = updates.is_showcase;
-
-  return { success: true, club: { ...club } };
-}
-
-/** Get all clubs a user is a member of */
-export function getUserClubs(userId: string) {
-  const memberships = mockClubMembers.filter(
-    (m) => m.user_id === userId && m.membership_status === 'active'
-  );
-  return memberships.map((m) => {
-    const club = mockClubs.find((c) => c.id === m.club_id);
-    return club ? { club, membership: m } : null;
-  }).filter(Boolean) as { club: Club; membership: ClubMember }[];
-}
 
 // ── Academic Certifications ──────────────────────────────────────────────────
 
@@ -2909,50 +2390,7 @@ export const mockCurriculumNotes = [
   },
 ];
 
-// ── Club Join Requests ──────────────────────────────────────────────────────
 
-export const mockClubJoinRequests: ClubJoinRequest[] = [
-  {
-    id: 'req-1',
-    club_id: 'club-2',
-    user_id: 'user-student-001',
-    status: 'pending',
-    requested_at: '2026-06-15T12:00:00Z',
-  },
-];
-
-// ── Club Curriculum Links ───────────────────────────────────────────────────
-
-export const mockClubCurriculums: ClubCurriculum[] = [
-  {
-    id: 'club-curr-1',
-    club_id: 'club-1',
-    curriculum_id: 'curr-1',
-  },
-  {
-    id: 'club-curr-2',
-    club_id: 'club-2',
-    curriculum_id: 'curr-1',
-  },
-  {
-    id: 'club-curr-3',
-    club_id: 'club-3',
-    curriculum_id: 'curr-1',
-  },
-];
-
-export const mockClubSubjects: ClubSubject[] = [
-  {
-    id: 'club-subj-1',
-    club_id: 'club-1',
-    subject_id: 'subj-1',
-  },
-  {
-    id: 'club-subj-2',
-    club_id: 'club-2',
-    subject_id: 'subj-1',
-  },
-];
 
 // ── Academic Certifications ──────────────────────────────────────────────────
 
@@ -3453,162 +2891,11 @@ export const getClubs = () =>
 export const getClubMembers = (clubId: string) =>
   mockClubMembers.filter(m => m.club_id === clubId);
 
-export const getClubMessages = (clubId: string) =>
-  mockClubMessages.filter(m => m.club_id === clubId);
-
 export const getClubAnnouncements = (clubId: string) =>
   mockClubAnnouncements.filter(a => a.club_id === clubId);
 
-export const getClubLinks = (clubId: string) =>
-  mockClubLinks.filter(l => l.club_id === clubId);
-
-export const getClubJoinRequests = (clubId: string) =>
-  mockClubJoinRequests.filter(r => r.club_id === clubId);
-
-export const getClubCurriculumLinks = (clubId: string) =>
-  mockClubCurriculums.filter(c => c.club_id === clubId);
-
-export const getClubSubjectLinks = (clubId: string) =>
-  mockClubSubjects.filter(s => s.club_id === clubId);
-
 export const getUserClubMembership = (clubId: string, userId: string) =>
   mockClubMembers.find(m => m.club_id === clubId && m.user_id === userId);
-
-export const getUserClubJoinRequest = (clubId: string, userId: string) =>
-  mockClubJoinRequests.find(r => r.club_id === clubId && r.user_id === userId && r.status === 'pending');
-
-export function createClub(data: {
-  name: string;
-  description?: string;
-  created_by: string;
-  join_mode: ClubJoinMode;
-  invite_code?: string;
-  curriculum_ids?: string[];
-  subject_ids?: string[];
-  enabled_features?: ClubFeature[];
-}): Club {
-  const now = new Date().toISOString();
-  const club: Club = {
-    id: `club-${Date.now()}`,
-    name: data.name,
-    description: data.description || null,
-    created_by: data.created_by,
-    join_mode: data.join_mode,
-    invite_code: data.join_mode === 'invite_link' ? (data.invite_code || generateInviteCode(data.name)) : null,
-    enabled_features: data.enabled_features || DEFAULT_CLUB_FEATURES,
-    created_at: now,
-  };
-
-  mockClubs.unshift(club);
-  mockClubMembers.push({
-    id: `clm-${Date.now()}`,
-    club_id: club.id,
-    user_id: data.created_by,
-    role: 'admin',
-    membership_status: 'active',
-    joined_at: now,
-  });
-
-  data.curriculum_ids?.forEach((curriculumId, index) => {
-    mockClubCurriculums.push({
-      id: `club-curr-${Date.now()}-${index}`,
-      club_id: club.id,
-      curriculum_id: curriculumId,
-    });
-  });
-
-  data.subject_ids?.forEach((subjectId, index) => {
-    mockClubSubjects.push({
-      id: `club-subj-${Date.now()}-${index}`,
-      club_id: club.id,
-      subject_id: subjectId,
-    });
-  });
-
-  return club;
-}
-
-export function joinOpenClub(clubId: string, userId: string): { success: true } | { success: false; error: string } {
-  const club = getClub(clubId);
-  if (!club) return { success: false, error: 'Club not found.' };
-  if (club.join_mode !== 'open') return { success: false, error: 'This club is not open join.' };
-  return addActiveClubMember(clubId, userId);
-}
-
-export function joinClubByInviteCode(
-  clubId: string,
-  userId: string,
-  inviteCode: string
-): { success: true } | { success: false; error: string } {
-  const club = getClub(clubId);
-  if (!club) return { success: false, error: 'Club not found.' };
-  if (club.join_mode !== 'invite_link') return { success: false, error: 'This club does not use invite links.' };
-  if (club.invite_code?.toLowerCase() !== inviteCode.trim().toLowerCase()) {
-    return { success: false, error: 'Invite code does not match this club.' };
-  }
-  return addActiveClubMember(clubId, userId);
-}
-
-export function requestClubJoin(clubId: string, userId: string): { success: true } | { success: false; error: string } {
-  const club = getClub(clubId);
-  if (!club) return { success: false, error: 'Club not found.' };
-  if (club.join_mode !== 'approval_based') return { success: false, error: 'This club does not require approval.' };
-  if (getUserClubMembership(clubId, userId)?.membership_status === 'active') {
-    return { success: false, error: 'You are already a member.' };
-  }
-  if (getUserClubJoinRequest(clubId, userId)) {
-    return { success: false, error: 'Your request is already pending.' };
-  }
-
-  mockClubJoinRequests.push({
-    id: `req-${Date.now()}`,
-    club_id: clubId,
-    user_id: userId,
-    status: 'pending',
-    requested_at: new Date().toISOString(),
-  });
-  return { success: true };
-}
-
-export function reviewClubJoinRequest(
-  requestId: string,
-  status: 'approved' | 'rejected'
-): { success: true } | { success: false; error: string } {
-  const request = mockClubJoinRequests.find(r => r.id === requestId);
-  if (!request) return { success: false, error: 'Join request not found.' };
-
-  request.status = status;
-  if (status === 'approved') {
-    addActiveClubMember(request.club_id, request.user_id);
-  }
-  return { success: true };
-}
-
-export function leaveClub(clubId: string, userId: string): { success: true } | { success: false; error: string } {
-  const memberIndex = mockClubMembers.findIndex(m => m.club_id === clubId && m.user_id === userId && m.membership_status === 'active');
-  if (memberIndex < 0) return { success: false, error: 'You are not an active member of this club.' };
-
-  const member = mockClubMembers[memberIndex];
-  const activeAdmins = mockClubMembers.filter(m => m.club_id === clubId && m.role === 'admin' && m.membership_status === 'active');
-  if (member.role === 'admin' && activeAdmins.length === 1) {
-    return { success: false, error: 'The sole admin cannot leave this club.' };
-  }
-
-  mockClubMembers.splice(memberIndex, 1);
-  return { success: true };
-}
-
-export function sendClubMessage(clubId: string, senderId: string, message: string): ClubMessage {
-  const newMessage: ClubMessage = {
-    id: `cmsg-${Date.now()}`,
-    club_id: clubId,
-    sender_id: senderId,
-    message,
-    created_at: new Date().toISOString(),
-  };
-  mockClubMessages.push(newMessage);
-  return newMessage;
-}
 
 export function createClubAnnouncement(
   clubId: string,
@@ -3626,47 +2913,6 @@ export function createClubAnnouncement(
   };
   mockClubAnnouncements.unshift(announcement);
   return announcement;
-}
-
-export function shareClubLink(clubId: string, sharedBy: string, title: string, url: string): ClubLink {
-  const link: ClubLink = {
-    id: `clink-${Date.now()}`,
-    club_id: clubId,
-    title,
-    url,
-    shared_by: sharedBy,
-    created_at: new Date().toISOString(),
-  };
-  mockClubLinks.unshift(link);
-  return link;
-}
-
-function addActiveClubMember(clubId: string, userId: string): { success: true } | { success: false; error: string } {
-  const existing = getUserClubMembership(clubId, userId);
-  if (existing?.membership_status === 'active') {
-    return { success: false, error: 'You are already a member.' };
-  }
-
-  if (existing) {
-    existing.membership_status = 'active';
-    existing.joined_at = new Date().toISOString();
-    return { success: true };
-  }
-
-  mockClubMembers.push({
-    id: `clm-${Date.now()}`,
-    club_id: clubId,
-    user_id: userId,
-    role: 'member',
-    membership_status: 'active',
-    joined_at: new Date().toISOString(),
-  });
-  return { success: true };
-}
-
-function generateInviteCode(name: string): string {
-  const prefix = name.replace(/[^a-zA-Z]/g, '').slice(0, 6).toUpperCase() || 'CLUB';
-  return `${prefix}${Math.floor(100 + Math.random() * 900)}`;
 }
 
 export const getDeck = (id: string): Deck | undefined =>
@@ -5422,7 +4668,7 @@ export function getContributorDashboardStats(userId: string) {
   const totalPublished = publishedCurrs + publishedNotes || 14;
 
   const pendingNotes = mockNotes.filter(n => n.contributor_id === effectiveId && n.status === 'pending_review').length || 3;
-  const clubsLed = mockClubMembers.filter(m => m.user_id === effectiveId && (m.role === 'admin' || m.role === 'moderator')).length || 2;
+  const clubsLed = mockClubMembers.filter(m => m.user_id === effectiveId).length || 2;
 
   const stat = mockContributorStats.find(s => s.contributor_id === effectiveId);
   const profileViews = stat ? stat.total_views.toString() : '128';
