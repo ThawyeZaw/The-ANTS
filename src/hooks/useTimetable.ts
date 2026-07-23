@@ -80,10 +80,8 @@ export interface UseTimetableReturn {
   integrationCounts: { exams: number; assignments: number; clubEvents: number; milestones: number };
 }
 
-export function useTimetable(): UseTimetableReturn {
-  const supabase = createClient();
-  const { user } = useAuth();
-  const userId = user?.id ?? '';
+export function useTimetable(userId: string): UseTimetableReturn {
+  const supabase = createClient()!;
   const [view, setViewState] = useState<TimetableView>('week');
   const [currentDate, setCurrentDate] = useState<Date>(() => new Date());
   const [filters, setFilters] = useState<TimetableFilters>(DEFAULT_TIMETABLE_FILTERS);

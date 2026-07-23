@@ -1,15 +1,14 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — useFlashcardSRS Hook (Mock Facade)
-// SRS study session powered by the unified mock data facade.
-// All data flows through src/lib/mock/database.ts — no direct Supabase calls.
+// The ANTS — useFlashcardSRS Hook (Supabase)
+// SRS study session powered by real card_reviews data.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useCallback } from 'react';
 import type { FlashCard, SRSRating, StudySessionState } from '@/types';
-import { computeNextReview, getNewCardDefaults } from '@/lib/srs/algorithm';
-import { getCardsByDeck, getDeckReviews, upsertCardReview } from '@/lib/mock/database';
+import { computeNextReview, getNewCardDefaults, QUALITY_MAP } from '@/lib/srs/algorithm';
+import { createClient } from '@/lib/supabase/client';
 
 export interface UseFlashcardSRSReturn {
   dueCards: FlashCard[];
@@ -30,6 +29,8 @@ export interface UseFlashcardSRSReturn {
 }
 
 export function useFlashcardSRS(): UseFlashcardSRSReturn {
+  const supabase = createClient()!;
+
   const [state, setState] = useState<StudySessionState>({
     deckId: '',
     dueCards: [],
@@ -47,39 +48,57 @@ export function useFlashcardSRS(): UseFlashcardSRSReturn {
   const [reviewCache, setReviewCache] = useState<Record<string, {
     interval_days: number;
     ease_factor: number;
+    repetitions: number;
   }>>({});
 
-  const loadDeck = useCallback((deckId: string, uid: string) => {
+  const loadDeck = useCallback(async (deckId: string, uid: string) => {
     setUserId(uid);
 
-    // Fetch all cards for this deck from mock facade
-    const cards = getCardsByDeck(deckId);
+    // Fetch all cards for this deck
+    const { data: cards } = await supabase
+      .from('cards')
+      .select('*')
+      .eq('deck_id', deckId);
 
-    if (cards.length === 0) {
+    if (!cards) {
       setState(prev => ({ ...prev, deckId, dueCards: [], sessionComplete: true, cardRatings: {}, pendingReviews: {} }));
       return;
     }
 
-    // Fetch all existing reviews for this user for these cards from mock facade
-    const reviews = getDeckReviews(deckId, uid);
+    // Fetch all existing reviews for this user for these cards
+    const cardIds = cards.map(c => c.id);
+    const { data: reviews } = await supabase
+      .from('card_reviews')
+      .select('*')
+      .eq('user_id', uid)
+      .in('card_id', cardIds);
 
     // Build review cache
-    const cache: Record<string, { interval_days: number; ease_factor: number }> = {};
-    for (const r of reviews) {
-      cache[r.card_id] = {
-        interval_days: r.interval_days,
-        ease_factor: r.ease_factor,
-      };
+    const cache: Record<string, { interval_days: number; ease_factor: number; repetitions: number }> = {};
+    if (reviews) {
+      for (const r of reviews) {
+        cache[r.card_id] = {
+          interval_days: r.interval ?? 0,
+          ease_factor: r.ease_factor ?? 2.5,
+          repetitions: r.repetitions ?? 0,
+        };
+      }
     }
     setReviewCache(cache);
 
     // Determine due cards: cards with no review OR review next_review_date <= now
     const now = new Date().toISOString();
     const dueCards: FlashCard[] = cards.filter(c => {
-      const review = reviews.find(r => r.card_id === c.id);
+      const review = reviews?.find(r => r.card_id === c.id);
       if (!review) return true; // new card, always due
       return review.next_review_date && review.next_review_date <= now;
-    });
+    }).map(c => ({
+      id: c.id,
+      deck_id: c.deck_id,
+      front_text: c.front_text ?? '',
+      back_text: c.back_text ?? '',
+      created_at: c.created_at ?? '',
+    }));
 
     setState({
       deckId,
@@ -91,7 +110,7 @@ export function useFlashcardSRS(): UseFlashcardSRSReturn {
       cardRatings: {},
       pendingReviews: {},
     });
-  }, []);
+  }, [supabase]);
 
   const flip = useCallback(() => {
     setState(prev => ({ ...prev, isFlipped: !prev.isFlipped, hasFlipped: true }));
@@ -132,16 +151,21 @@ export function useFlashcardSRS(): UseFlashcardSRSReturn {
       const nextIndex = prev.currentIndex + 1;
       const sessionComplete = nextIndex >= prev.dueCards.length;
 
-      // Persist to mock facade when session is complete
+      // Persist to Supabase when session is complete
       if (sessionComplete) {
-        for (const [cardId, review] of Object.entries(newPendingReviews)) {
-          upsertCardReview(cardId, userId, {
-            interval_days: review.interval_days,
+        const upserts = Object.entries(newPendingReviews).map(([cardId, review]) =>
+          supabase.from('card_reviews').upsert({
+            card_id: cardId,
+            user_id: userId,
+            interval: review.interval_days,
             ease_factor: review.ease_factor,
             next_review_date: review.next_review_date,
-            last_rating: review.last_rating,
-          });
-        }
+            quality: QUALITY_MAP[review.last_rating],
+            last_review_date: new Date().toISOString(),
+            repetitions: (existingReview?.repetitions ?? 0) + 1,
+          })
+        );
+        Promise.all(upserts);
       }
 
       return {
@@ -154,7 +178,7 @@ export function useFlashcardSRS(): UseFlashcardSRSReturn {
         pendingReviews: newPendingReviews,
       };
     });
-  }, [userId, reviewCache]);
+  }, [userId, reviewCache, supabase]);
 
   const restartSession = useCallback(() => {
     setState(prev => ({

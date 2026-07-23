@@ -9,7 +9,7 @@ interface ClubMembership {
   role: string;
   memberCount: number;
   joinMode: string;
-  custom_domain_slug?: string | null;
+  custom_slug?: string | null;
 }
 
 interface ClubMembershipsPanelProps {
@@ -17,15 +17,9 @@ interface ClubMembershipsPanelProps {
 }
 
 const roleLabels: Record<string, string> = {
-  admin: 'Admin',
+  admin: 'Leader',
   moderator: 'Moderator',
   member: 'Member',
-};
-
-const joinModeLabels: Record<string, string> = {
-  open: 'Open',
-  invite_link: 'Invite Only',
-  approval_based: 'Approval Required',
 };
 
 export default function ClubMembershipsPanel({ memberships }: ClubMembershipsPanelProps) {
@@ -41,7 +35,7 @@ export default function ClubMembershipsPanel({ memberships }: ClubMembershipsPan
         {memberships.map((club) => (
           <Link
             key={club.id}
-            href={`/clubs/${club.id}`}
+            href={`/clubs/${club.custom_slug}`}
             className="group flex items-center gap-3 rounded-lg border border-border bg-background p-3 transition-all hover:border-primary/30 hover:bg-primary/5"
           >
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-sm font-bold text-primary">

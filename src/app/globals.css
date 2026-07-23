@@ -4,11 +4,11 @@
    The ANTs — Design System
    ────────────────────────────────────────────────────────────────────────────── */
 
-/* ── Brand Font — Quicksand ────────────────────────────────────────────────── */
-
+/* ── Brand Font ─────────────────────────────────────────────────────────────
+   Queensides font files are not bundled; falls back to Quicksand. */
 .font-brand {
-  font-family: 'Quicksand', sans-serif;
-  font-weight: 500;
+  font-family: var(--font-quicksand), sans-serif;
+  font-weight: 400;
   letter-spacing: 0.02em;
 }
 
@@ -161,8 +161,8 @@
   --shadow-glow: var(--shadow-glow);
   --shadow-hover-sm: var(--shadow-hover-sm);
   --shadow-hover-md: var(--shadow-hover-md);
-  --font-sans: 'Quicksand', sans-serif;
-  --font-mono: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+  --font-sans: "Quicksand", var(--font-quicksand), sans-serif;
+  --font-mono: var(--font-geist-mono);
 }
 
 /* ── Base Styles ──────────────────────────────────────────────────────────── */
@@ -187,19 +187,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ── Subheading defaults ─────────────────────────────────────────────────── */
-h1, h2, h3 {
+/* ── Quicksand subheading defaults ───────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-sans);
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: -0.01em;
-}
-
-h4, h5, h6 {
-  font-family: var(--font-sans);
-  font-weight: 600;
-  line-height: 1.3;
-  letter-spacing: -0.005em;
 }
 
 /* ── Strong emphasis for CTA and interactive text ────────────────────────── */
@@ -439,10 +432,10 @@ a {
   --hp-radius-md: 16px;
   --hp-radius-lg: 26px;
 
-  /* Fonts */
-  --hp-font-display: 'Quicksand', sans-serif;
-  --hp-font-body: 'Quicksand', sans-serif;
-  --hp-font-mono: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
+  /* Fonts — loaded via HomepageFonts client component */
+  --hp-font-display: 'Fraunces', Georgia, serif;
+  --hp-font-body: 'Quicksand', var(--font-quicksand), sans-serif;
+  --hp-font-mono: 'JetBrains Mono', 'Courier New', monospace;
 
   /* Layout */
   --hp-maxw: 1180px;
@@ -816,7 +809,7 @@ a {
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--hp-brand);
-  font-weight: 500;
+  font-weight: 600;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -873,6 +866,7 @@ a {
   background: var(--hp-brand);
   color: #FFFFFF;
   transform: rotateY(180deg);
+  font-weight: 600;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1027,6 +1021,240 @@ a {
   .hp-grid-card,
   .hp-grid-dense,
   .hp-grid-accent {
+    background-image: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Dashboard — Grid Line Pattern System
+   Applies a cohesive grid-line visual framework across all dashboard pages.
+   Uses pure CSS gradients — zero HTTP requests, theme-aware, accessible.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Dashboard grid colour tokens (tied to theme via CSS vars) ───────────── */
+:root {
+  --dash-grid-color: rgba(59, 108, 181, 0.06);
+  --dash-grid-color-strong: rgba(59, 108, 181, 0.10);
+  --dash-welcome-dot: rgba(255, 255, 255, 0.30);
+  --dash-welcome-line: rgba(255, 255, 255, 0.12);
+}
+[data-theme="dark"] {
+  --dash-grid-color: rgba(91, 158, 255, 0.05);
+  --dash-grid-color-strong: rgba(91, 158, 255, 0.09);
+  --dash-welcome-dot: rgba(255, 255, 255, 0.25);
+  --dash-welcome-line: rgba(255, 255, 255, 0.10);
+}
+
+/* ── Dashboard body: subtle large-scale grid ─────────────────────────────── */
+.dash-grid-body {
+  background-image:
+    linear-gradient(var(--dash-grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--dash-grid-color) 1px, transparent 1px);
+  background-size: 72px 72px;
+  background-position: center center;
+}
+
+/* ── Dashboard-section grid (card containers): tighter grid ──────────────── */
+.dash-grid-section {
+  background-image:
+    linear-gradient(var(--dash-grid-color-strong) 1px, transparent 1px),
+    linear-gradient(90deg, var(--dash-grid-color-strong) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ── Welcome Banner Unique Pattern System ────────────────────────────────── */
+/*    Multi-layer geometric pattern with animated intersection highlights.    */
+
+/* Layer 1: Diamond-grid line pattern over the gradient */
+.dash-welcome-pattern {
+  position: relative;
+}
+.dash-welcome-pattern::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.55;
+  background-image:
+    repeating-linear-gradient(
+      60deg,
+      var(--dash-welcome-line) 0px,
+      var(--dash-welcome-line) 1px,
+      transparent 1px,
+      transparent 28px
+    ),
+    repeating-linear-gradient(
+      -60deg,
+      var(--dash-welcome-line) 0px,
+      var(--dash-welcome-line) 1px,
+      transparent 1px,
+      transparent 28px
+    );
+  border-radius: inherit;
+}
+
+/* Layer 2: Glowing dot nodes at grid intersections */
+.dash-welcome-pattern::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0.70;
+  background-image:
+    radial-gradient(circle, var(--dash-welcome-dot) 1.8px, transparent 2px);
+  background-size: 28px 28px;
+  background-position:
+    0px 0px,
+    14px 14px;
+  border-radius: inherit;
+}
+
+/* Layer 3: Animated pulsing nodes — CSS custom property driven */
+@keyframes dashNodePulse {
+  0%, 100% { opacity: 0.35; transform: scale(0.8); }
+  50%      { opacity: 0.85; transform: scale(1.3); }
+}
+
+.dash-welcome-nodes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.dash-welcome-node {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 0 6px rgba(255, 255, 255, 0.7),
+    0 0 14px rgba(255, 255, 255, 0.25);
+  animation: dashNodePulse 3s ease-in-out infinite;
+}
+
+/* ── Welcome card enhanced shadow for depth ──────────────────────────────── */
+.dash-welcome-shadow {
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.12),
+    0 12px 48px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+}
+
+[data-theme="dark"] .dash-welcome-shadow {
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.40),
+    0 12px 48px rgba(0, 0, 0, 0.30),
+    0 0 40px rgba(91, 158, 255, 0.08),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+}
+
+/* ── Glass Gradient Overlay — frosted glass panel atop welcome gradient ─── */
+/*    Sits as an absolute child between the pattern layers (z:1-3) and the   */
+/*    content (z:10). Uses a translucent radial highlight + crisp border to   */
+/*    simulate frosted glass over the gradient backdrop.                      */
+/*    No DOM restructuring required — pure CSS glass illusion.                */
+/* ──────────────────────────────────────────────────────────────────────────── */
+
+.dash-welcome-glass {
+  /* Inner glass highlight — diagonal radial glow across the card surface */
+  background:
+    radial-gradient(
+      ellipse 80% 50% at 30% 20%,
+      rgba(255, 255, 255, 0.16) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 50% 40% at 85% 80%,
+      rgba(255, 255, 255, 0.06) 0%,
+      transparent 50%
+    );
+
+  /* Glass edge — crisp semi-transparent inner border */
+  border: 1px solid rgba(255, 255, 255, 0.18);
+
+  /* Subtle inner glow around the perimeter */
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.10);
+}
+
+[data-theme="dark"] .dash-welcome-glass {
+  background:
+    radial-gradient(
+      ellipse 80% 50% at 30% 20%,
+      rgba(91, 158, 255, 0.10) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 50% 40% at 85% 80%,
+      rgba(40, 255, 191, 0.06) 0%,
+      transparent 50%
+    );
+
+  border: 1px solid rgba(255, 255, 255, 0.10);
+
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+/* Only enable backdrop-filter when supported (Safari, Chrome 76+) for quality */
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .dash-welcome-glass {
+    backdrop-filter: blur(12px) saturate(120%);
+    -webkit-backdrop-filter: blur(12px) saturate(120%);
+  }
+}
+
+/* ── Responsive: lighter blur on small screens for performance ──────────── */
+@media (max-width: 640px) {
+  @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+    .dash-welcome-glass {
+      backdrop-filter: blur(6px) saturate(105%);
+      -webkit-backdrop-filter: blur(6px) saturate(105%);
+    }
+  }
+}
+
+/* ── Stats cards: subtle grid overlay ────────────────────────────────────── */
+.dash-stat-grid {
+  background-image:
+    linear-gradient(var(--dash-grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--dash-grid-color) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: center center;
+}
+
+/* ── Responsive adjustments ──────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .dash-grid-body {
+    background-size: 48px 48px;
+  }
+  .dash-grid-section {
+    background-size: 32px 32px;
+  }
+  .dash-welcome-pattern::before {
+    background-size: 0 0, 0 0; /* hide complex pattern on small screens */
+  }
+  .dash-welcome-pattern::after {
+    background-size: 20px 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-welcome-node {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-data: reduce) {
+  .dash-grid-body,
+  .dash-grid-section,
+  .dash-welcome-pattern::before,
+  .dash-welcome-pattern::after,
+  .dash-stat-grid {
     background-image: none !important;
   }
 }
@@ -1373,23 +1601,13 @@ a {
 
 .dash-carousel-track {
   display: flex;
-  transition: transform 0.8s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: transform;
 }
 
 .dash-carousel-slide {
   min-width: 100%;
   flex-shrink: 0;
-  animation: dashSlideFadeIn 0.6s ease-out both;
-}
-
-@keyframes dashSlideFadeIn {
-  from {
-    opacity: 0.6;
-  }
-  to {
-    opacity: 1;
-  }
 }
 
 /* ── Carousel Arrow Buttons ──────────────────────────────────────────────── */
@@ -1620,7 +1838,7 @@ a {
 
 .dash-col-header__title {
   font-size: 1.1rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--foreground);
   display: flex;
   align-items: center;
@@ -1629,7 +1847,7 @@ a {
 
 .dash-col-header__link {
   font-size: 0.8rem;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--primary);
   transition: color 0.2s;
 }

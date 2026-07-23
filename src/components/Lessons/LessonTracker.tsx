@@ -2,27 +2,26 @@
 
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTs — LessonTracker
-// Main Lesson Tracker page component. Curriculum tabs → subject accordion →
-// per-topic confidence + status cards.
-// Belongs to: src/components/Lessons/  (BMK & ABC)
+// Main Lesson Tracker page component. Curriculum tabs → subject filter bar →
+// subject accordion → per-topic confidence + status cards.
+// Now uses LessonContext (single source of truth).
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import {
   BookOpen,
   ChevronDown,
   ChevronUp,
   ClipboardCheck,
-  ExternalLink,
   Layers,
   Sparkles,
+  Filter,
 } from 'lucide-react';
 import { useRole } from '@/hooks/useRole';
-import { useLessons, type TopicStatus } from '@/hooks/useLessons';
+import { useLessonContext, type TopicItem, type TopicProgressRecord, type TopicStatus } from '@/context/LessonContext';
 import { cn } from '@/lib/utils';
 import TopicCard from './TopicCard';
-import RelatedContent from '@/components/ui/RelatedContent';
 
 // ── Role-aware subtitle ───────────────────────────────────────────────────────
 
@@ -57,22 +56,19 @@ function SubjectProgressBar({ completed, total }: { completed: number; total: nu
 
 function SubjectAccordion({
   subject,
-  curriculumId,
   completedCount,
   progressRecords,
   onConfidenceChange,
   onStatusChange,
 }: {
-  subject: ReturnType<typeof useLessons>['subjects'][number];
-  curriculumId: string;
+  subject: { id: string; curriculum_id: string; title: string; description: string | null; order_no: number | null; topics: TopicItem[] };
   completedCount: number;
-  progressRecords: ReturnType<typeof useLessons>['progressRecords'];
+  progressRecords: TopicProgressRecord[];
   onConfidenceChange: (topicId: string, level: number) => void;
   onStatusChange: (topicId: string, status: TopicStatus) => void;
 }) {
   const [isOpen, setIsOpen] = useState(true);
   const total = subject.topics.length;
-  const pct = total === 0 ? 0 : Math.round((completedCount / total) * 100);
 
   return (
     <div className="rounded-xl border border-border bg-background-card overflow-hidden">
@@ -95,13 +91,6 @@ function SubjectAccordion({
           <div className="mt-2 max-w-xs">
             <SubjectProgressBar completed={completedCount} total={total} />
           </div>
-          <Link
-            href={`/lessons/${curriculumId}/${subject.id}`}
-            className="inline-flex items-center gap-1 mt-2 text-xs font-medium text-primary hover:text-primary-hover transition-colors"
-          >
-            <ExternalLink className="h-3 w-3" />
-            View details
-          </Link>
         </div>
         <div className="shrink-0 text-foreground-muted">
           {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -129,19 +118,67 @@ function SubjectAccordion({
               );
             })
           )}
-
-          {/* Related Content for this subject */}
-          {subject.topics.length > 0 && (
-            <div className="col-span-1 sm:col-span-2 pt-4 border-t border-border mt-2">
-              <RelatedContent
-                curriculumId={subject.curriculum_id}
-                subjectId={subject.id}
-                maxItems={2}
-              />
-            </div>
-          )}
         </div>
       )}
+    </div>
+  );
+}
+
+// ── Subject filter bar ────────────────────────────────────────────────────────
+
+function SubjectFilterBar({
+  subjects,
+  selectedIds,
+  onToggle,
+}: {
+  subjects: { id: string; title: string }[];
+  selectedIds: string[];
+  onToggle: (ids: string[]) => void;
+}) {
+  const allSelected = selectedIds.length === 0 || selectedIds.length === subjects.length;
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <Filter className="h-4 w-4 text-foreground-muted" />
+      <button
+        onClick={() => onToggle([])}
+        className={cn(
+          'rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-150 border',
+          allSelected
+            ? 'bg-primary text-primary-foreground border-primary'
+            : 'border-border text-foreground-muted hover:border-primary/50 hover:text-foreground'
+        )}
+      >
+        All
+      </button>
+      {subjects.map(subject => {
+        const isSelected = allSelected || selectedIds.includes(subject.id);
+        return (
+          <button
+            key={subject.id}
+            onClick={() => {
+              if (allSelected) {
+                // Currently all selected → select only this one
+                onToggle([subject.id]);
+              } else if (selectedIds.includes(subject.id)) {
+                const next = selectedIds.filter(id => id !== subject.id);
+                onToggle(next.length === 0 ? [] : next); // [] means "all"
+              } else {
+                const next = [...selectedIds, subject.id];
+                onToggle(next.length === subjects.length ? [] : next);
+              }
+            }}
+            className={cn(
+              'rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-150 border',
+              isSelected
+                ? 'bg-primary/10 text-primary border-primary/30'
+                : 'border-border text-foreground-muted hover:border-border-hover'
+            )}
+          >
+            {subject.title}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -153,27 +190,51 @@ export default function LessonTracker() {
   const {
     enrolledCurriculums,
     activeCurriculumId,
-    activeCurriculum,
-    subjects,
+    setActiveCurriculumId,
+    subjects: allSubjects,
+    topics,
     progressRecords,
-    isLoaded,
-    getCurriculumTopicCount,
-    getCurriculumCompletedCount,
-    getSubjectCompletedCount,
-    setSelectedCurriculumId,
-    updateConfidence,
-    updateStatus,
-  } = useLessons();
+    selectedSubjectIds,
+    setSelectedSubjectIds,
+    updateProgress,
+  } = useLessonContext();
 
-  // ── Loading state ────────────────────────────────────────────────────────────
+  // ── Derived: active curriculum object ──────────────────────────────────────
+  const activeCurriculum = useMemo(
+    () => enrolledCurriculums.find(c => c.id === activeCurriculumId) ?? null,
+    [enrolledCurriculums, activeCurriculumId]
+  );
 
-  if (!isLoaded) {
-    return (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
-      </div>
-    );
-  }
+  // ── Derived: progress helpers ──────────────────────────────────────────────
+  const getCurriculumTopicCount = (c: typeof enrolledCurriculums[number]) =>
+    c.subjects.reduce((sum, s) => sum + s.topics.length, 0);
+  const getCurriculumCompletedCount = (c: typeof enrolledCurriculums[number]) => {
+    const topicIds = new Set(c.subjects.flatMap(s => s.topics.map(t => t.id)));
+    return progressRecords.filter(r => topicIds.has(r.topic_id) && r.status === 'completed').length;
+  };
+  const getSubjectCompletedCount = (subject: typeof allSubjects[number]) => {
+    const topicIds = new Set(subject.topics.map(t => t.id));
+    return progressRecords.filter(r => topicIds.has(r.topic_id) && r.status === 'completed').length;
+  };
+
+  // ── Subject filter ────────────────────────────────────────────────────────
+  const filteredSubjects = useMemo(() => {
+    if (selectedSubjectIds.length === 0) return allSubjects; // empty = all selected
+    return allSubjects.filter(s => selectedSubjectIds.includes(s.id));
+  }, [allSubjects, selectedSubjectIds]);
+
+  const activeSubjects = useMemo(
+    () => allSubjects.filter(s => s.id && activeCurriculum?.subjects.some(cs => cs.id === s.id)),
+    [allSubjects, activeCurriculum]
+  );
+
+  // ── Confidence / status handlers ─────────────────────────────────────────
+  const updateConfidence = (topicId: string, level: number) => {
+    updateProgress(topicId, { confidence_level: level });
+  };
+  const updateStatus = (topicId: string, status: TopicStatus) => {
+    updateProgress(topicId, { status });
+  };
 
   // ── Empty state ─────────────────────────────────────────────────────────────
 
@@ -277,7 +338,7 @@ export default function LessonTracker() {
                 type="button"
                 role="tab"
                 aria-selected={isActive}
-                onClick={() => setSelectedCurriculumId(curriculum.id)}
+                onClick={() => setActiveCurriculumId(curriculum.id)}
                 className={cn(
                   'inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all duration-200 cursor-pointer focus-ring',
                   isActive
@@ -326,22 +387,32 @@ export default function LessonTracker() {
         </div>
       )}
 
+      {/* ── Subject filter bar ───────────────────────────────────────────────── */}
+      {activeSubjects.length > 0 && (
+        <SubjectFilterBar
+          subjects={activeSubjects.map(s => ({ id: s.id, title: s.title }))}
+          selectedIds={selectedSubjectIds}
+          onToggle={setSelectedSubjectIds}
+        />
+      )}
+
       {/* ── Subject accordion list ───────────────────────────────────────────── */}
-      {subjects.length === 0 ? (
+      {filteredSubjects.length === 0 ? (
         <div className="rounded-xl border border-border bg-background-card p-8 text-center">
           <Layers className="mx-auto h-8 w-8 text-foreground-muted" />
-          <p className="mt-3 font-semibold text-foreground">No subjects yet</p>
+          <p className="mt-3 font-semibold text-foreground">No subjects to show</p>
           <p className="text-sm text-foreground-muted">
-            This curriculum has no subjects defined yet.
+            {allSubjects.length === 0
+              ? 'This curriculum has no subjects defined yet.'
+              : 'All subjects are filtered out. Try selecting different filters.'}
           </p>
         </div>
       ) : (
         <div className="space-y-4">
-          {subjects.map((subject) => (
+          {filteredSubjects.map((subject) => (
             <SubjectAccordion
               key={subject.id}
               subject={subject}
-              curriculumId={activeCurriculumId ?? ''}
               completedCount={getSubjectCompletedCount(subject)}
               progressRecords={progressRecords}
               onConfidenceChange={updateConfidence}

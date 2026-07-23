@@ -14,8 +14,9 @@ import {
   Search,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
-import { getClubMembers, getClubCurriculumLinks, getClubs } from '@/lib/mock/database';
+import { getClubMembers, getClubs } from '@/lib/mock/database';
 import { DEFAULT_CLUB_FEATURES } from '@/types';
+import type { ClubFeature, ClubFeatureKey } from '@/types';
 
 export default function ClubsPageContent() {
   const clubs = getClubs();
@@ -74,14 +75,13 @@ export default function ClubsPageContent() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredClubs.map((club) => {
-              const memberCount = getClubMembers(club.id).filter(m => m.membership_status === 'active').length;
-              const curriculumLinks = getClubCurriculumLinks(club.id);
-              const enabledFeatures = club.enabled_features || DEFAULT_CLUB_FEATURES;
+              const memberCount = getClubMembers(club.id).filter((m: any) => m.membership_status === 'active').length;
+              const enabledFeatures: ClubFeature[] = club.enabled_features || DEFAULT_CLUB_FEATURES;
               
               // Filter features that are enabled and publicly visible
-              const publicFeatures = enabledFeatures
-                .filter(f => f.enabled && f.public_visible)
-                .map(f => f.key);
+              const publicFeatures: ClubFeatureKey[] = enabledFeatures
+                .filter((f: ClubFeature) => f.enabled && f.public_visible)
+                .map((f: ClubFeature) => f.key);
 
               return (
                 <Link
@@ -121,7 +121,7 @@ export default function ClubsPageContent() {
                     {/* Feature tags */}
                     {publicFeatures.length > 0 ? (
                       <div className="flex flex-wrap gap-1.5 mb-4">
-                        {publicFeatures.slice(0, 4).map((featureKey) => (
+                        {publicFeatures.slice(0, 4).map((featureKey: ClubFeatureKey) => (
                           <span
                             key={featureKey}
                             className="text-[10px] px-2 py-0.5 rounded-full bg-background-secondary text-foreground-muted border border-border"

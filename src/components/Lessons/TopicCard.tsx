@@ -9,7 +9,7 @@
 import { useState } from 'react';
 import { Star, CheckCircle2, Circle, Clock4 } from 'lucide-react';
 import { cn, formatRelativeTime } from '@/lib/utils';
-import type { TopicItem, TopicProgressRecord, TopicStatus } from '@/hooks/useLessons';
+import type { TopicItem, TopicProgressRecord, TopicStatus } from '@/context/LessonContext';
 
 // ── Status config ─────────────────────────────────────────────────────────────
 

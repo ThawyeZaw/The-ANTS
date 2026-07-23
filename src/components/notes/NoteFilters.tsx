@@ -47,6 +47,7 @@ export default function NoteFiltersPanel({ filters, onFiltersChange }: NoteFilte
               search: '',
               curriculumId: null,
               subjectId: null,
+              topicId: null,
               isSyllabusBased: null,
               tags: [],
             })}

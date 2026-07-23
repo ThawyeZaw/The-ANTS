@@ -319,6 +319,7 @@ export interface NoteFilters {
   search: string;
   curriculumId: string | null;
   subjectId: string | null;
+  topicId: string | null;
   isSyllabusBased: boolean | null;
   tags: string[];
 }
@@ -450,6 +451,23 @@ export type NoteBlock =
   | TableBlock
   | DividerBlock;
 
+/** Personal user note stored in `user_notes` table — private, owner-only */
+export interface UserNote {
+  id: string;
+  user_id: string;
+  topic_id: string | null;
+  subject_id: string | null;
+  curriculum_id: string | null;
+  title: string;
+  content: string | null;
+  blocks: NoteBlock[];
+  tags: string[];
+  color: string | null;
+  is_pinned: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Note {
   id: string;
   title: string;
@@ -522,25 +540,35 @@ export interface InvitedUser {
 }
 
 // -----------------------------------------------------------------------------
-// Clubs
+// Clubs — Showcase Library
 // -----------------------------------------------------------------------------
 
+/** Club field categories */
+export type ClubField =
+  | 'architecture'
+  | 'computer_science'
+  | 'volunteering'
+  | 'mathematics'
+  | 'science'
+  | 'literature'
+  | 'arts'
+  | 'music'
+  | 'debate'
+  | 'entrepreneurship'
+  | 'engineering'
+  | 'medicine'
+  | 'other';
+
+/** Predefined section keys for club public pages */
+export type ClubSectionKey = 'about' | 'projects' | 'members' | 'announcements';
+
+/** Join mode for a club */
 export type ClubJoinMode = 'open' | 'invite_link' | 'approval_based';
-export type ClubMemberRole = 'admin' | 'moderator' | 'member';
-export type ClubMembershipStatus = 'active' | 'pending' | 'rejected';
-export type ClubJoinRequestStatus = 'pending' | 'approved' | 'rejected';
 
-/** Available features that a club can enable or disable */
-export type ClubFeatureKey =
-  | 'chat'
-  | 'announcements'
-  | 'links'
-  | 'members'
-  | 'projects'
-  | 'activity_timeline'
-  | 'leaderboard';
+/** Club feature keys for granular visibility controls */
+export type ClubFeatureKey = 'chat' | 'announcements' | 'links' | 'members' | 'projects' | 'activity_timeline' | 'leaderboard';
 
-/** Feature configuration with visibility and enablement settings */
+/** Feature configuration for a club */
 export interface ClubFeature {
   key: ClubFeatureKey;
   enabled: boolean;
@@ -553,81 +581,49 @@ export const DEFAULT_CLUB_FEATURES: ClubFeature[] = [
   { key: 'announcements', enabled: true, public_visible: true },
   { key: 'links', enabled: true, public_visible: true },
   { key: 'members', enabled: true, public_visible: true },
+  { key: 'projects', enabled: false, public_visible: false },
+  { key: 'activity_timeline', enabled: false, public_visible: false },
+  { key: 'leaderboard', enabled: false, public_visible: false },
 ];
 
 export interface Club {
   id: string;
   name: string;
   description: string | null;
+  tagline: string | null;
+  cover_image_url: string | null;
+  accent_color: string | null;
+  custom_slug: string | null;
+  field: ClubField;
   created_by: string;
-  join_mode: ClubJoinMode;
-  invite_code: string | null;
-  enabled_features?: ClubFeature[];
-  cover_image_url?: string | null;
-  tagline?: string | null;
-  custom_domain_slug?: string | null;
-  is_showcase?: boolean;
   created_at: string;
+  updated_at: string | null;
+  join_mode?: ClubJoinMode;
+  enabled_features?: ClubFeature[];
+}
+
+export interface ClubSection {
+  id: string;
+  club_id: string;
+  section_key: ClubSectionKey;
+  visible: boolean;
+  order_no: number;
+  title_override: string | null;
+}
+
+export interface ClubLeader {
+  id: string;
+  club_id: string;
+  user_id: string;
 }
 
 export interface ClubMember {
   id: string;
   club_id: string;
   user_id: string;
-  role: ClubMemberRole;
-  membership_status: ClubMembershipStatus;
   joined_at: string | null;
+  membership_status?: string;
 }
-
-export interface ClubMessage {
-  id: string;
-  club_id: string;
-  sender_id: string;
-  message: string;
-  created_at: string;
-}
-
-export interface ClubAnnouncement {
-  id: string;
-  club_id: string;
-  created_by: string;
-  title: string | null;
-  content: string | null;
-  created_at: string;
-}
-
-export interface ClubLink {
-  id: string;
-  club_id: string;
-  title: string | null;
-  url: string | null;
-  shared_by: string;
-  created_at: string;
-}
-
-export interface ClubJoinRequest {
-  id: string;
-  club_id: string;
-  user_id: string;
-  status: ClubJoinRequestStatus;
-  requested_at: string;
-}
-
-export interface ClubCurriculum {
-  id: string;
-  club_id: string;
-  curriculum_id: string;
-}
-
-export interface ClubSubject {
-  id: string;
-  club_id: string;
-  subject_id: string;
-}
-
-// ── Club Projects ──
-
-export type ProjectStatus = 'active' | 'completed' | 'archived';
 
 export interface ClubProjectLink {
   label: string;
@@ -640,58 +636,30 @@ export interface ClubProject {
   created_by: string;
   title: string;
   description: string | null;
-  status?: ProjectStatus;
-  cover_image_url?: string | null;
-  links?: ClubProjectLink[];
-  contributors?: string[];
-  tags?: string[];
+  cover_image_url: string | null;
+  tags: string[];
+  links: ClubProjectLink[];
+  contributors: string[];
   created_at: string;
-  updated_at?: string | null;
+  updated_at: string | null;
 }
 
-// ── Club Events ──
-
-export interface ClubEvent {
+export interface ClubAnnouncement {
   id: string;
   club_id: string;
   created_by: string;
   title: string;
-  description: string | null;
-  event_date: string;
+  content: string;
   created_at: string;
 }
 
-// ── Club Milestones ──
-
-export type ClubMilestoneStatus = 'planned' | 'in_progress' | 'completed';
-
-export interface ClubMilestone {
-  id: string;
-  club_id: string;
-  title: string;
-  description: string | null;
-  status: ClubMilestoneStatus;
-  target_date?: string | null;
-  completed_at?: string | null;
-  created_by: string;
-  created_at: string;
-  order_no?: number | null;
-}
-
-// ── Club Member Contributions ──
-
-export type ContributionType = 'project' | 'event' | 'milestone_completed' | 'discussion' | 'other';
-
-export interface ClubMemberContribution {
-  id: string;
-  club_id: string;
-  user_id: string;
-  contribution_type: ContributionType;
-  title: string;
-  description?: string | null;
-  metadata?: Record<string, unknown> | null;
-  created_at: string;
-}
+// ── Default sections for new clubs ──
+export const DEFAULT_CLUB_SECTIONS: Array<{ key: ClubSectionKey; label: string }> = [
+  { key: 'about', label: 'About' },
+  { key: 'projects', label: 'Projects' },
+  { key: 'members', label: 'Members' },
+  { key: 'announcements', label: 'Announcements' },
+];
 
 // ── Academic Certifications ──
 
@@ -723,65 +691,6 @@ export const CERTIFICATION_TYPE_META: Record<CertificationType, { label: string;
   sat: { label: 'SAT', icon: 'PenTool', color: 'bg-amber-500/10 text-amber-400' },
   other: { label: 'Other', icon: 'Award', color: 'bg-gray-500/10 text-gray-400' },
 };
-
-
-// -----------------------------------------------------------------------------
-// Club Permission Helpers
-// -----------------------------------------------------------------------------
-
-/** Check if a user has admin permissions in a club */
-export function isClubAdmin(role: ClubMemberRole): boolean {
-  return role === 'admin';
-}
-
-/** Check if a user has moderator or admin permissions in a club */
-export function isClubLeader(role: ClubMemberRole): boolean {
-  return role === 'admin' || role === 'moderator';
-}
-
-/** Check if a user can modify club details */
-export function canModifyClubDetails(role: ClubMemberRole): boolean {
-  return role === 'admin';
-}
-
-/** Check if a user can manage club features */
-export function canManageClubFeatures(role: ClubMemberRole): boolean {
-  return role === 'admin';
-}
-
-/** Check if a user can make announcements */
-export function canMakeAnnouncements(role: ClubMemberRole): boolean {
-  return role === 'admin' || role === 'moderator';
-}
-
-/** Check if a user can add links */
-export function canAddLinks(role: ClubMemberRole): boolean {
-  return role === 'admin' || role === 'moderator';
-}
-
-/** Check if a user can send messages in chat */
-export function canSendMessages(role: ClubMemberRole, membershipStatus: ClubMembershipStatus): boolean {
-  return membershipStatus === 'active';
-}
-
-/** Check if a feature is enabled for a club */
-export function isFeatureEnabled(club: Club, featureKey: ClubFeatureKey): boolean {
-  const feature = club.enabled_features?.find(f => f.key === featureKey);
-  return feature?.enabled ?? false;
-}
-
-/** Check if a feature is publicly visible for a club */
-export function isFeaturePubliclyVisible(club: Club, featureKey: ClubFeatureKey): boolean {
-  const feature = club.enabled_features?.find(f => f.key === featureKey);
-  return feature?.public_visible ?? false;
-}
-
-/** Get all publicly visible features for a club */
-export function getPubliclyVisibleFeatures(club: Club): ClubFeatureKey[] {
-  return club.enabled_features
-    ?.filter(f => f.public_visible)
-    .map(f => f.key) || [];
-}
 
 // -----------------------------------------------------------------------------
 // Classrooms
@@ -1254,6 +1163,8 @@ export interface Deck {
   curriculum_id: string | null;
   /** Optional link to a specific subject within a curriculum */
   subject_id: string | null;
+  /** Optional link to a topic/lesson within a subject */
+  topic_id: string | null;
   name: string;
   description: string | null;
   /** Free-text category tag, e.g. "Biology", "History", "Custom" */
