@@ -15,7 +15,7 @@ import {
   Star, ExternalLink, Layers, List, ArrowLeft,
   CheckCircle2, Circle, Clock4, AlertTriangle,
 } from 'lucide-react';
-import { useLessons, type TopicItem, type TopicStatus } from '@/hooks/useLessons';
+import { useLessonContext, type TopicItem, type TopicStatus } from '@/context/LessonContext';
 import { cn } from '@/lib/utils';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -72,11 +72,9 @@ const STATUS_OPTIONS: {
 export default function SubjectLessonView({ curriculumId, subjectId }: SubjectLessonViewProps) {
   const {
     enrolledCurriculums,
-    updateConfidence,
-    updateStatus,
     progressRecords,
-    getSubjectCompletedCount,
-  } = useLessons();
+    updateProgress,
+  } = useLessonContext();
 
   // Find the curriculum and subject
   const curriculum = useMemo(
@@ -153,7 +151,12 @@ export default function SubjectLessonView({ curriculumId, subjectId }: SubjectLe
   // ── Derived values ──────────────────────────────────────────────────────────
 
   const selectedTopic = topics[selectedTopicIdx] ?? null;
-  const completedCount = getSubjectCompletedCount(subject);
+  const completedCount = useMemo(
+    () => subject?.topics.filter(
+      (t: TopicItem) => progressRecords.find((r) => r.topic_id === t.id)?.status === 'completed'
+    ).length ?? 0,
+    [subject, progressRecords]
+  );
   const totalCount = topics.length;
   const progressPct = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
 
@@ -182,17 +185,17 @@ export default function SubjectLessonView({ curriculumId, subjectId }: SubjectLe
   const handleConfidenceChange = useCallback(
     (level: number) => {
       if (!selectedTopic) return;
-      updateConfidence(selectedTopic.id, level);
+      updateProgress(selectedTopic.id, { confidence_level: level });
     },
-    [selectedTopic, updateConfidence]
+    [selectedTopic, updateProgress]
   );
 
   const handleStatusChange = useCallback(
     (status: TopicStatus) => {
       if (!selectedTopic) return;
-      updateStatus(selectedTopic.id, status);
+      updateProgress(selectedTopic.id, { status });
     },
-    [selectedTopic, updateStatus]
+    [selectedTopic, updateProgress]
   );
 
   // ── Render ──────────────────────────────────────────────────────────────────
