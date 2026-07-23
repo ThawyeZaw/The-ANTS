@@ -14,6 +14,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
 import MyWorkspace from '@/components/workspace/MyWorkspace';
+import { WorkspaceToastProvider } from '@/components/workspace/WorkspaceToast';
 import { cn } from '@/lib/utils';
 import { mockReviewQueue, getMainContributorDashboardStats } from '@/lib/mock/database';
 
@@ -205,7 +206,9 @@ export default function MainContributorDashboard() {
 
       {/* Workspace — upper position */}
       <Suspense fallback={<div className="flex items-center justify-center py-16 text-[var(--foreground-muted)]">Loading workspace...</div>}>
-        <MyWorkspace />
+        <WorkspaceToastProvider>
+          <MyWorkspace />
+        </WorkspaceToastProvider>
       </Suspense>
 
       {/* Original dashboard content — below workspace */}
