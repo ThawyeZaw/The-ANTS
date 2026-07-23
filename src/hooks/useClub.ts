@@ -126,7 +126,7 @@ export function useClub() {
     return res.success ? res.members : [];
   }, []);
 
-  const joinClub = useCallback(async (clubId: string, userId: string): Promise<Result> => {
+  const joinClub = useCallback(async (clubId: string, userId: string, inviteCode?: string): Promise<Result> => {
     const res = await actionJoinClub(clubId, userId);
     if (res.success) refresh();
     return res;

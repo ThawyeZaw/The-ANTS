@@ -1824,7 +1824,6 @@ export const mockClubs: Club[] = [
     description: 'A community for book lovers, writers, and literary enthusiasts. Share your favourite reads and creative writing.',
     created_by: 'user-teacher-002',
     join_mode: 'open',
-    invite_code: null,
     enabled_features: [
       { key: 'chat', enabled: true, public_visible: true },
       { key: 'announcements', enabled: true, public_visible: true },
@@ -1835,10 +1834,12 @@ export const mockClubs: Club[] = [
       { key: 'leaderboard', enabled: false, public_visible: false },
     ],
     cover_image_url: null,
+    accent_color: '#8b5cf6',
+    custom_slug: 'literary-society',
+    field: 'literature',
     tagline: 'Where words come alive — read, write, and inspire.',
-    custom_domain_slug: 'literary-society',
-    is_showcase: false,
     created_at: '2026-05-10T00:00:00Z',
+    updated_at: null,
   },
   {
     id: 'club-5',
@@ -1846,7 +1847,6 @@ export const mockClubs: Club[] = [
     description: 'Competitive math training with AMC-style problem sets, mock contests, and peer discussion.',
     created_by: 'user-teacher-001',
     join_mode: 'open',
-    invite_code: null,
     enabled_features: [
       { key: 'chat', enabled: true, public_visible: true },
       { key: 'announcements', enabled: true, public_visible: true },
@@ -1857,10 +1857,12 @@ export const mockClubs: Club[] = [
       { key: 'leaderboard', enabled: true, public_visible: true },
     ],
     cover_image_url: null,
+    accent_color: '#f59e0b',
+    custom_slug: 'math-olympiad',
+    field: 'mathematics',
     tagline: 'Train harder, think sharper — your path to the podium.',
-    custom_domain_slug: 'math-olympiad',
-    is_showcase: true,
     created_at: '2026-06-01T00:00:00Z',
+    updated_at: null,
   },
 ];
 
