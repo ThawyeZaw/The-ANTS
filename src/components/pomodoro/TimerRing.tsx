@@ -53,7 +53,7 @@ export default function TimerRing({ phase, remainingMs, totalMs, isPaused, class
   }, [phase]);
 
   return (
-    <div className={`relative flex flex-col items-center justify-center ${className}`}>
+    <div className={`flex flex-col items-center ${className}`}>
       {/* Phase label above the ring */}
       <span
         className="text-sm font-medium mb-3 tracking-wide uppercase"
@@ -62,59 +62,62 @@ export default function TimerRing({ phase, remainingMs, totalMs, isPaused, class
         {phaseLabel}
       </span>
 
-      <svg
-        width={SVG_SIZE}
-        height={SVG_SIZE}
-        viewBox={`0 0 ${SVG_SIZE} ${SVG_SIZE}`}
-        className="transform -rotate-90"
-        aria-hidden="true"
-      >
-        {/* Background track */}
-        <circle
-          cx={CENTER}
-          cy={CENTER}
-          r={RING_RADIUS}
-          fill="none"
-          stroke={trackColor}
-          strokeWidth={STROKE_WIDTH}
-          strokeLinecap="round"
-        />
-        {/* Progress arc */}
-        <circle
-          cx={CENTER}
-          cy={CENTER}
-          r={RING_RADIUS}
-          fill="none"
-          stroke={strokeColor}
-          strokeWidth={STROKE_WIDTH}
-          strokeLinecap="round"
-          strokeDasharray={CIRCUMFERENCE}
-          strokeDashoffset={strokeDashoffset}
-          className="transition-[stroke-dashoffset] duration-300 ease-linear motion-reduce:transition-none"
-          style={{
-            filter: `drop-shadow(0 0 6px ${strokeColor === 'var(--primary)' ? 'rgba(51,97,160,0.3)' : 'rgba(40,191,127,0.3)'})`,
-          }}
-        />
-      </svg>
-
-      {/* Centered time display */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-        <span
-          className="text-5xl font-bold tabular-nums tracking-tight"
-          style={{ color: 'var(--foreground)' }}
-          aria-live="polite"
-          aria-label={`${timeDisplay} remaining`}
+      {/* Ring + time overlay — relative wrapper so text centers inside the SVG */}
+      <div className="relative" style={{ width: SVG_SIZE, height: SVG_SIZE }}>
+        <svg
+          width={SVG_SIZE}
+          height={SVG_SIZE}
+          viewBox={`0 0 ${SVG_SIZE} ${SVG_SIZE}`}
+          className="transform -rotate-90"
+          aria-hidden="true"
         >
-          {timeDisplay}
-        </span>
-        {isPaused && (
+          {/* Background track */}
+          <circle
+            cx={CENTER}
+            cy={CENTER}
+            r={RING_RADIUS}
+            fill="none"
+            stroke={trackColor}
+            strokeWidth={STROKE_WIDTH}
+            strokeLinecap="round"
+          />
+          {/* Progress arc */}
+          <circle
+            cx={CENTER}
+            cy={CENTER}
+            r={RING_RADIUS}
+            fill="none"
+            stroke={strokeColor}
+            strokeWidth={STROKE_WIDTH}
+            strokeLinecap="round"
+            strokeDasharray={CIRCUMFERENCE}
+            strokeDashoffset={strokeDashoffset}
+            className="transition-[stroke-dashoffset] duration-300 ease-linear motion-reduce:transition-none"
+            style={{
+              filter: `drop-shadow(0 0 6px ${strokeColor === 'var(--primary)' ? 'rgba(51,97,160,0.3)' : 'rgba(40,191,127,0.3)'})`,
+            }}
+          />
+        </svg>
+
+        {/* Time display — now centered inside the ring, not the parent */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
           <span
-            className="text-xs mt-1 font-medium tracking-wide uppercase"
-            style={{ color: 'var(--foreground-muted)' }}
+            className="text-5xl font-bold tabular-nums tracking-tight"
+            style={{ color: 'var(--foreground)' }}
+            aria-live="polite"
+            aria-label={`${timeDisplay} remaining`}
           >
-            Paused
+            {timeDisplay}
           </span>
-        )}
+          {isPaused && (
+            <span
+              className="text-xs mt-1 font-medium tracking-wide uppercase"
+              style={{ color: 'var(--foreground-muted)' }}
+            >
+              Paused
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );

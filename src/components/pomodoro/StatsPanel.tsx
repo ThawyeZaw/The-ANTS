@@ -22,8 +22,8 @@ function daysAgoKey(days: number): string {
 }
 
 const CHART_WIDTH = 280;
-const CHART_HEIGHT = 120;
-const CHART_PADDING = { top: 8, right: 8, bottom: 20, left: 8 };
+const CHART_HEIGHT = 90;
+const CHART_PADDING = { top: 6, right: 8, bottom: 18, left: 8 };
 const BAR_GAP = 4;
 const DAY_COUNT = 7;
 
@@ -56,7 +56,7 @@ export default function StatsPanel({ stats }: StatsPanelProps) {
 
   return (
     <div
-      className="rounded-2xl p-5 space-y-4"
+      className="rounded-2xl p-4 space-y-3"
       style={{
         background: 'var(--background-card)',
         border: `1px solid var(--border)`,
@@ -70,14 +70,14 @@ export default function StatsPanel({ stats }: StatsPanelProps) {
       </h3>
 
       {/* Stat pills */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-2">
         {/* Today's focus */}
         <div
-          className="flex flex-col items-center gap-1 p-3 rounded-xl"
+          className="flex flex-col items-center gap-0.5 p-2 rounded-xl"
           style={{ background: 'var(--background-secondary)' }}
         >
-          <Clock className="h-5 w-5" style={{ color: 'var(--primary)' }} />
-          <span className="text-lg font-bold tabular-nums" style={{ color: 'var(--foreground)' }}>
+          <Clock className="h-4 w-4" style={{ color: 'var(--primary)' }} />
+          <span className="text-base font-bold tabular-nums" style={{ color: 'var(--foreground)' }}>
             {(() => {
               const today = daysAgoKey(0);
               const entry = stats.entries.find((e) => e.date === today);
@@ -91,11 +91,11 @@ export default function StatsPanel({ stats }: StatsPanelProps) {
 
         {/* Sessions today */}
         <div
-          className="flex flex-col items-center gap-1 p-3 rounded-xl"
+          className="flex flex-col items-center gap-0.5 p-2 rounded-xl"
           style={{ background: 'var(--background-secondary)' }}
         >
-          <CheckCircle className="h-5 w-5" style={{ color: 'var(--accent)' }} />
-          <span className="text-lg font-bold tabular-nums" style={{ color: 'var(--foreground)' }}>
+          <CheckCircle className="h-4 w-4" style={{ color: 'var(--accent)' }} />
+          <span className="text-base font-bold tabular-nums" style={{ color: 'var(--foreground)' }}>
             {(() => {
               const today = daysAgoKey(0);
               const entry = stats.entries.find((e) => e.date === today);
@@ -109,11 +109,11 @@ export default function StatsPanel({ stats }: StatsPanelProps) {
 
         {/* Streak */}
         <div
-          className="flex flex-col items-center gap-1 p-3 rounded-xl"
+          className="flex flex-col items-center gap-0.5 p-2 rounded-xl"
           style={{ background: 'var(--background-secondary)' }}
         >
-          <Flame className="h-5 w-5" style={{ color: 'var(--warning)' }} />
-          <span className="text-lg font-bold tabular-nums" style={{ color: 'var(--foreground)' }}>
+          <Flame className="h-4 w-4" style={{ color: 'var(--warning)' }} />
+          <span className="text-base font-bold tabular-nums" style={{ color: 'var(--foreground)' }}>
             {stats.currentStreak}
           </span>
           <span className="text-xs" style={{ color: 'var(--foreground-muted)' }}>
@@ -125,15 +125,15 @@ export default function StatsPanel({ stats }: StatsPanelProps) {
       {/* Weekly bar chart */}
       <div>
         <h4
-          className="text-sm font-medium mb-3"
+          className="text-sm font-medium mb-2"
           style={{ color: 'var(--foreground-secondary)' }}
         >
           Last 7 Days
         </h4>
         <svg
-          width={CHART_WIDTH}
-          height={CHART_HEIGHT}
           viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
+          className="w-full h-auto"
+          preserveAspectRatio="xMidYMid meet"
           aria-label="Weekly focus minutes chart"
           role="img"
         >
@@ -202,7 +202,7 @@ export default function StatsPanel({ stats }: StatsPanelProps) {
 
       {/* All-time total */}
       <div
-        className="text-xs text-center pt-1"
+        className="text-xs text-center"
         style={{ color: 'var(--foreground-muted)' }}
       >
         {stats.allTimeFocusMinutes > 0

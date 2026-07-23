@@ -68,7 +68,7 @@ export default function ZenMode({ isActive, onToggle, children }: ZenModeProps) 
       {/* Zen Mode Overlay */}
       {isActive && (
         <div
-          className="pomo-zen-overlay fixed inset-0 z-[100] flex flex-col items-center justify-center gap-8 animate-fade-in"
+          className="pomo-zen-overlay fixed inset-0 z-[100] flex flex-col items-center justify-center gap-8 animate-fade-in motion-reduce:animate-none"
           style={{
             background: 'var(--background)',
           }}
@@ -92,7 +92,7 @@ export default function ZenMode({ isActive, onToggle, children }: ZenModeProps) 
 
           {/* Rotating quote */}
           <p
-            className="text-sm italic text-center max-w-xs px-4 animate-fade-in"
+            className="text-sm italic text-center max-w-xs px-4 animate-fade-in motion-reduce:animate-none"
             style={{ color: 'var(--foreground-muted)' }}
             key={quoteIndex}
           >

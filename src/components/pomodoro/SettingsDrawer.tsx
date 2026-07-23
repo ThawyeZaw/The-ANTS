@@ -69,8 +69,8 @@ export default function SettingsDrawer({ settings, onUpdate }: SettingsDrawerPro
       {/* Toggle button */}
       <Button
         variant="secondary"
-        size="lg"
-        icon={<Settings className="h-5 w-5" />}
+        size="sm"
+        icon={<Settings className="h-4 w-4" />}
         onClick={() => setIsOpen(true)}
         aria-label="Open timer settings"
         aria-expanded={isOpen}
