@@ -57,6 +57,66 @@ import {
 } from '@/types';
 import { generateUsername } from '@/lib/utils';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Persistence Layer — localStorage-backed mock database
+// Survives page refreshes, browser restarts, and logout/login cycles.
+// Falls back gracefully to hardcoded defaults when localStorage is unavailable.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const STORAGE_PREFIX = 'theants_mock_';
+const STORAGE_KEYS = {
+  USER_ENROLLMENTS: `${STORAGE_PREFIX}user_enrollments`,
+  USER_CURRICULUMS: `${STORAGE_PREFIX}user_curriculums`,
+  EXAM_OVERRIDES: `${STORAGE_PREFIX}exam_overrides`,
+  EXAM_HISTORY: `${STORAGE_PREFIX}exam_history`,
+  TOPIC_PROGRESS: `${STORAGE_PREFIX}topic_progress`,
+  EXAM_COUNTDOWNS: `${STORAGE_PREFIX}exam_countdowns`,
+} as const;
+
+let _storageAvailable: boolean | null = null;
+
+function isStorageAvailable(): boolean {
+  if (_storageAvailable !== null) return _storageAvailable;
+  try {
+    const testKey = `${STORAGE_PREFIX}test`;
+    localStorage.setItem(testKey, '1');
+    localStorage.removeItem(testKey);
+    _storageAvailable = true;
+  } catch {
+    _storageAvailable = false;
+  }
+  return _storageAvailable;
+}
+
+/**
+ * Load an array from localStorage. Returns the fallback if storage is
+ * unavailable, corrupt, or empty.
+ */
+function loadArray<T>(key: string, fallback: T[]): T[] {
+  if (!isStorageAvailable()) return fallback;
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return fallback;
+    return parsed as T[];
+  } catch {
+    return fallback;
+  }
+}
+
+/**
+ * Persist an array to localStorage. Silently no-ops when storage is unavailable.
+ */
+function saveArray<T>(key: string, data: T[]): void {
+  if (!isStorageAvailable()) return;
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch {
+    // Storage full or disabled — silently degrade (data stays in-memory)
+  }
+}
+
 // ── Mock User Profiles ──────────────────────────────────────────────────────
 
 const mockProfiles: Profile[] = [
@@ -906,13 +966,29 @@ export const mockTopics: Topic[] = [
   { id: 'top-2', subject_id: 'subj-1', title: 'Energy', description: 'Work, energy, and power.', syllabus_code: null, learning_objectives: null, order_no: 2 },
 ];
 
-export const mockUserCurriculums = [
+const _defaultUserCurriculums = [
   { id: 'uc-1', user_id: 'user-student-001', curriculum_id: 'curr-1', selected_at: '2026-01-16T00:00:00Z' },
 ];
 
+export const mockUserCurriculums = loadArray(STORAGE_KEYS.USER_CURRICULUMS, _defaultUserCurriculums);
+
+function _saveUserCurriculums() { saveArray(STORAGE_KEYS.USER_CURRICULUMS, mockUserCurriculums); }
+
 // ── User Enrollments ─────────────────────────────────────────────────────────
 
-export const mockUserEnrollments = [
+type EnrollmentStatus = 'active' | 'completed' | 'dropped';
+
+interface EnrollmentRecord {
+  id: string;
+  user_id: string;
+  curriculum_id: string;
+  subject_id: string;
+  exam_id: string | null;
+  enrolled_at: string;
+  status: EnrollmentStatus;
+}
+
+const _defaultUserEnrollments: EnrollmentRecord[] = [
   {
     id: 'enr-1',
     user_id: 'user-student-001',
@@ -920,6 +996,7 @@ export const mockUserEnrollments = [
     subject_id: 'subj-cie-physics',
     exam_id: 'exam-cie-phys-0625-mj27',
     enrolled_at: '2026-06-01T00:00:00Z',
+    status: 'active',
   },
   {
     id: 'enr-2',
@@ -928,12 +1005,17 @@ export const mockUserEnrollments = [
     subject_id: 'subj-cie-maths',
     exam_id: null,
     enrolled_at: '2026-06-01T00:00:00Z',
+    status: 'active',
   },
 ];
 
+export const mockUserEnrollments: EnrollmentRecord[] = loadArray(STORAGE_KEYS.USER_ENROLLMENTS, _defaultUserEnrollments);
+
+function _saveUserEnrollments() { saveArray(STORAGE_KEYS.USER_ENROLLMENTS, mockUserEnrollments); }
+
 // ── User Exam Overrides ──────────────────────────────────────────────────────
 
-export const mockUserExamOverrides: Array<{ id: string; user_id: string; exam_id: string; custom_title: string | null; custom_exam_series: string | null; custom_exam_date: string | null }> = [
+const _defaultExamOverrides: Array<{ id: string; user_id: string; exam_id: string; custom_title: string | null; custom_exam_series: string | null; custom_exam_date: string | null }> = [
   {
     id: 'uov-1',
     user_id: 'user-student-001',
@@ -944,9 +1026,13 @@ export const mockUserExamOverrides: Array<{ id: string; user_id: string; exam_id
   },
 ];
 
+export const mockUserExamOverrides: typeof _defaultExamOverrides = loadArray(STORAGE_KEYS.EXAM_OVERRIDES, _defaultExamOverrides);
+
+function _saveExamOverrides() { saveArray(STORAGE_KEYS.EXAM_OVERRIDES, mockUserExamOverrides); }
+
 // ── User Exam History ────────────────────────────────────────────────────────
 
-export const mockUserExamHistory: Array<{ id: string; user_id: string; curriculum_id: string; subject_id: string; exam_id: string | null; exam_date: string; result: string | null; is_mock: boolean; notes: string | null; recorded_at: string }> = [
+const _defaultExamHistory: Array<{ id: string; user_id: string; curriculum_id: string; subject_id: string; exam_id: string | null; exam_date: string; result: string | null; is_mock: boolean; notes: string | null; recorded_at: string }> = [
   {
     id: 'eh-1',
     user_id: 'user-student-001',
@@ -961,9 +1047,27 @@ export const mockUserExamHistory: Array<{ id: string; user_id: string; curriculu
   },
 ];
 
-export const mockTopicProgress = [
+export const mockUserExamHistory: typeof _defaultExamHistory = loadArray(STORAGE_KEYS.EXAM_HISTORY, _defaultExamHistory);
+
+function _saveExamHistory() { saveArray(STORAGE_KEYS.EXAM_HISTORY, mockUserExamHistory); }
+
+const _defaultTopicProgress = [
   { id: 'tp-1', user_id: 'user-student-001', topic_id: 'top-1', confidence_level: 4, status: 'in_progress', updated_at: '2026-06-17T00:00:00Z' },
 ];
+
+export const mockTopicProgress = loadArray(STORAGE_KEYS.TOPIC_PROGRESS, _defaultTopicProgress);
+
+function _saveTopicProgress() { saveArray(STORAGE_KEYS.TOPIC_PROGRESS, mockTopicProgress); }
+
+/** Persist topic progress to localStorage (called by useLessons mutations) */
+export function persistTopicProgress(): void {
+  _saveTopicProgress();
+}
+
+/** Persist exam history to localStorage (called by useCourseManager mutations) */
+export function persistExamHistory(): void {
+  _saveExamHistory();
+}
 
 // ── Review Queue ─────────────────────────────────────────────────────────────
 
@@ -2179,7 +2283,18 @@ export function deleteCertification(
 
 // ── Mock Pomodoro ────────────────────────────────────────────────────────────
 export const mockPomodoroSessions = [
-  { id: 'ps-1', user_id: 'user-student-001', duration_minutes: 25, task_name: 'Physics Chapter 1', category: 'Study', completed_at: '2026-06-17T15:00:00Z' }
+  { id: 'ps-1', user_id: 'user-student-001', duration_minutes: 25, task_name: 'Physics Chapter 1', category: 'Study', completed_at: '2026-06-17T15:00:00Z' },
+  { id: 'ps-2', user_id: 'user-student-001', duration_minutes: 25, task_name: 'Physics Chapter 1', category: 'Study', completed_at: '2026-06-17T15:30:00Z' },
+  { id: 'ps-3', user_id: 'user-student-001', duration_minutes: 25, task_name: 'Physics Chapter 2', category: 'Study', completed_at: '2026-06-17T16:15:00Z' },
+  { id: 'ps-4', user_id: 'user-student-001', duration_minutes: 25, task_name: 'Chemistry Formulas', category: 'Study', completed_at: '2026-06-18T14:00:00Z' },
+  { id: 'ps-5', user_id: 'user-student-001', duration_minutes: 25, task_name: 'Chemistry Formulas', category: 'Study', completed_at: '2026-06-18T14:35:00Z' },
+  { id: 'ps-6', user_id: 'user-student-001', duration_minutes: 25, task_name: 'Maths Past Paper', category: 'Practice', completed_at: '2026-06-18T15:20:00Z' },
+  { id: 'ps-7', user_id: 'user-student-001', duration_minutes: 25, task_name: 'Maths Past Paper', category: 'Practice', completed_at: '2026-06-18T16:00:00Z' },
+  { id: 'ps-8', user_id: 'user-student-001', duration_minutes: 25, task_name: 'Biology Revision', category: 'Revision', completed_at: '2026-06-19T09:00:00Z' },
+  { id: 'ps-9', user_id: 'user-student-001', duration_minutes: 25, task_name: 'English Essay Plan', category: 'Writing', completed_at: '2026-06-19T10:30:00Z' },
+  { id: 'ps-10', user_id: 'user-student-001', duration_minutes: 25, task_name: 'ICT Theory', category: 'Study', completed_at: '2026-06-19T11:15:00Z' },
+  { id: 'ps-11', user_id: 'user-student-002', duration_minutes: 25, task_name: 'IELTS Reading', category: 'Practice', completed_at: '2026-06-19T14:00:00Z' },
+  { id: 'ps-12', user_id: 'user-student-002', duration_minutes: 25, task_name: 'IELTS Writing Task 2', category: 'Writing', completed_at: '2026-06-19T14:35:00Z' },
 ];
 
 // ── Mock Flashcards ─────────────────────────────────────────────────────────
@@ -2340,9 +2455,13 @@ export const mockExams: Exam[] = [
   { id: 'exam-1', curriculum_id: 'curr-1', subject_id: null, title: 'IGCSE Physics Paper 2', exam_series: 'May/June 2027', exam_date: '2027-05-15T09:00:00Z', created_at: '2025-12-01T00:00:00Z', exam_board: 'CAIE', syllabus_code: '0625', qualification: 'IGCSE', paper_code: 'P2', date_type: 'fixed', library_status: null },
 ];
 
-export const mockExamCountdowns: ExamCountdown[] = [
+const _defaultExamCountdowns: ExamCountdown[] = [
   { id: 'ec-1', user_id: 'user-student-001', exam_id: 'exam-1', custom_title: 'Physics Finals!', target_date: '2027-05-15T09:00:00Z', priority_indicator: 'high', qualification_group: 'IGCSE', created_at: '2026-01-01T00:00:00Z', custom_date_override: null, share_token: null, is_custom: false }
 ];
+
+export const mockExamCountdowns: ExamCountdown[] = loadArray(STORAGE_KEYS.EXAM_COUNTDOWNS, _defaultExamCountdowns);
+
+function _saveExamCountdowns() { saveArray(STORAGE_KEYS.EXAM_COUNTDOWNS, mockExamCountdowns); }
 
 export let mockGradeBoundaries: ExamGradeBoundary[] = [
   { id: 'gb-1', exam_id: 'exam-1', grade: 'A*', min_mark: 90, max_mark: null, boundary_level: 'overall_subject' },
@@ -2995,6 +3114,7 @@ export const createExamCountdown = (data: {
     is_custom: true,
   };
   mockExamCountdowns.push(countdown);
+  _saveExamCountdowns();
   return countdown;
 };
 
@@ -3002,6 +3122,7 @@ export const deleteExamCountdown = (id: string): { success: boolean } => {
   const idx = mockExamCountdowns.findIndex(c => c.id === id);
   if (idx < 0) return { success: false };
   mockExamCountdowns.splice(idx, 1);
+  _saveExamCountdowns();
   return { success: true };
 };
 
@@ -3036,20 +3157,27 @@ export function enrollInSubject(data: {
   subject_id: string;
   exam_id?: string | null;
 }): { success: true; enrollment: typeof mockUserEnrollments[0] } | { success: false; error: string } {
+  // Validate identifiers
+  if (!data.user_id || !data.curriculum_id || !data.subject_id) {
+    return { success: false, error: 'Missing required fields: user_id, curriculum_id, subject_id.' };
+  }
+
   const existing = mockUserEnrollments.find(
     e => e.user_id === data.user_id && e.curriculum_id === data.curriculum_id && e.subject_id === data.subject_id
   );
   if (existing) return { success: false, error: 'Already enrolled in this subject.' };
 
-  const enrollment = {
+  const enrollment: EnrollmentRecord = {
     id: `enr-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     user_id: data.user_id,
     curriculum_id: data.curriculum_id,
     subject_id: data.subject_id,
     exam_id: data.exam_id ?? null,
     enrolled_at: new Date().toISOString(),
+    status: 'active',
   };
   mockUserEnrollments.push(enrollment);
+  _saveUserEnrollments();
   return { success: true, enrollment };
 }
 
@@ -3058,6 +3186,7 @@ export function unenrollFromSubject(enrollmentId: string): { success: true } | {
   const idx = mockUserEnrollments.findIndex(e => e.id === enrollmentId);
   if (idx < 0) return { success: false, error: 'Enrollment not found.' };
   mockUserEnrollments.splice(idx, 1);
+  _saveUserEnrollments();
   return { success: true };
 }
 
@@ -3066,6 +3195,7 @@ export function updateEnrollmentExamTarget(enrollmentId: string, examId: string 
   const enrollment = mockUserEnrollments.find(e => e.id === enrollmentId);
   if (!enrollment) return { success: false, error: 'Enrollment not found.' };
   enrollment.exam_id = examId;
+  _saveUserEnrollments();
   return { success: true };
 }
 
@@ -3098,6 +3228,7 @@ export function upsertExamOverride(data: {
     if (data.custom_title !== undefined) existing.custom_title = data.custom_title;
     if (data.custom_exam_series !== undefined) existing.custom_exam_series = data.custom_exam_series;
     if (data.custom_exam_date !== undefined) existing.custom_exam_date = data.custom_exam_date;
+    _saveExamOverrides();
     return { success: true, override: existing };
   }
   const override = {
@@ -3109,6 +3240,7 @@ export function upsertExamOverride(data: {
     custom_exam_date: data.custom_exam_date ?? null,
   };
   mockUserExamOverrides.push(override);
+  _saveExamOverrides();
   return { success: true, override };
 }
 

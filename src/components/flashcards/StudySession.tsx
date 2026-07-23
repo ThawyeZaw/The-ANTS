@@ -20,10 +20,10 @@ interface StudySessionProps {
 }
 
 const RATING_BUTTONS: { rating: SRSRating; label: string; shortcut: string; color: string; hoverColor: string; emoji: string }[] = [
-  { rating: 'again', label: 'Again', shortcut: '1', color: 'border-red-400 text-red-500', hoverColor: 'hover:bg-red-50', emoji: '🔴' },
-  { rating: 'hard', label: 'Hard', shortcut: '2', color: 'border-amber-400 text-amber-500', hoverColor: 'hover:bg-amber-50', emoji: '🟡' },
-  { rating: 'good', label: 'Good', shortcut: '3', color: 'border-green-400 text-green-500', hoverColor: 'hover:bg-green-50', emoji: '🟢' },
-  { rating: 'easy', label: 'Easy', shortcut: '4', color: 'border-blue-400 text-blue-500', hoverColor: 'hover:bg-blue-50', emoji: '🔵' },
+  { rating: 'again', label: 'Again', shortcut: '1', color: 'border-red-400 text-red-500', hoverColor: 'hover:bg-red-500/10', emoji: '🔴' },
+  { rating: 'hard', label: 'Hard', shortcut: '2', color: 'border-amber-400 text-amber-500', hoverColor: 'hover:bg-amber-500/10', emoji: '🟡' },
+  { rating: 'good', label: 'Good', shortcut: '3', color: 'border-green-400 text-green-500', hoverColor: 'hover:bg-green-500/10', emoji: '🟢' },
+  { rating: 'easy', label: 'Easy', shortcut: '4', color: 'border-blue-400 text-blue-500', hoverColor: 'hover:bg-blue-500/10', emoji: '🔵' },
 ];
 
 export default function StudySession({ deckId, deckName, userId, onBack }: StudySessionProps) {

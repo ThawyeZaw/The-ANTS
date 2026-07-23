@@ -13,7 +13,6 @@ import { ArrowRight, MessageSquare, Users, Sun, Moon, Home } from 'lucide-react'
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
 import { getRoleLandingPath } from '@/lib/utils';
-import HomepageFonts from '@/components/homepage/HomepageFonts';
 import HeroVisual from '@/components/homepage/HeroVisual';
 import BentoFeatures from '@/components/homepage/BentoFeatures';
 import QualTrail from '@/components/homepage/QualTrail';
@@ -124,9 +123,6 @@ export default function HomePage() {
 
   return (
     <div className="hp" style={{ minHeight: '100vh', overflowX: 'hidden', position: 'relative' }}>
-      {/* Font loader (Fraunces + JetBrains Mono) */}
-      <HomepageFonts />
-
       {/* ── Sticky Nav (theme-aware via .hp-nav class) ──────────────────── */}
       <header
         style={{

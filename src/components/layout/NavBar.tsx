@@ -41,7 +41,6 @@ import {
   NotebookPen,
   ScrollText,
   SquareStack,
-  Briefcase,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
@@ -106,12 +105,6 @@ const NAV_GROUPS: NavGroupDef[] = [
         label: 'Create',
         accentColor: 'var(--color-amber-500, #f59e0b)',
         items: [
-          {
-            label: 'My Workspace',
-            href: '/workspace',
-            icon: <Briefcase className="h-4 w-4" />,
-            description: 'All your notes, decks, courses & exams',
-          },
           {
             label: 'Notes',
             href: '/my-notes',
