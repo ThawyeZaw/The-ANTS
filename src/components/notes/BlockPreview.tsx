@@ -228,7 +228,7 @@ export default function BlockPreview({ block }: BlockPreviewProps) {
 
     case 'paragraph':
       return (
-        <p className="text-foreground-secondary leading-relaxed my-3">
+        <p className="text-base text-foreground-secondary leading-relaxed my-3">
           {block.text.split('\n').map((line, i) => (
             <span key={i}>
               {i > 0 && <br />}
@@ -272,7 +272,7 @@ export default function BlockPreview({ block }: BlockPreviewProps) {
             <ExternalLink className="h-4 w-4" />
           </div>
           <div className="min-w-0">
-            <p className="font-medium text-foreground group-hover:text-primary transition-colors text-sm">{block.label}</p>
+            <p className="font-medium text-foreground group-hover:text-primary transition-colors text-base">{block.label}</p>
             {block.description && <p className="text-xs text-foreground-muted mt-0.5 truncate">{block.description}</p>}
             <p className="text-xs text-primary/60 mt-0.5 truncate">{block.url}</p>
           </div>

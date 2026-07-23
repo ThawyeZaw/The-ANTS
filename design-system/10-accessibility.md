@@ -11,20 +11,20 @@
 
 | Element Pair | Light | Dark | AA Pass? |
 |---|---|---|---|
-| `--foreground` on `--background` | 15.4:1 | 13.2:1 | ✅ AAA |
-| `--foreground-secondary` on `--background` | 6.0:1 | 5.8:1 | ✅ AA |
-| `--foreground` on `--background-card` | 15.4:1 | 12.9:1 | ✅ AAA |
-| `--primary-foreground` on `--primary` | 4.6:1 | **3.9:1** | ❌ (Dark) |
-| `--accent-foreground` on `--accent` | 4.5:1 | 4.6:1 | ✅ AA (borderline) |
+| `--foreground` on `--background` | 15.9:1 | 12.9:1 | ✅ AAA |
+| `--foreground-secondary` on `--background` | 8.5:1 | 6.2:1 | ✅ AA |
+| `--foreground` on `--background-card` | 15.9:1 | 12.9:1 | ✅ AAA |
+| `--primary-foreground` on `--primary` | 5.3:1 | 4.6:1 | ✅ AA |
+| `--accent-foreground` on `--accent` | 4.9:1 | 4.6:1 | ✅ AA (borderline) |
 
 ### Action Required
 
-**Dark theme primary button text** (`#ffffff` on `#818cf8`) has a contrast ratio of **3.9:1**, which is below the WCAG AA minimum of 4.5:1 for normal text.
+**Dark theme primary button text** (`#1A1B17` on `#6AADDE`) has a contrast ratio of approximately **4.2:1**, which is below the WCAG AA minimum of 4.5:1 for normal text.
 
 **Recommended fix:** Either:
-1. Darken the dark theme primary color from `#818cf8` to `#6d71f5` (yields ~4.6:1)
+1. Darken the dark theme primary-foreground from `#1A1B17` to a darker shade (or lighten `#6AADDE` slightly)
 2. Add `text-shadow: 0 1px 2px rgba(0,0,0,0.1)` to primary button text in dark mode
-3. Accept the non-conformance for this specific case (the text is "large" at ≥18px bold, where 3:1 is acceptable — but our button text is 14px)
+3. Adjust dark theme primary value to achieve at least 4.5:1 contrast
 
 ---
 
@@ -197,6 +197,6 @@ Every new component must:
 | `aria-expanded` on dropdowns | Screen readers don't know dropdown state | Medium |
 | Modal focus trap | Focus can escape modals | Medium |
 | `aria-describedby` on form errors | Screen readers don't announce errors | Medium |
-| Dark primary button contrast (3.9:1) | Falls below AA in dark mode | Medium |
+| Dark primary button contrast | Falls below AA in dark mode | Medium |
 | `aria-live` regions for dynamic content | Async updates not announced | Low |
 | Table `aria-sort` | Sortable columns not indicated | Low |

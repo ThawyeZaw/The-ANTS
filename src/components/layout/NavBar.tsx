@@ -608,6 +608,7 @@ export default function NavBar() {
               <div ref={userMenuRef} className="relative">
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  aria-expanded={isUserMenuOpen}
                   className={cn(
                     'flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-xl transition-all duration-200 cursor-pointer',
                     isUserMenuOpen
@@ -679,6 +680,7 @@ export default function NavBar() {
             {/* Mobile Hamburger */}
             <button
               onClick={() => setIsMobileOpen(!isMobileOpen)}
+              aria-expanded={isMobileOpen}
               className="md:hidden p-2 rounded-lg text-foreground-secondary hover:text-foreground hover:bg-background-secondary transition-all cursor-pointer"
               aria-label="Toggle menu"
             >

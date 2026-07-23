@@ -48,8 +48,8 @@
   --info: #3B6CB5;
 
   /* Role Colors */
-  --role-student: #3B6CB5;
-  --role-teacher: #28BF7F;
+  --role-student: #5B6CBF;
+  --role-teacher: #E8853B;
   --role-contributor: #7847C7;
   --role-main-contributor: #D0692B;
 
@@ -91,20 +91,20 @@
   --primary: #5B9EFF;
   --primary-hover: #3B7DD8;
   --primary-light: rgba(91, 158, 255, 0.12);
-  --primary-foreground: #060B14;
+  --primary-foreground: #000000;
 
   --accent: #28FFBF;
   --accent-hover: #06FF00;
   --accent-light: rgba(40, 255, 191, 0.10);
-  --accent-foreground: #060B14;
+  --accent-foreground: #000000;
 
   --success: #28FFBF;
   --warning: #FFB347;
   --error: #F87171;
   --info: #5B9EFF;
 
-  --role-student: #5B9EFF;
-  --role-teacher: #28FFBF;
+  --role-student: #8B9CFF;
+  --role-teacher: #FFA560;
   --role-contributor: #B98FFF;
   --role-main-contributor: #FFB347;
 
