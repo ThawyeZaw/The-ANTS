@@ -562,6 +562,30 @@ export type ClubField =
 /** Predefined section keys for club public pages */
 export type ClubSectionKey = 'about' | 'projects' | 'members' | 'announcements';
 
+/** Join mode for a club */
+export type ClubJoinMode = 'open' | 'invite_link' | 'approval_based';
+
+/** Club feature keys for granular visibility controls */
+export type ClubFeatureKey = 'chat' | 'announcements' | 'links' | 'members' | 'projects' | 'activity_timeline' | 'leaderboard';
+
+/** Feature configuration for a club */
+export interface ClubFeature {
+  key: ClubFeatureKey;
+  enabled: boolean;
+  public_visible: boolean;
+}
+
+/** Default features enabled for a new club */
+export const DEFAULT_CLUB_FEATURES: ClubFeature[] = [
+  { key: 'chat', enabled: true, public_visible: true },
+  { key: 'announcements', enabled: true, public_visible: true },
+  { key: 'links', enabled: true, public_visible: true },
+  { key: 'members', enabled: true, public_visible: true },
+  { key: 'projects', enabled: false, public_visible: false },
+  { key: 'activity_timeline', enabled: false, public_visible: false },
+  { key: 'leaderboard', enabled: false, public_visible: false },
+];
+
 export interface Club {
   id: string;
   name: string;
@@ -574,6 +598,8 @@ export interface Club {
   created_by: string;
   created_at: string;
   updated_at: string | null;
+  join_mode?: ClubJoinMode;
+  enabled_features?: ClubFeature[];
 }
 
 export interface ClubSection {
@@ -596,6 +622,7 @@ export interface ClubMember {
   club_id: string;
   user_id: string;
   joined_at: string | null;
+  membership_status?: string;
 }
 
 export interface ClubProjectLink {

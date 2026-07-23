@@ -19,8 +19,7 @@ import Input from '@/components/ui/Input';
 import { useAuth } from '@/hooks/useAuth';
 import { useClub } from '@/hooks/useClub';
 import { useRole } from '@/hooks/useRole';
-import type { Club } from '@/types';
-import { ClubJoinMode } from '@/types';
+import type { Club, ClubField, ClubJoinMode } from '@/types';
 import EmptyState from '@/components/ui/EmptyState';
 import { cn, formatDate } from '@/lib/utils';
 
@@ -41,10 +40,7 @@ export default function ClubDiscovery() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   const [clubMembersMap, setClubMembersMap] = useState<Record<string, any[]>>({});
-  const [clubCurriculumLinksMap, setClubCurriculumLinksMap] = useState<Record<string, any[]>>({});
-  const [clubSubjectLinksMap, setClubSubjectLinksMap] = useState<Record<string, any[]>>({});
   const [userMembershipMap, setUserMembershipMap] = useState<Record<string, any>>({});
-  const [userJoinRequestMap, setUserJoinRequestMap] = useState<Record<string, any>>({});
 
   useEffect(() => {
     (async () => {
@@ -56,26 +52,11 @@ export default function ClubDiscovery() {
       clubs.forEach((c: any, i: number) => { membersMap[c.id] = membersResults[i]; });
       setClubMembersMap(membersMap);
 
-      const currLinksResults = await Promise.all(clubs.map((c: any) => clubStore.getClubCurriculumLinks(c.id)));
-      const currLinksMap: Record<string, any[]> = {};
-      clubs.forEach((c: any, i: number) => { currLinksMap[c.id] = currLinksResults[i]; });
-      setClubCurriculumLinksMap(currLinksMap);
-
-      const subLinksResults = await Promise.all(clubs.map((c: any) => clubStore.getClubSubjectLinks(c.id)));
-      const subLinksMap: Record<string, any[]> = {};
-      clubs.forEach((c: any, i: number) => { subLinksMap[c.id] = subLinksResults[i]; });
-      setClubSubjectLinksMap(subLinksMap);
-
       if (user) {
         const memberships = await Promise.all(clubs.map((c: any) => clubStore.getUserClubMembership(c.id, user.id)));
         const memMap: Record<string, any> = {};
         clubs.forEach((c: any, i: number) => { memMap[c.id] = memberships[i]; });
         setUserMembershipMap(memMap);
-
-        const joinReqs = await Promise.all(clubs.map((c: any) => clubStore.getUserClubJoinRequest(c.id, user.id)));
-        const reqMap: Record<string, any> = {};
-        clubs.forEach((c: any, i: number) => { reqMap[c.id] = joinReqs[i]; });
-        setUserJoinRequestMap(reqMap);
       }
     })();
   }, [clubStore.clubs, user?.id, clubStore]);
@@ -93,7 +74,7 @@ export default function ClubDiscovery() {
 
   const handleJoin = async (clubId: string) => {
     if (!user) return;
-    const result = await clubStore.joinClub(clubId, user.id, inviteCodes[clubId]);
+    const result = await clubStore.joinClub(clubId, user.id);
     setFeedback((current) => ({
       ...current,
       [clubId]: result.success ? 'Updated your club membership.' : result.error || 'Could not join club.',
@@ -146,15 +127,8 @@ export default function ClubDiscovery() {
       <div className="grid gap-4 lg:grid-cols-3">
         {visibleClubs.map((club) => {
           const member = userMembershipMap[club.id];
-          const request = userJoinRequestMap[club.id];
+          const request = false; // join requests not yet supported
           const members = (clubMembersMap[club.id] || []).filter((item: any) => item.membership_status === 'active');
-          const leader = clubStore.profiles.find((p: any) => p.id === club.created_by);
-          const curriculumNames = (clubCurriculumLinksMap[club.id] || [])
-            .map((link: any) => (clubStore.curriculums.find((c: any) => c.id === link.curriculum_id) as any)?.title)
-            .filter(Boolean);
-          const subjectNames = (clubSubjectLinksMap[club.id] || [])
-            .map((link: any) => clubStore.subjects.find((subject: any) => subject.id === link.subject_id)?.title)
-            .filter(Boolean);
           const isMember = member?.membership_status === 'active';
 
           return (
@@ -176,14 +150,6 @@ export default function ClubDiscovery() {
                 <p className="mt-2 line-clamp-3 text-sm text-foreground-muted">
                   {club.description}
                 </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {curriculumNames.map((name: string) => (
-                    <Badge key={name}>{name}</Badge>
-                  ))}
-                  {subjectNames.map((name: string) => (
-                    <Badge key={name}>{name}</Badge>
-                  ))}
-                </div>
               </div>
 
               <div className="mt-5 space-y-3 border-t border-border pt-4">
@@ -192,7 +158,6 @@ export default function ClubDiscovery() {
                     <Users className="h-3.5 w-3.5" />
                     {members.length} members
                   </span>
-                  <span>Led by {leader?.name || 'Contributor'}</span>
                   <span>{formatDate(club.created_at)}</span>
                 </div>
 
@@ -247,9 +212,18 @@ export default function ClubDiscovery() {
         <CreateClubModal
           userId={user.id}
           onClose={() => setIsCreateOpen(false)}
-          onCreate={clubStore.createNewClub}
-          curriculums={clubStore.curriculums}
-          subjects={clubStore.subjects}
+          onCreate={(data) => clubStore.createNewClub(
+            {
+              name: data.name,
+              description: data.description,
+              tagline: undefined,
+              field: 'other' as ClubField,
+              cover_image_url: undefined,
+              accent_color: undefined,
+              custom_slug: undefined,
+            },
+            user.id
+          )}
         />
       )}
     </div>
@@ -260,29 +234,16 @@ function CreateClubModal({
   userId,
   onClose,
   onCreate,
-  curriculums,
-  subjects,
 }: {
   userId: string;
   onClose: () => void;
   onCreate: (data: {
     name: string;
     description?: string;
-    created_by: string;
-    join_mode: ClubJoinMode;
-    invite_code?: string;
-    curriculum_ids?: string[];
-    subject_ids?: string[];
   }) => unknown;
-  curriculums: Array<{ id: string; title: string }>;
-  subjects: Array<{ id: string; title: string }>;
 }) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [joinMode, setJoinMode] = useState<ClubJoinMode>('open');
-  const [inviteCode, setInviteCode] = useState('');
-  const [curriculumId, setCurriculumId] = useState(curriculums[0]?.id || '');
-  const [subjectId, setSubjectId] = useState(subjects[0]?.id || '');
   const [error, setError] = useState('');
 
   const handleSubmit = (event: FormEvent) => {
@@ -295,11 +256,6 @@ function CreateClubModal({
     onCreate({
       name: name.trim(),
       description: description.trim(),
-      created_by: userId,
-      join_mode: joinMode,
-      invite_code: inviteCode.trim(),
-      curriculum_ids: curriculumId ? [curriculumId] : [],
-      subject_ids: subjectId ? [subjectId] : [],
     });
     onClose();
   };
@@ -331,39 +287,6 @@ function CreateClubModal({
               className="rounded-xl border border-border bg-background-card px-4 py-2.5 text-sm text-foreground transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
           </label>
-          <label className="flex flex-col gap-1.5 text-sm font-medium text-foreground">
-            Join model
-            <select
-              value={joinMode}
-              onChange={(event) => setJoinMode(event.target.value as ClubJoinMode)}
-              className="rounded-xl border border-border bg-background-card px-4 py-2.5 text-sm text-foreground"
-            >
-              <option value="open">Open</option>
-              <option value="invite_link">Invite link</option>
-              <option value="approval_based">Approval based</option>
-            </select>
-          </label>
-          {joinMode === 'invite_link' && (
-            <Input label="Invite code" value={inviteCode} onChange={(event) => setInviteCode(event.target.value)} placeholder="Optional" />
-          )}
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="flex flex-col gap-1.5 text-sm font-medium text-foreground">
-              Curriculum
-              <select value={curriculumId} onChange={(event) => setCurriculumId(event.target.value)} className="rounded-xl border border-border bg-background-card px-4 py-2.5 text-sm text-foreground">
-                {curriculums.map((curriculum) => (
-                  <option key={curriculum.id} value={curriculum.id}>{curriculum.title}</option>
-                ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1.5 text-sm font-medium text-foreground">
-              Subject
-              <select value={subjectId} onChange={(event) => setSubjectId(event.target.value)} className="rounded-xl border border-border bg-background-card px-4 py-2.5 text-sm text-foreground">
-                {subjects.map((subject) => (
-                  <option key={subject.id} value={subject.id}>{subject.title}</option>
-                ))}
-              </select>
-            </label>
-          </div>
           {error && <p className="text-sm text-error">{error}</p>}
         </div>
 
