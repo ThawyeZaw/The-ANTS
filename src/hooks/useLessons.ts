@@ -1,13 +1,22 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — useLessons Hook (Supabase)
-// Lesson Tracker feature powered by real curriculum & progress data.
+// The ANTs — useLessons Hook (Mock Facade)
+// Lesson Tracker feature powered by the unified mock data facade.
+// All data flows through src/lib/mock/database.ts — no direct Supabase calls.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useCallback, useMemo, useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { useCallback, useMemo, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import {
+  mockCurriculums,
+  mockSubjects,
+  mockTopics,
+  mockUserCurriculums,
+  mockUserEnrollments,
+  mockTopicProgress,
+  persistTopicProgress,
+} from '@/lib/mock/database';
 
 // ── Local Types ───────────────────────────────────────────────────────────────
 
@@ -52,57 +61,31 @@ export interface CurriculumItem {
 
 export function useLessons() {
   const { user } = useAuth();
-  const supabase = createClient();
   const userId = user?.id ?? null;
 
-  const [allCurriculums, setAllCurriculums] = useState<any[]>([]);
-  const [allSubjects, setAllSubjects] = useState<any[]>([]);
-  const [allTopics, setAllTopics] = useState<any[]>([]);
-  const [enrollments, setEnrollments] = useState<any[]>([]);
-  const [progressRecords, setProgressRecords] = useState<TopicProgressRecord[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [selectedCurriculumId, setSelectedCurriculumId] = useState<string | null>(null);
 
-  // Load all data on mount / userId change
-  useEffect(() => {
-    if (!userId) {
-      setProgressRecords([]);
-      setEnrollments([]);
-      setIsLoaded(true);
-      return;
-    }
+  // Data is loaded synchronously from the mock facade — always ready.
+  const isLoaded = true;
 
-    (async () => {
-      const [cRes, sRes, tRes, ucRes, ueRes, pRes] = await Promise.all([
-        supabase.from('curriculums').select('*').order('title'),
-        supabase.from('subjects').select('*').order('order_no'),
-        supabase.from('topics').select('*').order('order_no'),
-        supabase.from('user_curriculums').select('*').eq('user_id', userId),
-        supabase.from('user_enrollments').select('*').eq('user_id', userId),
-        supabase.from('topic_progress').select('*').eq('user_id', userId),
-      ]);
+  // ── Enrollments: merge user_curriculums + user_enrollments ──────────────────
+  const enrollments = useMemo(() => {
+    if (!userId) return [];
 
-      setAllCurriculums(cRes.data ?? []);
-      setAllSubjects(sRes.data ?? []);
-      setAllTopics(tRes.data ?? []);
+    const ucData = mockUserCurriculums.filter(e => e.user_id === userId);
+    const ueData = mockUserEnrollments.filter(e => e.user_id === userId);
 
-      // Merge enrollments from user_curriculums + user_enrollments (sync CourseBrowser ↔ Lesson Tracker)
-      const ucData = ucRes.data ?? [];
-      const ueData = ueRes.data ?? [];
-      const merged: any[] = [...ucData];
-      const existingKeys = new Set(ucData.map((e: any) => `${e.curriculum_id}::${e.subject_id}`));
-      for (const enrollment of ueData) {
-        const key = `${enrollment.curriculum_id}::${enrollment.subject_id}`;
-        if (!existingKeys.has(key)) {
-          merged.push(enrollment);
-        }
+    const merged: any[] = [...ucData];
+    const existingKeys = new Set(ucData.map((e: any) => `${e.curriculum_id}::${e.subject_id}`));
+    for (const enrollment of ueData) {
+      const key = `${enrollment.curriculum_id}::${enrollment.subject_id}`;
+      if (!existingKeys.has(key)) {
+        merged.push(enrollment);
       }
-      setEnrollments(merged);
-
-      setProgressRecords((pRes.data ?? []) as TopicProgressRecord[]);
-      setIsLoaded(true);
-    })();
-  }, [userId, supabase]);
+    }
+    return merged;
+  }, [userId, refreshKey]);
 
   // Derived: enrolled curriculum tree
   const enrolledCurriculums = useMemo<CurriculumItem[]>(() => {
@@ -112,13 +95,13 @@ export function useLessons() {
 
     return enrolledCurriculumIds
       .map((cid): CurriculumItem | null => {
-        const curriculum = allCurriculums.find((c: any) => c.id === cid);
+        const curriculum = mockCurriculums.find((c: any) => c.id === cid);
         if (!curriculum) return null;
 
         const userEnrollments = enrollments.filter((e: any) => e.curriculum_id === cid);
         const enrolledSubjectIds = new Set(userEnrollments.map((e: any) => e.subject_id));
 
-        const subjects: SubjectItem[] = allSubjects
+        const subjects: SubjectItem[] = mockSubjects
           .filter((s: any) => s.curriculum_id === cid && enrolledSubjectIds.has(s.id))
           .map((subj: any) => ({
             id: subj.id,
@@ -126,7 +109,7 @@ export function useLessons() {
             title: subj.title,
             description: subj.description,
             order_no: subj.order_no,
-            topics: allTopics
+            topics: mockTopics
               .filter((t: any) => t.subject_id === subj.id)
               .map((t: any) => ({
                 id: t.id,
@@ -147,7 +130,7 @@ export function useLessons() {
         };
       })
       .filter((c): c is CurriculumItem => c !== null);
-  }, [userId, allCurriculums, allSubjects, allTopics, enrollments]);
+  }, [userId, enrollments]);
 
   const activeCurriculumId = useMemo(() => {
     if (selectedCurriculumId && enrolledCurriculums.find((c) => c.id === selectedCurriculumId)) {
@@ -161,6 +144,13 @@ export function useLessons() {
     [enrolledCurriculums, activeCurriculumId]
   );
 
+  // ── Progress records from mock facade ──────────────────────────────────────
+  const progressRecords = useMemo<TopicProgressRecord[]>(() => {
+    if (!userId) return [];
+    return mockTopicProgress.filter(r => r.user_id === userId) as TopicProgressRecord[];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, refreshKey]);
+
   // Progress helpers
   const getTopicProgress = useCallback(
     (topicId: string): TopicProgressRecord | undefined =>
@@ -169,13 +159,16 @@ export function useLessons() {
   );
 
   const getCurriculumTopicCount = useCallback(
-    (curriculum: CurriculumItem): number =>
-      curriculum.subjects.reduce((sum, s) => sum + s.topics.length, 0),
+    (curriculum: CurriculumItem | undefined | null): number => {
+      if (!curriculum) return 0;
+      return curriculum.subjects.reduce((sum, s) => sum + s.topics.length, 0);
+    },
     []
   );
 
   const getCurriculumCompletedCount = useCallback(
-    (curriculum: CurriculumItem): number => {
+    (curriculum: CurriculumItem | undefined | null): number => {
+      if (!curriculum) return 0;
       const allTopicIds = curriculum.subjects.flatMap((s) => s.topics.map((t) => t.id));
       return progressRecords.filter(
         (r) => allTopicIds.includes(r.topic_id) && r.status === 'completed'
@@ -192,66 +185,76 @@ export function useLessons() {
     [progressRecords]
   );
 
-  // Mutations
+  // ── Mutations (in-memory mock array updates) ───────────────────────────────
+
+  const VALID_STATUSES: TopicStatus[] = ['not_started', 'in_progress', 'completed'];
+  const MIN_CONFIDENCE = 0;
+  const MAX_CONFIDENCE = 5;
 
   const updateConfidence = useCallback(
-    async (topicId: string, level: number) => {
+    (topicId: string, level: number) => {
       if (!userId) return;
+
+      // Validate and clamp confidence level
+      const clampedLevel = Math.max(MIN_CONFIDENCE, Math.min(MAX_CONFIDENCE, Math.round(level)));
+      if (clampedLevel === 0 && level !== 0) {
+        // Invalid level passed — silently ignore
+        return;
+      }
+
       const now = new Date().toISOString();
 
-      const existing = progressRecords.find((r) => r.topic_id === topicId);
+      const existing = mockTopicProgress.find((r) => r.user_id === userId && r.topic_id === topicId);
       if (existing) {
-        await supabase.from('topic_progress').update({
-          confidence_level: level,
-          updated_at: now,
-        }).eq('id', existing.id).eq('user_id', userId);
-        setProgressRecords(prev =>
-          prev.map((r) => r.topic_id === topicId ? { ...r, confidence_level: level, updated_at: now } : r)
-        );
+        existing.confidence_level = clampedLevel;
+        existing.updated_at = now;
+        // Setting any confidence means the user has started studying
+        if (existing.status === 'not_started' && clampedLevel > 0) {
+          existing.status = 'in_progress';
+        }
       } else {
-        const { data } = await supabase.from('topic_progress').insert({
+        mockTopicProgress.push({
+          id: `tp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
           user_id: userId,
           topic_id: topicId,
-          confidence_level: level,
-          status: 'in_progress',
+          confidence_level: clampedLevel,
+          status: clampedLevel > 0 ? 'in_progress' : 'not_started',
           updated_at: now,
-        }).select().single();
-        if (data) {
-          setProgressRecords(prev => [...prev, data as TopicProgressRecord]);
-        }
+        } as any);
       }
+      persistTopicProgress();
+      setRefreshKey(k => k + 1);
     },
-    [userId, progressRecords, supabase]
+    [userId]
   );
 
   const updateStatus = useCallback(
-    async (topicId: string, status: TopicStatus) => {
+    (topicId: string, status: TopicStatus) => {
       if (!userId) return;
+
+      // Validate status is a known value
+      if (!VALID_STATUSES.includes(status)) return;
+
       const now = new Date().toISOString();
 
-      const existing = progressRecords.find((r) => r.topic_id === topicId);
+      const existing = mockTopicProgress.find((r) => r.user_id === userId && r.topic_id === topicId);
       if (existing) {
-        await supabase.from('topic_progress').update({
-          status,
-          updated_at: now,
-        }).eq('id', existing.id).eq('user_id', userId);
-        setProgressRecords(prev =>
-          prev.map((r) => r.topic_id === topicId ? { ...r, status, updated_at: now } : r)
-        );
+        existing.status = status;
+        existing.updated_at = now;
       } else {
-        const { data } = await supabase.from('topic_progress').insert({
+        mockTopicProgress.push({
+          id: `tp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
           user_id: userId,
           topic_id: topicId,
           confidence_level: 0,
           status,
           updated_at: now,
-        }).select().single();
-        if (data) {
-          setProgressRecords(prev => [...prev, data as TopicProgressRecord]);
-        }
+        } as any);
       }
+      persistTopicProgress();
+      setRefreshKey(k => k + 1);
     },
-    [userId, progressRecords, supabase]
+    [userId]
   );
 
   const subjects = useMemo(
@@ -265,6 +268,7 @@ export function useLessons() {
     activeCurriculum,
     subjects,
     progressRecords,
+    isLoaded,
     getTopicProgress,
     getCurriculumTopicCount,
     getCurriculumCompletedCount,

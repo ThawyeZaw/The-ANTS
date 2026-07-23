@@ -14,6 +14,7 @@ import {
   ChevronDown,
   ChevronUp,
   ClipboardCheck,
+  ExternalLink,
   Layers,
   Sparkles,
 } from 'lucide-react';
@@ -56,12 +57,14 @@ function SubjectProgressBar({ completed, total }: { completed: number; total: nu
 
 function SubjectAccordion({
   subject,
+  curriculumId,
   completedCount,
   progressRecords,
   onConfidenceChange,
   onStatusChange,
 }: {
   subject: ReturnType<typeof useLessons>['subjects'][number];
+  curriculumId: string;
   completedCount: number;
   progressRecords: ReturnType<typeof useLessons>['progressRecords'];
   onConfidenceChange: (topicId: string, level: number) => void;
@@ -69,6 +72,7 @@ function SubjectAccordion({
 }) {
   const [isOpen, setIsOpen] = useState(true);
   const total = subject.topics.length;
+  const pct = total === 0 ? 0 : Math.round((completedCount / total) * 100);
 
   return (
     <div className="rounded-xl border border-border bg-background-card overflow-hidden">
@@ -91,6 +95,13 @@ function SubjectAccordion({
           <div className="mt-2 max-w-xs">
             <SubjectProgressBar completed={completedCount} total={total} />
           </div>
+          <Link
+            href={`/lessons/${curriculumId}/${subject.id}`}
+            className="inline-flex items-center gap-1 mt-2 text-xs font-medium text-primary hover:text-primary-hover transition-colors"
+          >
+            <ExternalLink className="h-3 w-3" />
+            View details
+          </Link>
         </div>
         <div className="shrink-0 text-foreground-muted">
           {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -145,6 +156,7 @@ export default function LessonTracker() {
     activeCurriculum,
     subjects,
     progressRecords,
+    isLoaded,
     getCurriculumTopicCount,
     getCurriculumCompletedCount,
     getSubjectCompletedCount,
@@ -152,6 +164,16 @@ export default function LessonTracker() {
     updateConfidence,
     updateStatus,
   } = useLessons();
+
+  // ── Loading state ────────────────────────────────────────────────────────────
+
+  if (!isLoaded) {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
 
   // ── Empty state ─────────────────────────────────────────────────────────────
 
@@ -319,6 +341,7 @@ export default function LessonTracker() {
             <SubjectAccordion
               key={subject.id}
               subject={subject}
+              curriculumId={activeCurriculumId ?? ''}
               completedCount={getSubjectCompletedCount(subject)}
               progressRecords={progressRecords}
               onConfidenceChange={updateConfidence}

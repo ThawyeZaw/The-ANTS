@@ -7,7 +7,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   BookOpen, Plus, Check, X, Search, GraduationCap, Trash2,
   Undo2, ChevronDown, ChevronUp, AlertCircle,
@@ -107,6 +107,7 @@ function UndoToast({
 export default function CourseBrowser() {
   const { user } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const {
     allCurriculums,
     getSubjectsForCurriculum,
@@ -115,6 +116,9 @@ export default function CourseBrowser() {
     enroll,
     unenroll,
   } = useCourseManager();
+
+  // ── Pre-select from query param (e.g. /courses?curriculum=curr-igcse-cie) ──
+  const preselectedCurriculumId = searchParams.get('curriculum');
 
   // ── Local state ──────────────────────────────────────────────────────────
   const [selectedExamBoard, setSelectedExamBoard] = useState<string>('all');
@@ -129,6 +133,17 @@ export default function CourseBrowser() {
 
   const undoIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const enrolMessageTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // ── Auto-set filters from query param on mount ───────────────────────────
+  useEffect(() => {
+    if (!preselectedCurriculumId) return;
+    const curriculum = allCurriculums.find(c => c.id === preselectedCurriculumId);
+    if (curriculum) {
+      if (curriculum.exam_board) setSelectedExamBoard(curriculum.exam_board);
+      setSearchQuery(curriculum.title);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+   }, [preselectedCurriculumId]);
 
   // ── Derived: flat list of all subjects with curriculum info ──────────────
 

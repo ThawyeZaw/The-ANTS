@@ -15,10 +15,7 @@ import {
   Sparkles, Check, Layers,
   GraduationCap, Globe, BookMarked, Info, ChevronDown, ChevronUp, ScrollText,
 } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
-import { useRole } from '@/hooks/useRole';
 import { useCourseManager } from '@/hooks/useCourseManager';
-import { autoPopulateLessonTracker, autoPopulateGradeCalculator } from '@/lib/mock/database';
 import { QUALIFICATION_REGISTRY } from '@/constants/qualifications';
 import { buildSubjectBoardMap } from '@/lib/subject-board-mapping';
 import { cn } from '@/lib/utils';
@@ -37,13 +34,12 @@ interface EnrichedCurriculum extends CurriculumSummary {
 
 interface ExamBoardCardProps {
   curriculum: EnrichedCurriculum;
-  onAdd: (id: string) => void;
-  isAdding: boolean;
+  onSelectSubjects: (id: string) => void;
   totalSelected: number;
   isTopMatch: boolean;
 }
 
-function ExamBoardCard({ curriculum, onAdd, isAdding, totalSelected, isTopMatch }: ExamBoardCardProps) {
+function ExamBoardCard({ curriculum, onSelectSubjects, totalSelected, isTopMatch }: ExamBoardCardProps) {
   const qualKey = curriculum.exam_board && curriculum.qualification
     ? `${curriculum.exam_board}_${curriculum.qualification}` as keyof typeof QUALIFICATION_REGISTRY
     : null;
@@ -153,11 +149,11 @@ function ExamBoardCard({ curriculum, onAdd, isAdding, totalSelected, isTopMatch 
         </div>
       )}
 
-      {/* Add button */}
+      {/* Select subjects button */}
       <button
         id={`add-course-${curriculum.id}`}
-        onClick={() => onAdd(curriculum.id)}
-        disabled={curriculum.isEnrolled || isAdding}
+        onClick={() => onSelectSubjects(curriculum.id)}
+        disabled={curriculum.isEnrolled}
         className={cn(
           'mt-auto w-full flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition-all cursor-pointer',
           curriculum.isEnrolled
@@ -170,12 +166,10 @@ function ExamBoardCard({ curriculum, onAdd, isAdding, totalSelected, isTopMatch 
             <Check size={15} />
             Added to My Courses
           </>
-        ) : isAdding ? (
-          <span className="animate-pulse">Adding…</span>
         ) : (
           <>
             <GraduationCap size={15} />
-            Add to My Courses
+            Select Subjects
             <ChevronRight size={14} className="opacity-60 group-hover:translate-x-0.5 transition-transform" />
           </>
         )}
@@ -187,25 +181,16 @@ function ExamBoardCard({ curriculum, onAdd, isAdding, totalSelected, isTopMatch 
 // ── Main Component ───────────────────────────────────────────────────────────
 
 export default function CoursesLibraryBrowser() {
-  const { user } = useAuth();
-  const { role } = useRole();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { allCurriculums, enrolledCurriculumIds, enroll, getSubjectsForCurriculum } = useCourseManager();
+  const { allCurriculums, enrolledCurriculumIds, getSubjectsForCurriculum } = useCourseManager();
 
   // ── Local state ───────────────────────────────────────────────────────────
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSubjectIds, setSelectedSubjectIds] = useState<Set<string>>(new Set());
   const [smartFilter, setSmartFilter] = useState(true);
-  const [addingId, setAddingId] = useState<string | null>(null);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [showOtherBoards, setShowOtherBoards] = useState(false);
-
-  const showToast = (message: string, type: 'success' | 'error') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3500);
-  };
 
   // ── URL sync: hydrate from query param on mount ──────────────────────────
 
@@ -373,38 +358,14 @@ export default function CoursesLibraryBrowser() {
     setShowOtherBoards(false); // reset disclosure when selection changes
   };
 
-  const handleAdd = async (curriculumId: string) => {
-    if (!user) return;
-    setAddingId(curriculumId);
-    try {
-      const subjects = getSubjectsForCurriculum(curriculumId);
-      for (const subject of subjects) {
-        enroll(curriculumId, subject.id, null);
-      }
-      autoPopulateLessonTracker(user.id, curriculumId);
-      autoPopulateGradeCalculator(user.id, curriculumId);
-      showToast('Course added! Lesson Tracker and Grade Calculator have been populated.', 'success');
-      setTimeout(() => router.push('/courses'), 1500);
-    } catch {
-      showToast('Failed to add course. Please try again.', 'error');
-    } finally {
-      setAddingId(null);
-    }
+  const handleSelectSubjects = (curriculumId: string) => {
+    router.push(`/courses?curriculum=${encodeURIComponent(curriculumId)}`);
   };
 
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
-      {/* Toast */}
-      {toast && (
-        <div className={cn(
-          'fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold shadow-lg animate-slide-in-right',
-          toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-        )}>
-          {toast.message}
-        </div>
-      )}
 
       {/* Hero */}
       <div className="relative overflow-hidden rounded-3xl border border-[var(--border)] bg-gradient-to-br from-emerald-500/10 via-cyan-500/5 to-blue-500/10 p-6 md:p-8">
@@ -571,8 +532,7 @@ export default function CoursesLibraryBrowser() {
               <ExamBoardCard
                 key={c.id}
                 curriculum={c}
-                onAdd={handleAdd}
-                isAdding={addingId === c.id}
+                onSelectSubjects={handleSelectSubjects}
                 totalSelected={totalSelected}
                 isTopMatch={false}
               />
@@ -588,8 +548,7 @@ export default function CoursesLibraryBrowser() {
             <ExamBoardCard
               key={c.id}
               curriculum={c}
-              onAdd={handleAdd}
-              isAdding={addingId === c.id}
+              onSelectSubjects={handleSelectSubjects}
               totalSelected={totalSelected}
               // Top match = highest matchCount tier
               isTopMatch={hasSelection && c.matchCount === totalSelected && idx === 0}
@@ -623,8 +582,7 @@ export default function CoursesLibraryBrowser() {
                 <ExamBoardCard
                   key={c.id}
                   curriculum={c}
-                  onAdd={handleAdd}
-                  isAdding={addingId === c.id}
+                  onSelectSubjects={handleSelectSubjects}
                   totalSelected={totalSelected}
                   isTopMatch={false}
                 />

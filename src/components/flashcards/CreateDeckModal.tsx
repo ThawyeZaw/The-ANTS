@@ -73,9 +73,18 @@ export default function CreateDeckModal({ userId, onClose, onCreated }: CreateDe
       style={{ backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
+      <style>{`
+        .scrollbar-none {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-none::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
       <div
         ref={containerRef}
-        className="animate-fade-in-up w-full max-w-lg rounded-2xl border border-[var(--border)] bg-[var(--background-card)] p-6 shadow-[var(--shadow-lg)]"
+        className="scrollbar-none animate-fade-in-up w-full max-w-lg rounded-2xl border border-[var(--border)] bg-[var(--background-card)] p-6 shadow-[var(--shadow-lg)]"
         style={{ maxHeight: '90vh', overflowY: 'auto' }}
       >
         {/* Header */}
