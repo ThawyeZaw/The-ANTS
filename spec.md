@@ -116,7 +116,7 @@ the-ants/                                 # Project root
 │   └── migrations/                       # SQL migration files
 │
 ├── public/
-│   ├── sounds/                           # 🔒 PPP — Pomodoro background music (mp3/ogg)
+│   ├── sounds/                           # 🔒 PPP — Pomodoro background sounds (reserved; currently synthesized via Web Audio API, no static files needed)
 │   └── icons/                            # 🔒 PM — Exam board logos & app icons
 │
 └── src/
@@ -249,6 +249,13 @@ the-ants/                                 # Project root
     │   │   ├── AddCountdownModal.tsx
     │   │   ├── CountdownCard.tsx
     │   │   └── CountdownManager.tsx
+    │   ├── pomodoro/                     # 🔒 PPP (6 files)
+    │   │   ├── TimerRing.tsx             # SVG circular progress ring with MM:SS display
+    │   │   ├── TimerControls.tsx         # Play/Pause/Reset buttons + keyboard shortcuts
+    │   │   ├── SettingsDrawer.tsx        # Duration sliders, volume, auto-start toggle
+    │   │   ├── SoundscapePicker.tsx      # Synthesized ambient sound card selector
+    │   │   ├── StatsPanel.tsx            # Today stats pills + hand-rolled SVG 7-day bar chart
+    │   │   └── ZenMode.tsx               # Fullscreen distraction-free overlay
     │   ├── flashcards/                   # 🔒 ZLH (11 files)
     │   │   ├── AICardParser.tsx
     │   │   ├── AIPromptGenerator.tsx
@@ -334,6 +341,8 @@ the-ants/                                 # Project root
     │   │   └── algorithm.ts              # SM-2 / FSRS core algorithm
     │   ├── timetable/
     │   │   └── layout.ts                 # Timetable layout utilities
+    │   ├── pomodoro/
+    │   │   └── audio-engine.ts           # Web Audio API synthesized soundscapes (rain, brown noise, cafe, forest)
     │   ├── quiz-ai.ts                    # Quiz AI prompt generator & response parser
     │   ├── validateEnv.ts                # Environment variable validation
     │   └── utils.ts                      # General helpers (cn, date formatting, getInitials, generateUsername)
@@ -646,7 +655,7 @@ The Pomodoro Timer implements the time-management technique with configurable fo
 - **Session counter**: Visual indicator showing completed focus sessions (e.g., "3/4" before long break).
 - **Auto-transition**: Focus → break transitions happen automatically with a 3-second notification before switch.
 - **Configurable durations**: Settings panel to customise focus, short break, and long break lengths independently.
-- **Background sounds**: Toggleable ambient audio tracks (rain, forest, white noise, cafe). Sounds are `.mp3`/`.ogg` files served from `public/sounds/`.
+- **Background sounds**: Toggleable ambient audio tracks (rain, brown noise, cafe, forest) synthesized in-browser via the Web Audio API (`src/lib/pomodoro/audio-engine.ts`). No external audio files needed — zero licensing risk, zero missing-asset build errors.
 - **Volume slider**: Per-sound volume control (0-100%) with mute toggle.
 - **Session statistics**: Track total focus time, sessions completed, and daily streak. Data stored in `localStorage` for MVP; sync to `profiles` table in production.
 
@@ -663,23 +672,48 @@ The Pomodoro Timer implements the time-management technique with configurable fo
 
 ### 13.6 Technical Implementation Prerequisites
 - `'use client'` directive for all timer logic and audio playback.
-- Timer must use `requestAnimationFrame` or `setInterval` at 1s granularity. Do not rely on `setTimeout` for accuracy over long periods.
-- Audio playback uses the HTML5 `<audio>` element; autoplay policies require user interaction before first playback.
-- `TimerContext.tsx` provides global timer state so the timer continues across page navigations within the authenticated app.
-- `usePomodoro.ts` hook encapsulates timer logic: state machine, duration config, audio control.
-- localStorage reads on mount, writes on every session completion.
+- Timer uses an **absolute end-timestamp** design (`endsAt = Date.now() + remainingMs`; recompute `remaining = endsAt - Date.now()` on each tick). This survives tab throttling, backgrounding, and page remounts without drifting — more resilient than `setInterval`-based decrementing counters.
+- Audio playback uses the Web Audio API (`AudioContext`, `AudioBufferSourceNode`, `BiquadFilterNode`, `GainNode`) for runtime soundscape synthesis. Browser autoplay policy is satisfied via the user's Start button click.
+- `usePomodoro.ts` hook encapsulates all timer logic: state machine, duration config, audio control, stats logging, and streak calculation.
+- localStorage reads on mount (for session resume), writes on every session completion and settings change. Namespaced keys: `ants-pomodoro-settings`, `ants-pomodoro-session`, `ants-pomodoro-stats`.
+- No `TimerContext` is required for page-level navigation safety — the hook rehydrates correctly from localStorage on every mount of the `/pomodoro` page itself.
 
 ### 13.7 Error Handling
-- **Audio autoplay blocked**: Show a "Click to enable sound" button; gracefully degrade to silent timer.
+- **Audio autoplay blocked**: Web Audio API context is created lazily on first user gesture (Start button click). If `AudioContext` creation fails (e.g., very old browser), sound features degrade silently to a mute-only timer.
 - **localStorage quota exceeded**: Wrap writes in try/catch; fall back to in-memory stats; warn user once.
-- **Tab becomes inactive**: Timer continues (via `TimerContext`); no pause on tab switch. `document.title` updates to show remaining time.
+- **Tab becomes inactive**: Timer continues accurately via the absolute end-timestamp — `endsAt` is compared to `Date.now()` on every tick, so no time is lost when the tab resumes.
 - **Duration out of bounds**: Form clamps focus to 5-120 min, short break to 1-30 min, long break to 5-60 min.
 
 ### 13.8 Integration Requirements
-- `TimerContext.tsx` provides the global timer state shared across the app.
-- Sound files must reside in `public/sounds/` following naming convention: `rain.mp3`, `forest.mp3`, `white-noise.mp3`, `cafe.mp3`.
-- Session statistics can be surfaced on the dashboard page via a shared stats interface.
-- Notification permissions requested on first session start (for browser notifications when focus ends).
+- The timer runs entirely client-side on the `/pomodoro` page; no global context provider is needed — the `usePomodoro` hook rehydrates from localStorage on every page mount.
+- Ambient sounds are synthesized at runtime via `src/lib/pomodoro/audio-engine.ts` (Web Audio API). No static audio files are required.
+- Session statistics are persisted to localStorage (`ants-pomodoro-stats`). A future migration path moves stats to the `profiles` table via Supabase.
+- Browser notification permissions are requested on the user's first Start click. Notifications fire on phase completion and degrade silently if denied.
+- `document.title` updates to show remaining time (e.g., `"24:59 · Focus"`) while the timer is running; reverts to the default page title on unmount.
+- Keyboard shortcuts: Space (start/pause), R (reset), Z (toggle Zen Mode), Esc (exit Zen Mode).
+
+### 13.9 Outstanding Features (Implemented)
+
+| Feature | Description |
+|---|---|
+| **Synthesized ambient soundscapes** | Rain, brown noise, cafe ambience, and forest breeze generated procedurally via Web Audio API (`src/lib/pomodoro/audio-engine.ts`). No static audio files, no licensing risk. |
+| **Resilient absolute-timestamp timer** | Uses `endsAt = Date.now() + remainingMs` with recomputed remaining time per tick. Survives tab throttling, backgrounding, and page remounts without drift. |
+| **Distraction-free Zen Mode** | Page-scoped fixed-position fullscreen overlay (keyboard: Z to enter, Esc to exit) showing only the timer ring + controls + rotating encouragement quote. |
+| **Weekly focus chart** | Hand-rolled SVG bar chart (last 7 days) with zero charting library dependencies. |
+| **Session intent tag** | Optional one-line "What are you focusing on?" input stored with the session for lightweight task context. |
+| **Rotating encouragement quotes** | 12 short, real encouragement lines tailored for IGCSE/A-Level students in Myanmar — shown in Zen Mode between sessions. |
+| **Keyboard-first controls** | Space (start/pause), R (reset), Z (Zen Mode), Esc (exit Zen Mode) — all documented on-screen. |
+| **Resume-safe navigation** | Leaving `/pomodoro` and returning mid-session recomputes correctly from the stored end-timestamp. |
+| **Accessible by default** | `aria-live` regions for phase changes, visible focus rings on all interactive elements, `prefers-reduced-motion` respected on all animations. |
+
+### 13.10 Page Banner
+The `/pomodoro` page includes a hero banner (matching the Flashcard Decks page style) with:
+- Gradient background (`from-red-500/8 via-orange-500/5 to-amber-500/10`)
+- Timer icon badge: "Focus & Productivity"
+- "Pomodoro Timer" heading with description
+- "Enter Zen Mode" primary CTA button
+- Decorative blur circles
+- `BackButton` component for navigation
 
 ---
 

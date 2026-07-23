@@ -49,9 +49,16 @@ Whether you're targeting A* in IGCSE or A Levels, IELTS band 7+, or an OSSD dipl
 - Daily, weekly, and monthly views.
 
 ### ⌛ Pomodoro Timer
-- Launch a built-in Pomodoro timer from any study block or from the dashboard.
-- Customisable work/break intervals with background music.
-- Every completed session is logged to your productivity history.
+- Built-in Pomodoro timer with 25/5/15-minute defaults (all independently configurable).
+- Absolute end-timestamp design — survives tab throttling, backgrounding, and page remounts without drifting.
+- Synthesized ambient soundscapes (rain, brown noise, cafe, forest) via Web Audio API — zero audio files, zero licensing risk.
+- Distraction-free Zen Mode: fullscreen overlay with rotating encouragement quotes for IGCSE/A-Level students.
+- Session statistics: today's focus minutes, sessions completed, daily streak, and a hand-rolled SVG 7-day bar chart.
+- Optional session intent tag ("What are you focusing on?") stored with each session.
+- Keyboard shortcuts: Space (start/pause), R (reset), Z (Zen Mode), Esc (exit Zen Mode).
+- Browser notifications on phase completion; `document.title` updates with live remaining time.
+- All data persisted via localStorage; screen-reader accessible with `aria-live` regions.
+- Back navigation via reusable `BackButton` component.
 
 ### 📈 Lesson Tracker
 - Select from a library of subject and curriculum templates created by contributors.

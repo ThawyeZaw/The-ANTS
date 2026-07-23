@@ -2800,7 +2800,18 @@ export function deleteCertification(
 
 // ── Mock Pomodoro ────────────────────────────────────────────────────────────
 export const mockPomodoroSessions = [
-  { id: 'ps-1', user_id: 'user-student-001', duration_minutes: 25, task_name: 'Physics Chapter 1', category: 'Study', completed_at: '2026-06-17T15:00:00Z' }
+  { id: 'ps-1', user_id: 'user-student-001', duration_minutes: 25, task_name: 'Physics Chapter 1', category: 'Study', completed_at: '2026-06-17T15:00:00Z' },
+  { id: 'ps-2', user_id: 'user-student-001', duration_minutes: 25, task_name: 'Physics Chapter 1', category: 'Study', completed_at: '2026-06-17T15:30:00Z' },
+  { id: 'ps-3', user_id: 'user-student-001', duration_minutes: 25, task_name: 'Physics Chapter 2', category: 'Study', completed_at: '2026-06-17T16:15:00Z' },
+  { id: 'ps-4', user_id: 'user-student-001', duration_minutes: 25, task_name: 'Chemistry Formulas', category: 'Study', completed_at: '2026-06-18T14:00:00Z' },
+  { id: 'ps-5', user_id: 'user-student-001', duration_minutes: 25, task_name: 'Chemistry Formulas', category: 'Study', completed_at: '2026-06-18T14:35:00Z' },
+  { id: 'ps-6', user_id: 'user-student-001', duration_minutes: 25, task_name: 'Maths Past Paper', category: 'Practice', completed_at: '2026-06-18T15:20:00Z' },
+  { id: 'ps-7', user_id: 'user-student-001', duration_minutes: 25, task_name: 'Maths Past Paper', category: 'Practice', completed_at: '2026-06-18T16:00:00Z' },
+  { id: 'ps-8', user_id: 'user-student-001', duration_minutes: 25, task_name: 'Biology Revision', category: 'Revision', completed_at: '2026-06-19T09:00:00Z' },
+  { id: 'ps-9', user_id: 'user-student-001', duration_minutes: 25, task_name: 'English Essay Plan', category: 'Writing', completed_at: '2026-06-19T10:30:00Z' },
+  { id: 'ps-10', user_id: 'user-student-001', duration_minutes: 25, task_name: 'ICT Theory', category: 'Study', completed_at: '2026-06-19T11:15:00Z' },
+  { id: 'ps-11', user_id: 'user-student-002', duration_minutes: 25, task_name: 'IELTS Reading', category: 'Practice', completed_at: '2026-06-19T14:00:00Z' },
+  { id: 'ps-12', user_id: 'user-student-002', duration_minutes: 25, task_name: 'IELTS Writing Task 2', category: 'Writing', completed_at: '2026-06-19T14:35:00Z' },
 ];
 
 // ── Mock Flashcards ─────────────────────────────────────────────────────────
