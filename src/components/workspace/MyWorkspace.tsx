@@ -126,6 +126,17 @@ function CoursesTab({
   const router = useRouter();
   const { showToast } = useWorkspaceToast();
 
+  const handleSubjectClick = useCallback((curriculumId: string, subjectId: string, subjectTitle: string) => {
+    try {
+      router.push(`/lessons/${curriculumId}/${subjectId}`);
+    } catch {
+      showToast(`Failed to open "${subjectTitle}". Please try again.`, 'error', {
+        label: 'Go to Lesson Tracker',
+        onClick: () => router.push('/lessons'),
+      });
+    }
+  }, [router, showToast]);
+
   if (isLoading) return <TabContentSkeleton tab="courses" />;
 
   if (enrollments.length === 0) {
@@ -147,17 +158,6 @@ function CoursesTab({
     acc[key].subjects.push(e);
     return acc;
   }, {});
-
-  const handleSubjectClick = useCallback((curriculumId: string, subjectId: string, subjectTitle: string) => {
-    try {
-      router.push(`/lessons/${curriculumId}/${subjectId}`);
-    } catch {
-      showToast(`Failed to open "${subjectTitle}". Please try again.`, 'error', {
-        label: 'Go to Lesson Tracker',
-        onClick: () => router.push('/lessons'),
-      });
-    }
-  }, [router, showToast]);
 
   return (
     <div className="space-y-4">
