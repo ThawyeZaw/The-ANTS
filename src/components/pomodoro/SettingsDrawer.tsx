@@ -5,11 +5,12 @@
 // PPP-owned: duration sliders, sound picker, volume, auto-start toggle.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { Settings, X } from 'lucide-react';
+import { Settings, X, Volume2 } from 'lucide-react';
 import { useState } from 'react';
 import type { PomodoroSettings } from '@/constants/pomodoro';
 import { DURATION_BOUNDS, POMODORO_DEFAULTS } from '@/constants/pomodoro';
 import Button from '@/components/ui/Button';
+import { playChime } from '@/lib/pomodoro/audio-engine';
 
 interface SettingsDrawerProps {
   settings: PomodoroSettings;
@@ -211,6 +212,49 @@ export default function SettingsDrawer({ settings, onUpdate }: SettingsDrawerPro
             </button>
           </div>
 
+          {/* Completion chime toggle + test */}
+          <div className="flex items-center justify-between py-1">
+            <label
+              className="text-sm font-medium cursor-pointer"
+              style={{ color: 'var(--foreground-secondary)' }}
+              htmlFor="chime-toggle"
+            >
+              Completion sound
+            </label>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  playChime();
+                }}
+                className="p-1.5 rounded-lg transition-colors hover:bg-background-secondary focus-ring"
+                title="Test notification sound"
+                aria-label="Test notification sound"
+                style={{ color: 'var(--foreground-muted)' }}
+              >
+                <Volume2 size={14} />
+              </button>
+              <button
+                id="chime-toggle"
+                role="switch"
+                aria-checked={settings.notifyChime}
+                onClick={() => onUpdate({ notifyChime: !settings.notifyChime })}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus-ring ${
+                  settings.notifyChime ? 'bg-primary' : ''
+                }`}
+                style={{
+                  background: settings.notifyChime ? 'var(--primary)' : 'var(--border)',
+                }}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
+                    settings.notifyChime ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
           {/* Volume slider */}
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
@@ -250,6 +294,7 @@ export default function SettingsDrawer({ settings, onUpdate }: SettingsDrawerPro
                 cyclesBeforeLongBreak: POMODORO_DEFAULTS.cyclesBeforeLongBreak,
                 volume: POMODORO_DEFAULTS.volume,
                 autoStartNext: POMODORO_DEFAULTS.autoStartNext,
+                notifyChime: POMODORO_DEFAULTS.notifyChime,
               })
             }
             className="w-full py-2.5 text-sm font-medium rounded-xl transition-colors duration-200 focus-ring"
