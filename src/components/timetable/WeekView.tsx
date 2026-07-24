@@ -157,9 +157,9 @@ export default function WeekView({
     <div className="flex flex-col h-full min-w-0">
       {/* Day Headers */}
       <div
-        className="flex border-b sticky top-0 z-20"
+        className="flex border-b sticky top-0 z-20 backdrop-blur-sm"
         style={{
-          backgroundColor: 'var(--background)',
+          backgroundColor: 'color-mix(in srgb, var(--background) 92%, transparent)',
           borderColor: 'var(--border)',
         }}
       >
@@ -220,13 +220,13 @@ export default function WeekView({
       {/* Scrollable Grid */}
       <div className="flex flex-1 overflow-y-auto">
         <div
-          className="w-14 shrink-0 relative border-r"
-          style={{ height: totalGridHeight, borderColor: 'var(--border)' }}
+          className="w-16 shrink-0 relative border-r pt-2.5"
+          style={{ height: totalGridHeight + 10, borderColor: 'var(--border)' }}
         >
           {GRID_HOURS.map(hour => (
             <div
               key={hour}
-              className="absolute right-2 text-[9px] text-foreground-muted tabular-nums leading-none"
+              className="absolute right-3 pl-1.5 text-[9px] text-foreground-muted tabular-nums leading-none"
               style={{ top: (hour - GRID_START_HOUR) * sh - 5 }}
             >
               {formatHourShort(hour)}

@@ -135,8 +135,11 @@ export default function DayView({
     <div className="flex flex-col h-full">
       {/* Day Header */}
       <div
-        className="flex items-center gap-3 px-6 py-3 border-b"
-        style={{ borderColor: 'var(--border)' }}
+        className="flex items-center gap-3 px-6 py-3 border-b sticky top-0 z-10 backdrop-blur-sm"
+        style={{
+          borderColor: 'var(--border)',
+          backgroundColor: 'color-mix(in srgb, var(--background) 92%, transparent)',
+        }}
       >
         <div className="text-center">
           <p className="text-xs font-medium text-foreground-muted uppercase tracking-wider">
@@ -179,11 +182,11 @@ export default function DayView({
 
       {/* Time Grid */}
       <div className="flex flex-1 overflow-y-auto">
-        <div className="w-16 shrink-0 relative" style={{ height: totalGridHeight }}>
+        <div className="w-20 shrink-0 relative pt-2.5" style={{ height: totalGridHeight + 10 }}>
           {GRID_HOURS.map(hour => (
             <div
               key={hour}
-              className="absolute right-3 text-[10px] text-foreground-muted tabular-nums"
+              className="absolute right-4 pl-2 text-[10px] text-foreground-muted tabular-nums"
               style={{ top: (hour - GRID_START_HOUR) * sh - 7 }}
             >
               {formatHour(hour)}

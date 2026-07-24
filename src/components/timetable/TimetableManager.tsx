@@ -14,6 +14,7 @@ import {
   ZoomIn,
   ZoomOut,
   Maximize2,
+  Clock,
 } from 'lucide-react';
 import type { TimetableEvent, TimetableView, TimetableEventFormData, TimetableEventType } from '@/types/timetable';
 import { useAuth } from '@/hooks/useAuth';
@@ -59,6 +60,16 @@ function getHeaderLabel(view: TimetableView, currentDate: Date, weekStart: Date)
     case 'month':
       return `${months[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
   }
+}
+
+/** Format the user's local timezone offset, e.g. "GMT+6:30" or "GMT-5:00" */
+function getTimezoneLabel(): string {
+  const offset = -new Date().getTimezoneOffset();
+  const sign = offset >= 0 ? '+' : '-';
+  const abs = Math.abs(offset);
+  const hours = Math.floor(abs / 60);
+  const minutes = abs % 60;
+  return minutes > 0 ? `GMT${sign}${hours}:${String(minutes).padStart(2, '0')}` : `GMT${sign}${hours}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -369,8 +380,8 @@ export default function TimetableManager(props: TimetableManagerProps) {
     >
       {/* ── Top Toolbar ── */}
       <div
-        className="flex items-center gap-3 px-6 py-4 border-b shrink-0 flex-wrap"
-        style={{ borderColor: 'color-mix(in srgb, var(--border) 70%, transparent)', backgroundColor: 'var(--background)' }}
+        className="flex items-center gap-3 px-6 py-3 border-b shrink-0 flex-wrap sticky top-0 z-30 backdrop-blur-sm"
+        style={{ borderColor: 'color-mix(in srgb, var(--border) 70%, transparent)', backgroundColor: 'color-mix(in srgb, var(--background) 92%, transparent)' }}
       >
         {/* Navigation */}
         <div className="flex items-center gap-1">
@@ -400,10 +411,16 @@ export default function TimetableManager(props: TimetableManagerProps) {
         </div>
 
         {/* Date Label */}
-        <h1 className="text-base font-semibold tracking-tight flex-1 truncate"
-          style={{ color: 'var(--foreground)' }}>
-          {headerLabel}
-        </h1>
+        <div className="flex-1 min-w-0">
+          <h1 className="text-base font-semibold tracking-tight truncate"
+            style={{ color: 'var(--foreground)' }}>
+            {headerLabel}
+          </h1>
+          <p className="text-[10px] text-foreground-muted flex items-center gap-1 mt-0.5">
+            <Clock size={10} />
+            Times shown in your local timezone ({getTimezoneLabel()})
+          </p>
+        </div>
 
         {/* View Switcher */}
         <div
