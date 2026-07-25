@@ -1,15 +1,18 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTs — TopicCard
+// The ANTS — TopicCard
 // Per-topic interactive card: confidence star rating + status toggle.
+// Also surfaces related notes and due flashcard counts with one-click study links.
 // Belongs to: src/components/Lessons/  (BMK & ABC)
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState } from 'react';
-import { Star, CheckCircle2, Circle, Clock4 } from 'lucide-react';
+import Link from 'next/link';
+import { Star, CheckCircle2, Circle, Clock4, NotebookPen, Layers, ExternalLink } from 'lucide-react';
 import { cn, formatRelativeTime } from '@/lib/utils';
 import type { TopicItem, TopicProgressRecord, TopicStatus } from '@/context/LessonContext';
+import { useLessonLinkedContent } from '@/hooks/useLessons';
 
 // ── Status config ─────────────────────────────────────────────────────────────
 
@@ -81,6 +84,12 @@ export default function TopicCard({
   // Hover preview for confidence stars
   const [hoverLevel, setHoverLevel] = useState<number | null>(null);
   const displayLevel = hoverLevel ?? currentConfidence;
+
+  // Linked content (notes + due cards)
+  const { data: linkedContent } = useLessonLinkedContent(topic.id);
+  const notesCount = linkedContent?.notes.length ?? 0;
+  const dueCards = linkedContent?.dueCards ?? 0;
+  const linkedDeckId = linkedContent?.deckId ?? null;
 
   return (
     <article
@@ -164,6 +173,54 @@ export default function TopicCard({
           ))}
         </div>
       </div>
+
+      {/* Linked content pills (only when counts > 0) */}
+      {(notesCount > 0 || dueCards > 0) && (
+        <div className="space-y-2 pt-2 border-t border-border">
+          <div className="flex flex-wrap items-center gap-2">
+            {notesCount > 0 && (
+              <Link
+                href={`/library?topicId=${topic.id}`}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background-secondary px-3 py-1 text-xs font-medium text-foreground-secondary hover:border-primary/50 hover:text-primary transition-colors duration-150 focus-ring"
+              >
+                <NotebookPen className="h-3.5 w-3.5" />
+                {notesCount} note{notesCount !== 1 ? 's' : ''}
+              </Link>
+            )}
+            {dueCards > 0 && (
+              <Link
+                href={linkedDeckId ? `/flashcards/${linkedDeckId}?topicId=${topic.id}` : `/flashcards?topicId=${topic.id}`}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background-secondary px-3 py-1 text-xs font-medium text-foreground-secondary hover:border-accent/50 hover:text-accent transition-colors duration-150 focus-ring"
+              >
+                <Layers className="h-3.5 w-3.5" />
+                {dueCards} due
+              </Link>
+            )}
+          </div>
+
+          {/* CTA row */}
+          <div className="flex flex-wrap items-center gap-3 text-xs">
+            {notesCount > 0 && (
+              <Link
+                href={`/library?topicId=${topic.id}`}
+                className="inline-flex items-center gap-1 font-medium text-primary hover:text-primary-hover transition-colors duration-150"
+              >
+                Study notes
+                <ExternalLink className="h-3 w-3" />
+              </Link>
+            )}
+            {dueCards > 0 && (
+              <Link
+                href={linkedDeckId ? `/flashcards/${linkedDeckId}?topicId=${topic.id}` : `/flashcards?topicId=${topic.id}`}
+                className="inline-flex items-center gap-1 font-medium text-accent hover:text-accent-hover transition-colors duration-150"
+              >
+                Review cards
+                <ExternalLink className="h-3 w-3" />
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Last updated */}
       {progress?.updated_at && (

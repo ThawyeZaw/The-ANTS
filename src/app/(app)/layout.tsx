@@ -51,7 +51,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <LessonProvider>
           <div className="min-h-screen bg-background flex flex-col">
             <NavBar />
-            <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-6 dash-grid-body">
+            <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-6">
               {children}
             </main>
           </div>

@@ -20,7 +20,6 @@ import QualCarousel from '@/components/homepage/QualCarousel';
 import RoleLadder from '@/components/homepage/RoleLadder';
 import RevealSection from '@/components/homepage/RevealSection';
 import StatsRow from '@/components/homepage/StatsRow';
-import AntTrailPattern from '@/components/homepage/AntTrailPattern';
 import AntHeroAccent from '@/components/homepage/AntHeroAccent';
 import Footer from '@/components/layout/Footer';
 
@@ -353,7 +352,6 @@ export default function HomePage() {
           position: 'relative',
         }}
       >
-        <AntTrailPattern variant="mixed" opacity={0.05} />
         <AntHeroAccent />
 
         {/* ── Neon accent elements (CSS-rendered, instant load) ──── */}
@@ -665,7 +663,6 @@ export default function HomePage() {
           position: 'relative',
         }}
       >
-        <AntTrailPattern variant="brand" opacity={0.06} />
         <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
           <SectionHead
             eyebrow="Discover"
@@ -785,7 +782,6 @@ export default function HomePage() {
 
       {/* ── Stats Row (high-impact metrics divider) ──────────────────────── */}
       <section style={{ position: 'relative' }}>
-        <AntTrailPattern variant="brand" opacity={0.04} />
         <StatsRow />
       </section>
 
@@ -795,7 +791,6 @@ export default function HomePage() {
         className="hp-grid-bg-strong"
         style={{ padding: '130px 28px', position: 'relative' }}
       >
-        <AntTrailPattern variant="mixed" opacity={0.06} />
         {/* Ant brand accent — small, subtle floating silhouette */}
         <svg
           className="hp-ant-float"
@@ -838,7 +833,6 @@ export default function HomePage() {
           position: 'relative',
         }}
       >
-        <AntTrailPattern variant="brand" opacity={0.06} />
         <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
           <SectionHead
             eyebrow="Q U A L I F I C A T I O N S"
@@ -867,10 +861,8 @@ export default function HomePage() {
       {/* ── Roles Section ────────────────────────────────────────────────── */}
       <section
         id="roles"
-        className="hp-grid-bg"
         style={{ padding: '130px 28px', position: 'relative' }}
       >
-        <AntTrailPattern variant="violet" opacity={0.05} />
         <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
           <SectionHead
             eyebrow="F O R   E V E R Y O N E"
@@ -883,7 +875,6 @@ export default function HomePage() {
 
       {/* ── CTA Section ──────────────────────────────────────────────────── */}
       <section style={{ padding: '40px 28px 130px', position: 'relative' }}>
-        <AntTrailPattern variant="mixed" opacity={0.08} />
         <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
           <RevealSection>
             <div
@@ -986,7 +977,6 @@ export default function HomePage() {
 
       {/* ── Footer ───────────────────────────────────────────────────────── */}
       <section style={{ position: 'relative' }}>
-        <AntTrailPattern variant="brand" opacity={0.06} />
         <Footer />
       </section>
     </div>
