@@ -17,6 +17,7 @@ export interface PomodoroSettings {
   soundKey: SoundKey;
   volume: number;                // 0–1, default 0.4
   autoStartNext: boolean;        // default false
+  notifyChime: boolean;          // play completion chime, default true
 }
 
 export interface ActiveSessionSnapshot {
@@ -51,6 +52,7 @@ export const POMODORO_DEFAULTS: PomodoroSettings = {
   soundKey: null,
   volume: 0.4,
   autoStartNext: false,
+  notifyChime: true,
 };
 
 export const DURATION_BOUNDS = {
