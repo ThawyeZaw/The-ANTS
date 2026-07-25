@@ -16,6 +16,7 @@ import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Input from '@/components/ui/Input';
 import BackButton from '@/components/ui/BackButton';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 import {
   Shield,
   Settings,
@@ -38,6 +39,8 @@ import {
   Building2,
 } from 'lucide-react';
 import { formatDate, getInitials } from '@/lib/utils';
+import AddProjectForm from '@/components/clubs/AddProjectForm';
+import { FIELD_LABELS, FIELD_OPTIONS } from '@/constants/clubs';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -50,24 +53,6 @@ const TABS: Array<{ key: ManageTab; label: string; icon: React.ReactNode }> = [
   { key: 'announcements', label: 'Announcements', icon: <Megaphone className="h-4 w-4" /> },
   { key: 'members', label: 'People', icon: <Users className="h-4 w-4" /> },
 ];
-
-const FIELD_LABELS: Record<ClubField, string> = {
-  architecture: 'Architecture',
-  computer_science: 'Computer Science',
-  volunteering: 'Volunteering',
-  mathematics: 'Mathematics',
-  science: 'Science',
-  literature: 'Literature',
-  arts: 'Arts',
-  music: 'Music',
-  debate: 'Debate',
-  entrepreneurship: 'Entrepreneurship',
-  engineering: 'Engineering',
-  medicine: 'Medicine',
-  other: 'Other',
-};
-
-const FIELD_OPTIONS = Object.entries(FIELD_LABELS) as [ClubField, string][];
 
 // ── Page Component ───────────────────────────────────────────────────────────
 
@@ -236,9 +221,29 @@ function DetailsTab({
   const [customSlug, setCustomSlug] = useState(club.custom_slug || '');
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [showSaveConfirm, setShowSaveConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const router = useRouter();
+
+  const handleDeleteClub = async () => {
+    setDeleting(true);
+    const result = await clubStore.deleteClub(clubId, userId);
+    setDeleting(false);
+    if (result.success) {
+      router.push('/clubs');
+    } else {
+      setMessage({ type: 'error', text: result.error || 'Failed to delete club.' });
+      setShowDeleteConfirm(false);
+    }
+  };
 
   const handleSave = async (e: FormEvent) => {
     e.preventDefault();
+    setShowSaveConfirm(true);
+  };
+
+  const executeSave = async () => {
     setSaving(true);
     setMessage(null);
 
@@ -265,106 +270,151 @@ function DetailsTab({
   };
 
   return (
-    <form onSubmit={handleSave} className="space-y-6">
-      <div className="rounded-2xl border border-border bg-background-card p-6">
-        <h2 className="text-lg font-bold text-foreground">Basic Information</h2>
-        <p className="mt-1 text-sm text-foreground-muted">
-          Update your club&apos;s basic details and appearance.
-        </p>
+    <div className="space-y-6">
+      <form onSubmit={handleSave} className="space-y-6">
+        <div className="rounded-2xl border border-border bg-background-card p-6">
+          <h2 className="text-lg font-bold text-foreground">Basic Information</h2>
+          <p className="mt-1 text-sm text-foreground-muted">
+            Update your club&apos;s basic details and appearance.
+          </p>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
-          <Input
-            label="Club Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter club name"
-            required
-          />
-          <Input
-            label="Tagline"
-            value={tagline}
-            onChange={(e) => setTagline(e.target.value)}
-            placeholder="A short tagline for your club"
-          />
-
-          <div className="flex flex-col gap-1.5 md:col-span-2">
-            <label className="text-sm font-medium text-foreground">Description</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-              placeholder="Describe your club's mission and activities"
-              className="w-full rounded-xl border border-border bg-background-card px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            <Input
+              label="Club Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter club name"
+              required
             />
-          </div>
+            <Input
+              label="Tagline"
+              value={tagline}
+              onChange={(e) => setTagline(e.target.value)}
+              placeholder="A short tagline for your club"
+            />
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">Field</label>
-            <select
-              value={field}
-              onChange={(e) => setField(e.target.value as ClubField)}
-              className="w-full rounded-xl border border-border bg-background-card px-4 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
-            >
-              {FIELD_OPTIONS.map(([key, label]) => (
-                <option key={key} value={key}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <Input
-            label="Cover Image URL"
-            value={coverImageUrl}
-            onChange={(e) => setCoverImageUrl(e.target.value)}
-            placeholder="https://example.com/image.jpg"
-          />
-
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">Accent Color</label>
-            <div className="flex items-center gap-3">
-              <input
-                type="color"
-                value={accentColor}
-                onChange={(e) => setAccentColor(e.target.value)}
-                className="h-10 w-10 cursor-pointer rounded-lg border border-border bg-transparent p-0.5"
-              />
-              <Input
-                value={accentColor}
-                onChange={(e) => setAccentColor(e.target.value)}
-                placeholder="#6366f1"
+            <div className="flex flex-col gap-1.5 md:col-span-2">
+              <label className="text-sm font-medium text-foreground">Description</label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={3}
+                placeholder="Describe your club's mission and activities"
+                className="w-full rounded-xl border border-border bg-background-card px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
             </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium text-foreground">Field</label>
+              <select
+                value={field}
+                onChange={(e) => setField(e.target.value as ClubField)}
+                className="w-full rounded-xl border border-border bg-background-card px-4 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
+              >
+                {FIELD_OPTIONS.map(([key, label]) => (
+                  <option key={key} value={key}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <Input
+              label="Cover Image URL"
+              value={coverImageUrl}
+              onChange={(e) => setCoverImageUrl(e.target.value)}
+              placeholder="https://example.com/image.jpg"
+            />
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium text-foreground">Accent Color</label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="color"
+                  value={accentColor}
+                  onChange={(e) => setAccentColor(e.target.value)}
+                  className="h-10 w-10 cursor-pointer rounded-lg border border-border bg-transparent p-0.5"
+                />
+                <Input
+                  value={accentColor}
+                  onChange={(e) => setAccentColor(e.target.value)}
+                  placeholder="#6366f1"
+                />
+              </div>
+            </div>
+
+            <Input
+              label="Custom URL Slug"
+              value={customSlug}
+              onChange={(e) => setCustomSlug(e.target.value)}
+              placeholder="my-club-slug"
+              icon={<span className="text-foreground-muted text-xs">/clubs/</span>}
+            />
+          </div>
+        </div>
+
+        {message && (
+          <div
+            className={`rounded-xl border px-4 py-3 text-sm ${
+              message.type === 'success'
+                ? 'border-success/30 bg-success/10 text-success'
+                : 'border-error/30 bg-error/10 text-error'
+            }`}
+          >
+            {message.text}
+          </div>
+        )}
+
+        <div className="flex justify-end">
+          <Button type="submit" isLoading={saving} icon={<Save className="h-4 w-4" />}>
+            Save Changes
+          </Button>
+        </div>
+      </form>
+
+      <ConfirmModal
+        open={showSaveConfirm}
+        title="Save changes?"
+        message="Are you sure you want to save these changes to your club details?"
+        confirmLabel="Save Changes"
+        loading={saving}
+        onConfirm={async () => {
+          setShowSaveConfirm(false);
+          await executeSave();
+        }}
+        onCancel={() => setShowSaveConfirm(false)}
+      />
+
+      {/* ── Delete Club Section ── */}
+      {club.created_by === userId && (
+        <div className="rounded-2xl border border-error/20 bg-error/5 p-6">
+          <h2 className="text-lg font-bold text-foreground text-error">Danger Zone</h2>
+          <p className="mt-1 text-sm text-foreground-muted">
+            Once you delete this club, all projects, announcements, and member data will be permanently removed. This action cannot be undone.
+          </p>
+          <div className="mt-4">
+            <Button
+              variant="danger"
+              icon={<Trash2 className="h-4 w-4" />}
+              onClick={() => setShowDeleteConfirm(true)}
+            >
+              Delete Club
+            </Button>
           </div>
 
-          <Input
-            label="Custom URL Slug"
-            value={customSlug}
-            onChange={(e) => setCustomSlug(e.target.value)}
-            placeholder="my-club-slug"
-            icon={<span className="text-foreground-muted text-xs">/clubs/</span>}
+          <ConfirmModal
+            open={showDeleteConfirm}
+            title="Delete this club?"
+            message={`Are you sure you want to delete "${club.name}"? All projects, announcements, and member data will be permanently removed.`}
+            confirmLabel="Delete Club"
+            destructive
+            loading={deleting}
+            onConfirm={handleDeleteClub}
+            onCancel={() => setShowDeleteConfirm(false)}
           />
         </div>
-      </div>
-
-      {message && (
-        <div
-          className={`rounded-xl border px-4 py-3 text-sm ${
-            message.type === 'success'
-              ? 'border-success/30 bg-success/10 text-success'
-              : 'border-error/30 bg-error/10 text-error'
-          }`}
-        >
-          {message.text}
-        </div>
       )}
-
-      <div className="flex justify-end">
-        <Button type="submit" isLoading={saving} icon={<Save className="h-4 w-4" />}>
-          Save Changes
-        </Button>
-      </div>
-    </form>
+    </div>
   );
 }
 
@@ -673,13 +723,6 @@ function ProjectsTab({
 
   // Add project form
   const [showAddForm, setShowAddForm] = useState(false);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [coverImageUrl, setCoverImageUrl] = useState('');
-  const [tagsStr, setTagsStr] = useState('');
-  const [linksStr, setLinksStr] = useState('');
-  const [adding, setAdding] = useState(false);
-  const [addError, setAddError] = useState('');
 
   const loadProjects = async () => {
     const data = await clubStore.getClubProjects(clubId);
@@ -698,48 +741,6 @@ function ProjectsTab({
     }
   };
 
-  const handleAddProject = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!title.trim()) return;
-
-    setAdding(true);
-    setAddError('');
-
-    const tags = tagsStr
-      .split(',')
-      .map((t) => t.trim())
-      .filter(Boolean);
-    const links = linksStr
-      .split('\n')
-      .map((l) => l.trim())
-      .filter(Boolean)
-      .map((l) => {
-        const [url, label] = l.split('|').map((s) => s.trim());
-        return { label: label || url, url: url || l };
-      });
-
-    const result = await clubStore.addProject(clubId, userId, {
-      title,
-      description: description || undefined,
-      cover_image_url: coverImageUrl || undefined,
-      tags,
-      links,
-    });
-
-    setAdding(false);
-    if (result.success) {
-      setTitle('');
-      setDescription('');
-      setCoverImageUrl('');
-      setTagsStr('');
-      setLinksStr('');
-      setShowAddForm(false);
-      loadProjects();
-    } else {
-      setAddError(result.error || 'Failed to add project.');
-    }
-  };
-
   return (
     <div className="space-y-6">
       {/* Add Project Button / Form */}
@@ -753,78 +754,23 @@ function ProjectsTab({
           </Button>
         </div>
       ) : (
-        <form
-          onSubmit={handleAddProject}
-          className="rounded-2xl border border-border bg-background-card p-6"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-foreground">New Project</h2>
-            <button
-              type="button"
-              onClick={() => setShowAddForm(false)}
-              className="text-sm text-foreground-muted hover:text-foreground cursor-pointer px-2 py-1"
-            >
-              Cancel
-            </button>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <Input
-              label="Title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Project title"
-              required
-            />
-            <Input
-              label="Cover Image URL"
-              value={coverImageUrl}
-              onChange={(e) => setCoverImageUrl(e.target.value)}
-              placeholder="https://example.com/cover.jpg"
-            />
-
-            <div className="flex flex-col gap-1.5 md:col-span-2">
-              <label className="text-sm font-medium text-foreground">Description</label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={2}
-                placeholder="Brief description of the project"
-                className="w-full rounded-xl border border-border bg-background-card px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
-              />
-            </div>
-
-            <Input
-              label="Tags (comma-separated)"
-              value={tagsStr}
-              onChange={(e) => setTagsStr(e.target.value)}
-              placeholder="React, TypeScript, API"
-            />
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-foreground">
-                Links (one per line: url | label)
-              </label>
-              <textarea
-                value={linksStr}
-                onChange={(e) => setLinksStr(e.target.value)}
-                rows={2}
-                placeholder="https://github.com/example | GitHub&#10;https://demo.com | Live Demo"
-                className="w-full rounded-xl border border-border bg-background-card px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
-              />
-            </div>
-          </div>
-
-          {addError && (
-            <p className="mt-3 text-sm text-error">{addError}</p>
-          )}
-
-          <div className="mt-4 flex justify-end">
-            <Button type="submit" isLoading={adding} icon={<Plus className="h-4 w-4" />}>
-              Create Project
-            </Button>
-          </div>
-        </form>
+        <AddProjectForm
+          onAddProject={async (data) => {
+            const result = await clubStore.addProject(clubId, userId, {
+              title: data.title,
+              description: data.description,
+              cover_image_url: data.cover_image_url,
+              tags: data.tags,
+              links: data.links,
+            });
+            if (result.success) {
+              setShowAddForm(false);
+              loadProjects();
+            }
+            return result;
+          }}
+          onCancel={() => setShowAddForm(false)}
+        />
       )}
 
       {/* Projects grid */}
@@ -852,7 +798,7 @@ function ProjectsTab({
               <button
                 type="button"
                 onClick={() => handleDelete(project.id)}
-                className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-lg bg-error/10 text-error opacity-0 transition-opacity hover:bg-error/20 group-hover:opacity-100 cursor-pointer"
+                className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-lg bg-error/10 text-error opacity-100 sm:opacity-0 transition-opacity hover:bg-error/20 sm:group-hover:opacity-100 cursor-pointer"
                 title="Delete project"
               >
                 <Trash2 className="h-4 w-4" />
@@ -1009,7 +955,7 @@ function AnnouncementsTab({
               <button
                 type="button"
                 onClick={() => handleDelete(item.id)}
-                className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-lg bg-error/10 text-error opacity-0 transition-opacity hover:bg-error/20 group-hover:opacity-100 cursor-pointer"
+                className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-lg bg-error/10 text-error opacity-100 sm:opacity-0 transition-opacity hover:bg-error/20 sm:group-hover:opacity-100 cursor-pointer"
                 title="Delete announcement"
               >
                 <Trash2 className="h-4 w-4" />

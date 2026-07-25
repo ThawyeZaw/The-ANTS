@@ -11,24 +11,27 @@ import { ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface BackButtonProps {
-  /** Fallback route when history is unavailable */
+  /** Fallback route when history is unavailable (ignored when noFallback is true) */
   href?: string;
   /** Optional label (default: "Back") */
   label?: string;
   /** Custom class names */
   className?: string;
+  /** When true, only use router.back() — no fallback redirect */
+  noFallback?: boolean;
 }
 
-export default function BackButton({ href = '/dashboard', label = 'Back', className }: BackButtonProps) {
+export default function BackButton({ href = '/dashboard', label = 'Back', className, noFallback }: BackButtonProps) {
   const router = useRouter();
 
   const handleClick = () => {
-    // Try browser back first; fall back to href
+    // Try browser back first; only fall back to href when noFallback is false
     if (window.history.length > 1) {
       router.back();
-    } else {
+    } else if (!noFallback) {
       router.push(href);
     }
+    // If noFallback and no history, do nothing
   };
 
   return (

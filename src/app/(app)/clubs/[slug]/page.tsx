@@ -17,40 +17,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useClub } from '@/hooks/useClub';
 import { cn, formatDate, getInitials } from '@/lib/utils';
 import type { Club } from '@/types';
-
-// ── Field Display Constants ──────────────────────────────────────────────────
-
-const FIELD_LABELS: Record<string, string> = {
-  computer_science: 'Computer Science',
-  mathematics: 'Mathematics',
-  science: 'Science',
-  engineering: 'Engineering',
-  medicine: 'Medicine',
-  literature: 'Literature',
-  arts: 'Arts',
-  music: 'Music',
-  debate: 'Debate',
-  entrepreneurship: 'Entrepreneurship',
-  architecture: 'Architecture',
-  volunteering: 'Volunteering',
-  other: 'Other',
-};
-
-const FIELD_BADGE_STYLES: Record<string, string> = {
-  computer_science: 'bg-violet-500/15 text-violet-400 border-violet-500/20',
-  mathematics: 'bg-blue-500/15 text-blue-400 border-blue-500/20',
-  science: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
-  engineering: 'bg-amber-500/15 text-amber-400 border-amber-500/20',
-  medicine: 'bg-rose-500/15 text-rose-400 border-rose-500/20',
-  literature: 'bg-pink-500/15 text-pink-400 border-pink-500/20',
-  arts: 'bg-orange-500/15 text-orange-400 border-orange-500/20',
-  music: 'bg-indigo-500/15 text-indigo-400 border-indigo-500/20',
-  debate: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/20',
-  entrepreneurship: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/20',
-  architecture: 'bg-teal-500/15 text-teal-400 border-teal-500/20',
-  volunteering: 'bg-green-500/15 text-green-400 border-green-500/20',
-  other: 'bg-gray-500/15 text-gray-400 border-gray-500/20',
-};
+import { FIELD_LABELS, FIELD_BADGE_STYLES } from '@/constants/clubs';
+import AddProjectForm from '@/components/clubs/AddProjectForm';
 
 // ── Main Page Component ──────────────────────────────────────────────────────
 
@@ -71,7 +39,6 @@ export default function ClubMemberPage() {
   const [membership, setMembership] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [feedback, setFeedback] = useState('');
-  const [leaving, setLeaving] = useState(false);
 
   // ── Data Fetching ──────────────────────────────────────────────────────
 
@@ -132,20 +99,7 @@ export default function ClubMemberPage() {
   const leaderProfiles = leaders.map((l: any) => l.profiles).filter(Boolean);
 
   // ── Handlers ───────────────────────────────────────────────────────────
-
-  const handleLeave = async () => {
-    if (!user || !club) return;
-    setLeaving(true);
-    setFeedback('');
-    const result = await clubStore.leaveClub(club.id, user.id);
-    if (result.success) {
-      setMembership(null);
-      setFeedback('You left this club.');
-    } else {
-      setFeedback(result.error || 'Could not leave club.');
-    }
-    setLeaving(false);
-  };
+  
 
   const handleJoin = async () => {
     if (!user || !club) return;
@@ -157,6 +111,18 @@ export default function ClubMemberPage() {
       setFeedback('You joined this club!');
     } else {
       setFeedback(result.error || 'Could not join club.');
+    }
+  };
+
+  const handleRemoveMember = async (targetUserId: string) => {
+    if (!club) return;
+    setFeedback('');
+    const result = await clubStore.removeMember(club.id, user!.id, targetUserId);
+    if (result.success) {
+      setMembers((prev) => prev.filter((m) => m.user_id !== targetUserId));
+      setFeedback('Member removed.');
+    } else {
+      setFeedback(result.error || 'Could not remove member.');
     }
   };
 
@@ -243,126 +209,128 @@ export default function ClubMemberPage() {
   // ── Full Member View ───────────────────────────────────────────────────
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 pb-20">
+    <div className="mx-auto space-y-6 pb-20">
       <BackButton href="/clubs" label="Back to Clubs" />
 
-      {/* ── Club Header Card ─────────────────────────────────────────────── */}
-      <section className="rounded-2xl border border-[var(--border)] bg-[var(--background-card)] p-6 sm:p-8">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-          <div className="flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <span
-                className={cn(
-                  'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium',
-                  FIELD_BADGE_STYLES[club.field] || FIELD_BADGE_STYLES.other
+      {/* ── Side-by-side layout: sidebar (club info) + content on large screens ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6 items-start">
+        {/* ── Left Sidebar: Club Info + Actions (sticky) ── */}
+        <div className="space-y-6">
+          <section className="sticky top-24 space-y-6">
+            {/* ── Club Header Card ─────────────────────────────────────────────── */}
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--background-card)] p-6">
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className={cn(
+                      'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium',
+                      FIELD_BADGE_STYLES[club.field] || FIELD_BADGE_STYLES.other
+                    )}
+                  >
+                    {FIELD_LABELS[club.field] || club.field}
+                  </span>
+                  {isLeader && <Badge variant="warning">Leader</Badge>}
+                </div>
+
+                <h1 className="text-xl font-bold text-[var(--foreground)] sm:text-2xl">
+                  {club.name}
+                </h1>
+
+                {club.tagline && (
+                  <p className="text-sm text-[var(--foreground-secondary)]">{club.tagline}</p>
                 )}
-              >
-                {FIELD_LABELS[club.field] || club.field}
-              </span>
-              {isLeader && <Badge variant="warning">Leader</Badge>}
+
+                <div className="space-y-1.5 text-sm text-[var(--foreground-muted)]">
+                  {leaderProfiles.length > 0 && (
+                    <p>
+                      Led by{' '}
+                      {leaderProfiles
+                        .slice(0, 2)
+                        .map((p: any) => p.name)
+                        .join(', ')}
+                      {leaderProfiles.length > 2 && ` +${leaderProfiles.length - 2} more`}
+                    </p>
+                  )}
+                  <p>
+                    {members.length} {members.length === 1 ? 'member' : 'members'}
+                  </p>
+                  <p>Created {formatDate(club.created_at)}</p>
+                </div>
+
+                {/* ── Actions ── */}
+                <div className="space-y-2 pt-2 border-t border-[var(--border)]">
+                  <a
+                    href={`/explore/clubs/${club.custom_slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-1.5 w-full rounded-xl border border-border bg-background-card px-4 py-2.5 text-sm font-medium text-foreground-secondary hover:border-border-hover hover:text-foreground transition-colors cursor-pointer"
+                  >
+                    <Globe className="h-4 w-4" />
+                    <span>View Public Page</span>
+                  </a>
+                  {isLeader && (
+                    <Link href={`/clubs/${slug}/manage`} className="block">
+                      <Button variant="secondary" fullWidth>
+                        Manage Club
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+
+                {feedback && <p className="text-sm text-[var(--foreground-muted)]">{feedback}</p>}
+              </div>
             </div>
 
-            <h1 className="mt-3 text-2xl font-bold text-[var(--foreground)] sm:text-3xl">
-              {club.name}
-            </h1>
-
-            {club.tagline && (
-              <p className="mt-2 text-base text-[var(--foreground-secondary)]">{club.tagline}</p>
-            )}
-
-            <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-[var(--foreground-muted)]">
-              {leaderProfiles.length > 0 && (
-                <span>
-                  Led by{' '}
-                  {leaderProfiles
-                    .slice(0, 2)
-                    .map((p: any) => p.name)
-                    .join(', ')}
-                  {leaderProfiles.length > 2 && ` +${leaderProfiles.length - 2} more`}
-                </span>
-              )}
-              <span>
-                {members.length} {members.length === 1 ? 'member' : 'members'}
-              </span>
-              <span>Created {formatDate(club.created_at)}</span>
-            </div>
-          </div>
-
-          <div className="flex shrink-0 flex-row sm:flex-col gap-3 w-full sm:w-auto">
-            <a
-              href={`/explore/clubs/${club.custom_slug}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-background-card px-4 py-2.5 text-sm font-medium text-foreground-secondary hover:border-border-hover hover:text-foreground transition-colors cursor-pointer"
-            >
-              <Globe className="h-4 w-4" />
-              <span className="hidden sm:inline">View Public Page</span>
-            </a>
-            {isLeader && (
-              <Link href={`/clubs/${slug}/manage`} className="flex-1 sm:flex-none">
-                <Button variant="secondary" fullWidth>
-                  Manage Club
-                </Button>
-              </Link>
-            )}
-          </div>
+            {/* ── Members List (sidebar) ── */}
+            <MembersSection
+              members={members}
+              leaderUserIds={leaderUserIds}
+              isLeader={isLeader}
+              userId={user.id}
+              onRemoveMember={handleRemoveMember}
+            />
+          </section>
         </div>
 
-        {feedback && <p className="mt-4 text-sm text-[var(--foreground-muted)]">{feedback}</p>}
-      </section>
+        {/* ── Right Content: Projects, Announcements ── */}
+        <div className="space-y-6 min-w-0">
+          <ProjectsSection
+            userId={user.id}
+            projects={projects}
+            onAddProject={async (data) => {
+              if (!club) return { success: false, error: 'Club not found' };
+              const result = await clubStore.addProject(club.id, user.id, data);
+              if (result.success) {
+                const updated = await clubStore.getClubProjects(club.id);
+                setProjects(updated);
+              }
+              return result;
+            }}
+            onDeleteProject={async (projectId) => {
+              if (!club) return { success: false, error: 'Club not found' };
+              const result = await clubStore.deleteProject(projectId, user.id);
+              if (result.success) {
+                const updated = await clubStore.getClubProjects(club.id);
+                setProjects(updated);
+              }
+              return result;
+            }}
+          />
 
-      {/* ── Projects Section ─────────────────────────────────────────────── */}
-      <ProjectsSection
-        userId={user.id}
-        projects={projects}
-        onAddProject={async (data) => {
-          if (!club) return { success: false, error: 'Club not found' };
-          const result = await clubStore.addProject(club.id, user.id, data);
-          if (result.success) {
-            const updated = await clubStore.getClubProjects(club.id);
-            setProjects(updated);
-          }
-          return result;
-        }}
-        onDeleteProject={async (projectId) => {
-          if (!club) return { success: false, error: 'Club not found' };
-          const result = await clubStore.deleteProject(projectId, user.id);
-          if (result.success) {
-            const updated = await clubStore.getClubProjects(club.id);
-            setProjects(updated);
-          }
-          return result;
-        }}
-      />
-
-      {/* ── Announcements Section ────────────────────────────────────────── */}
-      <AnnouncementsSection
-        announcements={announcements}
-        isLeader={isLeader}
-        onPostAnnouncement={async (title, content) => {
-          if (!club) return { success: false, error: 'Club not found' };
-          const result = await clubStore.postAnnouncement(club.id, user.id, title, content);
-          if (result.success) {
-            const updated = await clubStore.getClubAnnouncements(club.id);
-            setAnnouncements(updated);
-          }
-          return result;
-        }}
-      />
-
-      {/* ── Members Section ──────────────────────────────────────────────── */}
-      <MembersSection members={members} leaderUserIds={leaderUserIds} />
-
-      {/* ── Leave Club Button ────────────────────────────────────────────── */}
-      <div className="flex justify-center pt-4">
-        <Button
-          variant="outline"
-          isLoading={leaving}
-          icon={<LogOut className="h-4 w-4" />}
-          onClick={handleLeave}
-        >
-          Leave Club
-        </Button>
+          <AnnouncementsSection
+            announcements={announcements}
+            isLeader={isLeader}
+            onPostAnnouncement={async (title, content) => {
+              if (!club) return { success: false, error: 'Club not found' };
+              const result = await clubStore.postAnnouncement(club.id, user.id, title, content);
+              if (result.success) {
+                const updated = await clubStore.getClubAnnouncements(club.id);
+                setAnnouncements(updated);
+              }
+              return result;
+            }}
+          />
+        </div>
       </div>
     </div>
   );
@@ -390,49 +358,8 @@ function ProjectsSection({
   onDeleteProject: (projectId: string) => Promise<{ success: boolean; error?: string }>;
 }) {
   const [showForm, setShowForm] = useState(false);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [coverImageUrl, setCoverImageUrl] = useState('');
-  const [tagsInput, setTagsInput] = useState('');
-  const [linkLabel, setLinkLabel] = useState('');
-  const [linkUrl, setLinkUrl] = useState('');
   const [error, setError] = useState('');
-  const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!title.trim()) return;
-    setSubmitting(true);
-    setError('');
-
-    const tags = tagsInput
-      .split(',')
-      .map((t) => t.trim())
-      .filter(Boolean);
-    const links = linkLabel && linkUrl ? [{ label: linkLabel, url: linkUrl }] : [];
-
-    const result = await onAddProject({
-      title: title.trim(),
-      description: description || undefined,
-      cover_image_url: coverImageUrl || undefined,
-      tags: tags.length > 0 ? tags : undefined,
-      links: links.length > 0 ? links : undefined,
-    });
-
-    if (result.success) {
-      setTitle('');
-      setDescription('');
-      setCoverImageUrl('');
-      setTagsInput('');
-      setLinkLabel('');
-      setLinkUrl('');
-      setShowForm(false);
-    } else {
-      setError(result.error || 'Could not add project.');
-    }
-    setSubmitting(false);
-  };
 
   const handleDelete = async (projectId: string) => {
     setDeletingId(projectId);
@@ -463,86 +390,10 @@ function ProjectsSection({
 
       {/* Add project form */}
       {showForm && (
-        <form
-          onSubmit={handleSubmit}
-          className="mb-6 space-y-4 rounded-xl border border-[var(--border)] bg-[var(--background)] p-5"
-        >
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="sm:col-span-2">
-              <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
-                Title *
-              </label>
-              <input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Project title"
-                className="w-full rounded-xl border border-[var(--border)] bg-[var(--background-card)] px-4 py-2.5 text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-muted)] focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/50"
-              />
-            </div>
-            <div className="sm:col-span-2">
-              <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
-                Description
-              </label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={2}
-                placeholder="Brief description of the project"
-                className="w-full rounded-xl border border-[var(--border)] bg-[var(--background-card)] px-4 py-2.5 text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-muted)] focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/50"
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
-                Cover Image URL
-              </label>
-              <input
-                value={coverImageUrl}
-                onChange={(e) => setCoverImageUrl(e.target.value)}
-                placeholder="https://example.com/image.jpg"
-                className="w-full rounded-xl border border-[var(--border)] bg-[var(--background-card)] px-4 py-2.5 text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-muted)] focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/50"
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
-                Tags (comma-separated)
-              </label>
-              <input
-                value={tagsInput}
-                onChange={(e) => setTagsInput(e.target.value)}
-                placeholder="react, typescript, api"
-                className="w-full rounded-xl border border-[var(--border)] bg-[var(--background-card)] px-4 py-2.5 text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-muted)] focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/50"
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
-                Link Label
-              </label>
-              <input
-                value={linkLabel}
-                onChange={(e) => setLinkLabel(e.target.value)}
-                placeholder="GitHub"
-                className="w-full rounded-xl border border-[var(--border)] bg-[var(--background-card)] px-4 py-2.5 text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-muted)] focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/50"
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
-                Link URL
-              </label>
-              <input
-                value={linkUrl}
-                onChange={(e) => setLinkUrl(e.target.value)}
-                placeholder="https://github.com/..."
-                className="w-full rounded-xl border border-[var(--border)] bg-[var(--background-card)] px-4 py-2.5 text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-muted)] focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/50"
-              />
-            </div>
-          </div>
-          <div className="flex items-center justify-between">
-            {error && <p className="text-sm text-[var(--error)]">{error}</p>}
-            <Button type="submit" size="sm" isLoading={submitting} icon={<Plus className="h-4 w-4" />}>
-              Create Project
-            </Button>
-          </div>
-        </form>
+        <AddProjectForm
+          onAddProject={onAddProject}
+          onCancel={() => setShowForm(false)}
+        />
       )}
 
       {/* Project grid */}
@@ -555,7 +406,7 @@ function ProjectsSection({
           </p>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map((project: any) => {
             const creator = project.profiles;
             const isOwn = project.created_by === userId;
@@ -754,43 +605,46 @@ function AnnouncementsSection({
 function MembersSection({
   members,
   leaderUserIds,
+  isLeader,
+  userId,
+  onRemoveMember,
 }: {
   members: any[];
   leaderUserIds: Set<string>;
+  isLeader: boolean;
+  userId: string;
+  onRemoveMember: (targetUserId: string) => Promise<void>;
 }) {
   return (
-    <section className="rounded-2xl border border-[var(--border)] bg-[var(--background-card)] p-6 sm:p-8">
-      <div className="mb-6 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary)]/10 text-[var(--primary)]">
-          <Users className="h-5 w-5" />
+    <section className="rounded-2xl border border-[var(--border)] bg-[var(--background-card)] p-4 sm:p-6">
+      <div className="mb-4 flex items-center gap-3">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--primary)]/10 text-[var(--primary)]">
+          <Users className="h-4 w-4" />
         </div>
-        <h2 className="text-xl font-semibold text-[var(--foreground)]">Members</h2>
+        <h2 className="font-semibold text-[var(--foreground)]">Members</h2>
         <span className="text-sm text-[var(--foreground-muted)]">
-          {members.length} {members.length === 1 ? 'member' : 'members'}
+          ({members.length})
         </span>
       </div>
 
       {members.length === 0 ? (
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--background)] p-8 text-center">
-          <Users className="mx-auto h-8 w-8 text-[var(--foreground-muted)]" />
-          <p className="mt-3 font-semibold text-[var(--foreground)]">No members yet</p>
-          <p className="text-sm text-[var(--foreground-muted)]">
-            Invite others to join this club.
-          </p>
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--background)] p-6 text-center">
+          <Users className="mx-auto h-6 w-6 text-[var(--foreground-muted)]" />
+          <p className="mt-2 text-sm font-medium text-[var(--foreground)]">No members yet</p>
         </div>
       ) : (
-        <div className="grid gap-2 sm:gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
+        <div className="flex flex-col divide-y divide-[var(--border)]">
           {members.map((member: any) => {
             const profile = member.profiles;
             const isLeaderMember = leaderUserIds.has(member.user_id);
             return (
               <div
                 key={member.id}
-                className="flex flex-col items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--background)] p-4 transition-all hover:border-[var(--primary)]/30"
+                className="flex items-center gap-3 py-2.5"
               >
                 <div
                   className={cn(
-                    'flex h-10 w-10 items-center justify-center rounded-full text-xs font-bold text-white',
+                    'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white',
                     isLeaderMember
                       ? 'bg-gradient-to-br from-[var(--warning)] to-orange-400'
                       : 'bg-gradient-to-br from-[var(--primary)] to-[var(--accent)]'
@@ -798,10 +652,25 @@ function MembersSection({
                 >
                   {getInitials(profile?.name || 'M')}
                 </div>
-                <span className="max-w-full truncate text-center text-sm font-medium text-[var(--foreground)]">
-                  {profile?.name || 'Member'}
-                </span>
-                {isLeaderMember && <Badge variant="warning">Leader</Badge>}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-[var(--foreground)]">
+                    {profile?.name || 'Member'}
+                  </p>
+                </div>
+                {isLeaderMember && (
+                  <span className="shrink-0 rounded-full border border-[var(--warning)]/30 bg-[var(--warning)]/10 px-2 py-0.5 text-[10px] font-medium text-[var(--warning)]">
+                    Leader
+                  </span>
+                )}
+                {isLeader && !isLeaderMember && member.user_id !== userId && (
+                  <button
+                    onClick={() => onRemoveMember(member.user_id)}
+                    className="shrink-0 cursor-pointer rounded-lg p-1.5 text-[var(--foreground-muted)] transition-colors hover:bg-[var(--error)]/10 hover:text-[var(--error)]"
+                    title="Remove member"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                )}
               </div>
             );
           })}

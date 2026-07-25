@@ -12,7 +12,6 @@ import { useRouter } from 'next/navigation';
 import {
   Search,
   Users,
-  Shield,
   ArrowRight,
   Building2,
   Code2,
@@ -38,6 +37,7 @@ import { cn, getInitials } from '@/lib/utils';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import BackButton from '@/components/ui/BackButton';
+import { FIELD_LABELS } from '@/constants/clubs';
 
 // ── Field-to-Display & Icon Mapping ──────────────────────────────────────────
 
@@ -59,9 +59,9 @@ const FIELD_META: Record<ClubField, { label: string; icon: React.ReactNode; grad
 
 const FIELD_OPTIONS: { value: ClubField | 'all'; label: string }[] = [
   { value: 'all', label: 'All Fields' },
-  ...(Object.entries(FIELD_META) as [ClubField, typeof FIELD_META[ClubField]][]).map(([key, meta]) => ({
+  ...(Object.entries(FIELD_LABELS) as [ClubField, string][]).map(([key, label]) => ({
     value: key,
-    label: meta.label,
+    label,
   })),
 ];
 
@@ -270,7 +270,7 @@ export default function ExploreClubsPage() {
 
         <div className="relative mx-auto max-w-6xl px-4 py-12 sm:py-16">
           <div className="mb-6">
-            <BackButton href="/" />
+            <BackButton noFallback />
           </div>
 
           <div className="max-w-2xl">
@@ -344,7 +344,7 @@ export default function ExploreClubsPage() {
               )}
               <button
                 onClick={() => { setSearchQuery(''); setFieldFilter('all'); }}
-                className="text-xs text-primary hover:text-primary-hover underline underline-offset-2 transition-colors cursor-pointer"
+                className="px-3 py-1.5 rounded-lg text-xs text-primary hover:text-primary-hover hover:bg-primary/10 underline underline-offset-2 transition-colors cursor-pointer min-h-[36px]"
               >
                 Clear all
               </button>
@@ -386,11 +386,10 @@ export default function ExploreClubsPage() {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredClubs.map((club) => {
               const fieldMeta = FIELD_META[club.field];
               const memberCount = memberCounts[club.id] ?? 0;
-              const leaderCount = leaderCounts[club.id] ?? 0;
               const cardGradient = getCardGradient(club.id);
               const initials = getInitials(club.name);
               const hasCover = !!club.cover_image_url;
@@ -448,8 +447,8 @@ export default function ExploreClubsPage() {
                         </span>
                       </div>
 
-                      {/* Hover "View Club" indicator */}
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                      {/* Desktop hover "View Club" indicator — hidden on mobile (no hover on touch) */}
+                      <div className="hidden sm:flex absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 items-center justify-center">
                         <span
                           className={cn(
                             'px-4 py-2 rounded-xl bg-white/90 text-foreground text-sm font-medium',
@@ -495,10 +494,6 @@ export default function ExploreClubsPage() {
                             <Users className="h-3.5 w-3.5" />
                             {memberCount} {memberCount === 1 ? 'member' : 'members'}
                           </span>
-                          <span className="flex items-center gap-1">
-                            <Shield className="h-3.5 w-3.5" />
-                            {leaderCount} {leaderCount === 1 ? 'leader' : 'leaders'}
-                          </span>
                         </div>
 
                         <div className="flex items-center gap-2">
@@ -510,7 +505,7 @@ export default function ExploreClubsPage() {
                             <button
                               onClick={(e) => handleJoin(e, club)}
                               disabled={joiningClubId === club.id}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-medium transition-colors cursor-pointer disabled:opacity-60"
+                              className="inline-flex items-center gap-1 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium transition-colors cursor-pointer disabled:opacity-60 min-h-[44px]"
                             >
                               {joiningClubId === club.id ? 'Joining...' : 'Join'}
                             </button>
@@ -518,7 +513,7 @@ export default function ExploreClubsPage() {
                             <Link
                               href={`/signup?redirect=/explore/clubs/${club.custom_slug}`}
                               onClick={(e) => e.stopPropagation()}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-xs font-medium transition-colors"
+                              className="inline-flex items-center gap-1 px-3.5 py-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-sm font-medium transition-colors min-h-[44px]"
                             >
                               Join
                             </Link>
@@ -526,7 +521,7 @@ export default function ExploreClubsPage() {
                           <ArrowRight
                             className={cn(
                               'h-4 w-4 text-primary',
-                              'opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0',
+                              'opacity-100 sm:opacity-0 sm:group-hover:opacity-100 translate-x-0 sm:-translate-x-1 sm:group-hover:translate-x-0',
                               'transition-all duration-300'
                             )}
                           />

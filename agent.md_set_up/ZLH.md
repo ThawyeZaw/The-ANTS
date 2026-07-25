@@ -1,6 +1,4 @@
-# AGENTS.md
-
-**Developer:** TYZ
+You are generating an AGENTS.md file for a frontend developer (ZLH) working on **The ANTs** — a curriculum-aware academic productivity platform for Myanmar students. Copy the structure below and fill in the **Developer-owned** section.
 
 ### Project Overview
 - **Stack:** Next.js 16 (App Router), React 19, TypeScript 5, Tailwind CSS v4, Supabase
@@ -15,37 +13,38 @@
 - Root files: `proxy.ts`, `spec.md`, `schema.md`, `README.md`, `AGENTS.md`, `package.json`, `package-lock.json`, `.env.local`
 - Directories: `The-ANTS-1/`, `design-system/`, `supabase/`, `public/icons/`
 - `src/app/` — all page/route files
-- `src/components/ui/`, `src/components/auth/`, `src/components/contributor-manager/`, `src/components/homepage/`, `src/components/review-queue/`, `src/components/workspace/`, `src/components/onboarding/`
-- `src/components/courses/`, `src/components/notes/`, `src/components/flashcards/`, `src/components/countdown/`, `src/components/exam-data/`, `src/components/exam-editor/`, `src/components/library/`, `src/components/share/`
-- `src/components/timetable/`, `src/components/pomodoro/`, `src/components/Lessons/`, `src/components/editor/`, `src/components/curriculum/`
+- `src/components/ui/`, `src/components/layout/`, `src/components/auth/`, `src/components/settings/`, `src/components/profile/`, `src/components/contributor-manager/`, `src/components/homepage/`, `src/components/about/`, `src/components/review-queue/`, `src/components/workspace/`, `src/components/onboarding/`, `src/components/explore/`
+- `src/components/clubs/`, `src/components/classrooms/`, `src/components/timetable/`, `src/components/pomodoro/`, `src/components/Lessons/`, `src/components/editor/`, `src/components/curriculum/`
 - `src/context/*`, `src/lib/*`, `src/types/*`
 - `src/hooks/` — all hooks except those listed under "Developer-owned" below
 - `src/constants/` — all files
 - `src/actions/` — all files except those listed under "Developer-owned" below
 
-### Developer-owned (TYZ) — you MAY create, edit, and delete these
+### Developer-owned (ZLH) — you MAY create, edit, and delete these
 **Components:**
-- `src/components/clubs/` — everything inside
-- `src/components/classrooms/` — everything inside
-- `src/components/profile/` — everything inside
-- `src/components/layout/` — everything inside (NavBar, DashboardLayout, Footer)
-- `src/components/settings/` — everything inside
-- `src/components/explore/` — everything inside
-- `src/components/about/` — everything inside
+- `src/components/courses/` — everything inside
+- `src/components/notes/` — everything inside
+- `src/components/flashcards/` — everything inside
+- `src/components/countdown/` — everything inside
+- `src/components/exam-data/` — everything inside
+- `src/components/exam-editor/` — everything inside
+- `src/components/library/` — everything inside
+- `src/components/share/` — everything inside
 
 **Hooks:**
-- `src/hooks/useClub.ts`
-- `src/hooks/useRealtimeChat.ts`
-- `src/hooks/useClassroom.ts`
-- `src/hooks/useRealtimeClassroom.ts`
-- `src/hooks/useProfile.ts`
+- `src/hooks/useCourseManager.ts`
+- `src/hooks/useNotes.ts`
+- `src/hooks/useUserNotes.ts`
+- `src/hooks/useFlashcardSRS.ts`
+- `src/hooks/useCountdown.ts`
+- `src/hooks/useExamReview.ts`
 
 **Actions:**
-- `src/actions/clubs.ts`
-- `src/actions/classrooms.ts`
+- `src/actions/notes.ts`
+- `src/actions/exam-editor.ts`
 
 ### Owned by OTHER developers — do NOT touch
-- **ZLH:** `src/components/courses/`, `src/components/notes/`, `src/components/flashcards/`, `src/components/countdown/`, `src/components/exam-data/`, `src/components/exam-editor/`, `src/components/library/`, `src/components/share/`, plus their hooks and actions
+- **TYZ:** `src/components/clubs/`, `src/components/classrooms/`, `src/components/profile/`, `src/components/layout/`, `src/components/settings/`, `src/components/explore/`, `src/components/about/`, plus their hooks and actions
 - **ABC:** `src/components/timetable/`, `src/components/pomodoro/`, `src/components/Lessons/`, `src/components/editor/`, `src/components/curriculum/`, `src/components/homepage/`, `src/components/auth/`, `src/components/onboarding/`, `src/components/workspace/`, `src/components/contributor-manager/`, `src/components/review-queue/`, plus their hooks and actions
 
 ### Code Style

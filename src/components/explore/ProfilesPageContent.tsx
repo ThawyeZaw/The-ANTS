@@ -71,7 +71,7 @@ export function ExploreProfilesContent() {
         <div className="max-w-6xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <BackButton href="/" />
+              <BackButton noFallback />
               <h1 className="text-3xl font-bold text-foreground mt-2">Explore Profiles</h1>
               <p className="text-foreground-secondary mt-1">
                 Discover students, teachers, and contributors in the community.
