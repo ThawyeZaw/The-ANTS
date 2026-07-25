@@ -79,7 +79,7 @@ export default function StudySession({ deckId, deckName, userId, onBack }: Study
       <div className="flex h-full flex-col items-center justify-center gap-6 p-8 text-center">
         <div className="text-6xl">🎉</div>
         <div>
-          <h2 className="text-xl font-bold text-[var(--foreground)]">All caught up!</h2>
+          <h2 className="text-xl font-semibold text-[var(--foreground)]">All caught up!</h2>
           <p className="mt-2 text-[var(--foreground-secondary)]">
             No cards are due for review in <strong>{deckName}</strong> right now.
           </p>
@@ -135,7 +135,7 @@ export default function StudySession({ deckId, deckName, userId, onBack }: Study
             />
           </div>
         </div>
-        <span className="text-xs font-bold text-[var(--foreground-secondary)] tabular-nums">
+        <span className="text-xs font-medium text-[var(--foreground-secondary)] tabular-nums">
           {progressPct}%
         </span>
       </div>
@@ -170,7 +170,7 @@ export default function StudySession({ deckId, deckName, userId, onBack }: Study
             className="absolute inset-0 flex flex-col items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--background-card)] p-8 shadow-[var(--shadow-lg)]"
             style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
           >
-            <p className="mb-4 text-xs font-bold uppercase tracking-widest text-[var(--primary)]">
+            <p className="mb-4 text-xs font-medium uppercase tracking-widest text-[var(--primary)]">
               Question
             </p>
             <FlashcardText
@@ -193,7 +193,7 @@ export default function StudySession({ deckId, deckName, userId, onBack }: Study
               transform: 'rotateY(180deg)',
             }}
           >
-            <p className="mb-4 text-xs font-bold uppercase tracking-widest text-[var(--accent)]">
+            <p className="mb-4 text-xs font-medium uppercase tracking-widest text-[var(--accent)]">
               Answer
             </p>
             <FlashcardText

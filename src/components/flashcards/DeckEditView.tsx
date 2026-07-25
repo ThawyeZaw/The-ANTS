@@ -77,7 +77,7 @@ export default function DeckEditView({ deck, userId, onBack, onDeckUpdated }: De
             className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--foreground-muted)] hover:bg-[var(--background-secondary)] transition-colors">
             <ArrowLeft size={16} />
           </button>
-          <h2 className="text-base font-bold text-[var(--foreground)]">Add Cards Manually</h2>
+          <h2 className="text-base font-semibold text-[var(--foreground)]">Add Cards Manually</h2>
         </div>
         <CardCreatorManual
           deckId={deck.id}
@@ -97,7 +97,7 @@ export default function DeckEditView({ deck, userId, onBack, onDeckUpdated }: De
             className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--foreground-muted)] hover:bg-[var(--background-secondary)] transition-colors">
             <ArrowLeft size={16} />
           </button>
-          <h2 className="text-base font-bold text-[var(--foreground)]">Add Cards with AI</h2>
+          <h2 className="text-base font-semibold text-[var(--foreground)]">Add Cards with AI</h2>
         </div>
         <CardCreatorAI
           deckId={deck.id}
@@ -126,7 +126,7 @@ export default function DeckEditView({ deck, userId, onBack, onDeckUpdated }: De
                 value={deckNameValue}
                 onChange={e => setDeckNameValue(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') saveDeckName(); if (e.key === 'Escape') setEditingDeckName(false); }}
-                className="flex-1 rounded-lg border border-[var(--primary)] bg-[var(--background-secondary)] px-3 py-1.5 text-base font-bold text-[var(--foreground)] focus:outline-none"
+                className="flex-1 rounded-lg border border-[var(--primary)] bg-[var(--background-secondary)] px-3 py-1.5 text-base font-semibold text-[var(--foreground)] focus:outline-none"
                 autoFocus
               />
               <button id="save-deck-name-btn" onClick={saveDeckName}
@@ -140,7 +140,7 @@ export default function DeckEditView({ deck, userId, onBack, onDeckUpdated }: De
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-bold text-[var(--foreground)] truncate">{deck.name}</h2>
+              <h2 className="text-lg font-semibold text-[var(--foreground)] truncate">{deck.name}</h2>
               <button id="edit-deck-name-btn" onClick={() => setEditingDeckName(true)}
                 className="flex h-6 w-6 items-center justify-center rounded text-[var(--foreground-muted)] hover:text-[var(--primary)] transition-colors">
                 <Pencil size={12} />
@@ -197,7 +197,7 @@ export default function DeckEditView({ deck, userId, onBack, onDeckUpdated }: De
               {editingCardId === card.id ? (
                 <div className="space-y-3">
                   <div>
-                    <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-[var(--primary)]">Front</label>
+                    <label className="mb-1 block text-xs font-medium uppercase tracking-wider text-[var(--primary)]">Front</label>
                     <textarea
                       id={`edit-card-front-${index}`}
                       value={editFront}
@@ -207,7 +207,7 @@ export default function DeckEditView({ deck, userId, onBack, onDeckUpdated }: De
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-[var(--accent)]">Back</label>
+                    <label className="mb-1 block text-xs font-medium uppercase tracking-wider text-[var(--accent)]">Back</label>
                     <textarea
                       id={`edit-card-back-${index}`}
                       value={editBack}
@@ -229,13 +229,13 @@ export default function DeckEditView({ deck, userId, onBack, onDeckUpdated }: De
                 </div>
               ) : (
                 <div className="flex items-start gap-3">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--primary-light)] text-xs font-bold text-[var(--primary)]">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--primary-light)] text-xs font-medium text-[var(--primary)]">
                     {index + 1}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold uppercase tracking-wider text-[var(--foreground-muted)] mb-0.5">Front</p>
+                    <p className="text-xs font-medium uppercase tracking-wider text-[var(--foreground-muted)] mb-0.5">Front</p>
                     <p className="text-sm text-[var(--foreground)] break-words">{card.front_text}</p>
-                    <p className="mt-2 text-xs font-bold uppercase tracking-wider text-[var(--foreground-muted)] mb-0.5">Back</p>
+                    <p className="mt-2 text-xs font-medium uppercase tracking-wider text-[var(--foreground-muted)] mb-0.5">Back</p>
                     <p className="text-sm text-[var(--foreground-secondary)] break-words">{card.back_text}</p>
                   </div>
                   <div className="flex shrink-0 flex-col gap-1">

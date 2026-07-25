@@ -173,7 +173,7 @@ export default function AICardParser({ onCardsConfirmed }: AICardParserProps) {
                 ) : (
                   /* View mode */
                   <div className="flex items-start gap-3">
-                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--primary-light)] text-xs font-bold text-[var(--primary)]">
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--primary-light)] text-xs font-medium text-[var(--primary)]">
                       {index + 1}
                     </span>
                     <div className="min-w-0 flex-1">

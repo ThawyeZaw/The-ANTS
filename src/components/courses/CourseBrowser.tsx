@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useCourseManager, type EnrollmentWithDetails } from '@/hooks/useCourseManager';
 import type { CurriculumSummary, SubjectSummary } from '@/hooks/useCourseManager';
+import { useLessonContext } from '@/context/LessonContext';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -42,18 +43,18 @@ function CourseBrowserSkeleton() {
       {/* Filter chips skeleton */}
       <div className="flex gap-2 mb-4">
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="h-9 w-24 animate-shimmer rounded-full" />
+          <div key={i} className="h-9 w-24 bg-background-secondary animate-pulse rounded-full" />
         ))}
       </div>
       {/* Search skeleton */}
-      <div className="h-10 w-full animate-shimmer rounded-xl mb-6" />
+      <div className="h-10 w-full bg-background-secondary animate-pulse rounded-xl mb-6" />
       {/* Subject cards skeleton */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="rounded-2xl border border-border bg-background-card p-5 animate-shimmer">
-            <div className="h-5 w-3/4 rounded-lg mb-2" />
-            <div className="h-3 w-1/2 rounded-lg mb-3" />
-            <div className="h-3 w-1/3 rounded-lg" />
+          <div key={i} className="rounded-2xl border border-border bg-background-card p-5 space-y-3">
+            <div className="h-5 w-3/4 bg-background-secondary animate-pulse rounded-lg" />
+            <div className="h-3.5 w-1/2 bg-background-secondary animate-pulse rounded-lg" />
+            <div className="h-8 w-1/3 bg-background-secondary animate-pulse rounded-lg" />
           </div>
         ))}
       </div>
@@ -85,7 +86,7 @@ function UndoToast({
       </span>
       <button
         onClick={onUndo}
-        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/10 transition-colors"
+        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/10 transition-colors focus-ring"
         aria-label={`Undo removing ${subjectName}`}
       >
         <Undo2 className="h-3.5 w-3.5" />
@@ -93,7 +94,7 @@ function UndoToast({
       </button>
       <button
         onClick={onDismiss}
-        className="rounded-lg p-1 text-foreground-muted hover:text-foreground transition-colors"
+        className="rounded-lg p-1 text-foreground-muted hover:text-foreground transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center focus-ring"
         aria-label="Dismiss undo notification"
       >
         <X className="h-4 w-4" />
@@ -117,6 +118,14 @@ export default function CourseBrowser() {
     unenroll,
   } = useCourseManager();
 
+  const {
+    setSelectedCurriculumIds: syncSelectedCurricula,
+    setSelectedSubjectIds: syncSelectedSubjects,
+    refetch: refetchContext,
+    selectedCurriculumIds: contextCurriculumIds,
+    selectedSubjectIds: contextSubjectIds,
+  } = useLessonContext();
+
   // ── Pre-select from query param (e.g. /courses?curriculum=curr-igcse-cie) ──
   const preselectedCurriculumId = searchParams.get('curriculum');
 
@@ -130,6 +139,7 @@ export default function CourseBrowser() {
   const [undoCountdown, setUndoCountdown] = useState(5);
   const [showMyCourses, setShowMyCourses] = useState(false);
   const [dataError, setDataError] = useState<string | null>(null);
+  const [pendingDropIds, setPendingDropIds] = useState<Set<string>>(new Set());
 
   const undoIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const enrolMessageTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -143,7 +153,7 @@ export default function CourseBrowser() {
       setSearchQuery(curriculum.title);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-   }, [preselectedCurriculumId]);
+  }, [preselectedCurriculumId]);
 
   // ── Derived: flat list of all subjects with curriculum info ──────────────
 
@@ -172,9 +182,11 @@ export default function CourseBrowser() {
 
   const enrolledSubjectKeys = useMemo(() => {
     return new Set(
-      enrollments.map(e => `${e.curriculum_id}::${e.subject_id}`)
+      enrollments
+        .filter(e => !pendingDropIds.has(e.id))
+        .map(e => `${e.curriculum_id}::${e.subject_id}`)
     );
-  }, [enrollments]);
+  }, [enrollments, pendingDropIds]);
 
   // ── Derived: filtered subjects ───────────────────────────────────────────
   // Strategy: chip narrows first, search narrows further (combined filter)
@@ -206,12 +218,13 @@ export default function CourseBrowser() {
   const myCoursesGrouped = useMemo(() => {
     const grouped: Record<string, EnrollmentWithDetails[]> = {};
     for (const enr of enrollments) {
+      if (pendingDropIds.has(enr.id)) continue;
       const key = enr.curriculum_id;
       if (!grouped[key]) grouped[key] = [];
       grouped[key].push(enr);
     }
     return grouped;
-  }, [enrollments]);
+  }, [enrollments, pendingDropIds]);
 
   // ── Handlers ─────────────────────────────────────────────────────────────
 
@@ -247,6 +260,8 @@ export default function CourseBrowser() {
     const keysToEnrol = Array.from(stagedSubjectKeys);
     const failed: string[] = [];
     let successCount = 0;
+    const enrolledCurriculumIdsSet = new Set(contextCurriculumIds);
+    const enrolledSubjectIdsSet = new Set(contextSubjectIds);
 
     for (const key of keysToEnrol) {
       const [curriculumId, subjectId] = key.split('::');
@@ -255,6 +270,8 @@ export default function CourseBrowser() {
       const result = await enroll(curriculumId, subjectId, null);
       if (result.success) {
         successCount++;
+        enrolledCurriculumIdsSet.add(curriculumId);
+        enrolledSubjectIdsSet.add(subjectId);
       } else {
         // Find subject name for error reporting
         const item = allSubjectsWithCurriculum.find(
@@ -263,6 +280,11 @@ export default function CourseBrowser() {
         failed.push(item?.subject.title ?? subjectId);
       }
     }
+
+    // Sync selections to LessonContext
+    syncSelectedCurricula(Array.from(enrolledCurriculumIdsSet));
+    syncSelectedSubjects(Array.from(enrolledSubjectIdsSet));
+    await refetchContext();
 
     setStagedSubjectKeys(new Set());
     setEnrolling(false);
@@ -278,20 +300,34 @@ export default function CourseBrowser() {
         text: `Enrolled in ${successCount} subject${successCount !== 1 ? 's' : ''}. Failed: ${failed.join(', ')}.`,
       });
     }
-  }, [stagedSubjectKeys, enroll, allSubjectsWithCurriculum]);
+  }, [stagedSubjectKeys, enroll, allSubjectsWithCurriculum, contextCurriculumIds, contextSubjectIds, syncSelectedCurricula, syncSelectedSubjects, refetchContext]);
 
   // ── Inline drop with undo ────────────────────────────────────────────────
 
   const handleRemoveCourse = useCallback((enrollment: EnrollmentWithDetails) => {
-    // Clear any existing undo
+    // Clear any existing undo, committing it immediately
     if (undoEntry) {
       clearTimeout(undoEntry.timer);
       if (undoIntervalRef.current) clearInterval(undoIntervalRef.current);
+      unenroll(undoEntry.enrollment.id).then(() => refetchContext());
     }
+
+    // Optimistically remove from visible list
+    setPendingDropIds(prev => {
+      const next = new Set(prev);
+      next.add(enrollment.id);
+      return next;
+    });
 
     const timer = setTimeout(async () => {
       // Undo timer expired — actually drop the course
       await unenroll(enrollment.id);
+      await refetchContext();
+      setPendingDropIds(prev => {
+        const next = new Set(prev);
+        next.delete(enrollment.id);
+        return next;
+      });
       setUndoEntry(null);
       setUndoCountdown(5);
       if (undoIntervalRef.current) clearInterval(undoIntervalRef.current);
@@ -304,29 +340,61 @@ export default function CourseBrowser() {
     if (undoIntervalRef.current) clearInterval(undoIntervalRef.current);
     undoIntervalRef.current = setInterval(() => {
       setUndoCountdown(prev => {
-        if (prev <= 1) return 1;
+        if (prev <= 1) {
+          if (undoIntervalRef.current) clearInterval(undoIntervalRef.current);
+          return 1;
+        }
         return prev - 1;
       });
     }, 1000);
-  }, [undoEntry, unenroll]);
+  }, [undoEntry, unenroll, refetchContext]);
 
   const handleUndoRemove = useCallback(() => {
     if (!undoEntry) return;
     clearTimeout(undoEntry.timer);
     if (undoIntervalRef.current) clearInterval(undoIntervalRef.current);
+
+    // Restore course in UI
+    setPendingDropIds(prev => {
+      const next = new Set(prev);
+      next.delete(undoEntry.enrollment.id);
+      return next;
+    });
+
     setUndoEntry(null);
     setUndoCountdown(5);
   }, [undoEntry]);
 
-  const handleDismissUndo = useCallback(() => {
+  const handleDismissUndo = useCallback(async () => {
     if (!undoEntry) return;
     clearTimeout(undoEntry.timer);
     if (undoIntervalRef.current) clearInterval(undoIntervalRef.current);
+
     // Immediately drop without waiting
-    unenroll(undoEntry.enrollment.id);
+    await unenroll(undoEntry.enrollment.id);
+    await refetchContext();
+    setPendingDropIds(prev => {
+      const next = new Set(prev);
+      next.delete(undoEntry.enrollment.id);
+      return next;
+    });
     setUndoEntry(null);
     setUndoCountdown(5);
-  }, [undoEntry, unenroll]);
+  }, [undoEntry, unenroll, refetchContext]);
+
+  // ── Keyboard Escape listener to dismiss toast ────────────────────────────
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && undoEntry) {
+        handleDismissUndo();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [undoEntry, handleDismissUndo]);
 
   // ── Cleanup on unmount ──────────────────────────────────────────────────
 
@@ -359,7 +427,11 @@ export default function CourseBrowser() {
     return count;
   }, [stagedSubjectKeys, enrolledSubjectKeys]);
 
-  const hasEnrollments = enrollments.length > 0;
+  const activeEnrollmentsCount = useMemo(() => {
+    return enrollments.filter(e => !pendingDropIds.has(e.id)).length;
+  }, [enrollments, pendingDropIds]);
+
+  const hasEnrollments = activeEnrollmentsCount > 0;
 
   // ── Auth guard ──────────────────────────────────────────────────────────
 
@@ -367,7 +439,7 @@ export default function CourseBrowser() {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center px-4 text-center">
         <AlertCircle className="h-12 w-12 text-amber-500 mb-4" />
-        <h2 className="text-xl font-bold text-foreground">Authentication Required</h2>
+        <h2 className="text-xl font-semibold text-foreground">Authentication Required</h2>
         <p className="mt-2 text-sm text-foreground-muted">
           Please log in to access the Course Manager.
         </p>
@@ -387,11 +459,11 @@ export default function CourseBrowser() {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center px-4 text-center">
         <AlertCircle className="h-12 w-12 text-error mb-4" />
-        <h2 className="text-xl font-bold text-foreground">Something went wrong</h2>
+        <h2 className="text-xl font-semibold text-foreground">Something went wrong</h2>
         <p className="mt-2 text-sm text-foreground-muted">{dataError}</p>
         <button
           onClick={() => { setDataError(null); window.location.reload(); }}
-          className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary-hover transition-colors"
+          className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary-hover transition-colors focus-ring"
         >
           Try Again
         </button>
@@ -406,7 +478,7 @@ export default function CourseBrowser() {
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <div className="mb-6">
         <p className="text-sm font-medium text-primary">Learn</p>
-        <h1 className="text-3xl font-bold text-foreground mt-1 flex items-center gap-3">
+        <h1 className="text-3xl font-semibold text-foreground mt-1 flex items-center gap-3">
           <BookOpen className="h-8 w-8 text-primary" />
           Course Manager
         </h1>
@@ -453,13 +525,13 @@ export default function CourseBrowser() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search subjects, curricula, or exam boards..."
-              className="w-full rounded-xl border border-border bg-background-card py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-foreground-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors"
+              className="w-full rounded-xl border border-border bg-background-card py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-foreground-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors focus-ring"
               aria-label="Search subjects"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1 text-foreground-muted hover:text-foreground transition-colors"
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1 text-foreground-muted hover:text-foreground transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center focus-ring"
                 aria-label="Clear search"
               >
                 <X className="h-4 w-4" />
@@ -481,7 +553,7 @@ export default function CourseBrowser() {
               <span>{enrolMessage.text}</span>
               <button
                 onClick={clearEnrolMessage}
-                className="shrink-0 rounded-lg p-1 hover:bg-foreground/10 transition-colors"
+                className="shrink-0 rounded-lg p-1 hover:bg-foreground/10 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center focus-ring"
                 aria-label="Dismiss message"
               >
                 <X className="h-3.5 w-3.5" />
@@ -595,12 +667,12 @@ export default function CourseBrowser() {
       <div className="lg:hidden mt-8">
         <button
           onClick={() => setShowMyCourses(v => !v)}
-          className="w-full flex items-center justify-between rounded-xl border border-border bg-background-card px-5 py-3 text-left"
+          className="w-full flex items-center justify-between rounded-xl border border-border bg-background-card px-5 py-3 text-left focus-ring"
           aria-expanded={showMyCourses}
           aria-controls="my-courses-mobile"
         >
           <span className="font-semibold text-foreground">
-            My Courses {hasEnrollments && `(${enrollments.length})`}
+            My Courses {hasEnrollments && `(${activeEnrollmentsCount})`}
           </span>
           {showMyCourses ? (
             <ChevronUp className="h-4 w-4 text-foreground-muted" />
@@ -625,14 +697,14 @@ export default function CourseBrowser() {
         <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background-elevated/95 backdrop-blur-sm px-4 py-4 lg:px-8 shadow-lg">
           <div className="mx-auto max-w-6xl flex items-center justify-between gap-4">
             <p className="text-sm font-medium text-foreground">
-              <span className="text-primary font-bold">{stagedCount}</span>{' '}
+              <span className="text-primary font-semibold">{stagedCount}</span>{' '}
               subject{stagedCount !== 1 ? 's' : ''} selected
             </p>
             <button
               onClick={handleBulkEnrol}
               disabled={enrolling}
               className={cn(
-                'inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-all duration-150 min-h-[44px]',
+                'inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-all duration-150 min-h-[44px] focus-ring',
                 enrolling
                   ? 'opacity-50 cursor-wait'
                   : 'hover:bg-primary-hover'
@@ -655,7 +727,7 @@ export default function CourseBrowser() {
       )}
 
       {/* Bottom padding equal to sticky bar height when visible */}
-      {stagedCount > 0 && <div className="h-20" />}
+      {stagedCount > 0 && <div className="h-24" />}
 
       {/* ── Undo toast ────────────────────────────────────────────────────── */}
       {undoEntry && (
@@ -697,7 +769,7 @@ function MyCoursesPanel({
 
   return (
     <div className="space-y-5">
-      <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+      <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
         <BookOpen className="h-5 w-5 text-primary" />
         My Courses
       </h2>
@@ -734,7 +806,7 @@ function MyCoursesPanel({
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <button
-                      onClick={() => router.push('/lessons')}
+                      onClick={() => router.push(`/lessons/${enr.curriculum_id}/${enr.subject_id}`)}
                       className="rounded-lg p-2 text-foreground-muted hover:text-primary hover:bg-primary/10 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center focus-ring"
                       aria-label={`View topics for ${enr.subject.title}`}
                       title="View Topics"

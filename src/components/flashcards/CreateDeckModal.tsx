@@ -99,7 +99,7 @@ export default function CreateDeckModal({ userId, onClose, onCreated }: CreateDe
               <Layers size={20} className="text-[var(--primary)]" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-[var(--foreground)]">New Flashcard Deck</h2>
+              <h2 className="text-lg font-semibold text-[var(--foreground)]">New Flashcard Deck</h2>
               <p className="text-xs text-[var(--foreground-muted)]">Organise your cards into a deck</p>
             </div>
           </div>

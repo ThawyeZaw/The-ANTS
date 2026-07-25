@@ -50,7 +50,7 @@ function ExamCard({ exam, isTracking, onAdd }: ExamCardProps) {
       isTracking ? 'border-[var(--primary)]/30 bg-[var(--primary)]/5' : 'border-[var(--border)]'
     )}>
       {isTracking && (
-        <div className="absolute top-3 right-3 flex items-center gap-1 rounded-full bg-[var(--primary)]/15 px-2 py-0.5 text-[10px] font-bold text-[var(--primary)]">
+        <div className="absolute top-3 right-3 flex items-center gap-1 rounded-full bg-[var(--primary)]/15 px-2 py-0.5 text-[10px] font-medium text-[var(--primary)]">
           <Check size={10} />
           Tracking
         </div>
@@ -59,12 +59,12 @@ function ExamCard({ exam, isTracking, onAdd }: ExamCardProps) {
       {/* Board + date type badges */}
       <div className="flex items-center gap-2 flex-wrap mb-3">
         {qualMeta ? (
-          <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full', qualMeta.colorClass)}>
+          <span className={cn('text-[10px] font-medium px-2 py-0.5 rounded-full', qualMeta.colorClass)}>
             {qualMeta.boardCode} · {exam.qualification}
           </span>
         ) : (
           board && (
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--background-secondary)] text-[var(--foreground-secondary)]">
+            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[var(--background-secondary)] text-[var(--foreground-secondary)]">
               {board}
             </span>
           )
@@ -85,7 +85,7 @@ function ExamCard({ exam, isTracking, onAdd }: ExamCardProps) {
       </div>
 
       {/* Exam title */}
-      <h3 className="text-base font-bold text-[var(--foreground)] mb-1 leading-tight line-clamp-2">
+      <h3 className="text-base font-semibold text-[var(--foreground)] mb-1 leading-tight line-clamp-2">
         {exam.title}
       </h3>
 
@@ -210,8 +210,8 @@ export default function ExamsLibraryBrowser() {
           <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-600 dark:text-amber-400">
             <BookMarked size={12} /> Official Exam Dates · Contributor-verified
           </div>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-[var(--foreground)] tracking-tight">
-            Exams
+          <h1 className="text-2xl md:text-3xl font-semibold text-[var(--foreground)] tracking-tight">
+          Exams
           </h1>
           <p className="max-w-xl text-sm md:text-base text-[var(--foreground-secondary)]">
             Browse official exam dates and papers by board. Fixed-date exams (IGCSE, A Level) have pre-filled dates — you can still override them. IELTS and OSSD require you to pick your personal date.
@@ -292,7 +292,7 @@ export default function ExamsLibraryBrowser() {
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--background-secondary)] text-[var(--foreground-muted)]">
             <FlaskConical size={28} />
           </div>
-          <h3 className="mb-1 text-base font-bold text-[var(--foreground)]">No exams found</h3>
+          <h3 className="mb-1 text-base font-semibold text-[var(--foreground)]">No exams found</h3>
           <p className="mb-4 text-sm text-[var(--foreground-secondary)]">
             {smartFilter ? 'No exams match your enrolled boards. Try "Browse All".' : 'Try adjusting your filters.'}
           </p>

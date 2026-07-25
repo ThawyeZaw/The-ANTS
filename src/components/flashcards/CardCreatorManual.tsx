@@ -111,7 +111,7 @@ export default function CardCreatorManual({
         {/* Front */}
         <div className="border-b border-[var(--border)] p-5">
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-[var(--primary)]">
+            <span className="text-xs font-medium uppercase tracking-wider text-[var(--primary)]">
               Front
             </span>
             <span className="text-xs text-[var(--foreground-muted)]">Question / Term</span>
@@ -138,7 +138,7 @@ export default function CardCreatorManual({
         {/* Back */}
         <div className="p-5">
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-[var(--accent)]">
+            <span className="text-xs font-medium uppercase tracking-wider text-[var(--accent)]">
               Back
             </span>
             <span className="text-xs text-[var(--foreground-muted)]">Answer / Definition</span>
@@ -204,7 +204,7 @@ export default function CardCreatorManual({
                     : 'hover:bg-[var(--background-card)] text-[var(--foreground-secondary)]'
                 }`}
               >
-                <span className="w-4 shrink-0 font-bold">{i + 1}.</span>
+                <span className="w-4 shrink-0 font-medium">{i + 1}.</span>
                 <span className="flex-1 truncate">
                   {card.front || <span className="italic opacity-50">Empty front</span>}
                 </span>

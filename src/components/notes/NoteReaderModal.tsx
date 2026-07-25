@@ -151,7 +151,7 @@ export default function NoteReaderModal({ noteId, onClose, allNotes }: NoteReade
           </div>
 
           {/* Title */}
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground leading-tight">{note.title}</h1>
+          <h1 className="text-2xl sm:text-3xl font-semibold text-foreground leading-tight">{note.title}</h1>
 
           {/* Summary */}
           {note.summary && (
@@ -172,7 +172,7 @@ export default function NoteReaderModal({ noteId, onClose, allNotes }: NoteReade
           <div className="flex flex-wrap items-center gap-4 text-xs text-foreground-muted pt-2 border-b border-border pb-4">
             {contributor && (
               <span className="flex items-center gap-1.5">
-                <div className="h-5 w-5 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold text-[10px]">
+                <div className="h-5 w-5 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-medium text-[10px]">
                   {contributor.name.charAt(0)}
                 </div>
                 by <strong className="text-foreground">{contributor.name}</strong>

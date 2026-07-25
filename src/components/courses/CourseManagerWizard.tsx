@@ -159,7 +159,7 @@ export default function CourseManagerWizard({ onComplete }: { onComplete?: () =>
         <div className="inline-flex rounded-2xl bg-primary/10 p-4 text-primary mb-4">
           <BookOpen className="h-8 w-8" />
         </div>
-        <h2 className="text-2xl font-bold text-foreground">Select Your Curricula</h2>
+        <h2 className="text-2xl font-semibold text-foreground">Select Your Curricula</h2>
         <p className="mt-2 text-sm text-foreground-muted max-w-md mx-auto">
           Choose one or more qualification programs you&apos;re studying.
           You can always add more later.
@@ -211,7 +211,7 @@ export default function CourseManagerWizard({ onComplete }: { onComplete?: () =>
 
       <div className="mt-8 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div>
-          <h3 className="text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-2">
+          <h3 className="text-emerald-700 dark:text-emerald-400 font-semibold flex items-center gap-2">
             <BookOpen size={18} />
             Explore Courses
           </h3>
@@ -235,7 +235,7 @@ export default function CourseManagerWizard({ onComplete }: { onComplete?: () =>
         <div className="inline-flex rounded-2xl bg-primary/10 p-4 text-primary mb-4">
           <Sparkles className="h-8 w-8" />
         </div>
-        <h2 className="text-2xl font-bold text-foreground">Select Your Subjects</h2>
+        <h2 className="text-2xl font-semibold text-foreground">Select Your Subjects</h2>
         <p className="mt-2 text-sm text-foreground-muted max-w-md mx-auto">
           Choose which subjects you want to track for each curriculum.
         </p>
@@ -359,7 +359,7 @@ export default function CourseManagerWizard({ onComplete }: { onComplete?: () =>
           <div className="inline-flex rounded-2xl bg-emerald-500/10 p-4 text-emerald-500 mb-4">
             <Check className="h-8 w-8" />
           </div>
-          <h2 className="text-2xl font-bold text-foreground">Review &amp; Confirm</h2>
+          <h2 className="text-2xl font-semibold text-foreground">Review &amp; Confirm</h2>
           <p className="mt-2 text-sm text-foreground-muted max-w-md mx-auto">
             Review your selections before saving. Your course manager will sync with the lesson tracker automatically.
           </p>
@@ -394,15 +394,15 @@ export default function CourseManagerWizard({ onComplete }: { onComplete?: () =>
         {/* Stats */}
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-xl border border-border bg-background-card p-4 text-center">
-            <p className="text-2xl font-bold text-primary">{selectedCurriculums.length}</p>
+            <p className="text-2xl font-semibold text-primary">{selectedCurriculums.length}</p>
             <p className="text-xs text-foreground-muted mt-1">Curricula</p>
           </div>
           <div className="rounded-xl border border-border bg-background-card p-4 text-center">
-            <p className="text-2xl font-bold text-primary">{selectedSubjectCount}</p>
+            <p className="text-2xl font-semibold text-primary">{selectedSubjectCount}</p>
             <p className="text-xs text-foreground-muted mt-1">Subjects</p>
           </div>
           <div className="rounded-xl border border-border bg-background-card p-4 text-center">
-            <p className="text-2xl font-bold text-emerald-500">{subjectsList.length}</p>
+            <p className="text-2xl font-semibold text-emerald-500">{subjectsList.length}</p>
             <p className="text-xs text-foreground-muted mt-1">To Enrol</p>
           </div>
         </div>
@@ -415,7 +415,7 @@ export default function CourseManagerWizard({ onComplete }: { onComplete?: () =>
   if (!user) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center px-4 text-center">
-        <h2 className="text-xl font-bold text-foreground">Authentication Required</h2>
+        <h2 className="text-xl font-semibold text-foreground">Authentication Required</h2>
         <p className="mt-2 text-sm text-foreground-muted">Please log in to access the Course Manager.</p>
       </div>
     );

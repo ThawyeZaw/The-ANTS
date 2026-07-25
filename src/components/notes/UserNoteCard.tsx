@@ -74,7 +74,7 @@ export default function UserNoteCard({
           onClick={() => onEdit(note.id)}
           className="text-left cursor-pointer"
         >
-          <h3 className="font-bold text-foreground leading-snug line-clamp-2 hover:text-primary transition-colors">
+          <h3 className="font-semibold text-foreground leading-snug line-clamp-2 hover:text-primary transition-colors">
             {note.title || 'Untitled Note'}
           </h3>
           {snippet && (

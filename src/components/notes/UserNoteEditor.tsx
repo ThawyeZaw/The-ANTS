@@ -384,7 +384,7 @@ export default function UserNoteEditor() {
             </div>
             <div className="flex-1 overflow-y-auto p-6">
               {title && (
-                <h1 className="text-2xl font-bold text-foreground mb-4">{title}</h1>
+                <h1 className="text-2xl font-semibold text-foreground mb-4">{title}</h1>
               )}
               {blocks.length === 0 ? (
                 <div className="flex flex-col items-center gap-3 py-16 text-center">
@@ -417,7 +417,7 @@ export default function UserNoteEditor() {
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10 shrink-0">
                 <AlertTriangle className="h-5 w-5 text-red-500" />
               </div>
-              <h3 className="text-lg font-bold text-foreground">Delete this note?</h3>
+              <h3 className="text-lg font-semibold text-foreground">Delete this note?</h3>
             </div>
             <p className="text-sm text-foreground-muted mb-5">
               &ldquo;{title || 'Untitled Note'}&rdquo; will be permanently deleted. This action cannot be undone.

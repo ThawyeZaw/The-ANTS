@@ -134,8 +134,7 @@ export default function CountdownEditor() {
                 : 'bg-[var(--background-secondary)] border-[var(--border)] text-[var(--foreground-secondary)] opacity-50 cursor-not-allowed'
             }`}
           >
-            <div className="text-[10px] font-bold uppercase tracking-widest mb-1">Step 0{step}</div>
-            <div className="text-xs font-extrabold">
+            <div className="text-[10px] font-medium uppercase tracking-widest mb-1">Step 0{step}</div><div className="text-xs font-extrabold">
               {step === 1 && 'Curriculum'}
               {step === 2 && 'Subject & Exam'}
               {step === 3 && 'Countdown Details'}
@@ -155,7 +154,7 @@ export default function CountdownEditor() {
             <p className="text-[var(--foreground-secondary)] text-xs mb-6">Choose the curriculum this countdown belongs to.</p>
 
             <div className="space-y-1.5">
-              <label className="block text-xs font-bold uppercase tracking-widest text-[var(--foreground-secondary)]">Curriculum</label>
+              <label className="block text-xs font-medium uppercase tracking-widest text-[var(--foreground-secondary)]">Curriculum</label>
               <select
                 value={selectedCurriculum}
                 onChange={e => { setSelectedCurriculum(e.target.value); setSelectedSubject(''); setSelectedExam(''); }}
@@ -179,7 +178,7 @@ export default function CountdownEditor() {
 
             <div className="mt-8 flex justify-end gap-3">
               <button type="button" onClick={() => setCurrentStep(2)} disabled={!canGoToStep2}
-                className="flex items-center gap-2 rounded-xl bg-[var(--primary)] px-5 py-3 text-xs font-bold text-[var(--primary-foreground)] shadow-lg disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                className="flex items-center gap-2 rounded-xl bg-[var(--primary)] px-5 py-3 text-xs font-medium text-[var(--primary-foreground)] shadow-lg disabled:opacity-40 disabled:cursor-not-allowed transition-all">
                 Next: Subject <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -197,7 +196,7 @@ export default function CountdownEditor() {
 
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <label className="block text-xs font-bold uppercase tracking-widest text-[var(--foreground-secondary)]">Subject</label>
+                <label className="block text-xs font-medium uppercase tracking-widest text-[var(--foreground-secondary)]">Subject</label>
                 <select value={selectedSubject} onChange={e => { setSelectedSubject(e.target.value); setSelectedExam(''); }}
                   className="w-full bg-[var(--background-card)] border border-[var(--border)] rounded-xl py-3 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] text-[var(--foreground)] transition-colors">
                   <option value="">-- Select a subject --</option>
@@ -207,7 +206,7 @@ export default function CountdownEditor() {
 
               {selectedSubject && (
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-bold uppercase tracking-widest text-[var(--foreground-secondary)]">Existing Exam (optional)</label>
+                  <label className="block text-xs font-medium uppercase tracking-widest text-[var(--foreground-secondary)]">Existing Exam (optional)</label>
                   <select value={selectedExam} onChange={e => setSelectedExam(e.target.value)}
                     className="w-full bg-[var(--background-card)] border border-[var(--border)] rounded-xl py-3 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] text-[var(--foreground)] transition-colors">
                     <option value="">-- Create new (no existing exam) --</option>
@@ -233,11 +232,11 @@ export default function CountdownEditor() {
 
             <div className="mt-8 flex justify-between gap-3">
               <button type="button" onClick={() => setCurrentStep(1)}
-                className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--background-secondary)] px-5 py-3 text-xs font-bold text-[var(--foreground)] transition hover:bg-[var(--background-card)]">
+                className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--background-secondary)] px-5 py-3 text-xs font-medium text-[var(--foreground)] transition hover:bg-[var(--background-card)]">
                 <ArrowLeft className="w-3.5 h-3.5" /> Back
               </button>
               <button type="button" onClick={() => setCurrentStep(3)} disabled={!canGoToStep3}
-                className="flex items-center gap-2 rounded-xl bg-[var(--primary)] px-5 py-3 text-xs font-bold text-[var(--primary-foreground)] shadow-lg disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                className="flex items-center gap-2 rounded-xl bg-[var(--primary)] px-5 py-3 text-xs font-medium text-[var(--primary-foreground)] shadow-lg disabled:opacity-40 disabled:cursor-not-allowed transition-all">
                 Next: Details <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -272,7 +271,7 @@ export default function CountdownEditor() {
                 {items.map((item) => (
                   <div key={item.id} className="rounded-2xl border border-[var(--border)] bg-[var(--background-secondary)] p-4">
                     <div className="mb-3 flex items-center justify-between">
-                      <p className="text-xs font-bold uppercase tracking-wider text-[var(--foreground-secondary)]">Countdown Entry</p>
+                      <p className="text-xs font-medium uppercase tracking-wider text-[var(--foreground-secondary)]">Countdown Entry</p>
                       <button type="button" onClick={() => removeItem(item.id)}
                         className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-rose-500/10 text-rose-300 hover:bg-rose-500/15 transition">
                         <Trash2 className="w-4 h-4" />
@@ -325,12 +324,12 @@ export default function CountdownEditor() {
             {/* Submit */}
             <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
               <button type="button" onClick={() => setCurrentStep(2)}
-                className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--background-secondary)] px-5 py-3 text-xs font-bold text-[var(--foreground)] transition hover:bg-[var(--background-card)]">
+                className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--background-secondary)] px-5 py-3 text-xs font-medium text-[var(--foreground)] transition hover:bg-[var(--background-card)]">
                 <ArrowLeft className="w-3.5 h-3.5" /> Back
               </button>
               <div className="flex items-center gap-3">
                 <button type="button" onClick={handleSubmit} disabled={isPending}
-                  className="flex items-center gap-2 rounded-xl bg-[var(--primary)] px-5 py-3 text-xs font-bold text-[var(--primary-foreground)] shadow-lg transition-opacity disabled:opacity-70">
+                  className="flex items-center gap-2 rounded-xl bg-[var(--primary)] px-5 py-3 text-xs font-medium text-[var(--primary-foreground)] shadow-lg transition-opacity disabled:opacity-70">
                   <Send className="w-4 h-4" />
                   {isPending ? 'Submitting...' : 'Submit for Review'}
                 </button>

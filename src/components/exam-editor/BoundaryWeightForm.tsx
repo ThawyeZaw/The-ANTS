@@ -123,7 +123,7 @@ export default function BoundaryWeightForm() {
               <p className="text-sm text-zinc-500 dark:text-zinc-400">Must equal 100%</p>
             </div>
           </div>
-          <div className={`text-2xl font-bold ${isComplete ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}`}>
+          <div className={`text-2xl font-semibold ${isComplete ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}`}>
             {totalWeight}%
           </div>
         </div>

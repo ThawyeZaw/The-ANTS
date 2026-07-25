@@ -157,7 +157,7 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
     <div className="w-full max-w-6xl mx-auto space-y-12">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-[var(--foreground)] flex items-center gap-3">
+          <h1 className="text-3xl font-semibold text-[var(--foreground)] flex items-center gap-3">
             <Timer className="h-8 w-8 text-[var(--primary)]" />
             Exam Countdowns
           </h1>
@@ -194,7 +194,7 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
       <section className="space-y-4">
         <div className="flex items-center gap-3">
           <BookOpen className="h-5 w-5 text-[var(--primary)]" />
-          <h2 className="text-xl font-bold text-[var(--foreground)]">Enrolled Subjects</h2>
+          <h2 className="text-xl font-semibold text-[var(--foreground)]">Enrolled Subjects</h2>
           <span className="text-xs text-[var(--foreground-muted)] bg-[var(--background-secondary)] rounded-full px-2 py-0.5">
             {autoWithExam} of {autoCountdowns.length} with exams
           </span>
@@ -268,7 +268,7 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
         <section className="space-y-4">
           <div className="flex items-center gap-3">
             <Timer className="h-5 w-5 text-[var(--foreground-muted)]" />
-            <h2 className="text-xl font-bold text-[var(--foreground)]">Custom Countdowns</h2>
+            <h2 className="text-xl font-semibold text-[var(--foreground)]">Custom Countdowns</h2>
           </div>
           <div className="space-y-10">
             {sortedGroups.map(group => {
@@ -278,7 +278,7 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
               return (
                 <div key={group} className="space-y-4">
                   <div className="flex items-center gap-3">
-                    <h3 className="text-lg font-bold text-[var(--foreground)] tracking-wide uppercase">{group}</h3>
+                    <h3 className="text-lg font-semibold text-[var(--foreground)] tracking-wide uppercase">{group}</h3>
                     <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent"></div>
                   </div>
 

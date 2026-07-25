@@ -72,7 +72,7 @@ function ExamBoardCard({ curriculum, onSelectSubjects, totalSelected, isTopMatch
     >
       {/* Enrolled badge */}
       {curriculum.isEnrolled && (
-        <div className="absolute top-3 right-3 flex items-center gap-1 rounded-full bg-[var(--primary)]/15 px-2 py-0.5 text-[10px] font-bold text-[var(--primary)]">
+        <div className="absolute top-3 right-3 flex items-center gap-1 rounded-full bg-[var(--primary)]/15 px-2 py-0.5 text-[10px] font-medium text-[var(--primary)]">
           <Check size={10} />
           Enrolled
         </div>
@@ -97,7 +97,7 @@ function ExamBoardCard({ curriculum, onSelectSubjects, totalSelected, isTopMatch
       </div>
 
       {/* Title */}
-      <h3 className="text-base font-bold text-[var(--foreground)] mb-1 leading-tight">
+      <h3 className="text-base font-semibold text-[var(--foreground)] mb-1 leading-tight">
         {curriculum.title}
       </h3>
       {curriculum.description && (
@@ -110,7 +110,7 @@ function ExamBoardCard({ curriculum, onSelectSubjects, totalSelected, isTopMatch
       <div className="flex flex-wrap items-center gap-2 mb-4">
         {/* Match badge — only shown when subjects are selected */}
         {matchesAll && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--accent)]/15 px-2.5 py-1 text-xs font-bold text-[var(--accent)]">
+          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--accent)]/15 px-2.5 py-1 text-xs font-medium text-[var(--accent)]">
             <Check size={11} />
             All {curriculum.matchCount} subject{curriculum.matchCount !== 1 ? 's' : ''} match
           </span>
@@ -374,7 +374,7 @@ export default function CoursesLibraryBrowser() {
             <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
               <BookMarked size={12} /> Verified by Contributors
             </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-[var(--foreground)] tracking-tight">
+            <h1 className="text-2xl md:text-3xl font-semibold text-[var(--foreground)] tracking-tight">
               Courses
             </h1>
             <p className="max-w-xl text-sm md:text-base text-[var(--foreground-secondary)]">
@@ -384,11 +384,11 @@ export default function CoursesLibraryBrowser() {
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <div className="text-center">
-              <p className="text-2xl font-bold text-[var(--foreground)]">{allCurriculums.length}</p>
+              <p className="text-2xl font-semibold text-[var(--foreground)]">{allCurriculums.length}</p>
               <p className="text-xs text-[var(--foreground-muted)]">Curricula</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-[var(--foreground)]">{totalBoards}</p>
+              <p className="text-2xl font-semibold text-[var(--foreground)]">{totalBoards}</p>
               <p className="text-xs text-[var(--foreground-muted)]">Boards</p>
             </div>
           </div>
@@ -504,7 +504,7 @@ export default function CoursesLibraryBrowser() {
           <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--amber-500)]/10 text-[var(--amber-500)]">
             <Info size={20} />
           </div>
-          <h3 className="mb-1 text-base font-bold text-[var(--foreground)]">
+          <h3 className="mb-1 text-base font-semibold text-[var(--foreground)]">
             No single exam board covers all {totalSelected} selected subjects
           </h3>
           <p className="mb-4 max-w-sm text-sm text-[var(--foreground-secondary)]">
@@ -598,7 +598,7 @@ export default function CoursesLibraryBrowser() {
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--background-secondary)] text-[var(--foreground-muted)]">
             <BookOpen size={28} />
           </div>
-          <h3 className="mb-1 text-base font-bold text-[var(--foreground)]">No curricula found</h3>
+          <h3 className="mb-1 text-base font-semibold text-[var(--foreground)]">No curricula found</h3>
           <p className="mb-6 max-w-sm text-sm text-[var(--foreground-secondary)]">
             {smartFilter
               ? 'No library courses match your enrolled boards. Switch to "Browse All" to see everything.'

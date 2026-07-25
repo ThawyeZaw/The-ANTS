@@ -69,7 +69,7 @@ export default function CardCreatorAI({ deckId, deckName, onSaved, onCancel }: C
       <div className="flex items-center gap-2">
         {STEPS.map((s, i) => (
           <div key={s.key} className="flex items-center gap-2">
-            <div className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all ${
+            <div className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium transition-all ${
               i < stepIndex
                 ? 'bg-green-500 text-white'
                 : i === stepIndex
@@ -133,7 +133,7 @@ export default function CardCreatorAI({ deckId, deckName, onSaved, onCancel }: C
           <div>
             <label className="mb-1.5 flex items-center justify-between text-sm font-semibold text-[var(--foreground)]">
               <span>Number of Cards</span>
-              <span className="rounded-full bg-[var(--primary-light)] px-2.5 py-0.5 text-[var(--primary)] text-xs font-bold">
+              <span className="rounded-full bg-[var(--primary-light)] px-2.5 py-0.5 text-[var(--primary)] text-xs font-medium">
                 {cardCount}
               </span>
             </label>
@@ -258,7 +258,7 @@ export default function CardCreatorAI({ deckId, deckName, onSaved, onCancel }: C
             <Check size={32} className="text-green-500" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-[var(--foreground)]">
+            <h3 className="text-lg font-semibold text-[var(--foreground)]">
               {savedCards.length} Card{savedCards.length !== 1 ? 's' : ''} Added!
             </h3>
             <p className="text-sm text-[var(--foreground-muted)]">

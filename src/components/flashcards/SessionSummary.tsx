@@ -50,9 +50,9 @@ export default function SessionSummary({
         <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 mx-auto shadow-lg animate-float">
           <Brain size={36} className="text-white" />
         </div>
-        <h2 className="text-2xl font-bold text-[var(--foreground)]">Session Complete!</h2>
+        <h2 className="text-2xl font-semibold text-[var(--foreground)]">Session Complete!</h2>
         <p className="text-[var(--foreground-secondary)]">
-          You reviewed <span className="font-bold text-[var(--primary)]">{totalCards} card{totalCards !== 1 ? 's' : ''}</span> in this session
+          You reviewed <span className="font-semibold text-[var(--primary)]">{totalCards} card{totalCards !== 1 ? 's' : ''}</span> in this session
         </p>
       </div>
 
@@ -91,10 +91,10 @@ export default function SessionSummary({
               className={`rounded-2xl border border-[var(--border)] p-4 text-left ${config.bg}`}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className={`text-sm font-bold ${config.color}`}>
+                <span className={`text-sm font-medium ${config.color}`}>
                   {config.emoji} {config.label}
                 </span>
-                <span className="text-lg font-extrabold text-[var(--foreground)]">{count}</span>
+                <span className="text-lg font-semibold text-[var(--foreground)]">{count}</span>
               </div>
               <div className="h-1.5 w-full rounded-full bg-[var(--background-secondary)]">
                 <div
