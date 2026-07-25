@@ -262,7 +262,7 @@ export default function ProfilePage() {
       className={`${widthClass} mx-auto ${spacingClass} animate-fade-in pb-12`}
       style={themeColors ? (themeColors as React.CSSProperties) : undefined}
     >
-      <BackButton href="/" label="Back" />
+      <BackButton noFallback label="Back" />
 
       {/* Profile Hero */}
       <ProfileHero profile={profile} isOwnProfile={isOwnProfile} />

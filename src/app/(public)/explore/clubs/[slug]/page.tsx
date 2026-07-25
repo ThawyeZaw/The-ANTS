@@ -27,40 +27,10 @@ import BackButton from '@/components/ui/BackButton';
 import { useClub } from '@/hooks/useClub';
 import { useAuth } from '@/hooks/useAuth';
 import type { Club, ClubSection, ClubProject, ClubAnnouncement } from '@/types';
+import { cn, formatDate, getInitials } from '@/lib/utils';
+import { FIELD_LABELS, FIELD_BADGE_STYLES } from '@/constants/clubs';
 
 // ── Constants ────────────────────────────────────────────────────────────────
-
-const FIELD_BADGE_VARIANTS: Record<string, string> = {
-  computer_science: 'bg-violet-500/15 text-violet-400 border-violet-500/20',
-  mathematics: 'bg-blue-500/15 text-blue-400 border-blue-500/20',
-  science: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
-  engineering: 'bg-amber-500/15 text-amber-400 border-amber-500/20',
-  medicine: 'bg-rose-500/15 text-rose-400 border-rose-500/20',
-  literature: 'bg-pink-500/15 text-pink-400 border-pink-500/20',
-  arts: 'bg-orange-500/15 text-orange-400 border-orange-500/20',
-  music: 'bg-indigo-500/15 text-indigo-400 border-indigo-500/20',
-  debate: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/20',
-  entrepreneurship: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/20',
-  architecture: 'bg-teal-500/15 text-teal-400 border-teal-500/20',
-  volunteering: 'bg-green-500/15 text-green-400 border-green-500/20',
-  other: 'bg-gray-500/15 text-gray-400 border-gray-500/20',
-};
-
-const FIELD_LABELS: Record<string, string> = {
-  computer_science: 'Computer Science',
-  mathematics: 'Mathematics',
-  science: 'Science',
-  engineering: 'Engineering',
-  medicine: 'Medicine',
-  literature: 'Literature',
-  arts: 'Arts',
-  music: 'Music',
-  debate: 'Debate',
-  entrepreneurship: 'Entrepreneurship',
-  architecture: 'Architecture',
-  volunteering: 'Volunteering',
-  other: 'Other',
-};
 
 const SECTION_ICONS: Record<string, React.ReactNode> = {
   about: <Building2 className="h-5 w-5" />,
@@ -77,25 +47,6 @@ const SECTION_LABELS: Record<string, string> = {
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .map((p) => p[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
-}
-
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
 
 function formatRelativeTime(dateStr: string): string {
   const date = new Date(dateStr);
@@ -412,9 +363,17 @@ export default function ClubShowcasePage() {
               )}
               {isAuthenticated ? (
                 joined ? (
-                  <Button variant="secondary" disabled icon={<Check className="h-5 w-5" />}>
-                    You&apos;re a Member
-                  </Button>
+                  <div className="flex flex-col items-end gap-2 w-full sm:w-auto">
+                    <Link href={`/clubs/${slug}`}>
+                      <Button icon={<Users className="h-5 w-5" />}>
+                        Member Dashboard
+                      </Button>
+                    </Link>
+                    <span className="inline-flex items-center gap-1.5 text-sm text-[var(--success)]">
+                      <Check className="h-4 w-4" />
+                      You&apos;re a Member
+                    </span>
+                  </div>
                 ) : (
                   <Button
                     size="lg"
@@ -435,7 +394,7 @@ export default function ClubShowcasePage() {
 
               <button
                 onClick={handleCopy}
-                className="inline-flex items-center gap-1.5 text-sm text-[var(--foreground-muted)] hover:text-[var(--foreground)] transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-[var(--foreground-muted)] hover:text-[var(--foreground)] hover:bg-[var(--background-card)] transition-colors cursor-pointer min-h-[44px]"
               >
                 {copied ? (
                   <>
@@ -532,7 +491,7 @@ export default function ClubShowcasePage() {
                     </span>
                   </div>
 
-                  <div className="grid gap-5 sm:grid-cols-2">
+                  <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                     {projects.map((project: any) => {
                       const creator = project.profiles;
                       return (
@@ -571,15 +530,10 @@ export default function ClubShowcasePage() {
                               {project.title}
                             </h3>
 
-                            {/* Description -- hidden for non-authenticated users */}
-                            {project.description && isAuthenticated && (
+                            {/* Description */}
+                            {project.description && (
                               <p className="mt-2 text-sm text-[var(--foreground-secondary)] line-clamp-2">
                                 {project.description}
-                              </p>
-                            )}
-                            {project.description && !isAuthenticated && (
-                              <p className="mt-2 text-sm text-[var(--foreground-muted)] italic">
-                                Sign in to view project details
                               </p>
                             )}
 
@@ -830,9 +784,17 @@ export default function ClubShowcasePage() {
               )}
               {isAuthenticated ? (
                 joined ? (
-                  <Button variant="secondary" disabled icon={<Check className="h-5 w-5" />}>
-                    You&apos;re a Member
-                  </Button>
+                  <div className="flex flex-col items-center gap-3">
+                    <Link href={`/clubs/${slug}`}>
+                      <Button icon={<Users className="h-5 w-5" />}>
+                        Member Dashboard
+                      </Button>
+                    </Link>
+                    <span className="inline-flex items-center gap-1.5 text-sm text-[var(--success)]">
+                      <Check className="h-4 w-4" />
+                      You&apos;re a Member
+                    </span>
+                  </div>
                 ) : (
                   <Button
                     size="lg"

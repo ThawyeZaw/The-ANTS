@@ -2,8 +2,6 @@
 
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTs — Pomodoro Timer Page
-// PPP-owned: thin shell wiring together the hook and UI components.
-// All state/logic lives in usePomodoro; presentation lives in components/pomodoro/.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useState, useRef } from 'react';
@@ -16,8 +14,9 @@ import SettingsDrawer from '@/components/pomodoro/SettingsDrawer';
 import SoundscapePicker from '@/components/pomodoro/SoundscapePicker';
 import StatsPanel from '@/components/pomodoro/StatsPanel';
 import ZenMode from '@/components/pomodoro/ZenMode';
+import ModeTabs from '@/components/pomodoro/ModeTabs';
 
-const DEFAULT_TITLE = 'The ANTs — Study Realm';
+const DEFAULT_TITLE = 'The ANTS \u2014 Study Realm';
 
 function formatTimerTitle(remainingMs: number, phase: string): string {
   const totalSeconds = Math.max(0, Math.ceil(remainingMs / 1000));
@@ -25,7 +24,7 @@ function formatTimerTitle(remainingMs: number, phase: string): string {
   const seconds = totalSeconds % 60;
   const time = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
   const label = phase === 'focus' ? 'Focus' : 'Break';
-  return `${time} \u00B7 ${label}`;
+  return `(${time}) ${label} | The ANTs`;
 }
 
 export default function PomodoroPage() {
@@ -43,6 +42,7 @@ export default function PomodoroPage() {
     pause,
     resume,
     reset,
+    switchPhase,
     updateSettings,
     setSessionLabel,
   } = usePomodoro();
@@ -51,7 +51,7 @@ export default function PomodoroPage() {
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const labelInputRef = useRef<HTMLInputElement>(null);
 
-  // ── document.title updates ──────────────────────────────────────────────
+  // ── document.title update ──────────────────────────────────────────────
   useEffect(() => {
     if (isRunning) {
       document.title = formatTimerTitle(remainingMs, phase);
@@ -63,32 +63,18 @@ export default function PomodoroPage() {
     };
   }, [isRunning, remainingMs, phase]);
 
-  // ── Focus label input when editing starts ───────────────────────────────
+  // ── Focus label input auto-focus ────────────────────────────────────────
   useEffect(() => {
     if (isEditingLabel && labelInputRef.current) {
       labelInputRef.current.focus();
     }
   }, [isEditingLabel]);
 
-  const phaseLabel = phase === 'focus'
-    ? 'Focus'
-    : phase === 'short_break'
-      ? 'Short Break'
-      : 'Long Break';
-
   const hasStarted = isRunning || (!isPaused);
+  const cycleIndex = cyclesCompletedToday % settings.cyclesBeforeLongBreak;
 
   return (
-    <div className="min-h-[calc(100vh-var(--nav-height))]">
-      {/* aria-live region for screen readers announcing phase changes */}
-      <div className="sr-only" aria-live="polite" aria-atomic="true">
-        {isRunning
-          ? `${phaseLabel} session in progress`
-          : isPaused && hasStarted
-            ? `${phaseLabel} session paused`
-            : 'Ready to start'}
-      </div>
-
+    <>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 md:pt-8 lg:pt-12">
         {/* ── Back navigation ─────────────────────────────────────────── */}
         <div className="mb-4">
@@ -96,10 +82,10 @@ export default function PomodoroPage() {
         </div>
 
         {/* ── Page banner ─────────────────────────────────────────────── */}
-        <div className="relative overflow-hidden rounded-3xl border border-[var(--border)] bg-gradient-to-r from-red-500/8 via-orange-500/5 to-amber-500/10 p-5 md:p-7 mb-6 md:mb-8">
+        <div className="relative overflow-hidden rounded-3xl border border-[var(--border)] bg-gradient-to-r from-indigo-500/8 via-violet-500/5 to-cyan-500/10 p-5 md:p-7 mb-6 md:mb-8">
           <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="space-y-2">
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-red-500/10 px-3 py-1 text-xs font-semibold text-red-600 dark:text-red-400">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
                 <Timer className="h-3 w-3" />
                 Focus &amp; Productivity
               </div>
@@ -110,18 +96,16 @@ export default function PomodoroPage() {
                 Break your study into focused intervals with timed breaks. Stay consistent, track your streaks, and build the habit of deep work.
               </p>
             </div>
-            {/* Quick Zen Mode entry from the banner */}
             <button
               onClick={() => setIsZen(true)}
-              className="flex items-center gap-2 self-start sm:self-auto rounded-xl bg-[var(--primary)] px-4 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-md)] transition-all hover:bg-[var(--primary-hover)] hover:shadow-[var(--shadow-glow)]"
+              className="flex items-center gap-2 self-start sm:self-auto rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-md)] transition-all hover:bg-indigo-600 hover:shadow-[var(--shadow-glow)]"
             >
               <Settings className="h-4 w-4" />
               Enter Zen Mode
             </button>
           </div>
-          {/* Decorative blur circles */}
-          <div className="absolute top-0 right-0 -mr-12 -mt-12 h-40 w-40 rounded-full bg-red-400/15 blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 -ml-12 -mb-12 h-40 w-40 rounded-full bg-amber-400/15 blur-3xl pointer-events-none" />
+          <div className="absolute top-0 right-0 -mr-12 -mt-12 h-40 w-40 rounded-full bg-indigo-400/15 blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 -ml-12 -mb-12 h-40 w-40 rounded-full bg-cyan-400/15 blur-3xl pointer-events-none" />
         </div>
       </div>
 
@@ -130,7 +114,6 @@ export default function PomodoroPage() {
           isActive={isZen}
           onToggle={() => setIsZen((prev) => !prev)}
         >
-          {/* Zen mode: just the ring and controls */}
           <TimerRing
             phase={phase}
             remainingMs={remainingMs}
@@ -150,10 +133,23 @@ export default function PomodoroPage() {
 
         {!isZen && (
           <div className="lg:grid lg:grid-cols-[1fr_384px] gap-6 lg:gap-8 items-start">
-            {/* ── Main: Timer + Controls ─────────────────────────────── */}
-            <div className="flex flex-col items-center gap-6 w-full">
-              {/* Top bar: session label + zen toggle */}
-              <div className="flex items-center gap-3 w-full max-w-md">
+            {/* ── Main Column ────────────────────────────────────────── */}
+            <div className="flex flex-col items-center gap-5 w-full">
+              {/* Mode toggle tabs */}
+              <ModeTabs phase={phase} settings={settings} onSwitch={switchPhase} />
+
+              {/* Session counter */}
+              {cycleIndex > 0 && (
+                <p
+                  className="text-xs font-medium"
+                  style={{ color: 'var(--foreground-muted)' }}
+                >
+                  Session {cycleIndex} of {settings.cyclesBeforeLongBreak} before long break
+                </p>
+              )}
+
+              {/* Focus label input */}
+              <div className="w-full max-w-md">
                 {isEditingLabel ? (
                   <input
                     ref={labelInputRef}
@@ -168,7 +164,7 @@ export default function PomodoroPage() {
                     }}
                     placeholder="What are you focusing on?"
                     maxLength={80}
-                    className="flex-1 px-3 py-2 text-sm rounded-xl border focus-ring"
+                    className="w-full px-4 py-2.5 text-sm rounded-xl border focus-ring text-center transition-all"
                     style={{
                       background: 'var(--background-card)',
                       borderColor: 'var(--border)',
@@ -179,9 +175,11 @@ export default function PomodoroPage() {
                 ) : (
                   <button
                     onClick={() => setIsEditingLabel(true)}
-                    className="flex-1 flex items-center gap-2 px-3 py-2 text-sm rounded-xl transition-colors focus-ring"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm rounded-xl border border-dashed transition-all focus-ring hover:border-solid"
                     style={{
                       color: sessionLabel ? 'var(--foreground)' : 'var(--foreground-muted)',
+                      borderColor: sessionLabel ? 'var(--border)' : 'color-mix(in srgb, var(--border) 60%, transparent)',
+                      backgroundColor: sessionLabel ? 'var(--background-card)' : 'transparent',
                     }}
                     aria-label={sessionLabel ? `Focus: ${sessionLabel}. Click to edit.` : 'Add a focus label'}
                   >
@@ -189,29 +187,9 @@ export default function PomodoroPage() {
                     <span className="truncate">{sessionLabel || 'What are you focusing on?'}</span>
                   </button>
                 )}
-                {/* Zen mode inline toggle */}
-                <button
-                  onClick={() => setIsZen(true)}
-                  className="p-2 rounded-xl focus-ring transition-colors hover:bg-background-secondary flex-shrink-0"
-                  aria-label="Enter Zen Mode"
-                  title="Zen Mode (Z)"
-                  style={{ color: 'var(--foreground-muted)' }}
-                >
-                  <Settings className="h-4 w-4" />
-                </button>
               </div>
 
-              {/* Cycle indicator */}
-              <div
-                className="text-sm font-medium px-4 py-1.5 rounded-full"
-                style={{
-                  background: 'var(--background-secondary)',
-                  color: 'var(--foreground-secondary)',
-                }}
-              >
-                Session {cyclesCompletedToday + 1} of {settings.cyclesBeforeLongBreak}
-              </div>
-
+              {/* Timer ring */}
               <TimerRing
                 phase={phase}
                 remainingMs={remainingMs}
@@ -219,6 +197,7 @@ export default function PomodoroPage() {
                 isPaused={isPaused}
               />
 
+              {/* Controls */}
               <TimerControls
                 isRunning={isRunning}
                 isPaused={isPaused}
@@ -231,21 +210,15 @@ export default function PomodoroPage() {
 
               {/* Keyboard shortcuts hint */}
               <p
-                className="hidden sm:block text-xs text-center"
+                className="text-xs text-center"
                 style={{ color: 'var(--foreground-muted)' }}
               >
-                <kbd className="px-1.5 py-0.5 rounded text-xs font-mono" style={{ background: 'var(--background-secondary)', border: '1px solid var(--border)' }}>Space</kbd> to toggle timer &middot;{' '}
+                <kbd className="px-1.5 py-0.5 rounded text-xs font-mono" style={{ background: 'var(--background-secondary)', border: '1px solid var(--border)' }}>Space</kbd> to toggle &middot;{' '}
                 <kbd className="px-1.5 py-0.5 rounded text-xs font-mono" style={{ background: 'var(--background-secondary)', border: '1px solid var(--border)' }}>R</kbd> to reset &middot;{' '}
-                <kbd className="px-1.5 py-0.5 rounded text-xs font-mono" style={{ background: 'var(--background-secondary)', border: '1px solid var(--border)' }}>Z</kbd> for Zen Mode
+                <kbd className="px-1.5 py-0.5 rounded text-xs font-mono" style={{ background: 'var(--background-secondary)', border: '1px solid var(--border)' }}>Z</kbd> Zen Mode
               </p>
-            </div>
 
-            {/* ── Sidebar: Stats + Sound/Settings ───────────────────── */}
-            <div className="flex flex-col gap-4 mt-6 lg:mt-0">
-              {/* Stats — results first, motivates continued use */}
-              <StatsPanel stats={stats} />
-
-              {/* Ambient sound + timer settings */}
+              {/* Ambience */}
               <div
                 className="rounded-2xl p-4 space-y-3"
                 style={{
@@ -265,9 +238,14 @@ export default function PomodoroPage() {
                 <SoundscapePicker settings={settings} onUpdate={updateSettings} />
               </div>
             </div>
+
+            {/* ── Sidebar ─────────────────────────────────────────────── */}
+            <div className="flex flex-col gap-4 mt-6 lg:mt-0">
+              <StatsPanel stats={stats} />
+            </div>
           </div>
         )}
       </div>
-    </div>
+    </>
   );
 }

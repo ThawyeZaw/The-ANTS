@@ -270,8 +270,54 @@ export async function actionGetClubMembers(clubId: string) {
   return { success: true, members: data ?? [] };
 }
 
-export async function actionJoinClub(clubId: string, userId: string) {
+export async function actionJoinClub(clubId: string, userId: string, inviteCode?: string) {
+  const supabase = await createClient();
   const admin = await createAdminClient();
+
+  // Check club's join mode — use raw query since join_mode/invite_code aren't in generated types yet
+  const { data: clubRaw, error: clubError } = await supabase
+    .from('clubs')
+    .select('*')
+    .eq('id', clubId)
+    .single();
+
+  if (clubError || !clubRaw) {
+    return { success: false, error: 'Club not found' };
+  }
+
+  const club = clubRaw as any;
+  const joinMode = club.join_mode;
+
+  // Handle join modes
+  if (joinMode === 'approval_based') {
+    // Check if request already exists — club_join_requests table not in generated types
+    const { data: existingRaw } = await (supabase as any)
+      .from('club_join_requests')
+      .select('id')
+      .eq('club_id', clubId)
+      .eq('user_id', userId)
+      .single();
+
+    if (existingRaw) {
+      return { success: false, error: 'You already have a pending join request for this club' };
+    }
+
+    const { error: requestError } = await (supabase as any)
+      .from('club_join_requests')
+      .insert({ club_id: clubId, user_id: userId, status: 'pending' });
+
+    if (requestError) return { success: false, error: requestError.message };
+    return { success: true, data: { type: 'join_request' } };
+  }
+
+  if (joinMode === 'invite_link') {
+    if (!inviteCode || inviteCode !== club.invite_code) {
+      return { success: false, error: 'Invalid invite code' };
+    }
+    // Fall through to normal join if code is valid
+  }
+
+  // Default: 'anyone' or null — direct join
   const { error } = await admin.from('club_members').insert({ club_id: clubId, user_id: userId });
   if (error) return { success: false, error: error.message };
   return { success: true };
@@ -419,6 +465,22 @@ export async function actionCreateAnnouncement(clubId: string, userId: string, d
 
 export async function actionDeleteAnnouncement(announcementId: string, userId: string) {
   const supabase = await createClient();
+
+  // Fetch the announcement to get its club_id
+  const { data: announcement, error: fetchError } = await supabase
+    .from('club_announcements')
+    .select('club_id')
+    .eq('id', announcementId)
+    .single();
+
+  if (fetchError || !announcement) {
+    return { success: false, error: 'Announcement not found' };
+  }
+
+  // Verify caller is a leader of the club
+  const auth = await requireLeader(announcement.club_id, userId);
+  if (!auth.success) return auth;
+
   const { error } = await supabase.from('club_announcements').delete().eq('id', announcementId);
   if (error) return { success: false, error: error.message };
   return { success: true };

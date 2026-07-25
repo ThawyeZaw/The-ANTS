@@ -20,7 +20,7 @@ import {
   DURATION_BOUNDS,
   STORAGE_KEYS,
 } from '@/constants/pomodoro';
-import { startSound, setVolume, stopSound, disposeAudio } from '@/lib/pomodoro/audio-engine';
+import { startSound, setVolume, stopSound, disposeAudio, playChime } from '@/lib/pomodoro/audio-engine';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -175,6 +175,7 @@ export interface UsePomodoroReturn {
   pause: () => void;
   resume: () => void;
   reset: () => void;
+  switchPhase: (phase: TimerPhase) => void;
   updateSettings: (partial: Partial<PomodoroSettings>) => void;
   setSessionLabel: (label: string | null) => void;
 }
@@ -342,6 +343,11 @@ export function usePomodoro(): UsePomodoroReturn {
     const current = sessionRef.current;
     const settings = settingsRef.current;
 
+    // Play completion chime if enabled
+    if (settings.notifyChime) {
+      playChime();
+    }
+
     if (current.phase === 'focus') {
       // Log completed focus session
       logCompletedFocusLocally(current.cyclesCompletedToday, current.sessionLabel);
@@ -465,6 +471,26 @@ export function usePomodoro(): UsePomodoroReturn {
     stopSound();
   }, [clearTick, persistSession]);
 
+  const switchPhase = useCallback((newPhase: TimerPhase) => {
+    clearTick();
+    stopSound();
+    const s = sessionRef.current;
+    const settings = settingsRef.current;
+    const durationMs = getPhaseDurationMs(newPhase, settings);
+
+    const newSession: ActiveSessionSnapshot = {
+      ...s,
+      phase: newPhase,
+      isPaused: true,
+      endsAt: null,
+      remainingMsWhenPaused: durationMs,
+    };
+
+    setSessionState(newSession);
+    sessionRef.current = newSession;
+    persistSession(newSession);
+  }, [clearTick, persistSession]);
+
   const resume = useCallback(() => {
     start();
   }, [start]);
@@ -577,6 +603,7 @@ export function usePomodoro(): UsePomodoroReturn {
     pause,
     resume,
     reset,
+    switchPhase,
     updateSettings,
     setSessionLabel,
   };
