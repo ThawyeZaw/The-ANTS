@@ -9,7 +9,6 @@
 
 import Link from 'next/link';
 import { Mail, MessageCircle, ArrowUpRight } from 'lucide-react';
-import DotGrid from '@/components/homepage/DotGrid';
 
 // ── Column data ──────────────────────────────────────────────────────────────
 
@@ -58,7 +57,7 @@ const SOCIAL_LINKS = [
 
 export default function Footer() {
   return (
-    <DotGrid>
+    <>
       <footer
         role="contentinfo"
         aria-label="Site footer"
@@ -252,7 +251,7 @@ export default function Footer() {
           </div>
         </div>
       </footer>
-    </DotGrid>
+    </>
   );
 }
 

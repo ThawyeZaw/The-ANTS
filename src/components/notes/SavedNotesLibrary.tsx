@@ -99,7 +99,7 @@ export default function SavedNotesLibrary() {
             <Bookmark className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Selected Notes</h1>
+            <h1 className="text-2xl font-semibold text-foreground">Selected Notes</h1>
             <p className="text-sm text-foreground-muted">
               {filteredNotes.length} saved note{filteredNotes.length !== 1 ? 's' : ''} filtered
             </p>

@@ -364,7 +364,7 @@ export default function AIPromptGenerator({ onImportBlocks, onClose }: AIPromptG
               <Sparkles className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="font-bold text-[var(--foreground)] text-sm">AI Note Generator</h2>
+              <h2 className="font-semibold text-[var(--foreground)] text-sm">AI Note Generator</h2>
               <p className="text-xs text-[var(--foreground-muted)]">Generate or convert content using your preferred AI tool</p>
             </div>
           </div>

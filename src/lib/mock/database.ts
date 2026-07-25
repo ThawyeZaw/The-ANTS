@@ -1007,6 +1007,24 @@ const _defaultUserEnrollments: EnrollmentRecord[] = [
     enrolled_at: '2026-06-01T00:00:00Z',
     status: 'active',
   },
+  {
+    id: 'enr-3',
+    user_id: 'user-student-001',
+    curriculum_id: 'curr-igcse-cie',
+    subject_id: 'subj-cie-bio',
+    exam_id: null,
+    enrolled_at: '2026-06-15T00:00:00Z',
+    status: 'active',
+  },
+  {
+    id: 'enr-4',
+    user_id: 'user-student-001',
+    curriculum_id: 'curr-igcse-cie',
+    subject_id: 'subj-cie-cs',
+    exam_id: null,
+    enrolled_at: '2026-07-01T00:00:00Z',
+    status: 'active',
+  },
 ];
 
 export const mockUserEnrollments: EnrollmentRecord[] = loadArray(STORAGE_KEYS.USER_ENROLLMENTS, _defaultUserEnrollments);
@@ -1052,7 +1070,25 @@ export const mockUserExamHistory: typeof _defaultExamHistory = loadArray(STORAGE
 function _saveExamHistory() { saveArray(STORAGE_KEYS.EXAM_HISTORY, mockUserExamHistory); }
 
 const _defaultTopicProgress = [
-  { id: 'tp-1', user_id: 'user-student-001', topic_id: 'top-1', confidence_level: 4, status: 'in_progress', updated_at: '2026-06-17T00:00:00Z' },
+  // ── CIE Physics topics ──────────────────────────────────────────────────
+  { id: 'tp-1', user_id: 'user-student-001', topic_id: 'top-cie-phys-1', confidence_level: 4, status: 'completed', updated_at: '2026-07-23T14:00:00Z' },
+  { id: 'tp-2', user_id: 'user-student-001', topic_id: 'top-cie-phys-2', confidence_level: 3, status: 'in_progress', updated_at: '2026-07-25T10:00:00Z' },
+  { id: 'tp-3', user_id: 'user-student-001', topic_id: 'top-cie-phys-3', confidence_level: 2, status: 'in_progress', updated_at: '2026-07-24T16:00:00Z' },
+  { id: 'tp-4', user_id: 'user-student-001', topic_id: 'top-cie-phys-4', confidence_level: 1, status: 'not_started', updated_at: '2026-07-20T09:00:00Z' },
+  { id: 'tp-5', user_id: 'user-student-001', topic_id: 'top-cie-phys-5', confidence_level: 5, status: 'completed', updated_at: '2026-07-22T11:00:00Z' },
+  { id: 'tp-6', user_id: 'user-student-001', topic_id: 'top-cie-phys-6', confidence_level: 0, status: 'not_started', updated_at: '2026-07-18T08:00:00Z' },
+  // ── CIE Maths topics ────────────────────────────────────────────────────
+  { id: 'tp-7', user_id: 'user-student-001', topic_id: 'top-cie-math-1', confidence_level: 5, status: 'completed', updated_at: '2026-07-25T09:00:00Z' },
+  { id: 'tp-8', user_id: 'user-student-001', topic_id: 'top-cie-math-2', confidence_level: 3, status: 'in_progress', updated_at: '2026-07-25T15:00:00Z' },
+  { id: 'tp-9', user_id: 'user-student-001', topic_id: 'top-cie-math-3', confidence_level: 2, status: 'in_progress', updated_at: '2026-07-23T13:00:00Z' },
+  { id: 'tp-10', user_id: 'user-student-001', topic_id: 'top-cie-math-4', confidence_level: 1, status: 'not_started', updated_at: '2026-07-19T10:00:00Z' },
+  // ── CIE Biology topics ──────────────────────────────────────────────────
+  { id: 'tp-11', user_id: 'user-student-001', topic_id: 'top-cie-bio-1', confidence_level: 4, status: 'completed', updated_at: '2026-07-24T08:00:00Z' },
+  { id: 'tp-12', user_id: 'user-student-001', topic_id: 'top-cie-bio-2', confidence_level: 2, status: 'in_progress', updated_at: '2026-07-25T12:00:00Z' },
+  { id: 'tp-13', user_id: 'user-student-001', topic_id: 'top-cie-bio-3', confidence_level: 0, status: 'not_started', updated_at: '2026-07-17T09:00:00Z' },
+  // ── CIE CS topics ───────────────────────────────────────────────────────
+  { id: 'tp-14', user_id: 'user-student-001', topic_id: 'top-cie-cs-1', confidence_level: 3, status: 'in_progress', updated_at: '2026-07-25T11:00:00Z' },
+  { id: 'tp-15', user_id: 'user-student-001', topic_id: 'top-cie-cs-2', confidence_level: 0, status: 'not_started', updated_at: '2026-07-16T10:00:00Z' },
 ];
 
 export const mockTopicProgress = loadArray(STORAGE_KEYS.TOPIC_PROGRESS, _defaultTopicProgress);
@@ -2430,6 +2466,18 @@ export let mockCardReviews: CardReview[] = [
   { id: 'cr-3', card_id: 'card-3', user_id: 'user-student-001', interval_days: 7, ease_factor: 2.65, next_review_date: '2026-07-01T00:00:00Z', last_rating: 'easy' },
   { id: 'cr-4', card_id: 'card-15', user_id: 'user-student-001', interval_days: 1, ease_factor: 2.5, next_review_date: '2026-06-25T00:00:00Z', last_rating: 'again' },
   { id: 'cr-5', card_id: 'card-16', user_id: 'user-student-001', interval_days: 3, ease_factor: 2.5, next_review_date: '2026-06-27T00:00:00Z', last_rating: 'good' },
+  // ── Recent reviews (last 7 days, for weekly activity chart) ──────────────
+  // Estimated review date = next_review_date - interval_days
+  { id: 'cr-recent-1', card_id: 'card-1', user_id: 'user-student-001', interval_days: 8, ease_factor: 2.6, next_review_date: '2026-08-01T00:00:00Z', last_rating: 'good' },    // 2026-07-24
+  { id: 'cr-recent-2', card_id: 'card-2', user_id: 'user-student-001', interval_days: 5, ease_factor: 2.3, next_review_date: '2026-07-30T00:00:00Z', last_rating: 'good' },    // 2026-07-25
+  { id: 'cr-recent-3', card_id: 'card-5', user_id: 'user-student-001', interval_days: 3, ease_factor: 2.5, next_review_date: '2026-07-28T00:00:00Z', last_rating: 'easy' },     // 2026-07-25
+  { id: 'cr-recent-4', card_id: 'card-6', user_id: 'user-student-001', interval_days: 7, ease_factor: 2.4, next_review_date: '2026-07-31T00:00:00Z', last_rating: 'good' },     // 2026-07-24
+  { id: 'cr-recent-5', card_id: 'card-3', user_id: 'user-student-001', interval_days: 12, ease_factor: 2.7, next_review_date: '2026-08-03T00:00:00Z', last_rating: 'easy' },    // 2026-07-22
+  { id: 'cr-recent-6', card_id: 'card-4', user_id: 'user-student-001', interval_days: 2, ease_factor: 2.2, next_review_date: '2026-07-27T00:00:00Z', last_rating: 'again' },    // 2026-07-25
+  { id: 'cr-recent-7', card_id: 'card-7', user_id: 'user-student-001', interval_days: 10, ease_factor: 2.5, next_review_date: '2026-08-02T00:00:00Z', last_rating: 'good' },    // 2026-07-23
+  { id: 'cr-recent-8', card_id: 'card-15', user_id: 'user-student-001', interval_days: 6, ease_factor: 2.5, next_review_date: '2026-07-28T00:00:00Z', last_rating: 'good' },    // 2026-07-22
+  { id: 'cr-recent-9', card_id: 'card-16', user_id: 'user-student-001', interval_days: 4, ease_factor: 2.4, next_review_date: '2026-07-27T00:00:00Z', last_rating: 'easy' },    // 2026-07-23
+  { id: 'cr-recent-10', card_id: 'card-17', user_id: 'user-student-001', interval_days: 5, ease_factor: 2.5, next_review_date: '2026-07-29T00:00:00Z', last_rating: 'good' },   // 2026-07-24
 ];
 
 // ── Mock Exams & Grades ─────────────────────────────────────────────────────
@@ -4874,6 +4922,147 @@ export function getMainContributorDashboardStats(userId: string) {
     { label: 'Rejected This Week', value: rejectedCount.toString(), color: 'red', key: 'rejected-this-week' },
     { label: 'Total Reviewed', value: totalReviewed.toString(), color: 'violet', key: 'total-reviewed' },
   ];
+}
+
+// ── Lesson Tracker: Linked Content ────────────────────────────────────────
+
+/** Get notes and due flashcard counts linked to a specific topic */
+export function getTopicLinkedContent(topicId: string): {
+  notes: Note[];
+  dueCards: number;
+  deckId: string | null;
+} {
+  const notes = getNotes({ topicId });
+
+  const now = new Date().toISOString();
+  const decks = mockDecks.filter((d) => d.topic_id === topicId);
+  const deckIds = decks.map((d) => d.id);
+  const cards = mockCards.filter((c) => deckIds.includes(c.deck_id));
+  const cardIds = cards.map((c) => c.id);
+  const dueCards = mockCardReviews.filter(
+    (r) => cardIds.includes(r.card_id) && r.next_review_date <= now
+  ).length;
+
+  return {
+    notes,
+    dueCards,
+    deckId: decks.length > 0 ? decks[0].id : null,
+  };
+}
+
+// ── Lesson Tracker: Weekly Activity ────────────────────────────────────────
+
+/** Get daily study activity for a user over the last 7 days */
+export function getWeeklyStudyActivity(userId: string): {
+  date: string;
+  topicsCompleted: number;
+  cardsReviewed: number;
+}[] {
+  const now = new Date();
+  const result: { date: string; topicsCompleted: number; cardsReviewed: number }[] = [];
+
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date(now);
+    date.setDate(date.getDate() - i);
+    const dateStr = date.toISOString().split('T')[0];
+
+    const topicsCompleted = mockTopicProgress.filter(
+      (tp) =>
+        tp.user_id === userId &&
+        tp.updated_at.startsWith(dateStr) &&
+        tp.status === 'completed'
+    ).length;
+
+    const cardsReviewed = mockCardReviews.filter(
+      (r) => {
+        const estimatedReviewDate = new Date(r.next_review_date);
+        estimatedReviewDate.setDate(estimatedReviewDate.getDate() - r.interval_days);
+        return (
+          r.user_id === userId &&
+          estimatedReviewDate.toISOString().split('T')[0] === dateStr
+        );
+      }
+    ).length;
+
+    result.push({ date: dateStr, topicsCompleted, cardsReviewed });
+  }
+
+  return result;
+}
+
+// ── Lesson Tracker: Progress Stats ─────────────────────────────────────────
+
+/** Get overall lesson tracker statistics for a user within a curriculum */
+export function getLessonTrackerStats(
+  userId: string,
+  curriculumId: string
+): {
+  overallPercent: number;
+  subjectBreakdown: { subjectId: string; name: string; percent: number }[];
+  currentStreak: number;
+  confidenceTrend: { topicId: string; name: string; confidence: number }[];
+} {
+  const subjects = mockSubjects.filter((s) => s.curriculum_id === curriculumId);
+  const topics = mockTopics.filter((t) =>
+    subjects.some((s) => s.id === t.subject_id)
+  );
+  const progress = mockTopicProgress.filter(
+    (tp) =>
+      tp.user_id === userId &&
+      topics.some((t) => t.id === tp.topic_id)
+  );
+
+  // Overall percent
+  const completedTopics = topics.filter((t) =>
+    progress.find((p) => p.topic_id === t.id && p.status === 'completed')
+  ).length;
+  const overallPercent =
+    topics.length > 0 ? Math.round((completedTopics / topics.length) * 100) : 0;
+
+  // Subject breakdown
+  const subjectBreakdown = subjects.map((s) => {
+    const subjectTopics = topics.filter((t) => t.subject_id === s.id);
+    const completed = subjectTopics.filter((t) =>
+      progress.find((p) => p.topic_id === t.id && p.status === 'completed')
+    ).length;
+    return {
+      subjectId: s.id,
+      name: s.title,
+      percent:
+        subjectTopics.length > 0
+          ? Math.round((completed / subjectTopics.length) * 100)
+          : 0,
+    };
+  });
+
+  // Current streak (consecutive days with any progress activity)
+  let currentStreak = 0;
+  const checkDate = new Date();
+  for (;;) {
+    const dateStr = checkDate.toISOString().split('T')[0];
+    const hasActivity = progress.some((p) => p.updated_at.startsWith(dateStr));
+    if (hasActivity) {
+      currentStreak++;
+      checkDate.setDate(checkDate.getDate() - 1);
+    } else {
+      break;
+    }
+  }
+
+  // Confidence trend (topics with lowest confidence, max 5)
+  const confidenceTrend = progress
+    .map((p) => {
+      const topic = topics.find((t) => t.id === p.topic_id);
+      return {
+        topicId: p.topic_id,
+        name: topic?.title ?? 'Unknown',
+        confidence: p.confidence_level,
+      };
+    })
+    .sort((a, b) => a.confidence - b.confidence)
+    .slice(0, 5);
+
+  return { overallPercent, subjectBreakdown, currentStreak, confidenceTrend };
 }
 
 

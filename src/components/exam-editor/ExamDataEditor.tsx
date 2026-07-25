@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useTransition } from 'react';
 import {
@@ -87,7 +87,7 @@ export default function ExamDataEditor() {
                 <Compass className="h-4 w-4" />
                 Verified Contributor Workstation
               </div>
-              <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-100 md:text-4xl">
+              <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-100 md:text-4xl">
                 Exam Syllabus Editor
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400">
@@ -98,7 +98,7 @@ export default function ExamDataEditor() {
             {isMainContributor ? (
               <button
                 type="button"
-                className="inline-flex items-center gap-2 rounded-2xl border border-cyan-400/20 bg-cyan-500/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.28em] text-cyan-100 transition hover:bg-cyan-500/15"
+                className="inline-flex items-center gap-2 rounded-2xl border border-cyan-400/20 bg-cyan-500/10 px-4 py-2 text-xs font-medium uppercase tracking-[0.28em] text-cyan-100 transition hover:bg-cyan-500/15"
               >
                 <FileText className="h-4 w-4 text-cyan-200" />
                 Review Submissions
@@ -112,7 +112,7 @@ export default function ExamDataEditor() {
             <div className="space-y-4 rounded-[28px] border border-white/10 bg-slate-950/40 p-5">
               <div className="space-y-2">
                 <p className="text-xs uppercase tracking-[0.32em] text-slate-500">Workflow</p>
-                <h2 className="text-2xl font-bold text-slate-100">Step-by-step schedule builder</h2>
+                <h2 className="text-2xl font-semibold text-slate-100">Step-by-step schedule builder</h2>
                 <p className="text-sm leading-6 text-slate-400">
                   Progress smoothly through board selection, qualification assignment and final exam scheduling.
                 </p>
@@ -141,7 +141,7 @@ export default function ExamDataEditor() {
               <div className="mb-6 flex items-center justify-between gap-4">
                 <div>
                   <p className="text-xs uppercase tracking-[0.28em] text-cyan-300/80">Dark Glass Wizard</p>
-                  <h3 className="mt-3 text-2xl font-bold text-slate-100">Interactive exam editor</h3>
+                  <h3 className="mt-3 text-2xl font-semibold text-slate-100">Interactive exam editor</h3>
                 </div>
                 <div className="rounded-3xl bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.28em] text-slate-300">
                   {activeStep}/3

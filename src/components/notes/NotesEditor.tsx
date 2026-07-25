@@ -149,7 +149,7 @@ export default function NotesEditor() {
                   onChange={(e) => setField('title', e.target.value)}
                   disabled={isReadOnly}
                   placeholder="Untitled Note"
-                  className="w-full text-[1.75rem] font-bold text-[var(--foreground)] bg-transparent border-none outline-none placeholder-[var(--foreground-muted)]/50 focus:outline-none"
+                  className="w-full text-[1.75rem] font-semibold text-[var(--foreground)] bg-transparent border-none outline-none placeholder-[var(--foreground-muted)]/50 focus:outline-none"
                   aria-label="Note title"
                 />
                 {state.summary && (
@@ -208,7 +208,7 @@ export default function NotesEditor() {
             <div className="flex-1 overflow-y-auto">
               <div className="max-w-[680px] mx-auto px-6 py-6">
                 {state.title && (
-                  <h1 className="text-[1.75rem] font-bold text-[var(--foreground)] mb-2 leading-tight">{state.title}</h1>
+                  <h1 className="text-[1.75rem] font-semibold text-[var(--foreground)] mb-2 leading-tight">{state.title}</h1>
                 )}
                 {state.summary && (
                   <p className="text-[var(--foreground-muted)] mb-8 text-sm italic border-l-2 border-[var(--primary)]/30 pl-3">{state.summary}</p>
@@ -264,7 +264,7 @@ export default function NotesEditor() {
             </div>
             <div className="flex-1 overflow-y-auto p-5">
               {state.title && (
-                <h1 className="text-xl font-bold text-[var(--foreground)] mb-2">{state.title}</h1>
+                <h1 className="text-xl font-semibold text-[var(--foreground)] mb-2">{state.title}</h1>
               )}
               {state.summary && (
                 <p className="text-[var(--foreground-muted)] mb-6 text-sm italic">{state.summary}</p>

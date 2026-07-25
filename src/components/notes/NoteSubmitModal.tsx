@@ -32,7 +32,7 @@ export default function NoteSubmitModal({
             <div className="p-2 rounded-lg bg-violet-500/10 text-violet-500">
               <Send className="h-5 w-5" />
             </div>
-            <h2 className="font-bold text-foreground">Submit for Review</h2>
+            <h2 className="font-semibold text-foreground">Submit for Review</h2>
           </div>
           <button
             onClick={onClose}

@@ -111,7 +111,7 @@ export default function NotesLibrary() {
             <BookOpen className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Notes Library</h1>
+            <h1 className="text-2xl font-semibold text-foreground">Notes Library</h1>
             <p className="text-sm text-foreground-muted">
               {notes.length} note{notes.length !== 1 ? 's' : ''} available
             </p>

@@ -220,7 +220,7 @@ export default function BlockPreview({ block }: BlockPreviewProps) {
     case 'heading': {
       const Tag = (`h${block.level}`) as 'h1' | 'h2' | 'h3';
       const classes = {
-        1: 'text-[1.75rem] font-bold text-[var(--foreground)] mt-8 mb-4 leading-tight',
+        1: 'text-[1.75rem] font-semibold text-[var(--foreground)] mt-8 mb-4 leading-tight',
         2: 'text-[1.35rem] font-semibold text-[var(--foreground)] mt-6 mb-3 leading-snug',
         3: 'text-[1.1rem] font-semibold text-[var(--foreground-secondary)] mt-5 mb-2 leading-snug',
       }[block.level];

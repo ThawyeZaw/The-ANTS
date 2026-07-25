@@ -86,7 +86,7 @@ export function AddCountdownModal({ isOpen, onClose, availableExams, onCreate, p
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--foreground)]/10 backdrop-blur-sm">
       <div className="w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--background-card)] p-6 shadow-2xl">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-[var(--foreground)]">Add Exam Countdown</h2>
+          <h2 className="text-xl font-semibold text-[var(--foreground)]">Add Exam Countdown</h2>
           <button 
             onClick={onClose} 
             className="rounded-lg p-1 text-[var(--foreground-secondary)] hover:text-[var(--foreground)] transition-colors focus-visible:ring-2 focus-visible:ring-[var(--primary)]/50 focus-visible:outline-none"

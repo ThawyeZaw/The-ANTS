@@ -145,7 +145,7 @@ export default function DeckLibrary({ userId }: DeckLibraryProps) {
             <div className="inline-flex items-center gap-1.5 rounded-full bg-violet-500/10 px-3 py-1 text-xs font-semibold text-violet-600 dark:text-violet-400">
               <Sparkles size={12} className="animate-pulse" /> Spaced Repetition (SM-2)
             </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-[var(--foreground)] tracking-tight">
+            <h1 className="text-2xl md:text-3xl font-semibold text-[var(--foreground)] tracking-tight">
               Flashcard Decks
             </h1>
             <p className="max-w-xl text-sm md:text-base text-[var(--foreground-secondary)]">
@@ -234,7 +234,7 @@ export default function DeckLibrary({ userId }: DeckLibraryProps) {
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--background-secondary)] text-[var(--foreground-muted)]">
             <Layers size={28} />
           </div>
-          <h3 className="mb-1 text-base font-bold text-[var(--foreground)]">No decks found</h3>
+          <h3 className="mb-1 text-base font-semibold text-[var(--foreground)]">No decks found</h3>
           <p className="mb-6 max-w-sm text-sm text-[var(--foreground-secondary)]">
             {searchQuery
               ? `No decks matching "${searchQuery}". Try another search query.`

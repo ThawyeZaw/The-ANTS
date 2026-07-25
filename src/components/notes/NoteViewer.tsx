@@ -113,7 +113,7 @@ export default function NoteViewer({ note }: NoteViewerProps) {
           </div>
 
           {/* Title */}
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground leading-snug">{note.title}</h1>
+          <h1 className="text-2xl sm:text-3xl font-semibold text-foreground leading-snug">{note.title}</h1>
 
           {/* Summary */}
           {note.summary && (
@@ -144,7 +144,7 @@ export default function NoteViewer({ note }: NoteViewerProps) {
             <div className="flex items-center gap-4 text-xs text-foreground-muted">
               {contributor && (
                 <span className="flex items-center gap-1.5">
-                  <div className="h-5 w-5 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold text-[10px]">
+                  <div className="h-5 w-5 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-medium text-[10px]">
                     {contributor.name.charAt(0)}
                   </div>
                   {contributor.name}

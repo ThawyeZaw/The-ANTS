@@ -36,7 +36,7 @@ function BoardBadge({ board, code }: { board?: string | null; code?: string | nu
     <div className="flex items-center gap-1.5 flex-wrap">
       {board && (
         <span className={cn(
-          'inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full',
+          'inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full',
           match ? match.colorClass : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)]'
         )}>
           {board}
@@ -72,7 +72,7 @@ function LibraryDeckCard({ deck, isOwned, onAddToWorkspace, onStudy, isAdding }:
       isOwned ? 'border-[var(--primary)]/30 bg-[var(--primary)]/5' : 'border-[var(--border)]'
     )}>
       {isOwned && (
-        <div className="absolute top-3 right-3 flex items-center gap-1 rounded-full bg-[var(--primary)]/15 px-2 py-0.5 text-[10px] font-bold text-[var(--primary)]">
+        <div className="absolute top-3 right-3 flex items-center gap-1 rounded-full bg-[var(--primary)]/15 px-2 py-0.5 text-[10px] font-medium text-[var(--primary)]">
           <Check size={10} />
           In My Decks
         </div>
@@ -84,7 +84,7 @@ function LibraryDeckCard({ deck, isOwned, onAddToWorkspace, onStudy, isAdding }:
       </div>
 
       {/* Deck name */}
-      <h3 className="text-base font-bold text-[var(--foreground)] mb-1 leading-tight line-clamp-2">
+      <h3 className="text-base font-semibold text-[var(--foreground)] mb-1 leading-tight line-clamp-2">
         {deck.name}
       </h3>
 
@@ -243,7 +243,7 @@ export default function FlashcardsLibraryBrowser() {
             <div className="inline-flex items-center gap-1.5 rounded-full bg-violet-500/10 px-3 py-1 text-xs font-semibold text-violet-600 dark:text-violet-400">
               <BookMarked size={12} /> Board-tagged · Contributor-approved
             </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-[var(--foreground)] tracking-tight">
+            <h1 className="text-2xl md:text-3xl font-semibold text-[var(--foreground)] tracking-tight">
               Flashcards
             </h1>
             <p className="max-w-xl text-sm md:text-base text-[var(--foreground-secondary)]">
@@ -332,7 +332,7 @@ export default function FlashcardsLibraryBrowser() {
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--background-secondary)] text-[var(--foreground-muted)]">
             <SquareStack size={28} />
           </div>
-          <h3 className="mb-1 text-base font-bold text-[var(--foreground)]">No decks found</h3>
+          <h3 className="mb-1 text-base font-semibold text-[var(--foreground)]">No decks found</h3>
           <p className="mb-6 max-w-sm text-sm text-[var(--foreground-secondary)]">
             {smartFilter
               ? 'No library decks match your enrolled boards. Try "Browse All" to see all available decks.'

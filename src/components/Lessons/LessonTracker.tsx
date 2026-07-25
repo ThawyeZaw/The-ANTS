@@ -22,6 +22,10 @@ import { useRole } from '@/hooks/useRole';
 import { useLessonContext, type TopicItem, type TopicProgressRecord, type TopicStatus } from '@/context/LessonContext';
 import { cn } from '@/lib/utils';
 import TopicCard from './TopicCard';
+import ProgressOverview from './ProgressOverview';
+import WeeklyActivityChart from './WeeklyActivityChart';
+import ConfidenceTrend from './ConfidenceTrend';
+import EnrollmentSwitcher from './EnrollmentSwitcher';
 
 // ── Role-aware subtitle ───────────────────────────────────────────────────────
 
@@ -262,18 +266,12 @@ export default function LessonTracker() {
     );
   }
 
-  // ── Overall stats for the active curriculum ──────────────────────────────────
-
-  const totalTopics = activeCurriculum ? getCurriculumTopicCount(activeCurriculum) : 0;
-  const completedTopics = activeCurriculum ? getCurriculumCompletedCount(activeCurriculum) : 0;
-  const overallPct = totalTopics === 0 ? 0 : Math.round((completedTopics / totalTopics) * 100);
-
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
     <div className="space-y-8 animate-fade-in">
 
-      {/* ── Page header ──────────────────────────────────────────────────────── */}
+      {/* ── Page header with EnrollmentSwitcher ────────────────────────────── */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-sm font-medium text-primary">Learn</p>
@@ -285,44 +283,10 @@ export default function LessonTracker() {
             {subtitle}
           </p>
         </div>
-
-        {/* Overall progress pill */}
-        {activeCurriculum && (
-          <div className="shrink-0 flex items-center gap-3 rounded-xl border border-border bg-background-card px-5 py-3 shadow-sm">
-            <div className="relative h-12 w-12 shrink-0">
-              <svg className="h-12 w-12 -rotate-90" viewBox="0 0 36 36">
-                <circle
-                  cx="18" cy="18" r="15.5"
-                  fill="none"
-                  stroke="var(--border)"
-                  strokeWidth="3"
-                />
-                <circle
-                  cx="18" cy="18" r="15.5"
-                  fill="none"
-                  stroke="var(--primary)"
-                  strokeWidth="3"
-                  strokeDasharray={`${overallPct} ${100 - overallPct}`}
-                  strokeDashoffset="25"
-                  strokeLinecap="round"
-                  style={{ transition: 'stroke-dasharray 0.6s ease' }}
-                />
-              </svg>
-              <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-foreground">
-                {overallPct}%
-              </span>
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-foreground leading-tight">
-                {completedTopics}/{totalTopics} topics
-              </p>
-              <p className="text-xs text-foreground-muted mt-0.5">completed</p>
-            </div>
-          </div>
-        )}
+        <EnrollmentSwitcher />
       </div>
 
-      {/* ── Curriculum tab bar ───────────────────────────────────────────────── */}
+      {/* ── Curriculum tab bar ─────────────────────────────────────────────── */}
       {enrolledCurriculums.length > 1 && (
         <div className="flex flex-wrap gap-2" role="tablist" aria-label="Curriculum tabs">
           {enrolledCurriculums.map((curriculum) => {
@@ -361,7 +325,16 @@ export default function LessonTracker() {
         </div>
       )}
 
-      {/* ── Curriculum meta ──────────────────────────────────────────────────── */}
+      {/* ── Progress Dashboard ────────────────────────────────────────────── */}
+      <ProgressOverview curriculumId={activeCurriculumId} />
+
+      {/* ── Activity + Confidence grid ────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <WeeklyActivityChart />
+        <ConfidenceTrend curriculumId={activeCurriculumId} />
+      </div>
+
+      {/* ── Curriculum meta ────────────────────────────────────────────────── */}
       {activeCurriculum && (
         <div className="rounded-xl border border-border bg-linear-to-br from-primary/5 to-accent/5 px-5 py-4 flex flex-wrap items-center gap-4">
           <div className="flex-1 min-w-0">
@@ -387,7 +360,7 @@ export default function LessonTracker() {
         </div>
       )}
 
-      {/* ── Subject filter bar ───────────────────────────────────────────────── */}
+      {/* ── Subject filter bar ─────────────────────────────────────────────── */}
       {activeSubjects.length > 0 && (
         <SubjectFilterBar
           subjects={activeSubjects.map(s => ({ id: s.id, title: s.title }))}
@@ -396,7 +369,7 @@ export default function LessonTracker() {
         />
       )}
 
-      {/* ── Subject accordion list ───────────────────────────────────────────── */}
+      {/* ── Subject accordion list ─────────────────────────────────────────── */}
       {filteredSubjects.length === 0 ? (
         <div className="rounded-xl border border-border bg-background-card p-8 text-center">
           <Layers className="mx-auto h-8 w-8 text-foreground-muted" />

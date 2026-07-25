@@ -87,7 +87,7 @@ export default function MyNotesLibrary() {
             <BookOpen className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">My Notes</h1>
+            <h1 className="text-2xl font-semibold text-foreground">My Notes</h1>
             <p className="text-sm text-foreground-muted">
               {filteredNotes.length} note{filteredNotes.length !== 1 ? 's' : ''} created by you
             </p>

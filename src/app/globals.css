@@ -473,13 +473,6 @@ a {
   --hp-btn-text: #FFFFFF;
   --hp-cta-text-muted: rgba(255, 255, 255, 0.88);
 
-  /* Grid line colours for light mode — boosted to match dark-mode visual weight */
-  --hp-grid-color: rgba(59, 108, 181, 0.12);
-  --hp-grid-color-strong: rgba(59, 108, 181, 0.20);
-  --hp-grid-color-card: rgba(59, 108, 181, 0.08);
-  --hp-grid-color-dense: rgba(59, 108, 181, 0.17);
-  --hp-grid-color-accent: rgba(59, 108, 181, 0.24);
-
   /* ── Light-mode elevation shadows (prominent, clear layering) ───────── */
   --hp-shadow-btn:
     0 1px 3px rgba(0, 0, 0, 0.08),
@@ -527,12 +520,6 @@ a {
   --hp-violet-rgb: 120, 71, 199;
   --hp-btn-text: #FFFFFF;
   --hp-cta-text-muted: rgba(255, 255, 255, 0.88);
-
-  --hp-grid-color: rgba(59, 108, 181, 0.12);
-  --hp-grid-color-strong: rgba(59, 108, 181, 0.20);
-  --hp-grid-color-card: rgba(59, 108, 181, 0.08);
-  --hp-grid-color-dense: rgba(59, 108, 181, 0.17);
-  --hp-grid-color-accent: rgba(59, 108, 181, 0.24);
 
   --hp-shadow-btn:
     0 1px 3px rgba(0, 0, 0, 0.08),
@@ -582,13 +569,6 @@ a {
   --hp-violet-rgb: 185, 143, 255;
   --hp-btn-text: #060B14;
   --hp-cta-text-muted: rgba(6, 11, 20, 0.78);
-
-  /* Grid line colours — clearly visible neon grid for nighttime study */
-  --hp-grid-color: rgba(91, 158, 255, 0.09);
-  --hp-grid-color-strong: rgba(91, 158, 255, 0.16);
-  --hp-grid-color-card: rgba(91, 158, 255, 0.06);
-  --hp-grid-color-dense: rgba(91, 158, 255, 0.13);
-  --hp-grid-color-accent: rgba(91, 158, 255, 0.20);
 
   /* Dark-mode elevation shadows (deep, minimal glow) */
   --hp-shadow-btn:
@@ -964,180 +944,6 @@ a {
   }
 }
 
-/* ── Grid Line Background Patterns ──────────────────────────────────────────── */
-/* Grid colour adapts via --hp-grid-color set per theme */
-
-.hp-grid-bg {
-  background-image:
-    linear-gradient(var(--hp-grid-color, rgba(91, 158, 255, 0.09)) 1px, transparent 1px),
-    linear-gradient(90deg, var(--hp-grid-color, rgba(91, 158, 255, 0.09)) 1px, transparent 1px);
-  background-size: 48px 48px;
-}
-
-.hp-grid-bg-strong {
-  background-image:
-    linear-gradient(var(--hp-grid-color-strong, rgba(91, 158, 255, 0.16)) 1px, transparent 1px),
-    linear-gradient(90deg, var(--hp-grid-color-strong, rgba(91, 158, 255, 0.16)) 1px, transparent 1px);
-  background-size: 40px 40px;
-}
-
-/* Fine grid for card surfaces */
-.hp-grid-card {
-  background-image:
-    linear-gradient(var(--hp-grid-color-card, rgba(91, 158, 255, 0.06)) 1px, transparent 1px),
-    linear-gradient(90deg, var(--hp-grid-color-card, rgba(91, 158, 255, 0.06)) 1px, transparent 1px);
-  background-size: 32px 32px;
-}
-
-/* Dense grid for CTA / hero emphasis areas */
-.hp-grid-dense {
-  background-image:
-    linear-gradient(var(--hp-grid-color-dense, rgba(91, 158, 255, 0.13)) 1px, transparent 1px),
-    linear-gradient(90deg, var(--hp-grid-color-dense, rgba(91, 158, 255, 0.13)) 1px, transparent 1px);
-  background-size: 28px 28px;
-}
-
-/* Brand accent grid: stronger grid lines for cards/surfaces that need contrast */
-.hp-grid-accent {
-  background-image:
-    linear-gradient(var(--hp-grid-color-accent, rgba(91, 158, 255, 0.20)) 1px, transparent 1px),
-    linear-gradient(90deg, var(--hp-grid-color-accent, rgba(91, 158, 255, 0.20)) 1px, transparent 1px);
-  background-size: 36px 36px;
-}
-
-@media (max-width: 640px) {
-  .hp-grid-bg,
-  .hp-grid-bg-strong,
-  .hp-grid-card,
-  .hp-grid-dense,
-  .hp-grid-accent {
-    background-size: 24px 24px;
-  }
-}
-
-@media (prefers-reduced-data: reduce) {
-  .hp-grid-bg,
-  .hp-grid-bg-strong,
-  .hp-grid-card,
-  .hp-grid-dense,
-  .hp-grid-accent {
-    background-image: none !important;
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════════
-   Dashboard — Grid Line Pattern System
-   Applies a cohesive grid-line visual framework across all dashboard pages.
-   Uses pure CSS gradients — zero HTTP requests, theme-aware, accessible.
-   ═══════════════════════════════════════════════════════════════════════════════ */
-
-/* ── Dashboard grid colour tokens (tied to theme via CSS vars) ───────────── */
-:root {
-  --dash-grid-color: rgba(59, 108, 181, 0.06);
-  --dash-grid-color-strong: rgba(59, 108, 181, 0.10);
-  --dash-welcome-dot: rgba(255, 255, 255, 0.30);
-  --dash-welcome-line: rgba(255, 255, 255, 0.12);
-}
-[data-theme="dark"] {
-  --dash-grid-color: rgba(91, 158, 255, 0.05);
-  --dash-grid-color-strong: rgba(91, 158, 255, 0.09);
-  --dash-welcome-dot: rgba(255, 255, 255, 0.25);
-  --dash-welcome-line: rgba(255, 255, 255, 0.10);
-}
-
-/* ── Dashboard body: subtle large-scale grid ─────────────────────────────── */
-.dash-grid-body {
-  background-image:
-    linear-gradient(var(--dash-grid-color) 1px, transparent 1px),
-    linear-gradient(90deg, var(--dash-grid-color) 1px, transparent 1px);
-  background-size: 72px 72px;
-  background-position: center center;
-}
-
-/* ── Dashboard-section grid (card containers): tighter grid ──────────────── */
-.dash-grid-section {
-  background-image:
-    linear-gradient(var(--dash-grid-color-strong) 1px, transparent 1px),
-    linear-gradient(90deg, var(--dash-grid-color-strong) 1px, transparent 1px);
-  background-size: 40px 40px;
-}
-
-/* ── Welcome Banner Unique Pattern System ────────────────────────────────── */
-/*    Multi-layer geometric pattern with animated intersection highlights.    */
-
-/* Layer 1: Diamond-grid line pattern over the gradient */
-.dash-welcome-pattern {
-  position: relative;
-}
-.dash-welcome-pattern::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 1;
-  opacity: 0.55;
-  background-image:
-    repeating-linear-gradient(
-      60deg,
-      var(--dash-welcome-line) 0px,
-      var(--dash-welcome-line) 1px,
-      transparent 1px,
-      transparent 28px
-    ),
-    repeating-linear-gradient(
-      -60deg,
-      var(--dash-welcome-line) 0px,
-      var(--dash-welcome-line) 1px,
-      transparent 1px,
-      transparent 28px
-    );
-  border-radius: inherit;
-}
-
-/* Layer 2: Glowing dot nodes at grid intersections */
-.dash-welcome-pattern::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 2;
-  opacity: 0.70;
-  background-image:
-    radial-gradient(circle, var(--dash-welcome-dot) 1.8px, transparent 2px);
-  background-size: 28px 28px;
-  background-position:
-    0px 0px,
-    14px 14px;
-  border-radius: inherit;
-}
-
-/* Layer 3: Animated pulsing nodes — CSS custom property driven */
-@keyframes dashNodePulse {
-  0%, 100% { opacity: 0.35; transform: scale(0.8); }
-  50%      { opacity: 0.85; transform: scale(1.3); }
-}
-
-.dash-welcome-nodes {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 3;
-  border-radius: inherit;
-  overflow: hidden;
-}
-
-.dash-welcome-node {
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow:
-    0 0 6px rgba(255, 255, 255, 0.7),
-    0 0 14px rgba(255, 255, 255, 0.25);
-  animation: dashNodePulse 3s ease-in-out infinite;
-}
-
 /* ── Welcome card enhanced shadow for depth ──────────────────────────────── */
 .dash-welcome-shadow {
   box-shadow:
@@ -1216,103 +1022,6 @@ a {
       -webkit-backdrop-filter: blur(6px) saturate(105%);
     }
   }
-}
-
-/* ── Stats cards: subtle grid overlay ────────────────────────────────────── */
-.dash-stat-grid {
-  background-image:
-    linear-gradient(var(--dash-grid-color) 1px, transparent 1px),
-    linear-gradient(90deg, var(--dash-grid-color) 1px, transparent 1px);
-  background-size: 24px 24px;
-  background-position: center center;
-}
-
-/* ── Responsive adjustments ──────────────────────────────────────────────── */
-@media (max-width: 640px) {
-  .dash-grid-body {
-    background-size: 48px 48px;
-  }
-  .dash-grid-section {
-    background-size: 32px 32px;
-  }
-  .dash-welcome-pattern::before {
-    background-size: 0 0, 0 0; /* hide complex pattern on small screens */
-  }
-  .dash-welcome-pattern::after {
-    background-size: 20px 20px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .dash-welcome-node {
-    animation: none;
-  }
-}
-
-@media (prefers-reduced-data: reduce) {
-  .dash-grid-body,
-  .dash-grid-section,
-  .dash-welcome-pattern::before,
-  .dash-welcome-pattern::after,
-  .dash-stat-grid {
-    background-image: none !important;
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════════
-   Auth Form — Subtle Line Pattern Enhancements
-   Uses CSS-only SVG patterns — zero HTTP requests, theme-aware, accessible.
-   ═══════════════════════════════════════════════════════════════════════════════ */
-
-/* ── Auth pattern token: ultra-low opacity accent for line overlays ──────── */
-:root {
-  --auth-pattern-opacity: 0.04;
-  --auth-pattern-color: 59, 108, 181;
-}
-[data-theme="dark"] {
-  --auth-pattern-opacity: 0.05;
-  --auth-pattern-color: 91, 158, 255;
-}
-
-/* ── 1. Subtle dot-grid overlay for form card backgrounds ────────────────── */
-/*    Provides a refined, barely-visible texture behind form content.          */
-.auth-pattern-dots {
-  position: relative;
-}
-.auth-pattern-dots::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  opacity: var(--auth-pattern-opacity);
-  background-image: radial-gradient(
-    circle,
-    rgb(var(--auth-pattern-color)) 0.5px,
-    transparent 0.5px
-  );
-  background-size: 20px 20px;
-}
-
-/* ── 2. Subtle diagonal line texture for branding panels ─────────────────── */
-/*    Adds a sophisticated diagonal weave that never distracts from content.  */
-.auth-pattern-diag {
-  position: relative;
-}
-.auth-pattern-diag::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 1;
-  opacity: 0.06;
-  background-image: repeating-linear-gradient(
-    45deg,
-    rgba(255, 255, 255, 0.08) 0px,
-    rgba(255, 255, 255, 0.08) 1px,
-    transparent 1px,
-    transparent 16px
-  );
 }
 
 /* ── 3. Horizontal line-separators between form sections ─────────────────── */
@@ -1419,9 +1128,6 @@ a {
 }
 
 @media (max-width: 639px) {
-  .auth-pattern-dots::before {
-    background-size: 16px 16px;
-  }
   .auth-header-accent {
     padding-left: 12px;
   }
@@ -1429,14 +1135,6 @@ a {
     width: 2px;
     top: 3px;
     bottom: 3px;
-  }
-}
-
-/* ── Accessibility: respect user motion/data preferences ─────────────────── */
-@media (prefers-reduced-data: reduce) {
-  .auth-pattern-dots::before,
-  .auth-pattern-diag::after {
-    background-image: none !important;
   }
 }
 
