@@ -25,7 +25,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import ProfileHero from '@/components/profile/ProfileHero';
-import ProfileStats from '@/components/profile/ProfileStats';
+import ProfileAboutCard from '@/components/profile/ProfileAboutCard';
 import ProfileActivity from '@/components/profile/ProfileActivity';
 import CertificationSection from '@/components/profile/CertificationSection';
 import ClubMembershipsPanel from '@/components/profile/ClubMembershipsPanel';
@@ -53,7 +53,6 @@ export default function ProfilePage() {
 
   const {
     profile,
-    stats,
     activities: timelineActivities,
     projects: rawProjects,
     portfolioActivities: rawActivities,
@@ -185,7 +184,7 @@ export default function ProfilePage() {
   const hasPortfolio = orderedSections.length > 0;
   const isContributor = profile?.role === 'contributor' || profile?.role === 'main_contributor';
 
-  // ── Mock data for contributor stats & published works ──────────────────────
+  // ── Mock data for contributor published works ──────────────────────
   const mockNotes = useMemo(() => {
     if (!profile || !isContributor) return [];
     return getNotesByContributor(profile.id).filter(
@@ -209,23 +208,6 @@ export default function ProfilePage() {
     for (const s of mockSubjects) map[s.id] = s;
     return map;
   }, []);
-
-  // Merge real stats with mock counts for a better UX
-  const effectiveStats = useMemo(() => {
-    const mockCounts = {
-      published_curriculums: mockCurriculums.filter(
-        (c) => c.created_by === profile?.id
-      ).length,
-      published_resources: mockNotes.length,
-      total_views: stats?.total_views ?? 0,
-    };
-    // Use mock counts if Supabase returned zero
-    return {
-      published_curriculums: mockCounts.published_curriculums || stats?.published_curriculums || 0,
-      published_resources: mockCounts.published_resources || stats?.published_resources || 0,
-      total_views: stats?.total_views ?? 0,
-    };
-  }, [stats, mockNotes, profile, mockCurriculums]);
 
   const showPublishedWorks = isContributor && (mockNotes.length > 0 || mockDecks.length > 0);
 
@@ -252,7 +234,7 @@ export default function ProfilePage() {
         <p className="text-sm text-foreground-secondary leading-relaxed mb-6">
           The user <span className="font-mono text-foreground font-semibold">@{username}</span> could not be found, or their profile is set to private.
         </p>
-        <BackButton href="/" label="Go Back" />
+        <BackButton href="/" label="Back to Home" />
       </div>
     );
   }
@@ -262,15 +244,13 @@ export default function ProfilePage() {
       className={`${widthClass} mx-auto ${spacingClass} animate-fade-in pb-12`}
       style={themeColors ? (themeColors as React.CSSProperties) : undefined}
     >
-      <BackButton noFallback label="Back" />
+      <BackButton noFallback label="Back to Explore" />
 
       {/* Profile Hero */}
       <ProfileHero profile={profile} isOwnProfile={isOwnProfile} />
 
-      {/* Stats (contributor/main_contributor only) */}
-      {isContributor && (
-        <ProfileStats stats={effectiveStats} memberSince={profile.createdAt} />
-      )}
+      {/* About Me Panel */}
+      <ProfileAboutCard profile={profile} />
 
       {/* ── Published Works (Contributor) ─── */}
       {showPublishedWorks && (

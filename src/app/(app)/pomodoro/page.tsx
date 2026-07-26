@@ -6,7 +6,6 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { Pencil, Settings, Timer } from 'lucide-react';
-import BackButton from '@/components/ui/BackButton';
 import { usePomodoro } from '@/hooks/usePomodoro';
 import TimerRing from '@/components/pomodoro/TimerRing';
 import TimerControls from '@/components/pomodoro/TimerControls';
@@ -76,10 +75,6 @@ export default function PomodoroPage() {
   return (
     <>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 md:pt-8 lg:pt-12">
-        {/* ── Back navigation ─────────────────────────────────────────── */}
-        <div className="mb-4">
-          <BackButton href="/dashboard" label="Back" />
-        </div>
 
         {/* ── Page banner ─────────────────────────────────────────────── */}
         <div className="relative overflow-hidden rounded-3xl border border-[var(--border)] bg-gradient-to-r from-indigo-500/8 via-violet-500/5 to-cyan-500/10 p-5 md:p-7 mb-6 md:mb-8">

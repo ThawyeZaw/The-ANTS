@@ -9,6 +9,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, type FormEvent } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import {
   Mail,
@@ -195,7 +196,7 @@ export default function SignupForm() {
             style={{ background: 'rgba(255,255,255,0.2)' }} />
 
           <div className="relative z-10">
-            <div className="text-4xl mb-4">🐜</div>
+            <div className="mb-4"><Image src="/logo.png" alt="The ANTs logo" width={40} height={40} /></div>
             <h2 className="text-2xl font-bold text-white mb-2">Join <span className="font-brand text-on-dark">The ANTs</span></h2>
             <p className="text-white/90 text-sm leading-relaxed text-on-accent">
               Start your academic journey with tools built specifically for UK curriculum students worldwide.
@@ -221,7 +222,7 @@ export default function SignupForm() {
         <div className="flex-1 flex flex-col justify-center p-8">
           {/* Mobile logo */}
           <div className="lg:hidden text-center mb-6">
-            <div className="text-3xl mb-2">🐜</div>
+            <div className="mb-2"><Image src="/logo.png" alt="The ANTs logo" width={32} height={32} /></div>
           </div>
 
           <div className="mb-7 auth-header-accent">

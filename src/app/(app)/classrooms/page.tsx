@@ -48,7 +48,7 @@ export default function ClassroomsPage() {
 
   return (
     <div className="space-y-6">
-      <BackButton href="/dashboard" label="Back" />
+      <BackButton href="/dashboard" label="Back to Dashboard" />
       <ClassroomList
       classrooms={classrooms}
       getMemberCount={(classroomId) => (membersMap[classroomId] || []).length}

@@ -8,6 +8,7 @@
 // Dark palette is scoped to the .hp class — does not affect authenticated pages.
 // ──────────────────────────────────────────────────────────────────────────────
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, MessageSquare, Users, Sun, Moon, Home } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
@@ -493,7 +494,7 @@ export default function HomePage() {
                   marginBottom: 28,
                 }}
               >
-                🐜 Built for Myanmar students
+                <Image src="/logo.png" alt="" width={16} height={16} className="inline-block align-middle mr-1" /> Built for Myanmar students
               </div>
             </div>
 

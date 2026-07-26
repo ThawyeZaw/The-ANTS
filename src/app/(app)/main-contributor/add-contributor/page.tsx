@@ -85,7 +85,7 @@ export default function AddContributorPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <BackButton href="/dashboard" label="Back" />
+          <BackButton href="/dashboard" label="Back to Dashboard" />
           <div>
             <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
               <UserPlus className="w-6 h-6 text-amber-500" />

@@ -7,6 +7,7 @@
 // keyboard-navigable, and optimized for all viewport sizes.
 // ──────────────────────────────────────────────────────────────────────────────
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { Mail, MessageCircle, ArrowUpRight } from 'lucide-react';
 
@@ -113,7 +114,7 @@ export default function Footer() {
                     color: 'var(--hp-ink)',
                   }}
                 >
-                  🐜 <span className="font-brand">The ANTs</span>
+                  <Image src="/logo.png" alt="The ANTs logo" width={20} height={20} className="inline-block align-middle" /> <span className="font-brand">The ANTs</span>
                 </span>
               </div>
               <p

@@ -1241,6 +1241,23 @@ export interface OrgTeamMember {
   isAlumni?: boolean;
 }
 
+/** Form data for creating/editing an org team member */
+export interface OrgTeamMemberFormData {
+  name: string;
+  title: string;
+  bio: string;
+  photoUrl: string;
+  linkedProfileUsername?: string;
+  isAlumni?: boolean;
+}
+
+/** The organisation's mission statement stored as markdown */
+export interface OrgMission {
+  id: string;
+  content: string;
+  updatedAt: string;
+}
+
 /** A single timeline item — an event, milestone, or activity in The ANTS history */
 export interface OrgTimelineItem {
   id: string;

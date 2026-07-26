@@ -270,7 +270,7 @@ export default function ExploreClubsPage() {
 
         <div className="relative mx-auto max-w-6xl px-4 py-12 sm:py-16">
           <div className="mb-6">
-            <BackButton noFallback />
+            <BackButton noFallback label="Back to Explore" />
           </div>
 
           <div className="max-w-2xl">

@@ -83,7 +83,7 @@ export default function ClubDiscovery() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <BackButton href="/dashboard" label="Back" />
+      <BackButton href="/dashboard" label="Back to Dashboard" />
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-sm font-medium text-primary">Community</p>

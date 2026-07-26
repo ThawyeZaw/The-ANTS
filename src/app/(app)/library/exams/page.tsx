@@ -1,17 +1,14 @@
-import { Suspense } from 'react';
-import ExamsLibraryBrowser from '@/components/library/ExamsLibraryBrowser';
+'use client';
 
-export const metadata = {
-  title: 'Exams Library — The ANTs',
-  description: 'Browse exam dates and papers by board. Add IGCSE, A Level, IELTS and more exams directly to your countdown dashboard.',
-};
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
-export default function ExamsLibraryPage() {
-  return (
-    <main className="min-h-screen p-4 md:p-6 lg:p-8">
-      <Suspense>
-        <ExamsLibraryBrowser />
-      </Suspense>
-    </main>
-  );
+export default function ExamsRedirect() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace('/library?tab=exams');
+  }, [router]);
+
+  return null;
 }

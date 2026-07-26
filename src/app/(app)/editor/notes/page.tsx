@@ -49,7 +49,7 @@ function EditorGuard() {
           Browse the Library or request a role upgrade in Settings.
         </p>
         <div className="mt-6 flex items-center gap-3">
-          <BackButton href="/library" label="Go to Library" />
+          <BackButton href="/library" label="Back to Library" />
           <Link
             href="/settings"
             className="inline-flex items-center gap-2 rounded-xl bg-[var(--primary)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[var(--primary-hover)] transition-colors"

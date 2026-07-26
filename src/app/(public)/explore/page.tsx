@@ -1,21 +1,16 @@
-'use client';
-
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTs — Flashcards Library Shell Page
-// Owner: ZLH
+// The ANTs — /explore page
+// Unified explore hub: All · Profiles · Clubs with tab navigation.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useAuth } from '@/hooks/useAuth';
-import DeckLibrary from '@/components/flashcards/DeckLibrary';
+import type { Metadata } from 'next';
+import ExplorePageContent from '@/components/explore/ExplorePageContent';
 
-export default function FlashcardsPage() {
-  const { user } = useAuth();
+export const metadata: Metadata = {
+  title: 'Explore | The ANTs',
+  description: 'Discover students, teachers, contributors, and community clubs in The ANTs community.',
+};
 
-  if (!user) return null;
-
-  return (
-    <div className="space-y-6">
-      <DeckLibrary userId={user.profile.id} />
-    </div>
-  );
+export default function ExplorePage() {
+  return <ExplorePageContent />;
 }

@@ -20,7 +20,7 @@ export default function CountdownPage() {
 
   return (
     <div className="min-h-screen bg-[var(--background)] px-4 py-8 sm:px-6 lg:px-8 transition-colors space-y-6">
-      <BackButton href="/dashboard" label="Back" />
+      <BackButton href="/dashboard" label="Back to Dashboard" />
       <CountdownManager userId={user.id} />
     </div>
   );

@@ -1,17 +1,14 @@
-import { Suspense } from 'react';
-import FlashcardsLibraryBrowser from '@/components/library/FlashcardsLibraryBrowser';
+'use client';
 
-export const metadata = {
-  title: 'Flashcards Library — The ANTs',
-  description: 'Browse contributor-approved flashcard decks tagged by exam board and syllabus code. Add to your study collection instantly.',
-};
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
-export default function FlashcardsLibraryPage() {
-  return (
-    <main className="min-h-screen p-4 md:p-6 lg:p-8">
-      <Suspense>
-        <FlashcardsLibraryBrowser />
-      </Suspense>
-    </main>
-  );
+export default function FlashcardsRedirect() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace('/library?tab=flashcards');
+  }, [router]);
+
+  return null;
 }

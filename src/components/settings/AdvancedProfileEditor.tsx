@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import {
   User,
@@ -24,6 +24,9 @@ import {
   Camera,
   Music2,
   X,
+  Upload,
+  ImageIcon,
+  AlertCircle,
 } from 'lucide-react';
 import {
   Profile,
@@ -39,9 +42,8 @@ import {
   type ProfileWidth,
   type ProfileSectionLayout,
 } from '@/types';
-import { PRESET_AVATARS, makePresetAvatarKey, isPresetAvatar } from '@/constants/avatars';
 import AvatarImage from '@/components/ui/AvatarImage';
-import { cn } from '@/lib/utils';
+import { cn, getInitials } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import CertificationEditor from './CertificationEditor';
 import {
@@ -50,6 +52,7 @@ import {
   updateCertification,
   deleteCertification,
 } from '@/lib/mock/database';
+import { uploadAvatar } from '@/lib/avatar-upload';
 
 type TabId = 'basic' | 'social' | 'projects' | 'activities' | 'achievements' | 'grades' | 'certifications' | 'appearance' | 'settings';
 
@@ -60,6 +63,12 @@ export default function AdvancedProfileEditor() {
   const [activeTab, setActiveTab] = useState<TabId>('basic');
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // Avatar upload state
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarUploadError, setAvatarUploadError] = useState<string | null>(null);
+  const [avatarDragOver, setAvatarDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState<Partial<Profile>>({});
   const [certs, setCerts] = useState<ReturnType<typeof getUserCertifications>>([]);
@@ -125,6 +134,39 @@ export default function AdvancedProfileEditor() {
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     }
+  };
+
+  // ── Avatar upload handler ─────────────────────────────────────────────────
+  const handleAvatarUpload = async (file: File) => {
+    if (!user) return;
+    setAvatarUploading(true);
+    setAvatarUploadError(null);
+
+    const result = await uploadAvatar(file, user.profile.id);
+
+    if (result.success && result.url) {
+      setFormData(prev => ({ ...prev, avatar: result.url }));
+      // Immediately persist the avatar URL
+      await updateProfile({ avatar: result.url });
+    } else {
+      setAvatarUploadError(result.error || 'Upload failed.');
+    }
+
+    setAvatarUploading(false);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleAvatarUpload(file);
+    // Reset input so the same file can be re-selected
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setAvatarDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleAvatarUpload(file);
   };
 
   if (!user) return null;
@@ -308,94 +350,134 @@ export default function AdvancedProfileEditor() {
   ];
 
   return (
-    <div className="flex flex-col md:flex-row gap-6 max-w-6xl mx-auto">
-      {/* Sidebar Tabs */}
-      <div className="w-full md:w-64 shrink-0 space-y-1">
+    <div className="flex flex-col md:flex-row gap-4 md:gap-6 max-w-6xl mx-auto">
+      {/* Tabs — Horizontal scroll on mobile, sidebar on desktop */}
+      <div className="flex md:flex-col gap-1 md:w-56 lg:w-64 shrink-0 overflow-x-auto pb-1 md:pb-0 -mx-1 px-1 scrollbar-none md:sticky md:top-4 md:self-start">
         {tabs.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as TabId)}
             className={cn(
-              "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer",
+              "flex items-center gap-2 px-3 md:px-4 py-2.5 md:py-3 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer whitespace-nowrap shrink-0",
               activeTab === tab.id
                 ? "bg-primary text-primary-foreground shadow-md"
                 : "text-foreground-secondary hover:bg-background-secondary hover:text-foreground"
             )}
           >
             {tab.icon}
-            {tab.label}
+            <span className="hidden sm:inline">{tab.label}</span>
           </button>
         ))}
       </div>
 
       {/* Editor Content */}
-      <div className="flex-1 bg-background-card border border-border rounded-2xl p-6 shadow-sm min-h-[600px] flex flex-col">
+      <div className="flex-1 bg-background-card border border-border rounded-2xl p-4 sm:p-6 shadow-sm min-h-[600px] flex flex-col">
         <div className="flex-1">
           {activeTab === 'basic' && (
             <div className="space-y-5 animate-fade-in">
               <h2 className="text-xl font-bold text-foreground mb-4">Basic Information</h2>
               
-              {/* Avatar Picker */}
+              {/* Avatar Upload Section */}
               <div className="mb-6 pb-6 border-b border-border">
-                <label className="text-sm font-medium text-foreground-muted mb-3 block">Avatar</label>
-                <div className="flex items-start gap-6">
-                  <AvatarImage avatar={formData.avatar || ''} name={formData.name || 'You'} size="xl" />
-                  <div className="flex-1 min-w-0">
-                    <div className="grid grid-cols-8 gap-2 mb-3">
-                      {PRESET_AVATARS.map(preset => {
-                        const presetKey = makePresetAvatarKey(preset.key);
-                        const isSelected = formData.avatar === presetKey;
-                        return (
-                          <button
-                            key={preset.key}
-                            onClick={() => setFormData(p => ({ ...p, avatar: presetKey }))}
-                            className={`relative p-2 rounded-xl border-2 transition-all duration-200 cursor-pointer flex flex-col items-center gap-1 ${
-                              isSelected
-                                ? 'border-primary ring-2 ring-primary/20 bg-primary/5'
-                                : 'border-border hover:border-foreground-muted bg-background-secondary'
-                            }`}
-                            title={preset.name}
-                          >
-                            <div className={`h-10 w-10 rounded-full bg-gradient-to-br ${preset.gradient} flex items-center justify-center text-xl`}>
-                              {preset.emoji}
-                            </div>
-                            <span className="text-[10px] text-foreground-muted truncate w-full text-center">{preset.name}</span>
-                            {isSelected && (
-                              <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                                <Check className="h-3 w-3 text-primary-foreground" />
-                              </div>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="h-px flex-1 bg-border" />
-                      <span className="text-xs text-foreground-muted font-medium">OR</span>
-                      <div className="h-px flex-1 bg-border" />
-                    </div>
-                    <div className="mt-3">
-                      <label className="text-xs text-foreground-muted block mb-1.5">Custom Image URL</label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={formData.avatar && !isPresetAvatar(formData.avatar) ? formData.avatar : ''}
-                          onChange={(e) => {
-                            const val = e.target.value.trim();
-                            setFormData(p => ({ ...p, avatar: val || '' }));
-                          }}
-                          className="flex-1 px-3 py-2 rounded-lg bg-background-secondary border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all font-mono text-xs"
-                          placeholder="https://example.com/avatar.jpg"
-                        />
-                        {formData.avatar && !isPresetAvatar(formData.avatar) && (
-                          <button
-                            onClick={() => setFormData(p => ({ ...p, avatar: '' }))}
-                            className="px-3 py-2 rounded-lg border border-border text-foreground-muted hover:text-error transition-colors text-sm cursor-pointer"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        )}
+                <label className="text-sm font-medium text-foreground-muted mb-3 block">Profile Picture</label>
+                <div className="flex flex-col sm:flex-row items-center gap-6">
+                  {/* Current Avatar Preview */}
+                  <div className="relative shrink-0">
+                    {formData.avatar ? (
+                      <img
+                        src={formData.avatar}
+                        alt="Avatar"
+                        className="h-20 w-20 rounded-full object-cover ring-2 ring-primary/20"
+                      />
+                    ) : (
+                      <div className="h-20 w-20 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-2xl font-bold ring-2 ring-primary/20">
+                        {getInitials(formData.name || 'You')}
                       </div>
+                    )}
+                    {/* Uploading overlay */}
+                    {avatarUploading && (
+                      <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
+                        <Loader2 className="h-6 w-6 text-white animate-spin" />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex-1 min-w-0 w-full">
+                    {/* Drop zone */}
+                    <div
+                      onDragOver={(e) => { e.preventDefault(); setAvatarDragOver(true); }}
+                      onDragLeave={() => setAvatarDragOver(false)}
+                      onDrop={handleDrop}
+                      className={cn(
+                        'relative border-2 border-dashed rounded-xl p-4 text-center transition-all duration-200 cursor-pointer',
+                        avatarDragOver
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-primary/40 hover:bg-background-secondary'
+                      )}
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                      />
+                      {avatarUploading ? (
+                        <div className="flex flex-col items-center gap-2 py-2">
+                          <Loader2 className="h-6 w-6 text-primary animate-spin" />
+                          <p className="text-sm text-foreground-muted">Uploading...</p>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-2 py-2">
+                          <div className="p-2 rounded-full bg-primary/10">
+                            <Upload className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-foreground">
+                              {avatarDragOver ? 'Drop image here' : 'Click or drag to upload'}
+                            </p>
+                            <p className="text-xs text-foreground-muted mt-0.5">
+                              JPEG or PNG, max 2MB
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Upload error */}
+                    {avatarUploadError && (
+                      <div className="flex items-center gap-2 mt-2 text-sm text-error">
+                        <AlertCircle className="h-4 w-4 shrink-0" />
+                        <span>{avatarUploadError}</span>
+                      </div>
+                    )}
+
+                    {/* Divider + URL fallback */}
+                    <div className="flex items-center gap-3 mt-3">
+                      <div className="h-px flex-1 bg-border" />
+                      <span className="text-xs text-foreground-muted font-medium">OR use URL</span>
+                      <div className="h-px flex-1 bg-border" />
+                    </div>
+                    <div className="flex gap-2 mt-3">
+                      <input
+                        type="text"
+                        value={formData.avatar || ''}
+                        onChange={(e) => {
+                          setFormData(p => ({ ...p, avatar: e.target.value.trim() }));
+                          setAvatarUploadError(null);
+                        }}
+                        className="flex-1 px-3 py-2 rounded-lg bg-background-secondary border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all font-mono text-xs"
+                        placeholder="https://example.com/avatar.jpg"
+                      />
+                      {formData.avatar && (
+                        <button
+                          onClick={() => setFormData(p => ({ ...p, avatar: '' }))}
+                          className="px-3 py-2 rounded-lg border border-border text-foreground-muted hover:text-error transition-colors text-sm cursor-pointer shrink-0"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1009,8 +1091,8 @@ export default function AdvancedProfileEditor() {
         </div>
 
         {/* Action Bar */}
-        <div className="mt-8 pt-4 border-t border-border flex items-center justify-between">
-           <div className="flex gap-2">
+        <div className="mt-8 pt-4 border-t border-border flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+           <div className="flex gap-2 justify-center sm:justify-start">
              <button
                onClick={() => router.push(`/profile/${user.profile.username}`)}
                className="px-4 py-2 text-sm font-medium text-foreground-secondary hover:text-foreground transition-colors cursor-pointer"
@@ -1018,7 +1100,7 @@ export default function AdvancedProfileEditor() {
                View Public Profile
              </button>
            </div>
-           <div className="flex items-center gap-3">
+           <div className="flex items-center justify-center sm:justify-end gap-3">
             {saveSuccess && (
               <span className="flex items-center gap-1 text-sm text-success font-medium animate-fade-in">
                 <Check className="h-4 w-4" /> Saved

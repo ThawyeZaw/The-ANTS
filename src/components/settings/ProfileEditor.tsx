@@ -1,28 +1,30 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTs — Profile Editor Component
+// The ANTS — Profile Editor Component
 // Inline editable profile form for the Settings page.
-// Replaces the read-only AccountInfo component.
+// Supports avatar upload via Supabase Storage and inline field editing.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   User,
   Mail,
   FileText,
   Briefcase,
-  Globe,
   Save,
   Loader2,
   Check,
   Pencil,
+  Upload,
+  AlertCircle,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
 import { RoleBadge } from '@/components/ui/Badge';
 import { cn, getInitials } from '@/lib/utils';
 import type { SocialLinkItem } from '@/types';
+import { uploadAvatar } from '@/lib/avatar-upload';
 
 interface ProfileFormData {
   name: string;
@@ -38,6 +40,12 @@ export default function ProfileEditor() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Avatar upload state
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarUploadError, setAvatarUploadError] = useState<string | null>(null);
+  const [avatarDragOver, setAvatarDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState<ProfileFormData>({
     name: '',
@@ -58,12 +66,12 @@ export default function ProfileEditor() {
     if (user) {
       const data: ProfileFormData = {
         name: user.profile.name,
-    bio: user.profile.bio || '',
-    title: user.profile.title || '',
-    socialLinks: user.profile.socialLinks ? [...user.profile.socialLinks] : [],
-  };
-  setFormData(data);
-  setOriginalData(data);
+        bio: user.profile.bio || '',
+        title: user.profile.title || '',
+        socialLinks: user.profile.socialLinks ? [...user.profile.socialLinks] : [],
+      };
+      setFormData(data);
+      setOriginalData(data);
     }
   }, [user]);
 
@@ -99,32 +107,140 @@ export default function ProfileEditor() {
     setSaveError(null);
   };
 
+  // ── Avatar upload handler ─────────────────────────────────────────────────
+  const handleAvatarUpload = async (file: File) => {
+    if (!user) return;
+    setAvatarUploading(true);
+    setAvatarUploadError(null);
+
+    const result = await uploadAvatar(file, user.profile.id);
+
+    if (result.success && result.url) {
+      await updateProfile({ avatar: result.url });
+    } else {
+      setAvatarUploadError(result.error || 'Upload failed.');
+    }
+
+    setAvatarUploading(false);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleAvatarUpload(file);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setAvatarDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleAvatarUpload(file);
+  };
+
   if (!user) return null;
+
+  const currentAvatar = user.profile.avatar;
 
   return (
     <div className="space-y-5">
       {/* Avatar + name header */}
-      <div className="flex items-center gap-4 pb-5 border-b border-border">
-        <div className="relative group">
-          <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-xl font-bold shadow-lg ring-2 ring-primary/20">
-            {getInitials(user.profile.name)}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 pb-5 border-b border-border">
+        <div className="relative shrink-0 self-center sm:self-start">
+          {/* Current Avatar */}
+          <div className="relative">
+            {currentAvatar ? (
+              <img
+                src={currentAvatar}
+                alt="Avatar"
+                className="h-16 w-16 rounded-full object-cover ring-2 ring-primary/20"
+              />
+            ) : (
+              <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-xl font-bold shadow-lg ring-2 ring-primary/20">
+                {getInitials(user.profile.name)}
+              </div>
+            )}
+            {/* Uploading overlay */}
+            {avatarUploading && (
+              <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
+                <Loader2 className="h-5 w-5 text-white animate-spin" />
+              </div>
+            )}
           </div>
         </div>
-        <div className="flex-1">
+
+        <div className="flex-1 min-w-0 text-center sm:text-left">
           <p className="font-semibold text-lg text-foreground">{user.profile.name}</p>
           <p className="text-sm text-foreground-muted">@{user.profile.username}</p>
-          <div className="mt-1.5">{role && <RoleBadge role={role} />}</div>
+          <div className="mt-1.5 flex justify-center sm:justify-start">{role && <RoleBadge role={role} />}</div>
         </div>
+
         {!isEditing && (
           <button
             onClick={() => setIsEditing(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border text-sm font-medium text-foreground-secondary hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all duration-200 cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border text-sm font-medium text-foreground-secondary hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all duration-200 cursor-pointer self-center sm:self-start"
           >
             <Pencil className="h-3.5 w-3.5" />
             Edit
           </button>
         )}
       </div>
+
+      {/* Avatar upload section (visible when editing) */}
+      {isEditing && (
+        <div className="pb-5 border-b border-border">
+          <label className="text-sm font-medium text-foreground-muted mb-3 block">Profile Picture</label>
+
+          {/* Drop zone */}
+          <div
+            onDragOver={(e) => { e.preventDefault(); setAvatarDragOver(true); }}
+            onDragLeave={() => setAvatarDragOver(false)}
+            onDrop={handleDrop}
+            className={cn(
+              'relative border-2 border-dashed rounded-xl p-4 text-center transition-all duration-200 cursor-pointer',
+              avatarDragOver
+                ? 'border-primary bg-primary/5'
+                : 'border-border hover:border-primary/40 hover:bg-background-secondary'
+            )}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            {avatarUploading ? (
+              <div className="flex flex-col items-center gap-2 py-2">
+                <Loader2 className="h-6 w-6 text-primary animate-spin" />
+                <p className="text-sm text-foreground-muted">Uploading...</p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-2 py-2">
+                <div className="p-2 rounded-full bg-primary/10">
+                  <Upload className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    {avatarDragOver ? 'Drop image here' : 'Click or drag to upload'}
+                  </p>
+                  <p className="text-xs text-foreground-muted mt-0.5">
+                    JPEG or PNG, max 2MB
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Upload error */}
+          {avatarUploadError && (
+            <div className="flex items-center gap-2 mt-2 text-sm text-error">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{avatarUploadError}</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Fields */}
       <div className="space-y-4">
@@ -212,12 +328,12 @@ export default function ProfileEditor() {
 
       {/* Action Buttons */}
       {isEditing && (
-        <div className="flex items-center gap-3 pt-4 border-t border-border">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-4 border-t border-border">
           <button
             onClick={handleSave}
             disabled={!isDirty || isSaving}
             className={cn(
-              'flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer',
+              'flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer',
               isDirty
                 ? 'bg-primary text-primary-foreground hover:bg-primary-hover shadow-md'
                 : 'bg-background-secondary text-foreground-muted cursor-not-allowed'
@@ -232,7 +348,7 @@ export default function ProfileEditor() {
           </button>
           <button
             onClick={handleCancel}
-            className="px-4 py-2.5 rounded-xl text-sm font-medium text-foreground-secondary hover:text-foreground hover:bg-background-secondary border border-border transition-all duration-200 cursor-pointer"
+            className="px-4 py-2.5 rounded-xl text-sm font-medium text-foreground-secondary hover:text-foreground hover:bg-background-secondary border border-border transition-all duration-200 cursor-pointer text-center"
           >
             Cancel
           </button>
