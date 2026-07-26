@@ -118,7 +118,7 @@ async function buildTimetableNotifications(
   windowEnd: Date
 ): Promise<PendingNotification[]> {
   const results: PendingNotification[] = [];
-  const lookAhead = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const lookAhead = new Date(now.getTime() + 8 * 24 * 60 * 60 * 1000); // 8 days to cover 1-week-early reminders
 
   const { data: events } = await (supabase
     .from('timetable_events')
@@ -134,25 +134,42 @@ async function buildTimetableNotifications(
     const profile = profiles.find((p) => p.id === event.user_id);
     if (!profile?.telegram_chat_id) continue;
 
-    const startDate = new Date(event.start_time as string);
-    const offset = (event.reminder_minutes as number) ?? 0;
-    const effectiveTime = new Date(startDate.getTime() - offset * 60 * 1000);
+    // Skip if user has timetable notifications explicitly disabled
+    const timetablePrefs = profile.notification_preferences?.timetable;
+    if (timetablePrefs && timetablePrefs.enabled === false) continue;
 
-    if (effectiveTime < now || effectiveTime > windowEnd) continue;
+    const startDate = new Date(event.start_time as string);
+    // Use per-event reminder_minutes if set, otherwise fall back to user's timetable preferences
+    const explicitOffset = event.reminder_minutes as number | null;
+    const userOffsets = getReminders(profile.notification_preferences, 'timetable');
+    const offsets = explicitOffset != null ? [explicitOffset] : userOffsets;
+    if (offsets.length === 0) continue;
+
+    const effectiveTimes = offsets.map((o) => ({
+      offset: o,
+      effectiveTime: new Date(startDate.getTime() - o * 60 * 1000),
+    }));
+    const matching = effectiveTimes.filter(
+      (et) => et.effectiveTime >= now && et.effectiveTime <= windowEnd
+    );
+    if (matching.length === 0) continue;
 
     const { timeStr, dateStr } = formatTime(startDate);
-    let msg = `🔔 <b>${event.title}</b>\n${dateStr} · ${timeStr}`;
-    if (event.location) msg += `\n📍 ${event.location}`;
-    if (offset > 0) msg += `\n⏰ ${offsetLabel(offset)} early`;
 
-    results.push({
-      chatId: profile.telegram_chat_id,
-      message: msg,
-      sourceType: 'timetable_event',
-      sourceId: event.id as string,
-      userId: profile.id,
-      offset,
-    });
+    for (const { offset: matchedOffset } of matching) {
+      let msg = `🔔 <b>${event.title}</b>\n${dateStr} · ${timeStr}`;
+      if (event.location) msg += `\n📍 ${event.location}`;
+      if (matchedOffset > 0) msg += `\n⏰ ${offsetLabel(matchedOffset)} early`;
+
+      results.push({
+        chatId: profile.telegram_chat_id,
+        message: msg,
+        sourceType: 'timetable_event',
+        sourceId: event.id as string,
+        userId: profile.id,
+        offset: matchedOffset,
+      });
+    }
   }
 
   return results;

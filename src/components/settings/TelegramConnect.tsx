@@ -6,7 +6,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState } from 'react';
-import { Send, Check, ExternalLink, Bell, BellOff } from 'lucide-react';
+import { Send, Check, ExternalLink, Bell, BellOff, Copy, CheckCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -33,12 +33,13 @@ interface TelegramConnectProps {
 // ── Reminder options ──────────────────────────────────────────────────────────
 
 const REMINDER_OPTIONS = [
-  { value: 15, label: '15 min before' },
+  { value: 0, label: 'On time' },
+  { value: 10, label: '10 min before' },
+  { value: 30, label: '30 min before' },
   { value: 60, label: '1 hour before' },
   { value: 1440, label: '1 day before' },
   { value: 4320, label: '3 days before' },
   { value: 10080, label: '1 week before' },
-  { value: 43200, label: '1 month before' },
 ];
 
 const NOTIFICATION_TYPES = [
@@ -46,7 +47,7 @@ const NOTIFICATION_TYPES = [
     key: 'timetable' as const,
     label: 'Timetable Events',
     description: 'Your scheduled classes and study sessions',
-    availableReminders: [15, 60],
+    availableReminders: [0, 10, 30, 60, 1440, 4320, 10080],
   },
   {
     key: 'assignments' as const,
@@ -58,7 +59,7 @@ const NOTIFICATION_TYPES = [
     key: 'exams' as const,
     label: 'Exam Countdowns',
     description: 'Upcoming exam dates',
-    availableReminders: [1440, 10080, 43200],
+    availableReminders: [1440, 4320, 10080],
   },
   {
     key: 'quizzes' as const,
@@ -78,9 +79,12 @@ export default function TelegramConnect({
 }: TelegramConnectProps) {
   const [isConnecting, setIsConnecting] = useState(false);
   const [showPrefs, setShowPrefs] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'TheANTS_bot';
   const isConnected = !!telegramChatId;
+
+  const startCommand = `/start ${username ?? ''}`;
 
   const deepLink = username
     ? `https://t.me/${botUsername}?start=${encodeURIComponent(username)}`
@@ -90,6 +94,24 @@ export default function TelegramConnect({
     setIsConnecting(true);
     window.open(deepLink, '_blank', 'noopener,noreferrer');
     setTimeout(() => setIsConnecting(false), 2000);
+  };
+
+  const handleCopyCommand = async () => {
+    try {
+      await navigator.clipboard.writeText(startCommand);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback for older browsers
+      const textarea = document.createElement('textarea');
+      textarea.value = startCommand;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   const toggleNotification = (key: keyof NotificationPreferences) => {
@@ -248,12 +270,50 @@ export default function TelegramConnect({
           </div>
         ) : (
           <div className="space-y-3">
-            {!username && (
+            {!username ? (
               <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
                 <span className="text-sm text-amber-700 dark:text-amber-400">
                   Set a username in your profile first before linking Telegram.
                 </span>
               </div>
+            ) : (
+              <>
+                {/* Show username and copyable command */}
+                <div className="p-4 rounded-xl bg-background-secondary border border-border space-y-3">
+                  <div>
+                    <p className="text-xs text-foreground-muted mb-1">Your username</p>
+                    <p className="text-sm font-mono font-medium text-foreground">@{username}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 px-3 py-2 rounded-lg bg-background text-sm font-mono text-foreground border border-border">
+                      {startCommand}
+                    </code>
+                    <button
+                      onClick={handleCopyCommand}
+                      className="flex-shrink-0 p-2 rounded-lg bg-background border border-border hover:bg-background-hover transition-colors cursor-pointer"
+                      title="Copy command"
+                    >
+                      {copied ? (
+                        <CheckCheck className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Copy className="h-4 w-4 text-foreground-secondary" />
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-xs text-foreground-muted">
+                    Send this command to{' '}
+                    <a
+                      href={`https://t.me/${botUsername}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline"
+                    >
+                      @{botUsername}
+                    </a>{' '}
+                    on Telegram to link your account.
+                  </p>
+                </div>
+              </>
             )}
             <button
               onClick={handleConnect}
@@ -266,13 +326,8 @@ export default function TelegramConnect({
               )}
             >
               <ExternalLink className="h-4 w-4" />
-              {isConnecting ? 'Opening Telegram...' : 'Connect Telegram Alerts'}
+              {isConnecting ? 'Opening Telegram...' : 'Open Telegram Bot'}
             </button>
-            <p className="text-xs text-foreground-muted">
-              Clicking the button will open Telegram. Send the pre-filled{' '}
-              <code className="px-1 py-0.5 rounded bg-background-secondary text-xs">/start</code> command
-              to the bot to complete linking.
-            </p>
           </div>
         )}
       </div>

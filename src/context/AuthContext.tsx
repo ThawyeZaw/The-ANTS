@@ -74,7 +74,7 @@ interface AuthContextValue {
   ) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   updateProfile: (
-    data: Partial<Pick<Profile, 'name' | 'bio' | 'title' | 'socialLinks' | 'avatar' | 'isPublic' | 'projects' | 'activities' | 'achievements' | 'pinnedItemId' | 'sectionVisibility' | 'sectionOrder' | 'spacing' | 'width' | 'sectionLayout' | 'showClubMemberships' | 'showClubProjects' | 'showClubActivity' | 'theme'>>
+    data: Partial<Pick<Profile, 'name' | 'bio' | 'title' | 'socialLinks' | 'avatar' | 'isPublic' | 'projects' | 'activities' | 'achievements' | 'pinnedItemId' | 'sectionVisibility' | 'sectionOrder' | 'spacing' | 'width' | 'sectionLayout' | 'showClubMemberships' | 'showClubProjects' | 'showClubActivity' | 'theme' | 'notificationPreferences'>>
   ) => Promise<{ success: boolean; error?: string }>;
   updateRole: (newRole: UserRole) => Promise<{ success: boolean; error?: string }>;
   completeOnboarding: (data: {
@@ -241,6 +241,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data.showClubProjects !== undefined) updates.show_club_projects = data.showClubProjects;
       if (data.showClubActivity !== undefined) updates.show_club_activity = data.showClubActivity;
       if (data.theme !== undefined) updates.theme = data.theme as unknown as TablesUpdate<'profiles'>['theme'];
+      if (data.notificationPreferences !== undefined) updates.notification_preferences = data.notificationPreferences as unknown as TablesUpdate<'profiles'>['notification_preferences'];
 
       const { error } = await supabase
         .from('profiles')

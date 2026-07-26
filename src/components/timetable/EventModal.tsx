@@ -503,12 +503,9 @@ export default function EventModal({
             >
               <option value="">No reminder</option>
               <option value="0">On time</option>
-              <option value="5">5 minutes early</option>
               <option value="10">10 minutes early</option>
-              <option value="15">15 minutes early</option>
               <option value="30">30 minutes early</option>
               <option value="60">1 hour early</option>
-              <option value="120">2 hours early</option>
               <option value="1440">1 day early</option>
               <option value="4320">3 days early</option>
               <option value="10080">1 week early</option>
