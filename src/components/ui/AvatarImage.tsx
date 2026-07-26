@@ -5,6 +5,8 @@
 // Renders preset illustrated avatars or uploaded images or fallback initials.
 // ──────────────────────────────────────────────────────────────────────────────
 
+import { useState } from 'react';
+import Image from 'next/image';
 import { isPresetAvatar, getPresetAvatar, PRESET_AVATARS } from '@/constants/avatars';
 import { getInitials } from '@/lib/utils';
 
@@ -33,9 +35,26 @@ const EMOJI_SIZE_MAP = {
   xl: 'text-6xl',
 };
 
+/** Pixel sizes mapped to Next.js Image `sizes` attribute */
+const IMAGE_PX_SIZES: Record<string, string> = {
+  sm: '40px',
+  md: '64px',
+  lg: '96px',
+  xl: '128px',
+};
+
+/** Initials fallback font size classes */
+const INITIALS_SIZE_MAP: Record<string, string> = {
+  sm: 'text-sm',
+  md: 'text-lg',
+  lg: 'text-3xl',
+  xl: 'text-4xl',
+};
+
 export default function AvatarImage({ avatar, name, size = 'md', className = '' }: AvatarImageProps) {
   const sizeClass = SIZE_MAP[size];
   const emojiSizeClass = EMOJI_SIZE_MAP[size];
+  const [imageError, setImageError] = useState(false);
 
   // Preset avatar
   if (avatar && isPresetAvatar(avatar)) {
@@ -52,26 +71,33 @@ export default function AvatarImage({ avatar, name, size = 'md', className = '' 
   }
 
   // Uploaded image
-  if (avatar) {
+  if (avatar && !imageError) {
     return (
-      <div className={`shrink-0 rounded-full overflow-hidden ${sizeClass} ${className}`}>
-        <img
+      <div className={`shrink-0 rounded-full overflow-hidden relative ${sizeClass} ${className}`}>
+        <Image
           src={avatar}
           alt={name}
-          className="h-full w-full object-cover"
-          onError={(e) => {
-            // Fallback to initials on broken image
-            const parent = (e.target as HTMLElement).parentElement;
-            if (parent) {
-              parent.innerHTML = `<div class="h-full w-full rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold ${size === 'sm' ? 'text-sm' : size === 'md' ? 'text-lg' : size === 'lg' ? 'text-3xl' : 'text-4xl'}">${getInitials(name)}</div>`;
-            }
-          }}
+          fill
+          className="object-cover"
+          sizes={IMAGE_PX_SIZES[size]}
+          onError={() => setImageError(true)}
         />
       </div>
     );
   }
 
-  // Fallback initials
+  // Uploaded image that failed — fallback to initials
+  if (avatar && imageError) {
+    return (
+      <div
+        className={`shrink-0 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold shadow-lg ring-2 ring-primary/20 ${sizeClass} ${INITIALS_SIZE_MAP[size]} ${className}`}
+      >
+        {getInitials(name)}
+      </div>
+    );
+  }
+
+  // Fallback initials (no avatar provided)
   return (
     <div
       className={`shrink-0 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold shadow-lg ring-2 ring-primary/20 ${sizeClass} ${className}`}

@@ -1,13 +1,25 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { useCountdown } from '@/hooks/useCountdown';
 import { CountdownCard } from './CountdownCard';
-import { AddCountdownModal } from './AddCountdownModal';
 import { Plus, Timer, BookMarked, BookOpen, Calendar } from 'lucide-react';
 import Link from 'next/link';
 import { useLessonContext, type SubjectCountdown } from '@/context/LessonContext';
 import { createClient } from '@/lib/supabase/client';
+
+const AddCountdownModal = dynamic(() => import('./AddCountdownModal').then(m => ({ default: m.AddCountdownModal })), {
+  loading: () => (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--foreground)]/10 backdrop-blur-sm"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <div className="w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--background-card)] p-6 animate-shimmer" style={{ minHeight: 400 }} />
+    </div>
+  ),
+});
 
 interface CountdownManagerProps {
   userId: string;

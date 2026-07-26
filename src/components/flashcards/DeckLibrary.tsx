@@ -6,16 +6,30 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { Search, Plus, Layers, Sparkles, Filter as FilterIcon } from 'lucide-react';
 import type { Deck } from '@/types';
 import DeckCard from './DeckCard';
-import CreateDeckModal from './CreateDeckModal';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { BookMarked } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useLessonContext } from '@/context/LessonContext';
 import { cn } from '@/lib/utils';
+import AppRevealSection from '@/components/ui/AppRevealSection';
+
+const CreateDeckModal = dynamic(() => import('./CreateDeckModal'), {
+  loading: () => (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <div className="w-full max-w-lg rounded-2xl border border-[var(--border)] bg-[var(--background-card)] p-6 animate-shimmer" style={{ minHeight: 500 }} />
+    </div>
+  ),
+});
 
 interface DeckLibraryProps {
   userId: string;
@@ -215,7 +229,7 @@ export default function DeckLibrary({ userId }: DeckLibraryProps) {
           <div className="h-8 w-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
         </div>
       ) : filteredDecks.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <AppRevealSection className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredDecks.map(deck => (
             <DeckCard
               key={deck.id}
@@ -228,7 +242,7 @@ export default function DeckLibrary({ userId }: DeckLibraryProps) {
               onDelete={handleDelete}
             />
           ))}
-        </div>
+        </AppRevealSection>
       ) : (
         <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-[var(--border)] bg-[var(--background-card)] p-12 text-center">
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--background-secondary)] text-[var(--foreground-muted)]">

@@ -7,10 +7,22 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { ExternalLink } from 'lucide-react';
 import type { NoteBlock } from '@/types';
-import AnimationBlockComponent from './AnimationBlock';
 import { useKaTeXStyles } from '@/hooks/useKaTeXStyles';
+
+const AnimationBlockComponent = dynamic(() => import('./AnimationBlock'), {
+  ssr: false,
+  loading: () => (
+    <div
+      className="my-5 flex flex-col items-center gap-2 animate-shimmer rounded-2xl border border-[var(--border)] bg-[var(--background-secondary)]"
+      style={{ width: '100%', maxWidth: 400, height: 200 }}
+      aria-live="polite"
+      aria-busy="true"
+    />
+  ),
+});
 
 interface BlockPreviewProps {
   block: NoteBlock;

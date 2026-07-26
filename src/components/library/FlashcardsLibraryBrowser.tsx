@@ -6,7 +6,7 @@
 // Contributors can submit their decks. All users can add to their workspace.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Search, Filter, Layers, Globe, Sparkles,
@@ -23,6 +23,10 @@ import {
 import { QUALIFICATION_REGISTRY } from '@/constants/qualifications';
 import { cn } from '@/lib/utils';
 import type { Deck } from '@/types';
+import AppRevealSection from '@/components/ui/AppRevealSection';
+import Button from '@/components/ui/Button';
+
+const ITEMS_PER_PAGE = 12;
 
 // ── Board tag badge ───────────────────────────────────────────────────────────
 
@@ -144,6 +148,13 @@ export default function FlashcardsLibraryBrowser() {
   const [selectedBoard, setSelectedBoard] = useState<string>('all');
   const [addingId, setAddingId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setVisibleCount(ITEMS_PER_PAGE);
+  }, [smartFilter, selectedBoard, searchQuery]);
 
   const showToast = (message: string, type: 'success' | 'error') => {
     setToast({ message, type });
@@ -223,6 +234,18 @@ export default function FlashcardsLibraryBrowser() {
   const handleStudy = (deckId: string) => {
     router.push(`/flashcards/${deckId}?mode=study`);
   };
+
+  const handleLoadMore = () => {
+    setIsLoadingMore(true);
+    // Simulate async load delay for correct pattern
+    setTimeout(() => {
+      setVisibleCount(prev => prev + ITEMS_PER_PAGE);
+      setIsLoadingMore(false);
+    }, 400);
+  };
+
+  const visibleDecks = filteredDecks.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredDecks.length;
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
@@ -315,18 +338,38 @@ export default function FlashcardsLibraryBrowser() {
 
       {/* Grid */}
       {filteredDecks.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {filteredDecks.map(deck => (
-            <LibraryDeckCard
-              key={deck.id}
-              deck={deck}
-              isOwned={ownedDeckIds.has(deck.id)}
-              onAddToWorkspace={handleAddToWorkspace}
-              onStudy={handleStudy}
-              isAdding={addingId === deck.id}
-            />
-          ))}
-        </div>
+        <>
+          <AppRevealSection className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {visibleDecks.map(deck => (
+              <LibraryDeckCard
+                key={deck.id}
+                deck={deck}
+                isOwned={ownedDeckIds.has(deck.id)}
+                onAddToWorkspace={handleAddToWorkspace}
+                onStudy={handleStudy}
+                isAdding={addingId === deck.id}
+              />
+            ))}
+          </AppRevealSection>
+
+          {/* Load More / End state */}
+          <div className="flex flex-col items-center gap-3 pt-2">
+            {hasMore ? (
+              <Button
+                variant="secondary"
+                isLoading={isLoadingMore}
+                onClick={handleLoadMore}
+                aria-live="polite"
+              >
+                Load More Decks
+              </Button>
+            ) : (
+              <p className="text-sm text-[var(--foreground-muted)] py-2">
+                You've browsed all {filteredDecks.length} decks. Time to start studying!
+              </p>
+            )}
+          </div>
+        </>
       ) : (
         <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-[var(--border)] bg-[var(--background-card)] p-16 text-center">
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--background-secondary)] text-[var(--foreground-muted)]">

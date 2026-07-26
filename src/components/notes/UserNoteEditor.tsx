@@ -8,6 +8,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -19,9 +20,19 @@ import type { NoteBlock, UserNote } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 import { createClient } from '@/lib/supabase/client';
 import { useLessonContext } from '@/context/LessonContext';
-import BlockEditor from './BlockEditor';
 import BlockPreview from './BlockPreview';
 import AIPromptGenerator from './AIPromptGenerator';
+
+const BlockEditor = dynamic(() => import('./BlockEditor'), {
+  loading: () => (
+    <div
+      className="flex flex-col gap-3 animate-shimmer rounded-2xl"
+      style={{ minHeight: 200 }}
+      aria-live="polite"
+      aria-busy="true"
+    />
+  ),
+});
 
 type ViewMode = 'editor' | 'preview' | 'split';
 

@@ -25,6 +25,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 import { Eye, X, AlertCircle, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -33,11 +34,32 @@ import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
 import { useNoteEditor } from '@/hooks/useNotes';
 import EditorToolbar from './EditorToolbar';
-import BlockEditor from './BlockEditor';
 import BlockPreview from './BlockPreview';
 import AIPromptGenerator from './AIPromptGenerator';
 import MetadataPanel from './MetadataPanel';
-import NoteSubmitModal from './NoteSubmitModal';
+
+const BlockEditor = dynamic(() => import('./BlockEditor'), {
+  loading: () => (
+    <div
+      className="flex flex-col gap-3 animate-shimmer rounded-2xl"
+      style={{ minHeight: 200 }}
+      aria-live="polite"
+      aria-busy="true"
+    />
+  ),
+});
+
+const NoteSubmitModal = dynamic(() => import('./NoteSubmitModal'), {
+  loading: () => (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <div className="w-full max-w-md bg-background-card border border-border rounded-2xl p-6 animate-shimmer" style={{ minHeight: 240 }} />
+    </div>
+  ),
+});
 
 type ViewMode = 'editor' | 'preview' | 'split';
 
