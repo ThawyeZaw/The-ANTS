@@ -33,13 +33,13 @@ Privacy and access boundaries are strictly enforced. There are **four roles**. A
 ## 3. Directory Isolation Boundaries
 Developers are strictly confined to their designated workspace paths. You are prohibited from editing files outside your assigned directories. The **Project Manager (PM)** owns all shared infrastructure.
 
+Refer to [`AGENTS.md`](./AGENTS.md) for the definitive, up-to-date ownership map. The current assignment is:
+
 | Developer | Feature Ownership |
 |---|---|
-| `PPP` | Smart Timetable, Pomodoro Timer |
-| `BMK` & `ABC` | Lesson Tracker, Course Manager, Curriculum & Notes Editor, Classrooms |
-| `ZLH` | Flashcard Creator & Library, Exam Countdown, Exam Data Editor |
-| `AKT` | Grade Calculator, Clubs |
-| **PM (`TYZ`)** | Shared Infrastructure, Public Home Page, Login & Signup, Role Landing Pages, NavBar, Contributor Profiles, Review Queue, Explore Pages, Public Profiles, Role Upgrade System |
+| **PM (`TYZ`)** | Shared Infrastructure, Public Home Page, Login & Signup, Role Landing Pages, NavBar, Footer, RelatedPagesSidebar, Settings, Contributor Profiles, Review Queue, Explore Pages, Public Profiles, Role Upgrade System, Clubs, Classrooms, Profile components, About page |
+| `ZLH` | Courses, Notes (editor, library, reader), Flashcards (deck library, study sessions, AI generation), Countdown, Exam Data Editor, Library browser (courses/exams/flashcards), Share views |
+| `ABC` | Timetable, Pomodoro Timer, Lesson Tracker, Course Manager, Curriculum & Notes Editor backend, Homepage components, Auth forms, Onboarding wizard, Workspace, Contributor Manager |
 
 ---
 
@@ -104,7 +104,6 @@ This directory tree is the **absolute source of truth** for file placement. AI A
 
 ```text
 the-ants/                                 # Project root
-├── proxy.ts                              # 🔒 PM — Route protection + post-login redirect to /dashboard
 ├── spec.md                               # 🔒 PM — System specification (this file)
 ├── schema.md                             # 🔒 PM — Database schema reference
 ├── README.md                             # 🔒 PM — Project README
@@ -116,7 +115,7 @@ the-ants/                                 # Project root
 │   └── migrations/                       # SQL migration files
 │
 ├── public/
-│   ├── sounds/                           # 🔒 PPP — Pomodoro background sounds (reserved; currently synthesized via Web Audio API, no static files needed)
+│   ├── sounds/                           # 🔒 ABC — Pomodoro background sounds (reserved; currently synthesized via Web Audio API, no static files needed)
 │   └── icons/                            # 🔒 PM — Exam board logos & app icons
 │
 └── src/
@@ -124,7 +123,6 @@ the-ants/                                 # Project root
     │   ├── layout.tsx                    # 🔒 PM — Root layout (providers, global fonts, metadata)
     │   ├── globals.css                   # 🔒 PM — Global Tailwind CSS v4 styles & design tokens
     │   ├── page.tsx                      # 🔒 PM (TYZ) — Public landing / home page
-    │   ├── not-found.tsx                 # 🔒 PM — Global 404 page
     │   │
     │   ├── (auth)/                       # 🔒 PM (TYZ) — Auth route group
     │   │   ├── error.tsx                 # 🔒 PM — Auth route group error boundary
@@ -134,45 +132,88 @@ the-ants/                                 # Project root
     │   ├── (public)/                     # Public routes (no auth required)
     │   │   ├── error.tsx                 # 🔒 PM — Public route group error boundary
     │   │   ├── explore/
+    │   │   │   ├── page.tsx              # 🔒 PM — Unified explore hub (All/Profiles/Clubs tabs)
     │   │   │   ├── clubs/page.tsx        # 🔒 PM — Public club discovery
     │   │   │   └── profiles/page.tsx     # 🔒 PM — Public profile listing
     │   │   ├── clubs/                    # 🔒 PM
-    │   │   │   └── [id]/page.tsx
+    │   │   │   └── [slug]/page.tsx       # Public club detail
+    │   │   ├── about/
+    │   │   │   └── page.tsx              # 🔒 PM — About page
     │   │   └── profile/
     │   │       └── [username]/page.tsx   # 🔒 PM — Public profile page
     │   │
+    │   ├── (onboarding)/                 # Onboarding wizard
+    │   │   └── onboarding/
+    │   │       └── page.tsx              # 🔒 ABC — Onboarding wizard
+    │   │
+    │   ├── auth/                          # Standalone auth pages (no route group)
+    │   │   ├── update-password/
+    │   │   │   └── page.tsx              # 🔒 PM — Password reset page
+    │   │   └── confirm/
+    │   │       └── route.ts              # 🔒 PM — Auth confirmation API route
+    │   │
+    │   ├── api/                           # API routes
+    │   │   ├── cron/
+    │   │   │   └── send-notifications/
+    │   │   │       └── route.ts          # 🔒 PM — Cron notification handler
+    │   │   └── telegram/
+    │   │       └── webhook/
+    │   │           └── route.ts          # 🔒 PM — Telegram bot webhook
+    │   │
     │   └── (app)/                        # Authenticated shell
-    │       ├── layout.tsx                # 🔒 PM — App shell (NavBar wraps all authed routes)
+    │       ├── layout.tsx                # 🔒 PM — App shell (NavBar, RelatedPagesSidebar, BackButton, auth gate)
     │       ├── loading.tsx               # 🔒 PM — Global app skeleton loader
     │       ├── error.tsx                 # 🔒 PM — App route group error boundary
     │       │
-    │       ├── dashboard/page.tsx        # 🔒 PM — Unified role-aware dashboard
-    │       ├── timetable/page.tsx        # 🔒 PPP
-    │       ├── pomodoro/page.tsx         # 🔒 PPP
+    │       ├── dashboard/page.tsx        # 🔒 PM — Unified role-aware dashboard (redirects to /role)
+    │       ├── student/page.tsx          # 🔒 PM — Student workspace dashboard
+    │       ├── teacher/page.tsx          # 🔒 PM — Teacher workspace dashboard
+    │       ├── contributor/page.tsx      # 🔒 PM — Contributor workspace dashboard
+    │       ├── main-contributor/
+    │       │   ├── page.tsx              # 🔒 PM — Main Contributor workspace dashboard
+    │       │   ├── review-queue/
+    │       │   │   └── page.tsx          # 🔒 PM — Gatekeeper review queue
+    │       │   └── add-contributor/
+    │       │       └── page.tsx          # 🔒 PM — Invite new contributor flow
+    │       ├── timetable/page.tsx        # 🔒 ABC — Smart Timetable
+    │       ├── pomodoro/page.tsx         # 🔒 ABC — Pomodoro Timer
     │       ├── flashcards/
     │       │   ├── page.tsx              # 🔒 ZLH — Deck library
     │       │   ├── loading.tsx           # 🔒 ZLH — Deck library skeleton
     │       │   └── [deckId]/page.tsx     # 🔒 ZLH — Study session + RelatedContent
-    │       ├── lessons/page.tsx          # 🔒 BMK & ABC — Lesson Tracker
-    │       ├── courses/page.tsx          # 🔒 BMK & ABC — Course Manager
-    │       ├── library/
-    │       │   ├── page.tsx              # Notes Library (All Roles)
-    │       │   └── [noteId]/page.tsx     # Standalone note viewer + RelatedContent
+    │       ├── lessons/page.tsx          # 🔒 ABC — Lesson Tracker
+    │       ├── courses/page.tsx          # 🔒 ABC — Course Manager
     │       ├── my-notes/
     │       │   ├── page.tsx              # My Notes hub (created + saved)
-    │       │   └── loading.tsx           # My Notes skeleton
+    │       │   ├── loading.tsx           # My Notes skeleton
+    │       │   └── editor/
+    │       │       └── page.tsx          # Split-screen Notes Editor
+    │       ├── library/
+    │       │   ├── page.tsx              # Notes Library (All Roles)
+    │       │   ├── courses/
+    │       │   │   └── page.tsx          # Courses library browser
+    │       │   ├── exams/
+    │       │   │   └── page.tsx          # Exams library browser
+    │       │   ├── flashcards/
+    │       │   │   └── page.tsx          # Flashcards library browser
+    │       │   └── [noteId]/page.tsx     # Standalone note viewer + RelatedContent
     │       ├── classrooms/
-    │       │   ├── page.tsx              # 🔒 BMK & ABC — Classroom list
-    │       │   ├── loading.tsx           # 🔒 BMK & ABC — Classroom list skeleton
-    │       │   └── [id]/page.tsx         # 🔒 BMK & ABC — Classroom detail (tabs: assignments, quizzes, resources, discussions, links, members, settings)
+    │       │   ├── page.tsx              # 🔒 TYZ — Classroom list
+    │       │   ├── loading.tsx           # 🔒 TYZ — Classroom list skeleton
+    │       │   └── [id]/page.tsx         # 🔒 TYZ — Classroom detail (tabs: assignments, quizzes, resources, discussions, links, members, settings)
     │       ├── clubs/
-    │       │   ├── page.tsx              # 🔒 AKT — Club Discovery
-    │       │   ├── loading.tsx           # 🔒 AKT — Club Discovery skeleton
-    │       │   └── [id]/page.tsx         # 🔒 AKT — Club detail (tabs: chat, announcements, links, members, projects, activity_timeline)
+    │       │   ├── page.tsx              # 🔒 TYZ — Club Discovery
+    │       │   ├── loading.tsx           # 🔒 TYZ — Club Discovery skeleton
+    │       │   ├── create/
+    │       │   │   └── page.tsx          # 🔒 TYZ — Create new club
+    │       │   └── [slug]/
+    │       │       ├── page.tsx          # 🔒 TYZ — Club detail (tabs: chat, announcements, links, members, projects, activity_timeline)
+    │       │       └── manage/
+    │       │           └── page.tsx      # 🔒 TYZ — Club management settings
     │       ├── countdown/
     │       │   ├── page.tsx              # 🔒 ZLH — Exam Countdown
     │       │   └── loading.tsx           # 🔒 ZLH — Exam Countdown skeleton
-    │       ├── calculator/page.tsx       # 🔒 AKT — Grade Calculator
+    │       ├── calculator/page.tsx       # 🔒 ZLH — Grade Calculator
     │       ├── settings/
     │       │   ├── page.tsx              # 🔒 PM — User settings
     │       │   ├── loading.tsx           # 🔒 PM — Settings skeleton
@@ -180,13 +221,29 @@ the-ants/                                 # Project root
     │       │       ├── page.tsx          # 🔒 PM — Profile editor
     │       │       └── loading.tsx       # 🔒 PM — Profile editor skeleton
     │       ├── editor/
-    │       │   ├── page.tsx              # 🔒 BMK & ABC — Curriculum editor
+    │       │   ├── page.tsx              # 🔒 ABC — Curriculum editor
     │       │   ├── notes/page.tsx        # Split-screen Notes Editor
-    │       │   └── exam/page.tsx         # 🔒 ZLH — Exam Data editor
-    │       ├── review/page.tsx           # 🔒 PM — Review Queue (Main Contributor only)
-    │       ├── main-contributor/
-    │       │   ├── add-contributor/page.tsx
-    │       │   └── role-upgrades/page.tsx
+    │       │   ├── curriculum/
+    │       │   │   └── page.tsx          # Curriculum library admin
+    │       │   ├── exam/
+    │       │   │   ├── page.tsx          # 🔒 ZLH — Exam Data editor
+    │       │   │   └── schedule/
+    │       │   │       └── page.tsx      # Exam schedule timeline input
+    │       ├── contribute/
+    │       │   ├── page.tsx              # Contribute hub
+    │       │   ├── countdown/
+    │       │   │   └── page.tsx          # Submit countdown data
+    │       │   └── grade-calculator/
+    │       │       └── page.tsx          # Submit grade boundary data
+    │       ├── resources/page.tsx        # General resource listing
+    │       ├── org-activities/
+    │       │   ├── page.tsx              # Organization activity feed
+    │       │   └── manage/
+    │       │       └── page.tsx          # 🔒 PM — Organization management
+    │       ├── share/
+    │       │   ├── note/[token]/page.tsx # Shared note view (no auth required)
+    │       │   ├── deck/[token]/page.tsx # Shared deck view
+    │       │   └── countdown/[token]/page.tsx # Shared countdown view
     │       └── profile/
     │           └── [username]/page.tsx   # 🔒 PM — Authenticated user profile
     │
@@ -202,8 +259,9 @@ the-ants/                                 # Project root
     │   │   ├── BackButton.tsx            # Reusable back navigation button
     │   │   └── RelatedContent.tsx        # Cross-feature linking (related flashcards/notes by topic/curriculum)
     │   ├── layout/                       # 🔒 PM — Global shell
-    │   │   ├── NavBar.tsx                # Centered CSS Grid nav with scroll-hide, solid dropdowns, theme toggle
-    │   │   └── Footer.tsx                # Global footer
+    │   │   ├── NavBar.tsx                # Flexbox nav with scroll-hide, solid dropdowns, theme toggle, role-aware groups
+    │   │   ├── Footer.tsx                # Global footer
+    │   │   └── RelatedPagesSidebar.tsx   # Context-aware left sidebar
     │   ├── auth/                         # 🔒 PM — Login & signup forms
     │   │   ├── LoginForm.tsx
     │   │   └── SignupForm.tsx
@@ -227,10 +285,10 @@ the-ants/                                 # Project root
     │   │   ├── OtpVerification.tsx
     │   │   ├── StepIndicator.tsx
     │   │   └── UsersTable.tsx
-    │   ├── Lessons/                      # 🔒 BMK & ABC
+    │   ├── Lessons/                      # 🔒 ABC
     │   │   ├── LessonTracker.tsx
     │   │   └── TopicCard.tsx
-    │   ├── classrooms/                   # 🔒 BMK & ABC (11 files)
+    │   ├── classrooms/                   # 🔒 TYZ
     │   │   ├── ClassroomCard.tsx         # Card shown in classroom grid
     │   │   ├── ClassroomList.tsx         # Main classroom list page
     │   │   ├── ClassroomDetail.tsx       # Classroom detail with tabs, search, feedback
@@ -242,14 +300,17 @@ the-ants/                                 # Project root
     │   │   ├── DiscussionsPanel.tsx      # Discussion topics + replies
     │   │   ├── LinksPanel.tsx            # Quick link sharing
     │   │   └── MembersPanel.tsx          # Member list with roles
-    │   ├── clubs/                        # 🔒 AKT
+    │   ├── clubs/                        # 🔒 TYZ
     │   │   ├── ClubDetail.tsx            # Club detail with tabs (chat, announcements, links, members, projects, activity_timeline)
-    │   │   └── ClubDiscovery.tsx         # Club discovery page
+    │   │   ├── ClubDiscovery.tsx         # Club discovery page
+    │   │   ├── AddProjectForm.tsx        # Club project creation form
+    │   │   ├── MemberProgressPanel.tsx   # Per-member contribution stats
+    │   │   └── MilestoneTracker.tsx      # Kanban milestone board
     │   ├── countdown/                    # 🔒 ZLH
     │   │   ├── AddCountdownModal.tsx
     │   │   ├── CountdownCard.tsx
     │   │   └── CountdownManager.tsx
-    │   ├── pomodoro/                     # 🔒 PPP (6 files)
+    │   ├── pomodoro/                     # 🔒 ABC
     │   │   ├── TimerRing.tsx             # SVG circular progress ring with MM:SS display
     │   │   ├── TimerControls.tsx         # Play/Pause/Reset buttons + keyboard shortcuts
     │   │   ├── SettingsDrawer.tsx        # Duration sliders, volume, auto-start toggle
@@ -288,18 +349,18 @@ the-ants/                                 # Project root
     │   ├── useRole.ts                    # 🔒 PM — Role-aware persona context
     │   ├── useProfile.ts                 # 🔒 PM — Public profile fetcher
     │   ├── useContributorManager.ts      # 🔒 PM — Multi-step invite flow
-    │   ├── usePomodoro.ts                # 🔒 PPP
-    │   ├── useTimetable.ts               # 🔒 PPP
+    │   ├── usePomodoro.ts                # 🔒 ABC
+    │   ├── useTimetable.ts               # 🔒 ABC
     │   ├── useFlashcardSRS.ts            # 🔒 ZLH
-    │   ├── useClub.ts                    # 🔒 AKT
-    │   ├── useClassroom.ts               # 🔒 BMK & ABC — Classroom state (CRUD, assignments, quizzes, discussions, resources)
+    │   ├── useClub.ts                    # 🔒 TYZ
+    │   ├── useClassroom.ts               # 🔒 TYZ — Classroom state (CRUD, assignments, quizzes, discussions, resources)
     │   ├── useCountdown.ts               # 🔒 ZLH
     │   ├── useNotes.ts                   # Notes library + editor state
-    │   ├── useLessons.ts                 # 🔒 BMK & ABC — Lesson tracking state
-    │   ├── useCourseManager.ts           # 🔒 BMK & ABC — Course manager state
+    │   ├── useLessons.ts                 # 🔒 ABC — Lesson tracking state
+    │   ├── useCourseManager.ts           # 🔒 ABC — Course manager state
     │   ├── useExamReview.ts              # 🔒 ZLH — Exam data review
-    │   ├── useRealtimeChat.ts            # 🔒 AKT — Real-time club chat
-    │   ├── useRealtimeClassroom.ts       # 🔒 BMK & ABC — Real-time classroom events
+    │   ├── useRealtimeChat.ts            # 🔒 TYZ — Real-time club chat
+    │   ├── useRealtimeClassroom.ts       # 🔒 TYZ — Real-time classroom events
     │   ├── useRealtimePresence.ts        # 🔒 PM — User presence tracking
     │   └── useZoomToFit.ts               # 🔒 PM — Canvas zoom utility
     │
@@ -309,11 +370,11 @@ the-ants/                                 # Project root
     │   └── ThemeContext.tsx              # 🔒 PM — Theme toggle (light/dark)
     │
     ├── actions/                          # Next.js Server Actions
-    │   ├── timetable.ts                  # 🔒 PPP
+    │   ├── timetable.ts                  # 🔒 ABC
     │   ├── flashcards.ts                 # 🔒 ZLH
-    │   ├── classrooms.ts                 # 🔒 BMK & ABC
-    │   ├── clubs.ts                      # 🔒 AKT
-    │   ├── editor.ts                     # 🔒 BMK & ABC
+    │   ├── classrooms.ts                 # 🔒 TYZ
+    │   ├── clubs.ts                      # 🔒 TYZ
+    │   ├── editor.ts                     # 🔒 ABC
     │   ├── exam-editor.ts                # 🔒 ZLH
     │   ├── roles.ts                      # 🔒 PM
     │   └── notes.ts                      # Notes server actions
@@ -322,8 +383,8 @@ the-ants/                                 # Project root
     │   ├── homepage.ts                   # 🔒 PM — Homepage stats & qualification boards
     │   ├── avatars.tsx                   # 🔒 PM — Avatar SVG components
     │   ├── qualifications.ts             # 🔒 PM — Exam boards, subjects, series
-    │   ├── timetable.ts                  # 🔒 PPP
-    │   └── pomodoro.ts                   # 🔒 PPP
+    │   ├── timetable.ts                  # 🔒 ABC
+    │   └── pomodoro.ts                   # 🔒 ABC
     │
     ├── lib/                              # Infrastructure clients & utilities (🔒 PM)
     │   ├── supabase/
@@ -356,29 +417,41 @@ the-ants/                                 # Project root
 
 ## 8. Navigation Bar Architecture
 
-The authenticated app shell uses a **single NavBar** component (`src/components/layout/NavBar.tsx`).
+The authenticated app shell uses a **single NavBar** component (`src/components/layout/NavBar.tsx`) and a context-aware **RelatedPagesSidebar** (`src/components/layout/RelatedPagesSidebar.tsx`).
 
-### Design
-- **Style:** Centered CSS Grid layout (`grid-cols-[1fr_auto_1fr]`) — logo left, nav links center, profile right
+### NavBar Design
+- **Style:** Flexbox layout — logo left, nav links center, theme-toggle + user-menu right
 - **Interaction:** Solid dropdown menus (opaque `bg-background-card` — no glassmorphism bleed-through)
 - **Behaviour:** Role-aware — nav links render only for the roles that can access them.
 - **Scroll Hide:** NavBar hides on scroll down (after 80px threshold) with `-translate-y-full` transition (300ms), and reappears on scroll up. Uses `requestAnimationFrame` throttling.
 - **Theme Toggle:** Integrated sun/moon toggle button switches between light and dark themes
+- **Mobile:** Full-screen slide-down overlay with grid sections (Study Resources, Study Tools, Community, Main Navigation, Admin Actions, Account)
+
+### RelatedPagesSidebar
+- Context-aware left sidebar strip that shows page-specific quick links.
+- Desktop only (hidden below `lg` breakpoint).
+- Sticky positioned below the NavBar (`sticky top-24 self-start`).
+- Links defined per route prefix in a `CONTEXT_MAP` (e.g., `/flashcards` links to Library Decks, Pomodoro, Courses, My Notes).
+- Renders an icon column with hover tooltips.
 
 ### Nav Groups & Role Visibility
 
-| Group | Links | Student | Teacher | Contributor | Main Contributor |
-|---|---|---|---|:---:|:---:|:---:|
-| **Plan** | Timetable, Exam Countdown, Grade Calculator | ✅ | ✅ | ✅ | ✅ |
-| **Study Tools** | Flashcards, Pomodoro Timer | ✅ | ✅ | ✅ | ✅ |
-| **Learn** | Lesson Tracker, Course Manager, Notes Library, Notes Editor, My Notes | ✅ | ✅ | ✅ | ✅ |
-| **Community** | Classrooms, Clubs | ✅ | ✅ | ✅ | ✅ |
-| **Editor** | Curriculum Editor, Exam Data Editor | ❌ | ❌ | ✅ | ✅ |
-| **Review** | Gatekeeper / Review Queue, Role Upgrade Requests | ❌ | ❌ | ❌ | ✅ |
-| **Profile** | My Public Profile | ✅ | ✅ | ✅ | ✅ |
+| Group       | Links                                                                 | Student | Teacher | Contributor | Main Contributor |
+|-------------|-----------------------------------------------------------------------|---------|---------|-------------|------------------|
+| **Study**   | Library (notes, courses, exams, flashcards)                           | ✅       | ✅       | ✅           | ✅                |
+| **Tools**   | Exam Countdown, Grade Calculator, Timetable, Pomodoro                 | ✅       | ✅       | ✅           | ✅                |
+| **Community**| Classrooms, Explore (clubs & profiles), About                         | ✅       | ✅       | ✅           | ✅                |
+| **Contribute** | Submit official resources                                           | ❌       | ❌       | ✅           | ✅                |
+| **Admin**   | Dashboard, Add Contributor, Review Queue, Manage Organization         | ❌       | ❌       | ❌           | ✅                |
 
-### Post-Login Redirect (proxy.ts)
-All roles redirect to `/dashboard` after login. The dashboard uses `useRole()` to render role-appropriate content.
+### Post-Login Redirect
+All roles redirect to `/dashboard` after login. The dashboard reads `useRole()` and immediately redirects (`router.replace`) to the role-specific route:
+- `student` → `/student`
+- `teacher` → `/teacher`
+- `contributor` → `/contributor`
+- `main_contributor` → `/main-contributor`
+
+Each role-specific page renders a `MyWorkspace` component with role-appropriate stats and quick-action cards.
 
 ---
 

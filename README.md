@@ -6,7 +6,7 @@
 
 *Ace with us!*
 
-*Timetables · Flashcards · Classrooms · Clubs · Quizzes · Grade Calculators · Exam Countdowns · Public Profiles · Notes*
+*Timetables · Flashcards · Classrooms · Clubs · Quizzes · Grade Calculators · Exam Countdowns · Public Profiles · Notes · Pomodoro · Resources · Sharing*
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://www.typescriptlang.org/)
@@ -116,25 +116,59 @@ Classrooms are virtual learning spaces with full CRUD for educational content. *
 - Club leaders control which features to enable: chat, announcements, links, members, projects, activity timeline.
 - Join modes: open, invite-link, or approval-based.
 - **Admin/Moderator/Member** role hierarchy with granular permissions.
-- Members can leave at any time.
+- **Milestone Tracking**: Kanban-style milestone board (planned → in_progress → completed) with auto-completion tracking and progress bars.
+- **Project Showcase**: Public club landing pages with hero banners, project galleries, milestone trackers, member spotlights, and shareable URLs.
+- **Club-to-Profile Integration**: Club memberships, projects, and activity can be displayed on user public profiles with per-section visibility toggles.
+- Members can leave at any time, and Club activity integrates with the Activity Timeline.
 
 ### 👤 Public Profiles (All Roles)
 - Every user has a publicly visible profile page (toggleable in settings).
-- Includes bio, role badge, project showcase, CCA timeline, and achievements.
+- Includes bio, role badge, certifications (IGCSE, A-Level, IELTS, etc. with verification), project showcase, CCA timeline, and achievements.
+- **Club Memberships Panel**: Show club badges with name, role, and member count on your profile.
+- **Academic Certifications**: Structured certification display (IGCSE, AS Level, A Level, IELTS, TOEFL, SAT) with grade, exam board, year, and optional certificate image. Main Contributors can verify certifications.
 - Shareable via direct link — perfect for university applications and CVs.
 - Customisable theme, spacing, and section layout.
 
 ### 🏠 Explore Pages
+- **Unified Explore Hub** (`/explore`): Tab-based browsing switching between All, Profiles, and Clubs views.
 - **Explore Clubs** (`/explore/clubs`): Browse all clubs with search, member counts, and join modes — no login required.
 - **Explore Profiles** (`/explore/profiles`): Discover community members with role-based filters and portfolio previews.
 - **Homepage explore cards** (`/`): Quick-access cards labeled "Clubs" and "Profiles" for direct navigation.
 
 ### 📊 Role-Aware Dashboards
 - **Unified dashboard router** (`/dashboard`): Automatically redirects users to their role-specific dashboard based on `useRole()`.
+- **Student Dashboard** — Study streak, cards due, next exam, average confidence stats with quick-action cards for all tools.
+- **Teacher Dashboard** — Classrooms overview, recent assignments, student progress summaries.
 - **Contributor Dashboard** — Three-column layout with carousel hero banner, visual deck preview cards with category-coloured gradients, pill-shaped stat overview rows (Published, Pending Review, Clubs Led, Profile Views), and stacked creator profile + submission cards.
-- **Carousel Hero Banner** — Multi-slide welcome banner with left/right navigation arrows, bottom pagination dots, ambient blurred orbs, and animated glowing node grid — all built on the cyan-to-purple gradient theme.
-- **Centered NavBar** — Logo left, primary navigation links center, user profile dropdown right — using CSS Grid `grid-cols-[1fr_auto_1fr]`.
-- **Solid Dropdown Menus** — All nav dropdowns, user menus, and mobile menus use opaque `bg-background-card` backgrounds for clear readability (no glassmorphism bleed-through).
+- **Main Contributor Dashboard** — Pending reviews count, approval/rejection stats, review queue summary.
+- **Carousel Hero Banner** — Multi-slide welcome banner with left/right navigation arrows, bottom pagination dots, ambient blurred orbs, and animated glowing node grid.
+- **Flexbox NavBar** — Logo left, primary navigation links center (Study, Tools, Community, Contribute, Admin), user profile dropdown right with theme toggle.
+- **RelatedPagesSidebar** — Context-aware left sidebar strip with page-specific quick links, shown on desktop.
+- **Solid Dropdown Menus** — All nav dropdowns, user menus, and mobile menus use opaque `bg-background-card` backgrounds for clear readability.
+
+### 📄 About Page (`/about`)
+- **Org Timeline**: 3D isometric timeline cards with spring-animated stacking ripple effect — 4 shadow planes fan out on hover.
+- **Team Member Cards**: Role-based team member display with hover effects.
+- **Mission Editor**: Org mission statement with edit capabilities for admins.
+- **Team Manager**: Manage team listings directly from the about page.
+
+### 🔗 Sharing System
+- **Shared Notes** (`/share/note/[token]`): Share notes via unique token links — recipients see read-only note content without an account.
+- **Shared Decks** (`/share/deck/[token]`): Share flashcard decks via token links for collaborative study.
+- **Shared Countdowns** (`/share/countdown/[token]`): Share exam countdowns with friends and study groups.
+- **Profile Sharing**: Share profile URLs with custom slugs and social link embeds.
+
+### 📁 Resources Page (`/resources`)
+- General resource listing page for supplementary study materials.
+
+### ✏️ Contribute Pages
+- **Contribute Hub** (`/contribute`): Central page for Contributors to submit official resources.
+- **Countdown Contribution** (`/contribute/countdown`): Submit exam countdown data for official exam series.
+- **Grade Calculator Contribution** (`/contribute/grade-calculator`): Submit grade boundary data for official qualification.
+
+### 📋 Organization Activities (`/org-activities`)
+- **Activity Management** (`/org-activities`): View organization-wide activities and contributions.
+- **Organization Management** (`/org-activities/manage`): Main Contributor tool for managing organization settings.
 
 ### ⏳ Exam Countdown
 - Set countdowns for every upcoming exam.
@@ -159,6 +193,8 @@ Classrooms are virtual learning spaces with full CRUD for educational content. *
 - **Signup defaults to `student`.** Users can only select `student` at registration.
 - **Upgrade-only policy:** Roles can only be upgraded (student → teacher → contributor → main_contributor). Downgrades are not permitted.
 - **Upgrade requests:** Users submit a role upgrade request with a reason. A **Main Contributor** reviews and approves/rejects it.
+- **Direct Promotion:** Main Contributors can promote users directly without requiring a prior request.
+- **JWT Role Claim:** Role is embedded in the JWT via a `custom_access_token` hook — the `useRole()` hook reads from JWT claims for zero-query role checks.
 - **One account, one role.** An email can only hold a single role at any time.
 
 ---
@@ -182,8 +218,11 @@ Classrooms are virtual learning spaces with full CRUD for educational content. *
 - **Language:** [TypeScript 5](https://www.typescriptlang.org/)
 - **Styling:** [Tailwind CSS v4](https://tailwindcss.com/)
 - **Icons:** [Lucide React](https://lucide.dev/)
-- **Database:** [Supabase](https://supabase.com/) (PostgreSQL + Auth + Storage)
-- **MVP Phase 1:** Mock data facade (`src/lib/mock/database.ts`) before Supabase binding
+- **Database:** [Supabase](https://supabase.com/) (PostgreSQL + Auth + Storage + Realtime)
+- **State:** Mock data facade (`src/lib/mock/database.ts`) for MVP before Supabase binding
+- **Animations:** Custom CSS animations (scroll reveals, cascade stagger, floating text, 3D transforms)
+- **Audio:** Web Audio API for synthesized ambient soundscapes (rain, brown noise, cafe, forest)
+- **SRS Algorithm:** SM-2/FSRS for flashcard spaced repetition
 - **Hosting:** Vercel
 
 ---
@@ -211,46 +250,59 @@ Visit `http://localhost:3000`. The app runs against the mock database in dev mod
 the-ants/
 ├── src/
 │   ├── app/                     # Next.js App Router pages
+│   │   ├── (app)/               # Authenticated routes (dashboard, classrooms, clubs, settings, etc.)
+│   │   ├── (auth)/              # Login & signup routes
+│   │   ├── (public)/            # Public routes (about, explore, profiles)
+│   │   ├── (onboarding)/        # Onboarding wizard
+│   │   ├── auth/                # Auth API routes (update-password, confirm)
+│   │   └── api/                 # API routes (cron, telegram webhook)
 │   ├── components/
-│   │   ├── about/               # About page components (OrgTimeline, TeamMemberCard)
-│   │   ├── homepage/            # Public landing page components (RevealSection, BentoFeatures, HeroVisual, QualTrail, QualCarousel, RoleLadder, StatsRow, DotGrid, AntTrailPattern, AntHeroAccent, HomepageFonts)
-│   │   ├── ui/                  # Shared atomic components (Button, Badge, BackButton, AvatarImage, AnimatedStat, RelatedContent, etc.)
-│   │   ├── layout/              # NavBar, Footer, DashboardLayout
-│   │   ├── auth/                # LoginForm, SignupForm
-│   │   ├── settings/            # ProfileEditor, AdvancedProfileEditor, CertificationEditor, RoleUpgradeForm, RoleSwitcher
-│   │   ├── profile/             # Profile components (ProfileHero, ProfileActivity, ProfileStats, ContributorPublicProfile, etc.)
-│   │   ├── classrooms/          # Classroom components (11 files)
-│   │   ├── clubs/               # Club components (ClubDetail, ClubDiscovery, MilestoneTracker)
-│   │   ├── flashcards/          # Flashcard components (11 files)
-│   │   ├── notes/               # Notes components (13 files)
-│   │   ├── countdown/           # Exam countdown components
-│   │   ├── contributor-manager/ # Invite flow components
-│   │   ├── exam-data/           # Exam data components
-│   │   ├── exam-editor/         # Exam editor components
-│   │   ├── review-queue/        # Review queue components
-│   │   ├── share/               # Shared view components
-│   │   ├── workspace/           # Workspace components
-│   │   ├── timetable/           # Timetable view components
-│   │   ├── onboarding/          # Onboarding wizard
-│   │   └── ...                  # Other feature components
-│   ├── hooks/                   # Custom React hooks (useAuth, useRole, useTimetable, useClassroom, useFlashcardSRS, etc.)
-│   ├── actions/                 # Next.js Server Actions
+│   │   ├── about/               # About page components (OrgTimeline, TeamMemberCard, MissionEditor, TeamManager)
+│   │   ├── homepage/            # Public landing page components (RevealSection, BentoFeatures, HeroVisual, QualTrail, etc.)
+│   │   ├── ui/                  # Shared atomic components (Button, Badge, BackButton, AvatarImage, Input, AnimatedStat, EmptyState, ConfirmModal, RelatedContent)
+│   │   ├── layout/              # NavBar, Footer, DashboardLayout, RelatedPagesSidebar
+│   │   ├── auth/                # LoginForm, SignupForm, ForgotPasswordPanel
+│   │   ├── settings/            # ProfileEditor, AdvancedProfileEditor, CertificationEditor, RoleUpgradeForm, RoleSwitcher, TelegramConnect
+│   │   ├── profile/             # ProfileHero, ProfileActivity, ProfileStats, ContributorPublicProfile, CertificationSection, ClubMembershipsPanel, ShareProfileButton
+│   │   ├── explore/             # ExplorePageContent, ClubsPageContent, ProfilesPageContent
+│   │   ├── classrooms/          # AssignmentsPanel, ClassroomCard/List/Detail, QuizCreator/TakeModal, QuizzesPanel, ResourcesPanel, DiscussionsPanel, LinksPanel, MembersPanel
+│   │   ├── clubs/               # ClubDetail, ClubDiscovery, AddProjectForm, MemberProgressPanel, MilestoneTracker
+│   │   ├── flashcards/          # DeckCard/Library, StudySession, AICardParser, AIPromptGenerator, CardCreatorAI/Manual, CreateDeckModal, DeckEditView, FlashcardText, SessionSummary
+│   │   ├── notes/               # BlockEditor/Preview, NotesLibrary/Editor, AIPromptGenerator, NoteCard/Filters/ReaderModal/SubmitModal/Viewer, MyNotesLibrary, SavedNotesLibrary
+│   │   ├── countdown/           # AddCountdownModal, CountdownCard, CountdownManager
+│   │   ├── contributor-manager/ # CompleteProfileForm, InviteForm, OtpVerification, StepIndicator, UsersTable
+│   │   ├── exam-data/           # CountdownEditor, GradeCalculator/Editor, MySubmissions, ReviewQueuePanel
+│   │   ├── exam-editor/         # BoundaryWeightForm, EvaluationMatrix, ExamDataEditor, ScheduleTimelineInput, StepIndicator
+│   │   ├── library/             # CoursesLibraryBrowser, ExamsLibraryBrowser, FlashcardsLibraryBrowser
+│   │   ├── share/               # SharedCountdownView, SharedDeckView, SharedNoteView
+│   │   ├── workspace/           # MyWorkspace, WorkspaceErrorBoundary, WorkspaceSkeleton, WorkspaceToast
+│   │   ├── timetable/           # DayView/WeekView/MonthView, EventModal, InlineCreate, IntegrationBanner, TimeBlock, TimetableFilters/Manager
+│   │   ├── pomodoro/            # TimerRing/Controls, SettingsDrawer, SoundscapePicker, StatsPanel, ZenMode, ModeTabs
+│   │   ├── Lessons/             # LessonTracker, TopicCard, ConfidenceTrend, EnrollmentSwitcher, ProgressOverview, SubjectLessonView, WeeklyActivityChart
+│   │   ├── editor/              # CurriculumLibraryAdmin
+│   │   ├── curriculum/          # CurriculumDashboard
+│   │   ├── review-queue/        # ReviewQueue
+│   │   └── onboarding/          # OnboardingWizard
+│   ├── hooks/                   # 21 custom hooks (useAuth, useRole, useTimetable, useClassroom, useFlashcardSRS, usePomodoro, useClub, etc.)
+│   ├── actions/                 # 8 Next.js Server Actions (timetable, flashcards, classrooms, clubs, exam-editor, notes, role-upgrade, editor)
 │   ├── lib/                     # Infrastructure & utilities
-│   │   ├── mock/database.ts     # Single mock data facade
-│   │   └── quiz-ai.ts           # AI quiz prompt/parser
-│   ├── types/                   # Shared TypeScript definitions
+│   │   ├── supabase/            # client.ts, server.ts, middleware.ts, auth-actions.ts, pool.ts, realtime.ts, health.ts
+│   │   ├── mock/                # database.ts, timetable.ts (mock data facades)
+│   │   ├── srs/                 # algorithm.ts (SM-2/FSRS)
+│   │   ├── timetable/           # layout.ts (overlap detection)
+│   │   ├── pomodoro/            # audio-engine.ts (Web Audio API)
+│   │   ├── quiz-ai.ts           # AI quiz prompt/parser
+│   │   ├── validateEnv.ts       # Environment validation
+│   │   └── utils.ts             # General helpers (cn, date formatting, getInitials, generateUsername)
+│   ├── types/                   # Shared TypeScript definitions (index.ts, supabase.ts)
 │   ├── constants/               # Static reference data
-│   └── context/                 # React context providers (AuthContext, PersonaContext, ThemeContext)
+│   └── context/                 # React context providers (AuthContext, PersonaContext, ThemeContext, LessonContext)
 ├── The-ANTS-1/                  # Legacy / alternative asset directory
-├── proxy.ts                     # Route protection + post-login redirect
+├── AGENTS.md                    # Developer ownership map
 ├── spec.md                      # System specification
-├── schema.md                     # Database schema reference
-├── design-system/                # Design system docs (colors, typography, components, accessibility)
-│   ├── README.md                 # Quick start + file index
-│   ├── design-system.md          # Color palette & typography (primary iteration file)
-│   ├── mock-db-audit.md          # Mock database vs schema coverage audit
-│   └── ...                       # Component library, interaction flows, etc.
-└── README.md                     # Project README
+├── schema.md                    # Database schema reference
+├── design-system/               # Design system docs
+└── README.md                    # Project README
 ```
 
 ---

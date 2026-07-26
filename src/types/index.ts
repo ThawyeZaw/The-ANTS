@@ -1006,6 +1006,8 @@ export interface ExamCountdown {
   share_token: string | null;
   /** Whether this countdown was created from the library (has linked exam) or is fully custom */
   is_custom: boolean;
+  /** Visibility control: 'private' (owner only), 'link' (share_token), 'public' (library) */
+  visibility: 'private' | 'link' | 'public';
 }
 
 // -----------------------------------------------------------------------------

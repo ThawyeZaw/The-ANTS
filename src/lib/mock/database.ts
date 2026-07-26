@@ -2506,7 +2506,7 @@ export const mockExams: Exam[] = [
 ];
 
 const _defaultExamCountdowns: ExamCountdown[] = [
-  { id: 'ec-1', user_id: 'user-student-001', exam_id: 'exam-1', custom_title: 'Physics Finals!', target_date: '2027-05-15T09:00:00Z', priority_indicator: 'high', qualification_group: 'IGCSE', created_at: '2026-01-01T00:00:00Z', custom_date_override: null, share_token: null, is_custom: false }
+  { id: 'ec-1', user_id: 'user-student-001', exam_id: 'exam-1', custom_title: 'Physics Finals!', target_date: '2027-05-15T09:00:00Z', priority_indicator: 'high', qualification_group: 'IGCSE', created_at: '2026-01-01T00:00:00Z', custom_date_override: null, share_token: null, is_custom: false, visibility: 'public' }
 ];
 
 export const mockExamCountdowns: ExamCountdown[] = loadArray(STORAGE_KEYS.EXAM_COUNTDOWNS, _defaultExamCountdowns);
@@ -3162,6 +3162,7 @@ export const createExamCountdown = (data: {
     custom_date_override: null,
     share_token: null,
     is_custom: true,
+    visibility: 'private',
   };
   mockExamCountdowns.push(countdown);
   _saveExamCountdowns();
