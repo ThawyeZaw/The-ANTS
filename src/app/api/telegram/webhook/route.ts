@@ -42,7 +42,15 @@ async function linkTelegramChat(username: string, chatId: number) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase
     .from('profiles')
-    .update({ telegram_chat_id: String(chatId) } as any)
+    .update({
+      telegram_chat_id: String(chatId),
+      notification_preferences: {
+        timetable:   { enabled: true, reminders: [0, 10, 30, 60, 1440, 4320, 10080] },
+        assignments: { enabled: true, reminders: [60, 1440, 4320, 10080] },
+        exams:       { enabled: true, reminders: [1440, 4320, 10080] },
+        quizzes:     { enabled: true, reminders: [60, 1440] },
+      },
+    } as any)
     .eq('username', username));
 
   return !error;

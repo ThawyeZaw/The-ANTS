@@ -212,7 +212,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // ── Update Profile ─────────────────────────────────────────────────────
   const updateProfile = useCallback(
     async (
-      data: Partial<Pick<Profile, 'name' | 'bio' | 'title' | 'socialLinks' | 'avatar' | 'isPublic' | 'projects' | 'activities' | 'achievements' | 'pinnedItemId' | 'sectionVisibility' | 'sectionOrder' | 'spacing' | 'width' | 'sectionLayout' | 'showClubMemberships' | 'showClubProjects' | 'showClubActivity' | 'theme'>>
+      data: Partial<Pick<Profile, 'name' | 'bio' | 'title' | 'socialLinks' | 'avatar' | 'isPublic' | 'projects' | 'activities' | 'achievements' | 'pinnedItemId' | 'sectionVisibility' | 'sectionOrder' | 'spacing' | 'width' | 'sectionLayout' | 'showClubMemberships' | 'showClubProjects' | 'showClubActivity' | 'theme' | 'notificationPreferences'>>
     ) => {
       if (!supabase) {
         return { success: false, error: 'Supabase is not configured (missing env vars).' };
@@ -241,7 +241,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data.showClubProjects !== undefined) updates.show_club_projects = data.showClubProjects;
       if (data.showClubActivity !== undefined) updates.show_club_activity = data.showClubActivity;
       if (data.theme !== undefined) updates.theme = data.theme as unknown as TablesUpdate<'profiles'>['theme'];
-      if (data.notificationPreferences !== undefined) updates.notification_preferences = data.notificationPreferences as unknown as TablesUpdate<'profiles'>['notification_preferences'];
+      if (data.notificationPreferences !== undefined) (updates as any).notification_preferences = data.notificationPreferences;
 
       const { error } = await supabase
         .from('profiles')
