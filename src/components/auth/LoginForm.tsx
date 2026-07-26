@@ -89,7 +89,7 @@ export default function LoginForm() {
             style={{ background: 'rgba(255,255,255,0.4)' }} />
 
           <div className="relative z-10">
-            <div className="mb-4"><Image src="/logo.png" alt="The ANTs logo" width={40} height={40} /></div>
+            <div className="mb-4"><Image src="/logo.png" alt="The ANTs logo" width={40} height={40} priority /></div>
             <h2 className="text-2xl font-bold text-white mb-2 font-brand text-on-dark">The ANTs</h2>
             <p className="text-white/90 text-sm leading-relaxed text-on-accent">
               Your all-in-one academic productivity platform for IGCSE, A-Level, and IELTS.

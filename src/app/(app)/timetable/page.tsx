@@ -11,9 +11,6 @@ export const metadata: Metadata = {
 export default function TimetablePage() {
   return (
     <div className="h-screen overflow-hidden flex flex-col">
-      <div className="shrink-0 px-4 pt-4">
-        <BackButton href="/dashboard" label="Back to Dashboard" />
-      </div>
       <div className="flex-1 min-h-0">
         <TimetableManager />
       </div>

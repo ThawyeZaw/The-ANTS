@@ -377,6 +377,7 @@ export default function NavBar() {
               alt="The ANTs logo"
               width={28}
               height={28}
+              priority
               className="group-hover:scale-110 transition-transform duration-200"
             />
             <span className="hidden sm:block font-bold text-lg bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent font-brand">

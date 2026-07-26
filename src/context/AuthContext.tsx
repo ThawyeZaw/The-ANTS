@@ -47,6 +47,8 @@ function mapProfile(row: Record<string, unknown>): Profile {
     activities: (row.activities as Profile['activities']) ?? undefined,
     achievements: (row.achievements as Profile['achievements']) ?? undefined,
     certificationIds: (row.certification_ids as string[] | null) ?? undefined,
+    telegramChatId: (row.telegram_chat_id as string) ?? null,
+    notificationPreferences: (row.notification_preferences as Profile['notificationPreferences']) ?? null,
     createdAt: (row.created_at as string) ?? new Date().toISOString(),
     // Onboarding fields
     onboardingCompleted: (row.onboarding_completed as boolean) ?? false,

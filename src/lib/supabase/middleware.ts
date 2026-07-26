@@ -37,7 +37,7 @@ export async function updateSession(request: NextRequest) {
     const user = data.user
 
     // Public routes — accessible without authentication
-    const publicPaths = ['/login', '/signup', '/about', '/explore', '/profile', '/auth', '/onboarding']
+    const publicPaths = ['/login', '/signup', '/about', '/explore', '/profile', '/auth', '/onboarding', '/api/telegram', '/api/cron']
     const isPublicPath = publicPaths.some(
       (path) => request.nextUrl.pathname === path || request.nextUrl.pathname.startsWith(path + '/')
     )

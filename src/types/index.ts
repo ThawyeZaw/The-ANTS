@@ -196,6 +196,13 @@ export interface Profile {
   showClubProjects?: boolean;
   showClubActivity?: boolean;
   certificationIds?: string[] | null;
+  telegramChatId?: string | null;
+  notificationPreferences?: {
+    timetable?: { enabled: boolean; reminders: number[] };
+    assignments?: { enabled: boolean; reminders: number[] };
+    exams?: { enabled: boolean; reminders: number[] };
+    quizzes?: { enabled: boolean; reminders: number[] };
+  } | null;
   createdAt: string;
   isVerified?: boolean;
   // Onboarding fields

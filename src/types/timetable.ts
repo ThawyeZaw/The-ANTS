@@ -109,4 +109,6 @@ export interface TimetableEventFormData {
   is_todo: boolean;
   is_recurring: boolean;
   recurrence_rule: RecurrenceRule | null;
+  /** Minutes before start_time to send a Telegram notification. null = no reminder. */
+  reminder_minutes: number | null;
 }

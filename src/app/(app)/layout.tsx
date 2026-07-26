@@ -69,7 +69,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <main className="flex-1 min-w-0">
                 {!hideBackButton && (
                   <div className="mb-4">
-                    <BackButton href="/dashboard" label="Back to Dashboard" />
+                    <BackButton href="/dashboard" label="Back" />
                   </div>
                 )}
                 {children}

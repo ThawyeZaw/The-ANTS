@@ -213,7 +213,7 @@ export function useTimetable(userId: string): UseTimetableReturn {
   // CRUD
   const createEvent = useCallback(async (data: TimetableEventFormData): Promise<{ success: boolean; error?: string }> => {
     try {
-      const { time_mode, date, start_time, end_time, recurrence_rule, ...rest } = data;
+      const { time_mode, date, start_time, end_time, recurrence_rule, reminder_minutes, ...rest } = data;
       let startIso: string | null = null;
       let endIso: string | null = null;
       let allDay = false;
@@ -239,7 +239,8 @@ export function useTimetable(userId: string): UseTimetableReturn {
         completed_at: null,
         event_source: 'user',
         source_id: null,
-      });
+        reminder_minutes,
+      } as any);
       refresh();
       return error ? { success: false, error: error.message } : { success: true };
     } catch (err) {
@@ -249,7 +250,7 @@ export function useTimetable(userId: string): UseTimetableReturn {
 
   const updateEvent = useCallback(async (eventId: string, data: TimetableEventFormData): Promise<{ success: boolean; error?: string }> => {
     try {
-      const { time_mode, date, start_time, end_time, recurrence_rule, ...rest } = data;
+      const { time_mode, date, start_time, end_time, recurrence_rule, reminder_minutes, ...rest } = data;
       let startIso: string | null = null;
       let endIso: string | null = null;
       let allDay = false;
@@ -271,7 +272,8 @@ export function useTimetable(userId: string): UseTimetableReturn {
         start_time: startIso,
         end_time: endIso,
         all_day: allDay,
-      }).eq('id', baseId);
+        reminder_minutes,
+      } as any).eq('id', baseId);
       refresh();
       return error ? { success: false, error: error.message } : { success: true };
     } catch (err) {
