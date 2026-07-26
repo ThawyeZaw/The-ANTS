@@ -19,6 +19,11 @@ import {
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthContext } from './AuthContext';
+import {
+  getAllCurriculums,
+  getAllSubjects,
+  mockTopics,
+} from '@/lib/mock/database';
 
 // ── Local Types ───────────────────────────────────────────────────────────────
 
@@ -141,6 +146,14 @@ export function LessonProvider({ children }: { children: ReactNode }) {
 
   const fetchData = useCallback(async () => {
     if (!userId || !supabase) {
+      // MVP: load mock curriculum data even when not authenticated
+      setAllCurriculums(getAllCurriculums().map(c => ({
+        ...c,
+        is_public: true,
+        status: 'published' as string,
+      })));
+      setAllSubjects(getAllSubjects());
+      setAllTopics([...mockTopics]);
       setProgressRecords([]);
       setEnrollments([]);
       setIsLoading(false);
@@ -157,9 +170,27 @@ export function LessonProvider({ children }: { children: ReactNode }) {
       supabase.from('topic_progress').select('*').eq('user_id', userId),
     ]);
 
-    setAllCurriculums(cRes.data ?? []);
-    setAllSubjects(sRes.data ?? []);
-    setAllTopics(tRes.data ?? []);
+    const curriculaFromDB = cRes.data ?? [];
+    const subjectsFromDB = sRes.data ?? [];
+    const topicsFromDB = tRes.data ?? [];
+
+    // Fall back to mock facade when Supabase returns no data
+    setAllCurriculums(curriculaFromDB.length > 0
+      ? curriculaFromDB
+      : getAllCurriculums().map(c => ({
+          ...c,
+          is_public: true,
+          status: 'published' as string,
+        }))
+    );
+    setAllSubjects(subjectsFromDB.length > 0
+      ? subjectsFromDB
+      : getAllSubjects()
+    );
+    setAllTopics(topicsFromDB.length > 0
+      ? topicsFromDB
+      : [...mockTopics]
+    );
     const enrollmentData = eRes.data ?? [];
     setEnrollments(enrollmentData);
     setProgressRecords((pRes.data ?? []) as TopicProgressRecord[]);
@@ -206,6 +237,15 @@ export function LessonProvider({ children }: { children: ReactNode }) {
       fetchData();
     }
   }, [isLessonPage, userId, fetchData]);
+
+  // Listen for curriculum changes from the editor so data stays in sync
+  useEffect(() => {
+    const handler = () => {
+      fetchData();
+    };
+    window.addEventListener('curriculum-data-changed', handler);
+    return () => window.removeEventListener('curriculum-data-changed', handler);
+  }, [fetchData]);
 
   const enrolledCurriculums = useMemo<CurriculumItem[]>(() => {
     if (!userId) return [];

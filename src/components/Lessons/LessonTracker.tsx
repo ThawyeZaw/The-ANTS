@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTs — LessonTracker
+// The ANTS — LessonTracker
 // Main Lesson Tracker page component. Curriculum tabs → subject filter bar →
 // subject accordion → per-topic confidence + status cards.
 // Now uses LessonContext (single source of truth).
@@ -17,6 +17,9 @@ import {
   Layers,
   Sparkles,
   Filter,
+  ChevronRight,
+  AlertTriangle,
+  CheckCircle2,
 } from 'lucide-react';
 import { useRole } from '@/hooks/useRole';
 import { useLessonContext, type TopicItem, type TopicProgressRecord, type TopicStatus } from '@/context/LessonContext';
@@ -45,7 +48,7 @@ function SubjectProgressBar({ completed, total }: { completed: number; total: nu
     <div className="flex items-center gap-3 min-w-0">
       <div className="flex-1 h-1.5 rounded-full bg-border overflow-hidden">
         <div
-          className="h-full rounded-full bg-linear-to-r from-primary to-accent transition-all duration-500"
+          className="h-full rounded-full bg-gradient-to-br from-primary to-accent transition-all duration-500"
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -56,23 +59,133 @@ function SubjectProgressBar({ completed, total }: { completed: number; total: nu
   );
 }
 
+// ── Sticky Breadcrumb ─────────────────────────────────────────────────────────
+
+function StickyBreadcrumb({
+  subject,
+  topicTitle,
+  onReset,
+}: {
+  subject: { title: string };
+  topicTitle?: string;
+  onReset?: () => void;
+}) {
+  return (
+    <div className="sticky top-[calc(var(--nav-height)+8px)] z-10 flex items-center gap-1.5 py-2 px-3 mb-3 rounded-lg border border-border bg-background-card/95 backdrop-blur-sm">
+      <span className="text-[10px] font-medium text-foreground-muted uppercase tracking-widest">
+        {subject.title}
+      </span>
+      {topicTitle && (
+        <>
+          <ChevronRight className="h-3 w-3 text-foreground-muted shrink-0" aria-hidden="true" />
+          <span className="text-[10px] font-medium text-foreground-muted uppercase tracking-widest truncate">
+            {topicTitle}
+          </span>
+        </>
+      )}
+      {onReset && (
+        <button
+          type="button"
+          onClick={onReset}
+          className="ml-auto text-[10px] font-medium text-primary hover:text-primary-hover uppercase tracking-widest cursor-pointer focus-ring rounded transition-colors duration-150"
+        >
+          Reset
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ── Bulk-Complete Confirmation Modal ──────────────────────────────────────────
+
+function BulkCompleteModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  count,
+  label,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  count: number;
+  label: string;
+}) {
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Confirm bulk complete"
+    >
+      <div
+        className="rounded-2xl border border-border bg-background-card p-6 max-w-md w-[calc(100%-2rem)] shadow-lg animate-slide-down"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start gap-3 mb-4">
+          <div className="shrink-0 rounded-xl bg-[var(--warning)]/10 p-2 text-[var(--warning)]">
+            <AlertTriangle className="h-5 w-5" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-foreground">Confirm Bulk Complete</h3>
+            <p className="mt-1 text-sm text-foreground-muted leading-relaxed">
+              <span className="font-semibold text-foreground">{count} topics</span> under{' '}
+              &lsquo;{label}&rsquo; will be marked complete.
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground-secondary hover:bg-background-secondary transition-colors duration-150 cursor-pointer focus-ring"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              onConfirm();
+              onClose();
+            }}
+            className="rounded-xl bg-error px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity duration-150 cursor-pointer focus-ring"
+            style={{ backgroundColor: 'var(--error)' }}
+          >
+            Mark {count} Complete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Subject accordion row ─────────────────────────────────────────────────────
 
 function SubjectAccordion({
   subject,
   completedCount,
   progressRecords,
+  curriculumId,
   onConfidenceChange,
   onStatusChange,
 }: {
   subject: { id: string; curriculum_id: string; title: string; description: string | null; order_no: number | null; topics: TopicItem[] };
   completedCount: number;
   progressRecords: TopicProgressRecord[];
+  curriculumId: string | null;
   onConfidenceChange: (topicId: string, level: number) => void;
   onStatusChange: (topicId: string, status: TopicStatus) => void;
 }) {
   const [isOpen, setIsOpen] = useState(true);
+  const [bulkModalOpen, setBulkModalOpen] = useState(false);
   const total = subject.topics.length;
+
+  const handleBulkComplete = () => {
+    subject.topics.forEach((t) => onStatusChange(t.id, 'completed'));
+  };
 
   return (
     <div className="rounded-xl border border-border bg-background-card overflow-hidden">
@@ -109,21 +222,53 @@ function SubjectAccordion({
               No topics found for this subject.
             </p>
           ) : (
-            subject.topics.map((topic) => {
-              const progress = progressRecords.find((r) => r.topic_id === topic.id);
-              return (
-                <TopicCard
-                  key={topic.id}
-                  topic={topic}
-                  progress={progress}
-                  onConfidenceChange={onConfidenceChange}
-                  onStatusChange={onStatusChange}
-                />
-              );
-            })
+            <>
+              {/* Sticky breadcrumb for subject context */}
+              <div className="col-span-2">
+                <StickyBreadcrumb subject={subject} />
+              </div>
+
+              {subject.topics.map((topic) => {
+                const progress = progressRecords.find((r) => r.topic_id === topic.id);
+
+                return (
+                  <TopicCard
+                    key={topic.id}
+                    topic={topic}
+                    progress={progress}
+                    curriculumId={curriculumId}
+                    onConfidenceChange={onConfidenceChange}
+                    onStatusChange={onStatusChange}
+                  />
+                );
+              })}
+            </>
+          )}
+
+          {/* Bulk complete button */}
+          {subject.topics.length > 0 && (
+            <div className="col-span-2 pt-2 border-t border-border flex justify-end">
+              <button
+                type="button"
+                onClick={() => setBulkModalOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-foreground-muted hover:text-foreground hover:bg-background-secondary transition-colors duration-150 cursor-pointer focus-ring"
+              >
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Mark all complete
+              </button>
+            </div>
           )}
         </div>
       )}
+
+      {/* Bulk-complete confirmation modal */}
+      <BulkCompleteModal
+        isOpen={bulkModalOpen}
+        onClose={() => setBulkModalOpen(false)}
+        onConfirm={handleBulkComplete}
+        count={total}
+        label={subject.title}
+      />
     </div>
   );
 }
@@ -162,11 +307,10 @@ function SubjectFilterBar({
             key={subject.id}
             onClick={() => {
               if (allSelected) {
-                // Currently all selected → select only this one
                 onToggle([subject.id]);
               } else if (selectedIds.includes(subject.id)) {
                 const next = selectedIds.filter(id => id !== subject.id);
-                onToggle(next.length === 0 ? [] : next); // [] means "all"
+                onToggle(next.length === 0 ? [] : next);
               } else {
                 const next = [...selectedIds, subject.id];
                 onToggle(next.length === subjects.length ? [] : next);
@@ -223,7 +367,7 @@ export default function LessonTracker() {
 
   // ── Subject filter ────────────────────────────────────────────────────────
   const filteredSubjects = useMemo(() => {
-    if (selectedSubjectIds.length === 0) return allSubjects; // empty = all selected
+    if (selectedSubjectIds.length === 0) return allSubjects;
     return allSubjects.filter(s => selectedSubjectIds.includes(s.id));
   }, [allSubjects, selectedSubjectIds]);
 
@@ -249,17 +393,16 @@ export default function LessonTracker() {
           <div className="inline-flex rounded-2xl bg-primary/10 p-4 text-primary mb-5">
             <BookOpen className="h-8 w-8" />
           </div>
-          <h2 className="text-xl font-bold text-foreground">No curricula enrolled</h2>
+          <h2 className="text-xl font-bold text-foreground">No courses enrolled yet</h2>
           <p className="mt-2 text-sm text-foreground-muted leading-relaxed">
-            Head over to Course Manager to enrol in a curriculum. Your topic progress will appear
-            here once you&apos;re enrolled.
+            You haven&apos;t enrolled in a course yet. Browse the curriculum library to get started.
           </p>
           <Link
             href="/courses"
             className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary-hover transition-colors duration-150"
           >
             <Sparkles className="h-4 w-4" />
-            Go to Course Manager
+            Browse Courses
           </Link>
         </div>
       </div>
@@ -336,7 +479,7 @@ export default function LessonTracker() {
 
       {/* ── Curriculum meta ────────────────────────────────────────────────── */}
       {activeCurriculum && (
-        <div className="rounded-xl border border-border bg-linear-to-br from-primary/5 to-accent/5 px-5 py-4 flex flex-wrap items-center gap-4">
+        <div className="rounded-xl border border-border bg-gradient-to-br from-primary/5 to-accent/5 px-5 py-4 flex flex-wrap items-center gap-4">
           <div className="flex-1 min-w-0">
             <h2 className="text-lg font-bold text-foreground">{activeCurriculum.title}</h2>
             {activeCurriculum.description && (
@@ -388,6 +531,7 @@ export default function LessonTracker() {
               subject={subject}
               completedCount={getSubjectCompletedCount(subject)}
               progressRecords={progressRecords}
+              curriculumId={activeCurriculumId}
               onConfidenceChange={updateConfidence}
               onStatusChange={updateStatus}
             />

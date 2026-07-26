@@ -665,6 +665,65 @@ a {
   transition: all 0.3s var(--hp-ease-out) !important;
 }
 
+/* ── App-scoped scroll-reveal — mirrors hp-reveal but uses app tokens ──────── */
+/*    Structurally identical to hp-reveal: 0.7s duration, translateY(18px)     */
+/*    scale(0.96) blur(6px) hidden state, exit-on-scroll-away. Uses app tokens   */
+/*    (var(--foreground)/var(--background)) instead of --hp-* tokens.            */
+/*    Do NOT use --hp-* tokens in .app-reveal scope.                             */
+
+.app-reveal {
+  opacity: 0;
+  transform: translateY(18px) scale(0.96);
+  filter: blur(6px);
+  transition: opacity 0.7s ease-out,
+              transform 0.7s ease-out,
+              filter 0.7s ease-out;
+}
+
+/* Staggered entry delay via CSS custom property */
+.app-reveal {
+  transition-delay: var(--app-delay, 0ms);
+}
+
+/* Fade-out is faster than fade-in for a snappy scroll-away feel */
+.app-reveal:not(.app-visible) {
+  transition-duration: 0.35s;
+  transition-timing-function: ease-in;
+  transition-delay: 0ms;
+  filter: blur(4px);
+}
+
+.app-reveal.app-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: blur(0);
+}
+
+/* ── Cascade stagger: children of a revealed parent stagger in ────────────── */
+.app-stagger > .app-reveal {
+  transition-delay: calc(var(--app-stagger-index, 0) * 80ms);
+}
+.app-stagger.app-visible > .app-reveal {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: blur(0);
+}
+
+/* ── Card entrance (slightly stronger) ────────────────────────────────────── */
+.app-reveal-card {
+  opacity: 0;
+  transform: translateY(24px) scale(0.94);
+  filter: blur(8px);
+  transition: opacity 0.8s ease-out,
+              transform 0.8s ease-out,
+              filter 0.8s ease-out;
+}
+.app-reveal-card.app-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: blur(0);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hp-reveal,
   .hp-reveal-card {
@@ -681,6 +740,18 @@ a {
   .hp .animate-float,
   .hp .hp-grad {
     animation: none;
+  }
+
+  .app-reveal,
+  .app-reveal-card {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
+  }
+
+  .app-stagger > .app-reveal {
+    transition-delay: 0ms;
   }
 }
 

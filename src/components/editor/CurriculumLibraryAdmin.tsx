@@ -18,12 +18,20 @@ import {
   getAllCurriculums,
   getPublicSubjects,
   getTopicsBySubject,
+  mockCurriculums,
   mockSubjects,
   addTopic as dbAddTopic,
   updateTopic as dbUpdateTopic,
   deleteTopic as dbDeleteTopic,
   submitToReviewQueue,
 } from '@/lib/mock/database';
+
+/** Dispatch a custom event so consumer hooks (useCourseManager, LessonContext) can refetch. */
+function notifyCurriculumChanged() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('curriculum-data-changed'));
+  }
+}
 import type { ReviewSubmissionType } from '@/types';
 
 // ── Local Types ───────────────────────────────────────────────────────────────
@@ -125,7 +133,9 @@ export default function CurriculumLibraryAdmin() {
           isNew: false as boolean,
         };
         setCurriculums(prev => [...prev, newCurr]);
+        mockCurriculums.push(newCurr);
       }
+      notifyCurriculumChanged();
       setStatusMessage('Published directly.');
     } else {
       // Contributor: submit to review queue
@@ -187,6 +197,7 @@ export default function CurriculumLibraryAdmin() {
           existing.order_no = editingSubject.order_no;
         }
       }
+      notifyCurriculumChanged();
       setStatusMessage('Published directly.');
     } else {
       submitToReviewQueue({
@@ -269,6 +280,7 @@ export default function CurriculumLibraryAdmin() {
           order_no: editingTopic.order_no,
         });
       }
+      notifyCurriculumChanged();
       setStatusMessage('Published directly.');
     } else {
       submitToReviewQueue({
@@ -300,6 +312,7 @@ export default function CurriculumLibraryAdmin() {
     if (!user) return;
     if (canDirectPublish) {
       dbDeleteTopic(topicId);
+      notifyCurriculumChanged();
       setStatusMessage('Topic deleted.');
       setSubmitStatus('done');
       setTimeout(() => setSubmitStatus('idle'), 3000);

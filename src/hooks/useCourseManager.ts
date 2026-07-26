@@ -9,6 +9,7 @@ import { useState, useCallback, useMemo, useEffect } from 'react';
 import type { Exam, ExamCountdown, UserExamHistory } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 import { createClient } from '@/lib/supabase/client';
+import { getAllCurriculums, getAllSubjects } from '@/lib/mock/database';
 
 // ── Local Types ───────────────────────────────────────────────────────────────
 
@@ -69,57 +70,106 @@ export function useCourseManager() {
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Load all data on mount / userId change
-  useEffect(() => {
+  const loadCurriculumData = useCallback(async () => {
     if (!userId) {
+      // MVP fallback: load mock data when no user is authenticated
+      setAllCurriculums(getAllCurriculums().map(c => ({
+        id: c.id,
+        title: c.title,
+        description: c.description,
+        qualification: c.qualification,
+        exam_board: c.exam_board,
+        syllabus_code: null,
+        structure_type: null,
+        grading_system: null,
+        hierarchy_model: null,
+        library_status: 'approved' as import('@/types').LibraryStatus,
+        share_token: null,
+        subject_count: undefined,
+      })));
+      setAllSubjects(getAllSubjects());
+      setAllExams([]);
       setEnrollments([]);
       setExamHistory([]);
       setCountdowns([]);
       setIsLoaded(true);
       return;
     }
-    (async () => {
-      const [
-        cRes, sRes, eRes, enrRes, histRes, ovrRes, cdRes,
-      ] = await Promise.all([
-        supabase.from('curriculums').select('*').order('title'),
-        supabase.from('subjects').select('*').order('order_no'),
-        supabase.from('exams').select('*'),
-        supabase.from('user_enrollments').select('*').eq('user_id', userId),
-        supabase.from('user_exam_history').select('*').eq('user_id', userId),
-        supabase.from('user_exam_overrides').select('*').eq('user_id', userId),
-        supabase.from('exam_countdowns').select('*').eq('user_id', userId),
-      ]);
+    setIsLoaded(false);
+    const [
+      cRes, sRes, eRes, enrRes, histRes, ovrRes, cdRes,
+    ] = await Promise.all([
+      supabase.from('curriculums').select('*').order('title'),
+      supabase.from('subjects').select('*').order('order_no'),
+      supabase.from('exams').select('*'),
+      supabase.from('user_enrollments').select('*').eq('user_id', userId),
+      supabase.from('user_exam_history').select('*').eq('user_id', userId),
+      supabase.from('user_exam_overrides').select('*').eq('user_id', userId),
+      supabase.from('exam_countdowns').select('*').eq('user_id', userId),
+    ]);
 
-      setAllCurriculums((cRes.data ?? []).map(c => ({
-        id: c.id,
-        title: c.title,
-        description: c.description,
-        qualification: c.qualification,
-        exam_board: c.exam_board,
-        syllabus_code: c.syllabus_code ?? null,
-        structure_type: c.structure_type ?? null,
-        grading_system: c.grading_system ?? null,
-        hierarchy_model: (c.hierarchy_model ?? null) as { level1: string; level2: string; level3: string } | null,
-        library_status: (c.library_status ?? 'approved') as import('@/types').LibraryStatus,
-        share_token: c.share_token ?? null,
-        subject_count: c.subject_count ?? undefined,
-      })));
+    setAllCurriculums((cRes.data ?? []).length > 0
+      ? (cRes.data ?? []).map(c => ({
+          id: c.id,
+          title: c.title,
+          description: c.description,
+          qualification: c.qualification,
+          exam_board: c.exam_board,
+          syllabus_code: c.syllabus_code ?? null,
+          structure_type: c.structure_type ?? null,
+          grading_system: c.grading_system ?? null,
+          hierarchy_model: (c.hierarchy_model ?? null) as { level1: string; level2: string; level3: string } | null,
+          library_status: (c.library_status ?? 'approved') as import('@/types').LibraryStatus,
+          share_token: c.share_token ?? null,
+          subject_count: c.subject_count ?? undefined,
+        }))
+      : getAllCurriculums().map(c => ({
+          id: c.id,
+          title: c.title,
+          description: c.description,
+          qualification: c.qualification,
+          exam_board: c.exam_board,
+          syllabus_code: null,
+          structure_type: null,
+          grading_system: null,
+          hierarchy_model: null,
+          library_status: 'approved' as import('@/types').LibraryStatus,
+          share_token: null,
+          subject_count: undefined,
+        }))
+    );
 
-      setAllSubjects(sRes.data ?? []);
-      setAllExams(eRes.data ?? []);
-      setEnrollments((enrRes.data ?? []) as EnrollmentEntry[]);
-      setExamHistory((histRes.data ?? []) as UserExamHistory[]);
+    setAllSubjects((sRes.data ?? []).length > 0
+      ? (sRes.data ?? [])
+      : getAllSubjects()
+    );
 
-      const ovrMap: Record<string, any> = {};
-      for (const o of (ovrRes.data ?? [])) {
-        ovrMap[o.exam_id] = o;
-      }
-      setExamOverrides(ovrMap);
+    setAllExams(eRes.data ?? []);
+    setEnrollments((enrRes.data ?? []) as EnrollmentEntry[]);
+    setExamHistory((histRes.data ?? []) as UserExamHistory[]);
 
-      setCountdowns((cdRes.data ?? []) as ExamCountdown[]);
-      setIsLoaded(true);
-    })();
+    const ovrMap: Record<string, any> = {};
+    for (const o of (ovrRes.data ?? [])) {
+      ovrMap[o.exam_id] = o;
+    }
+    setExamOverrides(ovrMap);
+
+    setCountdowns((cdRes.data ?? []) as ExamCountdown[]);
+    setIsLoaded(true);
   }, [userId, supabase]);
+
+  useEffect(() => {
+    loadCurriculumData();
+  }, [loadCurriculumData]);
+
+  // Listen for curriculum changes from the editor so data stays in sync
+  useEffect(() => {
+    const handler = () => {
+      loadCurriculumData();
+    };
+    window.addEventListener('curriculum-data-changed', handler);
+    return () => window.removeEventListener('curriculum-data-changed', handler);
+  }, [loadCurriculumData]);
 
   // Refetch helper
   const refetchEnrollments = useCallback(async () => {

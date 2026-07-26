@@ -6,7 +6,8 @@
 // date override. Smart filter for enrolled courses.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import {
   Search, Filter, Clock, Globe, Sparkles,
   Calendar, ChevronRight, FlaskConical, Check,
@@ -21,7 +22,21 @@ import {
 import { QUALIFICATION_REGISTRY } from '@/constants/qualifications';
 import { cn } from '@/lib/utils';
 import type { Exam } from '@/types';
-import { AddCountdownModal } from '@/components/countdown/AddCountdownModal';
+import Button from '@/components/ui/Button';
+
+const ITEMS_PER_PAGE = 12;
+
+const AddCountdownModal = dynamic(() => import('@/components/countdown/AddCountdownModal').then(m => ({ default: m.AddCountdownModal })), {
+  loading: () => (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--foreground)]/10 backdrop-blur-sm"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <div className="w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--background-card)] p-6 animate-shimmer" style={{ minHeight: 400 }} />
+    </div>
+  ),
+});
 
 // ── Exam Card ─────────────────────────────────────────────────────────────────
 
@@ -158,8 +173,15 @@ export default function ExamsLibraryBrowser() {
   const [selectedBoard, setSelectedBoard] = useState<string>('all');
   const [selectedQual, setSelectedQual] = useState<string>('all');
   const [pendingExam, setPendingExam] = useState<Exam | null>(null);
+  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const { createCountdown } = useCountdown(user?.id);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setVisibleCount(ITEMS_PER_PAGE);
+  }, [smartFilter, selectedBoard, selectedQual, searchQuery]);
 
   // Get tracked exam IDs
   const trackedExamIds = useMemo(() => {
@@ -201,6 +223,18 @@ export default function ExamsLibraryBrowser() {
     // For fixed, pre-fill but still allow override via modal
     setPendingExam(exam);
   };
+
+  const handleLoadMore = () => {
+    setIsLoadingMore(true);
+    // Simulate async load delay for correct pattern
+    setTimeout(() => {
+      setVisibleCount(prev => prev + ITEMS_PER_PAGE);
+      setIsLoadingMore(false);
+    }, 400);
+  };
+
+  const visibleExams = filteredExams.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredExams.length;
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
@@ -277,16 +311,36 @@ export default function ExamsLibraryBrowser() {
 
       {/* Grid */}
       {filteredExams.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filteredExams.map(exam => (
-            <ExamCard
-              key={exam.id}
-              exam={exam}
-              isTracking={trackedExamIds.has(exam.id)}
-              onAdd={handleAdd}
-            />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {visibleExams.map(exam => (
+              <ExamCard
+                key={exam.id}
+                exam={exam}
+                isTracking={trackedExamIds.has(exam.id)}
+                onAdd={handleAdd}
+              />
+            ))}
+          </div>
+
+          {/* Load More / End state */}
+          <div className="flex flex-col items-center gap-3 pt-2">
+            {hasMore ? (
+              <Button
+                variant="secondary"
+                isLoading={isLoadingMore}
+                onClick={handleLoadMore}
+                aria-live="polite"
+              >
+                Load More Exams
+              </Button>
+            ) : (
+              <p className="text-sm text-[var(--foreground-muted)] py-2">
+                You've explored all {filteredExams.length} exams. Well done!
+              </p>
+            )}
+          </div>
+        </>
       ) : (
         <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-[var(--border)] bg-[var(--background-card)] p-16 text-center">
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--background-secondary)] text-[var(--foreground-muted)]">
