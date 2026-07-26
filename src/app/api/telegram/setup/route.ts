@@ -1,8 +1,8 @@
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTs — Telegram Webhook Setup (one-time)
 //
-// GET /api/telegram/setup  — Registers the webhook URL with Telegram.
-//                             Visit this once after deploying to production.
+// GET /api/telegram/setup  — Deletes any existing webhook, then registers a
+//                             clean one. Visit once after deploying.
 //
 // Protected by CRON_SECRET to prevent abuse.
 // ──────────────────────────────────────────────────────────────────────────────
@@ -26,19 +26,24 @@ export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const webhookUrl = `${url.protocol}//${url.host}/api/telegram/webhook`;
 
-  // First, check current webhook status
+  // 1. Check current webhook status
   const infoRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getWebhookInfo`);
   const info = await infoRes.json();
 
-  // Register the webhook
+  // 2. Delete any existing webhook
+  const deleteRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/deleteWebhook`);
+  const deleteResult = await deleteRes.json();
+
+  // 3. Register the clean webhook (with drop_pending_updates to clear stale queue)
   const setRes = await fetch(
-    `https://api.telegram.org/bot${BOT_TOKEN}/setWebhook?url=${encodeURIComponent(webhookUrl)}`
+    `https://api.telegram.org/bot${BOT_TOKEN}/setWebhook?url=${encodeURIComponent(webhookUrl)}&drop_pending_updates=true`
   );
   const setResult = await setRes.json();
 
   return NextResponse.json({
     webhook_url: webhookUrl,
     previous: info?.result ?? null,
+    delete: deleteResult,
     result: setResult,
   });
 }
