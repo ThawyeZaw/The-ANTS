@@ -217,7 +217,7 @@ function SettingsPageInner() {
 
   const handleUpdatePreferences = async (prefs: NotificationPreferences) => {
     if (!user) return;
-    await updateProfile({ notificationPreferences: prefs } as any);
+    await updateProfile({ notificationPreferences: prefs });
   };
 
   return (

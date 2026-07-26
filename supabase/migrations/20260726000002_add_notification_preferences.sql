@@ -8,10 +8,10 @@
 ALTER TABLE public.profiles
     ADD COLUMN IF NOT EXISTS notification_preferences JSONB
     DEFAULT '{
-      "timetable": {"enabled": true, "reminders": [15]},
-      "assignments": {"enabled": false, "reminders": [60, 1440, 4320, 10080]},
-      "exams": {"enabled": false, "reminders": [1440, 10080, 43200]},
-      "quizzes": {"enabled": false, "reminders": [60, 1440]}
+      "timetable": {"enabled": true, "reminders": [0, 10, 30, 60, 1440, 4320, 10080]},
+      "assignments": {"enabled": true, "reminders": [60, 1440, 4320, 10080]},
+      "exams": {"enabled": true, "reminders": [1440, 4320, 10080]},
+      "quizzes": {"enabled": true, "reminders": [60, 1440]}
     }'::jsonb;
 
 -- 2. Add reminder_minutes to timetable_events
