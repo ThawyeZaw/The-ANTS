@@ -1,11 +1,15 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useState, useCallback, useRef, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
 import MyWorkspace from '@/components/workspace/MyWorkspace';
 import { WorkspaceToastProvider } from '@/components/workspace/WorkspaceToast';
+import CourseSyncPanel from '@/components/layout/CourseSyncPanel';
+import QuickAccessToolbar from '@/components/layout/QuickAccessToolbar';
+import MyContributions from '@/components/layout/MyContributions';
 import { cn } from '@/lib/utils';
 
 export default function ContributorDashboard() {
@@ -85,8 +89,8 @@ export default function ContributorDashboard() {
                     <p className="mt-1 text-sm text-white/70 max-w-md">{slide.subtitle}</p>
                   </div>
                   <div className="hidden sm:flex items-center justify-center shrink-0">
-                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white/15 border border-white/20 flex items-center justify-center text-4xl">
-                      🐜
+                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white/15 border border-white/20 flex items-center justify-center">
+                      <Image src="/logo.png" alt="The ANTs logo" width={40} height={40} className="md:w-[52px] md:h-[52px]" />
                     </div>
                   </div>
                 </div>
@@ -113,6 +117,16 @@ export default function ContributorDashboard() {
         )}
       </div>
 
+      {/* Quick Access Toolbar */}
+      <div className="mt-6">
+        <QuickAccessToolbar />
+      </div>
+
+      {/* Course Sync Panel — enrolled courses with synced resources */}
+      <div className="mt-6">
+        <CourseSyncPanel />
+      </div>
+
       {/* Workspace */}
       <div className="mt-6">
         <Suspense fallback={<div className="flex items-center justify-center py-16 text-[var(--foreground-muted)]">Loading workspace...</div>}>
@@ -120,6 +134,11 @@ export default function ContributorDashboard() {
             <MyWorkspace />
           </WorkspaceToastProvider>
         </Suspense>
+      </div>
+
+      {/* My Contributions */}
+      <div className="mt-6">
+        <MyContributions />
       </div>
     </div>
   );

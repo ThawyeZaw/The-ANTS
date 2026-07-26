@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useRole } from '@/hooks/useRole';
@@ -18,7 +19,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-[50vh] flex items-center justify-center">
       <div className="flex flex-col items-center gap-4 animate-pulse-soft">
-        <div className="text-4xl">🐜</div>
+        <Image src="/logo.png" alt="The ANTs logo" width={40} height={40} />
         <p className="text-sm text-foreground-muted">Loading your dashboard...</p>
       </div>
     </div>

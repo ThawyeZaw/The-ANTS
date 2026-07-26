@@ -154,7 +154,7 @@ export default function CreateClubPage() {
     <div className="max-w-2xl mx-auto space-y-8 py-4">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <BackButton href="/clubs" />
+        <BackButton href="/clubs" label="Back to Clubs" />
         <div>
           <h1 className="text-2xl font-bold text-foreground">Create a Club</h1>
           <p className="text-sm text-foreground-muted mt-1">

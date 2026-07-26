@@ -38,7 +38,7 @@ export default function ClubsPageContent() {
         <div className="max-w-6xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <BackButton href="/" />
+              <BackButton href="/" label="Back to Home" />
               <h1 className="text-3xl font-bold text-foreground mt-2">Explore Clubs</h1>
               <p className="text-foreground-secondary mt-1">
                 Discover community spaces for subjects, CCAs, and projects.

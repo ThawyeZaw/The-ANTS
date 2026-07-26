@@ -196,6 +196,13 @@ export interface Profile {
   showClubProjects?: boolean;
   showClubActivity?: boolean;
   certificationIds?: string[] | null;
+  telegramChatId?: string | null;
+  notificationPreferences?: {
+    timetable?: { enabled: boolean; reminders: number[] };
+    assignments?: { enabled: boolean; reminders: number[] };
+    exams?: { enabled: boolean; reminders: number[] };
+    quizzes?: { enabled: boolean; reminders: number[] };
+  } | null;
   createdAt: string;
   isVerified?: boolean;
   // Onboarding fields
@@ -999,6 +1006,8 @@ export interface ExamCountdown {
   share_token: string | null;
   /** Whether this countdown was created from the library (has linked exam) or is fully custom */
   is_custom: boolean;
+  /** Visibility control: 'private' (owner only), 'link' (share_token), 'public' (library) */
+  visibility: 'private' | 'link' | 'public';
 }
 
 // -----------------------------------------------------------------------------
@@ -1239,6 +1248,23 @@ export interface OrgTeamMember {
   linkedProfileUsername?: string;
   order: number;
   isAlumni?: boolean;
+}
+
+/** Form data for creating/editing an org team member */
+export interface OrgTeamMemberFormData {
+  name: string;
+  title: string;
+  bio: string;
+  photoUrl: string;
+  linkedProfileUsername?: string;
+  isAlumni?: boolean;
+}
+
+/** The organisation's mission statement stored as markdown */
+export interface OrgMission {
+  id: string;
+  content: string;
+  updatedAt: string;
 }
 
 /** A single timeline item — an event, milestone, or activity in The ANTS history */

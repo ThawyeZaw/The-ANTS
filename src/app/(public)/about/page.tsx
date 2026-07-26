@@ -6,14 +6,13 @@ import BackButton from '@/components/ui/BackButton';
 import {
   Users,
   Target,
-  Compass,
   Clock,
-  ChevronDown,
 } from 'lucide-react';
-import { getOrgTeamMembers, getOrgMilestones } from '@/lib/mock/database';
+import { getOrgTeamMembers, getOrgMilestones, getOrgMission } from '@/lib/mock/database';
 import TeamMemberCard from '@/components/about/TeamMemberCard';
 import OrgTimeline from '@/components/about/OrgTimeline';
 import type { OrgTeamMember } from '@/types';
+import { renderMarkdown } from '@/lib/markdown';
 
 // ── Tabs ─────────────────────────────────────────────────────────────────────
 
@@ -28,6 +27,8 @@ type TabKey = (typeof TABS)[number]['key'];
 // ── Mission Section ──────────────────────────────────────────────────────────
 
 function MissionSection() {
+  const mission = getOrgMission();
+
   return (
     <div className="animate-fade-in space-y-12">
       {/* Headline */}
@@ -39,41 +40,12 @@ function MissionSection() {
         </h1>
       </div>
 
-      {/* Who We Are */}
+      {/* Dynamic Mission Content */}
       <div className="bg-background-card border border-border rounded-2xl p-8 md:p-10">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
-            <Users className="h-5 w-5 text-primary" />
-          </div>
-          <h2 className="text-2xl font-bold text-foreground">Who We Are</h2>
-        </div>
-        <p className="text-foreground-secondary leading-relaxed text-base">
-          Our greatest strength is our community of mentors. <span className="font-brand">The ANTs</span> teaching
-          team is a diverse, global network of scholars who have successfully
-          conquered the academic hurdles you are facing right now. Because our
-          tutors come from a wide variety of prestigious academic pathways —
-          including A-Levels, Polytechnics, University Foundation programs, the
-          OSSD and top UK Universities — they bring rich, firsthand experience
-          to every lesson.
-        </p>
-      </div>
-
-      {/* The ANTs Advantage */}
-      <div className="bg-background-card border border-border rounded-2xl p-8 md:p-10">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center">
-            <Compass className="h-5 w-5 text-amber-400" />
-          </div>
-          <h2 className="text-2xl font-bold text-foreground"><span className="font-brand">The ANTs</span> Advantage</h2>
-        </div>
-        <p className="text-foreground-secondary leading-relaxed text-base">
-          When you learn with us, you are not just memorizing a syllabus. You
-          are connecting with high-achieving seniors who understand your exact
-          struggles. Whether you need rigorous IGCSE exam preparation or real-world
-          advice on transitioning to higher education abroad, our team provides
-          the academic strategies and peer mentorship you need to succeed
-          globally.
-        </p>
+        <div
+          className="[&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-foreground [&_h2]:mb-6 [&_h2]:flex [&_h2]:items-center [&_h2]:gap-3"
+          dangerouslySetInnerHTML={{ __html: renderMarkdown(mission.content) }}
+        />
       </div>
 
       {/* CTA */}
@@ -259,7 +231,7 @@ export default function AboutPage() {
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 py-8 pb-20">
         {/* Back button */}
-        <BackButton href="/" />
+        <BackButton href="/" label="Back to Home" />
 
         {/* Tab Nav with sliding pill indicator */}
         <div className="relative flex flex-wrap gap-1 p-1 bg-background-secondary rounded-xl border border-border mb-10 max-w-md mx-auto">

@@ -2,7 +2,7 @@
 
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTs — MyWorkspace
-// Unified personal hub with 4 tabs: My Courses, My Notes, My Decks, My Exams.
+// Unified personal hub with 4 tabs: My Notes, My Decks, My Quizzes, My Exams.
 // Each tab renders comprehensive card previews with detailed metadata,
 // clickable navigation to full-detail views, error detection, and loading states.
 // ──────────────────────────────────────────────────────────────────────────────
@@ -12,19 +12,18 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import {
   BookOpen, NotebookPen, Layers, Clock,
   Plus, ExternalLink, Search, Briefcase,
-  ArrowRight, BookMarked, SquareStack,
-  GraduationCap, CalendarDays, Pencil, Trash2,
-  Eye, Share2, Globe, Lock, BarChart3,
-  AlertTriangle, TrendingUp, Loader2, Sparkles,
+  ArrowRight, BookMarked,
+  CalendarDays, Pencil,
+  Eye, Share2, Globe, Lock,
+  AlertTriangle, Loader2, Sparkles,
+  FlaskConical,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
-import { useCourseManager } from '@/hooks/useCourseManager';
 import { useCountdown } from '@/hooks/useCountdown';
-import { getUserWorkspace, getDecksByUser, deleteDeck } from '@/lib/mock/database';
+import { getUserWorkspace, getDecksByUser, deleteDeck, mockQuizzes } from '@/lib/mock/database';
 import { cn } from '@/lib/utils';
-import type { Note, Deck, ExamCountdown } from '@/types';
-import type { EnrollmentWithDetails } from '@/hooks/useCourseManager';
+import type { Note, Deck, ExamCountdown, Quiz } from '@/types';
 import WorkspaceErrorBoundary from './WorkspaceErrorBoundary';
 import { useWorkspaceToast } from './WorkspaceToast';
 import { GridSkeleton, TabContentSkeleton } from './WorkspaceSkeleton';
@@ -32,10 +31,10 @@ import { GridSkeleton, TabContentSkeleton } from './WorkspaceSkeleton';
 // ── Tab config ────────────────────────────────────────────────────────────────
 
 const TABS = [
-  { key: 'courses', label: 'My Courses', icon: GraduationCap, color: 'text-emerald-500' },
-  { key: 'notes', label: 'My Notes', icon: NotebookPen, color: 'text-violet-500' },
-  { key: 'decks', label: 'My Decks', icon: Layers, color: 'text-blue-500' },
-  { key: 'exams', label: 'My Exams', icon: Clock, color: 'text-amber-500' },
+  { key: 'notes', label: 'Notes', icon: NotebookPen, color: 'text-violet-500' },
+  { key: 'decks', label: 'Decks', icon: Layers, color: 'text-blue-500' },
+  { key: 'quizzes', label: 'Quizzes', icon: FlaskConical, color: 'text-rose-500' },
+  { key: 'exams', label: 'Exams', icon: Clock, color: 'text-amber-500' },
 ] as const;
 
 type TabKey = typeof TABS[number]['key'];
@@ -114,148 +113,124 @@ function EmptyState({ icon: Icon, title, description, cta, ctaHref }: {
   );
 }
 
-// ── Courses tab ───────────────────────────────────────────────────────────────
+// ── Quizzes tab ───────────────────────────────────────────────────────────────
 
-function CoursesTab({
-  enrollments,
-  isLoading,
-}: {
-  enrollments: ReturnType<typeof useCourseManager>['enrollments'];
-  isLoading: boolean;
-}) {
+function QuizzesTab({ userId, isLoading }: { userId: string; isLoading: boolean }) {
   const router = useRouter();
-  const { showToast } = useWorkspaceToast();
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const handleSubjectClick = useCallback((curriculumId: string, subjectId: string, subjectTitle: string) => {
+  useEffect(() => {
     try {
-      router.push(`/lessons/${curriculumId}/${subjectId}`);
+      setQuizzes(mockQuizzes.filter(q => q.created_by === userId));
     } catch {
-      showToast(`Failed to open "${subjectTitle}". Please try again.`, 'error', {
-        label: 'Go to Lesson Tracker',
-        onClick: () => router.push('/lessons'),
-      });
+      // silently fail — mock data shouldn't throw
     }
-  }, [router, showToast]);
+  }, [userId]);
 
-  if (isLoading) return <TabContentSkeleton tab="courses" />;
+  const filtered = quizzes.filter(q =>
+    !searchQuery || q.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  if (enrollments.length === 0) {
+  const statusBadge = (status: Quiz['status']) => {
+    const map = {
+      draft: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+      published: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+      closed: 'bg-slate-500/10 text-slate-500 dark:text-slate-400',
+    };
+    return map[status] ?? map.closed;
+  };
+
+  if (isLoading) return <TabContentSkeleton tab="quizzes" />;
+
+  if (quizzes.length === 0) {
     return (
       <EmptyState
-        icon={GraduationCap}
-        title="No courses yet"
-        description="Browse Courses to add verified curriculum templates. Adding a course auto-populates your Lesson Tracker and Grade Calculator."
-        cta="Browse Library"
-        ctaHref="/library/courses"
+        icon={FlaskConical}
+        title="No quizzes yet"
+        description="Create quizzes for your classrooms or browse the library to discover quizzes from other educators."
+        cta="Browse Quizzes"
+        ctaHref="/library"
       />
     );
   }
 
-  // Group by curriculum
-  const grouped = enrollments.reduce<Record<string, { curriculum: EnrollmentWithDetails['curriculum']; subjects: EnrollmentWithDetails[] }>>((acc, e) => {
-    const key = e.curriculum.id;
-    if (!acc[key]) acc[key] = { curriculum: e.curriculum, subjects: [] };
-    acc[key].subjects.push(e);
-    return acc;
-  }, {});
-
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-[var(--foreground-secondary)]">
-          {Object.keys(grouped).length} qualification{Object.keys(grouped).length !== 1 ? 's' : ''}
-          {' · '}
-          {enrollments.length} subject{enrollments.length !== 1 ? 's' : ''}
-        </p>
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--foreground-muted)] pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search quizzes…"
+            className="w-full rounded-xl border border-[var(--border)] bg-[var(--background-secondary)] pl-9 pr-4 py-2 text-sm placeholder:text-[var(--foreground-muted)] focus:border-[var(--primary)] focus:outline-none"
+          />
+        </div>
         <Link
-          href="/library/courses"
-          className="flex items-center gap-1.5 text-xs font-semibold text-[var(--primary)] hover:underline"
+          href="/classrooms"
+          className="flex items-center gap-1.5 text-xs font-semibold text-[var(--primary)] hover:underline shrink-0"
         >
-          <Plus size={12} /> Add Course
+          <Plus size={12} /> New Quiz
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {Object.values(grouped).map(({ curriculum, subjects }) => {
-          const curriculumId = curriculum.id;
+      {filtered.length === 0 ? (
+        <p className="text-sm text-center text-[var(--foreground-muted)] py-8">No quizzes match your search.</p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filtered.map(quiz => {
+            const questionCount = quiz.questions?.length ?? 0;
+            const createdDate = new Date(quiz.created_at).toLocaleDateString('en-GB', {
+              day: 'numeric', month: 'short', year: 'numeric',
+            });
 
-          return (
-            <div
-              key={curriculum.id}
-              className="group rounded-2xl border border-[var(--border)] bg-[var(--background-card)] p-5 hover:border-[var(--primary)]/30 hover:shadow-sm transition-all"
-            >
-              {/* Header */}
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1 min-w-0">
-                  {curriculum.exam_board && (
-                    <span className="text-[10px] font-bold bg-[var(--primary)]/10 text-[var(--primary)] px-2 py-0.5 rounded-full">
-                      {curriculum.exam_board} · {curriculum.qualification}
+            return (
+              <Link
+                key={quiz.id}
+                href="/classrooms"
+                className="group rounded-2xl border border-[var(--border)] bg-[var(--background-card)] p-4 hover:border-[var(--primary)]/30 hover:shadow-sm transition-all"
+              >
+                {/* Header row */}
+                <div className="flex items-start justify-between mb-2">
+                  <h3 className="text-sm font-semibold text-[var(--foreground)] line-clamp-1 group-hover:text-[var(--primary)] transition-colors flex-1 min-w-0">
+                    {quiz.title}
+                  </h3>
+                  <span className={cn('text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ml-2 shrink-0', statusBadge(quiz.status))}>
+                    {quiz.status}
+                  </span>
+                </div>
+
+                {/* Description */}
+                {quiz.description && (
+                  <p className="text-xs text-[var(--foreground-secondary)] line-clamp-2 mb-3 leading-relaxed">
+                    {quiz.description}
+                  </p>
+                )}
+
+                {/* Metadata row */}
+                <div className="flex items-center gap-3 text-xs text-[var(--foreground-muted)]">
+                  <span className="flex items-center gap-1">
+                    <BookOpen size={11} />
+                    {questionCount} question{questionCount !== 1 ? 's' : ''}
+                  </span>
+                  {quiz.time_limit_minutes && (
+                    <span className="flex items-center gap-1">
+                      <Clock size={11} />
+                      {quiz.time_limit_minutes} min
                     </span>
                   )}
-                  <h3 className="text-sm font-bold text-[var(--foreground)] mt-1.5">
-                    {curriculum.title}
-                  </h3>
+                  <span className="flex items-center gap-1">
+                    <CalendarDays size={11} />
+                    {createdDate}
+                  </span>
                 </div>
-                <Link
-                  href={`/lessons`}
-                  className="text-[var(--foreground-muted)] hover:text-[var(--primary)] transition-colors p-1"
-                  title="Open Lesson Tracker"
-                >
-                  <ExternalLink size={14} />
-                </Link>
-              </div>
-
-              {/* Subject rows */}
-              <div className="space-y-1.5">
-                {subjects.map(e => {
-                  return (
-                    <button
-                      key={e.id}
-                      onClick={() => handleSubjectClick(curriculumId, e.subject_id, e.subject.title)}
-                      className="w-full flex items-center justify-between rounded-xl bg-[var(--background-secondary)] hover:bg-[var(--primary)]/5 px-3 py-2 text-left transition-all cursor-pointer focus-ring group/subject"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <span className="text-xs font-medium text-[var(--foreground)] group-hover/subject:text-[var(--primary)] transition-colors">
-                          {e.subject.title}
-                        </span>
-                        {e.exam && (
-                          <p className="text-[10px] text-[var(--foreground-muted)] mt-0.5">
-                            {e.exam.exam_series || e.exam.syllabus_code}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0 ml-2">
-                        <span className="text-[10px] font-semibold text-[var(--primary)]">
-                          Open
-                          <span className="hidden sm:inline"> Tracker</span> →
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Bottom actions */}
-              <div className="mt-3 pt-3 border-t border-[var(--border)]/50 flex gap-2">
-                <Link
-                  href="/lessons"
-                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-[var(--border)] py-1.5 text-xs font-semibold text-[var(--foreground-secondary)] hover:text-[var(--foreground)] hover:bg-[var(--background-secondary)] transition-all"
-                >
-                  <BarChart3 size={12} />
-                  Lesson Tracker
-                </Link>
-                <Link
-                  href="/calculator"
-                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-[var(--border)] py-1.5 text-xs font-semibold text-[var(--foreground-secondary)] hover:text-[var(--foreground)] hover:bg-[var(--background-secondary)] transition-all"
-                >
-                  <TrendingUp size={12} />
-                  Grade Calc
-                </Link>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -749,7 +724,7 @@ export default function MyWorkspace() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const initialTab = (searchParams.get('tab') as TabKey | null) ?? 'courses';
+  const initialTab = (searchParams.get('tab') as TabKey | null) ?? 'notes';
   const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
   const [globalError, setGlobalError] = useState<string | null>(null);
 
@@ -757,7 +732,6 @@ export default function MyWorkspace() {
 
   // ── Data hooks ──────────────────────────────────────────────────────────────
 
-  const { enrollments, enrolledCurriculumIds, isLoading: coursesLoading } = useCourseManager();
   const { groupedCountdowns } = useCountdown(user?.id);
 
   // Workspace data loaded via useEffect (no side-effects in useMemo)
@@ -811,11 +785,9 @@ export default function MyWorkspace() {
   // ── Derived counts ──────────────────────────────────────────────────────────
 
   const tabCounts: Record<TabKey, number> = {
-    courses: Object.keys(
-      enrollments.reduce((acc, e) => ({ ...acc, [e.curriculum.id]: true }), {})
-    ).length,
     notes: workspace ? workspace.createdNotes.length + workspace.savedNotes.length : 0,
     decks: workspace?.decks?.length ?? 0,
+    quizzes: user ? mockQuizzes.filter(q => q.created_by === user.id).length : 0,
     exams: Object.values(groupedCountdowns).flat().length,
   };
 
@@ -833,7 +805,7 @@ export default function MyWorkspace() {
             </h1>
           </div>
           <p className="text-sm text-[var(--foreground-secondary)]">
-            Your personal study hub — all your courses, notes, decks and exams in one place.
+            Your personal study hub — all your notes, decks, quizzes and exams in one place.
           </p>
         </div>
 
@@ -860,42 +832,42 @@ export default function MyWorkspace() {
       )}
 
       {/* Stats row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         {TABS.map(tab => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             className={cn(
-              'flex flex-col items-center justify-center rounded-2xl border p-4 transition-all cursor-pointer',
+              'flex flex-col items-center justify-center rounded-xl border p-2.5 transition-all cursor-pointer',
               activeTab === tab.key
                 ? 'border-[var(--primary)]/30 bg-[var(--primary)]/5'
                 : 'border-[var(--border)] bg-[var(--background-card)] hover:border-[var(--primary)]/20'
             )}
           >
-            <tab.icon className={cn('h-5 w-5 mb-2', activeTab === tab.key ? 'text-[var(--primary)]' : tab.color)} />
-            <span className="text-2xl font-black text-[var(--foreground)] tabular-nums">
+            <tab.icon className={cn('h-4 w-4 mb-1', activeTab === tab.key ? 'text-[var(--primary)]' : tab.color)} />
+            <span className="text-lg font-black text-[var(--foreground)] tabular-nums">
               {isLoading ? '—' : tabCounts[tab.key]}
             </span>
-            <span className="text-[11px] text-[var(--foreground-muted)] mt-0.5">{tab.label}</span>
+            <span className="text-[10px] text-[var(--foreground-muted)] mt-0.5">{tab.label}</span>
           </button>
         ))}
       </div>
 
       {/* Tab selector */}
-      <div className="flex gap-1 p-1 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border)]">
+      <div className="flex gap-1 p-1 rounded-xl bg-[var(--background-secondary)] border border-[var(--border)]">
         {TABS.map(tab => (
           <button
             key={tab.key}
             id={`workspace-tab-${tab.key}`}
             onClick={() => setActiveTab(tab.key)}
             className={cn(
-              'flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer',
+              'flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer',
               activeTab === tab.key
                 ? 'bg-[var(--background-card)] text-[var(--foreground)] shadow-sm'
                 : 'text-[var(--foreground-secondary)] hover:text-[var(--foreground)]'
             )}
           >
-            <tab.icon size={14} className={activeTab === tab.key ? tab.color : ''} />
+            <tab.icon size={12} className={activeTab === tab.key ? tab.color : ''} />
             <span className="hidden sm:inline">{tab.label}</span>
             <span className="sm:hidden tabular-nums">{tabCounts[tab.key]}</span>
           </button>
@@ -905,9 +877,10 @@ export default function MyWorkspace() {
       {/* Tab content with error boundary per tab */}
       <WorkspaceErrorBoundary>
         <div>
-          {activeTab === 'courses' && (
-            <CoursesTab enrollments={enrollments} isLoading={isLoading} />
+          {activeTab === 'quizzes' && user && (
+            <QuizzesTab userId={user.id} isLoading={isLoading} />
           )}
+          {activeTab === 'quizzes' && !user && <TabContentSkeleton tab="quizzes" />}
 
           {activeTab === 'notes' && workspace && (
             <NotesTab

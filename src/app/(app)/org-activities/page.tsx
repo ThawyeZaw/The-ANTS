@@ -70,7 +70,7 @@ export default function OrgActivitiesPage() {
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <BackButton href="/dashboard" label="Back" />
+            <BackButton href="/dashboard" label="Back to Dashboard" />
             <h1 className="text-2xl md:text-3xl font-bold text-foreground">
               <span className="font-brand">The ANTs</span> Activities
             </h1>

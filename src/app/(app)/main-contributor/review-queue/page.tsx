@@ -48,7 +48,7 @@ export default function ReviewQueuePage() {
 
   return (
     <div className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8 transition-colors">
-      <BackButton href="/dashboard" label="Back" />
+      <BackButton href="/dashboard" label="Back to Dashboard" />
       <div className="mt-4">
         <ReviewQueue />
       </div>

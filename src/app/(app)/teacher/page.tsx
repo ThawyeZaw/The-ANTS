@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -18,6 +19,8 @@ import { useRole } from '@/hooks/useRole';
 import ClassroomCard from '@/components/classrooms/ClassroomCard';
 import MyWorkspace from '@/components/workspace/MyWorkspace';
 import { WorkspaceToastProvider } from '@/components/workspace/WorkspaceToast';
+import CourseSyncPanel from '@/components/layout/CourseSyncPanel';
+import QuickAccessToolbar from '@/components/layout/QuickAccessToolbar';
 import { cn } from '@/lib/utils';
 import {
   getTeacherDashboardStats,
@@ -76,7 +79,7 @@ export default function TeacherDashboard() {
   const mainContent = (
     <div className="space-y-6">
       {/* Active Classrooms */}
-      <div className="glass rounded-2xl p-6">
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--background-card)] p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
             <GraduationCap className="h-5 w-5 text-emerald-500" />
@@ -121,7 +124,7 @@ export default function TeacherDashboard() {
       </div>
 
       {/* Active Assignments */}
-      <div className="glass rounded-2xl p-6">
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--background-card)] p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
             <FileText className="h-5 w-5 text-blue-500" />
@@ -165,48 +168,48 @@ export default function TeacherDashboard() {
   );
 
   const sidebarContent = (
-    <div className="space-y-6">
-      <div className="glass rounded-2xl p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold flex items-center gap-2 text-foreground text-lg">
-            <Megaphone className="h-5 w-5 text-sky-500" />
+    <div className="space-y-3">
+      <div className="rounded-xl border border-[var(--border)] bg-[var(--background-card)] p-3">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="font-semibold flex items-center gap-1.5 text-foreground text-sm">
+            <Megaphone className="h-4 w-4 text-sky-500" />
             Club Announcements
           </h3>
         </div>
-        <div className="space-y-3">
+        <div className="space-y-2">
           {mockClubAnnouncements.slice(0, 3).map(ann => (
-            <div key={ann.id} className="p-3 bg-background-secondary/50 rounded-xl border border-border/50">
-              <p className="font-semibold text-sm text-foreground">{ann.title}</p>
-              <p className="text-xs text-foreground-muted mt-1">{ann.content}</p>
+            <div key={ann.id} className="p-2 bg-background-secondary/50 rounded-lg border border-border/50">
+              <p className="font-semibold text-xs text-foreground">{ann.title}</p>
+              <p className="text-[11px] text-foreground-muted mt-0.5">{ann.content}</p>
             </div>
           ))}
           {mockClubAnnouncements.length === 0 && (
-            <p className="text-sm text-foreground-muted">No announcements right now.</p>
+            <p className="text-xs text-foreground-muted">No announcements right now.</p>
           )}
         </div>
       </div>
 
-      <div className="glass rounded-2xl p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold flex items-center gap-2 text-foreground text-lg">
-            <Clock className="h-5 w-5 text-rose-500" />
+      <div className="rounded-xl border border-[var(--border)] bg-[var(--background-card)] p-3">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="font-semibold flex items-center gap-1.5 text-foreground text-sm">
+            <Clock className="h-4 w-4 text-rose-500" />
             Upcoming Exams
           </h3>
         </div>
-        <div className="space-y-3">
+        <div className="space-y-2">
           {mockExams.slice(0, 3).map(exam => (
-            <div key={exam.id} className="p-3 bg-background-secondary/50 rounded-xl border border-border/50 flex flex-col justify-between">
+            <div key={exam.id} className="p-2 bg-background-secondary/50 rounded-lg border border-border/50 flex flex-col justify-between">
               <div>
-                <p className="font-semibold text-sm text-foreground">{exam.title}</p>
-                <p className="text-xs text-foreground-muted mt-0.5">{exam.exam_series}</p>
+                <p className="font-semibold text-xs text-foreground">{exam.title}</p>
+                <p className="text-[11px] text-foreground-muted mt-0.5">{exam.exam_series}</p>
               </div>
-              <div className="mt-2 text-xs font-semibold text-rose-500 bg-rose-500/10 self-start px-2 py-1 rounded-md">
+              <div className="mt-1.5 text-[10px] font-semibold text-rose-500 bg-rose-500/10 self-start px-1.5 py-0.5 rounded-md">
                 {new Date(exam.exam_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
               </div>
             </div>
           ))}
           {mockExams.length === 0 && (
-            <p className="text-sm text-foreground-muted">No upcoming exams.</p>
+            <p className="text-xs text-foreground-muted">No upcoming exams.</p>
           )}
         </div>
       </div>
@@ -224,30 +227,18 @@ export default function TeacherDashboard() {
             <p className="mt-1 text-sm text-white/70 max-w-md">{welcomeSubtitle}</p>
           </div>
           <div className="hidden sm:flex items-center justify-center shrink-0">
-            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white/15 border border-white/20 flex items-center justify-center text-4xl">
-              🐜
+            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white/15 border border-white/20 flex items-center justify-center">
+              <Image src="/logo.png" alt="The ANTs logo" width={40} height={40} className="md:w-[52px] md:h-[52px]" />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Stats Grid */}
-      {stats && stats.length > 0 && (
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {stats.map((stat) => (
-            <div
-              key={stat.key}
-              className="glass rounded-2xl p-5 transition-all duration-300 hover:-translate-y-0.5"
-            >
-              <div className={cn('inline-flex p-2 rounded-xl mb-3', colorMap[stat.color] || 'text-foreground bg-foreground/10')}>
-                {iconMap[stat.key] || <Star className="h-5 w-5" />}
-              </div>
-              <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-              <p className="text-sm text-foreground-muted mt-0.5">{stat.label}</p>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Quick Access Toolbar */}
+      <QuickAccessToolbar />
+
+      {/* Course Sync Panel — enrolled courses with synced resources */}
+      <CourseSyncPanel />
 
       {/* Workspace — upper position */}
       <Suspense fallback={<div className="flex items-center justify-center py-16 text-[var(--foreground-muted)]">Loading workspace...</div>}>
@@ -255,6 +246,24 @@ export default function TeacherDashboard() {
           <MyWorkspace />
         </WorkspaceToastProvider>
       </Suspense>
+
+      {/* Stats Grid */}
+      {stats && stats.length > 0 && (
+        <div className="grid grid-cols-4 gap-2">
+          {stats.map((stat) => (
+            <div
+              key={stat.key}
+              className="rounded-xl border border-[var(--border)] bg-[var(--background-card)] p-3 transition-all duration-300 hover:-translate-y-0.5"
+            >
+              <div className={cn('inline-flex p-1.5 rounded-lg mb-1.5', colorMap[stat.color] || 'text-foreground bg-foreground/10')}>
+                {iconMap[stat.key] || <Star className="h-4 w-4" />}
+              </div>
+              <p className="text-lg font-bold text-foreground">{stat.value}</p>
+              <p className="text-xs text-foreground-muted mt-0.5">{stat.label}</p>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Original dashboard content — below workspace */}
       <div className="border-t border-[var(--border)] pt-8">

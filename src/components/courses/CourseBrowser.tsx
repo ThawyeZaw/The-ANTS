@@ -292,15 +292,19 @@ export default function CourseBrowser() {
     if (failed.length === 0) {
       setEnrolMessage({
         type: 'success',
-        text: `Successfully enrolled in ${successCount} subject${successCount !== 1 ? 's' : ''}.`,
+        text: `Successfully enrolled in ${successCount} subject${successCount !== 1 ? 's' : ''}. Redirecting to dashboard...`,
       });
+      // Redirect to dashboard to trigger resource sync
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 1200);
     } else {
       setEnrolMessage({
         type: 'error',
         text: `Enrolled in ${successCount} subject${successCount !== 1 ? 's' : ''}. Failed: ${failed.join(', ')}.`,
       });
     }
-  }, [stagedSubjectKeys, enroll, allSubjectsWithCurriculum, contextCurriculumIds, contextSubjectIds, syncSelectedCurricula, syncSelectedSubjects, refetchContext]);
+  }, [stagedSubjectKeys, enroll, allSubjectsWithCurriculum, contextCurriculumIds, contextSubjectIds, syncSelectedCurricula, syncSelectedSubjects, refetchContext, router]);
 
   // ── Inline drop with undo ────────────────────────────────────────────────
 

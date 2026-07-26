@@ -33,8 +33,10 @@ import {
   TestimonialEntry,
   CertificationEntry,
   OrgTeamMember,
+  OrgTeamMemberFormData,
   OrgTimelineItem,
   OrgTimelineItemFormData,
+  OrgMission,
   Note,
   Classroom,
   ClassroomMember,
@@ -2504,7 +2506,7 @@ export const mockExams: Exam[] = [
 ];
 
 const _defaultExamCountdowns: ExamCountdown[] = [
-  { id: 'ec-1', user_id: 'user-student-001', exam_id: 'exam-1', custom_title: 'Physics Finals!', target_date: '2027-05-15T09:00:00Z', priority_indicator: 'high', qualification_group: 'IGCSE', created_at: '2026-01-01T00:00:00Z', custom_date_override: null, share_token: null, is_custom: false }
+  { id: 'ec-1', user_id: 'user-student-001', exam_id: 'exam-1', custom_title: 'Physics Finals!', target_date: '2027-05-15T09:00:00Z', priority_indicator: 'high', qualification_group: 'IGCSE', created_at: '2026-01-01T00:00:00Z', custom_date_override: null, share_token: null, is_custom: false, visibility: 'public' }
 ];
 
 export const mockExamCountdowns: ExamCountdown[] = loadArray(STORAGE_KEYS.EXAM_COUNTDOWNS, _defaultExamCountdowns);
@@ -3160,6 +3162,7 @@ export const createExamCountdown = (data: {
     custom_date_override: null,
     share_token: null,
     is_custom: true,
+    visibility: 'private',
   };
   mockExamCountdowns.push(countdown);
   _saveExamCountdowns();
@@ -4327,6 +4330,79 @@ const mockTeamMembers: OrgTeamMember[] = [
 /** Get all team members sorted by order */
 export function getOrgTeamMembers(): OrgTeamMember[] {
   return [...mockTeamMembers].sort((a, b) => a.order - b.order);
+}
+
+/** Add a new team member */
+export function addOrgTeamMember(data: OrgTeamMemberFormData): { success: true; member: OrgTeamMember } {
+  const member: OrgTeamMember = {
+    id: `team-${Date.now()}`,
+    ...data,
+    order: mockTeamMembers.length,
+  };
+  mockTeamMembers.push(member);
+  return { success: true, member };
+}
+
+/** Update an existing team member */
+export function updateOrgTeamMember(
+  id: string,
+  data: Partial<OrgTeamMemberFormData>
+): { success: true; member: OrgTeamMember } | { success: false; error: string } {
+  const idx = mockTeamMembers.findIndex((m) => m.id === id);
+  if (idx < 0) return { success: false, error: 'Member not found.' };
+  if (data.name !== undefined) mockTeamMembers[idx].name = data.name;
+  if (data.title !== undefined) mockTeamMembers[idx].title = data.title;
+  if (data.bio !== undefined) mockTeamMembers[idx].bio = data.bio;
+  if (data.photoUrl !== undefined) mockTeamMembers[idx].photoUrl = data.photoUrl;
+  if (data.linkedProfileUsername !== undefined) mockTeamMembers[idx].linkedProfileUsername = data.linkedProfileUsername;
+  if (data.isAlumni !== undefined) mockTeamMembers[idx].isAlumni = data.isAlumni;
+  return { success: true, member: { ...mockTeamMembers[idx] } };
+}
+
+/** Delete a team member */
+export function deleteOrgTeamMember(id: string): { success: true } | { success: false; error: string } {
+  const idx = mockTeamMembers.findIndex((m) => m.id === id);
+  if (idx < 0) return { success: false, error: 'Member not found.' };
+  mockTeamMembers.splice(idx, 1);
+  return { success: true };
+}
+
+/** Reorder team members by swapping two indices */
+export function reorderOrgTeamMember(id: string, direction: 'up' | 'down'): { success: true } | { success: false; error: string } {
+  const idx = mockTeamMembers.findIndex((m) => m.id === id);
+  if (idx < 0) return { success: false, error: 'Member not found.' };
+  const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+  if (swapIdx < 0 || swapIdx >= mockTeamMembers.length) return { success: false, error: 'Cannot move further.' };
+  const tempOrder = mockTeamMembers[idx].order;
+  mockTeamMembers[idx].order = mockTeamMembers[swapIdx].order;
+  mockTeamMembers[swapIdx].order = tempOrder;
+  return { success: true };
+}
+
+// ── Organisation Mission ─────────────────────────────────────────────────────
+
+const mockOrgMission: OrgMission = {
+  id: 'mission-001',
+  content: `## Who We Are
+
+Our greatest strength is our community of mentors. **The ANTs** teaching team is a diverse, global network of scholars who have successfully conquered the academic hurdles you are facing right now. Because our tutors come from a wide variety of prestigious academic pathways — including A-Levels, Polytechnics, University Foundation programs, the OSSD and top UK Universities — they bring rich, firsthand experience to every lesson.
+
+## The ANTs Advantage
+
+When you learn with us, you are not just memorizing a syllabus. You are connecting with high-achieving seniors who understand your exact struggles. Whether you need rigorous IGCSE exam preparation or real-world advice on transitioning to higher education abroad, our team provides the academic strategies and peer mentorship you need to succeed globally.`,
+  updatedAt: '2025-01-01T08:00:00Z',
+};
+
+/** Get the current org mission */
+export function getOrgMission(): OrgMission {
+  return { ...mockOrgMission };
+}
+
+/** Update the org mission content */
+export function updateOrgMission(content: string): { success: true; mission: OrgMission } {
+  mockOrgMission.content = content;
+  mockOrgMission.updatedAt = new Date().toISOString();
+  return { success: true, mission: { ...mockOrgMission } };
 }
 
 // ── Organisation Timeline Items ──────────────────────────────────────────────

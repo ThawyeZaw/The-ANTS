@@ -35,6 +35,7 @@ const DEFAULT_FORM: TimetableEventFormData = {
   is_todo: false,
   is_recurring: false,
   recurrence_rule: null,
+  reminder_minutes: null,
 };
 
 function isoToLocalTime(iso: string): string {
@@ -135,6 +136,7 @@ export default function EventModal({
         is_todo: event.is_todo,
         is_recurring: event.is_recurring,
         recurrence_rule: event.recurrence_rule,
+        reminder_minutes: (event as any).reminder_minutes ?? null,
       });
       setTypeSearch(EVENT_TYPE_LABELS[event.event_type] ?? event.event_type);
       setShowRecurrence(event.is_recurring);
@@ -484,6 +486,33 @@ export default function EventModal({
                 style={{ left: form.is_todo ? '22px' : '2px' }}
               />
             </button>
+          </div>
+
+          {/* Telegram Reminder */}
+          <div className="flex items-center justify-between py-2">
+            <div>
+              <p className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>Telegram Reminder</p>
+              <p className="text-xs text-foreground-muted mt-0.5">Get notified via Telegram before the event</p>
+            </div>
+            <select
+              id="event-reminder"
+              value={form.reminder_minutes ?? ''}
+              onChange={e => update('reminder_minutes', e.target.value ? Number(e.target.value) : null)}
+              className="px-3 py-2 rounded-lg text-sm border outline-none w-40"
+              style={{ color: 'var(--foreground)', backgroundColor: 'color-mix(in srgb, var(--border) 50%, transparent)', borderColor: 'var(--border)' }}
+            >
+              <option value="">No reminder</option>
+              <option value="0">On time</option>
+              <option value="5">5 minutes early</option>
+              <option value="10">10 minutes early</option>
+              <option value="15">15 minutes early</option>
+              <option value="30">30 minutes early</option>
+              <option value="60">1 hour early</option>
+              <option value="120">2 hours early</option>
+              <option value="1440">1 day early</option>
+              <option value="4320">3 days early</option>
+              <option value="10080">1 week early</option>
+            </select>
           </div>
 
           {/* Recurrence */}

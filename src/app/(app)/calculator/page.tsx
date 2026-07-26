@@ -2,6 +2,7 @@
 
 import React from 'react';
 import GradeCalculator from '@/components/exam-data/GradeCalculator';
+import BackButton from '@/components/ui/BackButton';
 
 export default function CalculatorPage() {
   return (
@@ -17,6 +18,9 @@ export default function CalculatorPage() {
       />
 
       <div className="relative z-10 w-full px-4 py-6 md:px-6 max-w-[1600px] mx-auto">
+        <div className="mb-6">
+          <BackButton href="/dashboard" label="Back to Dashboard" />
+        </div>
         <GradeCalculator />
       </div>
     </div>

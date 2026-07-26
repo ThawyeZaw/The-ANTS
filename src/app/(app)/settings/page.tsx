@@ -11,6 +11,8 @@ import { useTheme, COLOR_PRESETS, type ThemeColor } from '@/context/ThemeContext
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import RoleUpgradeForm from '@/components/settings/RoleUpgradeForm';
+import TelegramConnect, { type NotificationPreferences } from '@/components/settings/TelegramConnect';
+import { useAuth } from '@/hooks/useAuth';
 
 // ── Section Wrapper ───────────────────────────────────────────────────────────
 
@@ -153,7 +155,7 @@ function ColorPalettePicker() {
 export default function SettingsPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
-      <BackButton href="/dashboard" label="Back" />
+      <BackButton href="/dashboard" label="Back to Dashboard" />
 
       {/* Page Header */}
       <div>
@@ -200,6 +202,30 @@ export default function SettingsPage() {
         <ThemeModeToggle />
         <ColorPalettePicker />
       </SettingsSection>
+
+      {/* Telegram Notifications Section */}
+      <SettingsPageInner />
     </div>
+  );
+}
+
+// ── Inner component that uses auth/profile hooks ──────────────────────────────
+
+function SettingsPageInner() {
+  const { user, updateProfile } = useAuth();
+  const profile = user?.profile;
+
+  const handleUpdatePreferences = async (prefs: NotificationPreferences) => {
+    if (!user) return;
+    await updateProfile({ notificationPreferences: prefs } as any);
+  };
+
+  return (
+    <TelegramConnect
+      telegramChatId={profile?.telegramChatId ?? null}
+      username={profile?.username ?? null}
+      notificationPreferences={profile?.notificationPreferences ?? null}
+      onUpdatePreferences={handleUpdatePreferences}
+    />
   );
 }

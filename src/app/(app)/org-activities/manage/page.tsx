@@ -7,12 +7,14 @@ import {
   Plus,
   Pencil,
   Trash2,
-  Calendar,
   MapPin,
   ImageIcon,
   X,
   Save,
   Loader2,
+  Target,
+  Users,
+  Clock,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -23,6 +25,18 @@ import {
 } from '@/lib/mock/database';
 import type { OrgTimelineItem, OrgTimelineItemFormData } from '@/types';
 import { cn } from '@/lib/utils';
+import MissionEditor from '@/components/about/MissionEditor';
+import TeamManager from '@/components/about/TeamManager';
+
+// ── Tabs ─────────────────────────────────────────────────────────────────────
+
+const TABS = [
+  { key: 'mission', label: 'Mission', icon: <Target className="h-4 w-4" /> },
+  { key: 'team', label: 'Team', icon: <Users className="h-4 w-4" /> },
+  { key: 'timeline', label: 'Timeline', icon: <Clock className="h-4 w-4" /> },
+] as const;
+
+type TabKey = (typeof TABS)[number]['key'];
 
 const CATEGORY_OPTIONS = [
   { value: 'milestone', label: 'Milestone' },
@@ -51,9 +65,9 @@ const EMPTY_FORM: OrgTimelineItemFormData = {
   location: '',
 };
 
-export default function ManageOrgPage() {
-  const router = useRouter();
-  const { user } = useAuth();
+// ── Timeline Tab ──────────────────────────────────────────────────────────────
+
+function TimelineTab() {
   const [items, setItems] = useState<OrgTimelineItem[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -63,20 +77,7 @@ export default function ManageOrgPage() {
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  const isMainContributor = user?.profile?.role === 'main_contributor';
-
-  useEffect(() => {
-    if (user && !isMainContributor) router.replace('/dashboard');
-    else setItems(getOrgTimelineItems());
-  }, [user, isMainContributor, router]);
-
-  if (!isMainContributor) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <Loader2 className="h-6 w-6 text-primary animate-spin" />
-      </div>
-    );
-  }
+  useEffect(() => { setItems(getOrgTimelineItems()); }, []);
 
   const showFeedback = (type: 'success' | 'error', message: string) => {
     setFeedback({ type, message });
@@ -134,69 +135,66 @@ export default function ManageOrgPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-5xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <BackButton href="/org-activities" label="Back" />
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground">Manage Timeline & Activities</h1>
-            <p className="text-sm text-foreground-secondary mt-1">Add milestones, events, workshops, and more to <span className="font-brand">The ANTs</span> timeline.</p>
-          </div>
-          <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground hover:bg-primary-hover rounded-xl text-sm font-semibold transition-all cursor-pointer">
-            <Plus className="h-4 w-4" /> New Item
-          </button>
+    <div className="animate-fade-in space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-foreground">Timeline & Activities</h2>
+          <p className="text-sm text-foreground-muted mt-1">Add milestones, events, workshops, and more to <span className="font-brand">The ANTs</span> timeline.</p>
         </div>
+        <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground hover:bg-primary-hover rounded-xl text-sm font-semibold transition-all cursor-pointer">
+          <Plus className="h-4 w-4" /> New Item
+        </button>
+      </div>
 
-        {feedback && (
-          <div className={cn('mb-6 px-4 py-3 rounded-xl text-sm font-medium animate-fade-in', feedback.type === 'success' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25' : 'bg-red-500/15 text-red-400 border border-red-500/25')}>
-            {feedback.message}
-          </div>
-        )}
+      {feedback && (
+        <div className={cn('px-4 py-3 rounded-xl text-sm font-medium animate-fade-in', feedback.type === 'success' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25' : 'bg-red-500/15 text-red-400 border border-red-500/25')}>
+          {feedback.message}
+        </div>
+      )}
 
-        {items.length === 0 ? (
-          <div className="text-center py-16">
-            <ImageIcon className="h-12 w-12 text-foreground-muted mx-auto mb-4" />
-            <p className="text-sm text-foreground-muted">No items yet. Create your first one!</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {items.map((item) => (
-              <div key={item.id} className="flex items-center justify-between gap-4 p-4 bg-background-card border border-border rounded-xl hover:border-primary/10 transition-colors">
-                <div className="flex items-center gap-4 min-w-0">
-                  <span className={cn('shrink-0 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border', CATEGORY_COLORS[item.category || 'other'])}>{item.category || 'other'}</span>
-                  {item.showOnTimeline && (
-                    <span className="shrink-0 px-2 py-0.5 rounded-lg text-[10px] font-medium bg-primary/15 text-primary border border-primary/25">
-                      Timeline
-                    </span>
-                  )}
-                  <span className="shrink-0 text-xs font-mono text-foreground-muted">{item.date}</span>
-                  <div className="min-w-0">
-                    <h3 className="text-sm font-bold text-foreground truncate">{item.title}</h3>
-                    <p className="text-xs text-foreground-muted truncate mt-0.5">{item.description}</p>
-                    {(item.imageUrls.length > 0 || item.location) && (
-                      <div className="flex items-center gap-3 mt-1 text-[10px] text-foreground-muted">
-                        {item.imageUrls.length > 0 && <span>{item.imageUrls.length} image(s)</span>}
-                        {item.location && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{item.location}</span>}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <button onClick={() => openEdit(item)} className="p-2 rounded-lg text-foreground-muted hover:text-foreground hover:bg-background-secondary transition-colors cursor-pointer"><Pencil className="h-3.5 w-3.5" /></button>
-                  {confirmDeleteId === item.id ? (
-                    <div className="flex items-center gap-1.5">
-                      <button onClick={() => handleDelete(item.id)} className="px-2 py-1 rounded-lg text-[11px] font-medium bg-red-500/15 text-red-400 hover:bg-red-500/25 transition-colors cursor-pointer">Confirm</button>
-                      <button onClick={() => setConfirmDeleteId(null)} className="px-2 py-1 rounded-lg text-[11px] font-medium text-foreground-muted hover:text-foreground transition-colors cursor-pointer">Cancel</button>
+      {items.length === 0 ? (
+        <div className="text-center py-16">
+          <ImageIcon className="h-12 w-12 text-foreground-muted mx-auto mb-4" />
+          <p className="text-sm text-foreground-muted">No items yet. Create your first one!</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {items.map((item) => (
+            <div key={item.id} className="flex items-center justify-between gap-4 p-4 bg-background-card border border-border rounded-xl hover:border-primary/10 transition-colors">
+              <div className="flex items-center gap-4 min-w-0">
+                <span className={cn('shrink-0 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border', CATEGORY_COLORS[item.category || 'other'])}>{item.category || 'other'}</span>
+                {item.showOnTimeline && (
+                  <span className="shrink-0 px-2 py-0.5 rounded-lg text-[10px] font-medium bg-primary/15 text-primary border border-primary/25">
+                    Timeline
+                  </span>
+                )}
+                <span className="shrink-0 text-xs font-mono text-foreground-muted">{item.date}</span>
+                <div className="min-w-0">
+                  <h3 className="text-sm font-bold text-foreground truncate">{item.title}</h3>
+                  <p className="text-xs text-foreground-muted truncate mt-0.5">{item.description}</p>
+                  {(item.imageUrls.length > 0 || item.location) && (
+                    <div className="flex items-center gap-3 mt-1 text-[10px] text-foreground-muted">
+                      {item.imageUrls.length > 0 && <span>{item.imageUrls.length} image(s)</span>}
+                      {item.location && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{item.location}</span>}
                     </div>
-                  ) : (
-                    <button onClick={() => setConfirmDeleteId(item.id)} className="p-2 rounded-lg text-foreground-muted hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"><Trash2 className="h-3.5 w-3.5" /></button>
                   )}
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button onClick={() => openEdit(item)} className="p-2 rounded-lg text-foreground-muted hover:text-foreground hover:bg-background-secondary transition-colors cursor-pointer"><Pencil className="h-3.5 w-3.5" /></button>
+                {confirmDeleteId === item.id ? (
+                  <div className="flex items-center gap-1.5">
+                    <button onClick={() => handleDelete(item.id)} className="px-2 py-1 rounded-lg text-[11px] font-medium bg-red-500/15 text-red-400 hover:bg-red-500/25 transition-colors cursor-pointer">Confirm</button>
+                    <button onClick={() => setConfirmDeleteId(null)} className="px-2 py-1 rounded-lg text-[11px] font-medium text-foreground-muted hover:text-foreground transition-colors cursor-pointer">Cancel</button>
+                  </div>
+                ) : (
+                  <button onClick={() => setConfirmDeleteId(item.id)} className="p-2 rounded-lg text-foreground-muted hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"><Trash2 className="h-3.5 w-3.5" /></button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
@@ -282,6 +280,71 @@ export default function ManageOrgPage() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ── Main Page ────────────────────────────────────────────────────────────────
+
+export default function ManageOrgPage() {
+  const router = useRouter();
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<TabKey>('mission');
+
+  const isMainContributor = user?.profile?.role === 'main_contributor';
+
+  useEffect(() => {
+    if (user && !isMainContributor) router.replace('/dashboard');
+  }, [user, isMainContributor, router]);
+
+  if (!isMainContributor) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <Loader2 className="h-6 w-6 text-primary animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="max-w-5xl mx-auto px-4 py-8">
+        <div className="mb-8">
+          <BackButton href="/org-activities" label="Back to Activities" />
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground mt-2">Manage Organization</h1>
+          <p className="text-sm text-foreground-secondary mt-1">Edit <span className="font-brand">The ANTs</span> about page content — mission, team, and timeline.</p>
+        </div>
+
+        {/* Tab Nav with sliding pill indicator */}
+        <div className="relative flex flex-wrap gap-1 p-1 bg-background-secondary rounded-xl border border-border mb-10 max-w-md">
+          {/* Sliding indicator pill */}
+          <div
+            className="absolute top-1 bottom-1 rounded-lg bg-background-card shadow-sm border border-border transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+            style={{
+              left: `calc(${TABS.findIndex((t) => t.key === activeTab) * (100 / TABS.length)}% + 0.25rem)`,
+              width: `calc(${100 / TABS.length}% - 0.5rem)`,
+            }}
+          />
+          {TABS.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`relative z-10 flex-1 min-w-[100px] flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 cursor-pointer ${
+                activeTab === tab.key
+                  ? 'text-foreground'
+                  : 'text-foreground-muted hover:text-foreground-secondary'
+              }`}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'mission' && <MissionEditor />}
+        {activeTab === 'team' && <TeamManager />}
+        {activeTab === 'timeline' && <TimelineTab />}
+      </div>
     </div>
   );
 }

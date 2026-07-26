@@ -51,7 +51,7 @@ export default function CountdownEditorPage() {
 
   return (
     <div className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8 transition-colors">
-      <BackButton href="/editor/exam" label="Back to exam editors" />
+      <BackButton href="/editor/exam" label="Back to Exam Editor" />
       <div className="mt-6 max-w-4xl mx-auto space-y-8">
         <CountdownEditor />
         <MySubmissions />

@@ -14,6 +14,7 @@ const quicksand = Quicksand({
 
 export const metadata: Metadata = {
   title: "The ANTs — Academic Productivity Ecosystem",
+  icons: [{ rel: "icon", url: "/logo.png" }],
   description:
     "The ANTs is a curriculum-focused productivity and learning platform for Myanmar students pursuing IGCSE, A Levels, IELTS, SAT, OSSD, and more. Timetables, flashcards, classrooms, clubs, grade calculators, and exam countdowns — all in one place.",
   keywords: [

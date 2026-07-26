@@ -303,6 +303,7 @@ export default function TimetableManager(props: TimetableManagerProps) {
       is_todo: false,
       is_recurring: false,
       recurrence_rule: null,
+      reminder_minutes: null,
     });
 
     setInlineCreate(null);
@@ -362,6 +363,7 @@ export default function TimetableManager(props: TimetableManagerProps) {
       is_todo: event.is_todo,
       is_recurring: false,
       recurrence_rule: null,
+      reminder_minutes: null,
     });
 
     setRecurringChoice(null);

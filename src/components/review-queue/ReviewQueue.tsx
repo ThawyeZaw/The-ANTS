@@ -3,25 +3,27 @@
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTs — ReviewQueue
 // Main-contributor interface for reviewing all pending submissions.
-// Tabbed view by submission type with approve/reject/edit functionality.
+// Tabbed view by submission type with approve/reject/edit/preview functionality.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useCallback, useMemo } from 'react';
 import {
-  Shield, CheckCircle, XCircle, Pencil, Eye,
+  Shield, CheckCircle, XCircle, Pencil, Eye, EyeOff,
   Clock, BookOpen, FileText, Layers, Database, GraduationCap, Calculator,
-  ChevronDown, ChevronRight, Tag, MessageSquare,
+  ChevronDown, ChevronRight, Tag, MessageSquare, Maximize2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
+import BlockPreview from '@/components/notes/BlockPreview';
+import FlashcardText from '@/components/flashcards/FlashcardText';
 import {
   getReviewQueue,
   approveReviewItem,
   rejectReviewItem,
   editReviewItemData,
 } from '@/lib/mock/database';
-import type { ReviewQueueItem, ReviewSubmissionType, ReviewFeedbackCategory, ReviewFeedback } from '@/types';
+import type { ReviewQueueItem, ReviewSubmissionType, ReviewFeedbackCategory, ReviewFeedback, NoteBlock } from '@/types';
 
 // ── Tab Config ───────────────────────────────────────────────────────────────
 
@@ -63,6 +65,7 @@ export default function ReviewQueue() {
   const [feedbackNote, setFeedbackNote] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
   const [statusType, setStatusType] = useState<'success' | 'error'>('success');
+  const [previewItems, setPreviewItems] = useState<Set<string>>(new Set());
 
   const [queueItems, setQueueItems] = useState<ReviewQueueItem[]>(() =>
     getReviewQueue({ status: 'pending' })
@@ -151,6 +154,24 @@ export default function ReviewQueue() {
     setEditingData(null);
     setTimeout(() => setStatusMessage(''), 3000);
   }, [editingData, editJsonText, refreshQueue]);
+
+  // ── Preview toggle ────────────────────────────────────────────────────────
+
+  const togglePreview = useCallback((itemId: string) => {
+    setPreviewItems(prev => {
+      const next = new Set(prev);
+      if (next.has(itemId)) {
+        next.delete(itemId);
+        // Exit edit mode when toggling back from preview
+        if (editingData === itemId) setEditingData(null);
+      } else {
+        next.add(itemId);
+        // Exit edit mode when entering preview
+        if (editingData === itemId) setEditingData(null);
+      }
+      return next;
+    });
+  }, [editingData]);
 
   // ── Get count by type for tabs ────────────────────────────────────────────
 
@@ -326,51 +347,153 @@ export default function ReviewQueue() {
                 {/* Expanded details */}
                 {(isExpanded || isEditing || isRejecting) && (
                   <div className="border-t border-border px-5 py-4 space-y-4 bg-background-secondary/30">
-                    {/* Submitted data */}
-                    <div>
-                      <p className="text-xs font-semibold text-foreground-secondary mb-2">Submitted Data</p>
+                    {/* Preview / Edit toggle */}
+                    {(item.submission_type === 'note' || item.submission_type === 'flashcard_deck') && !isRejecting && (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => togglePreview(item.id)}
+                          className={cn(
+                            'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all',
+                            previewItems.has(item.id)
+                              ? 'bg-primary/10 text-primary border border-primary/30'
+                              : 'border border-border text-foreground-muted hover:text-foreground'
+                          )}
+                        >
+                          {previewItems.has(item.id) ? (
+                            <><Eye className="h-3.5 w-3.5" /> Preview Mode</>
+                          ) : (
+                            <><Maximize2 className="h-3.5 w-3.5" /> Preview</>
+                          )}
+                        </button>
+                        {!previewItems.has(item.id) && (
+                          <button
+                            onClick={() => openEdit(item)}
+                            className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium border border-border text-foreground-muted hover:text-foreground transition-all"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                            Edit Raw Data
+                          </button>
+                        )}
+                      </div>
+                    )}
 
-                      {isEditing ? (
-                        <div className="space-y-3">
-                          <textarea
-                            value={editJsonText}
-                            onChange={e => setEditJsonText(e.target.value)}
-                            rows={10}
-                            className="w-full rounded-lg border border-border bg-background-secondary p-3 text-sm text-foreground font-mono focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary resize-none"
-                          />
-                          <div className="flex justify-end gap-2">
-                            <button
-                              onClick={() => setEditingData(null)}
-                              className="rounded-lg px-3 py-1.5 text-xs font-medium text-foreground-muted hover:bg-background-secondary transition-colors"
-                            >
-                              Cancel
-                            </button>
-                            <button
-                              onClick={handleSaveEdit}
-                              className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary-hover transition-colors"
-                            >
-                              Save Changes
-                            </button>
+                    {/* ── Preview: Note ──────────────────────────────────── */}
+                    {previewItems.has(item.id) && item.submission_type === 'note' && (
+                      <div className="rounded-xl border border-primary/20 bg-background p-5 space-y-4">
+                        <div className="flex items-center gap-2 pb-3 border-b border-border">
+                          <FileText className="h-4 w-4 text-amber-500" />
+                          <h4 className="font-semibold text-foreground text-sm">
+                            {(item.submitted_data as any)?.title ?? 'Untitled Note'}
+                          </h4>
+                        </div>
+                        <div className="space-y-4 max-w-none">
+                          {((item.submitted_data as any)?.blocks as NoteBlock[] | undefined)?.map((block, idx) => (
+                            <BlockPreview key={idx} block={block} />
+                          )) ?? (
+                            <p className="text-sm text-foreground-muted italic">No content blocks found.</p>
+                          )}
+                        </div>
+                        {(item.submitted_data as any)?.tags?.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 pt-3 border-t border-border">
+                            {((item.submitted_data as any).tags as string[]).map((tag: string) => (
+                              <span
+                                key={tag}
+                                className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-600"
+                              >
+                                {tag}
+                              </span>
+                            ))}
                           </div>
-                        </div>
-                      ) : (
-                        <div className="rounded-lg border border-border bg-background-secondary p-3">
-                          <pre className="text-xs text-foreground font-mono whitespace-pre-wrap overflow-x-auto">
-                            {JSON.stringify(item.submitted_data, null, 2)}
-                          </pre>
-                        </div>
-                      )}
-                    </div>
+                        )}
+                      </div>
+                    )}
 
-                    {/* Edit button */}
-                    {!isEditing && (
-                      <button
-                        onClick={() => openEdit(item)}
-                        className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary-hover transition-colors"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                        Edit Data Before Approving
-                      </button>
+                    {/* ── Preview: Flashcard Deck ────────────────────────── */}
+                    {previewItems.has(item.id) && item.submission_type === 'flashcard_deck' && (
+                      <div className="rounded-xl border border-violet-500/20 bg-background p-5 space-y-4">
+                        <div className="flex items-center gap-2 pb-3 border-b border-border">
+                          <Layers className="h-4 w-4 text-violet-500" />
+                          <h4 className="font-semibold text-foreground text-sm">
+                            {(item.submitted_data as any)?.name ?? 'Untitled Deck'}
+                          </h4>
+                          {((item.submitted_data as any)?.cards as any[] | undefined) && (
+                            <span className="text-xs text-foreground-muted">
+                              ({((item.submitted_data as any).cards).length} cards)
+                            </span>
+                          )}
+                        </div>
+                        <div className="grid gap-3">
+                          {((item.submitted_data as any)?.cards as Array<{ front_text: string; back_text: string }> | undefined)?.map((card, idx) => (
+                            <div
+                              key={idx}
+                              className="rounded-lg border border-border bg-background-secondary/50 overflow-hidden"
+                            >
+                              <div className="px-4 py-2.5 border-b border-border bg-violet-500/5">
+                                <span className="text-[10px] font-semibold text-violet-500 uppercase tracking-wider">Front</span>
+                                <p className="text-sm text-foreground mt-0.5"><FlashcardText text={card.front_text} /></p>
+                              </div>
+                              <div className="px-4 py-2.5">
+                                <span className="text-[10px] font-semibold text-emerald-500 uppercase tracking-wider">Back</span>
+                                <p className="text-sm text-foreground mt-0.5"><FlashcardText text={card.back_text} /></p>
+                              </div>
+                            </div>
+                          )) ?? (
+                            <p className="text-sm text-foreground-muted italic">No cards found.</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ── Edit mode (raw JSON) or non-preview types ──────────── */}
+                    {(!previewItems.has(item.id) || (item.submission_type !== 'note' && item.submission_type !== 'flashcard_deck')) && (
+                      <>
+                        {/* Submitted data */}
+                        <div>
+                          <p className="text-xs font-semibold text-foreground-secondary mb-2">Submitted Data</p>
+
+                          {isEditing ? (
+                            <div className="space-y-3">
+                              <textarea
+                                value={editJsonText}
+                                onChange={e => setEditJsonText(e.target.value)}
+                                rows={10}
+                                className="w-full rounded-lg border border-border bg-background-secondary p-3 text-sm text-foreground font-mono focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                              />
+                              <div className="flex justify-end gap-2">
+                                <button
+                                  onClick={() => setEditingData(null)}
+                                  className="rounded-lg px-3 py-1.5 text-xs font-medium text-foreground-muted hover:bg-background-secondary transition-colors"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  onClick={handleSaveEdit}
+                                  className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary-hover transition-colors"
+                                >
+                                  Save Changes
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="rounded-lg border border-border bg-background-secondary p-3">
+                              <pre className="text-xs text-foreground font-mono whitespace-pre-wrap overflow-x-auto">
+                                {JSON.stringify(item.submitted_data, null, 2)}
+                              </pre>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Edit button */}
+                        {!isEditing && (
+                          <button
+                            onClick={() => openEdit(item)}
+                            className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary-hover transition-colors"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                            Edit Data Before Approving
+                          </button>
+                        )}
+                      </>
                     )}
 
                     {/* Reject form */}

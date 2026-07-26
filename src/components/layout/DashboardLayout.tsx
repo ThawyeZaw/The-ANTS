@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import {
@@ -166,8 +167,8 @@ export default function DashboardLayout({
                       <p className="mt-1 text-sm text-white/70 max-w-md">{slide.subtitle}</p>
                     </div>
                     <div className="hidden sm:flex items-center justify-center shrink-0">
-                      <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white/15 border border-white/20 flex items-center justify-center text-4xl">
-                        🐜
+                      <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white/15 border border-white/20 flex items-center justify-center">
+                        <Image src="/logo.png" alt="The ANTs logo" width={40} height={40} className="md:w-[52px] md:h-[52px]" />
                       </div>
                     </div>
                   </div>
@@ -236,8 +237,8 @@ export default function DashboardLayout({
             </p>
           </div>
           <div className="hidden sm:flex items-center justify-center shrink-0">
-            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white/15 border border-white/20 flex items-center justify-center text-4xl">
-              🐜
+            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white/15 border border-white/20 flex items-center justify-center">
+              <Image src="/logo.png" alt="The ANTs logo" width={40} height={40} className="md:w-[52px] md:h-[52px]" />
             </div>
           </div>
         </div>

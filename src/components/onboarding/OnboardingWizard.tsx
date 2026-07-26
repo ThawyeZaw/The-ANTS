@@ -7,6 +7,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   ArrowRight, ArrowLeft, Check, SkipForward,
@@ -227,7 +228,7 @@ export default function OnboardingWizard() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4 animate-pulse-soft">
-          <div className="text-4xl">🐜</div>
+          <Image src="/logo.png" alt="The ANTs logo" width={40} height={40} />
           <Loader2 className="h-5 w-5 text-primary animate-spin" />
           <p className="text-sm text-foreground-muted">Preparing your setup…</p>
         </div>
@@ -243,7 +244,7 @@ export default function OnboardingWizard() {
       <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-xl">🐜</span>
+            <Image src="/logo.png" alt="The ANTs logo" width={24} height={24} />
             <span className="font-bold text-foreground hidden sm:inline font-brand">The ANTs</span>
           </div>
 
