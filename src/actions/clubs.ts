@@ -147,7 +147,14 @@ export async function actionUpdateClub(clubId: string, userId: string, updates: 
 
   // Use admin client for the actual update to bypass RLS (auth already verified above)
   const admin = await createAdminClient();
-  const { data: updatedClub, error } = await admin.from('clubs').update(updates).eq('id', clubId).select().single();
+  // Strip null values — Supabase types use undefined, not null
+  const clean = Object.fromEntries(
+    Object.entries(updates).filter(([, v]) => v !== null)
+  );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: updatedClub, error } = await admin.from('clubs')
+    .update(clean as any)
+    .eq('id', clubId).select().single();
   if (error) return { success: false, error: error.message };
   if (!updatedClub) return { success: false, error: 'Failed to update club — no rows affected.' };
 
