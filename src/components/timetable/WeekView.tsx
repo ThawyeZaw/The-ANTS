@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import type { TimetableEvent } from '@/types/timetable';
 import {
@@ -153,6 +153,19 @@ export default function WeekView({
   const totalGridHeight = GRID_HOURS.length * sh;
   const nowTop = ((today.getHours() + today.getMinutes() / 60) - GRID_START_HOUR) * sh;
 
+  // Auto-scroll so 7 AM is at the top of the viewport on mount
+  const gridRef = useRef<HTMLDivElement>(null);
+  const scrolledRef = useRef(false);
+
+  useEffect(() => {
+    if (scrolledRef.current || !gridRef.current) return;
+    scrolledRef.current = true;
+    // Use requestAnimationFrame so the DOM has laid out
+    requestAnimationFrame(() => {
+      gridRef.current?.scrollTo({ top: 7 * sh });
+    });
+  }, [sh]);
+
   return (
     <div className="flex flex-col h-full min-w-0">
       {/* Day Headers */}
@@ -218,7 +231,7 @@ export default function WeekView({
       </div>
 
       {/* Scrollable Grid */}
-      <div className="flex flex-1 overflow-y-auto">
+      <div ref={gridRef} className="flex flex-1 overflow-y-auto">
         <div
           className="w-16 shrink-0 relative border-r pt-2.5"
           style={{ height: totalGridHeight + 10, borderColor: 'var(--border)' }}

@@ -3,6 +3,10 @@ import { Quicksand } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { AuthProvider } from "@/context/AuthContext";
+import { startReminderScheduler } from "@/lib/notifications/scheduler";
+
+// Start the in-process reminder scheduler for dev (survives HMR via globalThis)
+startReminderScheduler();
 
 
 const quicksand = Quicksand({

@@ -101,6 +101,8 @@ interface PendingNotification {
   sourceId: string;
   userId: string;
   offset: number;
+  /** When true, the caller should use recordSentinel() instead of markTimetableNotified() */
+  useSentinel?: boolean;
 }
 
 async function fetchLinkedProfiles(supabase: SupabaseAny): Promise<ProfileRec[]> {
@@ -120,46 +122,64 @@ async function buildTimetableNotifications(
   const results: PendingNotification[] = [];
   const lookAhead = new Date(now.getTime() + 8 * 24 * 60 * 60 * 1000); // 8 days to cover 1-week-early reminders
 
-  const { data: events } = await (supabase
+  // Fetch events with explicit per-event reminder_minutes (single offset, can safely mark notified)
+  const { data: explicitEvents, error: explicitErr } = await (supabase
     .from('timetable_events')
     .select('id, title, description, location, start_time, reminder_minutes, user_id, notified')
-    .eq('notified', false)
+    .or('notified.is.false,notified.is.null')
+    .not('reminder_minutes', 'is', null)
     .gte('start_time', now.toISOString())
     .lte('start_time', lookAhead.toISOString())
     .order('start_time') as SupabaseAny);
 
-  if (!events?.length) return results;
+  if (explicitErr) console.error('[cron:timetable] explicit query error:', explicitErr);
 
-  for (const event of events as Array<Record<string, unknown>>) {
-    const profile = profiles.find((p) => p.id === event.user_id);
-    if (!profile?.telegram_chat_id) continue;
+  // Fetch events WITHOUT explicit reminder_minutes (use user preferences, need sentinel dedup)
+  const { data: prefEvents, error: prefErr } = await (supabase
+    .from('timetable_events')
+    .select('id, title, description, location, start_time, reminder_minutes, user_id')
+    .is('reminder_minutes', null)
+    .gte('start_time', now.toISOString())
+    .lte('start_time', lookAhead.toISOString())
+    .order('start_time') as SupabaseAny);
 
-    // Skip if user has timetable notifications explicitly disabled
-    const timetablePrefs = profile.notification_preferences?.timetable;
-    if (timetablePrefs && timetablePrefs.enabled === false) continue;
+  if (prefErr) console.error('[cron:timetable] pref query error:', prefErr);
 
-    const startDate = new Date(event.start_time as string);
-    // Use per-event reminder_minutes if set, otherwise fall back to user's timetable preferences
-    const explicitOffset = event.reminder_minutes as number | null;
-    const userOffsets = getReminders(profile.notification_preferences, 'timetable');
-    const offsets = explicitOffset != null ? [explicitOffset] : userOffsets;
-    if (offsets.length === 0) continue;
+  console.log(`[cron:timetable] explicitEvents=${explicitEvents?.length ?? 0} prefEvents=${prefEvents?.length ?? 0}`);
 
-    const effectiveTimes = offsets.map((o) => ({
-      offset: o,
-      effectiveTime: new Date(startDate.getTime() - o * 60 * 1000),
-    }));
-    const matching = effectiveTimes.filter(
-      (et) => et.effectiveTime >= now && et.effectiveTime <= windowEnd
-    );
-    if (matching.length === 0) continue;
+  // Pre-fetch sentinel records for preference-based dedup
+  const { data: sentinels } = await (supabase
+    .from('timetable_events')
+    .select('source_id, reminder_minutes')
+    .eq('event_source', 'timetable_event_reminder')
+    .eq('notified', true) as SupabaseAny);
 
-    const { timeStr, dateStr } = formatTime(startDate);
+  const sentinelSet = new Set<string>();
+  for (const s of sentinels ?? []) {
+    if (s.source_id && s.reminder_minutes != null) {
+      sentinelSet.add(`${s.source_id}-${s.reminder_minutes}`);
+    }
+  }
 
-    for (const { offset: matchedOffset } of matching) {
-      let msg = `🔔 <b>${event.title}</b>\n${dateStr} · ${timeStr}`;
+  // ── Process events with explicit per-event reminder_minutes ──
+  if (explicitEvents?.length) {
+    for (const event of explicitEvents as Array<Record<string, unknown>>) {
+      const profile = profiles.find((p) => p.id === event.user_id);
+      if (!profile?.telegram_chat_id) continue;
+
+      const timetablePrefs = profile.notification_preferences?.timetable;
+      if (timetablePrefs && timetablePrefs.enabled === false) continue;
+
+      const startDate = new Date(event.start_time as string);
+      const explicitOffset = event.reminder_minutes as number;
+
+      const effectiveTime = new Date(startDate.getTime() - explicitOffset * 60 * 1000);
+      if (effectiveTime < now || effectiveTime > windowEnd) continue;
+
+      const { timeStr, dateStr } = formatTime(startDate);
+      let msg = `⏱ <b>EVENT REMINDER</b>\n\n🔔 <b>${event.title}</b>\n${dateStr} · ${timeStr}`;
       if (event.location) msg += `\n📍 ${event.location}`;
-      if (matchedOffset > 0) msg += `\n⏰ ${offsetLabel(matchedOffset)} early`;
+      if (explicitOffset > 0) msg += `\n⏰ ${offsetLabel(explicitOffset)} early`;
 
       results.push({
         chatId: profile.telegram_chat_id,
@@ -167,8 +187,48 @@ async function buildTimetableNotifications(
         sourceType: 'timetable_event',
         sourceId: event.id as string,
         userId: profile.id,
-        offset: matchedOffset,
+        offset: explicitOffset,
       });
+    }
+  }
+
+  // ── Process events WITHOUT explicit reminder (use user preferences + sentinels) ──
+  if (prefEvents?.length) {
+    for (const event of prefEvents as Array<Record<string, unknown>>) {
+      const profile = profiles.find((p) => p.id === event.user_id);
+      if (!profile?.telegram_chat_id) continue;
+
+      const timetablePrefs = profile.notification_preferences?.timetable;
+      if (timetablePrefs && timetablePrefs.enabled === false) continue;
+
+      const userOffsets = getReminders(profile.notification_preferences, 'timetable');
+      if (userOffsets.length === 0) continue;
+
+      const startDate = new Date(event.start_time as string);
+
+      for (const offset of userOffsets) {
+        // Check sentinel first
+        const key = `${event.id}-${offset}`;
+        if (sentinelSet.has(key)) continue;
+
+        const effectiveTime = new Date(startDate.getTime() - offset * 60 * 1000);
+        if (effectiveTime < now || effectiveTime > windowEnd) continue;
+
+        const { timeStr, dateStr } = formatTime(startDate);
+        let msg = `⏱ <b>EVENT REMINDER</b>\n\n🔔 <b>${event.title}</b>\n${dateStr} · ${timeStr}`;
+        if (event.location) msg += `\n📍 ${event.location}`;
+        if (offset > 0) msg += `\n⏰ ${offsetLabel(offset)} early`;
+
+        results.push({
+          chatId: profile.telegram_chat_id,
+          message: msg,
+          sourceType: 'timetable_event',
+          sourceId: event.id as string,
+          userId: profile.id,
+          offset,
+          useSentinel: true,
+        });
+      }
     }
   }
 
@@ -234,7 +294,7 @@ async function buildAssignmentNotifications(
         const { dateStr } = formatTime(new Date(a.due_date));
         results.push({
           chatId: p.telegram_chat_id,
-          message: `📚 <b>${a.title}</b>\nDue: ${dateStr}\n⏰ ${offsetLabel(offsetMin)} left`,
+          message: `📋 <b>ASSIGNMENT REMINDER</b>\n\n📚 <b>${a.title}</b>\nDue: ${dateStr}\n⏰ ${offsetLabel(offsetMin)} left`,
           sourceType: 'assignment',
           sourceId: a.id,
           userId: p.id,
@@ -297,7 +357,7 @@ async function buildExamNotifications(
       const { dateStr } = formatTime(new Date(c.target_date));
       results.push({
         chatId: p.telegram_chat_id,
-        message: `📝 <b>${c.title}</b>\nExam: ${dateStr}\n⏰ ${offsetLabel(offsetMin)} left`,
+        message: `📝 <b>EXAM REMINDER</b>\n\n📝 <b>${c.title}</b>\nExam: ${dateStr}\n⏰ ${offsetLabel(offsetMin)} left`,
         sourceType: 'exam_countdown',
         sourceId: c.id,
         userId: p.id,
@@ -341,21 +401,47 @@ export async function GET(req: NextRequest) {
 
   const supabase = await createAdminClient();
   const now = new Date();
-  const windowEnd = new Date(now.getTime() + 15 * 60 * 1000);
+  const windowEnd = new Date(now.getTime() + 15 * 60 * 1000); // 15 min for assignments/exams
+  const timetableWindowEnd = new Date(now.getTime() + 2 * 60 * 1000); // 2 min for timetable (tight accuracy)
 
   const profiles = await fetchLinkedProfiles(supabase);
   if (profiles.length === 0) {
-    return NextResponse.json({ processed: 0, message: 'No linked Telegram users' });
+    return NextResponse.json({
+      processed: 0,
+      message: 'No linked Telegram users',
+      profiles: 0,
+      window: { from: now.toISOString(), to: windowEnd.toISOString() },
+    });
   }
 
-  const timetablePending = await buildTimetableNotifications(supabase, profiles, now, windowEnd);
+  // Count un-notified events in the lookahead window for debugging
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { count: totalUnnotified } = await (supabase
+    .from('timetable_events')
+    .select('id', { count: 'exact', head: true })
+    .or('notified.is.false,notified.is.null' as any)
+    .gte('start_time', now.toISOString())
+    .lte('start_time', new Date(now.getTime() + 8 * 24 * 60 * 60 * 1000).toISOString()) as SupabaseAny);
+
+  const timetablePending = await buildTimetableNotifications(supabase, profiles, now, timetableWindowEnd);
   const assignmentPending = await buildAssignmentNotifications(supabase, profiles, now, windowEnd);
   const examPending = await buildExamNotifications(supabase, profiles, now, windowEnd);
 
   const allPending = [...timetablePending, ...assignmentPending, ...examPending];
 
+  // Debug logging
+  console.log(`[cron] profiles=${profiles.length} now=${now.toISOString()} timetableWindow=2min assignmentWindow=15min`);
+  console.log(`[cron] totalUnnotified=${totalUnnotified ?? 0} timetable=${timetablePending.length} assignment=${assignmentPending.length} exam=${examPending.length}`);
+
   if (allPending.length === 0) {
-    return NextResponse.json({ processed: 0, message: 'No pending notifications' });
+    return NextResponse.json({
+      processed: 0,
+      message: 'No pending notifications',
+      profiles: profiles.length,
+      totalUnnotified: totalUnnotified ?? 0,
+      bySource: { timetable: 0, assignments: 0, exams: 0 },
+      window: { from: now.toISOString(), to: windowEnd.toISOString() },
+    });
   }
 
   let sent = 0;
@@ -366,7 +452,7 @@ export async function GET(req: NextRequest) {
 
     if (result.success) {
       sent++;
-      if (n.sourceType === 'timetable_event') {
+      if (n.sourceType === 'timetable_event' && !n.useSentinel) {
         await markTimetableNotified(supabase, n.sourceId);
       } else {
         await recordSentinel(supabase, n);
@@ -385,6 +471,8 @@ export async function GET(req: NextRequest) {
     processed: allPending.length,
     sent,
     failed,
+    profiles: profiles.length,
+    totalUnnotified: totalUnnotified ?? 0,
     bySource: {
       timetable: timetablePending.length,
       assignments: assignmentPending.length,
