@@ -12,7 +12,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4-38bdf8?logo=tailwindcss)](https://tailwindcss.com/)
 [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ecf8e?logo=supabase)](https://supabase.com/)
-[![Status](https://img.shields.io/badge/Status-MVP%20Phase%201-amber)](./)
+[![Status](https://img.shields.io/badge/Status-Beta-3ecf8e)](./)
 
 </div>
 
@@ -240,7 +240,7 @@ npm install
 npm run dev
 ```
 
-Visit `http://localhost:3000`. The app runs against the mock database in dev mode — no Supabase connection needed to explore UI and features.
+Visit `http://localhost:3000`. The app connects to Supabase — ensure your `.env.local` has valid `SUPABASE_URL` and `SUPABASE_ANON_KEY` values.
 
 ---
 

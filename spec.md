@@ -5,7 +5,7 @@
 - **Styling:** Tailwind CSS v4
 - **Language:** TypeScript 5
 - **Backend/Database:** Supabase (PostgreSQL, Auth, Storage)
-- **MVP State:** Mock data via `src/lib/mock/database.ts` before Supabase binding.
+- **State:** Supabase (PostgreSQL + Auth + Storage + Realtime) — live production database. Mock facade (`src/lib/mock/database.ts`) retained for local dev/testing fallback.
 - **Hosting:** Vercel
 
 ---
