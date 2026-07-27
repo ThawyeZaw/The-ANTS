@@ -11,6 +11,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
 import { useLessonContext } from '@/context/LessonContext';
 import { createClient } from '@/lib/supabase/client';
+import { cachedQuery } from '@/lib/cache';
 
 export interface SyncedCourse {
   curriculumId: string;
@@ -73,12 +74,19 @@ export function useCourseSync() {
 
     const fetchResources = async () => {
       try {
-        const queries: Promise<{ data: any[] | null }>[] = [];
+        const queries: any[] = [];
 
         if (subjectIds.length > 0) {
-          queries.push(supabase.from('notes').select('*').in('subject_id', subjectIds));
-          queries.push(supabase.from('decks').select('*').in('subject_id', subjectIds));
-          queries.push(supabase.from('exams').select('*').in('subject_id', subjectIds));
+          const idsKey = subjectIds.sort().join(',');
+          queries.push(
+            cachedQuery(`notes_${idsKey}`, () => supabase.from('notes').select('*').in('subject_id', subjectIds), { staleTimeMs: 120_000 })
+          );
+          queries.push(
+            cachedQuery(`decks_${idsKey}`, () => supabase.from('decks').select('*').in('subject_id', subjectIds), { staleTimeMs: 120_000 })
+          );
+          queries.push(
+            cachedQuery(`exams_${idsKey}`, () => supabase.from('exams').select('*').in('subject_id', subjectIds), { staleTimeMs: 120_000 })
+          );
         }
 
         const [notesRes, decksRes, examsRes] = subjectIds.length > 0
@@ -141,6 +149,15 @@ export function useCourseSync() {
     };
 
     fetchResources();
+
+    const handleCacheInvalidate = () => {
+      fetchResources();
+    };
+    window.addEventListener('supabase-cache-invalidate', handleCacheInvalidate);
+
+    return () => {
+      window.removeEventListener('supabase-cache-invalidate', handleCacheInvalidate);
+    };
   }, [user, enrolledCurriculums, enrolledSubjectIds, ctxCountdowns, ctxLoading]);
 
   const hasEnrollments = syncedCourses.length > 0;

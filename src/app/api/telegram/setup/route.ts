@@ -12,6 +12,12 @@ import { NextRequest, NextResponse } from 'next/server';
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const CRON_SECRET = process.env.CRON_SECRET;
 
+function getSiteUrl(): string {
+  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return 'https://the-ants.org'; // fallback production URL
+}
+
 export async function GET(req: NextRequest) {
   const secret = req.headers.get('x-cron-secret') || req.nextUrl.searchParams.get('secret');
   if (!CRON_SECRET || secret !== CRON_SECRET) {
@@ -22,9 +28,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'TELEGRAM_BOT_TOKEN not configured' }, { status: 500 });
   }
 
-  // Derive the base URL from the request
-  const url = new URL(req.url);
-  const webhookUrl = `${url.protocol}//${url.host}/api/telegram/webhook`;
+  const webhookUrl = `${getSiteUrl()}/api/telegram/webhook`;
 
   // 1. Check current webhook status
   const infoRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getWebhookInfo`);

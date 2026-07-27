@@ -19,8 +19,9 @@ import {
   deleteOrgTeamMember,
   reorderOrgTeamMember,
 } from '@/lib/mock/database';
-import type { OrgTeamMember, OrgTeamMemberFormData } from '@/types';
+import type { OrgTeamMember, OrgTeamMemberFormData, Profile } from '@/types';
 import { cn } from '@/lib/utils';
+import UserSearchCombobox from '@/components/about/UserSearchCombobox';
 
 const EMPTY_FORM: OrgTeamMemberFormData = {
   name: '',
@@ -39,6 +40,7 @@ export default function TeamManager() {
   const [isSaving, setIsSaving] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [linkedUser, setLinkedUser] = useState<Pick<Profile, 'id' | 'name' | 'username' | 'avatar' | 'role'> | null>(null);
 
   useEffect(() => {
     setMembers(getOrgTeamMembers());
@@ -54,6 +56,7 @@ export default function TeamManager() {
   const openCreate = () => {
     setEditingId(null);
     setFormData(EMPTY_FORM);
+    setLinkedUser(null);
     setIsModalOpen(true);
   };
 
@@ -67,13 +70,50 @@ export default function TeamManager() {
       linkedProfileUsername: member.linkedProfileUsername || '',
       isAlumni: member.isAlumni || false,
     });
+    // Pre-populate linked user if member has a linked profile
+    if (member.linkedProfileUsername) {
+      setLinkedUser({
+        id: '',
+        name: member.name,
+        username: member.linkedProfileUsername,
+        avatar: member.photoUrl,
+        role: 'student',
+      });
+    } else {
+      setLinkedUser(null);
+    }
     setIsModalOpen(true);
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingId(null);
+    setLinkedUser(null);
     setFeedback(null);
+  };
+
+  const handleUserSelect = (user: Profile) => {
+    setLinkedUser({
+      id: user.id,
+      name: user.name,
+      username: user.username,
+      avatar: user.avatar,
+      role: user.role,
+    });
+    setFormData((p) => ({
+      ...p,
+      name: user.name || p.name,
+      photoUrl: user.avatar || p.photoUrl,
+      linkedProfileUsername: user.username,
+    }));
+  };
+
+  const handleUserClear = () => {
+    setLinkedUser(null);
+    setFormData((p) => ({
+      ...p,
+      linkedProfileUsername: '',
+    }));
   };
 
   const handleSave = () => {
@@ -239,7 +279,7 @@ export default function TeamManager() {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
           <div className="bg-background-card border border-border rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 shadow-2xl">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-bold text-foreground">
@@ -254,6 +294,15 @@ export default function TeamManager() {
             </div>
 
             <div className="space-y-4">
+              {/* User Search — auto-fill from platform */}
+              <UserSearchCombobox
+                onSelect={handleUserSelect}
+                onClear={handleUserClear}
+                selectedUser={linkedUser}
+                label="Link to Platform User"
+                description="Search for an existing user to auto-fill their details."
+              />
+
               <div>
                 <label className="block text-sm font-medium text-foreground-secondary mb-1.5">Name *</label>
                 <input
@@ -295,17 +344,6 @@ export default function TeamManager() {
                   onChange={(e) => setFormData((p) => ({ ...p, photoUrl: e.target.value }))}
                   className="w-full px-3 py-2.5 rounded-xl bg-background-secondary border border-border text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:border-primary/50 transition-colors"
                   placeholder="https://example.com/photo.jpg"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-foreground-secondary mb-1.5">Linked Profile Username</label>
-                <input
-                  type="text"
-                  value={formData.linkedProfileUsername || ''}
-                  onChange={(e) => setFormData((p) => ({ ...p, linkedProfileUsername: e.target.value }))}
-                  className="w-full px-3 py-2.5 rounded-xl bg-background-secondary border border-border text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:border-primary/50 transition-colors"
-                  placeholder="e.g. kozawwin"
                 />
               </div>
 

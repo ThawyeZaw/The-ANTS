@@ -9,6 +9,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import React from 'react';
 import { Mail, MessageCircle, ArrowUpRight } from 'lucide-react';
 
 // ── Column data ──────────────────────────────────────────────────────────────
@@ -56,7 +57,7 @@ const SOCIAL_LINKS = [
 
 // ── Component ────────────────────────────────────────────────────────────────
 
-export default function Footer() {
+const Footer = React.memo(function Footer() {
   return (
     <>
       <footer
@@ -254,7 +255,9 @@ export default function Footer() {
       </footer>
     </>
   );
-}
+});
+
+export default Footer;
 
 // ── Sub-components ───────────────────────────────────────────────────────────
 

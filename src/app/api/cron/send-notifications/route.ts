@@ -117,7 +117,7 @@ async function buildTimetableNotifications(
   supabase: SupabaseAny,
   profiles: ProfileRec[],
   now: Date,
-  windowEnd: Date
+  windowStart: Date
 ): Promise<PendingNotification[]> {
   const results: PendingNotification[] = [];
   const lookAhead = new Date(now.getTime() + 8 * 24 * 60 * 60 * 1000); // 8 days to cover 1-week-early reminders
@@ -174,7 +174,8 @@ async function buildTimetableNotifications(
       const explicitOffset = event.reminder_minutes as number;
 
       const effectiveTime = new Date(startDate.getTime() - explicitOffset * 60 * 1000);
-      if (effectiveTime < now || effectiveTime > windowEnd) continue;
+      // Send only if the reminder time has arrived (not before, not too far past)
+      if (effectiveTime > now || effectiveTime < windowStart) continue;
 
       const { timeStr, dateStr } = formatTime(startDate);
       let msg = `⏱ <b>EVENT REMINDER</b>\n\n🔔 <b>${event.title}</b>\n${dateStr} · ${timeStr}`;
@@ -212,7 +213,8 @@ async function buildTimetableNotifications(
         if (sentinelSet.has(key)) continue;
 
         const effectiveTime = new Date(startDate.getTime() - offset * 60 * 1000);
-        if (effectiveTime < now || effectiveTime > windowEnd) continue;
+        // Send only if the reminder time has arrived (not before, not too far past)
+        if (effectiveTime > now || effectiveTime < windowStart) continue;
 
         const { timeStr, dateStr } = formatTime(startDate);
         let msg = `⏱ <b>EVENT REMINDER</b>\n\n🔔 <b>${event.title}</b>\n${dateStr} · ${timeStr}`;
@@ -257,12 +259,13 @@ async function buildAssignmentNotifications(
   for (const [offsetMin, profs] of offsetProfiles) {
     const targetTime = new Date(now.getTime() + offsetMin * 60 * 1000);
     const windowStart = new Date(targetTime.getTime() - 5 * 60 * 1000);
+    const offsetWindowEnd = new Date(targetTime.getTime() + 5 * 60 * 1000);
 
     const { data: assignments } = await (supabase
       .from('assignments')
       .select('id, title, due_date, classroom_id')
       .gte('due_date', windowStart.toISOString())
-      .lte('due_date', windowEnd.toISOString())
+      .lte('due_date', offsetWindowEnd.toISOString())
       .eq('status', 'published') as SupabaseAny);
 
     if (!assignments?.length) continue;
@@ -329,12 +332,13 @@ async function buildExamNotifications(
   for (const [offsetMin, profs] of offsetProfiles) {
     const targetTime = new Date(now.getTime() + offsetMin * 60 * 1000);
     const windowStart = new Date(targetTime.getTime() - 5 * 60 * 1000);
+    const offsetWindowEnd = new Date(targetTime.getTime() + 5 * 60 * 1000);
 
     const { data: countdowns } = await (supabase
       .from('exam_countdowns')
       .select('id, title, target_date, user_id')
       .gte('target_date', windowStart.toISOString())
-      .lte('target_date', windowEnd.toISOString()) as SupabaseAny);
+      .lte('target_date', offsetWindowEnd.toISOString()) as SupabaseAny);
 
     if (!countdowns?.length) continue;
 
@@ -401,8 +405,11 @@ export async function GET(req: NextRequest) {
 
   const supabase = await createAdminClient();
   const now = new Date();
-  const windowEnd = new Date(now.getTime() + 15 * 60 * 1000); // 15 min for assignments/exams
-  const timetableWindowEnd = new Date(now.getTime() + 2 * 60 * 1000); // 2 min for timetable (tight accuracy)
+  // Max possible offset is 10080 min (1 week). windowEnd must cover the largest
+  // offset + 5 min buffer so that every offset's date-range query is satisfiable.
+  const maxOffsetMs = 10080 * 60 * 1000 + 5 * 60 * 1000;
+  const windowEnd = new Date(now.getTime() + maxOffsetMs);
+  const timetableWindowStart = new Date(now.getTime() - 2 * 60 * 1000); // 2 min lookback — fire only if reminder time has arrived
 
   const profiles = await fetchLinkedProfiles(supabase);
   if (profiles.length === 0) {
@@ -423,14 +430,14 @@ export async function GET(req: NextRequest) {
     .gte('start_time', now.toISOString())
     .lte('start_time', new Date(now.getTime() + 8 * 24 * 60 * 60 * 1000).toISOString()) as SupabaseAny);
 
-  const timetablePending = await buildTimetableNotifications(supabase, profiles, now, timetableWindowEnd);
+  const timetablePending = await buildTimetableNotifications(supabase, profiles, now, timetableWindowStart);
   const assignmentPending = await buildAssignmentNotifications(supabase, profiles, now, windowEnd);
   const examPending = await buildExamNotifications(supabase, profiles, now, windowEnd);
 
   const allPending = [...timetablePending, ...assignmentPending, ...examPending];
 
   // Debug logging
-  console.log(`[cron] profiles=${profiles.length} now=${now.toISOString()} timetableWindow=2min assignmentWindow=15min`);
+  console.log(`[cron] profiles=${profiles.length} now=${now.toISOString()} timetableLookback=2min assignmentWindow=15min`);
   console.log(`[cron] totalUnnotified=${totalUnnotified ?? 0} timetable=${timetablePending.length} assignment=${assignmentPending.length} exam=${examPending.length}`);
 
   if (allPending.length === 0) {

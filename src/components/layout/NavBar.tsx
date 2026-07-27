@@ -5,7 +5,7 @@
 // Structure: Library | Tools | Community | [Contribute] | [Admin]
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
@@ -246,7 +246,7 @@ export function getAllNavItems(): NavItem[] {
 
 // ── Main NavBar Component ────────────────────────────────────────────────────
 
-export default function NavBar() {
+const NavBar = React.memo(function NavBar() {
   const { user, logout } = useAuth();
   const { role } = useRole();
   const { theme, toggleTheme } = useTheme();
@@ -878,4 +878,6 @@ export default function NavBar() {
       )}
     </header>
   );
-}
+});
+
+export default NavBar;
