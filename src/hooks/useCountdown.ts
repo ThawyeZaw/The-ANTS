@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ExamCountdown, Exam } from '@/types';
 import { createClient } from '@/lib/supabase/client';
+import {
+  actionEnqueueExamReminders,
+  actionClearSourceQueue,
+} from '@/actions/notifications';
 
 export interface TimeLeft {
   days: number;
@@ -121,6 +125,12 @@ export function useCountdown(userId: string | undefined) {
 
     if (error || !newCountdown) return;
 
+    // Enqueue exam reminders
+    actionEnqueueExamReminders(
+      (newCountdown as ExamCountdown).id,
+      userId
+    );
+
     setCountdowns(prev => [
       ...prev,
       {
@@ -137,6 +147,8 @@ export function useCountdown(userId: string | undefined) {
       .eq('id', id);
 
     if (!error) {
+      // Clear pending queue items
+      actionClearSourceQueue('exam_countdown', id);
       setCountdowns(prev => prev.filter(c => c.id !== id));
     }
   }, []);
