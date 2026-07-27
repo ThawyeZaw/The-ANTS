@@ -1,24 +1,16 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTs — useCourseSync hook
-// Provides synced course-resource data for dashboards. When a user enrolls in
-// courses, this hook fetches all related resources (notes, flashcards, exams)
-// grouped by curriculum and subject for prominent dashboard display.
+// The ANTS — useCourseSync hook
+// Provides synced course-resource data for dashboards. Fetches real data from
+// Supabase (user_enrollments, notes, decks, exams) via LessonContext and direct
+// queries, grouped by curriculum and subject for prominent dashboard display.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
-import {
-  getUserEnrollments,
-  getNotesByEnrolledCourses,
-  getDecksByEnrolledCourses,
-  getExamsByEnrolledCourses,
-  getUserCountdowns,
-  getAllCurriculums,
-  getAllSubjects,
-  getTopicsBySubject,
-} from '@/lib/mock/database';
+import { useLessonContext } from '@/context/LessonContext';
+import { createClient } from '@/lib/supabase/client';
 
 export interface SyncedCourse {
   curriculumId: string;
@@ -40,93 +32,128 @@ export interface SyncedSubject {
 
 export function useCourseSync() {
   const { user } = useAuth();
+  const {
+    enrolledCurriculums,
+    enrolledSubjectIds,
+    countdowns: ctxCountdowns,
+    refetch,
+    isLoading: ctxLoading,
+  } = useLessonContext();
 
-  const syncedCourses = useMemo<SyncedCourse[]>(() => {
-    if (!user) return [];
+  const [syncedCourses, setSyncedCourses] = useState<SyncedCourse[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasTriggeredFetch, setHasTriggeredFetch] = useState(false);
 
-    const enrollments = getUserEnrollments(user.id);
-    if (enrollments.length === 0) return [];
+  // ── Trigger LessonContext to fetch data on non-lesson routes (e.g. dashboard) ──
+  useEffect(() => {
+    if (user && !hasTriggeredFetch) {
+      refetch();
+      setHasTriggeredFetch(true);
+    }
+  }, [user, hasTriggeredFetch, refetch]);
 
-    const curriculums = getAllCurriculums();
-    const subjects = getAllSubjects();
-    const enrolledNotes = getNotesByEnrolledCourses(user.id);
-    const enrolledDecks = getDecksByEnrolledCourses(user.id);
-    const enrolledExams = getExamsByEnrolledCourses(user.id);
-    const userCountdowns = getUserCountdowns(user.id);
-
-    // Group enrollments by curriculum
-    const curriculumMap = new Map<string, typeof enrollments>();
-    for (const enr of enrollments) {
-      if (!curriculumMap.has(enr.curriculum_id)) {
-        curriculumMap.set(enr.curriculum_id, []);
-      }
-      curriculumMap.get(enr.curriculum_id)!.push(enr);
+  // ── Build synced courses from LessonContext + Supabase resource queries ──
+  useEffect(() => {
+    if (!user) {
+      setSyncedCourses([]);
+      setIsLoading(false);
+      return;
     }
 
-    const result: SyncedCourse[] = [];
+    if (ctxLoading) return;
 
-    for (const [curriculumId, curriculumEnrollments] of curriculumMap) {
-      const curriculum = curriculums.find((c: any) => c.id === curriculumId);
-      if (!curriculum) continue;
+    if (enrolledCurriculums.length === 0) {
+      setSyncedCourses([]);
+      setIsLoading(false);
+      return;
+    }
 
-      const syncedSubjects: SyncedSubject[] = [];
+    const supabase = createClient();
+    const subjectIds = enrolledSubjectIds;
 
-      for (const enr of curriculumEnrollments) {
-        const subject = subjects.find((s: any) => s.id === enr.subject_id);
-        if (!subject) continue;
+    const fetchResources = async () => {
+      try {
+        const queries: Promise<{ data: any[] | null }>[] = [];
 
-        const topics = getTopicsBySubject(enr.subject_id);
+        if (subjectIds.length > 0) {
+          queries.push(supabase.from('notes').select('*').in('subject_id', subjectIds));
+          queries.push(supabase.from('decks').select('*').in('subject_id', subjectIds));
+          queries.push(supabase.from('exams').select('*').in('subject_id', subjectIds));
+        }
 
-        // Filter resources by subject/curriculum
-        const subjectNotes = enrolledNotes.filter(
-          (n: any) => n.subject_id === enr.subject_id || n.curriculum_id === curriculumId
-        );
-        const subjectDecks = enrolledDecks.filter(
-          (d: any) => d.subject_id === enr.subject_id || d.curriculum_id === curriculumId
-        );
-        const subjectExams = enrolledExams.filter(
-          (e: any) => e.subject_id === enr.subject_id || e.curriculum_id === curriculumId
-        );
-        const subjectCountdowns = userCountdowns.filter(
-          (c: any) => {
-            const linkedExam = enrolledExams.find((e: any) => e.id === c.exam_id);
-            return linkedExam && (linkedExam.subject_id === enr.subject_id || linkedExam.curriculum_id === curriculumId);
+        const [notesRes, decksRes, examsRes] = subjectIds.length > 0
+          ? await Promise.all(queries)
+          : [{ data: [] }, { data: [] }, { data: [] }];
+
+        const notes = (notesRes?.data ?? []) as any[];
+        const decks = (decksRes?.data ?? []) as any[];
+        const exams = (examsRes?.data ?? []) as any[];
+
+        // Map countdowns from LessonContext (SubjectCountdown[] -> { subjectId, exam })
+        const countdownsBySubject = new Map<string, any>();
+        for (const cd of ctxCountdowns) {
+          if (cd.exam) {
+            countdownsBySubject.set(cd.subjectId, cd.exam);
           }
-        );
+        }
 
-        syncedSubjects.push({
-          subjectId: enr.subject_id,
-          subjectTitle: subject.title,
-          topicCount: topics.length,
-          completedTopics: 0,
-          notes: subjectNotes,
-          flashcards: subjectDecks,
-          exams: subjectExams,
-          countdowns: subjectCountdowns,
-        });
+        const result: SyncedCourse[] = enrolledCurriculums.map((curriculum) => ({
+          curriculumId: curriculum.id,
+          curriculumTitle: curriculum.title,
+          examBoard: (curriculum as any).exam_board ?? null,
+          subjects: curriculum.subjects.map((subject) => {
+            const subjectNotes = notes.filter(
+              (n: any) => n.subject_id === subject.id
+            );
+            const subjectDecks = decks.filter(
+              (d: any) => d.subject_id === subject.id
+            );
+            const subjectExams = exams.filter(
+              (e: any) => e.subject_id === subject.id
+            );
+
+            // Build countdowns array for this subject
+            const subjectCountdowns: any[] = [];
+            const cd = countdownsBySubject.get(subject.id);
+            if (cd) {
+              subjectCountdowns.push(cd);
+            }
+
+            return {
+              subjectId: subject.id,
+              subjectTitle: subject.title,
+              topicCount: subject.topics.length,
+              completedTopics: 0,
+              notes: subjectNotes,
+              flashcards: subjectDecks,
+              exams: subjectExams,
+              countdowns: subjectCountdowns,
+            };
+          }),
+        }));
+
+        setSyncedCourses(result);
+      } catch (err) {
+        console.error('useCourseSync: failed to fetch resources', err);
+      } finally {
+        setIsLoading(false);
       }
+    };
 
-      result.push({
-        curriculumId,
-        curriculumTitle: (curriculum as any).title,
-        examBoard: (curriculum as any).exam_board ?? null,
-        subjects: syncedSubjects,
-      });
-    }
-
-    return result;
-  }, [user]);
+    fetchResources();
+  }, [user, enrolledCurriculums, enrolledSubjectIds, ctxCountdowns, ctxLoading]);
 
   const hasEnrollments = syncedCourses.length > 0;
   const totalResources = syncedCourses.reduce(
     (acc, c) =>
       acc +
       c.subjects.reduce(
-        (sAcc, s) => sAcc + s.notes.length + s.flashcards.length + s.exams.length + s.countdowns.length,
+        (sAcc, s) =>
+          sAcc + s.notes.length + s.flashcards.length + s.exams.length + s.countdowns.length,
         0
       ),
     0
   );
 
-  return { syncedCourses, hasEnrollments, totalResources, isLoading: false };
+  return { syncedCourses, hasEnrollments, totalResources, isLoading };
 }

@@ -10,6 +10,7 @@ import { WorkspaceToastProvider } from '@/components/workspace/WorkspaceToast';
 import CourseSyncPanel from '@/components/layout/CourseSyncPanel';
 import QuickAccessToolbar from '@/components/layout/QuickAccessToolbar';
 import MyContributions from '@/components/layout/MyContributions';
+import { useDashboardSync } from '@/hooks/useDashboardSync';
 import { cn } from '@/lib/utils';
 
 export default function ContributorDashboard() {
@@ -22,6 +23,8 @@ export default function ContributorDashboard() {
       router.replace(`/${role === 'main_contributor' ? 'main-contributor' : role}`);
     }
   }, [role, isContributor, router]);
+
+  const { syncedCourses } = useDashboardSync();
 
   if (!user || !isContributor) return null;
 

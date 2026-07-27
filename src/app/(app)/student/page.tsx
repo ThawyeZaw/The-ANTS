@@ -15,6 +15,9 @@ import {
   Flame,
   Zap,
   TrendingUp,
+  GraduationCap,
+  Layers,
+  Bell,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
@@ -25,11 +28,9 @@ import CourseSyncPanel from '@/components/layout/CourseSyncPanel';
 import QuickAccessToolbar from '@/components/layout/QuickAccessToolbar';
 import { cn } from '@/lib/utils';
 import {
-  getStudentDashboardStats,
-  mockExams,
   mockClubAnnouncements,
-  getUserSavedNotes,
 } from '@/lib/mock/database';
+import { useDashboardSync } from '@/hooks/useDashboardSync';
 
 // ── Icon & Color maps (replicated from DashboardLayout — PM-locked) ──────────
 
@@ -38,6 +39,11 @@ const iconMap: Record<string, React.ReactNode> = {
   'cards-due': <Zap className="h-5 w-5" />,
   'next-exam': <Clock className="h-5 w-5" />,
   'avg-confidence': <TrendingUp className="h-5 w-5" />,
+  'enrolled-courses': <GraduationCap className="h-5 w-5" />,
+  'synced-resources': <Layers className="h-5 w-5" />,
+  'saved-notes': <BookMarked className="h-5 w-5" />,
+  'flashcard-decks': <Layers className="h-5 w-5" />,
+  'active-countdowns': <Bell className="h-5 w-5" />,
 };
 
 const colorMap: Record<string, string> = {
@@ -58,7 +64,7 @@ export default function StudentDashboard() {
   const router = useRouter();
   const [recentPages, setRecentPages] = useState<any[]>([]);
 
-  const savedNotes = user ? getUserSavedNotes(user.id) : [];
+  const { savedNotes, upcomingExams, stats } = useDashboardSync();
 
   useEffect(() => {
     if (role && !isStudent) {
@@ -91,7 +97,6 @@ export default function StudentDashboard() {
 
   const firstName = user.profile.name.split(' ')[0];
   const welcomeSubtitle = "Here's your study snapshot for today. Keep up the great work!";
-  const stats = getStudentDashboardStats(user.id);
 
   const mainContent = (
     <div className="space-y-6">
@@ -192,18 +197,25 @@ export default function StudentDashboard() {
           </h3>
         </div>
         <div className="space-y-2">
-          {mockExams.slice(0, 3).map(exam => (
+          {upcomingExams.slice(0, 3).map(exam => (
             <div key={exam.id} className="p-2 bg-background-secondary/50 rounded-lg border border-border/50 flex flex-col justify-between">
               <div>
-                <p className="font-semibold text-xs text-foreground">{exam.title}</p>
-                <p className="text-[11px] text-foreground-muted mt-0.5">{exam.exam_series}</p>
+                <p className="font-semibold text-xs text-foreground">{exam.custom_title || 'Exam'}</p>
+                <p className="text-[11px] text-foreground-muted mt-0.5">{exam.qualification_group || ''}</p>
               </div>
-              <div className="mt-1.5 text-[10px] font-semibold text-rose-500 bg-rose-500/10 self-start px-1.5 py-0.5 rounded-md">
-                {new Date(exam.exam_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+              <div className="mt-1.5 flex items-center gap-2">
+                <span className="text-[10px] font-semibold text-rose-500 bg-rose-500/10 self-start px-1.5 py-0.5 rounded-md">
+                  {exam.target_date ? new Date(exam.target_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'TBD'}
+                </span>
+                {!exam.timeLeft.isPast && (
+                  <span className="text-[10px] font-semibold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded-md">
+                    {exam.timeLeft.days}d left
+                  </span>
+                )}
               </div>
             </div>
           ))}
-          {mockExams.length === 0 && (
+          {upcomingExams.length === 0 && (
             <p className="text-xs text-foreground-muted">No upcoming exams.</p>
           )}
         </div>

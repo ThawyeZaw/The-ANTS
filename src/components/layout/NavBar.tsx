@@ -2,7 +2,7 @@
 
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTs — NavBar Component (v6 — Study + Tools grouping)
-// Structure: Study | Tools | Community | [Contribute] | [Admin]
+// Structure: Library | Tools | Community | [Contribute] | [Admin]
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useRef, useEffect } from 'react';
@@ -70,7 +70,7 @@ const ALL_ROLES: UserRole[] = ['student', 'teacher', 'contributor', 'main_contri
 
 const NAV_GROUPS: NavGroup[] = [
   {
-    label: 'Study',
+    label: 'Library',
     href: '/library',
     icon: <BookOpen className="h-4 w-4" />,
     description: 'Notes, flashcards, courses & quizzes',

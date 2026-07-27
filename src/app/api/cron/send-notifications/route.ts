@@ -380,7 +380,7 @@ async function recordSentinel(supabase: SupabaseAny, n: PendingNotification) {
     start_time: new Date().toISOString(),
     event_source: n.sourceType === 'assignment' ? 'assignment_reminder'
                 : n.sourceType === 'exam_countdown' ? 'exam_reminder'
-                : n.sourceType,
+                : 'timetable_event_reminder',
     source_id: n.sourceId,
     reminder_minutes: n.offset,
     notified: true,
