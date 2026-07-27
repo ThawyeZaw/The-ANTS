@@ -6,8 +6,8 @@
 //   /start <username>  — Link a Telegram chat to a user profile.
 //   /stop              — Unlink the chat from the user profile.
 //
-// NOTE: telegram_chat_id was added via migration after auto-generated Supabase
-// types were created. `as any` casts are used where needed.
+// GET  /api/telegram/webhook  — Set up or check webhook registration
+// POST /api/telegram/webhook  — Handle incoming Telegram updates
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -19,11 +19,20 @@ const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 async function sendMessage(chatId: number, text: string) {
-  await fetch(`${TELEGRAM_API}/sendMessage`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' }),
-  });
+  try {
+    const res = await fetch(`${TELEGRAM_API}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      console.error('[telegram] sendMessage failed:', JSON.stringify(data));
+    }
+    return data;
+  } catch (err) {
+    console.error('[telegram] sendMessage fetch error:', err);
+  }
 }
 
 async function getUserByUsername(username: string) {
@@ -67,7 +76,62 @@ async function unlinkTelegramChat(chatId: number) {
   return !error;
 }
 
-// ── POST Handler ───────────────────────────────────────────────────────────────
+// ── GET: Webhook Setup / Status ────────────────────────────────────────────────
+
+export async function GET(req: NextRequest) {
+  if (!BOT_TOKEN) {
+    return NextResponse.json({ error: 'TELEGRAM_BOT_TOKEN not configured' }, { status: 500 });
+  }
+
+  const { searchParams } = new URL(req.url);
+  const action = searchParams.get('action') ?? 'status';
+
+  try {
+    if (action === 'set') {
+      // Register the webhook
+      const webhookUrl = searchParams.get('url') ?? `${req.nextUrl.origin}/api/telegram/webhook`;
+      const setRes = await fetch(`${TELEGRAM_API}/setWebhook`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url: webhookUrl,
+          allowed_updates: ['message'],
+          drop_pending_updates: false,
+        }),
+      });
+      const setData = await setRes.json();
+      return NextResponse.json({
+        action: 'setWebhook',
+        url: webhookUrl,
+        result: setData,
+      });
+    }
+
+    if (action === 'delete') {
+      const delRes = await fetch(`${TELEGRAM_API}/deleteWebhook`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ drop_pending_updates: false }),
+      });
+      const delData = await delRes.json();
+      return NextResponse.json({ action: 'deleteWebhook', result: delData });
+    }
+
+    // Default: check webhook status
+    const infoRes = await fetch(`${TELEGRAM_API}/getWebhookInfo`);
+    const infoData = await infoRes.json();
+    return NextResponse.json({
+      action: 'status',
+      botUsername: process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ?? '(not set)',
+      expectedUrl: `${req.nextUrl.origin}/api/telegram/webhook`,
+      webhookInfo: infoData,
+    });
+  } catch (err) {
+    return NextResponse.json({ error: String(err) }, { status: 500 });
+  }
+}
+
+// ── POST: Handle Incoming Messages ─────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
   if (!BOT_TOKEN) {
@@ -81,15 +145,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
+  console.log('[telegram] webhook received:', JSON.stringify(body).slice(0, 500));
+
   // Extract message fields
   const message = body.message as Record<string, unknown> | undefined;
   if (!message?.text || !message?.chat) {
+    // Could be a non-text update (e.g., /start without params, sticker, etc.)
+    // Still acknowledge so Telegram doesn't retry
     return NextResponse.json({ ok: true });
   }
 
   const text = (message.text as string).trim();
   const chat = message.chat as Record<string, unknown>;
   const chatId = chat.id as number;
+
+  console.log(`[telegram] message from chat ${chatId}: "${text}"`);
 
   // ── /start <username> ──
   if (text.startsWith('/start')) {
@@ -99,7 +169,7 @@ export async function POST(req: NextRequest) {
       await sendMessage(
         chatId,
         '👋 <b>Welcome to The ANTs Bot!</b>\n\n' +
-          'Link your account:\n<code>/start your_username</code>\n\n' +
+          'Link your ANTs account:\n<code>/start your_username</code>\n\n' +
           'Commands:\n/start &lt;username&gt; — Link account\n/stop — Unlink account'
       );
       return NextResponse.json({ ok: true });
@@ -108,14 +178,14 @@ export async function POST(req: NextRequest) {
     const user = await getUserByUsername(param);
 
     if (!user) {
-      await sendMessage(chatId, `❌ User <b>@${param}</b> not found.\nCheck your username and try again.`);
+      await sendMessage(chatId, `❌ User <b>@${param}</b> not found.\n\nMake sure:\n• Your username is correct\n• You have set a username in Settings → Profile`);
       return NextResponse.json({ ok: true });
     }
 
     if (user.telegram_chat_id) {
       await sendMessage(
         chatId,
-        `⚠️ <b>@${param}</b> is already linked.\nSend /stop from the old chat first.`
+        `⚠️ <b>@${param}</b> is already linked to another Telegram chat.\n\nSend /stop from the old chat first, or contact support.`
       );
       return NextResponse.json({ ok: true });
     }
@@ -125,11 +195,17 @@ export async function POST(req: NextRequest) {
     if (linked) {
       await sendMessage(
         chatId,
-        '✅ Linked! You\'ll now receive alerts here.\n\n' +
-          'Configure what you want in Settings → Telegram Alerts.\n/stop to unlink.'
+        `✅ <b>Linked!</b> Welcome, @${param}.\n\n` +
+          'You\'ll now receive alerts here for:\n' +
+          '• Timetable events\n' +
+          '• Assignment deadlines\n' +
+          '• Exam countdowns\n' +
+          '• Quiz due dates\n\n' +
+          'Configure what you want in Settings → Telegram Alerts.\n\n' +
+          'Send /stop anytime to unlink.'
       );
     } else {
-      await sendMessage(chatId, '❌ Linking failed. Try again later.');
+      await sendMessage(chatId, '❌ Linking failed. Please try again later or contact support.');
     }
 
     return NextResponse.json({ ok: true });
@@ -142,11 +218,10 @@ export async function POST(req: NextRequest) {
     if (unlinked) {
       await sendMessage(
         chatId,
-        '👋 Unlinked. You\'ll no longer receive alerts here.\n\n' +
-          'Re-link anytime with /start your_username.'
+        '👋 <b>Unlinked.</b>\n\nYou\'ll no longer receive alerts here.\n\nRe-link anytime with /start your_username.'
       );
     } else {
-      await sendMessage(chatId, '❌ This chat wasn\'t linked to any account.');
+      await sendMessage(chatId, '❌ This chat wasn\'t linked to any ANTs account.');
     }
 
     return NextResponse.json({ ok: true });
@@ -155,7 +230,7 @@ export async function POST(req: NextRequest) {
   // ── Unknown / non-command text ──
   await sendMessage(
     chatId,
-    'This bot only sends notifications from the-ants.org.\n\n' +
+    'This bot sends notifications from <b>The ANTs</b>.\n\n' +
       'To link your account:\n<code>/start your_username</code>\n\n' +
       'Commands:\n/start — Link account\n/stop — Unlink'
   );
