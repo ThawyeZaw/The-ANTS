@@ -10,6 +10,7 @@ import type { Exam, ExamCountdown, UserExamHistory } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 import { createClient } from '@/lib/supabase/client';
 import { getAllCurriculums, getAllSubjects } from '@/lib/mock/database';
+import { actionEnqueueExamReminders } from '@/actions/notifications';
 
 // ── Local Types ───────────────────────────────────────────────────────────────
 
@@ -266,15 +267,19 @@ export function useCourseManager() {
     async (userId: string, examId: string) => {
       const exam = allExams.find((e: any) => e.id === examId);
       if (!exam) return;
-      await supabase.from('exam_countdowns').insert({
+      const { data: newCd } = await supabase.from('exam_countdowns').insert({
         user_id: userId,
         exam_id: examId,
         custom_title: exam.subject,
         target_date: exam.date,
         priority_indicator: 'medium',
         qualification_group: exam.series ?? 'Custom',
-      });
+      }).select().single();
       await refetchCountdowns();
+      // Enqueue exam reminders
+      if (newCd) {
+        actionEnqueueExamReminders((newCd as any).id, userId);
+      }
     },
     [allExams, supabase, refetchCountdowns]
   );

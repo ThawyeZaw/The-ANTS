@@ -296,6 +296,93 @@ export type Database = {
           },
         ]
       }
+      classroom_announcements: {
+        Row: {
+          classroom_id: string
+          content: string
+          created_at: string | null
+          created_by: string
+          id: string
+          is_pinned: boolean | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          classroom_id: string
+          content: string
+          created_at?: string | null
+          created_by: string
+          id?: string
+          is_pinned?: boolean | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          classroom_id?: string
+          content?: string
+          created_at?: string | null
+          created_by?: string
+          id?: string
+          is_pinned?: boolean | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "classroom_announcements_classroom_id_fkey"
+            columns: ["classroom_id"]
+            isOneToOne: false
+            referencedRelation: "classrooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "classroom_announcements_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      classroom_chat_messages: {
+        Row: {
+          classroom_id: string
+          created_at: string | null
+          id: string
+          message: string
+          sender_id: string
+        }
+        Insert: {
+          classroom_id: string
+          created_at?: string | null
+          id?: string
+          message: string
+          sender_id: string
+        }
+        Update: {
+          classroom_id?: string
+          created_at?: string | null
+          id?: string
+          message?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "classroom_chat_messages_classroom_id_fkey"
+            columns: ["classroom_id"]
+            isOneToOne: false
+            referencedRelation: "classrooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "classroom_chat_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       classroom_curriculums: {
         Row: {
           classroom_id: string
@@ -325,6 +412,51 @@ export type Database = {
             columns: ["curriculum_id"]
             isOneToOne: false
             referencedRelation: "curriculums"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      classroom_join_requests: {
+        Row: {
+          classroom_id: string
+          id: string
+          message: string | null
+          requested_at: string | null
+          reviewed_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          classroom_id: string
+          id?: string
+          message?: string | null
+          requested_at?: string | null
+          reviewed_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          classroom_id?: string
+          id?: string
+          message?: string | null
+          requested_at?: string | null
+          reviewed_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "classroom_join_requests_classroom_id_fkey"
+            columns: ["classroom_id"]
+            isOneToOne: false
+            referencedRelation: "classrooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "classroom_join_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -441,31 +573,43 @@ export type Database = {
           created_at: string | null
           created_by: string
           curriculum_ids: string[] | null
+          custom_curriculum_names: string[] | null
           description: string | null
           enabled_features: Json | null
           id: string
           invite_code: string | null
+          is_public: boolean
+          join_mode: string
           name: string
+          url_slug: string | null
         }
         Insert: {
           created_at?: string | null
           created_by: string
           curriculum_ids?: string[] | null
+          custom_curriculum_names?: string[] | null
           description?: string | null
           enabled_features?: Json | null
           id?: string
           invite_code?: string | null
+          is_public?: boolean
+          join_mode?: string
           name: string
+          url_slug?: string | null
         }
         Update: {
           created_at?: string | null
           created_by?: string
           curriculum_ids?: string[] | null
+          custom_curriculum_names?: string[] | null
           description?: string | null
           enabled_features?: Json | null
           id?: string
           invite_code?: string | null
+          is_public?: boolean
+          join_mode?: string
           name?: string
+          url_slug?: string | null
         }
         Relationships: [
           {
@@ -504,15 +648,180 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "club_announcements_club_id_fkey"
+            foreignKeyName: "club_announcements_club_id_fkey1"
             columns: ["club_id"]
             isOneToOne: false
             referencedRelation: "clubs"
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "club_announcements_created_by_fkey1"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      club_announcements_legacy: {
+        Row: {
+          club_id: string
+          content: string | null
+          created_at: string | null
+          created_by: string
+          id: string
+          image_urls: string[] | null
+          markdown_content: string | null
+          title: string | null
+        }
+        Insert: {
+          club_id: string
+          content?: string | null
+          created_at?: string | null
+          created_by: string
+          id?: string
+          image_urls?: string[] | null
+          markdown_content?: string | null
+          title?: string | null
+        }
+        Update: {
+          club_id?: string
+          content?: string | null
+          created_at?: string | null
+          created_by?: string
+          id?: string
+          image_urls?: string[] | null
+          markdown_content?: string | null
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_announcements_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs_legacy"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "club_announcements_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      club_curriculums_legacy: {
+        Row: {
+          club_id: string
+          curriculum_id: string
+          id: string
+        }
+        Insert: {
+          club_id: string
+          curriculum_id: string
+          id?: string
+        }
+        Update: {
+          club_id?: string
+          curriculum_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_curriculums_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs_legacy"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "club_curriculums_curriculum_id_fkey"
+            columns: ["curriculum_id"]
+            isOneToOne: false
+            referencedRelation: "curriculums"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      club_events_legacy: {
+        Row: {
+          club_id: string
+          created_at: string | null
+          created_by: string
+          description: string | null
+          event_date: string
+          id: string
+          title: string
+        }
+        Insert: {
+          club_id: string
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          event_date: string
+          id?: string
+          title: string
+        }
+        Update: {
+          club_id?: string
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          event_date?: string
+          id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_events_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs_legacy"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "club_events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      club_join_requests_legacy: {
+        Row: {
+          club_id: string
+          id: string
+          requested_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          club_id: string
+          id?: string
+          requested_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          club_id?: string
+          id?: string
+          requested_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_join_requests_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs_legacy"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "club_join_requests_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -552,6 +861,96 @@ export type Database = {
           },
         ]
       }
+      club_links_legacy: {
+        Row: {
+          club_id: string
+          created_at: string | null
+          id: string
+          shared_by: string
+          title: string | null
+          url: string | null
+        }
+        Insert: {
+          club_id: string
+          created_at?: string | null
+          id?: string
+          shared_by: string
+          title?: string | null
+          url?: string | null
+        }
+        Update: {
+          club_id?: string
+          created_at?: string | null
+          id?: string
+          shared_by?: string
+          title?: string | null
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_links_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs_legacy"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "club_links_shared_by_fkey"
+            columns: ["shared_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      club_member_contributions_legacy: {
+        Row: {
+          club_id: string
+          contribution_type: string
+          created_at: string | null
+          description: string | null
+          id: string
+          metadata: Json | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          club_id: string
+          contribution_type: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          club_id?: string
+          contribution_type?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_member_contributions_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs_legacy"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "club_member_contributions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       club_members: {
         Row: {
           club_id: string
@@ -573,15 +972,150 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "club_members_club_id_fkey"
+            foreignKeyName: "club_members_club_id_fkey1"
             columns: ["club_id"]
             isOneToOne: false
             referencedRelation: "clubs"
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "club_members_user_id_fkey1"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      club_members_legacy: {
+        Row: {
+          club_id: string
+          id: string
+          joined_at: string | null
+          membership_status: string | null
+          role: string | null
+          user_id: string
+        }
+        Insert: {
+          club_id: string
+          id?: string
+          joined_at?: string | null
+          membership_status?: string | null
+          role?: string | null
+          user_id: string
+        }
+        Update: {
+          club_id?: string
+          id?: string
+          joined_at?: string | null
+          membership_status?: string | null
+          role?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_members_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs_legacy"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "club_members_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      club_messages_legacy: {
+        Row: {
+          club_id: string
+          created_at: string | null
+          id: string
+          message: string
+          sender_id: string
+        }
+        Insert: {
+          club_id: string
+          created_at?: string | null
+          id?: string
+          message: string
+          sender_id: string
+        }
+        Update: {
+          club_id?: string
+          created_at?: string | null
+          id?: string
+          message?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_messages_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs_legacy"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "club_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      club_milestones_legacy: {
+        Row: {
+          club_id: string
+          completed_at: string | null
+          created_at: string | null
+          created_by: string
+          description: string | null
+          id: string
+          order_no: number | null
+          status: string | null
+          target_date: string | null
+          title: string
+        }
+        Insert: {
+          club_id: string
+          completed_at?: string | null
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          id?: string
+          order_no?: number | null
+          status?: string | null
+          target_date?: string | null
+          title: string
+        }
+        Update: {
+          club_id?: string
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          id?: string
+          order_no?: number | null
+          status?: string | null
+          target_date?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_milestones_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs_legacy"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "club_milestones_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -630,10 +1164,76 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "club_projects_club_id_fkey"
+            foreignKeyName: "club_projects_club_id_fkey1"
             columns: ["club_id"]
             isOneToOne: false
             referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "club_projects_created_by_fkey1"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      club_projects_legacy: {
+        Row: {
+          club_id: string
+          contributors: string[] | null
+          cover_image_url: string | null
+          created_at: string | null
+          created_by: string
+          description: string | null
+          id: string
+          image_urls: string[] | null
+          links: Json | null
+          markdown_content: string | null
+          status: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          club_id: string
+          contributors?: string[] | null
+          cover_image_url?: string | null
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          id?: string
+          image_urls?: string[] | null
+          links?: Json | null
+          markdown_content?: string | null
+          status?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          club_id?: string
+          contributors?: string[] | null
+          cover_image_url?: string | null
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          id?: string
+          image_urls?: string[] | null
+          links?: Json | null
+          markdown_content?: string | null
+          status?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_projects_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs_legacy"
             referencedColumns: ["id"]
           },
           {
@@ -680,13 +1280,96 @@ export type Database = {
           },
         ]
       }
+      club_showcase_profiles: {
+        Row: {
+          club_id: string
+          cover_image_url: string | null
+          created_at: string | null
+          custom_slug: string | null
+          id: string
+          public_description: string | null
+          show_events: boolean
+          show_members: boolean
+          show_projects: boolean
+          tagline: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          club_id: string
+          cover_image_url?: string | null
+          created_at?: string | null
+          custom_slug?: string | null
+          id?: string
+          public_description?: string | null
+          show_events?: boolean
+          show_members?: boolean
+          show_projects?: boolean
+          tagline?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          club_id?: string
+          cover_image_url?: string | null
+          created_at?: string | null
+          custom_slug?: string | null
+          id?: string
+          public_description?: string | null
+          show_events?: boolean
+          show_members?: boolean
+          show_projects?: boolean
+          tagline?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_showcase_profiles_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: true
+            referencedRelation: "clubs_legacy"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      club_subjects_legacy: {
+        Row: {
+          club_id: string
+          id: string
+          subject_id: string
+        }
+        Insert: {
+          club_id: string
+          id?: string
+          subject_id: string
+        }
+        Update: {
+          club_id?: string
+          id?: string
+          subject_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_subjects_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs_legacy"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "club_subjects_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clubs: {
         Row: {
           accent_color: string | null
           cover_image_url: string | null
           created_at: string | null
           created_by: string
-          custom_slug: string | null
+          custom_slug: string
           description: string | null
           field: string
           id: string
@@ -699,7 +1382,7 @@ export type Database = {
           cover_image_url?: string | null
           created_at?: string | null
           created_by: string
-          custom_slug?: string | null
+          custom_slug: string
           description?: string | null
           field?: string
           id?: string
@@ -712,13 +1395,72 @@ export type Database = {
           cover_image_url?: string | null
           created_at?: string | null
           created_by?: string
-          custom_slug?: string | null
+          custom_slug?: string
           description?: string | null
           field?: string
           id?: string
           name?: string
           tagline?: string | null
           updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clubs_created_by_fkey1"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clubs_legacy: {
+        Row: {
+          category: string | null
+          cover_image_url: string | null
+          created_at: string | null
+          created_by: string
+          custom_domain_slug: string | null
+          description: string | null
+          enabled_features: Json | null
+          id: string
+          invite_code: string | null
+          is_archived: boolean
+          is_showcase: boolean | null
+          join_mode: string | null
+          name: string
+          tagline: string | null
+        }
+        Insert: {
+          category?: string | null
+          cover_image_url?: string | null
+          created_at?: string | null
+          created_by: string
+          custom_domain_slug?: string | null
+          description?: string | null
+          enabled_features?: Json | null
+          id?: string
+          invite_code?: string | null
+          is_archived?: boolean
+          is_showcase?: boolean | null
+          join_mode?: string | null
+          name: string
+          tagline?: string | null
+        }
+        Update: {
+          category?: string | null
+          cover_image_url?: string | null
+          created_at?: string | null
+          created_by?: string
+          custom_domain_slug?: string | null
+          description?: string | null
+          enabled_features?: Json | null
+          id?: string
+          invite_code?: string | null
+          is_archived?: boolean
+          is_showcase?: boolean | null
+          join_mode?: string | null
+          name?: string
+          tagline?: string | null
         }
         Relationships: [
           {
@@ -1464,6 +2206,56 @@ export type Database = {
           },
         ]
       }
+      notification_queue: {
+        Row: {
+          created_at: string
+          error_log: string | null
+          id: string
+          message_text: string
+          retry_count: number
+          scheduled_for: string
+          source_id: string | null
+          source_type: string | null
+          status: string
+          telegram_chat_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_log?: string | null
+          id?: string
+          message_text: string
+          retry_count?: number
+          scheduled_for?: string
+          source_id?: string | null
+          source_type?: string | null
+          status?: string
+          telegram_chat_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_log?: string | null
+          id?: string
+          message_text?: string
+          retry_count?: number
+          scheduled_for?: string
+          source_id?: string | null
+          source_type?: string | null
+          status?: string
+          telegram_chat_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_queue_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pomodoro_sessions: {
         Row: {
           category: string | null
@@ -1512,6 +2304,8 @@ export type Database = {
           id: string
           is_public: boolean | null
           name: string | null
+          notification_preferences: Json | null
+          onboarding_completed: boolean | null
           pinned_item_id: string | null
           projects: Json | null
           role: Database["public"]["Enums"]["user_role"] | null
@@ -1523,6 +2317,7 @@ export type Database = {
           show_club_projects: boolean | null
           social_links: Json | null
           spacing: string | null
+          telegram_chat_id: string | null
           theme: Json | null
           title: string | null
           updated_at: string | null
@@ -1541,6 +2336,8 @@ export type Database = {
           id: string
           is_public?: boolean | null
           name?: string | null
+          notification_preferences?: Json | null
+          onboarding_completed?: boolean | null
           pinned_item_id?: string | null
           projects?: Json | null
           role?: Database["public"]["Enums"]["user_role"] | null
@@ -1552,6 +2349,7 @@ export type Database = {
           show_club_projects?: boolean | null
           social_links?: Json | null
           spacing?: string | null
+          telegram_chat_id?: string | null
           theme?: Json | null
           title?: string | null
           updated_at?: string | null
@@ -1570,6 +2368,8 @@ export type Database = {
           id?: string
           is_public?: boolean | null
           name?: string | null
+          notification_preferences?: Json | null
+          onboarding_completed?: boolean | null
           pinned_item_id?: string | null
           projects?: Json | null
           role?: Database["public"]["Enums"]["user_role"] | null
@@ -1581,6 +2381,7 @@ export type Database = {
           show_club_projects?: boolean | null
           social_links?: Json | null
           spacing?: string | null
+          telegram_chat_id?: string | null
           theme?: Json | null
           title?: string | null
           updated_at?: string | null
@@ -1859,18 +2660,30 @@ export type Database = {
       student_profiles: {
         Row: {
           id: string
+          institution_name: string | null
+          onboarding_data: Json | null
+          preferred_name: string | null
           study_goals_metadata: Json | null
           target_exam_year: number | null
+          timezone: string | null
         }
         Insert: {
           id: string
+          institution_name?: string | null
+          onboarding_data?: Json | null
+          preferred_name?: string | null
           study_goals_metadata?: Json | null
           target_exam_year?: number | null
+          timezone?: string | null
         }
         Update: {
           id?: string
+          institution_name?: string | null
+          onboarding_data?: Json | null
+          preferred_name?: string | null
           study_goals_metadata?: Json | null
           target_exam_year?: number | null
+          timezone?: string | null
         }
         Relationships: [
           {
@@ -1919,16 +2732,22 @@ export type Database = {
           id: string
           institution_name: string | null
           is_verified_teacher: boolean | null
+          preferred_name: string | null
+          timezone: string | null
         }
         Insert: {
           id: string
           institution_name?: string | null
           is_verified_teacher?: boolean | null
+          preferred_name?: string | null
+          timezone?: string | null
         }
         Update: {
           id?: string
           institution_name?: string | null
           is_verified_teacher?: boolean | null
+          preferred_name?: string | null
+          timezone?: string | null
         }
         Relationships: [
           {
@@ -1956,7 +2775,9 @@ export type Database = {
           is_todo: boolean | null
           location: string | null
           metadata: Json | null
+          notified: boolean | null
           recurrence_rule: Json | null
+          reminder_minutes: number | null
           source_id: string | null
           start_time: string | null
           subject: string | null
@@ -1978,7 +2799,9 @@ export type Database = {
           is_todo?: boolean | null
           location?: string | null
           metadata?: Json | null
+          notified?: boolean | null
           recurrence_rule?: Json | null
+          reminder_minutes?: number | null
           source_id?: string | null
           start_time?: string | null
           subject?: string | null
@@ -2000,7 +2823,9 @@ export type Database = {
           is_todo?: boolean | null
           location?: string | null
           metadata?: Json | null
+          notified?: boolean | null
           recurrence_rule?: Json | null
+          reminder_minutes?: number | null
           source_id?: string | null
           start_time?: string | null
           subject?: string | null
@@ -2306,6 +3131,83 @@ export type Database = {
           },
         ]
       }
+      user_notes: {
+        Row: {
+          blocks: Json
+          color: string | null
+          content: string | null
+          created_at: string | null
+          curriculum_id: string | null
+          id: string
+          is_pinned: boolean | null
+          subject_id: string | null
+          tags: string[] | null
+          title: string
+          topic_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          blocks?: Json
+          color?: string | null
+          content?: string | null
+          created_at?: string | null
+          curriculum_id?: string | null
+          id?: string
+          is_pinned?: boolean | null
+          subject_id?: string | null
+          tags?: string[] | null
+          title?: string
+          topic_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          blocks?: Json
+          color?: string | null
+          content?: string | null
+          created_at?: string | null
+          curriculum_id?: string | null
+          id?: string
+          is_pinned?: boolean | null
+          subject_id?: string | null
+          tags?: string[] | null
+          title?: string
+          topic_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_notes_curriculum_id_fkey"
+            columns: ["curriculum_id"]
+            isOneToOne: false
+            referencedRelation: "curriculums"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_notes_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_notes_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_notes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_saved_notes: {
         Row: {
           id: string
@@ -2389,6 +3291,18 @@ export type Database = {
     }
     Functions: {
       custom_access_token_hook: { Args: { event: Json }; Returns: Json }
+      is_classroom_member: {
+        Args: { p_classroom_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      is_classroom_teacher: {
+        Args: { p_classroom_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      is_club_member: {
+        Args: { p_club_id: string; p_user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       evaluation_status:

@@ -1,0 +1,16 @@
+name: Process Telegram Notification Queue
+
+on:
+  schedule:
+    - cron: '* * * * *'        # Every minute
+  workflow_dispatch:            # Manual trigger for testing
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call queue processor Edge Function
+        run: |
+          curl --fail --silent --show-error \
+            --header "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.SUPABASE_EDGE_FUNCTION_URL }}/process-telegram-queue"

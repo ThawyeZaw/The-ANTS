@@ -6,6 +6,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { ClassroomFeature, AssignmentStatus, AssignmentPriority, QuizStatus, QuizQuestion, ResourceType } from '@/types';
+import { actionEnqueueAssignmentReminders } from '@/actions/notifications';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -323,32 +324,10 @@ export async function actionDeleteResource(userId: string, resourceId: string) {
 // ── Telegram Notification Helpers ─────────────────────────────────────────────
 
 /**
- * When a teacher publishes an assignment, also pre-insert timetable_events
- * as notification sentinels so users who opted into assignment reminders
- * will be picked up by the cron job.
- *
- * Note: the actual notification messages are built by the cron job.
- * This just ensures the cron has sentinel rows to deduplicate against.
+ * When a teacher publishes an assignment, enqueue assignment reminders
+ * into notification_queue for all classroom members with Telegram linked.
  */
-export async function actionSyncAssignmentNotifications(assignmentId: string, userId: string) {
-  const supabase = await createClient();
-  
-  // Fetch the assignment and its classroom members
-  const { data: assignment } = await supabase
-    .from('assignments')
-    .select('id, title, due_date, classroom_id')
-    .eq('id', assignmentId)
-    .single();
-  
-  if (!assignment) return { success: false, error: 'Assignment not found' };
-
-  const { data: members } = await supabase
-    .from('classroom_members')
-    .select('user_id')
-    .eq('classroom_id', assignment.classroom_id);
-
-  // No need to pre-insert timetable_events — the cron job handles
-  // assignments directly by querying due_date and checking user prefs.
-  // This function exists as a hook point for future enhancements.
+export async function actionSyncAssignmentNotifications(assignmentId: string, _userId: string) {
+  await actionEnqueueAssignmentReminders(assignmentId);
   return { success: true };
 }

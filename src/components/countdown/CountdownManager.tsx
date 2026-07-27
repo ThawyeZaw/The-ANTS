@@ -8,6 +8,7 @@ import { Plus, Timer, BookMarked, BookOpen, Calendar } from 'lucide-react';
 import Link from 'next/link';
 import { useLessonContext, type SubjectCountdown } from '@/context/LessonContext';
 import { createClient } from '@/lib/supabase/client';
+import { actionEnqueueExamReminders, actionClearSourceQueue } from '@/actions/notifications';
 
 const AddCountdownModal = dynamic(() => import('./AddCountdownModal').then(m => ({ default: m.AddCountdownModal })), {
   loading: () => (
@@ -148,18 +149,23 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
 
     if (oldCd) {
       await supabase.from('exam_countdowns').delete().eq('id', oldCd.id);
+      actionClearSourceQueue('exam_countdown', oldCd.id);
     }
 
     const newExamData = await supabase.from('exams').select('*').eq('id', examId).single();
     if (newExamData.data) {
-      await supabase.from('exam_countdowns').insert({
+      const { data: inserted } = await supabase.from('exam_countdowns').insert({
         user_id: userId,
         exam_id: examId,
         custom_title: newExamData.data.subject,
         target_date: newExamData.data.date,
         priority_indicator: 'medium',
         qualification_group: newExamData.data.series ?? 'Custom',
-      });
+      }).select().single();
+      // Enqueue exam reminders
+      if (inserted) {
+        actionEnqueueExamReminders((inserted as any).id, userId);
+      }
       // Refresh the page to reflect changes
       window.location.reload();
     }

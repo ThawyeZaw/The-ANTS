@@ -12,6 +12,10 @@ import type { Json } from '@/types/supabase';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { ALL_EVENT_TYPES, DEFAULT_TIMETABLE_FILTERS } from '@/constants/timetable';
+import {
+  actionEnqueueTimetableReminders,
+  actionClearSourceQueue,
+} from '@/actions/notifications';
 
 // ---------------------------------------------------------------------------
 // Date Helpers
@@ -228,7 +232,7 @@ export function useTimetable(userId: string): UseTimetableReturn {
         endIso = combineDateTime(date, end_time);
       }
 
-      const { error } = await supabase.from('timetable_events').insert({
+      const { data: event, error } = await supabase.from('timetable_events').insert({
         user_id: userId,
         ...rest,
         recurrence_rule: (recurrence_rule ?? null) as unknown as Json,
@@ -240,9 +244,23 @@ export function useTimetable(userId: string): UseTimetableReturn {
         event_source: 'user',
         source_id: null,
         reminder_minutes,
-      } as any);
+      } as any).select().single();
       refresh();
-      return error ? { success: false, error: error.message } : { success: true };
+      if (error) return { success: false, error: error.message };
+
+      // Enqueue Telegram reminder into notification_queue
+      if (startIso && reminder_minutes != null) {
+        actionEnqueueTimetableReminders(
+          userId,
+          (event as any).id,
+          rest.title ?? '',
+          rest.location ?? null,
+          startIso,
+          reminder_minutes
+        );
+      }
+
+      return { success: true };
     } catch (err) {
       return { success: false, error: String(err) };
     }
@@ -275,7 +293,23 @@ export function useTimetable(userId: string): UseTimetableReturn {
         reminder_minutes,
       } as any).eq('id', baseId);
       refresh();
-      return error ? { success: false, error: error.message } : { success: true };
+      if (error) return { success: false, error: error.message };
+
+      // Enqueue or clear Telegram reminder
+      if (startIso && reminder_minutes != null) {
+        actionEnqueueTimetableReminders(
+          userId,
+          baseId,
+          rest.title ?? '',
+          rest.location ?? null,
+          startIso,
+          reminder_minutes
+        );
+      } else {
+        actionClearSourceQueue('timetable_event', baseId);
+      }
+
+      return { success: true };
     } catch (err) {
       return { success: false, error: String(err) };
     }
@@ -285,6 +319,8 @@ export function useTimetable(userId: string): UseTimetableReturn {
     const baseId = eventId.includes('::') ? eventId.split('::')[0] : eventId;
     const { error } = await supabase.from('timetable_events').delete().eq('id', baseId);
     refresh();
+    // Clear pending queue items
+    actionClearSourceQueue('timetable_event', baseId);
     return error ? { success: false, error: error.message } : { success: true };
   }, [refresh, supabase]);
 
