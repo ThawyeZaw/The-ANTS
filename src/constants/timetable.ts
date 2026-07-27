@@ -110,8 +110,8 @@ export const COLOUR_PRESETS = [
 // Time Grid Configuration
 // ---------------------------------------------------------------------------
 
-/** Start hour for the timetable grid (6 = 6:00 AM) */
-export const GRID_START_HOUR = 6;
+/** Start hour for the timetable grid (0 = 12:00 AM) */
+export const GRID_START_HOUR = 0;
 
 /** End hour for the timetable grid (23 = 11:00 PM) */
 export const GRID_END_HOUR = 23;

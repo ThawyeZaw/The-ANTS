@@ -18,6 +18,7 @@ import {
 } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { cachedQuery } from '@/lib/cache';
 import { useAuthContext } from './AuthContext';
 import {
   getAllCurriculums,
@@ -163,11 +164,11 @@ export function LessonProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     loadedRef.current = true;
     const [cRes, sRes, tRes, eRes, pRes] = await Promise.all([
-      supabase.from('curriculums').select('*').order('title'),
-      supabase.from('subjects').select('*').order('order_no'),
-      supabase.from('topics').select('*').order('order_no'),
-      supabase.from('user_enrollments').select('*').eq('user_id', userId),
-      supabase.from('topic_progress').select('*').eq('user_id', userId),
+      cachedQuery<any>('curriculums_all', () => supabase.from('curriculums').select('*').order('title'), { staleTimeMs: 300000, persist: true }),
+      cachedQuery<any>('subjects_all', () => supabase.from('subjects').select('*').order('order_no'), { staleTimeMs: 300000, persist: true }),
+      cachedQuery<any>('topics_all', () => supabase.from('topics').select('*').order('order_no'), { staleTimeMs: 300000, persist: true }),
+      cachedQuery<any>(`user_enrollments_${userId}`, () => supabase.from('user_enrollments').select('*').eq('user_id', userId), { staleTimeMs: 60000, persist: false }),
+      cachedQuery<any>(`topic_progress_${userId}`, () => supabase.from('topic_progress').select('*').eq('user_id', userId), { staleTimeMs: 60000, persist: false }),
     ]);
 
     const curriculaFromDB = cRes.data ?? [];
@@ -196,7 +197,7 @@ export function LessonProvider({ children }: { children: ReactNode }) {
     setProgressRecords((pRes.data ?? []) as TopicProgressRecord[]);
 
     // ── Derive countdowns: batch query next exam per enrolled subject ────
-    const enrolledSubjectIds = [...new Set(enrollmentData.map((e: any) => e.subject_id))];
+    const enrolledSubjectIds = [...new Set(enrollmentData.map((e: any) => e.subject_id))] as string[];
     if (enrolledSubjectIds.length > 0) {
       setCountdownsLoading(true);
       const { data: nextExams } = await supabase!
@@ -241,6 +242,7 @@ export function LessonProvider({ children }: { children: ReactNode }) {
   // Listen for curriculum changes from the editor so data stays in sync
   useEffect(() => {
     const handler = () => {
+      window.dispatchEvent(new CustomEvent('supabase-cache-invalidate', { detail: 'curriculums_all' }));
       fetchData();
     };
     window.addEventListener('curriculum-data-changed', handler);

@@ -77,6 +77,12 @@ export default function EventModal({
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Compute time validity for visual feedback
+  const isTimeInvalid = useMemo(
+    () => form.time_mode === 'timed' && form.start_time >= form.end_time,
+    [form.time_mode, form.start_time, form.end_time]
+  );
+
   // Event type autocomplete state
   const [typeSearch, setTypeSearch] = useState('');
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
@@ -205,6 +211,10 @@ export default function EventModal({
     e.preventDefault();
     if (!form.title.trim()) {
       setError('Event title is required.');
+      return;
+    }
+    if (form.time_mode === 'timed' && form.start_time >= form.end_time) {
+      setError('End time must be after start time.');
       return;
     }
     setError(null);
@@ -421,7 +431,7 @@ export default function EventModal({
                       style={{
                         color: 'var(--foreground)',
                         backgroundColor: 'color-mix(in srgb, var(--border) 50%, transparent)',
-                        borderColor: 'var(--border)',
+                        borderColor: isTimeInvalid ? '#ef4444' : 'var(--border)',
                         colorScheme: 'dark',
                       }}
                     />
@@ -437,10 +447,13 @@ export default function EventModal({
                       style={{
                         color: 'var(--foreground)',
                         backgroundColor: 'color-mix(in srgb, var(--border) 50%, transparent)',
-                        borderColor: 'var(--border)',
+                        borderColor: isTimeInvalid ? '#ef4444' : 'var(--border)',
                         colorScheme: 'dark',
                       }}
                     />
+                    {isTimeInvalid && (
+                      <p className="text-[11px] text-red-400 mt-1">End time must be after start time</p>
+                    )}
                   </div>
                 </>
               )}

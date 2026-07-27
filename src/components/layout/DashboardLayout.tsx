@@ -106,7 +106,7 @@ function buildDefaultSlides(firstName: string, welcomeSubtitle: string): Carouse
   ];
 }
 
-export default function DashboardLayout({
+const DashboardLayout = React.memo(function DashboardLayout({
   firstName,
   welcomeSubtitle,
   stats,
@@ -283,4 +283,6 @@ export default function DashboardLayout({
       </div>
     </div>
   );
-}
+});
+
+export default DashboardLayout;

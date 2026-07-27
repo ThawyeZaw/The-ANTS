@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import type { TimetableEvent } from '@/types/timetable';
 import {
@@ -131,6 +131,18 @@ export default function DayView({
   const nowTopPx = ((nowMinutes / 60) - GRID_START_HOUR) * sh;
   const totalGridHeight = GRID_HOURS.length * sh;
 
+  // Auto-scroll so 7 AM is at the top of the viewport on mount
+  const gridRef = useRef<HTMLDivElement>(null);
+  const scrolledRef = useRef(false);
+
+  useEffect(() => {
+    if (scrolledRef.current || !gridRef.current) return;
+    scrolledRef.current = true;
+    requestAnimationFrame(() => {
+      gridRef.current?.scrollTo({ top: 7 * sh });
+    });
+  }, [sh]);
+
   return (
     <div className="flex flex-col h-full">
       {/* Day Header */}
@@ -181,7 +193,7 @@ export default function DayView({
       </div>
 
       {/* Time Grid */}
-      <div className="flex flex-1 overflow-y-auto">
+      <div ref={gridRef} className="flex flex-1 overflow-y-auto">
         <div className="w-20 shrink-0 relative pt-2.5" style={{ height: totalGridHeight + 10 }}>
           {GRID_HOURS.map(hour => (
             <div

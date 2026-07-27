@@ -6,7 +6,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState } from 'react';
-import { Send, Check, ExternalLink, Bell, BellOff, Copy, CheckCheck } from 'lucide-react';
+import { Send, Check, ExternalLink, Bell, BellOff, Copy, CheckCheck, MessageSquareCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -80,6 +80,8 @@ export default function TelegramConnect({
   const [isConnecting, setIsConnecting] = useState(false);
   const [showPrefs, setShowPrefs] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [testState, setTestState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [testError, setTestError] = useState<string | null>(null);
 
   const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'TheANTS_bot';
   const isConnected = !!telegramChatId;
@@ -111,6 +113,32 @@ export default function TelegramConnect({
       document.body.removeChild(textarea);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleTestNotification = async () => {
+    if (!telegramChatId) return;
+    setTestState('sending');
+    setTestError(null);
+    try {
+      const res = await fetch('/api/telegram/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chatId: telegramChatId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setTestState('sent');
+        setTimeout(() => setTestState('idle'), 3000);
+      } else {
+        setTestState('error');
+        setTestError(data.error || 'Unknown error');
+        setTimeout(() => setTestState('idle'), 5000);
+      }
+    } catch (err) {
+      setTestState('error');
+      setTestError(String(err));
+      setTimeout(() => setTestState('idle'), 5000);
     }
   };
 
@@ -188,7 +216,7 @@ export default function TelegramConnect({
             {/* Notification Preferences Toggle */}
             <button
               onClick={() => setShowPrefs(!showPrefs)}
-              className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-background-secondary hover:bg-background-hover transition-colors cursor-pointer"
+              className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-primary/5 border border-border shadow-sm hover:shadow-md hover:border-border-hover transition-all cursor-pointer"
             >
               <div className="flex items-center gap-2">
                 <Bell className="h-4 w-4 text-foreground-secondary" />
@@ -220,10 +248,10 @@ export default function TelegramConnect({
                         <button
                           onClick={() => toggleNotification(nt.key)}
                           className={cn(
-                            'flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer',
+                            'flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all shadow-sm cursor-pointer',
                             isEnabled
-                              ? 'bg-green-500/10 text-green-600 border border-green-500/20'
-                              : 'bg-background-secondary text-foreground-muted border border-border'
+                              ? 'bg-gradient-to-r from-green-500/15 to-emerald-500/10 text-green-600 border border-green-500/20 hover:shadow-md'
+                              : 'bg-gradient-to-r from-primary/5 to-blue-500/5 text-foreground-secondary border border-border hover:shadow hover:border-border-hover'
                           )}
                         >
                           {isEnabled ? (
@@ -247,10 +275,10 @@ export default function TelegramConnect({
                               key={ro.value}
                               onClick={() => toggleReminder(nt.key, ro.value)}
                               className={cn(
-                                'px-2 py-1 rounded-md text-xs transition-colors cursor-pointer',
+                                'px-2 py-1 rounded-md text-xs transition-all shadow-sm cursor-pointer',
                                 selectedReminders.includes(ro.value)
-                                  ? 'bg-primary/10 text-primary border border-primary/20'
-                                  : 'bg-background-secondary text-foreground-muted border border-border hover:border-border-hover'
+                                  ? 'bg-gradient-to-r from-primary/15 to-primary/10 text-primary border border-primary/20 hover:shadow-md'
+                                  : 'bg-gradient-to-r from-primary/5 to-blue-500/5 text-foreground-secondary border border-border hover:shadow hover:border-border-hover'
                               )}
                             >
                               {ro.label}
@@ -262,6 +290,37 @@ export default function TelegramConnect({
                   );
                 })}
               </div>
+            )}
+
+            {/* Test Notification Button */}
+            <button
+              onClick={handleTestNotification}
+              disabled={testState === 'sending'}
+              className={cn(
+                'w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all shadow-sm cursor-pointer',
+                testState === 'sent'
+                  ? 'bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-green-500/20 text-green-600 shadow-green-500/5'
+                  : testState === 'error'
+                    ? 'bg-gradient-to-r from-red-500/10 to-rose-500/10 border-red-500/20 text-red-600'
+                    : 'bg-gradient-to-r from-primary/10 to-blue-500/10 border-primary/15 hover:shadow-md hover:border-primary/25 text-primary'
+              )}
+            >
+              <div className="flex items-center gap-2">
+                <MessageSquareCheck className="h-4 w-4" />
+                <span className="text-sm font-medium">
+                  {testState === 'sending'
+                    ? 'Sending...'
+                    : testState === 'sent'
+                      ? 'Test sent! Check Telegram.'
+                      : testState === 'error'
+                        ? 'Test failed — see below'
+                        : 'Send Test Notification'}
+                </span>
+              </div>
+            </button>
+
+            {testState === 'error' && testError && (
+              <p className="text-xs text-red-500 px-1">{testError}</p>
             )}
 
             <p className="text-xs text-foreground-muted">
@@ -319,10 +378,10 @@ export default function TelegramConnect({
               onClick={handleConnect}
               disabled={!username || isConnecting}
               className={cn(
-                'inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 shadow-sm',
+                'inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 shadow-md hover:shadow-lg',
                 username
-                  ? 'bg-[#0088cc] text-white hover:bg-[#0077b5] cursor-pointer'
-                  : 'bg-background-secondary text-foreground-muted cursor-not-allowed'
+                  ? 'bg-gradient-to-r from-[#0088cc] to-[#0099e6] text-white hover:from-[#0077b5] hover:to-[#0088cc] cursor-pointer'
+                  : 'bg-primary/5 text-foreground-muted cursor-not-allowed'
               )}
             >
               <ExternalLink className="h-4 w-4" />

@@ -13,6 +13,7 @@ import {
   Users,
   Star,
   CheckSquare,
+  Bell,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
@@ -30,9 +31,9 @@ import {
   mockClassroomCurriculums,
   mockCurriculums,
   mockAssignments,
-  mockExams,
   mockClubAnnouncements,
 } from '@/lib/mock/database';
+import { useDashboardSync } from '@/hooks/useDashboardSync';
 
 // ── Icon & Color maps (replicated from DashboardLayout — PM-locked) ──────────
 
@@ -65,6 +66,8 @@ export default function TeacherDashboard() {
       router.replace(`/${role === 'main_contributor' ? 'main-contributor' : role}`);
     }
   }, [role, isTeacher, router]);
+
+  const { upcomingExams } = useDashboardSync();
 
   if (!user || !isTeacher) return null;
 
@@ -197,18 +200,25 @@ export default function TeacherDashboard() {
           </h3>
         </div>
         <div className="space-y-2">
-          {mockExams.slice(0, 3).map(exam => (
+          {upcomingExams.slice(0, 3).map(exam => (
             <div key={exam.id} className="p-2 bg-background-secondary/50 rounded-lg border border-border/50 flex flex-col justify-between">
               <div>
-                <p className="font-semibold text-xs text-foreground">{exam.title}</p>
-                <p className="text-[11px] text-foreground-muted mt-0.5">{exam.exam_series}</p>
+                <p className="font-semibold text-xs text-foreground">{exam.custom_title || 'Exam'}</p>
+                <p className="text-[11px] text-foreground-muted mt-0.5">{exam.qualification_group || ''}</p>
               </div>
-              <div className="mt-1.5 text-[10px] font-semibold text-rose-500 bg-rose-500/10 self-start px-1.5 py-0.5 rounded-md">
-                {new Date(exam.exam_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+              <div className="mt-1.5 flex items-center gap-2">
+                <span className="text-[10px] font-semibold text-rose-500 bg-rose-500/10 self-start px-1.5 py-0.5 rounded-md">
+                  {exam.target_date ? new Date(exam.target_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'TBD'}
+                </span>
+                {!exam.timeLeft.isPast && (
+                  <span className="text-[10px] font-semibold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded-md">
+                    {exam.timeLeft.days}d left
+                  </span>
+                )}
               </div>
             </div>
           ))}
-          {mockExams.length === 0 && (
+          {upcomingExams.length === 0 && (
             <p className="text-xs text-foreground-muted">No upcoming exams.</p>
           )}
         </div>

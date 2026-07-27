@@ -2,10 +2,10 @@
 
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTs — NavBar Component (v6 — Study + Tools grouping)
-// Structure: Study | Tools | Community | [Contribute] | [Admin]
+// Structure: Library | Tools | Community | [Contribute] | [Admin]
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
@@ -70,7 +70,7 @@ const ALL_ROLES: UserRole[] = ['student', 'teacher', 'contributor', 'main_contri
 
 const NAV_GROUPS: NavGroup[] = [
   {
-    label: 'Study',
+    label: 'Library',
     href: '/library',
     icon: <BookOpen className="h-4 w-4" />,
     description: 'Notes, flashcards, courses & quizzes',
@@ -246,7 +246,7 @@ export function getAllNavItems(): NavItem[] {
 
 // ── Main NavBar Component ────────────────────────────────────────────────────
 
-export default function NavBar() {
+const NavBar = React.memo(function NavBar() {
   const { user, logout } = useAuth();
   const { role } = useRole();
   const { theme, toggleTheme } = useTheme();
@@ -878,4 +878,6 @@ export default function NavBar() {
       )}
     </header>
   );
-}
+});
+
+export default NavBar;

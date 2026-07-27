@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Save, Eye, Edit3, Loader2 } from 'lucide-react';
+import { Save, Edit3, Loader2, Eye, EyeOff } from 'lucide-react';
 import { getOrgMission, updateOrgMission } from '@/lib/mock/database';
 import type { OrgMission } from '@/types';
 import { cn } from '@/lib/utils';
@@ -11,7 +11,7 @@ export default function MissionEditor() {
   const [mission, setMission] = useState<OrgMission | null>(null);
   const [content, setContent] = useState('');
   const [isEditing, setIsEditing] = useState(false);
-  const [isPreview, setIsPreview] = useState(false);
+  const [showMobilePreview, setShowMobilePreview] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
@@ -37,6 +37,7 @@ export default function MissionEditor() {
         setMission(r.mission);
         showFeedback('success', 'Mission updated successfully.');
         setIsEditing(false);
+        setShowMobilePreview(false);
       } else {
         showFeedback('error', 'Failed to update mission.');
       }
@@ -47,9 +48,11 @@ export default function MissionEditor() {
   const handleCancel = () => {
     setContent(mission?.content || '');
     setIsEditing(false);
-    setIsPreview(false);
+    setShowMobilePreview(false);
     setFeedback(null);
   };
+
+  const renderedHtml = renderMarkdown(content);
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -70,17 +73,21 @@ export default function MissionEditor() {
           </button>
         ) : (
           <div className="flex items-center gap-2">
+            {/* Mobile preview toggle */}
             <button
-              onClick={() => setIsPreview(!isPreview)}
+              onClick={() => setShowMobilePreview(!showMobilePreview)}
               className={cn(
-                'flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors cursor-pointer border',
-                isPreview
+                'md:hidden flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors cursor-pointer border',
+                showMobilePreview
                   ? 'bg-primary/15 text-primary border-primary/25'
                   : 'bg-background-secondary text-foreground-secondary border-border hover:text-foreground'
               )}
             >
-              <Eye className="h-4 w-4" />
-              {isPreview ? 'Editing' : 'Preview'}
+              {showMobilePreview ? (
+                <><EyeOff className="h-4 w-4" /> Editor</>
+              ) : (
+                <><Eye className="h-4 w-4" /> Preview</>
+              )}
             </button>
             <button
               onClick={handleCancel}
@@ -115,22 +122,51 @@ export default function MissionEditor() {
 
       {/* Editor / Preview */}
       {isEditing ? (
-        <div className="space-y-4">
-          {isPreview ? (
-            <div
-              className="min-h-[300px] p-6 bg-background-card border border-border rounded-2xl prose-p:text-foreground-secondary prose-strong:text-foreground"
-              dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }}
-            />
-          ) : (
+        <>
+          {/* Desktop: side-by-side */}
+          <div className="hidden md:grid md:grid-cols-[3fr_2fr] gap-4 min-h-[400px]">
+            {/* Left: Editor */}
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              rows={16}
               className="w-full px-4 py-4 rounded-2xl bg-background-card border border-border text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:border-primary/50 transition-colors resize-y font-mono leading-relaxed"
               placeholder="Write your mission statement in Markdown..."
             />
-          )}
-        </div>
+            {/* Right: Live Preview */}
+            <div className="rounded-2xl bg-background-card border border-border overflow-hidden">
+              <div className="px-4 py-2.5 border-b border-border bg-background-secondary">
+                <span className="text-xs font-semibold text-foreground-muted uppercase tracking-wider">Preview</span>
+              </div>
+              <div
+                className="p-5 prose-p:text-foreground-secondary prose-strong:text-foreground prose-headings:text-foreground prose-a:text-primary prose-li:text-foreground-secondary max-h-[calc(100%-40px)] overflow-y-auto text-sm"
+                dangerouslySetInnerHTML={{ __html: renderedHtml }}
+              />
+            </div>
+          </div>
+
+          {/* Mobile: stacked with toggle */}
+          <div className="md:hidden space-y-4">
+            {showMobilePreview ? (
+              <div className="rounded-2xl bg-background-card border border-border overflow-hidden">
+                <div className="px-4 py-2.5 border-b border-border bg-background-secondary">
+                  <span className="text-xs font-semibold text-foreground-muted uppercase tracking-wider">Preview</span>
+                </div>
+                <div
+                  className="p-5 min-h-[300px] prose-p:text-foreground-secondary prose-strong:text-foreground prose-headings:text-foreground prose-a:text-primary prose-li:text-foreground-secondary text-sm"
+                  dangerouslySetInnerHTML={{ __html: renderedHtml }}
+                />
+              </div>
+            ) : (
+              <textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                rows={16}
+                className="w-full px-4 py-4 rounded-2xl bg-background-card border border-border text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:border-primary/50 transition-colors resize-y font-mono leading-relaxed"
+                placeholder="Write your mission statement in Markdown..."
+              />
+            )}
+          </div>
+        </>
       ) : (
         <div
           className="p-6 bg-background-card border border-border rounded-2xl"
@@ -141,7 +177,14 @@ export default function MissionEditor() {
       {/* Last updated */}
       {mission && (
         <p className="text-xs text-foreground-muted">
-          Last updated: {new Date(mission.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+          Last updated:{' '}
+          {new Date(mission.updatedAt).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })}
         </p>
       )}
     </div>

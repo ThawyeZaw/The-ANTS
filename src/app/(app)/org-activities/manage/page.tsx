@@ -27,6 +27,7 @@ import type { OrgTimelineItem, OrgTimelineItemFormData } from '@/types';
 import { cn } from '@/lib/utils';
 import MissionEditor from '@/components/about/MissionEditor';
 import TeamManager from '@/components/about/TeamManager';
+import ImageUploader from '@/components/about/ImageUploader';
 
 // ── Tabs ─────────────────────────────────────────────────────────────────────
 
@@ -72,7 +73,6 @@ function TimelineTab() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<OrgTimelineItemFormData>(EMPTY_FORM);
-  const [imageInput, setImageInput] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -87,7 +87,7 @@ function TimelineTab() {
   const refresh = () => setItems(getOrgTimelineItems());
 
   const openCreate = () => {
-    setEditingId(null); setFormData(EMPTY_FORM); setImageInput(''); setIsModalOpen(true);
+    setEditingId(null); setFormData(EMPTY_FORM); setIsModalOpen(true);
   };
 
   const openEdit = (item: OrgTimelineItem) => {
@@ -97,19 +97,10 @@ function TimelineTab() {
       category: item.category, imageUrls: [...item.imageUrls], location: item.location || '',
       showOnTimeline: item.showOnTimeline,
     });
-    setImageInput(''); setIsModalOpen(true);
+    setIsModalOpen(true);
   };
 
-  const closeModal = () => { setIsModalOpen(false); setEditingId(null); setImageInput(''); setFeedback(null); };
-
-  const addImage = () => {
-    const url = imageInput.trim(); if (!url) return;
-    setFormData((p) => ({ ...p, imageUrls: [...p.imageUrls, url] })); setImageInput('');
-  };
-
-  const removeImage = (index: number) => {
-    setFormData((p) => ({ ...p, imageUrls: p.imageUrls.filter((_, i) => i !== index) }));
-  };
+  const closeModal = () => { setIsModalOpen(false); setEditingId(null); setFeedback(null); };
 
   const handleSave = () => {
     if (!formData.title.trim() || !formData.date.trim()) {
@@ -197,7 +188,7 @@ function TimelineTab() {
       )}
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
           <div className="bg-background-card border border-border rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto p-6 shadow-2xl">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-bold text-foreground">{editingId ? 'Edit Item' : 'New Item'}</h2>
@@ -251,23 +242,13 @@ function TimelineTab() {
                 <textarea value={formData.description} onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))} rows={4} className="w-full px-3 py-2.5 rounded-xl bg-background-secondary border border-border text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:border-primary/50 transition-colors resize-none" placeholder="Describe..." />
               </div>
               <div>
-                <label className="block text-sm font-medium text-foreground-secondary mb-1.5">Images (URLs)</label>
-                <div className="flex gap-2 mb-2">
-                  <input type="text" value={imageInput} onChange={(e) => setImageInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addImage()} className="flex-1 px-3 py-2 rounded-xl bg-background-secondary border border-border text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:border-primary/50 transition-colors" placeholder="Paste image URL and press Add" />
-                  <button onClick={addImage} className="px-4 py-2 bg-background-secondary border border-border rounded-xl text-sm font-medium text-foreground-secondary hover:text-foreground hover:border-primary/30 transition-colors cursor-pointer">Add</button>
-                </div>
-                {formData.imageUrls.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {formData.imageUrls.map((url, idx) => (
-                      <div key={idx} className="relative group">
-                        <div className="w-20 h-20 rounded-lg bg-background-secondary border border-border overflow-hidden">
-                          <img src={url} alt={`Image ${idx + 1}`} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = ''; }} />
-                        </div>
-                        <button onClick={() => removeImage(idx)} className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"><X className="h-3 w-3" /></button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <ImageUploader
+                  images={formData.imageUrls}
+                  onAdd={(url) => setFormData((p) => ({ ...p, imageUrls: [...p.imageUrls, url] }))}
+                  onRemove={(index) =>
+                    setFormData((p) => ({ ...p, imageUrls: p.imageUrls.filter((_, i) => i !== index) }))
+                  }
+                />
               </div>
             </div>
             <div className="flex items-center justify-end gap-3 mt-8 pt-5 border-t border-border">

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useDraggable } from '@dnd-kit/core';
-import { BookOpen, GraduationCap, Building2, Dumbbell, FileText, Coffee, AlertCircle, Users, Lock, CheckSquare, Square, Edit2, Trash2, MapPin, RotateCcw, CalendarPlus, Link2, Copy, Zap } from 'lucide-react';
+import { BookOpen, GraduationCap, Building2, Dumbbell, FileText, Coffee, AlertCircle, Users, Lock, CheckSquare, Square, Edit2, Trash2, MapPin, RotateCcw, Zap } from 'lucide-react';
 import type { TimetableEvent } from '@/types/timetable';
 import { EVENT_TYPE_CONFIG } from '@/constants/timetable';
 
@@ -60,7 +60,7 @@ export default function TimeBlock({
   draggable = false,
 }: TimeBlockProps) {
   const [showActions, setShowActions] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const config = EVENT_TYPE_CONFIG[event.event_type];
   const isExternal = event.event_source !== 'user';
   const isCompleted = event.is_todo && event.is_completed;
@@ -71,54 +71,6 @@ export default function TimeBlock({
   const endTime = event.end_time ? new Date(event.end_time) : null;
   const isLive = !event.all_day && startTime && endTime && now >= startTime && now <= endTime;
   const isPast = !event.all_day && endTime ? now > endTime : startTime ? now > startTime : false;
-
-  // Generate .ics file content and trigger download
-  const handleAddToCalendar = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const dtStart = startTime
-      ? startTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
-      : '';
-    const dtEnd = endTime
-      ? endTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
-      : '';
-    const icsContent = [
-      'BEGIN:VCALENDAR',
-      'VERSION:2.0',
-      'PRODID:-//The ANTS//Timetable//EN',
-      'BEGIN:VEVENT',
-      `DTSTART:${dtStart}`,
-      `DTEND:${dtEnd}`,
-      `SUMMARY:${event.title}`,
-      event.description ? `DESCRIPTION:${event.description.replace(/\n/g, '\\n')}` : '',
-      event.location ? `LOCATION:${event.location}` : '',
-      'END:VEVENT',
-      'END:VCALENDAR',
-    ].filter(Boolean).join('\r\n');
-
-    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${event.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.ics`;
-    a.click();
-    URL.revokeObjectURL(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleCopyLink = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const url = `${window.location.origin}${window.location.pathname}#event-${event.id}`;
-    navigator.clipboard.writeText(url).catch(() => {
-      // Fallback for older browsers
-      const textarea = document.createElement('textarea');
-      textarea.value = url;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-    });
-  };
 
   // DnD
   const { attributes, listeners, setNodeRef, transform, isDragging: isDndDragging } = useDraggable({
@@ -180,13 +132,13 @@ export default function TimeBlock({
       {...attributes}
       className="relative rounded-md overflow-hidden cursor-pointer group select-none"
       style={blockStyle}
-      onMouseEnter={() => setShowActions(true)}
-      onMouseLeave={() => setShowActions(false)}
-      onClick={() => !isExternal && onEdit?.(event)}
+      onMouseEnter={() => { setShowActions(true); setConfirmDelete(false); }}
+      onMouseLeave={() => { setShowActions(false); setConfirmDelete(false); }}
+      onClick={() => { if (!isExternal) setShowActions((prev) => !prev); }}
     >
-      <div className="px-4 py-3 h-full flex flex-col justify-between min-h-[40px]">
+      <div className="px-1.5 sm:px-4 py-2 sm:py-3 h-full flex flex-col justify-between min-h-[40px]">
         {/* Header row */}
-        <div className="flex items-start gap-2">
+        <div className="flex items-start gap-1 sm:gap-2">
           {/* To-do checkbox */}
           {event.is_todo && !isExternal && (
             <button
@@ -205,14 +157,14 @@ export default function TimeBlock({
             </button>
           )}
 
-          {/* Icon */}
-          <span style={{ color: event.color_code }} className="shrink-0 mt-[3px]">
+          {/* Icon — hidden on mobile to preserve space for event name */}
+          <span style={{ color: event.color_code }} className="hidden sm:inline shrink-0 mt-[3px]">
             <EventIcon iconName={config.icon} size={12} />
           </span>
 
           {/* Title */}
           <span
-            className="text-sm font-semibold leading-tight line-clamp-2 flex-1"
+            className="text-[13px] sm:text-sm font-semibold leading-tight line-clamp-2 flex-1"
             style={{
               color: event.color_code,
               textDecoration: isCompleted ? 'line-through' : 'none',
@@ -266,7 +218,7 @@ export default function TimeBlock({
         )}
       </div>
 
-      {/* Hover actions (user events only) */}
+      {/* Action buttons on hover/click (user events only) */}
       {!isExternal && showActions && (
         <div
           className="absolute top-1 right-1 flex gap-0.5 z-10 rounded-lg px-1 py-0.5 border"
@@ -278,24 +230,6 @@ export default function TimeBlock({
           }}
           onClick={e => e.stopPropagation()}
         >
-          {/* Calendar download */}
-          <button
-            className="p-1 rounded-full transition-colors hover:bg-black/[0.06]"
-            style={{ color: '#475569' }}
-            onClick={handleAddToCalendar}
-            title="Download .ics / Add to calendar"
-          >
-            {copied ? <Copy size={11} /> : <CalendarPlus size={11} />}
-          </button>
-          {/* Copy link */}
-          <button
-            className="p-1 rounded-full transition-colors hover:bg-black/[0.06]"
-            style={{ color: '#475569' }}
-            onClick={handleCopyLink}
-            title="Copy direct link to event"
-          >
-            <Link2 size={11} />
-          </button>
           <button
             className="p-1 rounded-full transition-colors hover:bg-black/[0.06]"
             style={{ color: '#475569' }}
@@ -304,45 +238,31 @@ export default function TimeBlock({
           >
             <Edit2 size={11} />
           </button>
-          <button
-            className="p-1 rounded-full transition-colors hover:bg-rose-500/10"
-            style={{ color: '#E11D48' }}
-            onClick={() => onDelete?.(event.id)}
-            title="Delete event"
-          >
-            <Trash2 size={11} />
-          </button>
-        </div>
-      )}
-
-      {/* Hover actions for external events (quick actions only) */}
-      {isExternal && showActions && (
-        <div
-          className="absolute top-1 right-1 flex gap-0.5 z-10 rounded-lg px-1 py-0.5 border"
-          style={{
-            backgroundColor: 'rgba(255,255,255,0.85)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
-            borderColor: 'rgba(0,0,0,0.08)',
-          }}
-          onClick={e => e.stopPropagation()}
-        >
-          <button
-            className="p-1 rounded-full transition-colors hover:bg-black/[0.06]"
-            style={{ color: '#475569' }}
-            onClick={handleAddToCalendar}
-            title="Download .ics / Add to calendar"
-          >
-            {copied ? <Copy size={11} /> : <CalendarPlus size={11} />}
-          </button>
-          <button
-            className="p-1 rounded-full transition-colors hover:bg-black/[0.06]"
-            style={{ color: '#475569' }}
-            onClick={handleCopyLink}
-            title="Copy direct link to event"
-          >
-            <Link2 size={11} />
-          </button>
+          {confirmDelete ? (
+            <div className="flex items-center gap-0.5 pl-0.5 border-l border-black/10">
+              <span className="text-[10px] text-rose-600 font-medium px-1">Delete?</span>
+              <button
+                className="p-1 rounded-full transition-colors bg-rose-500 text-white hover:bg-rose-600"
+                onClick={() => {
+                  onDelete?.(event.id);
+                  setConfirmDelete(false);
+                  setShowActions(false);
+                }}
+                title="Confirm delete"
+              >
+                <CheckSquare size={11} />
+              </button>
+            </div>
+          ) : (
+            <button
+              className="p-1 rounded-full transition-colors hover:bg-rose-500/10"
+              style={{ color: '#E11D48' }}
+              onClick={() => { setConfirmDelete(true); }}
+              title="Delete event"
+            >
+              <Trash2 size={11} />
+            </button>
+          )}
         </div>
       )}
     </div>
