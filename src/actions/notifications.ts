@@ -5,7 +5,9 @@
 //
 // These server actions pre-enqueue Telegram reminders into notification_queue
 // when timetable events, assignments, or exam countdowns are created/updated.
-// The process-telegram-queue Edge Function handles actual sending.
+// After enqueuing, each group of reminders (by scheduled_for timestamp) gets a
+// QStash-triggered HTTP request at the exact delivery time — replacing the
+// unreliable GitHub Actions cron polling.
 //
 // Uses createAdminClient() (service_role) because notification_queue has
 // RLS enabled and public access revoked.
@@ -16,6 +18,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { createAdminClient } from '@/lib/supabase/server';
+import { scheduleQStashMessage } from '@/lib/qstash';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SupabaseAny = any;
@@ -40,10 +43,18 @@ interface NotificationPrefs {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function formatTime(date: Date): { timeStr: string; dateStr: string } {
+function formatTime(date: Date, timeZone?: string): { timeStr: string; dateStr: string } {
+  const timeOpts: Intl.DateTimeFormatOptions = {
+    hour: '2-digit', minute: '2-digit', hour12: true,
+    ...(timeZone ? { timeZone } : {}),
+  };
+  const dateOpts: Intl.DateTimeFormatOptions = {
+    weekday: 'short', month: 'short', day: 'numeric',
+    ...(timeZone ? { timeZone } : {}),
+  };
   return {
-    timeStr: date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
-    dateStr: date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+    timeStr: date.toLocaleTimeString('en-US', timeOpts),
+    dateStr: date.toLocaleDateString('en-US', dateOpts),
   };
 }
 
@@ -57,12 +68,13 @@ async function getProfileForUser(userId: string) {
   const supabase = await createAdminClient();
   const { data } = await (supabase
     .from('profiles')
-    .select('id, telegram_chat_id, notification_preferences')
+    .select('id, telegram_chat_id, timezone, notification_preferences')
     .eq('id', userId)
     .maybeSingle() as SupabaseAny);
   return data as {
     id: string;
     telegram_chat_id: string | null;
+    timezone: string | null;
     notification_preferences: NotificationPrefs | null;
   } | null;
 }
@@ -79,13 +91,14 @@ async function getProfilesForClassroom(classroomId: string) {
   const userIds = members.map((m: { user_id: string }) => m.user_id);
   const { data: profiles } = await (supabase
     .from('profiles')
-    .select('id, telegram_chat_id, notification_preferences')
+    .select('id, telegram_chat_id, timezone, notification_preferences')
     .in('id', userIds)
     .not('telegram_chat_id', 'is', null) as SupabaseAny);
 
   return (profiles ?? []) as Array<{
     id: string;
     telegram_chat_id: string | null;
+    timezone: string | null;
     notification_preferences: NotificationPrefs | null;
   }>;
 }
@@ -114,6 +127,26 @@ async function upsertQueueItems(
   for (let i = 0; i < items.length; i += 1000) {
     const batch = items.slice(i, i + 1000);
     await db.from('notification_queue').insert(batch);
+  }
+}
+
+// ── Schedule QStash triggers for each distinct scheduled_for timestamp ───────
+
+async function scheduleQStashTriggers(items: QueueItem[]): Promise<void> {
+  if (items.length === 0) return;
+
+  const now = Date.now();
+  const uniqueTimestamps = new Set(items.map((i) => i.scheduled_for));
+
+  for (const scheduledFor of uniqueTimestamps) {
+    const delayMs = new Date(scheduledFor).getTime() - now;
+    // Enforce a minimum 5-second buffer so QStash has time to register the trigger.
+    // This also ensures "on time" (0-min) reminders for events starting very soon
+    // still get scheduled properly.
+    if (delayMs < 0) continue;
+
+    const delaySeconds = Math.max(5, Math.ceil(delayMs / 1000));
+    await scheduleQStashMessage({ delay: delaySeconds });
   }
 }
 
@@ -155,19 +188,22 @@ export async function actionEnqueueTimetableReminders(
   const timetablePrefs = profile.notification_preferences?.timetable;
   if (timetablePrefs?.enabled === false) return;
 
+  const userTimezone = profile.timezone ?? 'Asia/Yangon';
   const startDate = new Date(startTime);
   const scheduledFor = new Date(startDate.getTime() - reminderMinutes * 60 * 1000);
 
-  // Don't enqueue if scheduled time is in the past
-  if (scheduledFor.getTime() <= Date.now()) return;
+  // Don't enqueue if the scheduled time is more than 5 seconds in the past.
+  // This small buffer allows "on time" (0-min) reminders to work correctly
+  // even when the event starts very close to the current time.
+  if (scheduledFor.getTime() <= Date.now() - 5000) return;
 
-  const { timeStr, dateStr } = formatTime(startDate);
+  const { timeStr, dateStr } = formatTime(startDate, userTimezone);
 
   let msg = `⏱ <b>EVENT REMINDER</b>\n\n🔔 <b>${title}</b>\n${dateStr} · ${timeStr}`;
   if (location) msg += `\n📍 ${location}`;
   if (reminderMinutes > 0) msg += `\n⏰ ${offsetLabel(reminderMinutes)} early`;
 
-  await upsertQueueItems('timetable_event', eventId, [
+  const items: QueueItem[] = [
     {
       telegram_chat_id: profile.telegram_chat_id,
       message_text: msg,
@@ -176,7 +212,10 @@ export async function actionEnqueueTimetableReminders(
       source_id: eventId,
       user_id: userId,
     },
-  ]);
+  ];
+
+  await upsertQueueItems('timetable_event', eventId, items);
+  await scheduleQStashTriggers(items);
 }
 
 // ── Enqueue: Assignments ──────────────────────────────────────────────────────
@@ -205,6 +244,7 @@ export async function actionEnqueueAssignmentReminders(assignmentId: string) {
     const prefs = profile.notification_preferences?.assignments;
     if (!prefs?.enabled || !prefs.reminders?.length) continue;
 
+    const userTimezone = profile.timezone ?? 'Asia/Yangon';
     const dueDate = new Date(assignment.due_date);
 
     for (const offset of prefs.reminders) {
@@ -213,7 +253,7 @@ export async function actionEnqueueAssignmentReminders(assignmentId: string) {
       // Don't enqueue if scheduled time is in the past
       if (scheduledFor.getTime() <= Date.now()) continue;
 
-      const { dateStr } = formatTime(dueDate);
+      const { dateStr } = formatTime(dueDate, userTimezone);
       items.push({
         telegram_chat_id: profile.telegram_chat_id,
         message_text: `📋 <b>ASSIGNMENT REMINDER</b>\n\n📚 <b>${assignment.title}</b>\nDue: ${dateStr}\n⏰ ${offsetLabel(offset)} left`,
@@ -226,6 +266,7 @@ export async function actionEnqueueAssignmentReminders(assignmentId: string) {
   }
 
   await upsertQueueItems('assignment', assignmentId, items);
+  await scheduleQStashTriggers(items);
 }
 
 // ── Enqueue: Exam Countdowns ──────────────────────────────────────────────────
@@ -248,6 +289,7 @@ export async function actionEnqueueExamReminders(countdownId: string, userId: st
   const examPrefs = profile.notification_preferences?.exams;
   if (!examPrefs?.enabled || !examPrefs.reminders?.length) return;
 
+  const userTimezone = profile.timezone ?? 'Asia/Yangon';
   const items: QueueItem[] = [];
   const targetDate = new Date(countdown.target_date);
   const title = countdown.custom_title || 'Exam';
@@ -258,7 +300,7 @@ export async function actionEnqueueExamReminders(countdownId: string, userId: st
     // Don't enqueue if scheduled time is in the past
     if (scheduledFor.getTime() <= Date.now()) continue;
 
-    const { dateStr } = formatTime(targetDate);
+    const { dateStr } = formatTime(targetDate, userTimezone);
     items.push({
       telegram_chat_id: profile.telegram_chat_id,
       message_text: `📝 <b>EXAM REMINDER</b>\n\n📝 <b>${title}</b>\nExam: ${dateStr}\n⏰ ${offsetLabel(offset)} left`,
@@ -270,6 +312,7 @@ export async function actionEnqueueExamReminders(countdownId: string, userId: st
   }
 
   await upsertQueueItems('exam_countdown', countdownId, items);
+  await scheduleQStashTriggers(items);
 }
 
 // ── Enqueue: Quiz Reminders ──────────────────────────────────────────────────
@@ -298,6 +341,7 @@ export async function actionEnqueueQuizReminders(quizId: string) {
     const prefs = profile.notification_preferences?.quizzes;
     if (!prefs?.enabled || !prefs.reminders?.length) continue;
 
+    const userTimezone = profile.timezone ?? 'Asia/Yangon';
     const dueDate = new Date(quiz.due_date);
 
     for (const offset of prefs.reminders) {
@@ -306,7 +350,7 @@ export async function actionEnqueueQuizReminders(quizId: string) {
       // Don't enqueue if scheduled time is in the past
       if (scheduledFor.getTime() <= Date.now()) continue;
 
-      const { dateStr } = formatTime(dueDate);
+      const { dateStr } = formatTime(dueDate, userTimezone);
       items.push({
         telegram_chat_id: profile.telegram_chat_id,
         message_text: `📝 <b>QUIZ REMINDER</b>\n\n📝 <b>${quiz.title}</b>\nDue: ${dateStr}\n⏰ ${offsetLabel(offset)} left`,
@@ -319,6 +363,7 @@ export async function actionEnqueueQuizReminders(quizId: string) {
   }
 
   await upsertQueueItems('quiz', quizId, items);
+  await scheduleQStashTriggers(items);
 }
 
 // ── Enqueue: Role Upgrade Notifications ──────────────────────────────────────
@@ -341,6 +386,7 @@ export async function actionEnqueueRoleUpgradeNotification(
   if (!profile) return;
 
   const now = new Date(Date.now() + 60 * 1000).toISOString();
+  const insertedItems: QueueItem[] = [];
 
   // 1. Notify the requesting user about their upgrade result
   if (profile.telegram_chat_id) {
@@ -349,6 +395,14 @@ export async function actionEnqueueRoleUpgradeNotification(
       : `ℹ️ <b>ROLE UPGRADE REJECTED</b>\n\nHi ${profile.name || profile.username}, your role upgrade request was <b>rejected</b>.\n\n${reviewerNote ? `📝 Reason: ${reviewerNote}` : 'Please review the requirements and submit a new request.'}`;
 
     await db.from('notification_queue').insert({
+      telegram_chat_id: profile.telegram_chat_id,
+      message_text: userMsg,
+      scheduled_for: now,
+      source_type: 'role_upgrade',
+      source_id: userId,
+      user_id: userId,
+    });
+    insertedItems.push({
       telegram_chat_id: profile.telegram_chat_id,
       message_text: userMsg,
       scheduled_for: now,
@@ -367,16 +421,20 @@ export async function actionEnqueueRoleUpgradeNotification(
 
   if (admins?.length) {
     for (const admin of admins) {
-      await db.from('notification_queue').insert({
+      const adminItem: QueueItem = {
         telegram_chat_id: admin.telegram_chat_id,
         message_text: `🔄 <b>ROLE UPGRADE ${result.toUpperCase()}</b>\n\nUser <b>${profile.name || profile.username}</b> (${profile.role}) has been <b>${result}</b>.${reviewerNote ? `\n\n📝 Note: ${reviewerNote}` : ''}`,
         scheduled_for: now,
         source_type: 'role_upgrade',
         source_id: userId,
         user_id: admin.id,
-      });
+      };
+      await db.from('notification_queue').insert(adminItem);
+      insertedItems.push(adminItem);
     }
   }
+
+  await scheduleQStashTriggers(insertedItems);
 }
 
 // ── Enqueue: Review Queue Notifications ──────────────────────────────────────
@@ -408,6 +466,7 @@ export async function actionEnqueueReviewQueueNotification(
 
   const now = new Date(Date.now() + 60 * 1000).toISOString();
   const typeLabel = (submission.submission_type ?? 'submission').replace(/_/g, ' ');
+  const insertedItems: QueueItem[] = [];
 
   // Notify the contributor
   if (contributor.telegram_chat_id) {
@@ -420,14 +479,16 @@ export async function actionEnqueueReviewQueueNotification(
       msg = `🔄 <b>SUBMISSION UPDATED</b>\n\nYour <b>${typeLabel}</b> submission status has been updated to: <b>${newStatus}</b>.`;
     }
 
-    await db.from('notification_queue').insert({
+    const contributorItem: QueueItem = {
       telegram_chat_id: contributor.telegram_chat_id,
       message_text: msg,
       scheduled_for: now,
       source_type: 'review_queue',
       source_id: submissionId,
       user_id: contributor.id,
-    });
+    };
+    await db.from('notification_queue').insert(contributorItem);
+    insertedItems.push(contributorItem);
   }
 
   // Also notify all main_contributors when a new submission is pending review
@@ -440,17 +501,21 @@ export async function actionEnqueueReviewQueueNotification(
 
     if (admins?.length) {
       for (const admin of admins) {
-        await db.from('notification_queue').insert({
+        const adminItem: QueueItem = {
           telegram_chat_id: admin.telegram_chat_id,
           message_text: `📬 <b>NEW REVIEW SUBMISSION</b>\n\nA new <b>${typeLabel}</b> has been submitted by <b>${contributor.name || contributor.username}</b> and is awaiting your review.`,
           scheduled_for: now,
           source_type: 'review_queue',
           source_id: submissionId,
           user_id: admin.id,
-        });
+        };
+        await db.from('notification_queue').insert(adminItem);
+        insertedItems.push(adminItem);
       }
     }
   }
+
+  await scheduleQStashTriggers(insertedItems);
 }
 
 // ── Enqueue: Club Milestone Notifications ────────────────────────────────────
@@ -487,17 +552,22 @@ export async function actionEnqueueClubMilestoneNotification(milestoneId: string
 
   const now = new Date(Date.now() + 60 * 1000).toISOString();
   const badge = milestone.status === 'completed' ? '✅' : '🎯';
+  const insertedItems: QueueItem[] = [];
 
   for (const profile of profiles) {
-    await db.from('notification_queue').insert({
+    const item: QueueItem = {
       telegram_chat_id: profile.telegram_chat_id,
       message_text: `${badge} <b>CLUB MILESTONE</b>\n\n${badge} <b>${milestone.title}</b>\n${milestone.description ? `📄 ${milestone.description}\n` : ''}Status: <b>${milestone.status ?? 'active'}</b>`,
       scheduled_for: now,
       source_type: 'club_milestone',
       source_id: milestoneId,
       user_id: profile.id,
-    });
+    };
+    await db.from('notification_queue').insert(item);
+    insertedItems.push(item);
   }
+
+  await scheduleQStashTriggers(insertedItems);
 }
 
 // ── Enqueue: Club Announcement Notifications ─────────────────────────────────
@@ -531,15 +601,20 @@ export async function actionEnqueueClubAnnouncementNotification(
   // Truncate long content for Telegram messages
   const truncatedContent = content.length > 500 ? content.slice(0, 500) + '…' : content;
   const now = new Date(Date.now() + 60 * 1000).toISOString();
+  const insertedItems: QueueItem[] = [];
 
   for (const profile of profiles) {
-    await db.from('notification_queue').insert({
+    const item: QueueItem = {
       telegram_chat_id: profile.telegram_chat_id,
       message_text: `📢 <b>CLUB ANNOUNCEMENT</b>\n\n<b>${title}</b>\n\n${truncatedContent}\n\n— Check the club page for more details.`,
       scheduled_for: now,
       source_type: 'club_announcement',
       source_id: announcementId,
       user_id: profile.id,
-    });
+    };
+    await db.from('notification_queue').insert(item);
+    insertedItems.push(item);
   }
+
+  await scheduleQStashTriggers(insertedItems);
 }
