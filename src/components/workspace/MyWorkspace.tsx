@@ -148,7 +148,7 @@ function QuizzesTab({ userId, isLoading }: { userId: string; isLoading: boolean 
       <EmptyState
         icon={FlaskConical}
         title="No quizzes yet"
-        description="Create quizzes for your classrooms or browse the library to discover quizzes from other educators."
+        description="Create quizzes or browse the library to discover quizzes from other educators."
         cta="Browse Quizzes"
         ctaHref="/library"
       />
@@ -189,7 +189,7 @@ function QuizzesTab({ userId, isLoading }: { userId: string; isLoading: boolean 
             return (
               <Link
                 key={quiz.id}
-                href="/classrooms"
+                href="/library"
                 className="group rounded-2xl border border-[var(--border)] bg-[var(--background-card)] p-4 hover:border-[var(--primary)]/30 hover:shadow-sm transition-all"
               >
                 {/* Header row */}

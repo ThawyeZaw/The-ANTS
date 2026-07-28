@@ -26,7 +26,7 @@ interface QueueItem {
   telegram_chat_id: string;
   message_text: string;
   scheduled_for: string; // ISO timestamp
-  source_type: 'timetable_event' | 'assignment' | 'exam_countdown' | 'club_announcement';
+  source_type: 'timetable_event' | 'assignment' | 'exam_countdown' | 'club_announcement' | 'quiz' | 'role_upgrade' | 'review_queue' | 'club_milestone';
   source_id: string;
   user_id: string;
 }
@@ -270,4 +270,276 @@ export async function actionEnqueueExamReminders(countdownId: string, userId: st
   }
 
   await upsertQueueItems('exam_countdown', countdownId, items);
+}
+
+// ── Enqueue: Quiz Reminders ──────────────────────────────────────────────────
+
+export async function actionEnqueueQuizReminders(quizId: string) {
+  const supabase = await createAdminClient();
+
+  // Fetch the quiz
+  const { data: quiz } = await supabase
+    .from('quizzes')
+    .select('id, title, due_date, classroom_id')
+    .eq('id', quizId)
+    .single();
+
+  if (!quiz?.due_date) return;
+
+  // Get classroom members with Telegram linked
+  const profiles = await getProfilesForClassroom(quiz.classroom_id);
+  if (profiles.length === 0) return;
+
+  const items: QueueItem[] = [];
+
+  for (const profile of profiles) {
+    if (!profile.telegram_chat_id) continue;
+
+    const prefs = profile.notification_preferences?.quizzes;
+    if (!prefs?.enabled || !prefs.reminders?.length) continue;
+
+    const dueDate = new Date(quiz.due_date);
+
+    for (const offset of prefs.reminders) {
+      const scheduledFor = new Date(dueDate.getTime() - offset * 60 * 1000);
+
+      // Don't enqueue if scheduled time is in the past
+      if (scheduledFor.getTime() <= Date.now()) continue;
+
+      const { dateStr } = formatTime(dueDate);
+      items.push({
+        telegram_chat_id: profile.telegram_chat_id,
+        message_text: `📝 <b>QUIZ REMINDER</b>\n\n📝 <b>${quiz.title}</b>\nDue: ${dateStr}\n⏰ ${offsetLabel(offset)} left`,
+        scheduled_for: scheduledFor.toISOString(),
+        source_type: 'quiz',
+        source_id: quizId,
+        user_id: profile.id,
+      });
+    }
+  }
+
+  await upsertQueueItems('quiz', quizId, items);
+}
+
+// ── Enqueue: Role Upgrade Notifications ──────────────────────────────────────
+
+export async function actionEnqueueRoleUpgradeNotification(
+  userId: string,
+  result: 'approved' | 'rejected',
+  reviewerNote?: string
+) {
+  const supabase = await createAdminClient();
+  const db = supabase as SupabaseAny;
+
+  // Fetch the user's profile
+  const { data: profile } = await db
+    .from('profiles')
+    .select('id, name, username, telegram_chat_id, role')
+    .eq('id', userId)
+    .maybeSingle();
+
+  if (!profile) return;
+
+  const now = new Date(Date.now() + 60 * 1000).toISOString();
+
+  // 1. Notify the requesting user about their upgrade result
+  if (profile.telegram_chat_id) {
+    const userMsg = result === 'approved'
+      ? `🎉 <b>ROLE UPGRADE APPROVED</b>\n\nCongratulations, ${profile.name || profile.username}! Your role upgrade request has been <b>approved</b>.\n\n${reviewerNote ? `📝 Reviewer note: ${reviewerNote}` : 'You now have access to your new role\'s features.'}`
+      : `ℹ️ <b>ROLE UPGRADE REJECTED</b>\n\nHi ${profile.name || profile.username}, your role upgrade request was <b>rejected</b>.\n\n${reviewerNote ? `📝 Reason: ${reviewerNote}` : 'Please review the requirements and submit a new request.'}`;
+
+    await db.from('notification_queue').insert({
+      telegram_chat_id: profile.telegram_chat_id,
+      message_text: userMsg,
+      scheduled_for: now,
+      source_type: 'role_upgrade',
+      source_id: userId,
+      user_id: userId,
+    });
+  }
+
+  // 2. Notify all main_contributors about approved/rejected upgrades
+  const { data: admins } = await db
+    .from('profiles')
+    .select('id, telegram_chat_id')
+    .eq('role', 'main_contributor')
+    .not('telegram_chat_id', 'is', null);
+
+  if (admins?.length) {
+    for (const admin of admins) {
+      await db.from('notification_queue').insert({
+        telegram_chat_id: admin.telegram_chat_id,
+        message_text: `🔄 <b>ROLE UPGRADE ${result.toUpperCase()}</b>\n\nUser <b>${profile.name || profile.username}</b> (${profile.role}) has been <b>${result}</b>.${reviewerNote ? `\n\n📝 Note: ${reviewerNote}` : ''}`,
+        scheduled_for: now,
+        source_type: 'role_upgrade',
+        source_id: userId,
+        user_id: admin.id,
+      });
+    }
+  }
+}
+
+// ── Enqueue: Review Queue Notifications ──────────────────────────────────────
+
+export async function actionEnqueueReviewQueueNotification(
+  submissionId: string,
+  newStatus: string
+) {
+  const supabase = await createAdminClient();
+  const db = supabase as SupabaseAny;
+
+  // Fetch the submission
+  const { data: submission } = await db
+    .from('review_queue')
+    .select('id, contributor_id, submission_type, status')
+    .eq('id', submissionId)
+    .single();
+
+  if (!submission) return;
+
+  // Fetch the contributor's profile
+  const { data: contributor } = await db
+    .from('profiles')
+    .select('id, name, username, telegram_chat_id')
+    .eq('id', submission.contributor_id)
+    .maybeSingle();
+
+  if (!contributor) return;
+
+  const now = new Date(Date.now() + 60 * 1000).toISOString();
+  const typeLabel = (submission.submission_type ?? 'submission').replace(/_/g, ' ');
+
+  // Notify the contributor
+  if (contributor.telegram_chat_id) {
+    let msg: string;
+    if (newStatus === 'approved') {
+      msg = `✅ <b>SUBMISSION APPROVED</b>\n\nYour <b>${typeLabel}</b> has been <b>approved</b> and is now live! 🎉\n\nThank you for your contribution to The ANTs.`;
+    } else if (newStatus === 'rejected') {
+      msg = `❌ <b>SUBMISSION REJECTED</b>\n\nYour <b>${typeLabel}</b> submission was <b>rejected</b>.\n\nPlease check the review feedback in your dashboard for details and resubmit.`;
+    } else {
+      msg = `🔄 <b>SUBMISSION UPDATED</b>\n\nYour <b>${typeLabel}</b> submission status has been updated to: <b>${newStatus}</b>.`;
+    }
+
+    await db.from('notification_queue').insert({
+      telegram_chat_id: contributor.telegram_chat_id,
+      message_text: msg,
+      scheduled_for: now,
+      source_type: 'review_queue',
+      source_id: submissionId,
+      user_id: contributor.id,
+    });
+  }
+
+  // Also notify all main_contributors when a new submission is pending review
+  if (newStatus === 'pending') {
+    const { data: admins } = await db
+      .from('profiles')
+      .select('id, telegram_chat_id')
+      .eq('role', 'main_contributor')
+      .not('telegram_chat_id', 'is', null);
+
+    if (admins?.length) {
+      for (const admin of admins) {
+        await db.from('notification_queue').insert({
+          telegram_chat_id: admin.telegram_chat_id,
+          message_text: `📬 <b>NEW REVIEW SUBMISSION</b>\n\nA new <b>${typeLabel}</b> has been submitted by <b>${contributor.name || contributor.username}</b> and is awaiting your review.`,
+          scheduled_for: now,
+          source_type: 'review_queue',
+          source_id: submissionId,
+          user_id: admin.id,
+        });
+      }
+    }
+  }
+}
+
+// ── Enqueue: Club Milestone Notifications ────────────────────────────────────
+
+export async function actionEnqueueClubMilestoneNotification(milestoneId: string) {
+  const supabase = await createAdminClient();
+  const db = supabase as SupabaseAny;
+
+  // Fetch the milestone
+  const { data: milestone } = await db
+    .from('club_milestones_legacy')
+    .select('id, club_id, title, description, status')
+    .eq('id', milestoneId)
+    .single();
+
+  if (!milestone) return;
+
+  // Find all club members with Telegram linked
+  const { data: members } = await db
+    .from('club_members')
+    .select('user_id')
+    .eq('club_id', milestone.club_id);
+
+  if (!members?.length) return;
+
+  const userIds = members.map((m: { user_id: string }) => m.user_id);
+  const { data: profiles } = await db
+    .from('profiles')
+    .select('id, telegram_chat_id')
+    .in('id', userIds)
+    .not('telegram_chat_id', 'is', null);
+
+  if (!profiles?.length) return;
+
+  const now = new Date(Date.now() + 60 * 1000).toISOString();
+  const badge = milestone.status === 'completed' ? '✅' : '🎯';
+
+  for (const profile of profiles) {
+    await db.from('notification_queue').insert({
+      telegram_chat_id: profile.telegram_chat_id,
+      message_text: `${badge} <b>CLUB MILESTONE</b>\n\n${badge} <b>${milestone.title}</b>\n${milestone.description ? `📄 ${milestone.description}\n` : ''}Status: <b>${milestone.status ?? 'active'}</b>`,
+      scheduled_for: now,
+      source_type: 'club_milestone',
+      source_id: milestoneId,
+      user_id: profile.id,
+    });
+  }
+}
+
+// ── Enqueue: Club Announcement Notifications ─────────────────────────────────
+
+export async function actionEnqueueClubAnnouncementNotification(
+  announcementId: string,
+  clubId: string,
+  title: string,
+  content: string
+) {
+  const supabase = await createAdminClient();
+  const db = supabase as SupabaseAny;
+
+  // Find all club members with Telegram linked
+  const { data: members } = await db
+    .from('club_members')
+    .select('user_id')
+    .eq('club_id', clubId);
+
+  if (!members?.length) return;
+
+  const userIds = members.map((m: { user_id: string }) => m.user_id);
+  const { data: profiles } = await db
+    .from('profiles')
+    .select('id, telegram_chat_id')
+    .in('id', userIds)
+    .not('telegram_chat_id', 'is', null);
+
+  if (!profiles?.length) return;
+
+  // Truncate long content for Telegram messages
+  const truncatedContent = content.length > 500 ? content.slice(0, 500) + '…' : content;
+  const now = new Date(Date.now() + 60 * 1000).toISOString();
+
+  for (const profile of profiles) {
+    await db.from('notification_queue').insert({
+      telegram_chat_id: profile.telegram_chat_id,
+      message_text: `📢 <b>CLUB ANNOUNCEMENT</b>\n\n<b>${title}</b>\n\n${truncatedContent}\n\n— Check the club page for more details.`,
+      scheduled_for: now,
+      source_type: 'club_announcement',
+      source_id: announcementId,
+      user_id: profile.id,
+    });
+  }
 }

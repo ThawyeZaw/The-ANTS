@@ -22,16 +22,18 @@ import {
   ArrowRight,
   Sparkles,
   FlaskConical,
+  Brain,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import CoursesLibraryBrowser from '@/components/library/CoursesLibraryBrowser';
 import FlashcardsLibraryBrowser from '@/components/library/FlashcardsLibraryBrowser';
 import ExamsLibraryBrowser from '@/components/library/ExamsLibraryBrowser';
 import NotesLibrary from '@/components/notes/NotesLibrary';
+import QuizLibraryBrowser from '@/components/quizzes/QuizLibraryBrowser';
 
 // ── Tab Definition ───────────────────────────────────────────────────────────
 
-type TabId = 'all' | 'courses' | 'notes' | 'flashcards' | 'exams' | 'tools';
+type TabId = 'all' | 'courses' | 'notes' | 'flashcards' | 'exams' | 'tools' | 'quizzes';
 
 interface Tab {
   id: TabId;
@@ -70,6 +72,12 @@ const TABS: Tab[] = [
     label: 'Exams',
     icon: <FlaskConical className="h-3.5 w-3.5" />,
     accentColor: 'from-rose-500 to-pink-500',
+  },
+  {
+    id: 'quizzes',
+    label: 'Quizzes',
+    icon: <Brain className="h-3.5 w-3.5" />,
+    accentColor: 'from-amber-500 to-yellow-500',
   },
   {
     id: 'tools',
@@ -124,6 +132,15 @@ const OVERVIEW_CARDS: OverviewCard[] = [
     tabTarget: 'exams',
     icon: <FlaskConical className="h-5 w-5" />,
     accentColor: 'from-rose-500 to-pink-500',
+  },
+  {
+    id: 'quizzes',
+    label: 'Quizzes',
+    description: 'Official interactive quizzes from contributors — test your knowledge',
+    tabTarget: 'quizzes',
+    icon: <Brain className="h-5 w-5" />,
+    accentColor: 'from-amber-500 to-yellow-500',
+    badge: 'New',
   },
 ];
 
@@ -265,7 +282,7 @@ function AllTabContent({ onTabChange }: { onTabChange: (tab: TabId) => void }) {
               Resources
             </h1>
             <p className="text-xs text-foreground-secondary max-w-md">
-              Courses, notes, flashcards, exams &amp; study tools — all in one place.
+              Courses, notes, flashcards, exams, quizzes &amp; study tools — all in one place.
             </p>
           </div>
         </div>
@@ -402,6 +419,12 @@ function LibraryPageInner() {
       {activeTab === 'exams' && (
         <Suspense fallback={<div className="h-64 rounded-2xl bg-background-secondary animate-pulse" />}>
           <ExamsLibraryBrowser />
+        </Suspense>
+      )}
+
+      {activeTab === 'quizzes' && (
+        <Suspense fallback={<div className="h-64 rounded-2xl bg-background-secondary animate-pulse" />}>
+          <QuizLibraryBrowser />
         </Suspense>
       )}
 

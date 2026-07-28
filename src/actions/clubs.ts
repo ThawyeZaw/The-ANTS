@@ -460,25 +460,22 @@ export async function actionCreateAnnouncement(clubId: string, userId: string, d
   if (!auth.success) return auth;
 
   const supabase = await createClient();
-  const { error } = await supabase.from('club_announcements').insert({
+  const { data: announcement, error } = await supabase.from('club_announcements').insert({
     club_id: clubId,
     created_by: userId,
     title: data.title,
     content: data.content,
-  });
-  if (error) return { success: false, error: error.message };
+  }).select('id').single();
+  if (error || !announcement) return { success: false, error: error?.message ?? 'Failed to create announcement' };
 
-  // Also insert into timetable_events for Telegram notification delivery.
-  // Use a near-future start_time so the cron job picks it up quickly.
-  const notifyTime = new Date(Date.now() + 2 * 60 * 1000); // 2 min from now
-  await supabase.from('timetable_events').insert({
-    user_id: userId,
-    title: `[Club Announcement] ${data.title}`,
-    description: data.content,
-    start_time: notifyTime.toISOString(),
-    event_source: 'club_announcement',
-    notified: false,
-  } as any);
+  // Enqueue Telegram notifications for all club members
+  const { actionEnqueueClubAnnouncementNotification } = await import('@/actions/notifications');
+  await actionEnqueueClubAnnouncementNotification(
+    announcement.id,
+    clubId,
+    data.title,
+    data.content,
+  );
 
   return { success: true };
 }
