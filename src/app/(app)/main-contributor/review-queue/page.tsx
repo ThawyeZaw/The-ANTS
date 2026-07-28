@@ -4,6 +4,11 @@
 // The ANTs — Review Queue Page
 // Route: /main-contributor/review-queue — Main Contributor only.
 // ──────────────────────────────────────────────────────────────────────────────
+// NOTE: Quizzes have a separate review flow in src/actions/quizzes.ts
+// (actionSubmitQuizForReview / actionApproveQuiz / actionRejectQuiz) that
+// works directly on the quizzes_standalone_official table. The ReviewQueue
+// component below does not yet include a quizzes tab; integrating the quiz
+// review flow into the unified ReviewQueue UI is pending future work.
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';

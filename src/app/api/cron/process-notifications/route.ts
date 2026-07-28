@@ -124,8 +124,23 @@ export async function GET(req: NextRequest) {
     telegram_chat_id: string;
     message_text: string;
     retry_count: number;
+    user_id: string;
   }>) {
-    const result = await sendTelegramMessage(item.telegram_chat_id, item.message_text);
+    // ── Fetch user's timezone ──
+    let userTimezone = 'Asia/Yangon';
+    if (item.user_id) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('timezone')
+        .eq('id', item.user_id)
+        .single();
+      if ((profile as any)?.timezone) {
+        userTimezone = (profile as any).timezone;
+      }
+    }
+
+    const messageText = `${item.message_text}\n\n🕐 This reminder is in ${userTimezone} timezone`;
+    const result = await sendTelegramMessage(item.telegram_chat_id, messageText);
 
     if (result.ok) {
       await supabase

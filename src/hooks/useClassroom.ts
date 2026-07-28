@@ -2,8 +2,8 @@
 
 import { useCallback, useMemo, useState, useEffect } from 'react';
 import {
-  ClassroomFeature, AssignmentPriority, AssignmentStatus, QuizStatus, QuizQuestion, ResourceType,
-  type Classroom, type Assignment, type AssignmentSubmission, type Quiz, type QuizAttempt,
+  ClassroomFeature, AssignmentPriority, AssignmentStatus, ResourceType,
+  type Classroom, type Assignment, type AssignmentSubmission,
   type DiscussionTopic, type DiscussionReply, type ClassroomResource, type ClassroomMember,
 } from '@/types';
 import { createClient } from '@/lib/supabase/client';
@@ -91,33 +91,6 @@ export function useClassroom() {
       if (!supabase) return null;
       const { data } = await supabase.from('assignment_submissions').select('*').eq('assignment_id', assignmentId).eq('student_id', studentId).single();
       return data as unknown as AssignmentSubmission ?? null;
-    },
-    [supabase]
-  );
-
-  const getQuizzes = useCallback(
-    async (classroomId: string) => {
-      if (!supabase) return [];
-      const { data } = await supabase.from('quizzes').select('*').eq('classroom_id', classroomId).order('created_at', { ascending: false });
-      return (data as unknown as Quiz[]) ?? [];
-    },
-    [supabase]
-  );
-
-  const getQuizAttempt = useCallback(
-    async (quizId: string, studentId: string) => {
-      if (!supabase) return null;
-      const { data } = await supabase.from('quiz_attempts').select('*').eq('quiz_id', quizId).eq('student_id', studentId).single();
-      return data as unknown as QuizAttempt ?? null;
-    },
-    [supabase]
-  );
-
-  const getQuizAttempts = useCallback(
-    async (quizId: string) => {
-      if (!supabase) return [];
-      const { data } = await supabase.from('quiz_attempts').select('*').eq('quiz_id', quizId);
-      return (data as unknown as QuizAttempt[]) ?? [];
     },
     [supabase]
   );
@@ -254,53 +227,6 @@ export function useClassroom() {
     [refresh, supabase]
   );
 
-  const createNewQuiz = useCallback(
-    async (data: { classroom_id: string; title: string; description?: string; time_limit_minutes?: number; due_date?: string; questions: QuizQuestion[]; created_by: string }): Promise<Result> => {
-      if (!supabase) return { success: false, error: 'Configuration error' };
-      const { error } = await supabase.from('quizzes').insert({
-        classroom_id: data.classroom_id, title: data.title, description: data.description || null,
-        time_limit_minutes: data.time_limit_minutes || null, due_date: data.due_date || null,
-        status: 'draft', questions: data.questions as any, created_by: data.created_by,
-      });
-      if (!error) refresh();
-      return error ? { success: false, error: error.message } : { success: true };
-    },
-    [refresh, supabase]
-  );
-
-  const publishQuiz = useCallback(
-    async (quizId: string, status: QuizStatus): Promise<Result> => {
-      if (!supabase) return { success: false, error: 'Configuration error' };
-      const { error } = await supabase.from('quizzes').update({ status }).eq('id', quizId);
-      if (!error) refresh();
-      return error ? { success: false, error: error.message } : { success: true };
-    },
-    [refresh, supabase]
-  );
-
-  const updateQuizData = useCallback(
-    async (quizId: string, data: Partial<Quiz>): Promise<Result> => {
-      if (!supabase) return { success: false, error: 'Configuration error' };
-      const { error } = await supabase.from('quizzes').update(data as any).eq('id', quizId);
-      if (!error) refresh();
-      return error ? { success: false, error: error.message } : { success: true };
-    },
-    [refresh, supabase]
-  );
-
-  const submitQuiz = useCallback(
-    async (quizId: string, studentId: string, answers: { question_id: string; answer: string }[]): Promise<Result> => {
-      if (!supabase) return { success: false, error: 'Configuration error' };
-      const qAnswers = answers.map((a) => ({ question_id: a.question_id, answer: a.answer, is_correct: null as boolean | null }));
-      const { error } = await supabase.from('quiz_attempts').upsert({
-        quiz_id: quizId, student_id: studentId, answers: qAnswers as any, started_at: new Date().toISOString(), submitted_at: new Date().toISOString(),
-      } as any);
-      if (!error) refresh();
-      return error ? { success: false, error: error.message } : { success: true };
-    },
-    [refresh, supabase]
-  );
-
   const createTopic = useCallback(
     async (data: { classroom_id: string; title: string; content: string; assignment_id?: string; created_by: string }): Promise<Result> => {
       if (!supabase) return { success: false, error: 'Configuration error' };
@@ -377,16 +303,6 @@ export function useClassroom() {
     [refresh, supabase]
   );
 
-  const removeQuiz = useCallback(
-    async (quizId: string): Promise<Result> => {
-      if (!supabase) return { success: false, error: 'Configuration error' };
-      const { error } = await supabase.from('quizzes').delete().eq('id', quizId);
-      if (!error) refresh();
-      return error ? { success: false, error: error.message } : { success: true };
-    },
-    [refresh, supabase]
-  );
-
   const removeTopic = useCallback(
     async (topicId: string): Promise<Result> => {
       if (!supabase) return { success: false, error: 'Configuration error' };
@@ -412,16 +328,14 @@ export function useClassroom() {
     getProfile, getClassroom, getClassroomsByUser,
     getMembers, getMember,
     getAssignments, getSubmissionsByAssignment, getSubmission,
-    getQuizzes, getQuizAttempt, getQuizAttempts,
     getTopics, getReplies, getResources,
     createNewClassroom, joinByCode, leave,
     createNewAssignment, publishAssignment, updateAssignmentData,
     submitToAssignment, gradeSub,
-    createNewQuiz, publishQuiz, updateQuizData, submitQuiz,
     createTopic, replyToTopic,
     addNewResource, removeResource,
     updateClassroomData, editResource,
-    removeAssignment, removeQuiz, removeTopic, editTopic,
+    removeAssignment, removeTopic, editTopic,
     refresh,
   };
 }

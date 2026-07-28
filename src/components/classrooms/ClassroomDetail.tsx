@@ -9,7 +9,6 @@ import {
   Settings,
   Users,
   FileText,
-  Brain,
   MessageSquare,
   FolderOpen,
   Link as LinkIcon,
@@ -31,17 +30,15 @@ import type {
   ResourceType,
 } from '@/types';
 import AssignmentsPanel from './AssignmentsPanel';
-import QuizzesPanel from './QuizzesPanel';
 import DiscussionsPanel from './DiscussionsPanel';
 import ResourcesPanel from './ResourcesPanel';
 import MembersPanel from './MembersPanel';
 import LinksPanel from './LinksPanel';
 
-type TabKey = 'assignments' | 'quizzes' | 'resources' | 'discussions' | 'links' | 'members' | 'settings';
+type TabKey = 'assignments' | 'resources' | 'discussions' | 'links' | 'members' | 'settings';
 
 const TAB_META: Record<TabKey, { label: string; icon: React.ReactNode; featureKey?: ClassroomFeatureKey }> = {
   assignments: { label: 'Assignments', icon: <FileText className="h-4 w-4" />, featureKey: 'assignments' },
-  quizzes: { label: 'Quizzes', icon: <Brain className="h-4 w-4" />, featureKey: 'quizzes' },
   resources: { label: 'Resources', icon: <FolderOpen className="h-4 w-4" />, featureKey: 'resources' },
   discussions: { label: 'Discussions', icon: <MessageSquare className="h-4 w-4" />, featureKey: 'discussions' },
   links: { label: 'Links', icon: <LinkIcon className="h-4 w-4" />, featureKey: 'links' },
@@ -155,24 +152,21 @@ export default function ClassroomDetail({ classroomId, currentUserId, userRole }
   const [members, setMembers] = useState<ClassroomMember[]>([]);
   const [member, setMember] = useState<ClassroomMember | null>(null);
   const [assignments, setAssignments] = useState<any[]>([]);
-  const [quizzes, setQuizzes] = useState<any[]>([]);
   const [topics, setTopics] = useState<any[]>([]);
   const [resources, setResources] = useState<any[]>([]);
 
   useEffect(() => {
     (async () => {
-      const [mem, singleMember, asgn, qz, tp, res] = await Promise.all([
+      const [mem, singleMember, asgn, tp, res] = await Promise.all([
         c.getMembers(classroomId),
         c.getMember(classroomId, currentUserId),
         c.getAssignments(classroomId),
-        c.getQuizzes(classroomId),
         c.getTopics(classroomId),
         c.getResources(classroomId),
       ]);
       setMembers(mem);
       setMember(singleMember);
       setAssignments(asgn);
-      setQuizzes(qz);
       setTopics(tp);
       setResources(res);
     })();
@@ -198,9 +192,6 @@ export default function ClassroomDetail({ classroomId, currentUserId, userRole }
   const filteredAssignments = q
     ? assignments.filter((a) => a.title.toLowerCase().includes(q) || (a.description || '').toLowerCase().includes(q))
     : assignments;
-  const filteredQuizzes = q
-    ? quizzes.filter((qu) => qu.title.toLowerCase().includes(q) || (qu.description || '').toLowerCase().includes(q))
-    : quizzes;
   const filteredTopics = q
     ? topics.filter((t) => t.title.toLowerCase().includes(q) || t.content.toLowerCase().includes(q))
     : topics;
@@ -396,36 +387,6 @@ export default function ClassroomDetail({ classroomId, currentUserId, userRole }
               c.updateAssignmentData(assignmentId, { ...data, priority: data.priority as any });
             }}
             onDelete={c.removeAssignment}
-          />
-        )}
-
-        {activeTab === 'quizzes' && (
-          <QuizzesPanel
-            classroomId={classroomId}
-            quizzes={filteredQuizzes}
-            currentUserId={currentUserId}
-            isTeacher={isTeacher}
-            curriculumIds={classroom.curriculum_ids}
-            getQuizAttempt={c.getQuizAttempt}
-            onPublish={(quizId) => c.publishQuiz(quizId, 'published')}
-            onSubmit={(quizId, answers) => {
-              c.submitQuiz(quizId, currentUserId, answers);
-            }}
-            onCreate={(data) => {
-              c.createNewQuiz({
-                classroom_id: data.classroom_id,
-                title: data.title,
-                description: data.description || undefined,
-                time_limit_minutes: data.time_limit_minutes || undefined,
-                due_date: data.due_date || undefined,
-                questions: data.questions,
-                created_by: currentUserId,
-              });
-            }}
-            onEdit={(quizId, data) => {
-              c.updateQuizData(quizId, data);
-            }}
-            onDelete={c.removeQuiz}
           />
         )}
 
