@@ -132,21 +132,65 @@ async function upsertQueueItems(
 
 // ── Schedule QStash triggers for each distinct scheduled_for timestamp ───────
 
+/**
+ * Detect whether the current environment is local development
+ * where QStash (a cloud service) cannot reach back to us.
+ */
+function isLocalDev(): boolean {
+  return !process.env.VERCEL_URL && process.env.NODE_ENV === 'development';
+}
+
 async function scheduleQStashTriggers(items: QueueItem[]): Promise<void> {
   if (items.length === 0) return;
 
   const now = Date.now();
   const uniqueTimestamps = new Set(items.map((i) => i.scheduled_for));
 
+  // In local dev, QStash (cloud) can't reach 127.0.0.1.
+  // Fall back to setTimeout which fires on the dev server directly.
+  const local = isLocalDev();
+
   for (const scheduledFor of uniqueTimestamps) {
     const delayMs = new Date(scheduledFor).getTime() - now;
-    // Enforce a minimum 5-second buffer so QStash has time to register the trigger.
-    // This also ensures "on time" (0-min) reminders for events starting very soon
-    // still get scheduled properly.
+    // Enforce a minimum 5-second buffer so the trigger has time to register.
     if (delayMs < 0) continue;
 
-    const delaySeconds = Math.max(5, Math.ceil(delayMs / 1000));
-    await scheduleQStashMessage({ delay: delaySeconds });
+    if (local) {
+      const minDelayMs = Math.max(5000, delayMs);
+      setTimeout(() => {
+        triggerLocalProcessing().catch((err) =>
+          console.error('[qstash] Local processing failed:', err)
+        );
+      }, minDelayMs);
+    } else {
+      const delaySeconds = Math.max(5, Math.ceil(delayMs / 1000));
+      await scheduleQStashMessage({ delay: delaySeconds });
+    }
+  }
+}
+
+/**
+ * Fire a local HTTP request to the queue-processor endpoint.
+ * Used in local dev as a substitute for the QStash cloud callback.
+ */
+async function triggerLocalProcessing(): Promise<void> {
+  const baseUrl =
+    process.env.NEXT_PUBLIC_BASE_URL ?? 'http://127.0.0.1:3005';
+  const url = `${baseUrl}/api/qstash/process-notifications`;
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-cron-secret': process.env.CRON_SECRET ?? '',
+      },
+    });
+    if (!res.ok) {
+      console.warn(`[qstash] Local processing returned ${res.status}`);
+    }
+  } catch (err) {
+    console.error('[qstash] Local processing fetch error:', err);
   }
 }
 
