@@ -250,7 +250,7 @@ export function useTimetable(userId: string): UseTimetableReturn {
 
       // Enqueue Telegram reminder into notification_queue
       if (startIso && reminder_minutes != null) {
-        actionEnqueueTimetableReminders(
+        await actionEnqueueTimetableReminders(
           userId,
           (event as any).id,
           rest.title ?? '',
@@ -297,7 +297,7 @@ export function useTimetable(userId: string): UseTimetableReturn {
 
       // Enqueue or clear Telegram reminder
       if (startIso && reminder_minutes != null) {
-        actionEnqueueTimetableReminders(
+        await actionEnqueueTimetableReminders(
           userId,
           baseId,
           rest.title ?? '',
@@ -306,7 +306,7 @@ export function useTimetable(userId: string): UseTimetableReturn {
           reminder_minutes
         );
       } else {
-        actionClearSourceQueue('timetable_event', baseId);
+        await actionClearSourceQueue('timetable_event', baseId);
       }
 
       return { success: true };
