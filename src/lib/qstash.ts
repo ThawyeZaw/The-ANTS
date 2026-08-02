@@ -43,13 +43,20 @@ export async function scheduleQStashMessage(
   const url = options.url ?? `${getBaseUrl()}/api/qstash/process-notifications`;
 
   try {
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${QSTASH_TOKEN}`,
+      'Content-Type': options.contentType ?? 'application/json',
+    };
+
+    // A 0s (or negative) delay means "deliver immediately" — QStash publishes
+    // without waiting when the Upstash-Delay header is omitted entirely.
+    if (options.delay > 0) {
+      headers['Upstash-Delay'] = `${options.delay}s`;
+    }
+
     const res = await fetch(`${QSTASH_URL}/v1/messages`, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${QSTASH_TOKEN}`,
-        'Content-Type': options.contentType ?? 'application/json',
-        'Upstash-Delay': `${options.delay}s`,
-      },
+      headers,
       body: JSON.stringify({
         url,
         body: JSON.stringify(options.body ?? {}),
