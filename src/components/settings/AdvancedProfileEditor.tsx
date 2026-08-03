@@ -46,13 +46,21 @@ import AvatarImage from '@/components/ui/AvatarImage';
 import { cn, getInitials } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import CertificationEditor from './CertificationEditor';
-import {
-  getUserCertifications,
-  addCertification,
-  updateCertification,
-  deleteCertification,
-} from '@/lib/mock/database';
+import { createClient } from '@/lib/supabase/client';
 import { uploadAvatar } from '@/lib/avatar-upload';
+
+interface Certification {
+  id: string;
+  type: string;
+  subject?: string | null;
+  exam_board?: string | null;
+  grade?: string | null;
+  year?: number | null;
+  certificate_url?: string | null;
+  is_verified: boolean;
+  is_hidden: boolean;
+  order_no?: number | null;
+}
 
 type TabId = 'basic' | 'social' | 'projects' | 'activities' | 'achievements' | 'grades' | 'certifications' | 'appearance' | 'settings';
 
@@ -71,7 +79,7 @@ export default function AdvancedProfileEditor() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState<Partial<Profile>>({});
-  const [certs, setCerts] = useState<ReturnType<typeof getUserCertifications>>([]);
+  const [certs, setCerts] = useState<Certification[]>([]);
   const [certsVersion, setCertsVersion] = useState(0);
   
   useEffect(() => {
@@ -97,9 +105,18 @@ export default function AdvancedProfileEditor() {
         showClubProjects: user.profile.showClubProjects ?? true,
         showClubActivity: user.profile.showClubActivity ?? true,
       });
-      setCerts(getUserCertifications(user.profile.id));
+      // Load certifications from Supabase
+      const supabase = createClient();
+      supabase
+        .from('certifications')
+        .select('*')
+        .eq('user_id', user.profile.id)
+        .order('order_no', { ascending: true })
+        .then(({ data }) => {
+          if (data) setCerts(data as Certification[]);
+        });
     }
-  }, [user]);
+  }, [user, certsVersion]);
 
   const handleSave = async () => {
     if (!user) return;
@@ -776,21 +793,30 @@ export default function AdvancedProfileEditor() {
                 certifications={certs}
                 onAdd={(data) => {
                   if (!user) return { success: false, error: 'Not signed in.' };
-                  const result = addCertification(user.profile.id, data);
-                  setCerts(getUserCertifications(user.profile.id));
-                  return result;
+                  const supabase = createClient();
+                  // Optimistic update: add a temp entry so UI feels instant
+                  const tempId = `temp_${Date.now()}`;
+                  setCerts(prev => [...prev, { id: tempId, type: data.type, subject: data.subject ?? null, exam_board: data.exam_board ?? null, grade: data.grade ?? null, year: data.year ?? null, certificate_url: null, is_verified: false, is_hidden: false, order_no: null }]);
+                  supabase
+                    .from('certifications')
+                    .insert({ user_id: user.profile.id, ...data } as any)
+                    .then(() => setCertsVersion(v => v + 1));
+                  return { success: true };
                 }}
                 onUpdate={(certId, updates) => {
                   if (!user) return { success: false, error: 'Not signed in.' };
-                  const result = updateCertification(certId, user.profile.id, updates as any);
-                  setCerts(getUserCertifications(user.profile.id));
-                  return result;
+                  const supabase = createClient();
+                  setCerts(prev => prev.map(c => c.id === certId ? { ...c, ...updates } as Certification : c));
+                  supabase.from('certifications').update(updates as any).eq('id', certId).eq('user_id', user.profile.id)
+                    .then(() => setCertsVersion(v => v + 1));
+                  return { success: true };
                 }}
                 onDelete={(certId) => {
                   if (!user) return { success: false, error: 'Not signed in.' };
-                  const result = deleteCertification(certId, user.profile.id);
-                  setCerts(getUserCertifications(user.profile.id));
-                  return result;
+                  const supabase = createClient();
+                  setCerts(prev => prev.filter(c => c.id !== certId));
+                  supabase.from('certifications').delete().eq('id', certId).eq('user_id', user.profile.id);
+                  return { success: true };
                 }}
               />
             </div>

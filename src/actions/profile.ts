@@ -7,7 +7,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { createClient } from '@/lib/supabase/server';
-import type { Profile, ProjectEntry } from '@/types';
+import type { Profile, ProjectEntry, UserRole } from '@/types';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -265,3 +265,41 @@ export async function actionGetFullProfile(username: string): Promise<FullProfil
     notFound: false,
   };
 }
+
+export async function actionGetPublicProfiles(roles?: UserRole[]): Promise<Profile[]> {
+  const supabase = await createClient();
+  let query = supabase.from('profiles').select('*').eq('is_public', true);
+  if (roles && roles.length > 0) {
+    query = query.in('role', roles);
+  }
+  const { data, error } = await query;
+  if (error || !data) return [];
+  return data.map((profileRow: any) => ({
+    id: profileRow.id,
+    email: profileRow.email ?? '',
+    name: profileRow.name ?? '',
+    username: profileRow.username ?? '',
+    avatar: profileRow.avatar_url ?? '',
+    role: (profileRow.role ?? 'student') as Profile['role'],
+    bio: profileRow.bio ?? undefined,
+    title: profileRow.title ?? undefined,
+    socialLinks: profileRow.social_links as unknown as Profile['socialLinks'],
+    isPublic: profileRow.is_public ?? true,
+    pinnedItemId: profileRow.pinned_item_id ?? undefined,
+    sectionVisibility: profileRow.section_visibility as unknown as Profile['sectionVisibility'],
+    sectionOrder: (profileRow.section_order as unknown as Profile['sectionOrder']) ?? undefined,
+    spacing: (profileRow.spacing as Profile['spacing']) ?? undefined,
+    width: (profileRow.width as Profile['width']) ?? undefined,
+    sectionLayout: (profileRow.section_layout as Profile['sectionLayout']) ?? undefined,
+    showClubMemberships: (profileRow.show_club_memberships as boolean) ?? undefined,
+    showClubProjects: (profileRow.show_club_projects as boolean) ?? undefined,
+    showClubActivity: (profileRow.show_club_activity as boolean) ?? undefined,
+    theme: (profileRow.theme as unknown as Profile['theme']) ?? undefined,
+    projects: profileRow.projects as unknown as Profile['projects'],
+    activities: profileRow.activities as unknown as Profile['activities'],
+    achievements: profileRow.achievements as unknown as Profile['achievements'],
+    certificationIds: profileRow.certification_ids ?? undefined,
+    createdAt: profileRow.created_at ?? '',
+  }));
+}
+

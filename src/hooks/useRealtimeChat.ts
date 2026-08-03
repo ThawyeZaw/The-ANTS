@@ -1,18 +1,19 @@
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — useRealtimeChat Hook
-// Supabase Realtime subscription for club chat messages.
+// The ANTS — useRealtimeChat Hook (Deprecated)
 //
-// Usage:
-//   const { messages, sendMessage, isConnected } = useRealtimeChat(clubId, userId);
+// Club chat has been removed from the web app. Members communicate via
+// dedicated Telegram groups instead (configured per-club by admins).
+//
+// This file is retained as a stub to satisfy existing import sites without
+// requiring a cascade of component edits. All references should be cleaned up
+// in a future sprint.
 // ──────────────────────────────────────────────────────────────────────────────
 
 'use client';
 
-import { useCallback } from 'react';
-
 // ── Types ────────────────────────────────────────────────────────────────────
 
-/** A club message row from the database (snake_case). */
+/** @deprecated Club chat has moved to Telegram. */
 export interface ClubMessage {
   id: string;
   club_id: string;
@@ -21,38 +22,29 @@ export interface ClubMessage {
   created_at: string;
 }
 
-/** Sender profile for display. */
+/** @deprecated Club chat has moved to Telegram. */
 export interface MessageSender {
   id: string;
   name: string;
   avatar_url?: string;
 }
 
-interface UseRealtimeChatReturn {
-  /** Messages for the current session, newest last. */
-  messages: ClubMessage[];
-  /** Sender profiles keyed by user_id. */
-  senders: Map<string, MessageSender>;
-  /** Send a message to the club. */
-  sendMessage: (message: string) => Promise<{ success: boolean; error?: string }>;
-  /** Whether the realtime channel is connected. */
-  isConnected: boolean;
-  /** Whether there's an error with the subscription. */
-  error: string | null;
-}
-
-// ── Hook ─────────────────────────────────────────────────────────────────────
-
+/** @deprecated Club chat has moved to Telegram. */
 export function useRealtimeChat(
   _clubId: string | undefined,
   _userId: string | undefined
-): UseRealtimeChatReturn {
-  const sendMessage = useCallback(
-    async (_message: string): Promise<{ success: boolean; error?: string }> => {
-      return { success: false, error: 'Club chat is no longer available.' };
-    },
-    []
-  );
-
-  return { messages: [], senders: new Map(), sendMessage, isConnected: false, error: 'Club chat has been removed.' };
+): {
+  messages: ClubMessage[];
+  senders: Map<string, MessageSender>;
+  sendMessage: (_message: string) => Promise<{ success: boolean; error?: string }>;
+  isConnected: boolean;
+  error: string | null;
+} {
+  return {
+    messages: [],
+    senders: new Map(),
+    sendMessage: async () => ({ success: false, error: 'Chat has moved to Telegram.' }),
+    isConnected: false,
+    error: null, // null — not an error, just not available
+  };
 }

@@ -3,65 +3,37 @@
 //
 // GET /api/cron/process-notifications
 //
-// Processes the notification_queue table in batches:
-//   1. Fetches up to 25 pending items whose scheduled_for <= now()
-//   2. Marks them as 'processing'
-//   3. Sends each message via the Telegram Bot API
-//   4. Rate limits at ~20 msgs/sec (safe under Telegram's 30/s limit)
-//   5. Handles HTTP 429 (Retry-After) gracefully
-//   6. Updates status to 'sent' or 'failed', increments retry_count
+// Processes the notification_queue table in batches.
+// Delegates queue processing to the shared processor
+// (src/lib/notification-processor.ts), which provides:
+//   - stale-processing recovery (rows stuck in 'processing' > 10 min)
+//   - atomic row claiming (prevents duplicate Telegram sends)
+//   - batch timezone loading (no N+1)
+//   - rate-limited Telegram delivery with retries and 429 backoff
 //
-// Called every minute by GitHub Actions cron workflow.
+// Called every minute by GitHub Actions cron workflow. Kept as a fallback
+// alongside the QStash-triggered endpoint.
 // Protected by x-cron-secret header matching CRON_SECRET env var.
 //
 // This runs 100% server-side — works even when user's browser is closed.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { NextRequest, NextResponse } from 'next/server';
+import {
+  processNotificationQueue,
+  type ProcessQueueResult,
+} from '@/lib/notification-processor';
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const CRON_SECRET = process.env.CRON_SECRET;
-const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
 
 const BATCH_SIZE = 25;
-const RATE_LIMIT_MS = 50; // ~20 msgs/sec (Telegram limit: 30/s)
-const MAX_RETRIES = 3;
 
 // ── Dynamic import to avoid bundling supabase-admin in edge ──
 
 async function getAdminSupabase() {
   const { createAdminClient } = await import('@/lib/supabase/server');
   return await createAdminClient();
-}
-
-// ── Telegram sender ──────────────────────────────────────────────────────────
-
-async function sendTelegramMessage(
-  chatId: string,
-  text: string
-): Promise<{ ok: boolean; retryAfter?: number; errorText?: string }> {
-  try {
-    const res = await fetch(`${TELEGRAM_API}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' }),
-    });
-
-    if (res.status === 429) {
-      const body = await res.json().catch(() => ({}));
-      const retryAfter = body?.parameters?.retry_after ?? 5;
-      return { ok: false, retryAfter, errorText: 'Rate limited (429)' };
-    }
-
-    if (!res.ok) {
-      const errorText = await res.text();
-      return { ok: false, errorText: `${res.status}: ${errorText}` };
-    }
-
-    return { ok: true };
-  } catch (err) {
-    return { ok: false, errorText: String(err) };
-  }
 }
 
 // ── GET Handler ──────────────────────────────────────────────────────────────
@@ -83,107 +55,27 @@ export async function GET(req: NextRequest) {
   const supabase = await getAdminSupabase();
   const now = new Date().toISOString();
 
-  // ── 1. Fetch pending items ──
-  const { data: items, error: fetchError } = await supabase
-    .from('notification_queue')
-    .select('*')
-    .eq('status', 'pending')
-    .lte('scheduled_for', now)
-    .order('scheduled_for', { ascending: true })
-    .limit(BATCH_SIZE);
-
-  if (fetchError) {
-    console.error('[process-notifications] Fetch error:', fetchError);
+  // ── Process a batch (recovery + atomic claim + send) ──
+  let result: ProcessQueueResult;
+  try {
+    result = await processNotificationQueue(supabase, { limit: BATCH_SIZE });
+  } catch (err) {
+    console.error('[process-notifications] Processing error:', err);
     return NextResponse.json(
-      { error: 'Failed to fetch queue items', detail: fetchError.message },
+      { error: 'Failed to process queue', detail: String(err) },
       { status: 500 }
     );
   }
 
-  if (!items || items.length === 0) {
-    return NextResponse.json({ processed: 0, message: 'No pending items' });
-  }
-
-  // ── 2. Mark as processing ──
-  const itemIds = items.map((i: { id: string }) => i.id);
-  const { error: markError } = await supabase
-    .from('notification_queue')
-    .update({ status: 'processing' })
-    .in('id', itemIds);
-
-  if (markError) {
-    console.error('[process-notifications] Mark-as-processing error:', markError);
-  }
-
-  // ── 3. Send messages with rate limiting ──
-  let sent = 0;
-  let failed = 0;
-
-  for (const item of items as Array<{
-    id: string;
-    telegram_chat_id: string;
-    message_text: string;
-    retry_count: number;
-    user_id: string;
-  }>) {
-    // ── Fetch user's timezone ──
-    let userTimezone = 'Asia/Yangon';
-    if (item.user_id) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('timezone')
-        .eq('id', item.user_id)
-        .single();
-      if ((profile as any)?.timezone) {
-        userTimezone = (profile as any).timezone;
-      }
-    }
-
-    const messageText = `${item.message_text}\n\n🕐 This reminder is in ${userTimezone} timezone`;
-    const result = await sendTelegramMessage(item.telegram_chat_id, messageText);
-
-    if (result.ok) {
-      await supabase
-        .from('notification_queue')
-        .update({ status: 'sent' })
-        .eq('id', item.id);
-      sent++;
-    } else {
-      const newRetryCount = (item.retry_count ?? 0) + 1;
-      const isPermanent = newRetryCount >= MAX_RETRIES;
-
-      await supabase
-        .from('notification_queue')
-        .update({
-          status: isPermanent ? 'failed' : 'pending',
-          retry_count: newRetryCount,
-          error_log: result.errorText ?? 'Unknown error',
-        })
-        .eq('id', item.id);
-
-      failed++;
-
-      if (result.retryAfter) {
-        const waitSec = result.retryAfter;
-        console.warn(
-          `[process-notifications] Rate limited — waiting ${waitSec}s`
-        );
-        await new Promise((r) => setTimeout(r, waitSec * 1000));
-      }
-    }
-
-    // Rate limit: delay between messages
-    await new Promise((r) => setTimeout(r, RATE_LIMIT_MS));
-  }
-
   console.log(
-    `[process-notifications] Batch complete: ${sent} sent, ${failed} failed (of ${items.length})`
+    `[process-notifications] Batch complete: ${result.sent} sent, ${result.failed} failed, ${result.recovered} recovered (of ${result.claimed} claimed)`
   );
 
   return NextResponse.json({
-    processed: items.length,
-    sent,
-    failed,
+    processed: result.claimed,
+    sent: result.sent,
+    failed: result.failed,
+    recovered: result.recovered,
     timestamp: now,
   });
 }

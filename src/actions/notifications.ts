@@ -43,6 +43,22 @@ interface NotificationPrefs {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+/**
+ * Allow enqueueing reminders that are already slightly overdue (e.g. an
+ * "On Time" reminder created a few seconds after the event started). Anything
+ * more than 5 seconds in the past is skipped as it's too late to be useful.
+ */
+const OVERDUE_ENQUEUE_GRACE_MS = 5_000;
+
+/**
+ * Fire triggers a few seconds BEFORE the scheduled delivery time so that
+ * processor + Telegram round-trip latency lands the message exactly on time
+ * or slightly EARLY — never late. Must match EARLY_CLAIM_MS in
+ * src/lib/notification-processor.ts (the processor claims rows due within
+ * this window, which is what allows the trigger to fire ahead of schedule).
+ */
+const EARLY_FIRE_MS = 5_000;
+
 function formatTime(date: Date, timeZone?: string): { timeStr: string; dateStr: string } {
   const timeOpts: Intl.DateTimeFormatOptions = {
     hour: '2-digit', minute: '2-digit', hour12: true,
@@ -66,12 +82,23 @@ function offsetLabel(minutes: number): string {
 
 async function getProfileForUser(userId: string) {
   const supabase = await createAdminClient();
-  const { data } = await (supabase
+  let result = await (supabase
     .from('profiles')
     .select('id, telegram_chat_id, timezone, notification_preferences')
     .eq('id', userId)
     .maybeSingle() as SupabaseAny);
-  return data as {
+
+  // Fallback for environments where `profiles.timezone` does not exist yet
+  // (schema drift). Never let a missing column silently block reminder delivery.
+  if (result.error || !result.data) {
+    result = await (supabase
+      .from('profiles')
+      .select('id, telegram_chat_id, notification_preferences')
+      .eq('id', userId)
+      .maybeSingle() as SupabaseAny);
+  }
+
+  return (result.data ?? null) as {
     id: string;
     telegram_chat_id: string | null;
     timezone: string | null;
@@ -89,13 +116,22 @@ async function getProfilesForClassroom(classroomId: string) {
   if (!members?.length) return [];
 
   const userIds = members.map((m: { user_id: string }) => m.user_id);
-  const { data: profiles } = await (supabase
+  let result = await (supabase
     .from('profiles')
     .select('id, telegram_chat_id, timezone, notification_preferences')
     .in('id', userIds)
     .not('telegram_chat_id', 'is', null) as SupabaseAny);
 
-  return (profiles ?? []) as Array<{
+  // Same fallback as getProfileForUser — timezone is optional for delivery.
+  if (result.error || !result.data) {
+    result = await (supabase
+      .from('profiles')
+      .select('id, telegram_chat_id, notification_preferences')
+      .in('id', userIds)
+      .not('telegram_chat_id', 'is', null) as SupabaseAny);
+  }
+
+  return (result.data ?? []) as Array<{
     id: string;
     telegram_chat_id: string | null;
     timezone: string | null;
@@ -140,30 +176,63 @@ function isLocalDev(): boolean {
   return !process.env.VERCEL_URL && process.env.NODE_ENV === 'development';
 }
 
+/**
+ * Schedule one delayed trigger per distinct `scheduled_for` timestamp.
+ *
+ * Fixes for time-sensitive reminders:
+ *   - Already-due timestamps → ONE immediate trigger. The processor picks up
+ *     every overdue 'pending' row, so we don't need one trigger per timestamp.
+ *     (Previously `delayMs < 0` was skipped, leaving overdue rows stranded
+ *     until the 1-minute GitHub cron rescued them.)
+ *   - Future timestamps → one trigger per timestamp using the EXACT remaining
+ *     delay minus EARLY_FIRE_MS. The artificial 5-second minimum is removed,
+ *     so "On Time" (0-min) reminders are delivered at the scheduled second or
+ *     a few seconds earlier — never late. The processor's matching claim
+ *     window (EARLY_CLAIM_MS) is what allows the trigger to fire early.
+ *
+ * In local dev, QStash (cloud) can't reach 127.0.0.1, so setTimeout fires on
+ * the dev server directly with the same semantics. The dev rescue polling
+ * (startDevRescuePolling) additionally covers server reloads.
+ */
 async function scheduleQStashTriggers(items: QueueItem[]): Promise<void> {
   if (items.length === 0) return;
 
   const now = Date.now();
-  const uniqueTimestamps = new Set(items.map((i) => i.scheduled_for));
-
-  // In local dev, QStash (cloud) can't reach 127.0.0.1.
-  // Fall back to setTimeout which fires on the dev server directly.
+  const uniqueTimestamps = Array.from(new Set(items.map((i) => i.scheduled_for)));
   const local = isLocalDev();
 
-  for (const scheduledFor of uniqueTimestamps) {
-    const delayMs = new Date(scheduledFor).getTime() - now;
-    // Enforce a minimum 5-second buffer so the trigger has time to register.
-    if (delayMs < 0) continue;
+  const fireLocal = (delayMs: number) => {
+    setTimeout(() => {
+      triggerLocalProcessing().catch((err) =>
+        console.error('[qstash] Local processing failed:', err)
+      );
+    }, delayMs);
+  };
 
+  const expired = uniqueTimestamps.filter((ts) => new Date(ts).getTime() <= now);
+  const future = uniqueTimestamps
+    .filter((ts) => new Date(ts).getTime() > now)
+    .sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+
+  // Already-due timestamps: one immediate trigger covers every overdue row.
+  if (expired.length > 0) {
     if (local) {
-      const minDelayMs = Math.max(5000, delayMs);
-      setTimeout(() => {
-        triggerLocalProcessing().catch((err) =>
-          console.error('[qstash] Local processing failed:', err)
-        );
-      }, minDelayMs);
+      fireLocal(0);
     } else {
-      const delaySeconds = Math.max(5, Math.ceil(delayMs / 1000));
+      await scheduleQStashMessage({ delay: 0 });
+    }
+  }
+
+  // Future timestamps: exact remaining delay minus the early-fire margin.
+  // Firing EARLY_FIRE_MS before the scheduled time lets the processor +
+  // Telegram delivery land on-time or a few seconds earlier — never late.
+  for (const scheduledFor of future) {
+    const delayMs = Math.max(0, new Date(scheduledFor).getTime() - now - EARLY_FIRE_MS);
+    if (local) {
+      fireLocal(delayMs);
+    } else {
+      // Round UP so the trigger never fires before the intended time.
+      const delaySeconds = Math.max(0, Math.ceil(delayMs / 1000));
       await scheduleQStashMessage({ delay: delaySeconds });
     }
   }
@@ -193,6 +262,46 @@ async function triggerLocalProcessing(): Promise<void> {
     console.error('[qstash] Local processing fetch error:', err);
   }
 }
+
+/**
+ * Local-development rescue loop.
+ *
+ * setTimeout()-based triggers only live inside the Node process and are lost
+ * when the dev server reloads. This lightweight poll re-fires the local
+ * processor endpoint every 5 seconds (plus once shortly after startup), which
+ * recovers overdue rows and stale 'processing' rows — so no reminder is
+ * permanently stranded by a reload. The 5s cadence matches the EARLY_FIRE_MS
+ * claim window, so even a timer lost to a reload is still delivered on time.
+ * No-op outside local development.
+ */
+function startDevRescuePolling(): void {
+  if (!isLocalDev()) return;
+
+  const g = globalThis as { __antsDevRescuePollingStarted?: boolean };
+  if (g.__antsDevRescuePollingStarted) return;
+  g.__antsDevRescuePollingStarted = true;
+
+  const POLL_INTERVAL_MS = 5_000;
+
+  // Initial sweep — catches rows stranded by a previous dev-server reload.
+  setTimeout(() => {
+    triggerLocalProcessing().catch((err) =>
+      console.error('[qstash] Dev rescue poll failed:', err)
+    );
+  }, 1_000);
+
+  setInterval(() => {
+    triggerLocalProcessing().catch((err) =>
+      console.error('[qstash] Dev rescue poll failed:', err)
+    );
+  }, POLL_INTERVAL_MS);
+
+  console.log('[qstash] Local dev rescue polling started (every 5s)');
+}
+
+// Start the dev rescue loop when this module loads in local development.
+// Guarded by isLocalDev() — a no-op in production builds.
+startDevRescuePolling();
 
 // ── Remove queue items for a deleted source ───────────────────────────────────
 
@@ -236,10 +345,10 @@ export async function actionEnqueueTimetableReminders(
   const startDate = new Date(startTime);
   const scheduledFor = new Date(startDate.getTime() - reminderMinutes * 60 * 1000);
 
-  // Don't enqueue if the scheduled time is more than 5 seconds in the past.
-  // This small buffer allows "on time" (0-min) reminders to work correctly
-  // even when the event starts very close to the current time.
-  if (scheduledFor.getTime() <= Date.now() - 5000) return;
+  // Skip only if the reminder time is too far in the past. Near-term and
+  // "On Time" (0-min) reminders are enqueued — the trigger scheduler fires
+  // them immediately if they are already due.
+  if (scheduledFor.getTime() <= Date.now() - OVERDUE_ENQUEUE_GRACE_MS) return;
 
   const { timeStr, dateStr } = formatTime(startDate, userTimezone);
 
@@ -294,8 +403,9 @@ export async function actionEnqueueAssignmentReminders(assignmentId: string) {
     for (const offset of prefs.reminders) {
       const scheduledFor = new Date(dueDate.getTime() - offset * 60 * 1000);
 
-      // Don't enqueue if scheduled time is in the past
-      if (scheduledFor.getTime() <= Date.now()) continue;
+      // Skip only if the reminder is too far in the past — near-term and
+      // "On Time" reminders are enqueued and fired immediately by the scheduler.
+      if (scheduledFor.getTime() <= Date.now() - OVERDUE_ENQUEUE_GRACE_MS) continue;
 
       const { dateStr } = formatTime(dueDate, userTimezone);
       items.push({
@@ -341,8 +451,9 @@ export async function actionEnqueueExamReminders(countdownId: string, userId: st
   for (const offset of examPrefs.reminders) {
     const scheduledFor = new Date(targetDate.getTime() - offset * 60 * 1000);
 
-    // Don't enqueue if scheduled time is in the past
-    if (scheduledFor.getTime() <= Date.now()) continue;
+    // Skip only if the reminder is too far in the past — near-term and
+    // "On Time" reminders are enqueued and fired immediately by the scheduler.
+    if (scheduledFor.getTime() <= Date.now() - OVERDUE_ENQUEUE_GRACE_MS) continue;
 
     const { dateStr } = formatTime(targetDate, userTimezone);
     items.push({
@@ -391,8 +502,9 @@ export async function actionEnqueueQuizReminders(quizId: string) {
     for (const offset of prefs.reminders) {
       const scheduledFor = new Date(dueDate.getTime() - offset * 60 * 1000);
 
-      // Don't enqueue if scheduled time is in the past
-      if (scheduledFor.getTime() <= Date.now()) continue;
+      // Skip only if the reminder is too far in the past — near-term and
+      // "On Time" reminders are enqueued and fired immediately by the scheduler.
+      if (scheduledFor.getTime() <= Date.now() - OVERDUE_ENQUEUE_GRACE_MS) continue;
 
       const { dateStr } = formatTime(dueDate, userTimezone);
       items.push({

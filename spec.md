@@ -661,7 +661,8 @@ Timetable events are stored in the `timetable_events` table with a rich relation
 ### 12.3 Core Functional Requirements
 - **Daily, Weekly, and Monthly views**: Three toggleable calendar views. Day and week views show a time grid (6:00 AM–11:00 PM). Month view shows a compact 6-row calendar grid.
 - **Event CRUD**: Create, edit, delete events via modal form. Supports timed events, all-day events, and deadline-only events.
-- **Drag-and-drop reschedule**: Drag events to new time slots or across days. Uses `@dnd-kit/core` with `PointerSensor`. Drop targets highlight on hover. Duration is preserved on move.
+- **Drag-and-drop reschedule**: Drag events to new time slots or across days. Uses `@dnd-kit/core` with `PointerSensor`. Drop targets highlight on hover. Duration is preserved on move. Moving an event re-syncs its Telegram reminder to the new time.
+- **Undo / Redo**: All timetable mutations (create, edit, delete, drag-and-drop move, to-do completion) are reversible. Ctrl+Z / Cmd+Z undo, Ctrl+Shift+Z / Ctrl+Y redo, plus on-screen Undo/Redo buttons in the toolbar (mobile-friendly). History is client-only and is cleared when the page is refreshed; it does not survive a reload.
 - **Overlapping events share width**: Events that overlap in time are rendered side-by-side with proportional column widths — no warnings or blocks.
 - **Colour coding**: Each event type has a default colour; user can choose from 12 presets or a custom colour picker.
 - **Recurring events**: Supports daily, weekly, monthly, and custom (every N days) recurrence with optional end date. Weekly recurrence allows day-of-week selection. Editing a recurring instance prompts "Edit this event only" (creates a one-off) or "Edit all events in series" (modifies the base event).
@@ -674,9 +675,10 @@ Timetable events are stored in the `timetable_events` table with a rich relation
 1. **Create event**: Click "+" button or click an empty time slot → modal opens with pre-filled day/time → fill title, select event type, optionally set colour, recurrence, to-do status → save.
 2. **Edit event**: Click existing event → modal opens with current values → modify → save. Recurring instances prompt for scope choice.
 3. **Delete event**: Click event → modal → "Delete" button.
-4. **Reschedule**: Drag event vertically (change time) or horizontally (change day in week view). Drop zone highlights. On drop, event is moved preserving duration.
-5. **Navigate**: Left/right arrows move between days/weeks/months. "Today" button jumps to current date. View switcher toggles day/week/month.
-6. **Filter**: Filter panel toggles event types, show/hide completed to-dos, and show/hide external events.
+4. **Reschedule**: Drag event vertically (change time) or horizontally (change day in week view). Drop zone highlights. On drop, event is moved preserving duration, and its Telegram reminder is re-scheduled to the new time.
+5. **Undo / Redo**: After any mutation (drag-and-drop, create, edit, delete, to-do completion), the toolbar Undo/Redo buttons or Ctrl+Z / Ctrl+Shift+Z (Cmd on macOS) revert / re-apply the change. Each undo/redo restores the event and re-syncs its Telegram reminder.
+6. **Navigate**: Left/right arrows move between days/weeks/months. "Today" button jumps to current date. View switcher toggles day/week/month.
+7. **Filter**: Filter panel toggles event types, show/hide completed to-dos, and show/hide external events.
 
 ### 12.5 Permission Constraints
 - All roles with a user account have full CRUD on their own timetable events.
@@ -687,12 +689,14 @@ Timetable events are stored in the `timetable_events` table with a rich relation
 - `'use client'` directive for all drag-and-drop interactions.
 - `@dnd-kit/core` + `@dnd-kit/utilities` for drag-and-drop.
 - `src/lib/mock/timetable.ts` — full mock database with 12 rich events, CRUD, recurrence expansion, and cross-feature virtual event builders.
-- `src/hooks/useTimetable.ts` — state management, navigation, filtering, and CRUD.
+- `src/hooks/useTimetable.ts` — state management, navigation, filtering, CRUD, and client-side undo/redo history.
 - `src/actions/timetable.ts` — server actions (ready for Supabase migration).
 - `src/lib/timetable/layout.ts` — overlap detection and column width algorithm.
 - `src/constants/timetable.ts` — event type configs, colour presets, grid config, labels.
 - `src/types/timetable.ts` — all timetable TypeScript types.
 - Timezone-aware rendering using the user's local timezone.
+- **Undo/redo design**: `useTimetable` keeps two in-memory stacks (`history` / `redoStack`) of full event snapshots (before/after). Each mutation pushes `{ before, after }`; undo applies `before`, redo applies `after` (restore via `upsert` on `id`, or `delete` for created events). History is client-only and cleared on page refresh.
+- **Telegram reminder sync**: Every timetable mutation that changes an event's time (modal edit, drag-and-drop move, undo/redo restore) calls `actionEnqueueTimetableReminders` to re-schedule the reminder in `notification_queue`; delete and reminder-off cases call `actionClearSourceQueue`. This keeps the Telegram queue in sync with the event's current time on production.
 
 ### 12.7 Error Handling
 - **Overlapping events**: Events are displayed side-by-side; no blocking or warning.

@@ -1,0 +1,40 @@
+{
+  "version": "4",
+  "redirects": {
+    "https://esm.sh/@supabase/supabase-js@2": "https://esm.sh/@supabase/supabase-js@2.111.0"
+  },
+  "remote": {
+    "https://esm.sh/@supabase/supabase-js@2.111.0": "276104e20b7318fac2be1c67eb9be93f4280f5ec9f2fc5ac7b32e1f0ed6f31ba"
+  },
+  "workspace": {
+    "packageJson": {
+      "dependencies": [
+        "npm:@dnd-kit/core@^6.3.1",
+        "npm:@dnd-kit/utilities@^3.2.2",
+        "npm:@supabase/ssr@~0.12.3",
+        "npm:@supabase/supabase-js@^2.110.7",
+        "npm:@tailwindcss/postcss@4",
+        "npm:@tanstack/react-query-devtools@^5.101.4",
+        "npm:@tanstack/react-query@^5.101.4",
+        "npm:@types/dompurify@^3.0.5",
+        "npm:@types/katex@~0.16.8",
+        "npm:@types/node@20",
+        "npm:@types/react-dom@19",
+        "npm:@types/react-katex@^3.0.4",
+        "npm:@types/react@19",
+        "npm:dompurify@^3.4.11",
+        "npm:eslint-config-next@16.2.9",
+        "npm:eslint@9",
+        "npm:katex@0.17",
+        "npm:lucide-react@^1.18.0",
+        "npm:mermaid@^11.16.0",
+        "npm:next@16.2.9",
+        "npm:react-dom@19.2.4",
+        "npm:react-katex@^3.1.0",
+        "npm:react@19.2.4",
+        "npm:tailwindcss@4",
+        "npm:typescript@5"
+      ]
+    }
+  }
+}

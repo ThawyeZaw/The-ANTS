@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import {
   ChevronLeft,
@@ -15,6 +15,8 @@ import {
   ZoomOut,
   Maximize2,
   Clock,
+  Undo2,
+  Redo2,
 } from 'lucide-react';
 import type { TimetableEvent, TimetableView, TimetableEventFormData, TimetableEventType } from '@/types/timetable';
 import { useAuth } from '@/hooks/useAuth';
@@ -103,6 +105,10 @@ export default function TimetableManager(props: TimetableManagerProps) {
     deleteEvent,
     toggleComplete,
     moveEvent,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
     integrationCounts,
   } = useTimetable(userId);
 
@@ -204,6 +210,30 @@ export default function TimetableManager(props: TimetableManagerProps) {
     setActiveDragEvent(event ?? null);
     setIsDragging(true);
   }, []);
+
+  // ── Keyboard shortcuts: Ctrl+Z (undo), Ctrl+Shift+Z / Ctrl+Y (redo) ──
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      // Never hijack shortcuts while typing in a field or with a modal open
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable)) return;
+      if (modalOpen) return;
+
+      const mod = e.ctrlKey || e.metaKey;
+      if (!mod) return;
+
+      const key = e.key.toLowerCase();
+      if (key === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) void redo(); else void undo();
+      } else if (key === 'y') {
+        e.preventDefault();
+        void redo();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [undo, redo, modalOpen]);
 
   // Derived event lists for each view
   const dayEvents = view === 'day' ? getEventsForDay(currentDate) : [];
@@ -409,6 +439,28 @@ export default function TimetableManager(props: TimetableManagerProps) {
             title="Next"
           >
             <ChevronRight size={18} />
+          </button>
+        </div>
+
+        {/* Undo / Redo */}
+        <div className="flex items-center gap-1">
+          <button
+            id="timetable-undo"
+            onClick={() => void undo()}
+            disabled={!canUndo}
+            className="p-2 rounded-xl text-foreground-muted hover:text-foreground hover:bg-foreground/5 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-foreground-muted"
+            title="Undo (Ctrl+Z)"
+          >
+            <Undo2 size={18} />
+          </button>
+          <button
+            id="timetable-redo"
+            onClick={() => void redo()}
+            disabled={!canRedo}
+            className="p-2 rounded-xl text-foreground-muted hover:text-foreground hover:bg-foreground/5 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-foreground-muted"
+            title="Redo (Ctrl+Shift+Z)"
+          >
+            <Redo2 size={18} />
           </button>
         </div>
 

@@ -36,8 +36,12 @@ export async function updateSession(request: NextRequest) {
     const { data } = await supabase.auth.getUser()
     const user = data.user
 
-    // Public routes — accessible without authentication
-    const publicPaths = ['/login', '/signup', '/about', '/explore', '/profile', '/auth', '/onboarding', '/api/telegram', '/api/cron']
+    // Public routes — accessible without authentication.
+    // NOTE: /api/qstash and /api/cron are stateless webhook endpoints for the
+    // notification pipeline (QStash cloud callbacks / GitHub Actions cron).
+    // They are NOT auth-gated by the session cookie — each route validates the
+    // x-cron-secret header itself, so passing them through here is safe.
+    const publicPaths = ['/login', '/signup', '/about', '/explore', '/profile', '/auth', '/onboarding', '/api/telegram', '/api/cron', '/api/qstash']
     const isPublicPath = publicPaths.some(
       (path) => request.nextUrl.pathname === path || request.nextUrl.pathname.startsWith(path + '/')
     )
