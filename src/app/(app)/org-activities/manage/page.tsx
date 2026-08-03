@@ -18,11 +18,11 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import {
-  getOrgTimelineItems,
-  addOrgTimelineItem,
-  updateOrgTimelineItem,
-  deleteOrgTimelineItem,
-} from '@/lib/mock/database';
+  getOrgTimelineItemsAction,
+  addOrgTimelineItemAction,
+  updateOrgTimelineItemAction,
+  deleteOrgTimelineItemAction,
+} from '@/actions/org';
 import type { OrgTimelineItem, OrgTimelineItemFormData } from '@/types';
 import { cn } from '@/lib/utils';
 import MissionEditor from '@/components/about/MissionEditor';
@@ -77,14 +77,19 @@ function TimelineTab() {
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  useEffect(() => { setItems(getOrgTimelineItems()); }, []);
+  const refresh = async () => {
+    const data = await getOrgTimelineItemsAction();
+    setItems(data);
+  };
+
+  useEffect(() => {
+    refresh();
+  }, []);
 
   const showFeedback = (type: 'success' | 'error', message: string) => {
     setFeedback({ type, message });
     setTimeout(() => setFeedback(null), 3000);
   };
-
-  const refresh = () => setItems(getOrgTimelineItems());
 
   const openCreate = () => {
     setEditingId(null); setFormData(EMPTY_FORM); setIsModalOpen(true);
@@ -102,26 +107,31 @@ function TimelineTab() {
 
   const closeModal = () => { setIsModalOpen(false); setEditingId(null); setFeedback(null); };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.title.trim() || !formData.date.trim()) {
       showFeedback('error', 'Title and date are required.'); return;
     }
     setIsSaving(true);
-    setTimeout(() => {
+    try {
       if (editingId) {
-        const r = updateOrgTimelineItem(editingId, formData);
-        if (r.success) showFeedback('success', 'Item updated.'); else showFeedback('error', r.error);
+        const r = await updateOrgTimelineItemAction(editingId, formData);
+        if (r.success) showFeedback('success', 'Item updated.'); else showFeedback('error', r.error || 'Failed to update.');
       } else {
-        const r = addOrgTimelineItem(formData);
-        if (r.success) showFeedback('success', 'Item created.'); else showFeedback('error', 'Failed to create.');
+        const r = await addOrgTimelineItemAction(formData);
+        if (r.success) showFeedback('success', 'Item created.'); else showFeedback('error', r.error || 'Failed to create.');
       }
-      setIsSaving(false); refresh(); closeModal();
-    }, 400);
+      await refresh(); closeModal();
+    } catch {
+      showFeedback('error', 'An error occurred while saving.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleDelete = (id: string) => {
-    const r = deleteOrgTimelineItem(id);
-    if (r.success) { showFeedback('success', 'Item deleted.'); refresh(); }
+  const handleDelete = async (id: string) => {
+    const r = await deleteOrgTimelineItemAction(id);
+    if (r.success) { showFeedback('success', 'Item deleted.'); await refresh(); }
+    else { showFeedback('error', r.error || 'Failed to delete.'); }
     setConfirmDeleteId(null);
   };
 

@@ -41,22 +41,41 @@ export async function uploadTimelineImage(file: File): Promise<UploadResult> {
     'image/webp': 'webp',
   };
   const ext = extMap[file.type] || 'jpg';
-  const fileName = `timeline_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  let fileName = `timeline_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
-  const { error: uploadError } = await supabase.storage
+  let uploadRes = await supabase.storage
     .from('timeline-images')
-    .upload(fileName, file, {
-      cacheControl: '3600',
-      upsert: false,
-    });
+    .upload(fileName, file, { cacheControl: '3600', upsert: false });
 
-  if (uploadError) {
-    return { success: false, error: uploadError.message };
+  let targetBucket = 'timeline-images';
+
+  if (uploadRes.error) {
+    // Try fallback to 'public' bucket
+    const pubRes = await supabase.storage
+      .from('public')
+      .upload(`timeline/${fileName}`, file, { cacheControl: '3600', upsert: false });
+
+    if (!pubRes.error) {
+      targetBucket = 'public';
+      fileName = `timeline/${fileName}`;
+    } else {
+      // Try fallback to 'avatars' bucket
+      const avRes = await supabase.storage
+        .from('avatars')
+        .upload(`timeline/${fileName}`, file, { cacheControl: '3600', upsert: false });
+
+      if (!avRes.error) {
+        targetBucket = 'avatars';
+        fileName = `timeline/${fileName}`;
+      } else {
+        return { success: false, error: uploadRes.error.message || pubRes.error.message };
+      }
+    }
   }
 
   // Get the public URL
   const { data: urlData } = supabase.storage
-    .from('timeline-images')
+    .from(targetBucket)
     .getPublicUrl(fileName);
 
   return { success: true, url: urlData.publicUrl };
