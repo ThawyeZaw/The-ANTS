@@ -17,9 +17,8 @@ import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { useAuth } from '@/hooks/useAuth';
-import { useClub } from '@/hooks/useClub';
 import { useRole } from '@/hooks/useRole';
-import { useClubList } from '@/hooks/useClubQueries';
+import { useClubList, useCreateClub } from '@/hooks/useClubQueries';
 import { actionGetClubsBatchData, actionJoinClub } from '@/actions/clubs';
 import type { Club, ClubField, ClubJoinMode } from '@/types';
 import EmptyState from '@/components/ui/EmptyState';
@@ -34,8 +33,8 @@ const joinModeLabels: Record<ClubJoinMode, string> = {
 export default function ClubDiscovery() {
   const { user } = useAuth();
   const { isContributor, isMainContributor } = useRole();
-  const clubStore = useClub();
   const { data: clubs = [], isLoading } = useClubList();
+  const createClubMutation = useCreateClub();
   const [query, setQuery] = useState('');
   const [modeFilter, setModeFilter] = useState<'all' | ClubJoinMode>('all');
   const [inviteCodes, setInviteCodes] = useState<Record<string, string>>({});
@@ -224,7 +223,7 @@ export default function ClubDiscovery() {
                 )}
 
                 <div className="flex gap-2">
-                  <Link href={`/clubs/${club.id}`} className="flex-1">
+                  <Link href={`/clubs/${club.custom_slug || club.id}`} className="flex-1">
                     <Button variant="secondary" fullWidth>
                       View
                     </Button>
@@ -261,18 +260,23 @@ export default function ClubDiscovery() {
         <CreateClubModal
           userId={user.id}
           onClose={() => setIsCreateOpen(false)}
-          onCreate={(data) => clubStore.createNewClub(
-            {
-              name: data.name,
-              description: data.description,
-              tagline: undefined,
-              field: 'other' as ClubField,
-              cover_image_url: undefined,
-              accent_color: undefined,
-              custom_slug: undefined,
-            },
-            user.id
-          )}
+          onCreate={(data) =>
+            createClubMutation.mutate(
+              {
+                data: {
+                  name: data.name,
+                  description: data.description,
+                  tagline: undefined,
+                  field: 'other' as ClubField,
+                  cover_image_url: undefined,
+                  accent_color: undefined,
+                  custom_slug: undefined,
+                },
+                userId: user.id,
+              },
+              { onSettled: () => setIsCreateOpen(false) }
+            )
+          }
         />
       )}
     </div>

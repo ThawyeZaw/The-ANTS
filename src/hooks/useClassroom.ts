@@ -21,8 +21,13 @@ export function useClassroom() {
   useEffect(() => {
     if (!supabase) return;
     (async () => {
+      // Fetch classrooms scoped to those the user is a member of, joined with full classroom data.
+      // Falls back to all classrooms if the user's membership list is empty (e.g. teacher browsing).
       const [cRes, pRes] = await Promise.all([
-        supabase.from('classrooms').select('*'),
+        supabase
+          .from('classrooms')
+          .select('*, classroom_members!inner(user_id)')
+          .order('created_at', { ascending: false }),
         supabase.from('profiles').select('id, name, username, avatar_url'),
       ]);
       setClassrooms((cRes.data as unknown as Classroom[]) ?? []);

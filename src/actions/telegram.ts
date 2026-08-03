@@ -20,21 +20,48 @@ async function sendTelegramMessage(chatId: string, text: string) {
     return null;
   }
 
-  try {
-    const res = await fetch(`${TELEGRAM_API}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' }),
-    });
-    const data = await res.json();
-    if (!res.ok || !data.ok) {
-      console.error('[telegram] sendMessage failed:', JSON.stringify(data));
+  const delays = [1000, 2000, 4000];
+  let lastError: unknown = null;
+
+  for (let attempt = 0; attempt <= 3; attempt++) {
+    try {
+      const res = await fetch(`${TELEGRAM_API}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' }),
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        return data;
+      }
+      lastError = data;
+      console.error(`[telegram] sendMessage attempt ${attempt + 1} failed:`, JSON.stringify(data));
+    } catch (err) {
+      lastError = err;
+      console.error(`[telegram] sendMessage attempt ${attempt + 1} fetch error:`, err);
     }
-    return data;
-  } catch (err) {
-    console.error('[telegram] sendMessage fetch error:', err);
-    return null;
+
+    if (attempt < 3) {
+      await new Promise((r) => setTimeout(r, delays[attempt]));
+    }
   }
+
+  // Log final failure to Supabase for administrative auditing
+  try {
+    const supabase = await createAdminClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any).from('notification_queue').insert({
+      telegram_chat_id: chatId,
+      message_text: text,
+      status: 'failed',
+      error_log: JSON.stringify(lastError || 'Max retries exceeded'),
+      scheduled_for: new Date().toISOString(),
+    });
+  } catch (logErr) {
+    console.error('[telegram] Failed to log Telegram failure to notification_queue:', logErr);
+  }
+
+  return null;
 }
 
 function formatDate(date: Date): string {

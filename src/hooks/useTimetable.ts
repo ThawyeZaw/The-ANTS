@@ -7,6 +7,7 @@ import type {
   TimetableFilters,
   TimetableEventFormData,
   TimetableEventType,
+  RecurrenceRule,
 } from '@/types/timetable';
 import type { Json } from '@/types/supabase';
 import { createClient } from '@/lib/supabase/client';
@@ -55,6 +56,66 @@ export function combineDateTime(dateStr: string, timeStr: string): string {
 }
 
 // ---------------------------------------------------------------------------
+// Undo/Redo History
+//
+// Client-only snapshot history. Every mutation records the affected event's
+// full state BEFORE and AFTER, so undo/redo can restore the row and keep the
+// Telegram reminder queue in sync with whichever time is now active.
+// ---------------------------------------------------------------------------
+
+/** Mutable columns of a timetable event, captured for undo/redo. */
+interface EventSnapshot {
+  id: string;
+  title: string;
+  description: string | null;
+  event_type: TimetableEventType;
+  subject: string | null;
+  location: string | null;
+  start_time: string | null;
+  end_time: string | null;
+  all_day: boolean;
+  is_recurring: boolean;
+  recurrence_rule: RecurrenceRule | null;
+  color_code: string;
+  is_todo: boolean;
+  is_completed: boolean;
+  completed_at: string | null;
+  reminder_minutes: number | null;
+}
+
+interface HistoryEntry {
+  /** Full state before the action — null when the event was created by it. */
+  before: EventSnapshot | null;
+  /** Full state after the action — null when the event was deleted by it. */
+  after: EventSnapshot | null;
+}
+
+/** The DB stores reminder_minutes even though the TS interface omits it. */
+type EventWithReminder = TimetableEvent & { reminder_minutes?: number | null };
+
+function toSnapshot(e: TimetableEvent): EventSnapshot {
+  const withReminder = e as EventWithReminder;
+  return {
+    id: e.id,
+    title: e.title,
+    description: e.description ?? null,
+    event_type: e.event_type,
+    subject: e.subject ?? null,
+    location: e.location ?? null,
+    start_time: e.start_time,
+    end_time: e.end_time,
+    all_day: e.all_day,
+    is_recurring: e.is_recurring,
+    recurrence_rule: e.recurrence_rule,
+    color_code: e.color_code,
+    is_todo: e.is_todo,
+    is_completed: e.is_completed,
+    completed_at: e.completed_at,
+    reminder_minutes: withReminder.reminder_minutes ?? null,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // useTimetable Hook
 // ---------------------------------------------------------------------------
 
@@ -81,6 +142,10 @@ export interface UseTimetableReturn {
   deleteEvent: (id: string) => Promise<{ success: boolean; error?: string }>;
   toggleComplete: (id: string) => Promise<{ success: boolean; error?: string }>;
   moveEvent: (id: string, newStart: string, newEnd: string | null) => Promise<{ success: boolean; error?: string }>;
+  undo: () => Promise<void>;
+  redo: () => Promise<void>;
+  canUndo: boolean;
+  canRedo: boolean;
   integrationCounts: { exams: number; assignments: number; clubEvents: number; milestones: number };
 }
 
@@ -92,6 +157,12 @@ export function useTimetable(userId: string): UseTimetableReturn {
   const [allEvents, setAllEvents] = useState<TimetableEvent[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // Undo/redo stacks (client-only, cleared on refresh)
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [redoStack, setRedoStack] = useState<HistoryEntry[]>([]);
+  const canUndo = history.length > 0;
+  const canRedo = redoStack.length > 0;
 
   const weekStart = useMemo(() => getWeekStart(currentDate), [currentDate]);
   const monthStart = useMemo(() => getMonthStart(currentDate), [currentDate]);
@@ -145,6 +216,94 @@ export function useTimetable(userId: string): UseTimetableReturn {
   }, [userId, rangeStart.toISOString(), rangeEnd.toISOString(), filters.showExternalEvents, refreshKey, supabase]);
 
   const refresh = useCallback(() => setRefreshKey(k => k + 1), []);
+
+  // ── Undo/redo helpers ──
+
+  /** Push a mutation onto the undo stack and clear the redo stack. */
+  const recordHistory = useCallback((entry: HistoryEntry) => {
+    setHistory(h => [...h, entry]);
+    setRedoStack([]);
+  }, []);
+
+  /** Re-sync the Telegram reminder queue for a snapshot (enqueue or clear). */
+  const syncTimetableReminder = useCallback(async (s: EventSnapshot) => {
+    if (s.start_time) {
+      await actionEnqueueTimetableReminders(
+        userId,
+        s.id,
+        s.title,
+        s.location,
+        s.start_time,
+        s.reminder_minutes
+      );
+    } else {
+      await actionClearSourceQueue('timetable_event', s.id);
+    }
+  }, [userId]);
+
+  /**
+   * Write a snapshot back to the DB.
+   * - null snapshot → delete the row and clear its reminder queue.
+   * - snapshot → upsert the row and re-sync its reminder queue.
+   * `fallbackId` is the row to delete when snapshot is null.
+   */
+  const applySnapshot = useCallback(async (snapshot: EventSnapshot | null, fallbackId: string) => {
+    if (!snapshot) {
+      await supabase.from('timetable_events').delete().eq('id', fallbackId);
+      await actionClearSourceQueue('timetable_event', fallbackId);
+      return;
+    }
+    const { error } = await supabase
+      .from('timetable_events')
+      .upsert({
+        id: snapshot.id,
+        user_id: userId,
+        title: snapshot.title,
+        description: snapshot.description,
+        event_type: snapshot.event_type,
+        subject: snapshot.subject,
+        location: snapshot.location,
+        start_time: snapshot.start_time,
+        end_time: snapshot.end_time,
+        all_day: snapshot.all_day,
+        is_recurring: snapshot.is_recurring,
+        recurrence_rule: snapshot.recurrence_rule as unknown as Json,
+        color_code: snapshot.color_code,
+        is_todo: snapshot.is_todo,
+        is_completed: snapshot.is_completed,
+        completed_at: snapshot.completed_at,
+        reminder_minutes: snapshot.reminder_minutes,
+      }, { onConflict: 'id' });
+    if (error) {
+      console.error('[useTimetable] Undo/redo restore failed:', error);
+      return;
+    }
+    await syncTimetableReminder(snapshot);
+  }, [userId, supabase, syncTimetableReminder]);
+
+  /** Revert the most recent mutation. */
+  const undo = useCallback(async () => {
+    const entry = history[history.length - 1];
+    if (!entry) return;
+    setHistory(history.slice(0, -1));
+    setRedoStack(r => [...r, entry]);
+    const eventId = entry.before?.id ?? entry.after?.id;
+    if (!eventId) return;
+    await applySnapshot(entry.before, eventId);
+    refresh();
+  }, [history, applySnapshot, refresh]);
+
+  /** Re-apply the last undone mutation. */
+  const redo = useCallback(async () => {
+    const entry = redoStack[redoStack.length - 1];
+    if (!entry) return;
+    setRedoStack(redoStack.slice(0, -1));
+    setHistory(h => [...h, entry]);
+    const eventId = entry.before?.id ?? entry.after?.id;
+    if (!eventId) return;
+    await applySnapshot(entry.after, eventId);
+    refresh();
+  }, [redoStack, applySnapshot, refresh]);
 
   // Navigation
   const navigate = useCallback((direction: 'prev' | 'next') => {
@@ -245,8 +404,11 @@ export function useTimetable(userId: string): UseTimetableReturn {
         source_id: null,
         reminder_minutes,
       } as any).select().single();
-      refresh();
       if (error) return { success: false, error: error.message };
+      refresh();
+
+      // Record for undo (create → undo deletes the event)
+      if (event) recordHistory({ before: null, after: toSnapshot(event as TimetableEvent) });
 
       // Enqueue Telegram reminder into notification_queue
       if (startIso && reminder_minutes != null) {
@@ -264,7 +426,7 @@ export function useTimetable(userId: string): UseTimetableReturn {
     } catch (err) {
       return { success: false, error: String(err) };
     }
-  }, [userId, refresh, supabase]);
+  }, [userId, refresh, supabase, recordHistory]);
 
   const updateEvent = useCallback(async (eventId: string, data: TimetableEventFormData): Promise<{ success: boolean; error?: string }> => {
     try {
@@ -284,6 +446,11 @@ export function useTimetable(userId: string): UseTimetableReturn {
       }
 
       const baseId = eventId.includes('::') ? eventId.split('::')[0] : eventId;
+      const { data: existing } = await supabase
+        .from('timetable_events')
+        .select('*')
+        .eq('id', baseId)
+        .single();
       const { error } = await supabase.from('timetable_events').update({
         ...rest,
         recurrence_rule: (recurrence_rule ?? null) as unknown as Json,
@@ -292,8 +459,32 @@ export function useTimetable(userId: string): UseTimetableReturn {
         all_day: allDay,
         reminder_minutes,
       } as any).eq('id', baseId);
-      refresh();
       if (error) return { success: false, error: error.message };
+      refresh();
+
+      // Record for undo (edit → undo restores the previous state)
+      if (existing) {
+        const beforeSnap = toSnapshot(existing as TimetableEvent);
+        recordHistory({
+          before: beforeSnap,
+          after: {
+            ...beforeSnap,
+            title: rest.title,
+            description: rest.description || null,
+            event_type: rest.event_type,
+            subject: rest.subject || null,
+            location: rest.location || null,
+            start_time: startIso,
+            end_time: endIso,
+            all_day: allDay,
+            is_recurring: rest.is_recurring,
+            recurrence_rule: recurrence_rule ?? null,
+            color_code: rest.color_code,
+            is_todo: rest.is_todo,
+            reminder_minutes,
+          },
+        });
+      }
 
       // Enqueue or clear Telegram reminder
       if (startIso && reminder_minutes != null) {
@@ -313,36 +504,71 @@ export function useTimetable(userId: string): UseTimetableReturn {
     } catch (err) {
       return { success: false, error: String(err) };
     }
-  }, [userId, refresh, supabase]);
+  }, [userId, refresh, supabase, recordHistory]);
 
   const deleteEvent = useCallback(async (eventId: string): Promise<{ success: boolean; error?: string }> => {
     const baseId = eventId.includes('::') ? eventId.split('::')[0] : eventId;
+    const { data: existing } = await supabase
+      .from('timetable_events')
+      .select('*')
+      .eq('id', baseId)
+      .single();
     const { error } = await supabase.from('timetable_events').delete().eq('id', baseId);
+    if (error) return { success: false, error: error.message };
     refresh();
+    // Record for undo (delete → undo re-creates the event)
+    if (existing) recordHistory({ before: toSnapshot(existing as TimetableEvent), after: null });
     // Clear pending queue items
     actionClearSourceQueue('timetable_event', baseId);
-    return error ? { success: false, error: error.message } : { success: true };
-  }, [refresh, supabase]);
+    return { success: true };
+  }, [refresh, supabase, recordHistory]);
 
   const toggleComplete = useCallback(async (eventId: string): Promise<{ success: boolean; error?: string }> => {
-    const { data: existing } = await supabase.from('timetable_events').select('is_completed').eq('id', eventId).single();
+    const { data: existing } = await supabase
+      .from('timetable_events')
+      .select('*')
+      .eq('id', eventId)
+      .single();
     const newVal = !(existing?.is_completed ?? false);
+    const completedAt = newVal ? new Date().toISOString() : null;
     const { error } = await supabase.from('timetable_events').update({
       is_completed: newVal,
-      completed_at: newVal ? new Date().toISOString() : null,
+      completed_at: completedAt,
     }).eq('id', eventId);
+    if (error) return { success: false, error: error.message };
     refresh();
-    return error ? { success: false, error: error.message } : { success: true };
-  }, [refresh, supabase]);
+    // Record for undo (toggle → undo flips completion back)
+    if (existing) {
+      recordHistory({
+        before: toSnapshot(existing as TimetableEvent),
+        after: toSnapshot({ ...existing, is_completed: newVal, completed_at: completedAt } as TimetableEvent),
+      });
+    }
+    return { success: true };
+  }, [refresh, supabase, recordHistory]);
 
   const moveEvent = useCallback(async (eventId: string, newStart: string, newEnd: string | null): Promise<{ success: boolean; error?: string }> => {
+    // Fetch the event first so we can record history and re-sync its reminder.
+    const { data: existing } = await supabase
+      .from('timetable_events')
+      .select('*')
+      .eq('id', eventId)
+      .single();
     const { error } = await supabase.from('timetable_events').update({
       start_time: newStart,
       end_time: newEnd,
     }).eq('id', eventId);
+    if (error) return { success: false, error: error.message };
     refresh();
-    return error ? { success: false, error: error.message } : { success: true };
-  }, [refresh, supabase]);
+
+    if (existing) {
+      const moved = { ...existing, start_time: newStart, end_time: newEnd };
+      recordHistory({ before: toSnapshot(existing as TimetableEvent), after: toSnapshot(moved as TimetableEvent) });
+      // Keep the Telegram reminder in sync with the new time (drag & drop).
+      await syncTimetableReminder(toSnapshot(moved as TimetableEvent));
+    }
+    return { success: true };
+  }, [refresh, supabase, recordHistory, syncTimetableReminder]);
 
   // Integration counts for banner
   const integrationCounts = useMemo(() => {
@@ -360,6 +586,7 @@ export function useTimetable(userId: string): UseTimetableReturn {
     setFilters, toggleEventTypeFilter,
     getEventsForDay, getEventsForWeek, getEventsForMonth,
     createEvent, updateEvent, deleteEvent, toggleComplete, moveEvent,
+    undo, redo, canUndo, canRedo,
     integrationCounts,
   };
 }

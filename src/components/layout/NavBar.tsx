@@ -147,6 +147,13 @@ const TOOLS_LINKS: ToolLink[] = [
     description: 'Focused study sessions',
     accentColor: 'from-rose-500 to-red-500',
   },
+  {
+    label: 'Quizzes',
+    href: '/quizzes',
+    icon: <Brain className="h-4 w-4" />,
+    description: 'Practice with quiz sessions',
+    accentColor: 'from-violet-500 to-purple-500',
+  },
 ];
 
 // ── Community Dropdown Items ──────────────────────────────────────────────
@@ -160,10 +167,17 @@ const COMMUNITY_LINKS: ToolLink[] = [
     accentColor: 'from-blue-500 to-cyan-500',
   },
   {
+    label: 'Clubs',
+    href: '/clubs',
+    icon: <Users className="h-4 w-4" />,
+    description: 'Subject clubs & CCA projects',
+    accentColor: 'from-pink-500 to-rose-500',
+  },
+  {
     label: 'Explore',
     href: '/explore',
     icon: <Compass className="h-4 w-4" />,
-    description: 'Clubs, profiles & discover more',
+    description: 'Discover profiles & communities',
     accentColor: 'from-violet-500 to-purple-500',
   },
   {
@@ -189,10 +203,12 @@ const TOOLS_QUICK_LINKS = [
   { label: 'Calculator', href: '/calculator', icon: <Calculator className="h-4 w-4" /> },
   { label: 'Timetable', href: '/timetable', icon: <CalendarDays className="h-4 w-4" /> },
   { label: 'Pomodoro', href: '/pomodoro', icon: <Timer className="h-4 w-4" /> },
+  { label: 'Quizzes', href: '/quizzes', icon: <Brain className="h-4 w-4" /> },
 ];
 
 const COMMUNITY_QUICK_LINKS = [
   { label: 'Classrooms', href: '/classrooms', icon: <GraduationCap className="h-4 w-4" /> },
+  { label: 'Clubs', href: '/clubs', icon: <Users className="h-4 w-4" /> },
   { label: 'Explore', href: '/explore', icon: <Compass className="h-4 w-4" /> },
   { label: 'About', href: '/about', icon: <Info className="h-4 w-4" /> },
 ];

@@ -5,7 +5,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import BackButton from '@/components/ui/BackButton';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   MessageSquare,
@@ -14,13 +14,42 @@ import {
   Search,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
-import { getClubMembers, getClubs } from '@/lib/mock/database';
+import { actionGetAllClubs, actionGetClubsBatchData } from '@/actions/clubs';
 import { DEFAULT_CLUB_FEATURES } from '@/types';
-import type { ClubFeature, ClubFeatureKey } from '@/types';
+import type { Club, ClubFeature, ClubFeatureKey } from '@/types';
 
 export default function ClubsPageContent() {
-  const clubs = getClubs();
+  const [clubs, setClubs] = useState<Club[]>([]);
+  const [memberCounts, setMemberCounts] = useState<Record<string, number>>({});
   const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadClubs() {
+      setLoading(true);
+      const res = await actionGetAllClubs();
+      if (!cancelled && res.success && res.clubs) {
+        const clubList = res.clubs as unknown as Club[];
+        setClubs(clubList);
+
+        if (clubList.length > 0) {
+          const clubIds = clubList.map((c) => c.id);
+          const batchRes = await actionGetClubsBatchData(clubIds);
+          if (!cancelled && batchRes.success) {
+            const counts: Record<string, number> = {};
+            (batchRes.members || []).forEach((m: any) => {
+              counts[m.club_id] = (counts[m.club_id] || 0) + 1;
+            });
+            setMemberCounts(counts);
+          }
+        }
+        setLoading(false);
+      }
+    }
+    loadClubs();
+    return () => { cancelled = true; };
+  }, []);
 
   const filteredClubs = clubs.filter((club) => {
     if (!searchQuery.trim()) return true;
@@ -75,7 +104,7 @@ export default function ClubsPageContent() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredClubs.map((club) => {
-              const memberCount = getClubMembers(club.id).filter((m: any) => m.membership_status === 'active').length;
+              const memberCount = memberCounts[club.id] || 0;
               const enabledFeatures: ClubFeature[] = club.enabled_features || DEFAULT_CLUB_FEATURES;
               
               // Filter features that are enabled and publicly visible

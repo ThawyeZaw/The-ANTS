@@ -11,6 +11,8 @@ export const metadata: Metadata = {
   description: 'Discover students, teachers, contributors, and community clubs in The ANTs community.',
 };
 
+export const revalidate = 60;
+
 export default function ExplorePage() {
   return <ExplorePageContent />;
 }
