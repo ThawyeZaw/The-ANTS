@@ -15,23 +15,23 @@
 /* ── Light Theme (default) ────────────────────────────────────────────────── */
 :root {
   /* Backgrounds */
-  --background: #FFFDF9;
-  --background-secondary: #F5F1EA;
+  --background: #FFFFFF;
+  --background-secondary: #F3F4F6;
   --background-card: #FFFFFF;
   --background-elevated: #FFFFFF;
 
   /* Foregrounds — calibrated for WCAG 2.1 AA (≥4.5:1 body, ≥3:1 large) */
-  --foreground: #1A1C20;       /* ~15.9:1 on white  */
-  --foreground-secondary: #3A3D44; /* ~8.5:1 on white   */
-  --foreground-muted: #4B4E56;     /* ~7.0:1 on white — boosted from #5E6169 */
+  --foreground: #1A1C20;       /* ~17:1 on white   */
+  --foreground-secondary: #3A3D44; /* ~10.5:1 on white */
+  --foreground-muted: #4B4E56;     /* ~7.9:1 on white — boosted from #5E6169 */
 
   /* Borders */
   --border: rgba(59, 108, 181, 0.12);
   --border-hover: rgba(59, 108, 181, 0.22);
 
   /* Primary — Refined Blue (≥4.5:1 on white for link text) */
-  --primary: #3361A0;           /* ~5.3:1 on white — boosted from #3B6CB5 */
-  --primary-hover: #264773;     /* ~8:1 on white */
+  --primary: #3361A0;           /* ~6:1 on white — boosted from #3B6CB5 */
+  --primary-hover: #264773;     /* ~9:1 on white */
   --primary-light: rgba(51, 97, 160, 0.10);
   --primary-foreground: #FFFFFF;
 
@@ -229,6 +229,15 @@ h1, h2, h3, h4, h5, h6 {
   background: var(--foreground-secondary);
 }
 
+/* ── Hide scrollbar (keep scroll functionality) ──────────────────────────── */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
 /* ── Glassmorphism Utility ────────────────────────────────────────────────── */
 .glass {
   background: var(--glass-bg);
@@ -368,6 +377,84 @@ h1, h2, h3, h4, h5, h6 {
 
 .animate-pulse-soft {
   animation: pulse-soft 2s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Filter Tab Bar — Clean Sliding Transition (Zero Blur)
+   ───────────────────────────────────────────────────────────────────────────────
+   Pure sliding feel via targeted property transitions. No GPU layer promotion
+   hacks (translateZ, will-change, backface-visibility) — these cause text blur
+   on non-Retina displays and sub-pixel rendering artifacts. Font smoothing left
+   at browser defaults for maximum text sharpness.
+
+   Usage:
+     <div class="filter-tab-bar">              ← container
+       <button class="filter-tab">...</button> ← inactive tab
+       <button class="filter-tab filter-tab--active">...</button> ← active tab
+     </div>
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Container ───────────────────────────────────────────────────────────── */
+.filter-tab-bar {
+  position: relative;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Individual tab button — no GPU hacks, no blur ───────────────────────── */
+.filter-tab {
+  position: relative;
+  transition:
+    background-color 0.28s cubic-bezier(0.25, 0.1, 0.25, 1),
+    color            0.28s cubic-bezier(0.25, 0.1, 0.25, 1),
+    box-shadow       0.28s cubic-bezier(0.25, 0.1, 0.25, 1),
+    border-color     0.28s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* ── Sliding underline indicator (pure CSS, no JS) ───────────────────────── */
+.filter-tab::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--primary);
+  transition:
+    width  0.28s cubic-bezier(0.25, 0.1, 0.25, 1),
+    opacity 0.28s cubic-bezier(0.25, 0.1, 0.25, 1);
+  opacity: 0;
+}
+
+.filter-tab:hover::after {
+  width: 60%;
+  opacity: 0.35;
+}
+
+.filter-tab--active::after {
+  width: 60%;
+  opacity: 1;
+}
+
+/* ── Active state — no transform, no blur ────────────────────────────────── */
+.filter-tab--active {
+  /* No GPU hacks — just shadow + border for the "lift" */
+}
+
+/* ── Icon container: independent color transition ────────────────────────── */
+.filter-tab-icon {
+  transition: color 0.28s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* ── Reduced motion: instant transitions ─────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .filter-tab,
+  .filter-tab::after,
+  .filter-tab-icon {
+    transition: none;
+    animation: none;
+  }
 }
 
 /* ── Staggered Animation Delays ───────────────────────────────────────────── */

@@ -354,20 +354,21 @@ function LibraryPageInner() {
   return (
     <div className="animate-fade-in space-y-4">
       {/* ═══ Filter Tabs (always visible) ══════════════════════════════════════ */}
-      <div className="flex items-center gap-1 p-1 rounded-xl bg-background-secondary border border-border overflow-x-auto scrollbar-none">
+      <div className="flex items-center gap-1 p-1 rounded-xl bg-background-secondary border border-border overflow-x-auto scrollbar-none filter-tab-bar">
         {TABS.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={cn(
-              'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0',
+              'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap filter-tab cursor-pointer shrink-0',
               activeTab === tab.id
-                ? 'bg-background-card text-foreground shadow-sm border border-border'
+                ? 'filter-tab--active bg-background-card text-foreground shadow-sm border border-border'
                 : 'text-foreground-muted hover:text-foreground hover:bg-background-card/50'
             )}
           >
             <span
               className={cn(
+                'filter-tab-icon',
                 activeTab === tab.id ? 'text-primary' : 'text-foreground-muted'
               )}
             >

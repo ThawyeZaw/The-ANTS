@@ -357,36 +357,116 @@ const NavBar = React.memo(function NavBar() {
   return (
     <header
       className={cn(
-        'fixed top-0 left-0 right-0 z-50 transition-transform duration-300',
+        'fixed top-0 left-0 right-0 z-50 flex justify-center px-4 pt-3 sm:pt-4 transition-transform duration-300',
         isNavHidden && '-translate-y-full'
       )}
     >
-      {/* Background with blur */}
-      <div className="absolute inset-0 bg-background/80 backdrop-blur-xl border-b border-border" />
-
-      {/* Nav Content */}
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <nav className="flex items-center justify-between h-16 gap-4">
+      {/* Nav Content — Pill-shaped floating card */}
+      <div className="w-[min(94%,980px)]">
+        <nav className="flex items-center justify-between h-12 px-3 sm:pl-5 sm:pr-3 gap-2 rounded-full bg-background/85 backdrop-blur-[18px] border border-border shadow-lg">
           {/* ─── Logo ─── */}
           <Link
             href={role ? '/dashboard' : '/'}
-            className="flex items-center gap-2 shrink-0 group"
+            className="flex items-center gap-2 shrink-0 no-underline"
           >
             <Image
               src="/logo.png"
               alt="The ANTs logo"
-              width={28}
-              height={28}
+              width={20}
+              height={20}
               priority
-              className="group-hover:scale-110 transition-transform duration-200"
+              className="sm:w-[22px] sm:h-[22px]"
             />
-            <span className="hidden sm:block font-bold text-lg bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent font-brand">
+            <span className="hidden sm:block font-bold text-[15px] text-foreground font-brand">
               The ANTs
             </span>
           </Link>
 
           {/* ─── Desktop Nav Groups ─── */}
           <div className="hidden md:flex items-center gap-1">
+            <style>{`
+              @media (max-width: 767px) { .nav-desktop-links { display: none !important; } }
+
+              .nav-item {
+                position: relative;
+                display: inline-flex;
+                align-items: center;
+                cursor: pointer;
+                text-decoration: none;
+                font-size: 13px;
+                font-weight: 500;
+                color: var(--foreground-secondary);
+                padding: 6px 10px;
+                border-radius: 999px;
+                transition: background-color 0.2s ease, color 0.3s ease;
+              }
+              .nav-item:hover {
+                background: var(--background-secondary);
+                color: var(--foreground);
+              }
+
+              .nav-linktext {
+                position: relative;
+                z-index: 2;
+                transition: color 0.3s ease;
+              }
+              .nav-linktext::before {
+                display: inline-block;
+                content: attr(data-text);
+                position: absolute;
+                top: 0;
+                left: 0;
+                overflow: hidden;
+                max-width: 0%;
+                white-space: nowrap;
+                color: var(--primary);
+                transition: max-width 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+              }
+              .nav-item:hover .nav-linktext {
+                color: transparent;
+              }
+              .nav-item:hover .nav-linktext::before {
+                max-width: 100%;
+              }
+
+              .nav-item--active {
+                color: var(--primary);
+                background: var(--primary-light);
+              }
+              .nav-item--active .nav-linktext {
+                color: var(--primary);
+              }
+              .nav-item--active:hover .nav-linktext {
+                color: var(--primary);
+              }
+              .nav-item--active:hover .nav-linktext::before {
+                max-width: 0%;
+              }
+
+              /* Dropdown trigger pill button */
+              .nav-pill-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                padding: 6px 10px;
+                border-radius: 999px;
+                font-size: 13px;
+                font-weight: 500;
+                cursor: pointer;
+                border: none;
+                background: transparent;
+                color: var(--foreground-secondary);
+                transition: background-color 0.2s ease, color 0.2s ease;
+              }
+              .nav-pill-btn:hover {
+                background: var(--background-secondary);
+                color: var(--foreground);
+              }
+              .nav-pill-btn--active {
+                color: var(--primary);
+                background: var(--primary-light);
+              }
+            `}</style>
             {visibleGroups.map((group) => {
               // Tools dropdown
               if (group.label === 'Tools') {
@@ -395,21 +475,16 @@ const NavBar = React.memo(function NavBar() {
                     <button
                       onClick={handleToolsClick}
                       className={cn(
-                        'relative px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-1.5 cursor-pointer',
-                        isToolsActive()
-                          ? 'text-primary'
-                          : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary'
+                        'nav-pill-btn',
+                        isToolsActive() && 'nav-pill-btn--active'
                       )}
                     >
                       {group.icon}
-                      <span className="hidden lg:inline">{group.label}</span>
+                      <span className="hidden lg:inline nav-linktext" data-text={group.label}>{group.label}</span>
                       <ChevronDown className={cn(
-                        'h-3 w-3 transition-transform duration-200 hidden sm:block',
+                        'h-3 w-3 transition-transform duration-200',
                         isToolsOpen && 'rotate-180'
                       )} />
-                      {isToolsActive() && (
-                        <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
-                      )}
                     </button>
 
                     {isToolsOpen && (
@@ -427,7 +502,7 @@ const NavBar = React.memo(function NavBar() {
                             )}
                           >
                             <div className={cn(
-                              'inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br text-white',
+                              'inline-flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br text-white',
                               tool.accentColor
                             )}>
                               {tool.icon}
@@ -451,21 +526,16 @@ const NavBar = React.memo(function NavBar() {
                     <button
                       onClick={handleCommunityClick}
                       className={cn(
-                        'relative px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-1.5 cursor-pointer',
-                        isCommunityActive()
-                          ? 'text-primary'
-                          : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary'
+                        'nav-pill-btn',
+                        isCommunityActive() && 'nav-pill-btn--active'
                       )}
                     >
                       {group.icon}
-                      <span className="hidden lg:inline">{group.label}</span>
+                      <span className="hidden lg:inline nav-linktext" data-text={group.label}>{group.label}</span>
                       <ChevronDown className={cn(
-                        'h-3 w-3 transition-transform duration-200 hidden sm:block',
+                        'h-3 w-3 transition-transform duration-200',
                         isCommunityOpen && 'rotate-180'
                       )} />
-                      {isCommunityActive() && (
-                        <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
-                      )}
                     </button>
 
                     {isCommunityOpen && (
@@ -483,7 +553,7 @@ const NavBar = React.memo(function NavBar() {
                             )}
                           >
                             <div className={cn(
-                              'inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br text-white',
+                              'inline-flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br text-white',
                               link.accentColor
                             )}>
                               {link.icon}
@@ -507,21 +577,16 @@ const NavBar = React.memo(function NavBar() {
                     <button
                       onClick={handleAdminClick}
                       className={cn(
-                        'relative px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-1.5 cursor-pointer',
-                        isActive(group.href)
-                          ? 'text-primary'
-                          : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary'
+                        'nav-pill-btn',
+                        isActive(group.href) && 'nav-pill-btn--active'
                       )}
                     >
                       {group.icon}
-                      <span className="hidden lg:inline">{group.label}</span>
+                      <span className="hidden lg:inline nav-linktext" data-text={group.label}>{group.label}</span>
                       <ChevronDown className={cn(
-                        'h-3 w-3 transition-transform duration-200 hidden sm:block',
+                        'h-3 w-3 transition-transform duration-200',
                         isAdminOpen && 'rotate-180'
                       )} />
-                      {isActive(group.href) && (
-                        <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
-                      )}
                     </button>
 
                     {isAdminOpen && (
@@ -531,7 +596,7 @@ const NavBar = React.memo(function NavBar() {
                           onClick={() => setIsAdminOpen(false)}
                           className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-background-secondary transition-colors"
                         >
-                          <div className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 text-white">
+                          <div className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 text-white">
                             {group.icon}
                           </div>
                           <div className="flex-1">
@@ -572,19 +637,14 @@ const NavBar = React.memo(function NavBar() {
                   key={group.label}
                   href={group.href}
                   className={cn(
-                    'relative px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
-                    active
-                      ? 'text-primary'
-                      : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary'
+                    'nav-item',
+                    active && 'nav-item--active'
                   )}
                 >
                   <span className="flex items-center gap-1.5">
                     {group.icon}
-                    <span className="hidden lg:inline">{group.label}</span>
+                    <span className="hidden lg:inline nav-linktext" data-text={group.label}>{group.label}</span>
                   </span>
-                  {active && (
-                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
-                  )}
                   {group.badge && (
                     <span className="ml-1 text-[9px] font-bold uppercase tracking-wide bg-primary/15 text-primary px-1.5 py-0 rounded-full">
                       {group.badge}
@@ -596,14 +656,14 @@ const NavBar = React.memo(function NavBar() {
           </div>
 
           {/* ─── Right Section: Theme + User ─── */}
-          <div className="flex items-center gap-1 sm:gap-2">
+          <div className="flex items-center gap-1 sm:gap-1.5">
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg text-foreground-secondary hover:text-foreground hover:bg-background-secondary transition-all duration-200"
+              className="flex items-center justify-center w-9 h-9 rounded-full border border-border text-foreground-secondary hover:text-foreground hover:bg-background-secondary transition-colors duration-200"
               aria-label="Toggle theme"
             >
-              {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
 
             {/* User Menu */}
@@ -612,7 +672,7 @@ const NavBar = React.memo(function NavBar() {
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   className={cn(
-                    'flex items-center gap-2 pl-1.5 pr-2 sm:pl-2 sm:pr-3 py-1.5 rounded-xl transition-all duration-200',
+                    'flex items-center gap-2 pl-1.5 pr-2 sm:pl-2 sm:pr-3 py-1.5 rounded-full transition-colors duration-200',
                     isUserMenuOpen
                       ? 'bg-primary/10 ring-2 ring-primary/30'
                       : 'hover:bg-background-secondary'
@@ -686,7 +746,7 @@ const NavBar = React.memo(function NavBar() {
 
       {/* ─── Mobile Menu ─── */}
       {isMobileOpen && (
-        <div className="md:hidden fixed inset-x-0 top-16 bottom-0 bg-background/95 backdrop-blur-xl border-t border-border animate-slide-down overflow-y-auto z-40">
+        <div className="md:hidden fixed inset-x-0 top-[68px] bottom-0 bg-background/95 backdrop-blur-xl border-t border-border animate-slide-down overflow-y-auto z-40">
           <div className="p-4 space-y-4">
             {/* Study Resources Grid */}
             <div>

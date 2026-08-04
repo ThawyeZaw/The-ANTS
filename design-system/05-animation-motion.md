@@ -243,6 +243,8 @@ import RevealSection from '@/components/homepage/RevealSection';
 | Element | Transition Property | Duration | Easing |
 |---|---|---|---|
 | **Buttons (app)** | `all` | `200ms` | `ease` (browser default) |
+| **Filter Tabs (library)** | `background-color, color, box-shadow, border-color` | `300ms` | `cubic-bezier(0.25, 0.1, 0.25, 1)` — GPU-accelerated |
+| **Filter Tab hover scale** | `transform` | `250ms` | `cubic-bezier(0.25, 0.1, 0.25, 1)` — 1.03x on hover |
 | **NavBar links/buttons** | `all` | `200ms` | `ease` |
 | **NavBar scroll hide/show** | `transform` | `300ms` | `ease` |
 | **Cards (hover lift)** | `transform, box-shadow, border-color` | `300ms` | `ease-out` |
@@ -260,6 +262,49 @@ import RevealSection from '@/components/homepage/RevealSection';
   transition-all duration-300
   hover:border-primary hover:shadow-lg hover:-translate-y-0.5">
 ```
+
+### Code Example — Filter Tab Bar (Library & Global)
+
+```tsx
+// Filter tab container — GPU-accelerated, zero-layout-thrash
+<div className="filter-tab-bar flex items-center gap-1 p-1 rounded-xl
+  bg-background-secondary border border-border overflow-x-auto scrollbar-none">
+  {tabs.map((tab) => (
+    <button
+      className={cn(
+        'filter-tab flex items-center gap-1.5 px-3 py-1.5 rounded-lg',
+        'text-xs font-medium whitespace-nowrap cursor-pointer shrink-0',
+        isActive
+          ? 'filter-tab--active bg-background-card text-foreground shadow-sm border border-border'
+          : 'text-foreground-muted hover:text-foreground hover:bg-background-card/50'
+      )}
+    >
+      <span className={cn('filter-tab-icon', isActive ? 'text-primary' : 'text-foreground-muted')}>
+        <Icon />
+      </span>
+      {tab.label}
+    </button>
+  ))}
+</div>
+```
+
+### Filter Tab Transition Spec
+
+| Property | Duration | Easing | Notes |
+|---|---|---|---|
+| `background-color` | 300ms | `cubic-bezier(0.25, 0.1, 0.25, 1)` | Smooth Apple-like deceleration |
+| `color` | 300ms | same | Sync with bg for cohesive feel |
+| `box-shadow` | 300ms | same | Lift effect on active tab |
+| `border-color` | 300ms | same | Subtle border reveal |
+| `transform` (hover) | 250ms | same | 1.03x scale on inactive hover |
+
+Hardware acceleration:
+- `transform: translateZ(0)` + `will-change: transform` on `.filter-tab`
+- `will-change: scroll-position` on `.filter-tab-bar`
+- `backface-visibility: hidden` prevents WebKit sub-pixel flicker
+- No layout-triggering properties animated (no width, height, padding, margin, top, left)
+
+Reduced motion: All transitions and animations disabled — instant state change.
 
 ### Code Example — Homepage Card Hover
 
