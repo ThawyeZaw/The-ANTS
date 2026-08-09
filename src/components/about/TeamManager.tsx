@@ -13,12 +13,12 @@ import {
   Users,
 } from 'lucide-react';
 import {
-  getOrgTeamMembers,
-  addOrgTeamMember,
-  updateOrgTeamMember,
-  deleteOrgTeamMember,
-  reorderOrgTeamMember,
-} from '@/lib/mock/database';
+  getOrgTeamMembersAction,
+  addOrgTeamMemberAction,
+  updateOrgTeamMemberAction,
+  deleteOrgTeamMemberAction,
+  reorderOrgTeamMembersAction,
+} from '@/actions/org';
 import type { OrgTeamMember, OrgTeamMemberFormData, Profile } from '@/types';
 import { cn } from '@/lib/utils';
 import UserSearchCombobox from '@/components/about/UserSearchCombobox';
@@ -42,16 +42,19 @@ export default function TeamManager() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [linkedUser, setLinkedUser] = useState<Pick<Profile, 'id' | 'name' | 'username' | 'avatar' | 'role'> | null>(null);
 
+  const refresh = async () => {
+    const data = await getOrgTeamMembersAction();
+    setMembers(data);
+  };
+
   useEffect(() => {
-    setMembers(getOrgTeamMembers());
+    refresh();
   }, []);
 
   const showFeedback = (type: 'success' | 'error', message: string) => {
     setFeedback({ type, message });
     setTimeout(() => setFeedback(null), 3000);
   };
-
-  const refresh = () => setMembers(getOrgTeamMembers());
 
   const openCreate = () => {
     setEditingId(null);
@@ -116,40 +119,54 @@ export default function TeamManager() {
     }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.name.trim() || !formData.title.trim()) {
       showFeedback('error', 'Name and title are required.');
       return;
     }
     setIsSaving(true);
-    setTimeout(() => {
+    try {
       if (editingId) {
-        const r = updateOrgTeamMember(editingId, formData);
+        const r = await updateOrgTeamMemberAction(editingId, formData);
         if (r.success) showFeedback('success', 'Member updated.');
-        else showFeedback('error', r.error);
+        else showFeedback('error', r.error || 'Failed to update member.');
       } else {
-        const r = addOrgTeamMember(formData);
+        const r = await addOrgTeamMemberAction(formData);
         if (r.success) showFeedback('success', 'Member added.');
-        else showFeedback('error', 'Failed to add member.');
+        else showFeedback('error', r.error || 'Failed to add member.');
       }
-      setIsSaving(false);
-      refresh();
+      await refresh();
       closeModal();
-    }, 400);
+    } catch {
+      showFeedback('error', 'An error occurred while saving team member.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleDelete = (id: string) => {
-    const r = deleteOrgTeamMember(id);
+  const handleDelete = async (id: string) => {
+    const r = await deleteOrgTeamMemberAction(id);
     if (r.success) {
       showFeedback('success', 'Member removed.');
-      refresh();
+      await refresh();
+    } else {
+      showFeedback('error', r.error || 'Failed to remove member.');
     }
     setConfirmDeleteId(null);
   };
 
-  const handleReorder = (id: string, direction: 'up' | 'down') => {
-    reorderOrgTeamMember(id, direction);
-    refresh();
+  const handleReorder = async (id: string, direction: 'up' | 'down') => {
+    const index = members.findIndex((m) => m.id === id);
+    if (index === -1) return;
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= members.length) return;
+
+    const newMembers = [...members];
+    const [moved] = newMembers.splice(index, 1);
+    newMembers.splice(targetIndex, 0, moved);
+    setMembers(newMembers);
+
+    await reorderOrgTeamMembersAction(newMembers.map((m) => m.id));
   };
 
   return (

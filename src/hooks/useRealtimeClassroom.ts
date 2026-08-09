@@ -65,15 +65,14 @@ export function useRealtimeClassroom(
       );
     }
 
-    // Assignment submissions
+    // Assignment submissions — no classroom_id column on this table, so we
+    // subscribe broadly and rely on Supabase RLS to deliver only rows for
+    // assignments that belong to classrooms the user is a member of.
     if (options.onSubmissionChange) {
       channel.on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'assignment_submissions', filter: `assignment_id=eq.${classroomId}` },
+        { event: '*', schema: 'public', table: 'assignment_submissions' },
         (payload) => {
-          // The filter above won't work directly for submissions since they
-          // reference assignment_id, not classroom_id. This gets handled by
-          // the server broadcasting to the classroom channel.
           if (!cancelled) options.onSubmissionChange?.(payload as RealtimePostgresChangesPayload<Record<string, unknown>>);
         }
       );
@@ -109,7 +108,7 @@ export function useRealtimeClassroom(
       if (status === 'SUBSCRIBED') {
         setIsConnected(true);
         setError(null);
-      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
         setError('Classroom realtime connection lost. Retrying...');
         setIsConnected(false);
       }
@@ -119,9 +118,12 @@ export function useRealtimeClassroom(
 
     return () => {
       cancelled = true;
-      channel.unsubscribe();
+      supabase.removeChannel(channel);
     };
-  }, [classroomId]); // eslint-disable-line react-hooks/exhaustive-deps
+    // options callbacks are deliberately excluded — including them would cause
+    // infinite re-subscription loops when parent components re-render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [classroomId]);
 
   return { isConnected, error };
 }

@@ -17,8 +17,9 @@ import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { useAuth } from '@/hooks/useAuth';
-import { useClub } from '@/hooks/useClub';
 import { useRole } from '@/hooks/useRole';
+import { useClubList, useCreateClub } from '@/hooks/useClubQueries';
+import { actionGetClubsBatchData, actionJoinClub } from '@/actions/clubs';
 import type { Club, ClubField, ClubJoinMode } from '@/types';
 import EmptyState from '@/components/ui/EmptyState';
 import { cn, formatDate } from '@/lib/utils';
@@ -32,54 +33,99 @@ const joinModeLabels: Record<ClubJoinMode, string> = {
 export default function ClubDiscovery() {
   const { user } = useAuth();
   const { isContributor, isMainContributor } = useRole();
-  const clubStore = useClub();
+  const { data: clubs = [], isLoading } = useClubList();
+  const createClubMutation = useCreateClub();
   const [query, setQuery] = useState('');
   const [modeFilter, setModeFilter] = useState<'all' | ClubJoinMode>('all');
   const [inviteCodes, setInviteCodes] = useState<Record<string, string>>({});
   const [feedback, setFeedback] = useState<Record<string, string>>({});
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
-  const [clubMembersMap, setClubMembersMap] = useState<Record<string, any[]>>({});
-  const [userMembershipMap, setUserMembershipMap] = useState<Record<string, any>>({});
+  const [batchData, setBatchData] = useState<{
+    leaders: any[];
+    members: any[];
+    memberships: any[];
+  } | null>(null);
 
   useEffect(() => {
-    (async () => {
-      const clubs = clubStore.clubs;
-      if (clubs.length === 0) return;
-
-      const membersResults = await Promise.all(clubs.map((c: any) => clubStore.getClubMembers(c.id)));
-      const membersMap: Record<string, any[]> = {};
-      clubs.forEach((c: any, i: number) => { membersMap[c.id] = membersResults[i]; });
-      setClubMembersMap(membersMap);
-
-      if (user) {
-        const memberships = await Promise.all(clubs.map((c: any) => clubStore.getUserClubMembership(c.id, user.id)));
-        const memMap: Record<string, any> = {};
-        clubs.forEach((c: any, i: number) => { memMap[c.id] = memberships[i]; });
-        setUserMembershipMap(memMap);
-      }
-    })();
-  }, [clubStore.clubs, user?.id, clubStore]);
+    if (clubs.length > 0) {
+      const clubIds = clubs.map((c) => c.id);
+      actionGetClubsBatchData(clubIds, user?.id).then((data) => {
+        if (data.success) setBatchData(data);
+      });
+    }
+  }, [clubs, user?.id]);
 
   const visibleClubs = useMemo(() => {
     const lowered = query.toLowerCase().trim();
-    return clubStore.clubs.filter((club) => {
+    return clubs.filter((club) => {
       const matchesMode = modeFilter === 'all' || club.join_mode === modeFilter;
       const matchesQuery = !lowered
         || club.name.toLowerCase().includes(lowered)
         || club.description?.toLowerCase().includes(lowered);
       return matchesMode && matchesQuery;
     });
-  }, [clubStore.clubs, modeFilter, query]);
+  }, [clubs, modeFilter, query]);
 
   const handleJoin = async (clubId: string) => {
     if (!user) return;
-    const result = await clubStore.joinClub(clubId, user.id);
+    const result = await actionJoinClub(clubId, user.id);
     setFeedback((current) => ({
       ...current,
       [clubId]: result.success ? 'Updated your club membership.' : result.error || 'Could not join club.',
     }));
+    // Refresh batch data after mutation
+    if (clubs.length > 0) {
+      const clubIds = clubs.map((c) => c.id);
+      const data = await actionGetClubsBatchData(clubIds, user.id);
+      if (data.success) setBatchData(data);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <BackButton href="/dashboard" label="Back to Dashboard" />
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-sm font-medium text-primary">Community</p>
+            <h1 className="text-3xl font-bold text-foreground mt-1">Clubs</h1>
+            <p className="text-foreground-muted mt-2 max-w-2xl">
+              Discover community spaces for CCA projects, subjects, and focused study groups.
+            </p>
+          </div>
+        </div>
+        <div className="grid gap-4 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex min-h-80 flex-col rounded-xl border border-border bg-background-card p-5 shadow-sm animate-pulse"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="h-10 w-10 rounded-xl bg-foreground-muted/20" />
+                <div className="h-5 w-16 rounded-full bg-foreground-muted/20" />
+              </div>
+              <div className="mt-4 flex-1 space-y-3">
+                <div className="h-5 w-3/4 rounded bg-foreground-muted/20" />
+                <div className="space-y-2">
+                  <div className="h-3 w-full rounded bg-foreground-muted/20" />
+                  <div className="h-3 w-5/6 rounded bg-foreground-muted/20" />
+                  <div className="h-3 w-4/6 rounded bg-foreground-muted/20" />
+                </div>
+              </div>
+              <div className="mt-5 space-y-3 border-t border-border pt-4">
+                <div className="h-3 w-1/3 rounded bg-foreground-muted/20" />
+                <div className="flex gap-2">
+                  <div className="h-10 flex-1 rounded-xl bg-foreground-muted/20" />
+                  <div className="h-10 w-20 rounded-xl bg-foreground-muted/20" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -126,9 +172,11 @@ export default function ClubDiscovery() {
 
       <div className="grid gap-4 lg:grid-cols-3">
         {visibleClubs.map((club) => {
-          const member = userMembershipMap[club.id];
+          const member = batchData?.memberships?.find((m: any) => m.club_id === club.id);
           const request = false; // join requests not yet supported
-          const members = (clubMembersMap[club.id] || []).filter((item: any) => item.membership_status === 'active');
+          const members = (batchData?.members || []).filter(
+            (item: any) => item.club_id === club.id && item.membership_status === 'active'
+          );
           const isMember = member?.membership_status === 'active';
 
           return (
@@ -175,7 +223,7 @@ export default function ClubDiscovery() {
                 )}
 
                 <div className="flex gap-2">
-                  <Link href={`/clubs/${club.id}`} className="flex-1">
+                  <Link href={`/clubs/${club.custom_slug || club.id}`} className="flex-1">
                     <Button variant="secondary" fullWidth>
                       View
                     </Button>
@@ -212,18 +260,23 @@ export default function ClubDiscovery() {
         <CreateClubModal
           userId={user.id}
           onClose={() => setIsCreateOpen(false)}
-          onCreate={(data) => clubStore.createNewClub(
-            {
-              name: data.name,
-              description: data.description,
-              tagline: undefined,
-              field: 'other' as ClubField,
-              cover_image_url: undefined,
-              accent_color: undefined,
-              custom_slug: undefined,
-            },
-            user.id
-          )}
+          onCreate={(data) =>
+            createClubMutation.mutate(
+              {
+                data: {
+                  name: data.name,
+                  description: data.description,
+                  tagline: undefined,
+                  field: 'other' as ClubField,
+                  cover_image_url: undefined,
+                  accent_color: undefined,
+                  custom_slug: undefined,
+                },
+                userId: user.id,
+              },
+              { onSettled: () => setIsCreateOpen(false) }
+            )
+          }
         />
       )}
     </div>

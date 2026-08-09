@@ -73,7 +73,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: 'Library',
     href: '/library',
     icon: <BookOpen className="h-4 w-4" />,
-    description: 'Notes, flashcards, courses & quizzes',
+    description: 'Notes, flashcards & courses',
     allowedRoles: ALL_ROLES,
     accentColor: 'from-emerald-500 to-teal-500',
   },
@@ -81,7 +81,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: 'Tools',
     href: '#tools',
     icon: <Wrench className="h-4 w-4" />,
-    description: 'Countdown, calculator, timetable & pomodoro',
+    description: 'Countdown, calculator, timetable, pomodoro & quizzes',
     allowedRoles: ALL_ROLES,
     accentColor: 'from-sky-500 to-blue-500',
   },
@@ -147,6 +147,13 @@ const TOOLS_LINKS: ToolLink[] = [
     description: 'Focused study sessions',
     accentColor: 'from-rose-500 to-red-500',
   },
+  {
+    label: 'Quizzes',
+    href: '/quizzes',
+    icon: <Brain className="h-4 w-4" />,
+    description: 'Practice with quiz sessions',
+    accentColor: 'from-violet-500 to-purple-500',
+  },
 ];
 
 // ── Community Dropdown Items ──────────────────────────────────────────────
@@ -160,10 +167,17 @@ const COMMUNITY_LINKS: ToolLink[] = [
     accentColor: 'from-blue-500 to-cyan-500',
   },
   {
+    label: 'Clubs',
+    href: '/clubs',
+    icon: <Users className="h-4 w-4" />,
+    description: 'Subject clubs & CCA projects',
+    accentColor: 'from-pink-500 to-rose-500',
+  },
+  {
     label: 'Explore',
     href: '/explore',
     icon: <Compass className="h-4 w-4" />,
-    description: 'Clubs, profiles & discover more',
+    description: 'Discover profiles & communities',
     accentColor: 'from-violet-500 to-purple-500',
   },
   {
@@ -181,7 +195,7 @@ const STUDY_QUICK_LINKS = [
   { label: 'Courses', href: '/library/courses', icon: <GraduationCap className="h-4 w-4" /> },
   { label: 'My Notes', href: '/my-notes', icon: <NotebookPen className="h-4 w-4" /> },
   { label: 'Flashcards', href: '/flashcards', icon: <Layers className="h-4 w-4" /> },
-  { label: 'Quizzes', href: '#quizzes', icon: <Brain className="h-4 w-4" />, comingSoon: true },
+  { label: 'Quizzes', href: '/quizzes', icon: <Brain className="h-4 w-4" /> },
 ];
 
 const TOOLS_QUICK_LINKS = [
@@ -189,10 +203,12 @@ const TOOLS_QUICK_LINKS = [
   { label: 'Calculator', href: '/calculator', icon: <Calculator className="h-4 w-4" /> },
   { label: 'Timetable', href: '/timetable', icon: <CalendarDays className="h-4 w-4" /> },
   { label: 'Pomodoro', href: '/pomodoro', icon: <Timer className="h-4 w-4" /> },
+  { label: 'Quizzes', href: '/quizzes', icon: <Brain className="h-4 w-4" /> },
 ];
 
 const COMMUNITY_QUICK_LINKS = [
   { label: 'Classrooms', href: '/classrooms', icon: <GraduationCap className="h-4 w-4" /> },
+  { label: 'Clubs', href: '/clubs', icon: <Users className="h-4 w-4" /> },
   { label: 'Explore', href: '/explore', icon: <Compass className="h-4 w-4" /> },
   { label: 'About', href: '/about', icon: <Info className="h-4 w-4" /> },
 ];
@@ -226,7 +242,6 @@ export function getAllNavItems(): NavItem[] {
   }));
 
   const studyQuickItems: NavItem[] = STUDY_QUICK_LINKS
-    .filter(l => !l.comingSoon)
     .map(l => ({ label: l.label, href: l.href, icon: l.icon }));
 
   const toolsQuickItems: NavItem[] = TOOLS_QUICK_LINKS.map(l => ({
@@ -271,7 +286,7 @@ const NavBar = React.memo(function NavBar() {
 
   // Check if current page is active
   const isActive = (href: string) => {
-    if (href === '#tools' || href === '#community' || href === '#quizzes') return false;
+    if (href === '#tools' || href === '#community') return false;
     return pathname === href || pathname.startsWith(`${href}/`);
   };
 
@@ -757,20 +772,12 @@ const NavBar = React.memo(function NavBar() {
                 {STUDY_QUICK_LINKS.map((link) => (
                   <Link
                     key={link.href}
-                    href={link.comingSoon ? '#' : link.href}
-                    onClick={() => !link.comingSoon && setIsMobileOpen(false)}
-                    className={cn(
-                      'flex flex-col items-center gap-1 p-3 rounded-xl bg-background-card border border-border transition-all',
-                      link.comingSoon
-                        ? 'opacity-50 cursor-default'
-                        : 'hover:bg-background-secondary hover:border-primary/30'
-                    )}
+                    href={link.href}
+                    onClick={() => setIsMobileOpen(false)}
+                    className="flex flex-col items-center gap-1 p-3 rounded-xl bg-background-card border border-border hover:bg-background-secondary hover:border-primary/30 transition-all"
                   >
                     <span className="text-foreground-muted">{link.icon}</span>
                     <span className="text-xs font-medium text-foreground text-center">{link.label}</span>
-                    {link.comingSoon && (
-                      <span className="text-[9px] text-foreground-muted">Soon</span>
-                    )}
                   </Link>
                 ))}
               </div>

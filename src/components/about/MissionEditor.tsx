@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Save, Edit3, Loader2, Eye, EyeOff } from 'lucide-react';
-import { getOrgMission, updateOrgMission } from '@/lib/mock/database';
+import { getOrgMissionAction, updateOrgMissionAction } from '@/actions/org';
 import type { OrgMission } from '@/types';
 import { cn } from '@/lib/utils';
 import { renderMarkdown } from '@/lib/markdown';
@@ -16,8 +16,14 @@ export default function MissionEditor() {
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   useEffect(() => {
-    setMission(getOrgMission());
-    setContent(getOrgMission().content);
+    let active = true;
+    getOrgMissionAction().then((res) => {
+      if (active && res) {
+        setMission(res);
+        setContent(res.content);
+      }
+    });
+    return () => { active = false; };
   }, []);
 
   const showFeedback = (type: 'success' | 'error', message: string) => {
@@ -25,24 +31,27 @@ export default function MissionEditor() {
     setTimeout(() => setFeedback(null), 3000);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!content.trim()) {
       showFeedback('error', 'Mission content cannot be empty.');
       return;
     }
     setIsSaving(true);
-    setTimeout(() => {
-      const r = updateOrgMission(content);
-      if (r.success) {
+    try {
+      const r = await updateOrgMissionAction(content);
+      if (r.success && r.mission) {
         setMission(r.mission);
         showFeedback('success', 'Mission updated successfully.');
         setIsEditing(false);
         setShowMobilePreview(false);
       } else {
-        showFeedback('error', 'Failed to update mission.');
+        showFeedback('error', r.error || 'Failed to update mission.');
       }
+    } catch {
+      showFeedback('error', 'An error occurred while saving mission.');
+    } finally {
       setIsSaving(false);
-    }, 400);
+    }
   };
 
   const handleCancel = () => {

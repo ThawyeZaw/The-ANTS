@@ -9,8 +9,9 @@ jobs:
   process:
     runs-on: ubuntu-latest
     steps:
-      - name: Call queue processor Edge Function
+      - name: Call queue processor API
         run: |
           curl --fail --silent --show-error \
+            --max-time 30 \
             --header "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
-            "${{ secrets.SUPABASE_EDGE_FUNCTION_URL }}/process-telegram-queue"
+            "https://the-ants.org/api/cron/process-notifications"

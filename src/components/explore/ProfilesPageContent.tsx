@@ -4,7 +4,7 @@
 // The ANTs — Public Profile Discovery Page Content (client component)
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
@@ -19,8 +19,8 @@ import {
   Shield,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
-import { getPublicProfiles } from '@/lib/mock/database';
-import { UserRole, ROLE_METADATA } from '@/types';
+import { actionGetPublicProfiles } from '@/actions/profile';
+import { UserRole, ROLE_METADATA, Profile } from '@/types';
 import { cn } from '@/lib/utils';
 import AvatarImage from '@/components/ui/AvatarImage';
 
@@ -48,11 +48,27 @@ export function ExploreProfilesContent() {
     initialRoleParam || 'All'
   );
   const [searchQuery, setSearchQuery] = useState('');
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [loadingProfiles, setLoadingProfiles] = useState(true);
 
   const activeFilterConfig = ROLE_FILTERS.find(f => f.label === activeFilter) || ROLE_FILTERS[0];
-  const profiles = getPublicProfiles(
-    activeFilterConfig.roles.length > 0 ? activeFilterConfig.roles : undefined
-  );
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setLoadingProfiles(true);
+      const data = await actionGetPublicProfiles(
+        activeFilterConfig.roles.length > 0 ? activeFilterConfig.roles : undefined
+      );
+      if (!cancelled) {
+        setProfiles(data);
+        setLoadingProfiles(false);
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, [activeFilter]);
+
 
   const filteredProfiles = profiles.filter((profile) => {
     if (!searchQuery.trim()) return true;

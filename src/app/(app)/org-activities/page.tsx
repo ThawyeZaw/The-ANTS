@@ -1,17 +1,18 @@
 'use client';
 
 import BackButton from '@/components/ui/BackButton';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Calendar,
   MapPin,
   Search,
   X,
   ImageIcon,
+  Loader2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { getOrgActivities } from '@/lib/mock/database';
+import { getOrgTimelineItemsAction } from '@/actions/org';
 import type { OrgTimelineItem } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -47,9 +48,21 @@ const ACTIVE_COLORS: Record<string, string> = {
 
 export default function OrgActivitiesPage() {
   const router = useRouter();
-  const items = getOrgActivities();
+  const [items, setItems] = useState<OrgTimelineItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<CategoryKey>('all');
+
+  useEffect(() => {
+    let active = true;
+    getOrgTimelineItemsAction().then((data) => {
+      if (active) {
+        setItems(data);
+        setLoading(false);
+      }
+    });
+    return () => { active = false; };
+  }, []);
 
   const filtered = useMemo(() => {
     return items.filter((a) => {
@@ -119,7 +132,11 @@ export default function OrgActivitiesPage() {
         </div>
 
         {/* Cards */}
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="h-6 w-6 text-primary animate-spin" />
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="text-center py-16">
             <ImageIcon className="h-12 w-12 text-foreground-muted mx-auto mb-4" />
             <p className="text-sm text-foreground-muted">No activities found.</p>

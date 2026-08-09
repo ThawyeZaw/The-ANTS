@@ -6,7 +6,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState } from 'react';
-import { Send, Check, ExternalLink, Bell, BellOff, Copy, CheckCheck, MessageSquareCheck } from 'lucide-react';
+import { Send, Check, ExternalLink, Bell, BellOff, Copy, CheckCheck, MessageSquareCheck, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -86,7 +86,7 @@ export default function TelegramConnect({
   const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'TheANTS_bot';
   const isConnected = !!telegramChatId;
 
-  const startCommand = `/start ${username ?? ''}`;
+  const startCommand = `/start ${username ?? 'your_username'}`;
 
   const deepLink = username
     ? `https://t.me/${botUsername}?start=${encodeURIComponent(username)}`
@@ -104,7 +104,6 @@ export default function TelegramConnect({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback for older browsers
       const textarea = document.createElement('textarea');
       textarea.value = startCommand;
       document.body.appendChild(textarea);
@@ -337,56 +336,89 @@ export default function TelegramConnect({
               </div>
             ) : (
               <>
-                {/* Show username and copyable command */}
-                <div className="p-4 rounded-xl bg-background-secondary border border-border space-y-3">
+                {/* Step-by-step setup card */}
+                <div className="p-4 rounded-xl bg-background-secondary border border-border space-y-4">
                   <div>
-                    <p className="text-xs text-foreground-muted mb-1">Your username</p>
-                    <p className="text-sm font-mono font-medium text-foreground">@{username}</p>
+                    <p className="text-xs font-medium text-foreground-muted uppercase tracking-wide mb-2">
+                      How to link
+                    </p>
+                    <ol className="space-y-2 text-sm text-foreground-secondary">
+                      <li className="flex items-start gap-2">
+                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center font-medium mt-0.5">
+                          1
+                        </span>
+                        <span>
+                          Open{' '}
+                          <a
+                            href={`https://t.me/${botUsername}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline font-medium"
+                          >
+                            @{botUsername}
+                          </a>{' '}
+                          on Telegram
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center font-medium mt-0.5">
+                          2
+                        </span>
+                        <span>
+                          Send this command to the bot:
+                        </span>
+                      </li>
+                    </ol>
                   </div>
+
+                  {/* Copyable command */}
                   <div className="flex items-center gap-2">
-                    <code className="flex-1 px-3 py-2 rounded-lg bg-background text-sm font-mono text-foreground border border-border">
+                    <code className="flex-1 px-3 py-2.5 rounded-lg bg-background text-sm font-mono text-foreground border border-border select-all">
                       {startCommand}
                     </code>
                     <button
                       onClick={handleCopyCommand}
-                      className="flex-shrink-0 p-2 rounded-lg bg-background border border-border hover:bg-background-hover transition-colors cursor-pointer"
-                      title="Copy command"
+                      className="flex-shrink-0 p-2.5 rounded-lg bg-[#0088cc] text-white hover:bg-[#0077b5] transition-colors cursor-pointer shadow-sm"
+                      title="Copy to clipboard"
                     >
                       {copied ? (
-                        <CheckCheck className="h-4 w-4 text-green-500" />
+                        <CheckCheck className="h-4 w-4" />
                       ) : (
-                        <Copy className="h-4 w-4 text-foreground-secondary" />
+                        <Copy className="h-4 w-4" />
                       )}
                     </button>
                   </div>
+
+                  {/* Your username display */}
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-background border border-border">
+                    <span className="text-xs text-foreground-muted">Your username:</span>
+                    <code className="text-sm font-mono font-medium text-foreground">@{username}</code>
+                  </div>
+
                   <p className="text-xs text-foreground-muted">
-                    Send this command to{' '}
-                    <a
-                      href={`https://t.me/${botUsername}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline"
-                    >
-                      @{botUsername}
-                    </a>{' '}
-                    on Telegram to link your account.
+                    After sending the command, the bot will reply with a confirmation. Come back here — the status indicator should turn green.
                   </p>
                 </div>
+
+                {/* One-click button */}
+                <button
+                  onClick={handleConnect}
+                  disabled={isConnecting}
+                  className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-medium transition-all duration-200 shadow-md hover:shadow-lg bg-gradient-to-r from-[#0088cc] to-[#0099e6] text-white hover:from-[#0077b5] hover:to-[#0088cc] cursor-pointer"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  {isConnecting ? 'Opening Telegram...' : 'Open @' + botUsername + ' on Telegram'}
+                </button>
+
+                <button
+                  onClick={() => window.open(deepLink, '_blank', 'noopener,noreferrer')}
+                  className="w-full inline-flex items-center justify-center gap-2 px-5 py-2 rounded-xl text-xs text-foreground-muted hover:text-foreground-secondary transition-colors cursor-pointer"
+                >
+                  <RefreshCw className="h-3 w-3" />
+                  One-click link (opens bot with /start prefilled)
+                </button>
               </>
             )}
-            <button
-              onClick={handleConnect}
-              disabled={!username || isConnecting}
-              className={cn(
-                'inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 shadow-md hover:shadow-lg',
-                username
-                  ? 'bg-gradient-to-r from-[#0088cc] to-[#0099e6] text-white hover:from-[#0077b5] hover:to-[#0088cc] cursor-pointer'
-                  : 'bg-primary/5 text-foreground-muted cursor-not-allowed'
-              )}
-            >
-              <ExternalLink className="h-4 w-4" />
-              {isConnecting ? 'Opening Telegram...' : 'Open Telegram Bot'}
-            </button>
           </div>
         )}
       </div>

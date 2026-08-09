@@ -6,13 +6,17 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import BackButton from '@/components/ui/BackButton';
-import { Check, Sun, Moon, Palette, User, UserCog } from 'lucide-react';
+import { Check, Sun, Moon, Palette, User, UserCog, Bell, Globe } from 'lucide-react';
+import type { Metadata } from 'next';
 import { useTheme, COLOR_PRESETS, type ThemeColor } from '@/context/ThemeContext';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import RoleUpgradeForm from '@/components/settings/RoleUpgradeForm';
 import TelegramConnect, { type NotificationPreferences } from '@/components/settings/TelegramConnect';
+import TimezoneSelector from '@/components/settings/TimezoneSelector';
 import { useAuth } from '@/hooks/useAuth';
+import { createClient } from '@/lib/supabase/client';
+import { DEFAULT_TIMEZONE } from '@/constants/timezones';
 
 // ── Section Wrapper ───────────────────────────────────────────────────────────
 
@@ -28,9 +32,9 @@ function SettingsSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-background-card border border-border rounded-2xl overflow-hidden">
+    <div className="bg-background-card border border-border rounded-2xl">
       {/* Header */}
-      <div className="px-6 py-5 border-b border-border flex items-center gap-3">
+      <div className="px-6 py-5 border-b border-border flex items-center gap-3 rounded-t-2xl">
         <div className="p-2 rounded-lg bg-primary/10 text-primary">
           {icon}
         </div>
@@ -161,7 +165,7 @@ export default function SettingsPage() {
       <div>
         <h1 className="text-2xl font-bold text-foreground">Settings</h1>
         <p className="text-foreground-muted mt-1">
-          Personalise your experience. Changes save instantly.
+          Personalise your experience. Most changes save instantly; timezone changes require clicking <strong>Save</strong>.
         </p>
       </div>
 
@@ -184,15 +188,6 @@ export default function SettingsPage() {
         </div>
       </SettingsSection>
 
-      {/* Role Management Section */}
-      <SettingsSection
-        title="Role Management"
-        description="Switch your role to access different features"
-        icon={<UserCog className="h-4 w-4" />}
-      >
-        <RoleUpgradeForm />
-      </SettingsSection>
-
       {/* Appearance Section */}
       <SettingsSection
         title="Appearance"
@@ -205,6 +200,15 @@ export default function SettingsPage() {
 
       {/* Telegram Notifications Section */}
       <SettingsPageInner />
+
+      {/* Role Management Section */}
+      <SettingsSection
+        title="Role Management"
+        description="Switch your role to access different features"
+        icon={<UserCog className="h-4 w-4" />}
+      >
+        <RoleUpgradeForm />
+      </SettingsSection>
     </div>
   );
 }
@@ -220,12 +224,42 @@ function SettingsPageInner() {
     await updateProfile({ notificationPreferences: prefs });
   };
 
+  const handleTimezoneChange = async (tz: string) => {
+    if (!user) return;
+    const supabase = createClient();
+    if (!supabase) return;
+    await supabase.from('profiles').update({ timezone: tz } as any).eq('id', user.id);
+    // Refetch profile to sync state
+    await updateProfile({});
+  };
+
   return (
-    <TelegramConnect
-      telegramChatId={profile?.telegramChatId ?? null}
-      username={profile?.username ?? null}
-      notificationPreferences={profile?.notificationPreferences ?? null}
-      onUpdatePreferences={handleUpdatePreferences}
-    />
+    <div className="space-y-6">
+      {/* Telegram Section */}
+      <SettingsSection
+        title="Notifications"
+        description="Manage your notification preferences"
+        icon={<Bell className="h-4 w-4" />}
+      >
+        <TelegramConnect
+          telegramChatId={profile?.telegramChatId ?? null}
+          username={profile?.username ?? null}
+          notificationPreferences={profile?.notificationPreferences ?? null}
+          onUpdatePreferences={handleUpdatePreferences}
+        />
+      </SettingsSection>
+
+      {/* Timezone Section */}
+      <SettingsSection
+        title="Timezone"
+        description="Set your local timezone for notification scheduling"
+        icon={<Globe className="h-4 w-4" />}
+      >
+        <TimezoneSelector
+          value={profile?.timezone ?? DEFAULT_TIMEZONE}
+          onChange={handleTimezoneChange}
+        />
+      </SettingsSection>
+    </div>
   );
 }

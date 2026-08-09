@@ -13,12 +13,14 @@ import {
   ArrowRight, ArrowLeft, Check, SkipForward,
   Globe, User, Search, X, ChevronDown,
   Building2, GraduationCap, BookOpen, Loader2,
+  Send,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useCourseManager, type CurriculumSummary, type SubjectSummary } from '@/hooks/useCourseManager';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import { TIMEZONES, detectBrowserTimezone } from '@/constants/timezones';
 import type { OnboardingCurriculumSelection } from '@/types';
 
 // ── Step definitions ────────────────────────────────────────────────────────
@@ -28,6 +30,7 @@ const STEPS = [
   { id: 2, label: 'Curriculum' },
   { id: 3, label: 'Subjects' },
   { id: 4, label: 'Institution' },
+  { id: 5, label: 'Telegram' },
 ];
 
 // ── Subject selection helper (keyed by curriculum+subject) ─────────────────
@@ -39,18 +42,6 @@ interface SelectedSubjectEntry {
   subject_id: string;
   subject: SubjectSummary;
 }
-
-// ── Timezone list ──────────────────────────────────────────────────────────
-
-const TIMEZONES = [
-  'Asia/Yangon', 'Asia/Bangkok', 'Asia/Singapore', 'Asia/Kuala_Lumpur',
-  'Asia/Jakarta', 'Asia/Manila', 'Asia/Hong_Kong', 'Asia/Shanghai',
-  'Asia/Tokyo', 'Asia/Seoul', 'Asia/Kolkata', 'Asia/Dubai', 'Asia/Riyadh',
-  'Europe/London', 'Europe/Paris', 'Europe/Berlin',
-  'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles',
-  'America/Toronto', 'Pacific/Auckland', 'Australia/Sydney',
-  'Africa/Cairo', 'Africa/Lagos', 'UTC',
-];
 
 // ── Curriculum Emoji Map (these are just for visual flair) ─────────────────
 
@@ -108,6 +99,10 @@ export default function OnboardingWizard() {
 
   // Step 4
   const [institutionName, setInstitutionName] = useState('');
+
+  // Step 5
+  const [remindLater, setRemindLater] = useState(false);
+  const username = user?.profile?.username ?? '';
 
   // Auto-detect timezone
   useEffect(() => {
@@ -219,7 +214,7 @@ export default function OnboardingWizard() {
   // ── Timezone filter ──────────────────────────────────────────────────
 
   const filteredTimezones = TIMEZONES.filter((tz) =>
-    tz.toLowerCase().includes(tzSearch.toLowerCase())
+    tz.value.toLowerCase().includes(tzSearch.toLowerCase())
   );
 
   // ── Loading states ───────────────────────────────────────────────────
@@ -332,7 +327,9 @@ export default function OnboardingWizard() {
                     >
                       <span className="flex items-center gap-2 text-foreground">
                         <Globe className="h-4 w-4 text-foreground-muted" />
-                        {timezone || <span className="text-foreground-muted">Select timezone</span>}
+                        {timezone
+                          ? (TIMEZONES.find((t) => t.value === timezone)?.label ?? timezone)
+                          : <span className="text-foreground-muted">Select timezone</span>}
                       </span>
                       <ChevronDown className={cn('h-4 w-4 text-foreground-muted transition-transform', tzOpen && 'rotate-180')} />
                     </button>
@@ -355,15 +352,15 @@ export default function OnboardingWizard() {
                         <div className="max-h-48 overflow-y-auto">
                           {filteredTimezones.map((tz) => (
                             <button
-                              key={tz}
+                              key={tz.value}
                               type="button"
-                              onClick={() => { setTimezone(tz); setTzOpen(false); setTzSearch(''); }}
+                              onClick={() => { setTimezone(tz.value); setTzOpen(false); setTzSearch(''); }}
                               className={cn(
                                 'w-full text-left px-4 py-2 text-sm hover:bg-background-secondary transition-colors',
-                                timezone === tz ? 'text-primary font-medium' : 'text-foreground'
+                                timezone === tz.value ? 'text-primary font-medium' : 'text-foreground'
                               )}
                             >
-                              {tz}
+                              {tz.label}
                             </button>
                           ))}
                           {filteredTimezones.length === 0 && (
@@ -655,6 +652,60 @@ export default function OnboardingWizard() {
                       No curricula selected — you can add them from the Course Manager.
                     </p>
                   )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ═══════════════ STEP 5: Telegram ═══════════════ */}
+          {step === 5 && (
+            <div className="animate-fade-in-up space-y-6">
+              <div className="text-center space-y-6">
+                <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-sky-500 to-blue-500 flex items-center justify-center">
+                  <Send className="h-8 w-8 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold">Stay Notified</h2>
+                <p className="text-[var(--text-secondary)]">
+                  Connect your Telegram to receive notifications about deadlines, club activities, and more.
+                </p>
+                <div className="bg-[var(--bg-card)] rounded-xl p-4 border border-[var(--border)]">
+                  <p className="text-sm font-medium mb-2">How to connect:</p>
+                  <ol className="text-sm text-left space-y-2 text-[var(--text-secondary)]">
+                    <li>1. Open Telegram and search for @TheANTS_bot</li>
+                    <li>2. Start a chat and send: <code className="bg-[var(--bg)] px-2 py-0.5 rounded text-xs font-mono">/start {username}</code></li>
+                    <li>3. You&apos;ll receive a confirmation message</li>
+                  </ol>
+                </div>
+                <p className="text-xs text-[var(--text-secondary)]">
+                  You can also connect later from Settings.
+                </p>
+
+                {/* Remind me later toggle */}
+                <label className="flex items-center justify-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={remindLater}
+                    onChange={(e) => setRemindLater(e.target.checked)}
+                    className="h-4 w-4 rounded border-[var(--border)] text-primary focus:ring-primary/50"
+                  />
+                  <span className="text-sm text-[var(--text-secondary)]">Remind me later</span>
+                </label>
+
+                <div className="flex gap-3 justify-center">
+                  <Button
+                    variant="secondary"
+                    onClick={() => handleFinish(true)}
+                    id="onboarding-telegram-skip"
+                  >
+                    Skip
+                  </Button>
+                  <Button
+                    onClick={() => handleFinish(false)}
+                    iconRight={<Check className="h-4 w-4" />}
+                    id="onboarding-telegram-done"
+                  >
+                    Done
+                  </Button>
                 </div>
               </div>
             </div>

@@ -1,17 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import BackButton from '@/components/ui/BackButton';
 import {
   Users,
   Target,
   Clock,
+  Loader2,
 } from 'lucide-react';
-import { getOrgTeamMembers, getOrgMilestones, getOrgMission } from '@/lib/mock/database';
+import {
+  getOrgMissionAction,
+  getOrgTeamMembersAction,
+  getOrgTimelineItemsAction,
+} from '@/actions/org';
 import TeamMemberCard from '@/components/about/TeamMemberCard';
 import OrgTimeline from '@/components/about/OrgTimeline';
-import type { OrgTeamMember } from '@/types';
+import type { OrgTeamMember, OrgTimelineItem } from '@/types';
 import { renderMarkdown } from '@/lib/markdown';
 
 // ── Tabs ─────────────────────────────────────────────────────────────────────
@@ -27,7 +32,19 @@ type TabKey = (typeof TABS)[number]['key'];
 // ── Mission Section ──────────────────────────────────────────────────────────
 
 function MissionSection() {
-  const mission = getOrgMission();
+  const [missionContent, setMissionContent] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    getOrgMissionAction().then((m) => {
+      if (active) {
+        setMissionContent(m?.content || '');
+        setLoading(false);
+      }
+    });
+    return () => { active = false; };
+  }, []);
 
   return (
     <div className="animate-fade-in space-y-12">
@@ -41,11 +58,17 @@ function MissionSection() {
       </div>
 
       {/* Dynamic Mission Content */}
-      <div className="bg-background-card border border-border rounded-2xl p-8 md:p-10">
-        <div
-          className="[&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-foreground [&_h2]:mb-6 [&_h2]:flex [&_h2]:items-center [&_h2]:gap-3"
-          dangerouslySetInnerHTML={{ __html: renderMarkdown(mission.content) }}
-        />
+      <div className="bg-background-card border border-border rounded-2xl p-8 md:p-10 min-h-[160px] flex flex-col justify-center">
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 text-primary animate-spin" />
+          </div>
+        ) : (
+          <div
+            className="[&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-foreground [&_h2]:mb-6 [&_h2]:flex [&_h2]:items-center [&_h2]:gap-3"
+            dangerouslySetInnerHTML={{ __html: renderMarkdown(missionContent) }}
+          />
+        )}
       </div>
 
       {/* CTA */}
@@ -64,7 +87,19 @@ function MissionSection() {
 // ── Team Section ─────────────────────────────────────────────────────────────
 
 function TeamSection() {
-  const members: OrgTeamMember[] = getOrgTeamMembers();
+  const [members, setMembers] = useState<OrgTeamMember[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    getOrgTeamMembersAction().then((data) => {
+      if (active) {
+        setMembers(data);
+        setLoading(false);
+      }
+    });
+    return () => { active = false; };
+  }, []);
 
   return (
     <div className="animate-fade-in space-y-8">
@@ -78,11 +113,17 @@ function TeamSection() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {members.map((member) => (
-          <TeamMemberCard key={member.id} member={member} />
-        ))}
-      </div>
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-6 w-6 text-primary animate-spin" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {members.map((member) => (
+            <TeamMemberCard key={member.id} member={member} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -90,7 +131,19 @@ function TeamSection() {
 // ── History Section ──────────────────────────────────────────────────────────
 
 function HistorySection() {
-  const milestones = getOrgMilestones();
+  const [milestones, setMilestones] = useState<OrgTimelineItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    getOrgTimelineItemsAction().then((data) => {
+      if (active) {
+        setMilestones(data.filter((item) => item.showOnTimeline));
+        setLoading(false);
+      }
+    });
+    return () => { active = false; };
+  }, []);
 
   return (
     <div className="animate-fade-in space-y-8">
@@ -104,7 +157,13 @@ function HistorySection() {
         </p>
       </div>
 
-      <OrgTimeline items={milestones} />
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-6 w-6 text-primary animate-spin" />
+        </div>
+      ) : (
+        <OrgTimeline items={milestones} />
+      )}
     </div>
   );
 }

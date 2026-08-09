@@ -16,16 +16,6 @@ import {
 import { cn } from '@/lib/utils';
 import type { Profile } from '@/types';
 
-// ── "Open to" presets ─────────────────────────────────────────────────────────
-
-const OPEN_TO_PRESETS = [
-  { key: 'university', label: 'University Applications', color: 'bg-violet-500/10 text-violet-400 border-violet-500/20' },
-  { key: 'internships', label: 'Internships', color: 'bg-sky-500/10 text-sky-400 border-sky-500/20' },
-  { key: 'tutoring', label: 'Tutoring', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
-  { key: 'collaboration', label: 'Collaboration', color: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
-  { key: 'networking', label: 'Networking', color: 'bg-pink-500/10 text-pink-400 border-pink-500/20' },
-];
-
 interface InfoRowProps {
   icon: React.ReactNode;
   label: string;
