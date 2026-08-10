@@ -355,13 +355,12 @@ function LibraryPageInner() {
                   </div>
                 </div>
 
-                {/* Footer Arrow & Action */}
-                <div className="pt-6 mt-4 border-t border-border/40 flex items-center justify-between text-xs font-semibold text-foreground-secondary group-hover:text-primary transition-colors">
-                  <span>{cat.itemCount}</span>
-                  <div className="flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                    <span>Explore</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </div>
+                {/* Footer — single clear metadata (no separate CTA bubble to avoid dual-click confusion) */}
+                <div className="pt-5 mt-4 border-t border-border/40 flex items-center justify-between text-xs">
+                  <span className="font-medium text-foreground-muted">{cat.itemCount}</span>
+                  <span className="font-semibold text-foreground-secondary group-hover:text-primary transition-colors inline-flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                    View <ArrowRight className="h-3.5 w-3.5" />
+                  </span>
                 </div>
               </div>
             ))}

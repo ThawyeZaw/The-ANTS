@@ -248,7 +248,7 @@ export default function FlashcardsLibraryBrowser() {
   const hasMore = visibleCount < filteredDecks.length;
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
+    <div className="space-y-8">
       {/* Toast */}
       {toast && (
         <div className={cn(
@@ -259,34 +259,20 @@ export default function FlashcardsLibraryBrowser() {
         </div>
       )}
 
-      {/* Hero */}
-      <div className="relative overflow-hidden rounded-3xl border border-[var(--border)] bg-gradient-to-br from-violet-500/10 via-indigo-500/5 to-cyan-500/10 p-6 md:p-8">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-violet-500/10 px-3 py-1 text-xs font-semibold text-violet-600 dark:text-violet-400">
-              <BookMarked size={12} /> Board-tagged · Contributor-approved
-            </div>
-            <h1 className="text-2xl md:text-3xl font-semibold text-[var(--foreground)] tracking-tight">
-              Flashcards
-            </h1>
-            <p className="max-w-xl text-sm md:text-base text-[var(--foreground-secondary)]">
-              Browse decks tagged by exam board and syllabus code. Add any deck to your workspace instantly — your SRS progress starts fresh.
-            </p>
-          </div>
-          <div className="flex items-center gap-4 shrink-0">
-            {(role === 'contributor' || role === 'main_contributor') && (
-              <button
-                onClick={() => router.push('/flashcards')}
-                className="flex items-center gap-2 rounded-xl bg-[var(--primary)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[var(--primary-hover)] hover:shadow-[var(--shadow-glow)] transition-all cursor-pointer"
-              >
-                <Send size={14} />
-                Submit a Deck
-              </button>
-            )}
-          </div>
+      {/* ═══ Context Info + Action Bar ═══════════════════════════════════════ */}
+      <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 rounded-2xl border border-[var(--border)] bg-[var(--background-card)]/60">
+        <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-violet-600 dark:text-violet-400">
+          <BookMarked size={13} /> Board-tagged · Contributor-approved
         </div>
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-56 w-56 rounded-full bg-violet-400/15 blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 -ml-16 -mb-16 h-48 w-48 rounded-full bg-cyan-400/15 blur-3xl pointer-events-none" />
+        {(role === 'contributor' || role === 'main_contributor') && (
+          <button
+            onClick={() => router.push('/flashcards')}
+            className="flex items-center gap-2 rounded-xl bg-[var(--primary)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--primary-hover)] hover:shadow-[var(--shadow-glow)] transition-all cursor-pointer shrink-0"
+          >
+            <Send size={13} />
+            Submit a Deck
+          </button>
+        )}
       </div>
 
       {/* Filters */}

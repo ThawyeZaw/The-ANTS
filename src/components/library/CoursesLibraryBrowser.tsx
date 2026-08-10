@@ -65,10 +65,26 @@ function ExamBoardCard({ curriculum, onSelectSubjects, totalSelected, isTopMatch
   const partialMatch = hasSelection && curriculum.matchCount > 0 && !matchesAll;
   const noMatch = hasSelection && curriculum.matchCount === 0;
 
+  const handleCardClick = () => {
+    if (!curriculum.isEnrolled) {
+      onSelectSubjects(curriculum.id);
+    }
+  };
+
   return (
     <div
+      onClick={handleCardClick}
+      role={curriculum.isEnrolled ? 'article' : 'button'}
+      tabIndex={curriculum.isEnrolled ? -1 : 0}
+      onKeyDown={(e) => {
+        if (!curriculum.isEnrolled && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          handleCardClick();
+        }
+      }}
       className={cn(
         'group relative flex flex-col rounded-2xl border p-5 transition-all duration-300',
+        !curriculum.isEnrolled && 'cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/40 focus:border-[var(--primary)]/50',
         'hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5',
         isTopMatch && 'border-[var(--primary)]/40 shadow-[var(--shadow-glow)]',
         !isTopMatch && curriculum.isEnrolled && 'border-[var(--primary)]/30 bg-[var(--primary)]/5',
@@ -413,7 +429,7 @@ export default function CoursesLibraryBrowser() {
   // ── Render ──────────────────────────────────────────────────────────────
 
   return (
-    <div className="space-y-7 max-w-7xl mx-auto">
+    <div className="space-y-7">
       {/* ═══ Stats Summary Bar ════════════════════════════════════════════════ */}
       <div className="flex flex-wrap items-center gap-4 sm:gap-6 px-5 py-3.5 rounded-2xl border border-[var(--border)] bg-[var(--background-card)]/60">
         <div className="flex items-center gap-2">

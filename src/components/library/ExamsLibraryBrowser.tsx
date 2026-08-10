@@ -237,21 +237,16 @@ export default function ExamsLibraryBrowser() {
   const hasMore = visibleCount < filteredExams.length;
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
-      {/* Hero */}
-      <div className="relative overflow-hidden rounded-3xl border border-[var(--border)] bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-red-500/10 p-6 md:p-8">
-        <div className="relative z-10 space-y-2">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-600 dark:text-amber-400">
-            <BookMarked size={12} /> Official Exam Dates · Contributor-verified
-          </div>
-          <h1 className="text-2xl md:text-3xl font-semibold text-[var(--foreground)] tracking-tight">
-          Exams
-          </h1>
-          <p className="max-w-xl text-sm md:text-base text-[var(--foreground-secondary)]">
-            Browse official exam dates and papers by board. Fixed-date exams (IGCSE, A Level) have pre-filled dates — you can still override them. IELTS and OSSD require you to pick your personal date.
-          </p>
+    <div className="space-y-8">
+      {/* ═══ Context Info Bar ════════════════════════════════════════════════ */}
+      <div className="flex flex-wrap items-center gap-4 sm:gap-6 px-5 py-3.5 rounded-2xl border border-[var(--border)] bg-[var(--background-card)]/60">
+        <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400">
+          <BookMarked size={13} /> Official Exam Dates · Contributor-verified
         </div>
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-56 w-56 rounded-full bg-amber-400/15 blur-3xl pointer-events-none" />
+        <div className="h-5 w-px bg-[var(--border)] hidden sm:block" />
+        <p className="text-xs text-[var(--foreground-secondary)] max-w-xl">
+          Fixed-date exams (IGCSE, A Level) have pre-filled dates. IELTS &amp; OSSD require your personal date selection.
+        </p>
       </div>
 
       {/* Filters */}
