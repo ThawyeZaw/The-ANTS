@@ -67,10 +67,6 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  console.log(
-    `[process-notifications] Batch complete: ${result.sent} sent, ${result.failed} failed, ${result.recovered} recovered (of ${result.claimed} claimed)`
-  );
-
   return NextResponse.json({
     processed: result.claimed,
     sent: result.sent,

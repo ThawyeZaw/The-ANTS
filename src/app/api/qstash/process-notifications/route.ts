@@ -85,9 +85,7 @@ export async function POST(req: NextRequest) {
     if (count && count > 0) {
       const scheduled = await scheduleQStashMessage({ delay: CHAIN_DELAY_S });
       chained = scheduled !== null;
-      if (chained) {
-        console.log(`[qstash-process] Chained next batch in ${CHAIN_DELAY_S}s (${count} remaining)`);
-      } else {
+      if (!chained) {
         console.warn('[qstash-process] Failed to chain next batch');
       }
     }

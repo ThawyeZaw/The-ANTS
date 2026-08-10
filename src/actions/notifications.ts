@@ -295,8 +295,6 @@ function startDevRescuePolling(): void {
       console.error('[qstash] Dev rescue poll failed:', err)
     );
   }, POLL_INTERVAL_MS);
-
-  console.log('[qstash] Local dev rescue polling started (every 5s)');
 }
 
 // Start the dev rescue loop when this module loads in local development.

@@ -145,8 +145,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  console.log('[telegram] webhook received:', JSON.stringify(body).slice(0, 500));
-
   // Extract message fields
   const message = body.message as Record<string, unknown> | undefined;
   if (!message?.text || !message?.chat) {

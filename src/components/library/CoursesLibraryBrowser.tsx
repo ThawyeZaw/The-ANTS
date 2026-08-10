@@ -13,7 +13,7 @@ import {
   Search, BookOpen, Star, ChevronRight, X,
   Sparkles, Check, Layers,
   GraduationCap, Globe, BookMarked, Info, ChevronDown, ChevronUp,
-  ScrollText, ArrowRight,
+  ArrowRight,
 } from 'lucide-react';
 import { useCourseManager } from '@/hooks/useCourseManager';
 import { QUALIFICATION_REGISTRY } from '@/constants/qualifications';
@@ -256,20 +256,16 @@ export default function CoursesLibraryBrowser() {
   // ── Local state ───────────────────────────────────────────────────────────
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedSubjectIds, setSelectedSubjectIds] = useState<Set<string>>(new Set());
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState<Set<string>>(() => {
+    if (typeof window === 'undefined') return new Set();
+    const params = new URLSearchParams(window.location.search);
+    const subjectsParam = params.get('subjects');
+    if (!subjectsParam) return new Set();
+    const ids = subjectsParam.split(',').map(s => s.trim()).filter(Boolean);
+    return new Set(ids);
+  });
   const [smartFilter, setSmartFilter] = useState(true);
   const [showOtherBoards, setShowOtherBoards] = useState(false);
-
-  // ── URL sync: hydrate from query param on mount ──────────────────────────
-
-  useEffect(() => {
-    const subjectsParam = searchParams.get('subjects');
-    if (!subjectsParam) return;
-    const ids = subjectsParam.split(',').map(s => s.trim()).filter(Boolean);
-    if (ids.length === 0) return;
-    setSelectedSubjectIds(new Set(ids));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // ── URL sync: write selection to query param (shallow, non-navigating) ──
 

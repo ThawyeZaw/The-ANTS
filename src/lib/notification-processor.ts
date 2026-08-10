@@ -124,11 +124,6 @@ export async function processNotificationQueue(
     console.error('[notification-processor] Stale-recovery error:', recoverError);
   } else {
     recovered = recoveredRows?.length ?? 0;
-    if (recovered > 0) {
-      console.log(
-        `[notification-processor] Recovered ${recovered} stale processing row(s)`
-      );
-    }
   }
 
   // ── 1. Fetch due pending rows ──
