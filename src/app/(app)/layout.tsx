@@ -64,7 +64,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <LessonProvider>
           <div className="min-h-screen bg-background flex flex-col">
             <NavBar />
-            <div className="flex-1 w-full max-w-[1440px] mx-auto px-4 py-6 pt-18 flex items-start gap-6">
+            <div className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pt-18 flex items-start gap-5">
               <RelatedPagesSidebar />
               <main className="flex-1 min-w-0">
                 {!hideBackButton && (

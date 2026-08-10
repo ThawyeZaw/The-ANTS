@@ -182,17 +182,21 @@ export default function RelatedPagesSidebar({ className }: RelatedPagesSidebarPr
   return (
     <aside
       className={cn(
-        'hidden lg:flex flex-col items-center gap-1 w-12 shrink-0 py-4 px-1',
+        'hidden lg:flex flex-col items-center gap-1 w-[48px] shrink-0 py-3 px-1',
         'sticky top-24 self-start z-10',
-        'rounded-2xl border border-border bg-background-card/60 backdrop-blur-md shadow-sm',
+        'rounded-2xl border border-border bg-background-card/70 backdrop-blur-md shadow-sm',
         className
       )}
+      aria-label="Related pages shortcuts"
     >
       {/* Section divider label */}
-      <p className="text-[9px] font-bold uppercase tracking-widest text-foreground-muted/50 mb-1 select-none">
-        Related
+      <p
+        className="text-[9px] font-bold uppercase tracking-[0.14em] text-foreground-muted/55 mb-1 select-none"
+        title="Related"
+      >
+        REL
       </p>
-      <div className="w-full h-px bg-border mb-1" />
+      <div className="w-8 h-px bg-border/70 mb-1" />
 
       {/* Context links */}
       {contextLinks.map((link) => (

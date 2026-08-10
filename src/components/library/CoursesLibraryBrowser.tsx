@@ -197,32 +197,33 @@ function SubjectCard({ subject, isSelected, onToggle }: SubjectCardProps) {
       aria-pressed={isSelected}
       onClick={() => onToggle(subject.id)}
       className={cn(
-        'group relative flex flex-col items-start gap-2.5 rounded-2xl border p-4 text-left transition-all duration-200 cursor-pointer w-full',
+        'group relative flex flex-col items-start gap-2.5 rounded-2xl border p-4 text-left transition-all duration-200 cursor-pointer w-full shadow-sm',
         isSelected
-          ? 'border-[var(--primary)] bg-[var(--primary)]/5 ring-1 ring-[var(--primary)]/20'
-          : 'border-[var(--border)] bg-[var(--background-card)] hover:border-[var(--primary)]/40 hover:bg-[var(--background-secondary)]'
+          ? 'border-2 border-[var(--primary)] bg-[var(--primary)]/8 ring-2 ring-[var(--primary)]/15 shadow-[0_0_0_1px_var(--primary)]/20'
+          : 'border border-[var(--border)] bg-[var(--background-secondary)]/60 hover:border-[var(--primary)]/60 hover:bg-[var(--background-secondary)] hover:shadow-md hover:-translate-y-0.5'
       )}
     >
       {/* Check indicator */}
       <div className={cn(
-        'absolute top-3 right-3 h-5 w-5 rounded-md flex items-center justify-center shrink-0 transition-all',
+        'absolute top-3 right-3 h-5.5 w-5.5 rounded-[7px] flex items-center justify-center shrink-0 transition-all duration-200',
         isSelected
-          ? 'bg-[var(--primary)] text-white'
-          : 'border-2 border-[var(--border)] group-hover:border-[var(--primary)]/40'
+          ? 'bg-[var(--primary)] text-white shadow-[0_1px_3px_rgba(0,0,0,0.2)]'
+          : 'border-[2.5px] border-[var(--foreground-muted)]/40 bg-[var(--background-card)] group-hover:border-[var(--primary)]/70 group-hover:bg-[var(--background-card)]'
       )}>
-        {isSelected && <Check size={12} strokeWidth={3} />}
+        {isSelected && <Check size={13} strokeWidth={3} className="drop-shadow-sm" />}
       </div>
 
       {/* Subject name */}
       <span className={cn(
-        'text-sm font-semibold pr-7 leading-tight transition-colors',
+        'text-sm font-semibold pr-8 leading-tight transition-colors',
         isSelected ? 'text-[var(--primary)]' : 'text-[var(--foreground)]'
       )}>
         {subject.title}
       </span>
 
-      {/* Board availability hint */}
-      <span className="text-xs text-[var(--foreground-muted)]">
+      {/* Board availability hint — increased contrast */}
+      <span className="text-xs font-medium text-[var(--foreground-secondary)] flex items-center gap-1">
+        <GraduationCap size={11} className="opacity-70" />
         {subject.boardCount} exam board{subject.boardCount !== 1 ? 's' : ''} available
       </span>
     </button>
@@ -412,36 +413,28 @@ export default function CoursesLibraryBrowser() {
   // ── Render ──────────────────────────────────────────────────────────────
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
-
-      {/* ═══ Hero ═════════════════════════════════════════════════════════════ */}
-      <div className="relative overflow-hidden rounded-3xl border border-[var(--border)] bg-gradient-to-br from-emerald-500/10 via-cyan-500/5 to-blue-500/10 p-6 md:p-8">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-              <BookMarked size={12} /> Verified by Contributors
-            </div>
-            <h1 className="text-2xl md:text-3xl font-semibold text-[var(--foreground)] tracking-tight">
-              Courses
-            </h1>
-            <p className="max-w-xl text-sm md:text-base text-[var(--foreground-secondary)]">
-              Browse verified curriculum templates from CAIE, Edexcel, IELTS and more.
-              Adding a course automatically populates your Lesson Tracker and Grade Calculator.
-            </p>
+    <div className="space-y-7 max-w-7xl mx-auto">
+      {/* ═══ Stats Summary Bar ════════════════════════════════════════════════ */}
+      <div className="flex flex-wrap items-center gap-4 sm:gap-6 px-5 py-3.5 rounded-2xl border border-[var(--border)] bg-[var(--background-card)]/60">
+        <div className="flex items-center gap-2">
+          <BookMarked size={14} className="text-emerald-500" />
+          <span className="text-xs font-semibold text-[var(--foreground-secondary)]">Verified Curricula</span>
+        </div>
+        <div className="h-5 w-px bg-[var(--border)] hidden sm:block" />
+        <div className="flex items-center gap-5">
+          <div className="flex items-baseline gap-1.5">
+            <p className="text-lg font-bold text-[var(--foreground)]">{allCurriculums.length}</p>
+            <p className="text-[11px] text-[var(--foreground-muted)]">Curricula</p>
           </div>
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="text-center">
-              <p className="text-2xl font-semibold text-[var(--foreground)]">{allCurriculums.length}</p>
-              <p className="text-xs text-[var(--foreground-muted)]">Curricula</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-semibold text-[var(--foreground)]">{totalBoards}</p>
-              <p className="text-xs text-[var(--foreground-muted)]">Boards</p>
-            </div>
+          <div className="flex items-baseline gap-1.5">
+            <p className="text-lg font-bold text-[var(--foreground)]">{totalBoards}</p>
+            <p className="text-[11px] text-[var(--foreground-muted)]">Boards</p>
+          </div>
+          <div className="flex items-baseline gap-1.5">
+            <p className="text-lg font-bold text-[var(--foreground)]">{allFlatSubjects.length}</p>
+            <p className="text-[11px] text-[var(--foreground-muted)]">Subjects</p>
           </div>
         </div>
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-56 w-56 rounded-full bg-emerald-400/15 blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 -ml-16 -mb-16 h-48 w-48 rounded-full bg-blue-400/15 blur-3xl pointer-events-none" />
       </div>
 
       {/* ═══ Phase 1: Subject Selection ═══════════════════════════════════════ */}

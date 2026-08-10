@@ -200,31 +200,6 @@ function ToolCard({ tool }: { tool: ToolItem }) {
   );
 }
 
-// ── Ambient Background Layer ─────────────────────────────────────────────────
-
-function AmbientBackground() {
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0" aria-hidden="true">
-      <div
-        className="animate-blob absolute -top-24 -left-24 w-80 h-80 rounded-full opacity-[0.12]"
-        style={{ background: 'radial-gradient(circle, #4ADE80, #059669)', filter: 'blur(80px)' }}
-      />
-      <div
-        className="animate-blob-alt absolute -top-16 -right-20 w-72 h-72 rounded-full opacity-[0.11]"
-        style={{ background: 'radial-gradient(circle, #38BDF8, #0284C7)', filter: 'blur(90px)', animationDelay: '4s' }}
-      />
-      <div
-        className="animate-blob-slow absolute top-1/3 -left-32 w-96 h-64 rounded-full opacity-[0.10]"
-        style={{ background: 'radial-gradient(circle, #A78BFA, #7C3AED)', filter: 'blur(100px)', animationDelay: '8s' }}
-      />
-      <div
-        className="animate-blob absolute top-1/4 -right-28 w-80 h-80 rounded-full opacity-[0.09]"
-        style={{ background: 'radial-gradient(circle, #FDE68A, #F59E0B)', filter: 'blur(90px)', animationDelay: '2s' }}
-      />
-    </div>
-  );
-}
-
 // ── Main Page Component ────────────────────────────────────────────────────────
 
 function LibraryPageInner() {
@@ -248,202 +223,231 @@ function LibraryPageInner() {
   const selectedCategoryObj = MAIN_CATEGORIES.find((c) => c.id === activeCategory);
 
   return (
-    <div className="relative animate-fade-in min-h-[75vh] pb-12">
-      <AmbientBackground />
+    <div className="animate-fade-in min-h-[75vh] pb-12 space-y-5">
+      {/* ── Unified Header Section ────────────────────────────────────── */}
+      <div className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-accent/5 to-primary/5 p-5 sm:p-6">
+        <div className="space-y-3">
+          {/* ── Breadcrumb trail (main nav indicator) ────────────────── */}
+          <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs">
+            <button
+              onClick={() => selectCategory(null)}
+              className="font-medium text-foreground-muted hover:text-foreground transition-colors cursor-pointer flex items-center gap-1"
+            >
+              {isCategorySelected && <ChevronLeft className="h-3.5 w-3.5" />}
+              Categories
+            </button>
+            {isCategorySelected && (
+              <>
+                <span className="text-foreground-muted/40">/</span>
+                <span className="font-semibold text-primary flex items-center gap-1.5">
+                  {selectedCategoryObj?.icon}
+                  {selectedCategoryObj?.title}
+                </span>
+              </>
+            )}
+          </nav>
 
-      <div className="relative z-10 space-y-6">
-        {/* Header Section */}
-        <div className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-accent/5 to-primary/5 p-6 sm:p-8">
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="space-y-1.5 max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold tracking-wide uppercase">
-                <Sparkles className="h-3.5 w-3.5" />
-                Resource Center
+          {/* ── Combined compact header ───────────────────────────────── */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="space-y-1 max-w-2xl">
+              <div className="flex items-center gap-2">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-semibold tracking-wide uppercase">
+                  <Sparkles className="h-3 w-3" />
+                  Study &amp; Learning Hub
+                </div>
+                {!isCategorySelected && (
+                  <span className="text-[11px] font-semibold text-foreground-muted uppercase tracking-wide">
+                    &middot; Resource Center
+                  </span>
+                )}
+                {isCategorySelected && selectedCategoryObj?.badge && (
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/20">
+                    {selectedCategoryObj.badge}
+                  </span>
+                )}
               </div>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-                Study &amp; Learning Hub
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground leading-tight">
+                {isCategorySelected ? (
+                  <span className="flex items-center gap-2">
+                    {selectedCategoryObj?.title}
+                    <span className="text-sm font-normal text-foreground-muted">
+                      &middot; {selectedCategoryObj?.subtitle}
+                    </span>
+                  </span>
+                ) : (
+                  'Resource Library'
+                )}
               </h1>
               <p className="text-sm text-foreground-secondary leading-relaxed">
-                Choose a category below to explore curated courses, comprehensive notes, interactive flashcards, exams, quizzes, and productivity tools.
+                {isCategorySelected
+                  ? selectedCategoryObj?.description
+                  : 'Choose a category below to explore curated courses, comprehensive notes, interactive flashcards, exams, quizzes, and productivity tools.'}
               </p>
             </div>
 
-            {isCategorySelected && (
-              <button
-                onClick={() => selectCategory(null)}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-background-card hover:bg-background-secondary text-foreground text-xs font-semibold transition-all shadow-sm shrink-0 self-start md:self-auto cursor-pointer"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Back to All Categories
-              </button>
-            )}
-          </div>
-          <div className="absolute top-0 right-0 -mr-16 -mt-16 h-48 w-48 rounded-full bg-primary/15 blur-3xl pointer-events-none" />
-        </div>
-
-        {/* Dynamic Content: 6-Card Grid OR Category Detail Browser */}
-        {!isCategorySelected ? (
-          /* ═════════ 6-CARD GRID DESIGN ═════════ */
-          <div className="space-y-4">
-            <div className="flex items-center justify-between px-1">
-              <h2 className="text-xs font-semibold text-foreground-muted uppercase tracking-wider">
-                Select a Resource Category
-              </h2>
-              <span className="text-xs text-foreground-muted">6 Categories Available</span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {MAIN_CATEGORIES.map((cat) => (
-                <div
-                  key={cat.id}
-                  onClick={() => selectCategory(cat.id)}
-                  className={cn(
-                    'group relative flex flex-col justify-between p-6 rounded-2xl cursor-pointer',
-                    'border border-border/80 bg-background-card',
-                    'bg-gradient-to-br', cat.gradient,
-                    'transition-all duration-300 ease-out',
-                    'hover:-translate-y-1.5 hover:shadow-xl hover:shadow-black/5',
-                    cat.borderGlow
-                  )}
-                >
-                  <div className="space-y-4">
-                    {/* Header with Icon and Badge */}
-                    <div className="flex items-start justify-between">
-                      <div className="p-3.5 rounded-2xl bg-background-card/80 border border-border/50 shadow-sm group-hover:scale-110 group-hover:bg-background-card transition-all duration-300">
-                        {cat.icon}
-                      </div>
-
-                      {cat.badge && (
-                        <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-primary/15 text-primary border border-primary/20">
-                          {cat.badge}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Title and Description */}
-                    <div className="space-y-1.5">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
-                          {cat.title}
-                        </h3>
-                        <span className="text-xs text-foreground-muted font-medium">
-                          &middot; {cat.subtitle}
-                        </span>
-                      </div>
-                      <p className="text-xs text-foreground-muted leading-relaxed line-clamp-2">
-                        {cat.description}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Footer Arrow & Action */}
-                  <div className="pt-6 mt-4 border-t border-border/40 flex items-center justify-between text-xs font-semibold text-foreground-secondary group-hover:text-primary transition-colors">
-                    <span>{cat.itemCount}</span>
-                    <div className="flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                      <span>Explore</span>
-                      <ArrowRight className="h-4 w-4" />
-                    </div>
-                  </div>
+            {!isCategorySelected && (
+              <div className="flex items-center gap-4 sm:gap-5 shrink-0 self-start sm:self-auto">
+                <div className="text-center">
+                  <p className="text-xl font-semibold text-foreground">6</p>
+                  <p className="text-[11px] text-foreground-muted">Categories</p>
                 </div>
-              ))}
-            </div>
-
-            {/* Quick Links Bar */}
-            <div className="mt-8 flex flex-wrap items-center gap-3 px-5 py-3.5 rounded-2xl bg-background-card border border-border/80 shadow-sm">
-              <Sparkles className="h-4 w-4 text-primary shrink-0" />
-              <span className="text-xs font-medium text-foreground-muted">Quick Navigation:</span>
-              <div className="flex flex-wrap items-center gap-2 text-xs font-medium">
-                <Link
-                  href="/my-notes"
-                  className="px-2.5 py-1 rounded-lg bg-background-secondary hover:bg-background-tertiary text-foreground-secondary hover:text-foreground transition-colors"
-                >
-                  My Notes
-                </Link>
-                <Link
-                  href="/flashcards"
-                  className="px-2.5 py-1 rounded-lg bg-background-secondary hover:bg-background-tertiary text-foreground-secondary hover:text-foreground transition-colors"
-                >
-                  My Decks
-                </Link>
-                <Link
-                  href="/countdown"
-                  className="px-2.5 py-1 rounded-lg bg-background-secondary hover:bg-background-tertiary text-foreground-secondary hover:text-foreground transition-colors"
-                >
-                  Exam Timetable
-                </Link>
+                <div className="text-center">
+                  <p className="text-xl font-semibold text-foreground">4+</p>
+                  <p className="text-[11px] text-foreground-muted">Tools</p>
+                </div>
               </div>
-            </div>
+            )}
           </div>
-        ) : (
-          /* ═════════ DETAILED SUB-CATEGORY / ITEM BROWSER ═════════ */
-          <div className="space-y-6">
-            {/* Category Breadcrumb Bar */}
-            <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-background-card border border-border/80 text-xs">
-              <button
-                onClick={() => selectCategory(null)}
-                className="font-medium text-foreground-muted hover:text-foreground transition-colors cursor-pointer"
+        </div>
+      </div>
+
+      {/* Dynamic Content: 6-Card Grid OR Category Detail Browser */}
+      {!isCategorySelected ? (
+        /* ═════════ 6-CARD GRID DESIGN ═════════ */
+        <div className="space-y-4">
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-xs font-semibold text-foreground-muted uppercase tracking-wider">
+              Select a Resource Category
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {MAIN_CATEGORIES.map((cat) => (
+              <div
+                key={cat.id}
+                onClick={() => selectCategory(cat.id)}
+                className={cn(
+                  'group relative flex flex-col justify-between p-6 rounded-2xl cursor-pointer',
+                  'border border-border/80 bg-background-card',
+                  'bg-gradient-to-br', cat.gradient,
+                  'transition-all duration-300 ease-out',
+                  'hover:-translate-y-1.5 hover:shadow-xl hover:shadow-black/5',
+                  cat.borderGlow
+                )}
               >
-                Categories
-              </button>
-              <span className="text-foreground-muted/40">/</span>
-              <span className="font-semibold text-primary flex items-center gap-1.5">
-                {selectedCategoryObj?.title}
-              </span>
-            </div>
+                <div className="space-y-4">
+                  {/* Header with Icon and Badge */}
+                  <div className="flex items-start justify-between">
+                    <div className="p-3.5 rounded-2xl bg-background-card/80 border border-border/50 shadow-sm group-hover:scale-110 group-hover:bg-background-card transition-all duration-300">
+                      {cat.icon}
+                    </div>
 
-            {/* Render Category View Component */}
-            {activeCategory === 'courses' && (
-              <Suspense fallback={<div className="h-64 rounded-2xl bg-background-secondary animate-pulse" />}>
-                <CoursesLibraryBrowser />
-              </Suspense>
-            )}
+                    {cat.badge && (
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-primary/15 text-primary border border-primary/20">
+                        {cat.badge}
+                      </span>
+                    )}
+                  </div>
 
-            {activeCategory === 'notes' && (
-              <Suspense fallback={<div className="h-64 rounded-2xl bg-background-secondary animate-pulse" />}>
-                <NotesLibrary />
-              </Suspense>
-            )}
-
-            {activeCategory === 'flashcards' && (
-              <Suspense fallback={<div className="h-64 rounded-2xl bg-background-secondary animate-pulse" />}>
-                <FlashcardsLibraryBrowser />
-              </Suspense>
-            )}
-
-            {activeCategory === 'exams' && (
-              <Suspense fallback={<div className="h-64 rounded-2xl bg-background-secondary animate-pulse" />}>
-                <ExamsLibraryBrowser />
-              </Suspense>
-            )}
-
-            {activeCategory === 'quizzes' && (
-              <Suspense fallback={<div className="h-64 rounded-2xl bg-background-secondary animate-pulse" />}>
-                <QuizLibraryBrowser />
-              </Suspense>
-            )}
-
-            {activeCategory === 'tools' && (
-              <div className="space-y-4">
-                <div className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-sky-500/10 via-blue-500/5 to-indigo-500/10 px-5 py-4">
-                  <div className="relative z-10 space-y-0.5">
-                    <h2 className="text-base font-semibold text-foreground tracking-tight">
-                      Study Tools &amp; Utilities
-                    </h2>
-                    <p className="text-xs text-foreground-secondary max-w-md">
-                      Productivity tools designed to boost your daily study efficiency
+                  {/* Title and Description */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
+                        {cat.title}
+                      </h3>
+                      <span className="text-xs text-foreground-muted font-medium">
+                        &middot; {cat.subtitle}
+                      </span>
+                    </div>
+                    <p className="text-xs text-foreground-muted leading-relaxed line-clamp-2">
+                      {cat.description}
                     </p>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                  {TOOLS.map((tool) => (
-                    <ToolCard key={tool.id} tool={tool} />
-                  ))}
+
+                {/* Footer Arrow & Action */}
+                <div className="pt-6 mt-4 border-t border-border/40 flex items-center justify-between text-xs font-semibold text-foreground-secondary group-hover:text-primary transition-colors">
+                  <span>{cat.itemCount}</span>
+                  <div className="flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                    <span>Explore</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </div>
                 </div>
               </div>
-            )}
+            ))}
           </div>
-        )}
-      </div>
+
+          {/* Quick Links Bar */}
+          <div className="mt-6 flex flex-wrap items-center gap-3 px-5 py-3.5 rounded-2xl bg-background-card border border-border/80 shadow-sm">
+            <Sparkles className="h-4 w-4 text-primary shrink-0" />
+            <span className="text-xs font-medium text-foreground-muted">Quick Navigation:</span>
+            <div className="flex flex-wrap items-center gap-2 text-xs font-medium">
+              <Link
+                href="/my-notes"
+                className="px-2.5 py-1 rounded-lg bg-background-secondary hover:bg-background-tertiary text-foreground-secondary hover:text-foreground transition-colors"
+              >
+                My Notes
+              </Link>
+              <Link
+                href="/flashcards"
+                className="px-2.5 py-1 rounded-lg bg-background-secondary hover:bg-background-tertiary text-foreground-secondary hover:text-foreground transition-colors"
+              >
+                My Decks
+              </Link>
+              <Link
+                href="/countdown"
+                className="px-2.5 py-1 rounded-lg bg-background-secondary hover:bg-background-tertiary text-foreground-secondary hover:text-foreground transition-colors"
+              >
+                Exam Timetable
+              </Link>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* ═════════ DETAILED SUB-CATEGORY / ITEM BROWSER ═════════ */
+        <div className="space-y-5">
+          {/* Render Category View Component */}
+          {activeCategory === 'courses' && (
+            <Suspense fallback={<div className="h-64 rounded-2xl bg-background-secondary animate-pulse" />}>
+              <CoursesLibraryBrowser />
+            </Suspense>
+          )}
+
+          {activeCategory === 'notes' && (
+            <Suspense fallback={<div className="h-64 rounded-2xl bg-background-secondary animate-pulse" />}>
+              <NotesLibrary />
+            </Suspense>
+          )}
+
+          {activeCategory === 'flashcards' && (
+            <Suspense fallback={<div className="h-64 rounded-2xl bg-background-secondary animate-pulse" />}>
+              <FlashcardsLibraryBrowser />
+            </Suspense>
+          )}
+
+          {activeCategory === 'exams' && (
+            <Suspense fallback={<div className="h-64 rounded-2xl bg-background-secondary animate-pulse" />}>
+              <ExamsLibraryBrowser />
+            </Suspense>
+          )}
+
+          {activeCategory === 'quizzes' && (
+            <Suspense fallback={<div className="h-64 rounded-2xl bg-background-secondary animate-pulse" />}>
+              <QuizLibraryBrowser />
+            </Suspense>
+          )}
+
+          {activeCategory === 'tools' && (
+            <div className="space-y-4">
+              <div className="rounded-2xl border border-border bg-gradient-to-br from-sky-500/10 via-blue-500/5 to-indigo-500/10 px-5 py-4">
+                <div className="space-y-0.5">
+                  <h2 className="text-base font-semibold text-foreground tracking-tight">
+                    Study Tools &amp; Utilities
+                  </h2>
+                  <p className="text-xs text-foreground-secondary max-w-md">
+                    Productivity tools designed to boost your daily study efficiency
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {TOOLS.map((tool) => (
+                  <ToolCard key={tool.id} tool={tool} />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
