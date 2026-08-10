@@ -490,7 +490,7 @@ const NavBar = React.memo(function NavBar() {
                     <button
                       onClick={handleToolsClick}
                       className={cn(
-                        'nav-pill-btn',
+                        'nav-pill-btn focus-ring',
                         isToolsActive() && 'nav-pill-btn--active'
                       )}
                     >
@@ -541,7 +541,7 @@ const NavBar = React.memo(function NavBar() {
                     <button
                       onClick={handleCommunityClick}
                       className={cn(
-                        'nav-pill-btn',
+                        'nav-pill-btn focus-ring',
                         isCommunityActive() && 'nav-pill-btn--active'
                       )}
                     >
@@ -592,7 +592,7 @@ const NavBar = React.memo(function NavBar() {
                     <button
                       onClick={handleAdminClick}
                       className={cn(
-                        'nav-pill-btn',
+                        'nav-pill-btn focus-ring',
                         isActive(group.href) && 'nav-pill-btn--active'
                       )}
                     >
@@ -687,7 +687,7 @@ const NavBar = React.memo(function NavBar() {
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   className={cn(
-                    'flex items-center gap-2 pl-1.5 pr-2 sm:pl-2 sm:pr-3 py-1.5 rounded-full transition-colors duration-200',
+                    'flex items-center gap-2 pl-1.5 pr-2 sm:pl-2 sm:pr-3 py-1.5 rounded-full transition-colors duration-200 focus-ring',
                     isUserMenuOpen
                       ? 'bg-primary/10 ring-2 ring-primary/30'
                       : 'hover:bg-background-secondary'
@@ -761,7 +761,7 @@ const NavBar = React.memo(function NavBar() {
 
       {/* ─── Mobile Menu ─── */}
       {isMobileOpen && (
-        <div className="md:hidden fixed inset-x-0 top-[68px] bottom-0 bg-background/95 backdrop-blur-xl border-t border-border animate-slide-down overflow-y-auto z-40">
+        <div className="md:hidden fixed inset-x-0 top-[68px] bottom-0 bg-background-card border-t border-border animate-slide-down overflow-y-auto z-40">
           <div className="p-4 space-y-4">
             {/* Study Resources Grid */}
             <div>

@@ -55,13 +55,13 @@ export default function ClassroomList({
   return (
     <div className="w-full max-w-6xl mx-auto space-y-8 animate-fade-in">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-2">
         <div>
-          <h1 className="text-3xl font-bold text-[var(--foreground)] flex items-center gap-3">
-            <BookOpen className="h-8 w-8 text-[var(--primary)]" />
+          <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+            <BookOpen className="h-8 w-8 text-primary" />
             Classrooms
           </h1>
-          <p className="text-[var(--foreground-secondary)] mt-2">Your virtual classrooms for assignments, quizzes, and discussions.</p>
+          <p className="text-sm text-foreground-muted mt-2">Your virtual classrooms for assignments, quizzes, and discussions.</p>
         </div>
 
         <div className="flex items-center gap-2">
