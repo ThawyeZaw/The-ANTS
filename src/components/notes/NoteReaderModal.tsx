@@ -86,7 +86,7 @@ export default function NoteReaderModal({ noteId, onClose, allNotes }: NoteReade
         <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-background-card shrink-0">
           <div className="flex items-center gap-2">
             <button
-              onClick={() => window.open(`/library/${note.id}`, '_blank')}
+              onClick={() => window.open(`/my-notes/${note.id}`, '_blank')}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border text-foreground-muted hover:text-foreground text-xs font-medium hover:bg-background-secondary transition-all cursor-pointer"
               title="Open in full page"
             >

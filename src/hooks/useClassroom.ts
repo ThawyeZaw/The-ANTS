@@ -8,6 +8,8 @@ import {
 } from '@/types';
 import { createClient } from '@/lib/supabase/client';
 
+import { matchesSlugOrId } from '@/lib/utils';
+
 type Result = { success: boolean; error?: string };
 
 export function useClassroom() {
@@ -41,7 +43,7 @@ export function useClassroom() {
   );
 
   const getClassroom = useCallback(
-    (id: string) => classrooms.find((c) => c.id === id),
+    (id: string) => classrooms.find((c) => matchesSlugOrId(c, id) || c.invite_code === id),
     [classrooms]
   );
 

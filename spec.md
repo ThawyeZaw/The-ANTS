@@ -2450,3 +2450,68 @@ The contributor dashboard relies on the following mock data functions (all in `s
 - `mockTimelineItems` (OrgTimelineItem[]) — Timeline entries with `title`, `description`, `date`, `imageUrls`
 
 All mock data is fully covered and requires no backend changes.
+
+---
+
+## 35. Course Structures, Auto-Pinning & Resource Architecture
+
+### 35.1 Supported Curriculum Specifications
+
+The platform supports 5 core academic curriculum structures, each mapped to a 3-tier hierarchy (`Curriculum/Qualification → Subject → Topic/Paper/Unit/Module`):
+
+1. **CAIE IGCSE (Cambridge International)**:
+   - **Structure**: 2-year linear qualification with terminal exams at course completion.
+   - **Syllabus & Codes**: 4-digit subject codes (e.g., `0620` Chemistry, `0580` Mathematics).
+   - **Tiers**: Core tier (max grade C) and Extended tier (max grade A*).
+   - **Grading & Assessment**: Raw marks converted to grade boundaries (A*-G or 9-1). Fixed exam series in May/June and Oct/Nov.
+
+2. **Edexcel IGCSE (Pearson)**:
+   - **Structure**: Linear qualification with terminal Paper 1 & Paper 2 exams.
+   - **Syllabus & Codes**: Alphanumeric codes (e.g., `4MA1` Mathematics A).
+   - **Grading & Assessment**: Exclusively uses 9-1 grading scale based on raw marks. Series in May/June, Oct/Nov, and Jan (select subjects).
+
+3. **Edexcel International Advanced Level (IAL)**:
+   - **Structure**: Highly modular. Syllabus split into discrete units (e.g., `WMA11` Pure Math 1, `WMA12` Pure Math 2).
+   - **Unit Exams & Retakes**: Students can take unit exams across series and retake specific units independently without repeating the whole subject.
+   - **Grading & Assessment**: Uniform Mark Scale (UMS). Raw marks convert to UMS to standardize difficulty across years. Final grades (A*-E) sum UMS scores across required units.
+   - **Cash-In**: Requires explicit Cash-in codes to convert banked unit scores into an overall AS or A Level certificate. Exam series in Jan, May/June, and Oct.
+
+4. **CAIE AS & A Level (Cambridge)**:
+   - **Structure**: Staged linear qualification. Students can sit all papers at the end of 2 years, or take AS Level (Year 1) and carry marks forward to A2 Level (Year 2) within a 13-month window.
+   - **Exam Format**: Paper combinations (e.g., Papers 1, 2, 3 for AS; 4, 5 for A2).
+   - **Grading & Assessment**: Raw marks weighted and added together against yearly grade boundaries (no UMS). Grades A-E for AS, A*-E for A Level. Fixed series in May/June and Oct/Nov.
+
+5. **IELTS Academic**:
+   - **Structure**: Single-sitting English proficiency test assessing 4 modules: Reading, Writing, Listening, Speaking.
+   - **Exam Format**: 3-hour exam with skills-based practice.
+   - **Grading & Assessment**: Band scores from 0 to 9.0 in 0.5 increments. Overall Band is the exact average of 4 modules, rounded to the nearest 0.5 (e.g., 0.25 rounds up to 0.5). Continuous computer-delivered test schedule.
+
+### 35.2 Course Manager & Auto-Pin Resource Workflow
+
+When a user selects and enrolls in a course in the **Course Manager** (`/courses`):
+- **Resource Pinning**: All associated official resources (**Lesson Tracker** topics, **Notes Library**, **Flashcards**, **Quizzes**) are pinned for fast user access under their account without duplicating records in the database.
+- **Target Exam Confirmation Modal**: Prompts the student immediately to confirm their target exam series date (e.g., *May/June 2026*, *Oct/Nov 2026*, *Jan 2027*, *May/June 2027*, or set target date later). Confirming auto-populates their **Exam Countdown**.
+- **Unpinning**: Dropping a course unpins fast-access links while preserving personal study history and custom user notes.
+
+### 35.3 Resource Types & Approval Lifecycle
+
+- **User-Created Resources**:
+  - Any user can create custom notes, flashcard decks, or countdowns.
+  - Private by default; shareable with others via unique URLs (`/share/note/[token]`, `/share/deck/[token]`, `/share/countdown/[token]`).
+- **Official Library Resources**:
+  - Submitted strictly by **Contributors** and **Main Contributors** via `NoteSubmitModal`.
+  - Routed to the **Gatekeeper Review Queue** (`/main-contributor/review-queue`).
+  - Reviewed and approved by a **Main Contributor** before receiving the official badge and public catalog placement.
+
+### 35.4 Reorganized 3-Pillar Navigation Structure
+
+The top navbar (`src/components/layout/NavBar.tsx`) is organized into 3 primary pillars for all authenticated users, plus role-gated admin links:
+
+| Pillar | Navigation Items & Routes |
+|---|---|
+| **Library** | Courses (`/courses`), Notes (`/library`), Flashcards (`/flashcards`), Quizzes (`/quizzes`) |
+| **Tools** | Exam Countdown (`/countdown`), Grade Calculator (`/calculator`), Timetable (`/timetable`), Pomodoro Timer (`/pomodoro`) |
+| **Community** | Classrooms (`/classrooms`), Clubs (`/clubs`), Profiles (`/explore`), About The ANTs (`/about`) |
+| **Contribute** | Submit Official Resources (`/contribute`) — *Contributor & Main Contributor only* |
+| **Admin** | Dashboard, Add Contributor, Review Queue, Manage Organization (`/main-contributor`) — *Main Contributor only* |
+

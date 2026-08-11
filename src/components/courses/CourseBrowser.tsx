@@ -12,7 +12,7 @@ import {
   BookOpen, Plus, Check, X, Search, GraduationCap, Trash2,
   Undo2, ChevronDown, ChevronUp, AlertCircle,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, slugify } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useCourseManager, type EnrollmentWithDetails } from '@/hooks/useCourseManager';
 import type { CurriculumSummary, SubjectSummary } from '@/hooks/useCourseManager';
@@ -112,6 +112,7 @@ export default function CourseBrowser() {
   const {
     allCurriculums,
     getSubjectsForCurriculum,
+    getExamsForCurriculum,
     enrollments,
     isLoading: hookLoading,
     enroll,
@@ -250,11 +251,20 @@ export default function CourseBrowser() {
     setEnrolMessage(null);
   }, []);
 
+  const [showExamTargetModal, setShowExamTargetModal] = useState(false);
+  const [selectedTargetSeries, setSelectedTargetSeries] = useState<string>('May/June 2026');
+
   // ── Bulk enrol ───────────────────────────────────────────────────────────
 
-  const handleBulkEnrol = useCallback(async () => {
+  const handleOpenExamTargetModal = useCallback(() => {
+    if (stagedSubjectKeys.size === 0) return;
+    setShowExamTargetModal(true);
+  }, [stagedSubjectKeys]);
+
+  const executeBulkEnrol = useCallback(async (seriesOption?: string | null) => {
     if (stagedSubjectKeys.size === 0) return;
     setEnrolling(true);
+    setShowExamTargetModal(false);
     setEnrolMessage(null);
 
     const keysToEnrol = Array.from(stagedSubjectKeys);
@@ -267,13 +277,19 @@ export default function CourseBrowser() {
       const [curriculumId, subjectId] = key.split('::');
       if (!curriculumId || !subjectId) continue;
 
-      const result = await enroll(curriculumId, subjectId, null);
+      let examId: string | null = null;
+      if (seriesOption) {
+        const subjectExams = getExamsForCurriculum(curriculumId);
+        const match = subjectExams.find((e: any) => e.subject_id === subjectId && (e.series === seriesOption || e.exam_series === seriesOption));
+        if (match) examId = match.id;
+      }
+
+      const result = await enroll(curriculumId, subjectId, examId);
       if (result.success) {
         successCount++;
         enrolledCurriculumIdsSet.add(curriculumId);
         enrolledSubjectIdsSet.add(subjectId);
       } else {
-        // Find subject name for error reporting
         const item = allSubjectsWithCurriculum.find(
           s => s.subject.id === subjectId && s.curriculum.id === curriculumId
         );
@@ -292,9 +308,8 @@ export default function CourseBrowser() {
     if (failed.length === 0) {
       setEnrolMessage({
         type: 'success',
-        text: `Successfully enrolled in ${successCount} subject${successCount !== 1 ? 's' : ''}. Redirecting to dashboard...`,
+        text: `Successfully enrolled in ${successCount} subject${successCount !== 1 ? 's' : ''}. Official notes & resources pinned to your account!`,
       });
-      // Redirect to dashboard to trigger resource sync
       setTimeout(() => {
         router.push('/dashboard');
       }, 1200);
@@ -304,7 +319,7 @@ export default function CourseBrowser() {
         text: `Enrolled in ${successCount} subject${successCount !== 1 ? 's' : ''}. Failed: ${failed.join(', ')}.`,
       });
     }
-  }, [stagedSubjectKeys, enroll, allSubjectsWithCurriculum, contextCurriculumIds, contextSubjectIds, syncSelectedCurricula, syncSelectedSubjects, refetchContext, router]);
+  }, [stagedSubjectKeys, enroll, getExamsForCurriculum, allSubjectsWithCurriculum, contextCurriculumIds, contextSubjectIds, syncSelectedCurricula, syncSelectedSubjects, refetchContext, router]);
 
   // ── Inline drop with undo ────────────────────────────────────────────────
 
@@ -705,7 +720,7 @@ export default function CourseBrowser() {
               subject{stagedCount !== 1 ? 's' : ''} selected
             </p>
             <button
-              onClick={handleBulkEnrol}
+              onClick={handleOpenExamTargetModal}
               disabled={enrolling}
               className={cn(
                 'inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-all duration-150 min-h-[44px] focus-ring',
@@ -732,6 +747,75 @@ export default function CourseBrowser() {
 
       {/* Bottom padding equal to sticky bar height when visible */}
       {stagedCount > 0 && <div className="h-24" />}
+
+      {/* ── Exam Target Modal ─────────────────────────────────────────────── */}
+      {showExamTargetModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="w-full max-w-md rounded-2xl border border-border bg-background-card p-6 shadow-2xl space-y-5 animate-scale-up">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <GraduationCap className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-foreground">Target Exam Window</h3>
+                  <p className="text-xs text-foreground-muted">Pin countdown and sync study resources</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowExamTargetModal(false)}
+                className="rounded-lg p-1 text-foreground-muted hover:text-foreground transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <p className="text-sm text-foreground-secondary">
+              Select your target exam series to automatically pin Countdown timers and sync official notes to your account, or choose to set your date later.
+            </p>
+
+            <div className="space-y-2">
+              <label className="text-xs font-semibold uppercase tracking-wider text-foreground-muted">
+                Exam Series / Target Date
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {['May/June 2026', 'Oct/Nov 2026', 'Jan 2027', 'May/June 2027'].map((series) => (
+                  <button
+                    key={series}
+                    type="button"
+                    onClick={() => setSelectedTargetSeries(series)}
+                    className={cn(
+                      'rounded-xl border p-3 text-xs font-medium text-left transition-all',
+                      selectedTargetSeries === series
+                        ? 'border-primary bg-primary/10 text-primary font-semibold'
+                        : 'border-border bg-background-secondary text-foreground hover:border-border-hover'
+                    )}
+                  >
+                    {series}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => executeBulkEnrol(null)}
+                className="rounded-xl border border-border px-4 py-2.5 text-xs font-medium text-foreground-secondary hover:bg-background-secondary transition-colors"
+              >
+                Set target date later
+              </button>
+              <button
+                type="button"
+                onClick={() => executeBulkEnrol(selectedTargetSeries)}
+                className="rounded-xl bg-primary px-4 py-2.5 text-xs font-semibold text-primary-foreground hover:bg-primary-hover transition-colors"
+              >
+                Confirm & Enrol
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Undo toast ────────────────────────────────────────────────────── */}
       {undoEntry && (
@@ -810,7 +894,7 @@ function MyCoursesPanel({
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <button
-                      onClick={() => router.push(`/lessons/${enr.curriculum_id}/${enr.subject_id}`)}
+                      onClick={() => router.push(`/lessons/${slugify(enr.curriculum.title)}/${slugify(enr.subject.title)}`)}
                       className="rounded-lg p-2 text-foreground-muted hover:text-primary hover:bg-primary/10 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center focus-ring"
                       aria-label={`View topics for ${enr.subject.title}`}
                       title="View Topics"

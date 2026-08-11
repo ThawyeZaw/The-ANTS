@@ -169,7 +169,7 @@ export default function EditorToolbar({
         {noteId && (
           <button
             onClick={() => {
-              navigator.clipboard.writeText(`${window.location.origin}/library/${noteId}`);
+              navigator.clipboard.writeText(`${window.location.origin}/my-notes/${noteId}`);
             }}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[var(--background-secondary)] border border-[var(--border)] text-[var(--foreground-muted)] hover:text-[var(--foreground)] hover:border-[var(--border-hover)] text-xs font-medium transition-all shrink-0 cursor-pointer focus-ring"
             aria-label="Copy share link"

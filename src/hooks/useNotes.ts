@@ -41,6 +41,8 @@ export function useNotes(filters: NoteFilters) {
   return { notes };
 }
 
+import { matchesSlugOrId } from '@/lib/utils';
+
 // ── useSingleNote ─────────────────────────────────────────────────────────────
 
 export function useSingleNote(noteId: string) {
@@ -51,8 +53,19 @@ export function useSingleNote(noteId: string) {
   useEffect(() => {
     setLoading(true);
     (async () => {
-      const { data } = await supabase.from('notes').select('*').eq('id', noteId).single();
-      setNote((data as unknown as Note) ?? null);
+      const { data } = await supabase.from('notes').select('*').eq('id', noteId).maybeSingle();
+      if (data) {
+        setNote(data as unknown as Note);
+        setLoading(false);
+        return;
+      }
+      const { data: allNotes } = await supabase.from('notes').select('*');
+      if (allNotes) {
+        const found = allNotes.find((n: any) => matchesSlugOrId(n, noteId));
+        setNote((found as unknown as Note) ?? null);
+      } else {
+        setNote(null);
+      }
       setLoading(false);
     })();
   }, [noteId, supabase]);

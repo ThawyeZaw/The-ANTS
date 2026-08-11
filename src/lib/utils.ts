@@ -171,3 +171,36 @@ export function humanizeAuthError(error?: string): string {
 
   return error;
 }
+
+/**
+ * Convert any string into a clean, URL-safe slug.
+ * Example: "Cambridge IGCSE Chemistry (0620)" -> "cambridge-igcse-chemistry-0620"
+ */
+export function slugify(text?: string | null): string {
+  if (!text) return '';
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+/**
+ * Match an entity by UUID, exact slug, or slugified title/name.
+ */
+export function matchesSlugOrId(
+  entity: { id: string; title?: string | null; name?: string | null; custom_slug?: string | null; slug?: string | null; syllabus_code?: string | null },
+  param: string
+): boolean {
+  if (!param) return false;
+  const decodedParam = decodeURIComponent(param).toLowerCase().trim();
+  if (entity.id.toLowerCase() === decodedParam) return true;
+  if (entity.slug && entity.slug.toLowerCase() === decodedParam) return true;
+  if (entity.custom_slug && entity.custom_slug.toLowerCase() === decodedParam) return true;
+  if (entity.syllabus_code && entity.syllabus_code.toLowerCase() === decodedParam) return true;
+  const titleSlug = slugify(entity.title ?? entity.name ?? '');
+  if (titleSlug && titleSlug === decodedParam) return true;
+  return false;
+}
+

@@ -96,11 +96,11 @@ export default function MyNotesLibrary() {
 
         <div className="flex items-center gap-2">
           <Link
-            href="/library"
+            href="/courses"
             className="flex items-center gap-2 px-4 py-2 border border-border text-foreground-secondary font-medium rounded-xl text-sm hover:bg-background-secondary transition-all shrink-0"
           >
             <BookOpen className="h-4 w-4" />
-            Browse Library
+            Browse Courses
           </Link>
           <Link
             href="/editor/notes"
@@ -175,11 +175,11 @@ export default function MyNotesLibrary() {
                     Create Note
                   </Link>
                   <Link
-                    href="/library"
+                    href="/courses"
                     className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border text-foreground-secondary text-sm font-medium hover:bg-background-secondary transition-all"
                   >
                     <BookOpen className="h-4 w-4" />
-                    Browse Library
+                    Browse Courses
                   </Link>
                 </div>
               )}

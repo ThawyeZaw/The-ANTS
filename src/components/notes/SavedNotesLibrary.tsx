@@ -109,13 +109,13 @@ export default function SavedNotesLibrary() {
         {/* Tab switcher */}
         <div className="flex border-b border-border/60 shrink-0">
           <Link
-            href="/library"
+            href="/my-notes"
             className="px-4 py-2 border-b-2 font-medium text-sm transition-all -mb-px border-transparent text-foreground-muted hover:text-foreground hover:border-border"
           >
             All Notes
           </Link>
           <Link
-            href="/library/saved"
+            href="/my-notes"
             className="px-4 py-2 border-b-2 font-semibold text-sm transition-all -mb-px border-primary text-primary"
           >
             Selected Notes
@@ -170,7 +170,7 @@ export default function SavedNotesLibrary() {
                   : 'You haven\'t saved any study notes yet. Explore the library to add notes to your dashboard!'}
               </p>
               <Link
-                href="/library"
+                href="/my-notes"
                 className="mt-2 flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary/95 transition-all shadow-md shadow-primary/20"
               >
                 <BookOpen className="h-4 w-4" />

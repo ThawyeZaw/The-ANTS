@@ -7,7 +7,7 @@
 
 import Link from 'next/link';
 import { Bookmark, BookmarkCheck, FlaskConical, GraduationCap, Zap, Pencil, Trash2, Globe, Lock, Link as LinkIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, slugify } from '@/lib/utils';
 import type { Note } from '@/types';
 import { mockCurriculums, mockSubjects } from '@/lib/mock/database';
 
@@ -96,7 +96,7 @@ export default function NoteCard({ note, isSaved = false, onToggleSave, contribu
 
         {/* ── Title ── */}
         <Link
-          href={`/library/${note.id}`}
+          href={`/my-notes/${slugify(note.title) || note.id}`}
           onClick={(e) => {
             if (onRead) {
               e.preventDefault();

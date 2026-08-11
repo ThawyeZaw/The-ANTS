@@ -8,7 +8,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { getDeck } from '@/lib/mock/database';
+import { getDeck, getDecks } from '@/lib/mock/database';
+import { matchesSlugOrId } from '@/lib/utils';
 import type { Deck } from '@/types';
 import StudySession from '@/components/flashcards/StudySession';
 import DeckEditView from '@/components/flashcards/DeckEditView';
@@ -30,8 +31,14 @@ export default function DeckPage() {
 
   useEffect(() => {
     if (deckId) {
-      const found = getDeck(deckId);
-      setDeck(found || null);
+      const directFound = getDeck(deckId);
+      if (directFound) {
+        setDeck(directFound);
+      } else {
+        const allDecks = getDecks();
+        const found = allDecks.find(d => matchesSlugOrId(d, deckId));
+        setDeck(found || null);
+      }
       setLoading(false);
     }
   }, [deckId]);

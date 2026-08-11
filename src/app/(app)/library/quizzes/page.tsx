@@ -7,7 +7,7 @@ export default function LibraryQuizzesRedirect() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/library?tab=quizzes');
+    router.replace('/quizzes');
   }, [router]);
 
   return null;

@@ -36,7 +36,7 @@ function ClubCard({ club, isLeader }: { club: Club; isLeader?: boolean }) {
   return (
     <Link
       href={`/clubs/${club.custom_slug}`}
-      className="group block rounded-2xl border border-border bg-background-card overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-border-hover hover:-translate-y-0.5"
+      className="group block card-standard overflow-hidden focus-ring"
     >
       {/* Cover */}
       {club.cover_image_url ? (
@@ -184,20 +184,25 @@ export default function ClubDashboardPage() {
   const hasClubs = leaderClubs.length > 0 || memberClubs.length > 0;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-2">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">My Clubs</h1>
-          <p className="text-sm text-foreground-muted mt-1">
-            Manage your club memberships and communities
+          <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+            <Users className="h-8 w-8 text-primary" />
+            My Clubs
+          </h1>
+          <p className="text-sm text-foreground-muted mt-2">
+            Manage your club memberships and communities.
           </p>
         </div>
-        <Link href="/clubs/create">
-          <Button icon={<Plus className="h-4 w-4" />}>
-            Create a Club
-          </Button>
-        </Link>
+        <div className="shrink-0">
+          <Link href="/clubs/create" className="focus-ring rounded-xl inline-block">
+            <Button icon={<Plus className="h-4 w-4" />}>
+              Create a Club
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Loading */}

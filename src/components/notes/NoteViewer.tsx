@@ -54,7 +54,7 @@ export default function NoteViewer({ note }: NoteViewerProps) {
   return (
     <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
 
-      <BackButton href="/library" label="Back to Library" />
+      <BackButton href="/my-notes" label="Back to My Notes" />
 
       {/* ── Pending / rejected notice ── */}
       {note.status !== 'approved' && (

@@ -76,26 +76,26 @@
 
 /* ── Dark Theme ───────────────────────────────────────────────────────────── */
 [data-theme="dark"] {
-  --background: #060B14;
-  --background-secondary: #090E1A;
-  --background-card: #0C1220;
-  --background-elevated: #111827;
+  --background: #0D131F;
+  --background-secondary: #131B2C;
+  --background-card: #182238;
+  --background-elevated: #1E2942;
 
   --foreground: #E8EDF4;
   --foreground-secondary: #B8C4D6;
-  --foreground-muted: #94A3B8;     /* ~7.5:1 on dark bg — lightened from #7D8BA3 */
+  --foreground-muted: #94A3B8;     /* ~7.5:1 on dark bg */
 
-  --border: rgba(91, 158, 255, 0.10);
-  --border-hover: rgba(91, 158, 255, 0.20);
+  --border: rgba(91, 158, 255, 0.12);
+  --border-hover: rgba(91, 158, 255, 0.24);
 
   --primary: #5B9EFF;
   --primary-hover: #3B7DD8;
-  --primary-light: rgba(91, 158, 255, 0.12);
-  --primary-foreground: #000000;
+  --primary-light: rgba(91, 158, 255, 0.14);
+  --primary-foreground: #FFFFFF;
 
   --accent: #28FFBF;
   --accent-hover: #06FF00;
-  --accent-light: rgba(40, 255, 191, 0.10);
+  --accent-light: rgba(40, 255, 191, 0.12);
   --accent-foreground: #000000;
 
   --success: #28FFBF;
@@ -108,9 +108,9 @@
   --role-contributor: #B98FFF;
   --role-main-contributor: #FFB347;
 
-  --glass-bg: rgba(6, 11, 20, 0.80);
-  --glass-border: rgba(91, 158, 255, 0.08);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  --glass-bg: rgba(13, 19, 31, 0.82);
+  --glass-border: rgba(91, 158, 255, 0.12);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.40);
 
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.20);
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.30);
@@ -165,7 +165,7 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* ── Base Styles ──────────────────────────────────────────────────────────── */
+/* ── Base Styles & Smooth Theme Transitions ────────────────────────────── */
 * {
   box-sizing: border-box;
 }
@@ -175,6 +175,29 @@ html {
   font-size: 110%; /* +10% base size for improved readability — scales via rem */
 }
 
+body,
+header,
+nav,
+footer,
+main,
+section,
+aside,
+div,
+button,
+a,
+input,
+select,
+textarea,
+.glass,
+.glass-subtle,
+.hp,
+.hp-nav {
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -182,7 +205,6 @@ body {
   font-weight: 400;
   line-height: 1.5;
   letter-spacing: 0.012em;
-  transition: background-color 0.3s ease, color 0.3s ease;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -547,14 +569,14 @@ a {
 
 /* ── Dark / Neon theme — Nighttime study optimized ───────────────────────── */
 [data-theme="dark"] .hp {
-  /* Deep indigo-black base (reduces eye strain vs pure #000) */
-  --hp-bg: #060B14;
-  --hp-bg-soft: #090E1A;
-  --hp-surface: #0C1220;
-  --hp-surface-2: #111827;
-  --hp-surface-hover: #161E30;
-  --hp-border: rgba(91, 158, 255, 0.08);
-  --hp-border-strong: rgba(91, 158, 255, 0.16);
+  /* Deep slate-indigo base (reduces eye strain vs pure #000) */
+  --hp-bg: #0D131F;
+  --hp-bg-soft: #131B2C;
+  --hp-surface: #182238;
+  --hp-surface-2: #1E2942;
+  --hp-surface-hover: #24324F;
+  --hp-border: rgba(91, 158, 255, 0.12);
+  --hp-border-strong: rgba(91, 158, 255, 0.24);
   --hp-ink: #E8EDF4;
   --hp-ink-muted: #B0BFD4;
   --hp-ink-faint: #7A8FA8;
@@ -567,8 +589,8 @@ a {
   --hp-amber-rgb: 255, 126, 179;
   --hp-violet: #B98FFF;
   --hp-violet-rgb: 185, 143, 255;
-  --hp-btn-text: #060B14;
-  --hp-cta-text-muted: rgba(6, 11, 20, 0.78);
+  --hp-btn-text: #0D131F;
+  --hp-cta-text-muted: rgba(13, 19, 31, 0.78);
 
   /* Dark-mode elevation shadows (deep, minimal glow) */
   --hp-shadow-btn:
@@ -1887,5 +1909,189 @@ a {
   .nav-icon-btn:hover .nav-icon-draw svg polyline,
   .nav-icon-btn:hover .nav-icon-draw svg polygon {
     stroke-width: 2;
+  }
+}
+
+/* ── Hide scrollbar (keep scroll functionality) ──────────────────────────── */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Card Standard — shared card base style
+   ═══════════════════════════════════════════════════════════════════════════════ */
+.card-standard {
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  background: var(--background-card);
+  transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+}
+.card-standard:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border-color: var(--border-hover);
+}
+
+/* ── Focus Ring ───────────────────────────────────────────────────────────── */
+.focus-ring:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Filter Tab Bar — Clean Sliding Transition (Zero Blur)
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Container ───────────────────────────────────────────────────────────── */
+.filter-tab-bar {
+  position: relative;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Individual tab button ───────────────────────────────────────────────── */
+.filter-tab {
+  position: relative;
+  transition:
+    background-color 0.28s cubic-bezier(0.25, 0.1, 0.25, 1),
+    color            0.28s cubic-bezier(0.25, 0.1, 0.25, 1),
+    box-shadow       0.28s cubic-bezier(0.25, 0.1, 0.25, 1),
+    border-color     0.28s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* ── Sliding underline indicator ─────────────────────────────────────────── */
+.filter-tab::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--primary);
+  transition:
+    width  0.28s cubic-bezier(0.25, 0.1, 0.25, 1),
+    opacity 0.28s cubic-bezier(0.25, 0.1, 0.25, 1);
+  opacity: 0;
+}
+
+.filter-tab:hover::after {
+  width: 60%;
+  opacity: 0.35;
+}
+
+.filter-tab--active::after {
+  width: 60%;
+  opacity: 1;
+}
+
+/* ── Icon container ──────────────────────────────────────────────────────── */
+.filter-tab-icon {
+  transition: color 0.28s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .filter-tab,
+  .filter-tab::after,
+  .filter-tab-icon {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Illustrated Tab Cards (Library page)
+   ═══════════════════════════════════════════════════════════════════════════════ */
+.illus-tab-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px 10px;
+  border-radius: 16px;
+  border: 1.5px solid transparent;
+  background: var(--background-card);
+  cursor: pointer;
+  min-width: 90px;
+  transition:
+    border-color 0.22s ease,
+    box-shadow   0.22s ease,
+    transform    0.18s ease;
+}
+.illus-tab-card:hover {
+  border-color: var(--border-hover);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+  transform: translateY(-2px);
+}
+.illus-tab-card--active {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light), 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+.illus-tab-card--active:hover {
+  transform: translateY(-1px);
+}
+
+.illus-tab-card__illus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+}
+
+.illus-tab-card__label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--foreground-secondary);
+  white-space: nowrap;
+  transition: color 0.22s ease;
+}
+.illus-tab-card--active .illus-tab-card__label {
+  color: var(--primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .illus-tab-card {
+    transition: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Ambient Blob Animations (Library page background)
+   ═══════════════════════════════════════════════════════════════════════════════ */
+@keyframes blob-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(18px, -22px) scale(1.05); }
+  66%       { transform: translate(-14px, 14px) scale(0.97); }
+}
+@keyframes blob-drift-alt {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  40%       { transform: translate(-20px, 16px) scale(1.04); }
+  70%       { transform: translate(12px, -18px) scale(0.96); }
+}
+@keyframes blob-drift-slow {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%       { transform: translate(10px, -10px) scale(1.03); }
+}
+
+.animate-blob {
+  animation: blob-drift 14s ease-in-out infinite;
+}
+.animate-blob-alt {
+  animation: blob-drift-alt 18s ease-in-out infinite;
+}
+.animate-blob-slow {
+  animation: blob-drift-slow 22s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-blob,
+  .animate-blob-alt,
+  .animate-blob-slow {
+    animation: none;
   }
 }

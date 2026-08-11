@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { Layers, BookOpen, ExternalLink, Package, Calendar, LineChart } from 'lucide-react';
 import type { Deck, Note, Exam } from '@/types';
 import { getNotes, getRelatedDecks, getExams, mockCurriculums, mockSubjects } from '@/lib/mock/database';
+import { slugify } from '@/lib/utils';
 
 interface RelatedContentProps {
   curriculumId?: string | null;
@@ -91,7 +92,7 @@ export default function RelatedContent({
               {relatedDecks.map((deck) => (
                 <li key={deck.id}>
                   <Link
-                    href={`/flashcards/${deck.id}`}
+                    href={`/flashcards/${slugify(deck.name) || deck.id}`}
                     className="group flex items-start gap-2 text-sm"
                   >
                     <span className="flex-1 font-medium text-[var(--foreground)] group-hover:text-[var(--primary)] transition-colors line-clamp-1">
@@ -116,7 +117,7 @@ export default function RelatedContent({
               {relatedNotes.map((note) => (
                 <li key={note.id}>
                   <Link
-                    href={`/library/${note.id}`}
+                    href={`/my-notes/${slugify(note.title) || note.id}`}
                     className="group flex items-start gap-2 text-sm"
                   >
                     <span className="flex-1 font-medium text-[var(--foreground)] group-hover:text-[var(--primary)] transition-colors line-clamp-1">
@@ -162,7 +163,7 @@ export default function RelatedContent({
               Your Progress
             </div>
             <Link
-              href={`/lessons/${curriculumId}/${subjectId}`}
+              href={`/lessons/${slugify(curriculum?.title) || curriculumId}/${slugify(subject?.title) || subjectId}`}
               className="group flex items-center justify-between p-3 rounded-lg border border-[var(--border)] hover:border-[var(--primary)] hover:bg-[var(--primary-light)] transition-all"
             >
               <div className="flex flex-col">

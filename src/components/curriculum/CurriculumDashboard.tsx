@@ -473,7 +473,7 @@ function NotesSection({ notes }: { notes: ReturnType<typeof useCurriculumDashboa
             return (
               <Link
                 key={note.id}
-                href={`/library/${note.id}`}
+                href={`/my-notes/${note.id}`}
                 className="block rounded-lg border border-border/60 bg-background-secondary/50 px-3 py-2.5 hover:border-primary/30 hover:bg-background-secondary transition-colors"
               >
                 <div className="flex items-start justify-between gap-2">

@@ -315,6 +315,22 @@ export function useCourseManager() {
           await createCountdownIfNeeded(userId, nextExam.id);
         }
       }
+
+      // Auto-pin official library notes for fast access without DB duplication
+      try {
+        const { data: officialNotes } = await supabase
+          .from('notes')
+          .select('id')
+          .eq('subject_id', subjectId)
+          .eq('visibility', 'public');
+        if (officialNotes && officialNotes.length > 0) {
+          const saveInserts = officialNotes.map((n: { id: string }) => ({ user_id: userId, note_id: n.id }));
+          await supabase.from('user_saved_notes').upsert(saveInserts, { onConflict: 'user_id,note_id' });
+        }
+      } catch {
+        // Ignore fallback errors if running local mock
+      }
+
       await refetchEnrollments();
       return { success: true };
     },

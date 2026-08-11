@@ -6,7 +6,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
-import { generateClubSlug } from '@/lib/utils';
+import { generateClubSlug, slugify } from '@/lib/utils';
 import type { ClubField, ClubProjectLink } from '@/types';
 import type { Json } from '@/types/supabase';
 
@@ -66,12 +66,21 @@ export async function actionGetClub(clubId: string) {
 
 export async function actionGetClubBySlug(slug: string) {
   const supabase = await createClient();
-  // Try by custom_slug first
+  // 1. Try by custom_slug first
   const { data: club, error } = await supabase.from('clubs').select('*').eq('custom_slug', slug).single();
   if (!error && club) return { success: true, club };
-  // Fall back to id lookup (for legacy UUID-based links)
+
+  // 2. Fall back to id lookup (for legacy links)
   const { data: clubById, error: errorById } = await supabase.from('clubs').select('*').eq('id', slug).single();
   if (!errorById && clubById) return { success: true, club: clubById };
+
+  // 3. Fall back to slugified name lookup
+  const { data: allClubs } = await supabase.from('clubs').select('*');
+  if (allClubs) {
+    const found = allClubs.find((c: any) => c.custom_slug === slug || slugify(c.name) === slug);
+    if (found) return { success: true, club: found };
+  }
+
   return { success: false, error: 'Club not found' };
 }
 

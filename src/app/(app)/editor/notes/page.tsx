@@ -23,7 +23,7 @@ function EditorGuard() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated && !hasAccess) {
-      router.replace('/library');
+      router.replace('/my-notes');
     }
   }, [isLoading, isAuthenticated, hasAccess, router]);
 
@@ -46,10 +46,10 @@ function EditorGuard() {
         <h2 className="text-xl font-bold text-[var(--foreground)]">Access Restricted</h2>
         <p className="mt-2 max-w-sm text-sm text-[var(--foreground-secondary)]">
           The Notes Editor is available to Contributors and Main Contributors only.
-          Browse the Library or request a role upgrade in Settings.
+          Browse Notes or request a role upgrade in Settings.
         </p>
         <div className="mt-6 flex items-center gap-3">
-          <BackButton href="/library" label="Back to Library" />
+          <BackButton href="/my-notes" label="Back to My Notes" />
           <Link
             href="/settings"
             className="inline-flex items-center gap-2 rounded-xl bg-[var(--primary)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[var(--primary-hover)] transition-colors"

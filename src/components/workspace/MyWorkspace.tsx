@@ -444,7 +444,7 @@ function DecksTab({ userId, isLoading }: { userId: string; isLoading: boolean })
         title="No flashcard decks yet"
         description="Create your own deck or add approved decks from the library. All decks support spaced repetition (SRS)."
         cta="Browse Library"
-        ctaHref="/library/flashcards"
+        ctaHref="/flashcards"
       />
     );
   }
@@ -586,7 +586,7 @@ function ExamsTab({
         title="No exam countdowns yet"
         description="Add official exam dates or create custom countdowns. Track days remaining and study with purpose."
         cta="Browse Exams"
-        ctaHref="/library/exams"
+        ctaHref="/resources"
       />
     );
   }
@@ -812,7 +812,7 @@ export default function MyWorkspace() {
         {/* Quick actions */}
         <div className="flex items-center gap-2 flex-wrap">
           <Link
-            href="/library/courses"
+            href="/courses"
             className="flex items-center gap-1.5 rounded-xl border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--foreground-secondary)] hover:text-[var(--foreground)] hover:bg-[var(--background-secondary)] transition-all"
           >
             <BookMarked size={13} /> Library
