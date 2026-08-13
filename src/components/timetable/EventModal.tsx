@@ -5,6 +5,7 @@ import { X, ChevronDown, ChevronUp, RotateCcw, AlertCircle, Search } from 'lucid
 import type { TimetableEvent, TimetableEventFormData, TimetableEventType, RecurrenceRule } from '@/types/timetable';
 import { EVENT_TYPE_CONFIG, ALL_EVENT_TYPES, COLOUR_PRESETS } from '@/constants/timetable';
 import { formatDateLocal } from '@/hooks/useTimetable';
+import { useAuth } from '@/hooks/useAuth';
 
 interface EventModalProps {
   isOpen: boolean;
@@ -71,6 +72,9 @@ export default function EventModal({
   defaultStartTime,
   dayEventCount,
 }: EventModalProps) {
+  const { user } = useAuth();
+  const isTelegramConnected = Boolean(user?.profile?.telegramChatId);
+
   const [form, setForm] = useState<TimetableEventFormData>(DEFAULT_FORM);
   const [isSaving, setIsSaving] = useState(false);
   const [showRecurrence, setShowRecurrence] = useState(false);
@@ -161,8 +165,34 @@ export default function EventModal({
     setError(null);
   }, [isOpen, event, defaultDate, defaultStartTime]);
 
+  const getDayOfWeekFromDateStr = (dateStr: string) => {
+    if (!dateStr) return new Date().getDay();
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      return new Date(year, month, day).getDay();
+    }
+    return new Date().getDay();
+  };
+
   const update = (key: keyof TimetableEventFormData, value: unknown) => {
-    setForm(prev => ({ ...prev, [key]: value }));
+    setForm(prev => {
+      let updatedRule = prev.recurrence_rule;
+      if (key === 'date' && typeof value === 'string' && prev.is_recurring && prev.recurrence_rule?.frequency === 'weekly') {
+        const oldDay = getDayOfWeekFromDateStr(prev.date);
+        const newDay = getDayOfWeekFromDateStr(value);
+        const currentDays = prev.recurrence_rule.days_of_week ?? [];
+        if (currentDays.length <= 1 && (currentDays.length === 0 || currentDays[0] === oldDay)) {
+          updatedRule = {
+            ...prev.recurrence_rule,
+            days_of_week: [newDay],
+          };
+        }
+      }
+      return { ...prev, [key]: value, recurrence_rule: updatedRule };
+    });
   };
 
   const handleTypeSelect = (type: TimetableEventType) => {
@@ -197,10 +227,11 @@ export default function EventModal({
       update('recurrence_rule', null);
     } else {
       update('is_recurring', true);
+      const dayOfWeek = getDayOfWeekFromDateStr(form.date);
       const rule: RecurrenceRule = {
         frequency: freq as RecurrenceRule['frequency'],
         interval: 1,
-        days_of_week: freq === 'weekly' ? [new Date().getDay()] : undefined,
+        days_of_week: freq === 'weekly' ? [dayOfWeek] : undefined,
         end_date: null,
       };
       update('recurrence_rule', rule);
@@ -502,27 +533,49 @@ export default function EventModal({
           </div>
 
           {/* Telegram Reminder */}
-          <div className="flex items-center justify-between py-2">
-            <div>
-              <p className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>Telegram Reminder</p>
-              <p className="text-xs text-foreground-muted mt-0.5">Get notified via Telegram before the event</p>
+          <div className="py-2 space-y-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>Telegram Reminder</p>
+                <p className="text-xs text-foreground-muted mt-0.5">Get notified via Telegram before the event</p>
+              </div>
+              <select
+                id="event-reminder"
+                value={form.reminder_minutes ?? ''}
+                onChange={e => update('reminder_minutes', e.target.value ? Number(e.target.value) : null)}
+                className="px-3 py-2 rounded-lg text-sm border outline-none w-40"
+                style={{ color: 'var(--foreground)', backgroundColor: 'color-mix(in srgb, var(--border) 50%, transparent)', borderColor: 'var(--border)' }}
+              >
+                <option value="">No reminder</option>
+                <option value="0">On time</option>
+                <option value="10">10 minutes early</option>
+                <option value="30">30 minutes early</option>
+                <option value="60">1 hour early</option>
+                <option value="1440">1 day early</option>
+                <option value="4320">3 days early</option>
+                <option value="10080">1 week early</option>
+              </select>
             </div>
-            <select
-              id="event-reminder"
-              value={form.reminder_minutes ?? ''}
-              onChange={e => update('reminder_minutes', e.target.value ? Number(e.target.value) : null)}
-              className="px-3 py-2 rounded-lg text-sm border outline-none w-40"
-              style={{ color: 'var(--foreground)', backgroundColor: 'color-mix(in srgb, var(--border) 50%, transparent)', borderColor: 'var(--border)' }}
-            >
-              <option value="">No reminder</option>
-              <option value="0">On time</option>
-              <option value="10">10 minutes early</option>
-              <option value="30">30 minutes early</option>
-              <option value="60">1 hour early</option>
-              <option value="1440">1 day early</option>
-              <option value="4320">3 days early</option>
-              <option value="10080">1 week early</option>
-            </select>
+
+            {form.reminder_minutes !== null && !isTelegramConnected && (
+              <div className="p-3 rounded-xl border border-amber-500/30 bg-amber-500/10 flex items-start gap-2.5 animate-in fade-in duration-200">
+                <AlertCircle size={16} className="text-amber-500 shrink-0 mt-0.5" />
+                <div className="flex-1 text-xs">
+                  <p className="font-semibold text-amber-500">Telegram Bot Not Connected</p>
+                  <p className="text-foreground-muted mt-0.5">
+                    Connect Telegram in Settings to enable live reminders on your phone.
+                  </p>
+                  <a
+                    href="/settings"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 mt-2 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-500 text-black hover:bg-amber-400 transition-colors shadow-sm"
+                  >
+                    Connect Telegram in Settings
+                  </a>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Recurrence */}

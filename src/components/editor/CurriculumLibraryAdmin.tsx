@@ -5,7 +5,7 @@
 // Contributor/Main-Contributor interface for managing the curriculum library.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   BookOpen, Plus, Pencil, Trash2, Save, Send,
   GraduationCap, ChevronRight, ChevronDown, Shield, AlertCircle,
@@ -14,17 +14,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
-import {
-  getAllCurriculums,
-  getPublicSubjects,
-  getTopicsBySubject,
-  mockCurriculums,
-  mockSubjects,
-  addTopic as dbAddTopic,
-  updateTopic as dbUpdateTopic,
-  deleteTopic as dbDeleteTopic,
-  submitToReviewQueue,
-} from '@/lib/mock/database';
+import { createClient } from '@/lib/supabase/client';
 
 /** Dispatch a custom event so consumer hooks (useCourseManager, LessonContext) can refetch. */
 function notifyCurriculumChanged() {
@@ -73,13 +63,89 @@ export default function CurriculumLibraryAdmin() {
   const { isMainContributor, isContributor } = useRole();
   const canDirectPublish = isMainContributor;
 
-  const [curriculums, setCurriculums] = useState(() => getAllCurriculums().map(c => ({ ...c, description: c.description || '', qualification: c.qualification || '', exam_board: c.exam_board || '', isNew: false as boolean })));
+  const [curriculums, setCurriculums] = useState<any[]>([]);
   const [expandedCurriculum, setExpandedCurriculum] = useState<string | null>(null);
   const [editingCurriculum, setEditingCurriculum] = useState<EditableCurriculum | null>(null);
   const [editingSubject, setEditingSubject] = useState<EditableSubject | null>(null);
   const [editingTopic, setEditingTopic] = useState<EditableTopic | null>(null);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'submitting' | 'done' | 'error'>('idle');
   const [statusMessage, setStatusMessage] = useState('');
+
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [topics, setTopics] = useState<any[]>([]);
+
+  const fetchCurriculums = useCallback(async () => {
+    const supabase = createClient();
+    if (!supabase) return;
+    const { data: currData } = await supabase.from('curriculums').select('*').order('title');
+    if (currData) {
+      setCurriculums(currData.map(c => ({
+        ...c,
+        description: c.description || '',
+        qualification: c.qualification || '',
+        exam_board: c.exam_board || '',
+        isNew: false,
+      })));
+    }
+    const { data: subjData } = await supabase.from('subjects').select('*').order('order_no');
+    if (subjData) setSubjects(subjData);
+
+    const { data: topicData } = await supabase.from('topics').select('*').order('order_no');
+    if (topicData) setTopics(topicData);
+  }, []);
+
+  useEffect(() => {
+    fetchCurriculums();
+  }, [fetchCurriculums]);
+
+  const getPublicSubjects = useCallback((curriculumId: string) => {
+    return subjects.filter(s => s.curriculum_id === curriculumId);
+  }, [subjects]);
+
+  const getTopicsBySubject = useCallback((subjectId: string) => {
+    return topics.filter(t => t.subject_id === subjectId);
+  }, [topics]);
+
+  const submitToReviewQueue = useCallback(async (submission: {
+    contributor_id: string;
+    submission_type: 'curriculum' | 'subject' | 'topic';
+    entity_id: string;
+    submitted_data: Record<string, any>;
+    is_update: boolean;
+    published_entity_id: string | null;
+  }) => {
+    const supabase = createClient();
+    if (!supabase) return;
+    await supabase.from('review_queue').insert({
+      contributor_id: submission.contributor_id,
+      submission_type: submission.submission_type,
+      entity_id: submission.entity_id,
+      submitted_data: submission.submitted_data,
+      is_update: submission.is_update,
+      published_entity_id: submission.published_entity_id,
+    });
+  }, []);
+
+  const dbAddTopic = useCallback(async (data: any) => {
+    const supabase = createClient();
+    if (!supabase) return;
+    await supabase.from('topics').insert(data);
+    fetchCurriculums();
+  }, [fetchCurriculums]);
+
+  const dbUpdateTopic = useCallback(async (topicId: string, data: any) => {
+    const supabase = createClient();
+    if (!supabase) return;
+    await supabase.from('topics').update(data).eq('id', topicId);
+    fetchCurriculums();
+  }, [fetchCurriculums]);
+
+  const dbDeleteTopic = useCallback(async (topicId: string) => {
+    const supabase = createClient();
+    if (!supabase) return;
+    await supabase.from('topics').delete().eq('id', topicId);
+    fetchCurriculums();
+  }, [fetchCurriculums]);
 
   // ── Add new curriculum ────────────────────────────────────────────────────
 
@@ -113,35 +179,36 @@ export default function CurriculumLibraryAdmin() {
   const handleSaveCurriculum = useCallback(async () => {
     if (!editingCurriculum || !user) return;
     setSubmitStatus('submitting');
+    const supabase = createClient();
+    if (!supabase) { setSubmitStatus('error'); return; }
 
     if (canDirectPublish) {
-      // Main-contributor: publish directly
-      const existing = curriculums.find(c => c.id === editingCurriculum.id);
-      if (!existing && editingCurriculum.isNew) {
-        // Add new directly
-        const newCurr = {
+      if (editingCurriculum.isNew) {
+        await supabase.from('curriculums').insert({
           id: editingCurriculum.id,
           title: editingCurriculum.title,
           description: editingCurriculum.description,
           qualification: editingCurriculum.qualification,
           exam_board: editingCurriculum.exam_board,
           created_by: user.id,
-          status: 'published' as string,
+          status: 'published',
           is_public: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          isNew: false as boolean,
-        };
-        setCurriculums(prev => [...prev, newCurr]);
-        mockCurriculums.push(newCurr);
+        });
+      } else {
+        await supabase.from('curriculums').update({
+          title: editingCurriculum.title,
+          description: editingCurriculum.description,
+          qualification: editingCurriculum.qualification,
+          exam_board: editingCurriculum.exam_board,
+        }).eq('id', editingCurriculum.id);
       }
+      fetchCurriculums();
       notifyCurriculumChanged();
       setStatusMessage('Published directly.');
     } else {
-      // Contributor: submit to review queue
-      submitToReviewQueue({
+      await supabase.from('review_queue').insert({
         contributor_id: user.id,
-        submission_type: editingCurriculum.isNew ? 'curriculum' : 'curriculum',
+        submission_type: 'curriculum',
         entity_id: editingCurriculum.id,
         submitted_data: {
           title: editingCurriculum.title,
@@ -158,7 +225,7 @@ export default function CurriculumLibraryAdmin() {
     setSubmitStatus('done');
     setEditingCurriculum(null);
     setTimeout(() => setSubmitStatus('idle'), 3000);
-  }, [editingCurriculum, user, canDirectPublish, curriculums]);
+  }, [editingCurriculum, user, canDirectPublish, fetchCurriculums]);
 
   // ── Add new subject ──────────────────────────────────────────────────────
 
@@ -180,22 +247,24 @@ export default function CurriculumLibraryAdmin() {
     setSubmitStatus('submitting');
 
     if (canDirectPublish) {
-      // Publish directly
-      if (editingSubject.isNew) {
-        mockSubjects.push({
-          id: editingSubject.id,
-          curriculum_id: editingSubject.curriculum_id,
-          title: editingSubject.title,
-          description: editingSubject.description,
-          order_no: editingSubject.order_no,
-        });
-      } else {
-        const existing = mockSubjects.find(s => s.id === editingSubject.id);
-        if (existing) {
-          existing.title = editingSubject.title;
-          existing.description = editingSubject.description;
-          existing.order_no = editingSubject.order_no;
+      const supabase = createClient();
+      if (supabase) {
+        if (editingSubject.isNew) {
+          await supabase.from('subjects').insert({
+            id: editingSubject.id,
+            curriculum_id: editingSubject.curriculum_id,
+            title: editingSubject.title,
+            description: editingSubject.description,
+            order_no: editingSubject.order_no,
+          });
+        } else {
+          await supabase.from('subjects').update({
+            title: editingSubject.title,
+            description: editingSubject.description,
+            order_no: editingSubject.order_no,
+          }).eq('id', editingSubject.id);
         }
+        fetchCurriculums();
       }
       notifyCurriculumChanged();
       setStatusMessage('Published directly.');
@@ -219,7 +288,7 @@ export default function CurriculumLibraryAdmin() {
     setSubmitStatus('done');
     setEditingSubject(null);
     setTimeout(() => setSubmitStatus('idle'), 3000);
-  }, [editingSubject, user, canDirectPublish]);
+  }, [editingSubject, user, canDirectPublish, fetchCurriculums, submitToReviewQueue]);
 
   // ── Add new topic ────────────────────────────────────────────────────────
 
@@ -304,7 +373,7 @@ export default function CurriculumLibraryAdmin() {
     setSubmitStatus('done');
     setEditingTopic(null);
     setTimeout(() => setSubmitStatus('idle'), 3000);
-  }, [editingTopic, user, canDirectPublish]);
+  }, [editingTopic, user, canDirectPublish, dbAddTopic, dbUpdateTopic, submitToReviewQueue]);
 
   // ── Delete topic ─────────────────────────────────────────────────────────
 
@@ -329,7 +398,7 @@ export default function CurriculumLibraryAdmin() {
       setSubmitStatus('done');
       setTimeout(() => setSubmitStatus('idle'), 3000);
     }
-  }, [user, canDirectPublish]);
+  }, [user, canDirectPublish, dbDeleteTopic, submitToReviewQueue]);
 
   // ── Render ────────────────────────────────────────────────────────────────
 

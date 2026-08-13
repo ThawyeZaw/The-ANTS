@@ -1,9 +1,10 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 import {
   GraduationCap,
   FileText,
@@ -23,16 +24,6 @@ import { WorkspaceToastProvider } from '@/components/workspace/WorkspaceToast';
 import CourseSyncPanel from '@/components/layout/CourseSyncPanel';
 import QuickAccessToolbar from '@/components/layout/QuickAccessToolbar';
 import { cn } from '@/lib/utils';
-import {
-  getTeacherDashboardStats,
-  getClassroomsByUser,
-  getProfile,
-  mockClassroomMembers,
-  mockClassroomCurriculums,
-  mockCurriculums,
-  mockAssignments,
-  mockClubAnnouncements,
-} from '@/lib/mock/database';
 import { useDashboardSync } from '@/hooks/useDashboardSync';
 
 // ── Icon & Color maps (replicated from DashboardLayout — PM-locked) ──────────
@@ -61,11 +52,43 @@ export default function TeacherDashboard() {
   const { role, isTeacher } = useRole();
   const router = useRouter();
 
+  const [teacherClassrooms, setTeacherClassrooms] = useState<any[]>([]);
+  const [activeAssignments, setActiveAssignments] = useState<any[]>([]);
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [stats, setStats] = useState<any[]>([]);
+
   useEffect(() => {
     if (role && !isTeacher) {
       router.replace(`/${role === 'main_contributor' ? 'main-contributor' : role}`);
     }
   }, [role, isTeacher, router]);
+
+  useEffect(() => {
+    async function fetchData() {
+      if (!user) return;
+      const supabase = createClient();
+      if (!supabase) return;
+
+      const [{ data: classes }, { data: assigns }, { data: anns }] = await Promise.all([
+        supabase.from('classrooms').select('*').eq('created_by', user.id),
+        supabase.from('assignments').select('*'),
+        supabase.from('classroom_announcements').select('*').order('created_at', { ascending: false }).limit(5),
+      ]);
+
+      if (classes) setTeacherClassrooms(classes);
+      if (assigns) setActiveAssignments(assigns);
+      if (anns) setAnnouncements(anns);
+
+      setStats([
+        { key: 'active-classrooms', label: 'Active Classrooms', value: classes?.length ?? 0, color: 'emerald' },
+        { key: 'total-students', label: 'Total Students', value: 0, color: 'violet' },
+        { key: 'pending-assignments', label: 'Assignments', value: assigns?.length ?? 0, color: 'amber' },
+        { key: 'completed-this-week', label: 'Completed Tasks', value: 0, color: 'sky' },
+      ]);
+    }
+
+    fetchData();
+  }, [user]);
 
   const { upcomingExams } = useDashboardSync();
 
@@ -73,11 +96,6 @@ export default function TeacherDashboard() {
 
   const firstName = user.profile.name.split(' ')[0];
   const welcomeSubtitle = "Your classrooms are waiting. Here's your teaching overview for today.";
-  const stats = getTeacherDashboardStats(user.id);
-
-  const teacherClassrooms = getClassroomsByUser(user.id);
-  const teacherClassIds = teacherClassrooms.map(c => c.id);
-  const activeAssignments = mockAssignments.filter(a => teacherClassIds.includes(a.classroom_id));
 
   const mainContent = (
     <div className="space-y-6">
@@ -106,11 +124,9 @@ export default function TeacherDashboard() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {teacherClassrooms.map((classroom) => {
-              const memberCount = mockClassroomMembers.filter(m => m.classroom_id === classroom.id).length;
-              const teachers = mockClassroomMembers.filter(m => m.classroom_id === classroom.id && m.role === 'teacher');
-              const teacherNames = teachers.map(t => getProfile(t.user_id)?.name).filter(Boolean) as string[];
-              const currIds = mockClassroomCurriculums.filter(cc => cc.classroom_id === classroom.id).map(cc => cc.curriculum_id);
-              const curriculumNames = mockCurriculums.filter(c => currIds.includes(c.id)).map(c => c.title);
+              const memberCount = 0;
+              const teacherNames: string[] = [];
+              const curriculumNames: string[] = [];
 
               return (
                 <ClassroomCard
@@ -180,13 +196,13 @@ export default function TeacherDashboard() {
           </h3>
         </div>
         <div className="space-y-2">
-          {mockClubAnnouncements.slice(0, 3).map(ann => (
+          {announcements.slice(0, 3).map(ann => (
             <div key={ann.id} className="p-2 bg-background-secondary/50 rounded-lg border border-border/50">
               <p className="font-semibold text-xs text-foreground">{ann.title}</p>
               <p className="text-[11px] text-foreground-muted mt-0.5">{ann.content}</p>
             </div>
           ))}
-          {mockClubAnnouncements.length === 0 && (
+          {announcements.length === 0 && (
             <p className="text-xs text-foreground-muted">No announcements right now.</p>
           )}
         </div>

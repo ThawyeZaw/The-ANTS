@@ -20,11 +20,6 @@ import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { cachedQuery } from '@/lib/cache';
 import { useAuthContext } from './AuthContext';
-import {
-  getAllCurriculums,
-  getAllSubjects,
-  mockTopics,
-} from '@/lib/mock/database';
 
 // ── Local Types ───────────────────────────────────────────────────────────────
 
@@ -146,15 +141,15 @@ export function LessonProvider({ children }: { children: ReactNode }) {
   const [countdownsLoading, setCountdownsLoading] = useState(false);
 
   const fetchData = useCallback(async () => {
-    if (!userId || !supabase) {
-      // MVP: load mock curriculum data even when not authenticated
-      setAllCurriculums(getAllCurriculums().map(c => ({
-        ...c,
-        is_public: true,
-        status: 'published' as string,
-      })));
-      setAllSubjects(getAllSubjects());
-      setAllTopics([...mockTopics]);
+    if (!userId) {
+      const [cRes, sRes, tRes] = await Promise.all([
+        cachedQuery<any>('curriculums_all', () => supabase.from('curriculums').select('*').order('title'), { staleTimeMs: 300000, persist: true }),
+        cachedQuery<any>('subjects_all', () => supabase.from('subjects').select('*').order('order_no'), { staleTimeMs: 300000, persist: true }),
+        cachedQuery<any>('topics_all', () => supabase.from('topics').select('*').order('order_no'), { staleTimeMs: 300000, persist: true }),
+      ]);
+      setAllCurriculums(cRes.data ?? []);
+      setAllSubjects(sRes.data ?? []);
+      setAllTopics(tRes.data ?? []);
       setProgressRecords([]);
       setEnrollments([]);
       setIsLoading(false);
@@ -171,27 +166,9 @@ export function LessonProvider({ children }: { children: ReactNode }) {
       cachedQuery<any>(`topic_progress_${userId}`, () => supabase.from('topic_progress').select('*').eq('user_id', userId), { staleTimeMs: 60000, persist: false }),
     ]);
 
-    const curriculaFromDB = cRes.data ?? [];
-    const subjectsFromDB = sRes.data ?? [];
-    const topicsFromDB = tRes.data ?? [];
-
-    // Fall back to mock facade when Supabase returns no data
-    setAllCurriculums(curriculaFromDB.length > 0
-      ? curriculaFromDB
-      : getAllCurriculums().map(c => ({
-          ...c,
-          is_public: true,
-          status: 'published' as string,
-        }))
-    );
-    setAllSubjects(subjectsFromDB.length > 0
-      ? subjectsFromDB
-      : getAllSubjects()
-    );
-    setAllTopics(topicsFromDB.length > 0
-      ? topicsFromDB
-      : [...mockTopics]
-    );
+    setAllCurriculums(cRes.data ?? []);
+    setAllSubjects(sRes.data ?? []);
+    setAllTopics(tRes.data ?? []);
     const enrollmentData = eRes.data ?? [];
     setEnrollments(enrollmentData);
     setProgressRecords((pRes.data ?? []) as TopicProgressRecord[]);

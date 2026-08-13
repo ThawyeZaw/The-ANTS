@@ -9,7 +9,6 @@ import { useState, useCallback, useMemo, useEffect } from 'react';
 import type { Exam, ExamCountdown, UserExamHistory } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 import { createClient } from '@/lib/supabase/client';
-import { getAllCurriculums, getAllSubjects } from '@/lib/mock/database';
 import { actionEnqueueExamReminders } from '@/actions/notifications';
 
 // ── Local Types ───────────────────────────────────────────────────────────────
@@ -73,22 +72,12 @@ export function useCourseManager() {
   // Load all data on mount / userId change
   const loadCurriculumData = useCallback(async () => {
     if (!userId) {
-      // MVP fallback: load mock data when no user is authenticated
-      setAllCurriculums(getAllCurriculums().map(c => ({
-        id: c.id,
-        title: c.title,
-        description: c.description,
-        qualification: c.qualification,
-        exam_board: c.exam_board,
-        syllabus_code: null,
-        structure_type: null,
-        grading_system: null,
-        hierarchy_model: null,
-        library_status: 'approved' as import('@/types').LibraryStatus,
-        share_token: null,
-        subject_count: undefined,
-      })));
-      setAllSubjects(getAllSubjects());
+      const [cRes, sRes] = await Promise.all([
+        supabase.from('curriculums').select('*').order('title'),
+        supabase.from('subjects').select('*').order('order_no'),
+      ]);
+      setAllCurriculums((cRes.data ?? []) as any[]);
+      setAllSubjects((sRes.data ?? []) as any[]);
       setAllExams([]);
       setEnrollments([]);
       setExamHistory([]);
@@ -109,41 +98,22 @@ export function useCourseManager() {
       supabase.from('exam_countdowns').select('*').eq('user_id', userId),
     ]);
 
-    setAllCurriculums((cRes.data ?? []).length > 0
-      ? (cRes.data ?? []).map(c => ({
-          id: c.id,
-          title: c.title,
-          description: c.description,
-          qualification: c.qualification,
-          exam_board: c.exam_board,
-          syllabus_code: c.syllabus_code ?? null,
-          structure_type: c.structure_type ?? null,
-          grading_system: c.grading_system ?? null,
-          hierarchy_model: (c.hierarchy_model ?? null) as { level1: string; level2: string; level3: string } | null,
-          library_status: (c.library_status ?? 'approved') as import('@/types').LibraryStatus,
-          share_token: c.share_token ?? null,
-          subject_count: c.subject_count ?? undefined,
-        }))
-      : getAllCurriculums().map(c => ({
-          id: c.id,
-          title: c.title,
-          description: c.description,
-          qualification: c.qualification,
-          exam_board: c.exam_board,
-          syllabus_code: null,
-          structure_type: null,
-          grading_system: null,
-          hierarchy_model: null,
-          library_status: 'approved' as import('@/types').LibraryStatus,
-          share_token: null,
-          subject_count: undefined,
-        }))
-    );
+    setAllCurriculums((cRes.data ?? []).map(c => ({
+      id: c.id,
+      title: c.title,
+      description: c.description,
+      qualification: c.qualification,
+      exam_board: c.exam_board,
+      syllabus_code: c.syllabus_code ?? null,
+      structure_type: c.structure_type ?? null,
+      grading_system: c.grading_system ?? null,
+      hierarchy_model: (c.hierarchy_model ?? null) as { level1: string; level2: string; level3: string } | null,
+      library_status: (c.library_status ?? 'approved') as import('@/types').LibraryStatus,
+      share_token: c.share_token ?? null,
+      subject_count: c.subject_count ?? undefined,
+    })));
 
-    setAllSubjects((sRes.data ?? []).length > 0
-      ? (sRes.data ?? [])
-      : getAllSubjects()
-    );
+    setAllSubjects((sRes.data ?? []) as SubjectSummary[]);
 
     setAllExams(eRes.data ?? []);
     setEnrollments((enrRes.data ?? []) as EnrollmentEntry[]);

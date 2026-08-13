@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, SlidersHorizontal } from 'lucide-react';
 import type { TimetableEventType } from '@/types/timetable';
 import { EVENT_TYPE_CONFIG, ALL_EVENT_TYPES } from '@/constants/timetable';
 
@@ -14,11 +14,13 @@ interface InlineCreateProps {
   topPx?: number;
   /** Called when user submits (Enter key) */
   onSubmit: (title: string, eventType: TimetableEventType) => void;
+  /** Called when user wants to open the full event creation modal */
+  onMore?: (title: string, eventType: TimetableEventType) => void;
   /** Called when user cancels (Escape or blur) */
   onCancel: () => void;
 }
 
-export default function InlineCreate({ topPx, onSubmit, onCancel }: InlineCreateProps) {
+export default function InlineCreate({ topPx, onSubmit, onMore, onCancel }: InlineCreateProps) {
   const [title, setTitle] = useState('');
   const [eventType, setEventType] = useState<TimetableEventType>('study');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -38,6 +40,10 @@ export default function InlineCreate({ topPx, onSubmit, onCancel }: InlineCreate
     onSubmit(trimmed, eventType);
   }, [title, eventType, onSubmit, onCancel]);
 
+  const handleMore = useCallback(() => {
+    onMore?.(title.trim(), eventType);
+  }, [title, eventType, onMore]);
+
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -52,7 +58,7 @@ export default function InlineCreate({ topPx, onSubmit, onCancel }: InlineCreate
 
   return (
     <div
-      className="absolute left-2 right-2 z-30 rounded-lg p-2 flex flex-col gap-1.5 shadow-xl animate-in fade-in slide-in-from-top-1 duration-150"
+      className="absolute left-2 right-2 z-30 rounded-lg p-2.5 flex flex-col gap-2 shadow-xl animate-in fade-in slide-in-from-top-1 duration-150"
       style={{
         top: topPx ?? 0,
         backgroundColor: 'var(--background-card)',
@@ -70,17 +76,17 @@ export default function InlineCreate({ topPx, onSubmit, onCancel }: InlineCreate
         onKeyDown={handleKeyDown}
         onBlur={() => {
           // Small delay to allow button clicks
-          setTimeout(onCancel, 150);
+          setTimeout(onCancel, 200);
         }}
         placeholder="Event title…"
-        className="w-full bg-transparent text-sm text-foreground placeholder:text-foreground-muted outline-none"
+        className="w-full bg-transparent text-sm font-medium text-foreground placeholder:text-foreground-muted outline-none"
         autoComplete="off"
       />
 
-      {/* Quick type picker + submit */}
-      <div className="flex items-center gap-1">
+      {/* Quick type picker + action buttons */}
+      <div className="flex items-center gap-1.5">
         {/* Type chips (compact) */}
-        <div className="flex items-center gap-0.5 flex-1 overflow-x-auto">
+        <div className="flex items-center gap-1 flex-1 overflow-x-auto no-scrollbar">
           {ALL_EVENT_TYPES.map(type => {
             const cfg = EVENT_TYPE_CONFIG[type];
             const isActive = type === eventType;
@@ -90,7 +96,7 @@ export default function InlineCreate({ topPx, onSubmit, onCancel }: InlineCreate
                 type="button"
                 onMouseDown={e => e.preventDefault()} // prevent blur
                 onClick={() => setEventType(type)}
-                className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium transition-colors"
+                className="shrink-0 px-2 py-0.5 rounded text-[10px] font-medium transition-colors"
                 style={{
                   backgroundColor: isActive ? cfg.bgColor : 'color-mix(in srgb, var(--border) 20%, transparent)',
                   color: isActive ? cfg.color : 'var(--foreground-muted)',
@@ -103,24 +109,44 @@ export default function InlineCreate({ topPx, onSubmit, onCancel }: InlineCreate
           })}
         </div>
 
+        {/* 'More...' button to open full modal */}
+        {onMore && (
+          <button
+            type="button"
+            onMouseDown={e => e.preventDefault()}
+            onClick={handleMore}
+            className="shrink-0 px-2 py-1 rounded text-[11px] font-semibold flex items-center gap-1 transition-colors hover:bg-accent"
+            style={{
+              color: 'var(--foreground)',
+              border: '1px solid var(--border)',
+            }}
+            title="Open full event creation modal"
+          >
+            <SlidersHorizontal size={11} />
+            <span>More</span>
+          </button>
+        )}
+
         {/* Submit button */}
         <button
           type="button"
           onMouseDown={e => e.preventDefault()}
           onClick={handleSubmit}
           disabled={!title.trim()}
-          className="shrink-0 w-6 h-6 rounded flex items-center justify-center transition-colors disabled:opacity-30"
+          className="shrink-0 px-2.5 py-1 rounded text-[11px] font-semibold flex items-center gap-1 transition-colors disabled:opacity-30"
           style={{
             backgroundColor: config.color,
             color: 'white',
           }}
         >
-          <Plus size={14} />
+          <Plus size={12} />
+          <span>Add</span>
         </button>
       </div>
 
-      <p className="text-[9px] text-foreground-muted">
-        Press Enter to create · Esc to cancel
+      <p className="text-[9px] text-foreground-muted flex justify-between items-center">
+        <span>Press Enter to create · Esc to cancel</span>
+        {onMore && <span className="opacity-75 font-medium">Click More for reminders & recurrence</span>}
       </p>
     </div>
   );

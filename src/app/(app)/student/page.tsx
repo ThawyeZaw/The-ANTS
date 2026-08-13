@@ -27,10 +27,8 @@ import { WorkspaceToastProvider } from '@/components/workspace/WorkspaceToast';
 import CourseSyncPanel from '@/components/layout/CourseSyncPanel';
 import QuickAccessToolbar from '@/components/layout/QuickAccessToolbar';
 import { cn } from '@/lib/utils';
-import {
-  mockClubAnnouncements,
-} from '@/lib/mock/database';
 import { useDashboardSync } from '@/hooks/useDashboardSync';
+import { createClient } from '@/lib/supabase/client';
 
 // ── Icon & Color maps (replicated from DashboardLayout — PM-locked) ──────────
 
@@ -63,6 +61,7 @@ export default function StudentDashboard() {
   const { role, isStudent } = useRole();
   const router = useRouter();
   const [recentPages, setRecentPages] = useState<any[]>([]);
+  const [announcements, setAnnouncements] = useState<any[]>([]);
 
   const { savedNotes, upcomingExams, stats } = useDashboardSync();
 
@@ -73,6 +72,18 @@ export default function StudentDashboard() {
   }, [role, isStudent, router]);
 
   useEffect(() => {
+    async function fetchAnnouncements() {
+      const supabase = createClient();
+      if (!supabase) return;
+      const { data } = await supabase
+        .from('classroom_announcements')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(5);
+      if (data) setAnnouncements(data);
+    }
+    fetchAnnouncements();
+
     try {
       const recentStr = localStorage.getItem('recentPages');
       if (recentStr) {
@@ -177,13 +188,13 @@ export default function StudentDashboard() {
           </h3>
         </div>
         <div className="space-y-3">
-          {mockClubAnnouncements.slice(0, 3).map(ann => (
+          {announcements.slice(0, 3).map(ann => (
             <div key={ann.id} className="p-3 bg-background-secondary/40 rounded-xl border border-border/50 transition-colors hover:bg-background-secondary/80">
               <p className="font-semibold text-sm text-foreground">{ann.title}</p>
               <p className="text-xs text-foreground-muted mt-1 leading-relaxed">{ann.content}</p>
             </div>
           ))}
-          {mockClubAnnouncements.length === 0 && (
+          {announcements.length === 0 && (
             <p className="text-sm text-foreground-muted py-2">No announcements right now.</p>
           )}
         </div>

@@ -108,41 +108,43 @@ export default function TimeBlock({
     // Month view chip
     return (
       <div
-        className="flex items-center gap-1 px-1.5 py-0.5 rounded text-xs cursor-pointer overflow-hidden group"
-        style={{ backgroundColor: config.bgColor, borderLeft: `2px solid ${event.color_code}` }}
+        className="flex items-start gap-1 px-1.5 py-1 rounded text-[11px] cursor-pointer overflow-hidden group hover:z-30 hover:scale-[1.02] hover:shadow-md transition-all duration-150"
+        style={{ backgroundColor: config.bgColor, borderLeft: `2.5px solid ${event.color_code}` }}
         onClick={() => onEdit?.(event)}
         title={event.title}
       >
         <EventIcon iconName={config.icon} size={10} />
         <span
-          className="truncate leading-tight"
+          className="leading-tight break-words whitespace-normal flex-1 font-medium text-[11px]"
           style={{ color: event.color_code, textDecoration: isCompleted ? 'line-through' : 'none' }}
         >
           {event.title}
         </span>
-        {isExternal && <Lock size={8} className="shrink-0 opacity-60" style={{ color: event.color_code }} />}
+        {isExternal && <Lock size={8} className="shrink-0 opacity-60 mt-0.5" style={{ color: event.color_code }} />}
       </div>
     );
   }
+
+  const isShortBlock = heightPx !== undefined && heightPx < 45;
 
   return (
     <div
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      className="relative rounded-md overflow-hidden cursor-pointer group select-none"
+      className="relative rounded-md overflow-hidden cursor-pointer group select-none hover:z-50 hover:scale-[1.02] hover:shadow-2xl transition-all duration-150"
       style={blockStyle}
       onMouseEnter={() => { setShowActions(true); setConfirmDelete(false); }}
       onMouseLeave={() => { setShowActions(false); setConfirmDelete(false); }}
       onClick={() => { if (!isExternal) setShowActions((prev) => !prev); }}
     >
-      <div className="px-1.5 sm:px-4 py-2 sm:py-3 h-full flex flex-col justify-between min-h-[40px]">
+      <div className={`px-1.5 sm:px-2 py-1 sm:py-1.5 h-full flex flex-col justify-between ${isShortBlock ? 'min-h-[22px]' : 'min-h-[36px]'}`}>
         {/* Header row */}
-        <div className="flex items-start gap-1 sm:gap-2">
+        <div className="flex items-start gap-1">
           {/* To-do checkbox */}
           {event.is_todo && !isExternal && (
             <button
-              className="shrink-0 mt-[3px] hover:scale-110 transition-transform"
+              className="shrink-0 mt-[1px] hover:scale-110 transition-transform"
               style={{ color: event.color_code }}
               onClick={e => {
                 e.stopPropagation();
@@ -151,20 +153,15 @@ export default function TimeBlock({
               title={event.is_completed ? 'Mark as incomplete' : 'Mark as complete'}
             >
               {event.is_completed
-                ? <CheckSquare size={13} />
-                : <Square size={13} />
+                ? <CheckSquare size={11} />
+                : <Square size={11} />
               }
             </button>
           )}
 
-          {/* Icon — hidden on mobile to preserve space for event name */}
-          <span style={{ color: event.color_code }} className="hidden sm:inline shrink-0 mt-[3px]">
-            <EventIcon iconName={config.icon} size={12} />
-          </span>
-
-          {/* Title */}
+          {/* Title — full text wrapping */}
           <span
-            className="text-[13px] sm:text-sm font-semibold leading-tight line-clamp-2 flex-1"
+            className="text-[11px] sm:text-[12px] font-semibold leading-[1.2] break-words whitespace-normal text-wrap flex-1 min-w-0"
             style={{
               color: event.color_code,
               textDecoration: isCompleted ? 'line-through' : 'none',
@@ -177,41 +174,30 @@ export default function TimeBlock({
           {/* LIVE NOW badge */}
           {isLive && (
             <span
-              className="shrink-0 flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide animate-pulse"
+              className="shrink-0 flex items-center gap-0.5 px-1 py-0.5 rounded text-[8px] font-bold uppercase tracking-wide animate-pulse"
               style={{
                 backgroundColor: '#6366F1',
                 color: '#FFFFFF',
               }}
             >
-              <Zap size={8} />
+              <Zap size={7} />
               LIVE
             </span>
           )}
 
-          {/* Lock badge for external events */}
-          {isExternal && (
-            <span
-              className="shrink-0 mt-0.5 opacity-50"
-              title="External event — read only"
-              style={{ color: event.color_code }}
-            >
-              <Lock size={10} />
-            </span>
-          )}
-
-          {/* Recurrence badge */}
+          {/* Recurrence badge — visible on hover or wide block */}
           {event.is_recurring && !isExternal && (
-            <span className="shrink-0 mt-0.5 opacity-50" style={{ color: event.color_code }} title="Recurring">
-              <RotateCcw size={10} />
+            <span className="shrink-0 mt-0.5 opacity-40 group-hover:opacity-100 transition-opacity" style={{ color: event.color_code }} title="Recurring">
+              <RotateCcw size={9} />
             </span>
           )}
         </div>
 
-        {/* Time / location sub-row */}
-        {event.location && (
+        {/* Time / location sub-row — visible if space permits or on hover */}
+        {event.location && (!isShortBlock || showActions) && (
           <div className="flex items-center gap-0.5 mt-0.5 opacity-60">
-            <MapPin size={9} style={{ color: event.color_code }} />
-            <span className="text-[10px] truncate" style={{ color: event.color_code }}>
+            <MapPin size={8} style={{ color: event.color_code }} />
+            <span className="text-[9.5px] break-words whitespace-normal leading-tight" style={{ color: event.color_code }}>
               {event.location}
             </span>
           </div>

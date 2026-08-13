@@ -7,19 +7,6 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { createClient } from '@/lib/supabase/server';
-import {
-  getOrgMission as getMockMission,
-  updateOrgMission as updateMockMission,
-  getOrgTeamMembers as getMockTeamMembers,
-  addOrgTeamMember as addMockTeamMember,
-  updateOrgTeamMember as updateMockTeamMember,
-  deleteOrgTeamMember as deleteMockTeamMember,
-  reorderOrgTeamMember as reorderMockTeamMember,
-  getOrgTimelineItems as getMockTimelineItems,
-  addOrgTimelineItem as addMockTimelineItem,
-  updateOrgTimelineItem as updateMockTimelineItem,
-  deleteOrgTimelineItem as deleteMockTimelineItem,
-} from '@/lib/mock/database';
 import type {
   OrgMission,
   OrgTeamMember,
@@ -59,6 +46,12 @@ async function checkAuthPermission(): Promise<{ authorized: boolean; userId?: st
 
 // ── 1. Organisation Mission Actions ──────────────────────────────────────────
 
+const DEFAULT_MISSION: OrgMission = {
+  id: 'org-mission-1',
+  content: 'The ANTs is committed to empowering students across Myanmar and worldwide through free, open-access, high-quality curriculum notes, past papers, flashcards, and peer-to-peer learning tools.',
+  updatedAt: new Date().toISOString(),
+};
+
 export async function getOrgMissionAction(): Promise<OrgMission> {
   try {
     const supabase = await createClient();
@@ -70,7 +63,7 @@ export async function getOrgMissionAction(): Promise<OrgMission> {
       .single();
 
     if (error || !data) {
-      return getMockMission();
+      return DEFAULT_MISSION;
     }
 
     const row = data as any;
@@ -80,7 +73,7 @@ export async function getOrgMissionAction(): Promise<OrgMission> {
       updatedAt: row.updated_at,
     };
   } catch {
-    return getMockMission();
+    return DEFAULT_MISSION;
   }
 }
 
@@ -131,9 +124,6 @@ export async function updateOrgMissionAction(content: string): Promise<{ success
       resultData = data;
     }
 
-    // Also sync mock database for fallback compatibility
-    updateMockMission(content);
-
     return {
       success: true,
       mission: {
@@ -143,9 +133,7 @@ export async function updateOrgMissionAction(content: string): Promise<{ success
       },
     };
   } catch (err: any) {
-    // Fallback sync to mock DB if real DB is pending migration
-    const res = updateMockMission(content);
-    return { success: true, mission: res.mission };
+    return { success: false, error: err?.message || 'Failed to update organization mission.' };
   }
 }
 
@@ -160,7 +148,7 @@ export async function getOrgTeamMembersAction(): Promise<OrgTeamMember[]> {
       .order('display_order', { ascending: true });
 
     if (error || !data || data.length === 0) {
-      return getMockTeamMembers();
+      return [];
     }
 
     return (data as any[]).map((row) => ({
@@ -174,7 +162,7 @@ export async function getOrgTeamMembersAction(): Promise<OrgTeamMember[]> {
       isAlumni: Boolean(row.is_alumni),
     }));
   } catch {
-    return getMockTeamMembers();
+    return [];
   }
 }
 
@@ -224,13 +212,8 @@ export async function addOrgTeamMemberAction(formData: OrgTeamMemberFormData): P
       isAlumni: row.is_alumni,
     };
 
-    addMockTeamMember(formData);
     return { success: true, member };
   } catch (err: any) {
-    const mockRes = addMockTeamMember(formData);
-    if (mockRes.success) {
-      return { success: true, member: mockRes.member };
-    }
     return { success: false, error: err?.message || 'Failed to add team member.' };
   }
 }
@@ -272,13 +255,8 @@ export async function updateOrgTeamMemberAction(id: string, formData: OrgTeamMem
       isAlumni: row.is_alumni,
     };
 
-    updateMockTeamMember(id, formData);
     return { success: true, member };
   } catch (err: any) {
-    const mockRes = updateMockTeamMember(id, formData);
-    if (mockRes.success) {
-      return { success: true, member: mockRes.member };
-    }
     return { success: false, error: err?.message || 'Failed to update team member.' };
   }
 }
@@ -298,11 +276,9 @@ export async function deleteOrgTeamMemberAction(id: string): Promise<{ success: 
 
     if (error) throw error;
 
-    deleteMockTeamMember(id);
     return { success: true };
   } catch (err: any) {
-    deleteMockTeamMember(id);
-    return { success: true };
+    return { success: false, error: err?.message || 'Failed to delete team member.' };
   }
 }
 
@@ -319,12 +295,10 @@ export async function reorderOrgTeamMembersAction(memberIds: string[]): Promise<
         .from('org_team_members' as any)
         .update({ display_order: index })
         .eq('id', memberIds[index]);
-
-      reorderMockTeamMember(memberIds[index], index === 0 ? 'up' : 'down');
     }
     return { success: true };
   } catch (err: any) {
-    return { success: true };
+    return { success: false, error: err?.message || 'Failed to reorder team members.' };
   }
 }
 
@@ -340,7 +314,7 @@ export async function getOrgTimelineItemsAction(): Promise<OrgTimelineItem[]> {
       .order('created_at', { ascending: false });
 
     if (error || !data || data.length === 0) {
-      return getMockTimelineItems();
+      return [];
     }
 
     return (data as any[]).map((row) => ({
@@ -356,7 +330,7 @@ export async function getOrgTimelineItemsAction(): Promise<OrgTimelineItem[]> {
       createdAt: row.created_at,
     }));
   } catch {
-    return getMockTimelineItems();
+    return [];
   }
 }
 
@@ -409,13 +383,8 @@ export async function addOrgTimelineItemAction(formData: OrgTimelineItemFormData
       createdAt: row.created_at,
     };
 
-    addMockTimelineItem(formData);
     return { success: true, item };
   } catch (err: any) {
-    const mockRes = addMockTimelineItem(formData);
-    if (mockRes.success) {
-      return { success: true, item: mockRes.item };
-    }
     return { success: false, error: err?.message || 'Failed to create timeline item.' };
   }
 }
@@ -460,13 +429,8 @@ export async function updateOrgTimelineItemAction(id: string, formData: OrgTimel
       createdAt: row.created_at,
     };
 
-    updateMockTimelineItem(id, formData);
     return { success: true, item };
   } catch (err: any) {
-    const mockRes = updateMockTimelineItem(id, formData);
-    if (mockRes.success) {
-      return { success: true, item: mockRes.item };
-    }
     return { success: false, error: err?.message || 'Failed to update timeline item.' };
   }
 }
@@ -486,11 +450,9 @@ export async function deleteOrgTimelineItemAction(id: string): Promise<{ success
 
     if (error) throw error;
 
-    deleteMockTimelineItem(id);
     return { success: true };
   } catch (err: any) {
-    deleteMockTimelineItem(id);
-    return { success: true };
+    return { success: false, error: err?.message || 'Failed to delete timeline item.' };
   }
 }
 

@@ -5,9 +5,10 @@
 // Slide-over panel for note metadata (curriculum, subject, topic, tags, etc.)
 // ──────────────────────────────────────────────────────────────────────────────
 
+import { useState, useEffect } from 'react';
 import { X, Tag } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { mockCurriculums, mockSubjects, mockTopics } from '@/lib/mock/database';
+import { createClient } from '@/lib/supabase/client';
 import type { NoteEditorState } from '@/types';
 
 interface MetadataPanelProps {
@@ -19,12 +20,33 @@ interface MetadataPanelProps {
 }
 
 export default function MetadataPanel({ open, onClose, state, setField, isReadOnly }: MetadataPanelProps) {
+  const [curriculums, setCurriculums] = useState<any[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [topics, setTopics] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function fetchOptions() {
+      const supabase = createClient();
+      if (!supabase) return;
+      const [{ data: cData }, { data: sData }, { data: tData }] = await Promise.all([
+        supabase.from('curriculums').select('*'),
+        supabase.from('subjects').select('*'),
+        supabase.from('topics').select('*'),
+      ]);
+      if (cData) setCurriculums(cData);
+      if (sData) setSubjects(sData);
+      if (tData) setTopics(tData);
+    }
+
+    fetchOptions();
+  }, []);
+
   const filteredSubjects = state.curriculumId
-    ? mockSubjects.filter((s) => s.curriculum_id === state.curriculumId)
-    : mockSubjects;
+    ? subjects.filter((s) => s.curriculum_id === state.curriculumId)
+    : subjects;
 
   const filteredTopics = state.subjectId
-    ? mockTopics.filter((t) => t.subject_id === state.subjectId)
+    ? topics.filter((t) => t.subject_id === state.subjectId)
     : [];
 
   if (!open) return null;
@@ -86,7 +108,7 @@ export default function MetadataPanel({ open, onClose, state, setField, isReadOn
                 className="px-3 py-2 rounded-xl bg-[var(--background-secondary)] border border-[var(--border)] text-sm text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)]/60 cursor-pointer disabled:opacity-60"
               >
                 <option value="">No Curriculum</option>
-                {mockCurriculums.map((c) => (
+                {curriculums.map((c) => (
                   <option key={c.id} value={c.id}>{c.qualification} — {c.exam_board}</option>
                 ))}
               </select>

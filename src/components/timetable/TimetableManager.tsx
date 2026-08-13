@@ -688,20 +688,9 @@ export default function TimetableManager(props: TimetableManagerProps) {
                 startTime={inlineCreate.startTime}
                 topPx={inlineCreate.topPx}
                 onSubmit={handleInlineSubmit}
+                onMore={handleInlineExpand}
                 onCancel={() => setInlineCreate(null)}
               />
-              {/* "More options" link to open full modal */}
-              <button
-                onClick={() => {
-                  setModalDefaultDate(inlineCreate.date);
-                  setModalDefaultTime(inlineCreate.startTime);
-                  setInlineCreate(null);
-                  setModalOpen(true);
-                }}
-                className="absolute -bottom-7 left-2 text-[11px] text-foreground-muted hover:text-primary transition-colors"
-              >
-                More options…
-              </button>
             </div>
           )}
 

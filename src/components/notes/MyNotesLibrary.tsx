@@ -15,7 +15,7 @@ import { useAuth } from '@/hooks/useAuth';
 import NoteCard from './NoteCard';
 import NoteFiltersPanel from './NoteFilters';
 import NoteReaderModal from './NoteReaderModal';
-import { getNotesByContributor, deleteNote } from '@/lib/mock/database';
+import { createClient } from '@/lib/supabase/client';
 
 const DEFAULT_FILTERS: NoteFilters = {
   search: '',
@@ -35,19 +35,33 @@ export default function MyNotesLibrary() {
 
   // Load only notes created by the current user
   useEffect(() => {
-    if (user?.id) {
-      setCreatedNotes(getNotesByContributor(user.id));
+    async function fetchUserNotes() {
+      if (!user?.id) return;
+      const supabase = createClient();
+      if (!supabase) return;
+
+      const { data } = await supabase
+        .from('notes')
+        .select('*')
+        .eq('contributor_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (data) setCreatedNotes(data as unknown as Note[]);
     }
+
+    fetchUserNotes();
   }, [user?.id]);
 
-  const handleDeleteNote = (noteId: string) => {
+  const handleDeleteNote = async (noteId: string) => {
     if (!user) return;
     if (window.confirm('Are you sure you want to delete this note? This action cannot be undone.')) {
-      const result = deleteNote(noteId, user.id);
-      if (result.success) {
+      const supabase = createClient();
+      if (!supabase) return;
+      const { error } = await supabase.from('notes').delete().eq('id', noteId).eq('contributor_id', user.id);
+      if (!error) {
         setCreatedNotes(prev => prev.filter(n => n.id !== noteId));
       } else {
-        alert(result.error);
+        alert(error.message);
       }
     }
   };

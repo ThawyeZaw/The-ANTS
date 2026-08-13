@@ -15,7 +15,7 @@ import { useSavedNotes } from '@/hooks/useNotes';
 import NoteCard from './NoteCard';
 import NoteFiltersPanel from './NoteFilters';
 import NoteReaderModal from './NoteReaderModal';
-import { getProfile } from '@/lib/mock/database';
+import { createClient } from '@/lib/supabase/client';
 
 const DEFAULT_FILTERS: NoteFilters = {
   search: '',
@@ -36,6 +36,7 @@ export default function SavedNotesLibrary() {
 
   // Track saved state (checkSaved is async)
   const [savedNoteIds, setSavedNoteIds] = useState<Set<string>>(new Set());
+  const [contributorNames, setContributorNames] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
     if (!user) { setSavedNoteIds(new Set()); return; }
@@ -47,6 +48,28 @@ export default function SavedNotesLibrary() {
       });
     return () => { cancelled = true; };
   }, [savedNotes, user, checkSaved]);
+
+  useEffect(() => {
+    async function fetchProfiles() {
+      if (savedNotes.length === 0) return;
+      const supabase = createClient();
+      if (!supabase) return;
+
+      const contributorIds = [...new Set(savedNotes.map(n => n.contributor_id))];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, name')
+        .in('id', contributorIds);
+
+      if (profiles) {
+        const map = new Map<string, string>();
+        profiles.forEach(p => map.set(p.id, p.name || 'Anonymous'));
+        setContributorNames(map);
+      }
+    }
+
+    fetchProfiles();
+  }, [savedNotes]);
 
   // Client-side filtering on saved notes for instantaneous response
   const filteredNotes = useMemo(() => {
@@ -71,18 +94,6 @@ export default function SavedNotesLibrary() {
       return true;
     });
   }, [savedNotes, filters]);
-
-  // Build a contributor name lookup map
-  const contributorNames = useMemo(() => {
-    const map = new Map<string, string>();
-    savedNotes.forEach((n) => {
-      if (!map.has(n.contributor_id)) {
-        const profile = getProfile(n.contributor_id);
-        if (profile) map.set(n.contributor_id, profile.name);
-      }
-    });
-    return map;
-  }, [savedNotes]);
 
   const activeFilterCount = [
     filters.curriculumId,

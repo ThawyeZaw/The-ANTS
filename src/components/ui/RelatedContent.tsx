@@ -6,10 +6,11 @@
 // based on curriculum, subject, and/or topic context.
 // ──────────────────────────────────────────────────────────────────────────────
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Layers, BookOpen, ExternalLink, Package, Calendar, LineChart } from 'lucide-react';
 import type { Deck, Note, Exam } from '@/types';
-import { getNotes, getRelatedDecks, getExams, mockCurriculums, mockSubjects } from '@/lib/mock/database';
+import { createClient } from '@/lib/supabase/client';
 import { slugify } from '@/lib/utils';
 
 interface RelatedContentProps {
@@ -31,39 +32,56 @@ export default function RelatedContent({
   excludeDeckId,
   maxItems = 3,
 }: RelatedContentProps) {
-  // Query related decks
-  const relatedDecks = getRelatedDecks(curriculumId, subjectId)
-    .filter((d) => d.is_public && d.id !== excludeDeckId)
-    .slice(0, maxItems);
+  const [relatedDecks, setRelatedDecks] = useState<Deck[]>([]);
+  const [relatedNotes, setRelatedNotes] = useState<Note[]>([]);
+  const [relatedExams, setRelatedExams] = useState<Exam[]>([]);
+  const [curriculum, setCurriculum] = useState<any>(null);
+  const [subject, setSubject] = useState<any>(null);
 
-  // Query related notes (approved only, matching curriculum/subject/topic)
-  const relatedNotes = getNotes({
-    curriculumId: curriculumId ?? undefined,
-    subjectId: subjectId ?? undefined,
-    topicId: topicId ?? undefined,
-  })
-    .filter((n) => n.id !== excludeNoteId)
-    .slice(0, maxItems);
+  useEffect(() => {
+    async function fetchRelated() {
+      const supabase = createClient();
+      if (!supabase) return;
 
-  // Query related exams
-  const relatedExams = getExams()
-    .filter(
-      (e) =>
-        (curriculumId ? e.curriculum_id === curriculumId : true) &&
-        (subjectId ? e.subject_id === subjectId : true)
-    )
-    .slice(0, maxItems);
+      // Query decks
+      let deckQuery = supabase.from('decks').select('*').eq('is_public', true);
+      if (curriculumId) deckQuery = deckQuery.eq('curriculum_id', curriculumId);
+      if (subjectId) deckQuery = deckQuery.eq('subject_id', subjectId);
+      const { data: decks } = await deckQuery;
+      if (decks) {
+        setRelatedDecks((decks as unknown as Deck[]).filter(d => d.id !== excludeDeckId).slice(0, maxItems));
+      }
 
-  if (relatedDecks.length === 0 && relatedNotes.length === 0 && relatedExams.length === 0 && (!curriculumId || !subjectId)) {
-    return null;
-  }
+      // Query notes
+      let notesQuery = supabase.from('notes').select('*');
+      if (curriculumId) notesQuery = notesQuery.eq('curriculum_id', curriculumId);
+      if (subjectId) notesQuery = notesQuery.eq('subject_id', subjectId);
+      if (topicId) notesQuery = notesQuery.eq('topic_id', topicId);
+      const { data: notes } = await notesQuery;
+      if (notes) {
+        setRelatedNotes((notes as unknown as Note[]).filter(n => n.id !== excludeNoteId).slice(0, maxItems));
+      }
 
-  const curriculum = curriculumId
-    ? mockCurriculums.find((c) => c.id === curriculumId)
-    : null;
-  const subject = subjectId
-    ? mockSubjects.find((s) => s.id === subjectId)
-    : null;
+      // Query exams
+      let examQuery = supabase.from('exams').select('*');
+      if (curriculumId) examQuery = examQuery.eq('curriculum_id', curriculumId);
+      if (subjectId) examQuery = examQuery.eq('subject_id', subjectId);
+      const { data: exams } = await examQuery;
+      if (exams) setRelatedExams((exams as unknown as Exam[]).slice(0, maxItems));
+
+      // Curriculum & subject info
+      if (curriculumId) {
+        const { data: cData } = await supabase.from('curriculums').select('*').eq('id', curriculumId).single();
+        if (cData) setCurriculum(cData);
+      }
+      if (subjectId) {
+        const { data: sData } = await supabase.from('subjects').select('*').eq('id', subjectId).single();
+        if (sData) setSubject(sData);
+      }
+    }
+
+    fetchRelated();
+  }, [curriculumId, subjectId, topicId, excludeNoteId, excludeDeckId, maxItems]);
 
   const contextLabel = subject
     ? subject.title

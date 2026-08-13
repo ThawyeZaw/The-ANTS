@@ -55,7 +55,7 @@ export default function DeckLibrary({ userId }: DeckLibraryProps) {
       .select('*')
       .eq('owner_id', userId)
       .order('created_at', { ascending: false });
-    if (!error) setDecks((data ?? []) as Deck[]);
+    if (!error) setDecks((data ?? []) as unknown as Deck[]);
     setIsLoading(false);
   }, [userId, supabase]);
 

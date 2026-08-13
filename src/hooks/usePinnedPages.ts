@@ -48,6 +48,7 @@ export function usePinnedPages() {
   const pinPage = useCallback(
     (href: string, label: string) => {
       if (!user) return;
+      const userId = user.id;
       const newPage: PinnedPage = {
         href,
         label,
@@ -59,7 +60,7 @@ export function usePinnedPages() {
         const updated = [...prev, newPage];
         try {
           localStorage.setItem(
-            getStorageKey(user.id),
+            getStorageKey(userId),
             JSON.stringify(updated)
           );
         } catch (e) {
@@ -74,11 +75,12 @@ export function usePinnedPages() {
   const unpinPage = useCallback(
     (href: string) => {
       if (!user) return;
+      const userId = user.id;
       setPinnedPages((prev) => {
         const updated = prev.filter((p) => p.href !== href);
         try {
           localStorage.setItem(
-            getStorageKey(user.id),
+            getStorageKey(userId),
             JSON.stringify(updated)
           );
         } catch (e) {

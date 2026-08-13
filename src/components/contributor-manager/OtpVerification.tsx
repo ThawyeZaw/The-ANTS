@@ -3,7 +3,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTs — OTP Verification (Step 2)
 // Premium 6-digit OTP input with auto-focus advance.
-// Mock OTP code: 123456
+// Verification is handled server-side via Supabase email OTP.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useRef, useCallback, useEffect } from 'react';
@@ -129,13 +129,6 @@ export default function OtpVerification({
         ))}
       </div>
 
-      {/* Mock hint */}
-      <div className="text-center">
-        <p className="text-xs text-foreground-muted bg-background-secondary inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full">
-          <span className="w-1.5 h-1.5 rounded-full bg-warning" />
-          Test code: <span className="font-mono font-semibold text-warning">123456</span>
-        </p>
-      </div>
 
       {/* Error */}
       {error && (

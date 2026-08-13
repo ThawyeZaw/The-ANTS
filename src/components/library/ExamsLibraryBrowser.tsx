@@ -7,6 +7,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useMemo, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import dynamic from 'next/dynamic';
 import {
   Search, Filter, Clock, Globe, Sparkles,
@@ -15,10 +16,6 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useCountdown } from '@/hooks/useCountdown';
-import {
-  getLibraryExams, getExamsByEnrolledCourses,
-  getUserCountdowns,
-} from '@/lib/mock/database';
 import { QUALIFICATION_REGISTRY } from '@/constants/qualifications';
 import { cn } from '@/lib/utils';
 import type { Exam } from '@/types';
@@ -176,6 +173,24 @@ export default function ExamsLibraryBrowser() {
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
+  const [allExams, setAllExams] = useState<Exam[]>([]);
+  const [userCountdowns, setUserCountdowns] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function fetchData() {
+      const supabase = createClient();
+      if (!supabase) return;
+      const [{ data: eData }, { data: cData }] = await Promise.all([
+        supabase.from('exams').select('*').order('exam_date', { ascending: true }),
+        user ? supabase.from('exam_countdowns').select('*').eq('user_id', user.id) : Promise.resolve({ data: [] }),
+      ]);
+      if (eData) setAllExams(eData as unknown as Exam[]);
+      if (cData) setUserCountdowns(cData);
+    }
+
+    fetchData();
+  }, [user]);
+
   const { createCountdown } = useCountdown(user?.id);
 
   // Reset pagination when filters change
@@ -186,14 +201,11 @@ export default function ExamsLibraryBrowser() {
   // Get tracked exam IDs
   const trackedExamIds = useMemo(() => {
     if (!user) return new Set<string>();
-    return new Set(getUserCountdowns(user.id).map(c => c.exam_id).filter(Boolean) as string[]);
-  }, [user]);
+    return new Set(userCountdowns.map(c => c.exam_id).filter(Boolean) as string[]);
+  }, [user, userCountdowns]);
 
   // Library exams
-  const libraryExams = useMemo(() => {
-    if (!user) return getLibraryExams();
-    return smartFilter ? getExamsByEnrolledCourses(user.id) : getLibraryExams();
-  }, [user, smartFilter]);
+  const libraryExams = allExams;
 
   // Filter
   const filteredExams = useMemo(() => {
@@ -203,7 +215,7 @@ export default function ExamsLibraryBrowser() {
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       list = list.filter(e =>
-        e.title.toLowerCase().includes(q) ||
+        e.title?.toLowerCase().includes(q) ||
         e.exam_board?.toLowerCase().includes(q) ||
         e.qualification?.toLowerCase().includes(q) ||
         e.syllabus_code?.toLowerCase().includes(q) ||
@@ -214,7 +226,6 @@ export default function ExamsLibraryBrowser() {
     return list;
   }, [libraryExams, selectedBoard, selectedQual, searchQuery]);
 
-  const allExams = getLibraryExams();
   const allBoards = useMemo(() => [...new Set(allExams.map(e => e.exam_board).filter(Boolean))], [allExams]);
   const allQuals = useMemo(() => [...new Set(allExams.map(e => e.qualification).filter(Boolean))], [allExams]);
 

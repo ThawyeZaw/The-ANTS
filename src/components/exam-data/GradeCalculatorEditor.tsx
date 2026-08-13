@@ -7,7 +7,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { submitExamCalculatorPreset } from '@/actions/exam-editor';
-import { getAllCurriculums, getPublicSubjects, getApprovedCalculatorPresets } from '@/lib/mock/database';
+import { createClient } from '@/lib/supabase/client';
+import { useEffect } from 'react';
 
 interface PaperBoundaryDraft { id: string; grade: string; minMark: number; }
 interface PaperDraft { id: string; name: string; maxMark: number; weight: number; unitGroup: string; paperBoundaries: PaperBoundaryDraft[]; showBoundaries: boolean; }
@@ -21,8 +22,27 @@ const mkPaperBoundary = (grade: string, min: number): PaperBoundaryDraft => ({ i
 export default function GradeCalculatorEditor() {
   const { user } = useAuth();
   const [isPending, startTransition] = useTransition();
-  const curriculums = useMemo(() => getAllCurriculums(), []);
-  const allApprovedPresets = useMemo(() => getApprovedCalculatorPresets() as Record<string, unknown>[], []);
+
+  const [curriculums, setCurriculums] = useState<any[]>([]);
+  const [allSubjects, setAllSubjects] = useState<any[]>([]);
+  const [allApprovedPresets, setAllApprovedPresets] = useState<Record<string, unknown>[]>([]);
+
+  useEffect(() => {
+    async function fetchData() {
+      const supabase = createClient();
+      if (!supabase) return;
+      const [{ data: cData }, { data: sData }, { data: pData }] = await Promise.all([
+        supabase.from('curriculums').select('*'),
+        supabase.from('subjects').select('*'),
+        (supabase as any).from('grade_calculator_presets').select('*').eq('status', 'approved'),
+      ]);
+      if (cData) setCurriculums(cData);
+      if (sData) setAllSubjects(sData);
+      if (pData) setAllApprovedPresets(pData as Record<string, unknown>[]);
+    }
+
+    fetchData();
+  }, []);
 
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedCurriculum, setSelectedCurriculum] = useState('');
@@ -38,7 +58,10 @@ export default function GradeCalculatorEditor() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const subjects = useMemo(() => { if (!selectedCurriculum) return []; return getPublicSubjects(selectedCurriculum).map(s => ({ id: s.id, title: s.title })); }, [selectedCurriculum]);
+  const subjects = useMemo(() => {
+    if (!selectedCurriculum) return [];
+    return allSubjects.filter(s => s.curriculum_id === selectedCurriculum);
+  }, [selectedCurriculum, allSubjects]);
   const selCurrTitle = curriculums.find(c => c.id === selectedCurriculum)?.title || 'None';
   const selSubjTitle = subjects.find(s => s.id === selectedSubject)?.title || 'None';
 

@@ -7,7 +7,7 @@
 
 import { useState } from 'react';
 import { Plus, Trash2, GripVertical, Check, ChevronLeft, ChevronRight } from 'lucide-react';
-import { createCard } from '@/lib/mock/database';
+import { createClient } from '@/lib/supabase/client';
 import type { FlashCard } from '@/types';
 
 interface CardEntry {
@@ -56,17 +56,34 @@ export default function CardCreatorManual({
     setCurrentIdx(prev => Math.min(prev, newCards.length - 1));
   }
 
-  function handleSave() {
+  async function handleSave() {
     const validCards = cards.filter(c => c.front.trim() && c.back.trim());
     if (validCards.length === 0) {
       setError('Please fill in at least one card (both front and back).');
       return;
     }
-    const created = validCards.map(c =>
-      createCard({ deck_id: deckId, front_text: c.front.trim(), back_text: c.back.trim() })
-    );
+
+    const supabase = createClient();
+    if (!supabase) return;
+
+    const newRows = validCards.map(c => ({
+      deck_id: deckId,
+      front_text: c.front.trim(),
+      back_text: c.back.trim(),
+    }));
+
+    const { data, error: err } = await supabase
+      .from('cards')
+      .insert(newRows)
+      .select('*');
+
+    if (err) {
+      setError(err.message);
+      return;
+    }
+
     setSaved(true);
-    setTimeout(() => onSaved([...existingCards, ...created]), 600);
+    setTimeout(() => onSaved([...existingCards, ...((data ?? []) as unknown as FlashCard[])]), 600);
   }
 
   const current = cards[currentIdx];

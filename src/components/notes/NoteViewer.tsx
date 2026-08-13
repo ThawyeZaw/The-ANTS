@@ -18,7 +18,7 @@ import { useRole } from '@/hooks/useRole';
 import { useSavedNotes } from '@/hooks/useNotes';
 import BlockPreview from './BlockPreview';
 import RelatedContent from '@/components/ui/RelatedContent';
-import { getProfile, mockCurriculums, mockSubjects } from '@/lib/mock/database';
+import { createClient } from '@/lib/supabase/client';
 import { useState, useEffect } from 'react';
 
 interface NoteViewerProps {
@@ -32,19 +32,40 @@ export default function NoteViewer({ note }: NoteViewerProps) {
   const { toggleSave, checkSaved } = useSavedNotes(user?.id);
 
   const [isSaved, setIsSaved] = useState(false);
+  const [contributor, setContributor] = useState<{ name: string | null } | null>(null);
+  const [curriculum, setCurriculum] = useState<any>(null);
+  const [subject, setSubject] = useState<any>(null);
 
   useEffect(() => {
     if (!user) { setIsSaved(false); return; }
     checkSaved(note.id).then(setIsSaved);
   }, [user, note.id, checkSaved]);
 
+  useEffect(() => {
+    async function fetchMetadata() {
+      const supabase = createClient();
+      if (!supabase) return;
+
+      if (note.contributor_id) {
+        const { data: p } = await supabase.from('profiles').select('name').eq('id', note.contributor_id).single();
+        if (p) setContributor(p);
+      }
+      if (note.curriculum_id) {
+        const { data: c } = await supabase.from('curriculums').select('*').eq('id', note.curriculum_id).single();
+        if (c) setCurriculum(c);
+      }
+      if (note.subject_id) {
+        const { data: s } = await supabase.from('subjects').select('*').eq('id', note.subject_id).single();
+        if (s) setSubject(s);
+      }
+    }
+
+    fetchMetadata();
+  }, [note.contributor_id, note.curriculum_id, note.subject_id]);
+
   const isOwner = user?.id === note.contributor_id;
   const canEdit = (isContributor || isMainContributor) && isOwner &&
     (note.status === 'draft' || note.status === 'rejected');
-
-  const contributor = getProfile(note.contributor_id);
-  const curriculum = note.curriculum_id ? mockCurriculums.find((c) => c.id === note.curriculum_id) : null;
-  const subject = note.subject_id ? mockSubjects.find((s) => s.id === note.subject_id) : null;
 
 
   const formattedDate = new Intl.DateTimeFormat('en-GB', {
@@ -145,9 +166,9 @@ export default function NoteViewer({ note }: NoteViewerProps) {
               {contributor && (
                 <span className="flex items-center gap-1.5">
                   <div className="h-5 w-5 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-medium text-[10px]">
-                    {contributor.name.charAt(0)}
+                    {(contributor.name || '?').charAt(0)}
                   </div>
-                  {contributor.name}
+                  {contributor.name || 'Anonymous'}
                 </span>
               )}
               <span className="flex items-center gap-1">

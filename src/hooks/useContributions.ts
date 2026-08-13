@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { mockNotes, mockDecks, mockQuizzes, mockCurriculums, mockExamCountdowns } from '@/lib/mock/database';
+import { createClient } from '@/lib/supabase/client';
 
 export type ContributionItem = {
   id: string;
@@ -20,65 +20,69 @@ export function useContributions() {
 
   useEffect(() => {
     if (!user) { setIsLoading(false); return; }
-    try {
-      const items: ContributionItem[] = [];
 
-      // Notes
-      mockNotes.filter(n => n.contributor_id === user.id).forEach(n => {
-        items.push({
-          id: n.id, type: 'note', title: n.title,
-          status: n.status,
-          lastModified: n.updated_at || n.created_at,
-          editHref: `/editor/notes?id=${n.id}&edit=true`,
+    const userId = user.id;
+
+    async function fetchContributions() {
+      const supabase = createClient();
+      if (!supabase) { setIsLoading(false); return; }
+
+      try {
+        const [
+          { data: notes },
+          { data: decks },
+          { data: quizzes },
+        ] = await Promise.all([
+          supabase.from('notes').select('*').eq('contributor_id', userId),
+          supabase.from('decks').select('*').eq('owner_id', userId),
+          (supabase as any).from('quizzes_standalone').select('*').eq('created_by', userId),
+        ]);
+
+        const items: ContributionItem[] = [];
+
+        (notes ?? []).forEach((n: any) => {
+          items.push({
+            id: n.id,
+            type: 'note',
+            title: n.title,
+            status: n.status || 'published',
+            lastModified: n.updated_at || n.created_at || new Date().toISOString(),
+            editHref: `/editor/notes?id=${n.id}&edit=true`,
+          });
         });
-      });
 
-      // Decks/Flashcards
-      mockDecks.filter(d => d.owner_id === user.id).forEach(d => {
-        items.push({
-          id: d.id, type: 'flashcard', title: d.name,
-          status: d.is_public ? 'public' : 'private',
-          lastModified: d.created_at,
-          editHref: `/flashcards/${d.id}`,
+        (decks ?? []).forEach((d: any) => {
+          items.push({
+            id: d.id,
+            type: 'flashcard',
+            title: d.name,
+            status: d.visibility || 'private',
+            lastModified: d.created_at || new Date().toISOString(),
+            editHref: `/flashcards/${d.id}`,
+          });
         });
-      });
 
-      // Quizzes
-      mockQuizzes.filter(q => q.created_by === user.id).forEach(q => {
-        items.push({
-          id: q.id, type: 'quiz', title: q.title,
-          status: q.status,
-          lastModified: q.created_at,
-          editHref: `/classrooms/${q.classroom_id}`,
+        (quizzes ?? []).forEach((q: any) => {
+          items.push({
+            id: q.id,
+            type: 'quiz',
+            title: q.title,
+            status: q.status || 'draft',
+            lastModified: q.created_at || new Date().toISOString(),
+            editHref: `/classrooms`,
+          });
         });
-      });
 
-      // Curriculums — has `created_by` field in mock data
-      // TODO: when a proper Curriculum type is added, use a typed filter
-      mockCurriculums.forEach(c => {
-        items.push({
-          id: c.id, type: 'curriculum', title: c.title,
-          status: c.status || 'active',
-          lastModified: c.updated_at || c.created_at || new Date().toISOString(),
-          editHref: `/editor/curriculum?id=${c.id}`,
-        });
-      });
-
-      // Exam countdowns — uses `user_id` field (not `created_by`)
-      mockExamCountdowns.filter(c => c.user_id === user.id).forEach(c => {
-        items.push({
-          id: c.id, type: 'exam', title: c.custom_title || 'Untitled Countdown',
-          status: 'active',
-          lastModified: c.created_at,
-          editHref: `/countdown`,
-        });
-      });
-
-      setContributions(items);
-    } catch (e) {
-      console.error('Failed to load contributions:', e);
+        items.sort((a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime());
+        setContributions(items);
+      } catch (e) {
+        setContributions([]);
+      } finally {
+        setIsLoading(false);
+      }
     }
-    setIsLoading(false);
+
+    fetchContributions();
   }, [user]);
 
   return { contributions, isLoading };

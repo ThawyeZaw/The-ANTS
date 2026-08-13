@@ -6,7 +6,7 @@
 // Tabbed view by submission type with approve/reject/edit/preview functionality.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   Shield, CheckCircle, XCircle, Pencil, Eye, EyeOff,
   Clock, BookOpen, FileText, Layers, Database, GraduationCap, Calculator,
@@ -17,12 +17,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
 import BlockPreview from '@/components/notes/BlockPreview';
 import FlashcardText from '@/components/flashcards/FlashcardText';
-import {
-  getReviewQueue,
-  approveReviewItem,
-  rejectReviewItem,
-  editReviewItemData,
-} from '@/lib/mock/database';
+import { createClient } from '@/lib/supabase/client';
 import type { ReviewQueueItem, ReviewSubmissionType, ReviewFeedbackCategory, ReviewFeedback, NoteBlock } from '@/types';
 
 // ── Tab Config ───────────────────────────────────────────────────────────────
@@ -41,12 +36,12 @@ const SUBMISSION_TABS: { key: ReviewSubmissionType | 'all'; label: string; icon:
 ];
 
 const FEEDBACK_CATEGORIES: { key: ReviewFeedbackCategory; label: string }[] = [
-  { key: 'inaccurate_content', label: 'Inaccurate Content' },
-  { key: 'formatting_issues', label: 'Formatting Issues' },
-  { key: 'missing_information', label: 'Missing Information' },
-  { key: 'grammar_spelling', label: 'Grammar / Spelling' },
-  { key: 'duplicate_entry', label: 'Duplicate Entry' },
-  { key: 'outdated_syllabus', label: 'Outdated Syllabus' },
+  { key: 'inaccurate_content', label: 'Inaccurate Information' },
+  { key: 'formatting_issues', label: 'Formatting / Styling Issues' },
+  { key: 'missing_information', label: 'Incomplete Content' },
+  { key: 'grammar_spelling', label: 'Grammar / Spelling Issues' },
+  { key: 'duplicate_entry', label: 'Duplicate Submission' },
+  { key: 'outdated_syllabus', label: 'Outdated Syllabus Content' },
   { key: 'other', label: 'Other' },
 ];
 
@@ -67,13 +62,21 @@ export default function ReviewQueue() {
   const [statusType, setStatusType] = useState<'success' | 'error'>('success');
   const [previewItems, setPreviewItems] = useState<Set<string>>(new Set());
 
-  const [queueItems, setQueueItems] = useState<ReviewQueueItem[]>(() =>
-    getReviewQueue({ status: 'pending' })
-  );
+  const [queueItems, setQueueItems] = useState<ReviewQueueItem[]>([]);
 
-  const refreshQueue = useCallback(() => {
-    setQueueItems(getReviewQueue({ status: 'pending' }));
+  const refreshQueue = useCallback(async () => {
+    const supabase = createClient();
+    if (!supabase) return;
+    const { data } = await supabase
+      .from('review_queue')
+      .select('*')
+      .eq('status', 'pending');
+    if (data) setQueueItems(data as ReviewQueueItem[]);
   }, []);
+
+  useEffect(() => {
+    refreshQueue();
+  }, [refreshQueue]);
 
   const filteredItems = useMemo(() => {
     if (activeTab === 'all') return queueItems;
@@ -82,15 +85,26 @@ export default function ReviewQueue() {
 
   // ── Approve ───────────────────────────────────────────────────────────────
 
-  const handleApprove = useCallback((itemId: string) => {
+  const handleApprove = useCallback(async (itemId: string) => {
     if (!user) return;
-    const result = approveReviewItem(itemId, user.id);
-    if (result.success) {
+    const supabase = createClient();
+    if (!supabase) return;
+
+    const { error } = await supabase
+      .from('review_queue')
+      .update({
+        status: 'approved',
+        reviewer_id: user.id,
+        reviewed_at: new Date().toISOString(),
+      })
+      .eq('id', itemId);
+
+    if (!error) {
       setStatusMessage('Item approved and published.');
       setStatusType('success');
       refreshQueue();
     } else {
-      setStatusMessage(result.error ?? 'Failed to approve.');
+      setStatusMessage(error.message ?? 'Failed to approve.');
       setStatusType('error');
     }
     setTimeout(() => setStatusMessage(''), 3000);
@@ -104,21 +118,32 @@ export default function ReviewQueue() {
     setFeedbackNote('');
   };
 
-  const handleReject = useCallback(() => {
+  const handleReject = useCallback(async () => {
     if (!user || !rejectingId) return;
+    const supabase = createClient();
+    if (!supabase) return;
 
     const feedback: ReviewFeedback = {
       categories: [...feedbackCategories],
       note: feedbackNote,
     };
 
-    const result = rejectReviewItem(rejectingId, user.id, feedback);
-    if (result.success) {
+    const { error } = await supabase
+      .from('review_queue')
+      .update({
+        status: 'rejected',
+        reviewer_id: user.id,
+        reviewed_at: new Date().toISOString(),
+        feedback: feedback as unknown as any,
+      })
+      .eq('id', rejectingId);
+
+    if (!error) {
       setStatusMessage('Item rejected with feedback.');
       setStatusType('success');
       refreshQueue();
     } else {
-      setStatusMessage(result.error ?? 'Failed to reject.');
+      setStatusMessage(error?.message ?? 'Failed to reject.');
       setStatusType('error');
     }
     setRejectingId(null);
@@ -134,17 +159,23 @@ export default function ReviewQueue() {
     setEditJsonText(JSON.stringify(item.submitted_data, null, 2));
   };
 
-  const handleSaveEdit = useCallback(() => {
+  const handleSaveEdit = useCallback(async () => {
     if (!editingData) return;
+    const supabase = createClient();
+    if (!supabase) return;
     try {
       const parsed = JSON.parse(editJsonText);
-      const result = editReviewItemData(editingData, parsed);
-      if (result.success) {
+      const { error } = await supabase
+        .from('review_queue')
+        .update({ submitted_data: parsed })
+        .eq('id', editingData);
+
+      if (!error) {
         setStatusMessage('Data updated.');
         setStatusType('success');
         refreshQueue();
       } else {
-        setStatusMessage(result.error ?? 'Failed to update.');
+        setStatusMessage(error.message || 'Failed to update.');
         setStatusType('error');
       }
     } catch {

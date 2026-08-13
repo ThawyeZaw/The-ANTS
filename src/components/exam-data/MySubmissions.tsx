@@ -3,15 +3,21 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Clock3, CheckCircle2, XCircle, Eye } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { getExamSubmissionsByContributor } from '@/lib/mock/database';
+import { createClient } from '@/lib/supabase/client';
 
 export default function MySubmissions() {
   const { user } = useAuth();
-  const [submissions, setSubmissions] = useState<ReturnType<typeof getExamSubmissionsByContributor>>([]);
+  const [submissions, setSubmissions] = useState<any[]>([]);
 
-  const refresh = useCallback(() => {
+  const refresh = useCallback(async () => {
     if (!user) return;
-    setSubmissions(getExamSubmissionsByContributor(user.id));
+    const supabase = createClient();
+    if (!supabase) return;
+    const { data } = await (supabase as any)
+      .from('exam_editor_submissions')
+      .select('*')
+      .eq('contributor_id', user.id);
+    if (data) setSubmissions(data);
   }, [user]);
 
   useEffect(() => {

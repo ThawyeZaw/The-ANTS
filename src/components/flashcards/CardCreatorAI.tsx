@@ -7,7 +7,7 @@
 
 import { useState } from 'react';
 import { Sparkles, ArrowRight, ArrowLeft, Check } from 'lucide-react';
-import { importCardsFromParsed } from '@/lib/mock/database';
+import { createClient } from '@/lib/supabase/client';
 import AIPromptGenerator from './AIPromptGenerator';
 import AICardParser from './AICardParser';
 import type { FlashCard, ParsedAICard } from '@/types';
@@ -47,8 +47,22 @@ export default function CardCreatorAI({ deckId, deckName, onSaved, onCancel }: C
     setStep('prompt');
   }
 
-  function handleCardsConfirmed(parsed: ParsedAICard[]) {
-    const created = importCardsFromParsed(deckId, parsed);
+  async function handleCardsConfirmed(parsed: ParsedAICard[]) {
+    const supabase = createClient();
+    if (!supabase) return;
+
+    const newRows = parsed.map(p => ({
+      deck_id: deckId,
+      front_text: p.front.trim(),
+      back_text: p.back.trim(),
+    }));
+
+    const { data, error } = await supabase
+      .from('cards')
+      .insert(newRows)
+      .select('*');
+
+    const created = (data ?? []) as unknown as FlashCard[];
     setSavedCards(created);
     setStep('done');
     setTimeout(() => onSaved(created), 1500);

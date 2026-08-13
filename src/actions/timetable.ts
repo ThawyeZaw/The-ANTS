@@ -35,7 +35,7 @@ export async function fetchTimetableEventsAction(
 
     const { data, error } = await query;
     if (error) return { success: false, error: error.message };
-    return { success: true, events: (data as TimetableEvent[]) ?? [] };
+    return { success: true, events: (data as unknown as TimetableEvent[]) ?? [] };
   } catch (err) {
     return { success: false, error: `Failed to fetch events: ${String(err)}` };
   }
@@ -80,7 +80,7 @@ export async function createEventAction(
     } as any).select().single();
 
     if (error || !event) return { success: false, error: error?.message ?? 'Failed to create event' };
-    return { success: true, event: event as TimetableEvent };
+    return { success: true, event: event as unknown as TimetableEvent };
   } catch (err) {
     return { success: false, error: `Failed to create event: ${String(err)}` };
   }
@@ -121,7 +121,7 @@ export async function updateEventAction(
     } as any).eq('id', baseId).select().single();
 
     if (error || !event) return { success: false, error: error?.message ?? 'Failed to update event' };
-    return { success: true, event: event as TimetableEvent };
+    return { success: true, event: event as unknown as TimetableEvent };
   } catch (err) {
     return { success: false, error: `Failed to update event: ${String(err)}` };
   }
@@ -160,7 +160,7 @@ export async function toggleEventCompleteAction(
   }).eq('id', eventId).select().single();
 
   if (error || !event) return { success: false, error: error?.message ?? 'Failed to toggle' };
-  return { success: true, event: event as TimetableEvent };
+  return { success: true, event: event as unknown as TimetableEvent };
 }
 
 // ---------------------------------------------------------------------------
@@ -180,5 +180,5 @@ export async function moveEventAction(
   }).eq('id', eventId).select().single();
 
   if (error || !event) return { success: false, error: error?.message ?? 'Failed to move event' };
-  return { success: true, event: event as TimetableEvent };
+  return { success: true, event: event as unknown as TimetableEvent };
 }

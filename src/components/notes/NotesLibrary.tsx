@@ -16,14 +16,9 @@ import { useCourseManager } from '@/hooks/useCourseManager';
 import NoteCard from './NoteCard';
 import NoteFiltersPanel from './NoteFilters';
 import NoteReaderModal from './NoteReaderModal';
-import {
-  getNotes,
-  getProfile,
-  getUserSavedNotes,
-  saveNote,
-  unsaveNote,
-  isNoteSaved,
-} from '@/lib/mock/database';
+import { createClient } from '@/lib/supabase/client';
+import { actionSaveNote, actionUnsaveNote } from '@/actions/notes';
+import type { Note } from '@/types';
 
 const DEFAULT_FILTERS: NoteFilters = {
   search: '',
@@ -42,52 +37,88 @@ export default function NotesLibrary() {
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
   const [showEnrolledOnly, setShowEnrolledOnly] = useState(false);
   const [savedNoteIds, setSavedNoteIds] = useState<Set<string>>(new Set());
-  const [toggleKey, setToggleKey] = useState(0);
+  const [rawNotes, setRawNotes] = useState<Note[]>([]);
 
   const { enrolledCurriculumIds } = useCourseManager();
 
-  // Get notes from mock database with applied filters
-  const notes = useMemo(() => {
-    return getNotes({
-      curriculumId: filters.curriculumId ?? undefined,
-      subjectId: filters.subjectId ?? undefined,
-      isSyllabusBased: filters.isSyllabusBased ?? undefined,
-      search: filters.search || undefined,
-      tags: filters.tags.length > 0 ? filters.tags : undefined,
-    });
-  }, [filters.curriculumId, filters.subjectId, filters.isSyllabusBased, filters.search, JSON.stringify(filters.tags), toggleKey]);
-
-  // Track saved state for displayed notes
+  // Fetch notes and saved state from Supabase
   useEffect(() => {
-    if (!user) { setSavedNoteIds(new Set()); return; }
-    const savedNotes = getUserSavedNotes(user.id);
-    setSavedNoteIds(new Set(savedNotes.map(n => n.id)));
-  }, [user, notes.length, toggleKey]);
+    async function fetchNotesData() {
+      const supabase = createClient();
+      if (!supabase) return;
 
-  // Toggle save using mock database
+      let query = supabase.from('notes').select('*');
+      if (filters.curriculumId) query = query.eq('curriculum_id', filters.curriculumId);
+      if (filters.subjectId) query = query.eq('subject_id', filters.subjectId);
+
+      const { data } = await query;
+      if (data) setRawNotes(data as unknown as Note[]);
+
+      if (user) {
+        const { data: savedRows } = await supabase
+          .from('user_saved_notes')
+          .select('note_id')
+          .eq('user_id', user.id);
+        if (savedRows) {
+          setSavedNoteIds(new Set(savedRows.map((s: any) => s.note_id)));
+        }
+      }
+    }
+
+    fetchNotesData();
+  }, [user, filters.curriculumId, filters.subjectId]);
+
+  // Filter notes client-side for search & tags
+  const notes = useMemo(() => {
+    let list = rawNotes;
+    if (filters.search) {
+      const q = filters.search.toLowerCase();
+      list = list.filter(n => n.title.toLowerCase().includes(q) || n.summary?.toLowerCase().includes(q));
+    }
+    if (filters.tags && filters.tags.length > 0) {
+      list = list.filter(n => filters.tags.some(t => n.tags?.includes(t)));
+    }
+    return list;
+  }, [rawNotes, filters.search, filters.tags]);
+
+  // Toggle save using server action
   const toggleSave = useCallback(async (noteId: string) => {
     if (!user) return;
-    const saved = isNoteSaved(user.id, noteId);
-    if (saved) {
-      unsaveNote(user.id, noteId);
+    const isSaved = savedNoteIds.has(noteId);
+    if (isSaved) {
+      await actionUnsaveNote(user.id, noteId);
       setSavedNoteIds(prev => { const next = new Set(prev); next.delete(noteId); return next; });
     } else {
-      saveNote(user.id, noteId);
+      await actionSaveNote(user.id, noteId);
       setSavedNoteIds(prev => new Set([...prev, noteId]));
     }
-    setToggleKey(k => k + 1);
-  }, [user]);
+  }, [user, savedNoteIds]);
 
   // Build a contributor name lookup map
-  const contributorNames = useMemo(() => {
-    const map = new Map<string, string>();
-    notes.forEach((n) => {
-      if (!map.has(n.contributor_id)) {
-        const profile = getProfile(n.contributor_id);
-        if (profile) map.set(n.contributor_id, profile.name);
+  const [contributorNames, setContributorNames] = useState<Map<string, string>>(new Map());
+
+  useEffect(() => {
+    async function fetchProfiles() {
+      if (notes.length === 0) return;
+      const supabase = createClient();
+      if (!supabase) return;
+
+      const contributorIds = [...new Set(notes.map(n => n.contributor_id).filter(Boolean))];
+      if (contributorIds.length === 0) return;
+
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, name')
+        .in('id', contributorIds);
+
+      if (profiles) {
+        const map = new Map<string, string>();
+        profiles.forEach(p => map.set(p.id, p.name || 'Anonymous'));
+        setContributorNames(map);
       }
-    });
-    return map;
+    }
+
+    fetchProfiles();
   }, [notes]);
 
   // Apply enrolled filter

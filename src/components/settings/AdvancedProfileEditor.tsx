@@ -113,7 +113,7 @@ export default function AdvancedProfileEditor() {
         .eq('user_id', user.profile.id)
         .order('order_no', { ascending: true })
         .then(({ data }) => {
-          if (data) setCerts(data as Certification[]);
+          if (data) setCerts(data as unknown as Certification[]);
         });
     }
   }, [user, certsVersion]);

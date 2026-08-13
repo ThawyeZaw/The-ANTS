@@ -17,6 +17,7 @@ import {
   actionEnqueueTimetableReminders,
   actionClearSourceQueue,
 } from '@/actions/notifications';
+import { expandRecurringEvents } from '@/lib/timetable/recurrence';
 
 // ---------------------------------------------------------------------------
 // Date Helpers
@@ -203,12 +204,20 @@ export function useTimetable(userId: string): UseTimetableReturn {
         .from('timetable_events')
         .select('*')
         .eq('user_id', userId)
-        .gte('start_time', rangeStart.toISOString())
-        .lte('start_time', rangeEnd.toISOString());
+        .or(`and(start_time.gte.${rangeStart.toISOString()},start_time.lte.${rangeEnd.toISOString()}),is_recurring.eq.true`);
 
       if (!cancelled) {
-        if (error) console.error('Failed to load timetable events:', error);
-        else setAllEvents((data ?? []) as TimetableEvent[]);
+        if (error || !data) {
+          if (error && error.code !== 'PGRST116') console.error('Failed to load timetable events from DB:', error);
+          setAllEvents([]);
+        } else {
+          const expandedEvents: TimetableEvent[] = [];
+          for (const ev of data as TimetableEvent[]) {
+            const instances = expandRecurringEvents(ev, rangeStart, rangeEnd);
+            expandedEvents.push(...instances);
+          }
+          setAllEvents(expandedEvents);
+        }
         setIsLoading(false);
       }
     })();
@@ -234,7 +243,9 @@ export function useTimetable(userId: string): UseTimetableReturn {
         s.title,
         s.location,
         s.start_time,
-        s.reminder_minutes
+        s.reminder_minutes,
+        s.is_recurring,
+        s.recurrence_rule
       );
     } else {
       await actionClearSourceQueue('timetable_event', s.id);
@@ -346,7 +357,7 @@ export function useTimetable(userId: string): UseTimetableReturn {
     return events.filter(e => {
       const t = e.start_time || e.end_time;
       if (!t) return e.all_day;
-      return new Date(t).toISOString().startsWith(dateStr.replace(/-/g, '-'));
+      return formatDateLocal(new Date(t)) === dateStr;
     });
   }, [events]);
 
@@ -418,7 +429,9 @@ export function useTimetable(userId: string): UseTimetableReturn {
           rest.title ?? '',
           rest.location ?? null,
           startIso,
-          reminder_minutes
+          reminder_minutes,
+          rest.is_recurring,
+          recurrence_rule
         );
       }
 
@@ -494,7 +507,9 @@ export function useTimetable(userId: string): UseTimetableReturn {
           rest.title ?? '',
           rest.location ?? null,
           startIso,
-          reminder_minutes
+          reminder_minutes,
+          rest.is_recurring,
+          recurrence_rule
         );
       } else {
         await actionClearSourceQueue('timetable_event', baseId);

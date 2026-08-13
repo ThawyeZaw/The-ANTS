@@ -22,11 +22,6 @@ import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { cn } from '@/lib/utils';
 import { generateQuizPrompt, parseQuizAIResponse } from '@/lib/quiz-ai';
-import {
-  mockCurriculums,
-  mockSubjects,
-  mockTopics,
-} from '@/lib/mock/database';
 import { actionCreateQuiz as createQuiz } from '@/actions/quizzes';
 import type { QuizStandaloneQuestion, QuizQuestionType, QuizStandaloneUser } from '@/types/quiz';
 
@@ -284,20 +279,10 @@ function AIWizard({
 }) {
   const [step, setStep] = useState<AIStep>('configure');
 
-  const defaultCurriculum = curriculumIds && curriculumIds.length > 0
-    ? mockCurriculums.find((c) => c.id === curriculumIds[0])
-    : undefined;
-  const defaultSubject = defaultCurriculum
-    ? mockSubjects.find((s) => s.curriculum_id === defaultCurriculum.id)
-    : undefined;
-  const defaultTopics = defaultSubject
-    ? mockTopics.filter((t) => t.subject_id === defaultSubject.id)
-    : [];
-
-  const [subject, setSubject] = useState(defaultSubject?.title || '');
+  const [subject, setSubject] = useState('');
   const [topic, setTopic] = useState('');
   const [questionCount, setQuestionCount] = useState(5);
-  const [examBoard, setExamBoard] = useState(defaultCurriculum?.exam_board || '');
+  const [examBoard, setExamBoard] = useState('');
   const [difficulty, setDifficulty] = useState('');
   const [additionalNotes, setAdditionalNotes] = useState('');
   const [configError, setConfigError] = useState('');
@@ -403,11 +388,6 @@ function AIWizard({
             <h3 className="text-sm font-semibold text-[var(--foreground)]">Configure AI Quiz Generation</h3>
           </div>
 
-          {defaultCurriculum && (
-            <div className="rounded-lg border border-[var(--primary)]/20 bg-[var(--primary-light)] px-3 py-2 text-xs text-[var(--primary)]">
-              Pre-filled from curriculum: {defaultCurriculum.title} ({defaultCurriculum.exam_board})
-            </div>
-          )}
 
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -438,25 +418,6 @@ function AIWizard({
               placeholder="e.g. Forces and Motion"
               className="w-full rounded-lg border border-[var(--border)] bg-[var(--background-card)] px-3 py-2 text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-muted)] focus:border-[var(--primary)] focus:outline-none"
             />
-            {defaultTopics.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {defaultTopics.map((t) => (
-                  <button
-                    key={t.id}
-                    type="button"
-                    onClick={() => setTopic(t.title)}
-                    className={cn(
-                      'rounded-full px-2.5 py-0.5 text-xs transition-colors',
-                      topic === t.title
-                        ? 'bg-[var(--primary-light)] text-[var(--primary)] border border-[var(--primary)]'
-                        : 'bg-[var(--background-secondary)] text-[var(--foreground-muted)] border border-[var(--border)] hover:border-[var(--primary)]/30'
-                    )}
-                  >
-                    {t.title}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
