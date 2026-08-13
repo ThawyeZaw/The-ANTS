@@ -31,12 +31,6 @@ import CertificationSection from '@/components/profile/CertificationSection';
 import ClubMembershipsPanel from '@/components/profile/ClubMembershipsPanel';
 import { PROFILE_THEME_PRESETS, type Profile } from '@/types';
 import { cn, formatDate, formatRelativeTime } from '@/lib/utils';
-import {
-  getNotesByContributor,
-  getLibraryDecks,
-  mockCurriculums,
-  mockSubjects,
-} from '@/lib/mock/database';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -184,30 +178,11 @@ export default function ProfilePage() {
   const hasPortfolio = orderedSections.length > 0;
   const isContributor = profile?.role === 'contributor' || profile?.role === 'main_contributor';
 
-  // ── Mock data for contributor published works ──────────────────────
-  const mockNotes = useMemo(() => {
-    if (!profile || !isContributor) return [];
-    return getNotesByContributor(profile.id).filter(
-      (n) => n.visibility === 'public' && n.status === 'approved'
-    );
-  }, [profile, isContributor]);
-
-  const mockDecks = useMemo(() => {
-    if (!profile || !isContributor) return [];
-    return getLibraryDecks().filter((d) => d.owner_id === profile.id && d.is_public);
-  }, [profile, isContributor]);
-
-  const curriculumMap = useMemo(() => {
-    const map: Record<string, (typeof mockCurriculums)[number]> = {};
-    for (const c of mockCurriculums) map[c.id] = c;
-    return map;
-  }, []);
-
-  const subjectMap = useMemo(() => {
-    const map: Record<string, (typeof mockSubjects)[number]> = {};
-    for (const s of mockSubjects) map[s.id] = s;
-    return map;
-  }, []);
+  // ── Published works for contributor ──────────────────────
+  const mockNotes: any[] = useMemo(() => [], []);
+  const mockDecks: any[] = useMemo(() => [], []);
+  const curriculumMap: Record<string, any> = useMemo(() => ({}), []);
+  const subjectMap: Record<string, any> = useMemo(() => ({}), []);
 
   const showPublishedWorks = isContributor && (mockNotes.length > 0 || mockDecks.length > 0);
 

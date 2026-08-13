@@ -15,7 +15,7 @@ import Link from 'next/link';
 import { BookMarked } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useLessonContext } from '@/context/LessonContext';
-import { cn } from '@/lib/utils';
+import { cn, slugify } from '@/lib/utils';
 import AppRevealSection from '@/components/ui/AppRevealSection';
 
 const CreateDeckModal = dynamic(() => import('./CreateDeckModal'), {
@@ -55,7 +55,7 @@ export default function DeckLibrary({ userId }: DeckLibraryProps) {
       .select('*')
       .eq('owner_id', userId)
       .order('created_at', { ascending: false });
-    if (!error) setDecks((data ?? []) as Deck[]);
+    if (!error) setDecks((data ?? []) as unknown as Deck[]);
     setIsLoading(false);
   }, [userId, supabase]);
 
@@ -89,11 +89,15 @@ export default function DeckLibrary({ userId }: DeckLibraryProps) {
 
   // ── Handlers ────────────────────────────────────────────────────────────
   const handleStudy = (deckId: string) => {
-    router.push(`/flashcards/${deckId}?mode=study`);
+    const targetDeck = decks.find(d => d.id === deckId);
+    const slug = slugify(targetDeck?.name) || deckId;
+    router.push(`/flashcards/${slug}?mode=study`);
   };
 
   const handleEdit = (deckId: string) => {
-    router.push(`/flashcards/${deckId}?mode=edit`);
+    const targetDeck = decks.find(d => d.id === deckId);
+    const slug = slugify(targetDeck?.name) || deckId;
+    router.push(`/flashcards/${slug}?mode=edit`);
   };
 
   const handleClone = async (deckId: string) => {
@@ -185,7 +189,7 @@ export default function DeckLibrary({ userId }: DeckLibraryProps) {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[var(--border)] pb-4">
         <div className="flex items-center gap-2 flex-wrap">
           <Link
-            href="/library/flashcards"
+            href="/flashcards"
             className="flex items-center gap-2 rounded-xl bg-violet-500/10 px-4 py-2 text-sm font-semibold text-violet-600 dark:text-violet-400 transition-all hover:bg-violet-500/20"
           >
             <BookMarked className="h-4 w-4" aria-hidden="true" />

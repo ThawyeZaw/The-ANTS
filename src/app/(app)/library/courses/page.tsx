@@ -7,7 +7,7 @@ export default function CoursesRedirect() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/library?tab=courses');
+    router.replace('/courses');
   }, [router]);
 
   return null;

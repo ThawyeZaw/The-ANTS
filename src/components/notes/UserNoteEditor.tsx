@@ -78,14 +78,14 @@ export default function UserNoteEditor() {
         .eq('user_id', user.id)
         .single();
       if (data) {
-        const n = data as UserNote;
+        const n = data as unknown as UserNote;
         setNoteId(n.id);
         setTitle(n.title);
         setCurriculumId(n.curriculum_id);
         setSubjectId(n.subject_id);
         setTopicId(n.topic_id);
         setTags(n.tags ?? []);
-        setBlocks((n.blocks ?? []) as NoteBlock[]);
+        setBlocks(((n.blocks ?? []) as unknown) as NoteBlock[]);
       }
       setIsLoading(false);
     })();

@@ -8,6 +8,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
@@ -16,6 +17,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       { success: false, error: 'TELEGRAM_BOT_TOKEN not configured' },
       { status: 500 }
+    );
+  }
+
+  // Auth Guard: ensure the caller is authenticated
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized: Authentication required' },
+      { status: 401 }
     );
   }
 
@@ -30,6 +42,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       { success: false, error: 'Missing chatId in request body' },
       { status: 400 }
+    );
+  }
+
+  // Authorization Check: verify chatId belongs to current user profile
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('telegram_chat_id')
+    .eq('id', user.id)
+    .single();
+
+  if (!profile || profile.telegram_chat_id !== body.chatId) {
+    return NextResponse.json(
+      { success: false, error: 'Forbidden: You can only test notifications for your own linked Telegram chat' },
+      { status: 403 }
     );
   }
 

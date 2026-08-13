@@ -19,6 +19,8 @@
 
 import { createAdminClient } from '@/lib/supabase/server';
 import { scheduleQStashMessage } from '@/lib/qstash';
+import { expandRecurringEvents } from '@/lib/timetable/recurrence';
+import type { TimetableEvent, RecurrenceRule } from '@/types/timetable';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SupabaseAny = any;
@@ -319,6 +321,12 @@ export async function actionClearSourceQueue(
     .in('status', ['pending', 'processing']);
 }
 
+// ── Check Telegram Connection ────────────────────────────────────────────────
+export async function actionCheckTelegramConnected(userId: string): Promise<boolean> {
+  const profile = await getProfileForUser(userId);
+  return Boolean(profile?.telegram_chat_id);
+}
+
 // ── Enqueue: Timetable Events ─────────────────────────────────────────────────
 
 export async function actionEnqueueTimetableReminders(
@@ -327,7 +335,9 @@ export async function actionEnqueueTimetableReminders(
   title: string,
   location: string | null,
   startTime: string,
-  reminderMinutes: number | null
+  reminderMinutes: number | null,
+  isRecurring?: boolean,
+  recurrenceRule?: RecurrenceRule | null
 ) {
   if (!reminderMinutes && reminderMinutes !== 0) {
     // No reminder configured — clear any existing queue items
@@ -342,30 +352,78 @@ export async function actionEnqueueTimetableReminders(
   if (timetablePrefs?.enabled === false) return;
 
   const userTimezone = profile.timezone ?? 'Asia/Yangon';
-  const startDate = new Date(startTime);
-  const scheduledFor = new Date(startDate.getTime() - reminderMinutes * 60 * 1000);
+  const items: QueueItem[] = [];
 
-  // Skip only if the reminder time is too far in the past. Near-term and
-  // "On Time" (0-min) reminders are enqueued — the trigger scheduler fires
-  // them immediately if they are already due.
-  if (scheduledFor.getTime() <= Date.now() - OVERDUE_ENQUEUE_GRACE_MS) return;
+  if (isRecurring && recurrenceRule) {
+    // Rolling 30-day window for recurring events to minimize DB & QStash load
+    const now = new Date();
+    const rangeEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-  const { timeStr, dateStr } = formatTime(startDate, userTimezone);
-
-  let msg = `⏱ <b>EVENT REMINDER</b>\n\n🔔 <b>${title}</b>\n${dateStr} · ${timeStr}`;
-  if (location) msg += `\n📍 ${location}`;
-  if (reminderMinutes > 0) msg += `\n⏰ ${offsetLabel(reminderMinutes)} early`;
-
-  const items: QueueItem[] = [
-    {
-      telegram_chat_id: profile.telegram_chat_id,
-      message_text: msg,
-      scheduled_for: scheduledFor.toISOString(),
-      source_type: 'timetable_event',
-      source_id: eventId,
+    const dummyEvent: TimetableEvent = {
+      id: eventId,
       user_id: userId,
-    },
-  ];
+      title,
+      location,
+      start_time: startTime,
+      end_time: null,
+      event_type: 'study',
+      all_day: false,
+      is_recurring: true,
+      recurrence_rule: recurrenceRule,
+      color_code: '#6366f1',
+      is_todo: false,
+      is_completed: false,
+      completed_at: null,
+      event_source: 'user',
+      source_id: null,
+      created_at: new Date().toISOString(),
+    };
+
+    const occurrences = expandRecurringEvents(dummyEvent, now, rangeEnd);
+
+    for (const occ of occurrences) {
+      if (!occ.start_time) continue;
+      const occStart = new Date(occ.start_time);
+      const scheduledFor = new Date(occStart.getTime() - reminderMinutes * 60 * 1000);
+
+      // Skip past instances
+      if (scheduledFor.getTime() <= Date.now() - OVERDUE_ENQUEUE_GRACE_MS) continue;
+
+      const { timeStr, dateStr } = formatTime(occStart, userTimezone);
+      let msg = `⏱ <b>EVENT REMINDER</b>\n\n🔔 <b>${title}</b>\n${dateStr} · ${timeStr}`;
+      if (location) msg += `\n📍 ${location}`;
+      if (reminderMinutes > 0) msg += `\n⏰ ${offsetLabel(reminderMinutes)} early`;
+
+      items.push({
+        telegram_chat_id: profile.telegram_chat_id,
+        message_text: msg,
+        scheduled_for: scheduledFor.toISOString(),
+        source_type: 'timetable_event',
+        source_id: eventId,
+        user_id: userId,
+      });
+    }
+  } else {
+    // Single instance event
+    const startDate = new Date(startTime);
+    const scheduledFor = new Date(startDate.getTime() - reminderMinutes * 60 * 1000);
+
+    if (scheduledFor.getTime() > Date.now() - OVERDUE_ENQUEUE_GRACE_MS) {
+      const { timeStr, dateStr } = formatTime(startDate, userTimezone);
+      let msg = `⏱ <b>EVENT REMINDER</b>\n\n🔔 <b>${title}</b>\n${dateStr} · ${timeStr}`;
+      if (location) msg += `\n📍 ${location}`;
+      if (reminderMinutes > 0) msg += `\n⏰ ${offsetLabel(reminderMinutes)} early`;
+
+      items.push({
+        telegram_chat_id: profile.telegram_chat_id,
+        message_text: msg,
+        scheduled_for: scheduledFor.toISOString(),
+        source_type: 'timetable_event',
+        source_id: eventId,
+        user_id: userId,
+      });
+    }
+  }
 
   await upsertQueueItems('timetable_event', eventId, items);
   await scheduleQStashTriggers(items);

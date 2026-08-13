@@ -5,9 +5,10 @@
 // Owner: ZLH
 // ──────────────────────────────────────────────────────────────────────────────
 
+import { useState, useEffect } from 'react';
 import { RotateCcw, ArrowLeft, Brain, TrendingUp } from 'lucide-react';
-import type { SRSRating, FlashCard } from '@/types';
-import { getUserCardReview, mockDecks } from '@/lib/mock/database';
+import type { SRSRating, FlashCard, Deck } from '@/types';
+import { createClient } from '@/lib/supabase/client';
 import { formatNextReview } from '@/lib/srs/algorithm';
 import RelatedContent from '@/components/ui/RelatedContent';
 
@@ -37,7 +38,44 @@ export default function SessionSummary({
   onBackToDecks,
   deckId,
 }: SessionSummaryProps) {
-  const deck = mockDecks.find((d) => d.id === deckId);
+  const [deck, setDeck] = useState<Deck | null>(null);
+  const [nextReviewDates, setNextReviewDates] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    async function fetchData() {
+      const supabase = createClient();
+      if (!supabase) return;
+
+      if (deckId) {
+        const { data } = await supabase
+          .from('decks')
+          .select('*')
+          .eq('id', deckId)
+          .single();
+        if (data) setDeck(data as Deck);
+      }
+
+      if (reviewedCards.length > 0 && userId) {
+        const cardIds = reviewedCards.map(c => c.id);
+        const { data: reviews } = await supabase
+          .from('card_reviews')
+          .select('card_id, next_review_date')
+          .eq('user_id', userId)
+          .in('card_id', cardIds);
+
+        if (reviews) {
+          const map: Record<string, string> = {};
+          reviews.forEach(r => {
+            if (r.next_review_date) map[r.card_id] = r.next_review_date;
+          });
+          setNextReviewDates(map);
+        }
+      }
+    }
+
+    fetchData();
+  }, [deckId, userId, reviewedCards]);
+
   const totalRated = Object.values(ratings).reduce((s, v) => s + v, 0);
   const masteryRate = totalCards > 0
     ? Math.round(((ratings.good + ratings.easy) / totalCards) * 100)
@@ -117,7 +155,7 @@ export default function SessionSummary({
           </div>
           <div className="space-y-1.5 max-h-40 overflow-y-auto">
             {reviewedCards.slice(0, 6).map(card => {
-              const review = getUserCardReview(card.id, userId);
+              const date = nextReviewDates[card.id];
               return (
                 <div
                   key={card.id}
@@ -127,7 +165,7 @@ export default function SessionSummary({
                     {card.front_text.length > 40 ? card.front_text.slice(0, 40) + '…' : card.front_text}
                   </span>
                   <span className="ml-3 shrink-0 font-semibold text-[var(--primary)]">
-                    {review ? formatNextReview(review.next_review_date) : 'Soon'}
+                    {date ? formatNextReview(date) : 'Soon'}
                   </span>
                 </div>
               );

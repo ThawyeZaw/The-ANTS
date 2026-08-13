@@ -15,8 +15,6 @@ import {
   Pencil,
   ShieldCheck,
   UserCircle,
-  Sun,
-  Moon,
   LogOut,
   Menu,
   X,
@@ -28,7 +26,7 @@ import {
   Clock,
   Calculator,
   NotebookPen,
-  Target,
+  Settings,
   GraduationCap,
   Brain,
   UserPlus,
@@ -37,10 +35,11 @@ import {
   Wrench,
   Compass,
   Info,
+  FlaskConical,
 } from 'lucide-react';
+import ThemePickerDropdown from '@/components/theme/ThemePickerDropdown';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
-import { useTheme } from '@/context/ThemeContext';
 import { cn, getInitials } from '@/lib/utils';
 import { RoleBadge } from '@/components/ui/Badge';
 import type { UserRole } from '@/types';
@@ -73,23 +72,23 @@ const NAV_GROUPS: NavGroup[] = [
     label: 'Library',
     href: '/library',
     icon: <BookOpen className="h-4 w-4" />,
-    description: 'Notes, flashcards & courses',
+    description: 'Courses, notes, flashcards & quizzes',
     allowedRoles: ALL_ROLES,
     accentColor: 'from-emerald-500 to-teal-500',
   },
   {
     label: 'Tools',
-    href: '#tools',
+    href: '/tools',
     icon: <Wrench className="h-4 w-4" />,
-    description: 'Countdown, calculator, timetable, pomodoro & quizzes',
+    description: 'Countdown, calculator, timetable & pomodoro',
     allowedRoles: ALL_ROLES,
     accentColor: 'from-sky-500 to-blue-500',
   },
   {
     label: 'Community',
-    href: '#community',
+    href: '/community',
     icon: <Users className="h-4 w-4" />,
-    description: 'Classrooms, explore & about',
+    description: 'Classrooms, clubs, profiles & about',
     allowedRoles: ALL_ROLES,
     accentColor: 'from-pink-500 to-rose-500',
   },
@@ -116,6 +115,53 @@ const NAV_GROUPS: NavGroup[] = [
   },
 ];
 
+// ── Library Dropdown Items ────────────────────────────────────────────────────
+
+const LIBRARY_LINKS: ToolLink[] = [
+  {
+    label: 'All Resources',
+    href: '/library',
+    icon: <BookOpen className="h-4 w-4" />,
+    description: 'Explore 6 resource categories & tools',
+    accentColor: 'from-sky-500 to-blue-500',
+  },
+  {
+    label: 'Courses',
+    href: '/library?tab=courses',
+    icon: <GraduationCap className="h-4 w-4" />,
+    description: 'Browse curriculum courses & syllabi',
+    accentColor: 'from-emerald-500 to-teal-500',
+  },
+  {
+    label: 'Notes',
+    href: '/library?tab=notes',
+    icon: <NotebookPen className="h-4 w-4" />,
+    description: 'Official & community notes library',
+    accentColor: 'from-amber-500 to-orange-500',
+  },
+  {
+    label: 'Flashcards',
+    href: '/library?tab=flashcards',
+    icon: <Layers className="h-4 w-4" />,
+    description: 'Study decks with SRS algorithm',
+    accentColor: 'from-purple-500 to-violet-500',
+  },
+  {
+    label: 'Exams',
+    href: '/library?tab=exams',
+    icon: <FlaskConical className="h-4 w-4" />,
+    description: 'Past papers & syllabus specifications',
+    accentColor: 'from-rose-500 to-pink-500',
+  },
+  {
+    label: 'Quizzes',
+    href: '/library?tab=quizzes',
+    icon: <Brain className="h-4 w-4" />,
+    description: 'Practice questions & quiz sessions',
+    accentColor: 'from-yellow-500 to-amber-500',
+  },
+];
+
 // ── Tools Dropdown Items ──────────────────────────────────────────────────────
 
 const TOOLS_LINKS: ToolLink[] = [
@@ -123,36 +169,29 @@ const TOOLS_LINKS: ToolLink[] = [
     label: 'Exam Countdown',
     href: '/countdown',
     icon: <Clock className="h-4 w-4" />,
-    description: 'Track time until exams',
+    description: 'Track time until target exams',
     accentColor: 'from-sky-500 to-blue-500',
   },
   {
     label: 'Grade Calculator',
     href: '/calculator',
     icon: <Calculator className="h-4 w-4" />,
-    description: 'Predict your grades',
+    description: 'Predict & calculate subject grades',
     accentColor: 'from-emerald-500 to-teal-500',
   },
   {
     label: 'Timetable',
     href: '/timetable',
     icon: <CalendarDays className="h-4 w-4" />,
-    description: 'Weekly study schedule',
+    description: 'Scheduling & time blocking',
     accentColor: 'from-indigo-500 to-violet-500',
   },
   {
     label: 'Pomodoro Timer',
     href: '/pomodoro',
     icon: <Timer className="h-4 w-4" />,
-    description: 'Focused study sessions',
+    description: 'Focused study session timer',
     accentColor: 'from-rose-500 to-red-500',
-  },
-  {
-    label: 'Quizzes',
-    href: '/quizzes',
-    icon: <Brain className="h-4 w-4" />,
-    description: 'Practice with quiz sessions',
-    accentColor: 'from-violet-500 to-purple-500',
   },
 ];
 
@@ -174,17 +213,17 @@ const COMMUNITY_LINKS: ToolLink[] = [
     accentColor: 'from-pink-500 to-rose-500',
   },
   {
-    label: 'Explore',
+    label: 'Explore Profiles',
     href: '/explore',
     icon: <Compass className="h-4 w-4" />,
-    description: 'Discover profiles & communities',
+    description: 'Discover community member profiles',
     accentColor: 'from-violet-500 to-purple-500',
   },
   {
     label: 'About The ANTs',
     href: '/about',
     icon: <Info className="h-4 w-4" />,
-    description: 'Our mission, team & story',
+    description: 'Our organization, team & mission',
     accentColor: 'from-amber-500 to-orange-500',
   },
 ];
@@ -192,8 +231,8 @@ const COMMUNITY_LINKS: ToolLink[] = [
 // ── Quick Links for Mobile Menu ──────────────────────────────────────────────
 
 const STUDY_QUICK_LINKS = [
-  { label: 'Courses', href: '/library/courses', icon: <GraduationCap className="h-4 w-4" /> },
-  { label: 'My Notes', href: '/my-notes', icon: <NotebookPen className="h-4 w-4" /> },
+  { label: 'Courses', href: '/courses', icon: <GraduationCap className="h-4 w-4" /> },
+  { label: 'Notes', href: '/library', icon: <NotebookPen className="h-4 w-4" /> },
   { label: 'Flashcards', href: '/flashcards', icon: <Layers className="h-4 w-4" /> },
   { label: 'Quizzes', href: '/quizzes', icon: <Brain className="h-4 w-4" /> },
 ];
@@ -203,7 +242,6 @@ const TOOLS_QUICK_LINKS = [
   { label: 'Calculator', href: '/calculator', icon: <Calculator className="h-4 w-4" /> },
   { label: 'Timetable', href: '/timetable', icon: <CalendarDays className="h-4 w-4" /> },
   { label: 'Pomodoro', href: '/pomodoro', icon: <Timer className="h-4 w-4" /> },
-  { label: 'Quizzes', href: '/quizzes', icon: <Brain className="h-4 w-4" /> },
 ];
 
 const COMMUNITY_QUICK_LINKS = [
@@ -224,8 +262,15 @@ export interface NavItem {
 
 export function getAllNavItems(): NavItem[] {
   const groupItems: NavItem[] = NAV_GROUPS
-    .filter(g => g.href !== '#tools' && g.href !== '#community')
+    .filter(g => g.href !== '#library' && g.href !== '#tools' && g.href !== '#community')
     .map(g => ({ label: g.label, href: g.href, icon: g.icon, description: g.description }));
+
+  const libraryItems: NavItem[] = LIBRARY_LINKS.map(l => ({
+    label: l.label,
+    href: l.href,
+    icon: l.icon,
+    description: l.description,
+  }));
 
   const toolItems: NavItem[] = TOOLS_LINKS.map(t => ({
     label: t.label,
@@ -241,8 +286,11 @@ export function getAllNavItems(): NavItem[] {
     description: c.description,
   }));
 
-  const studyQuickItems: NavItem[] = STUDY_QUICK_LINKS
-    .map(l => ({ label: l.label, href: l.href, icon: l.icon }));
+  const studyQuickItems: NavItem[] = STUDY_QUICK_LINKS.map(l => ({
+    label: l.label,
+    href: l.href,
+    icon: l.icon,
+  }));
 
   const toolsQuickItems: NavItem[] = TOOLS_QUICK_LINKS.map(l => ({
     label: l.label,
@@ -256,7 +304,7 @@ export function getAllNavItems(): NavItem[] {
     icon: l.icon,
   }));
 
-  return [...groupItems, ...toolItems, ...communityItems, ...studyQuickItems, ...toolsQuickItems, ...communityQuickItems];
+  return [...groupItems, ...libraryItems, ...toolItems, ...communityItems, ...studyQuickItems, ...toolsQuickItems, ...communityQuickItems];
 }
 
 // ── Main NavBar Component ────────────────────────────────────────────────────
@@ -264,17 +312,18 @@ export function getAllNavItems(): NavItem[] {
 const NavBar = React.memo(function NavBar() {
   const { user, logout } = useAuth();
   const { role } = useRole();
-  const { theme, toggleTheme } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
 
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [isToolsOpen, setIsToolsOpen] = useState(false);
   const [isCommunityOpen, setIsCommunityOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isNavHidden, setIsNavHidden] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const libraryRef = useRef<HTMLDivElement>(null);
   const toolsRef = useRef<HTMLDivElement>(null);
   const communityRef = useRef<HTMLDivElement>(null);
   const adminRef = useRef<HTMLDivElement>(null);
@@ -286,8 +335,12 @@ const NavBar = React.memo(function NavBar() {
 
   // Check if current page is active
   const isActive = (href: string) => {
-    if (href === '#tools' || href === '#community') return false;
+    if (href === '#library' || href === '#tools' || href === '#community') return false;
     return pathname === href || pathname.startsWith(`${href}/`);
+  };
+
+  const isLibraryActive = () => {
+    return pathname.startsWith('/library') || LIBRARY_LINKS.some(l => pathname.startsWith(l.href));
   };
 
   const isToolsActive = () => {
@@ -329,6 +382,9 @@ const NavBar = React.memo(function NavBar() {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
         setIsUserMenuOpen(false);
       }
+      if (libraryRef.current && !libraryRef.current.contains(e.target as Node)) {
+        setIsLibraryOpen(false);
+      }
       if (toolsRef.current && !toolsRef.current.contains(e.target as Node)) {
         setIsToolsOpen(false);
       }
@@ -349,20 +405,30 @@ const NavBar = React.memo(function NavBar() {
     router.push('/');
   };
 
+  const handleLibraryClick = () => {
+    setIsLibraryOpen(!isLibraryOpen);
+    setIsToolsOpen(false);
+    setIsCommunityOpen(false);
+    setIsAdminOpen(false);
+  };
+
   const handleToolsClick = () => {
     setIsToolsOpen(!isToolsOpen);
+    setIsLibraryOpen(false);
     setIsCommunityOpen(false);
     setIsAdminOpen(false);
   };
 
   const handleCommunityClick = () => {
     setIsCommunityOpen(!isCommunityOpen);
+    setIsLibraryOpen(false);
     setIsToolsOpen(false);
     setIsAdminOpen(false);
   };
 
   const handleAdminClick = () => {
     setIsAdminOpen(!isAdminOpen);
+    setIsLibraryOpen(false);
     setIsToolsOpen(false);
     setIsCommunityOpen(false);
   };
@@ -372,37 +438,167 @@ const NavBar = React.memo(function NavBar() {
   return (
     <header
       className={cn(
-        'fixed top-0 left-0 right-0 z-50 transition-transform duration-300',
+        'fixed top-0 left-0 right-0 z-50 flex justify-center px-4 pt-3 sm:pt-4 transition-transform duration-300',
         isNavHidden && '-translate-y-full'
       )}
     >
-      {/* Background with blur */}
-      <div className="absolute inset-0 bg-background/80 backdrop-blur-xl border-b border-border" />
-
-      {/* Nav Content */}
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <nav className="flex items-center justify-between h-16 gap-4">
+      {/* Nav Content — Pill-shaped floating card */}
+      <div className="w-[min(94%,980px)]">
+        <nav className="flex items-center justify-between h-12 px-3 sm:pl-5 sm:pr-3 gap-2 rounded-full bg-background/85 backdrop-blur-[18px] border border-border shadow-lg">
           {/* ─── Logo ─── */}
           <Link
             href={role ? '/dashboard' : '/'}
-            className="flex items-center gap-2 shrink-0 group"
+            className="flex items-center gap-2 shrink-0 no-underline"
           >
             <Image
               src="/logo.png"
               alt="The ANTs logo"
-              width={28}
-              height={28}
+              width={20}
+              height={20}
               priority
-              className="group-hover:scale-110 transition-transform duration-200"
+              className="sm:w-[22px] sm:h-[22px]"
             />
-            <span className="hidden sm:block font-bold text-lg bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent font-brand">
+            <span className="hidden sm:block font-bold text-[15px] text-foreground font-brand">
               The ANTs
             </span>
           </Link>
 
           {/* ─── Desktop Nav Groups ─── */}
           <div className="hidden md:flex items-center gap-1">
+            <style>{`
+              @media (max-width: 767px) { .nav-desktop-links { display: none !important; } }
+
+              .nav-item {
+                position: relative;
+                display: inline-flex;
+                align-items: center;
+                cursor: pointer;
+                text-decoration: none;
+                font-size: 13px;
+                font-weight: 500;
+                color: var(--foreground-secondary);
+                padding: 6px 10px;
+                border-radius: 999px;
+                transition: background-color 0.2s ease, color 0.3s ease;
+              }
+              .nav-item:hover {
+                background: var(--background-secondary);
+                color: var(--foreground);
+              }
+
+              .nav-linktext {
+                position: relative;
+                z-index: 2;
+                transition: color 0.3s ease;
+              }
+              .nav-linktext::before {
+                display: inline-block;
+                content: attr(data-text);
+                position: absolute;
+                top: 0;
+                left: 0;
+                overflow: hidden;
+                max-width: 0%;
+                white-space: nowrap;
+                color: var(--primary);
+                transition: max-width 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+              }
+              .nav-item:hover .nav-linktext {
+                color: transparent;
+              }
+              .nav-item:hover .nav-linktext::before {
+                max-width: 100%;
+              }
+
+              .nav-item--active {
+                color: var(--primary);
+                background: var(--primary-light);
+              }
+              .nav-item--active .nav-linktext {
+                color: var(--primary);
+              }
+              .nav-item--active:hover .nav-linktext {
+                color: var(--primary);
+              }
+              .nav-item--active:hover .nav-linktext::before {
+                max-width: 0%;
+              }
+
+              /* Dropdown trigger pill button */
+              .nav-pill-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                padding: 6px 10px;
+                border-radius: 999px;
+                font-size: 13px;
+                font-weight: 500;
+                cursor: pointer;
+                border: none;
+                background: transparent;
+                color: var(--foreground-secondary);
+                transition: background-color 0.2s ease, color 0.2s ease;
+              }
+              .nav-pill-btn:hover {
+                background: var(--background-secondary);
+                color: var(--foreground);
+              }
+              .nav-pill-btn--active {
+                color: var(--primary);
+                background: var(--primary-light);
+              }
+            `}</style>
             {visibleGroups.map((group) => {
+              // Library dropdown
+              if (group.label === 'Library') {
+                return (
+                  <div key="library" ref={libraryRef} className="relative">
+                    <button
+                      onClick={handleLibraryClick}
+                      className={cn(
+                        'nav-pill-btn',
+                        isLibraryActive() && 'nav-pill-btn--active'
+                      )}
+                    >
+                      {group.icon}
+                      <span className="hidden lg:inline nav-linktext" data-text={group.label}>{group.label}</span>
+                      <ChevronDown className={cn(
+                        'h-3 w-3 transition-transform duration-200',
+                        isLibraryOpen && 'rotate-180'
+                      )} />
+                    </button>
+
+                    {isLibraryOpen && (
+                      <div className="absolute top-full left-0 mt-2 w-56 bg-background-card border border-border rounded-2xl p-2 animate-slide-down z-50 shadow-xl">
+                        {LIBRARY_LINKS.map((link) => (
+                          <Link
+                            key={link.href}
+                            href={link.href}
+                            onClick={() => setIsLibraryOpen(false)}
+                            className={cn(
+                              'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors',
+                              isActive(link.href)
+                                ? 'bg-primary/10 text-primary'
+                                : 'hover:bg-background-secondary text-foreground-secondary hover:text-foreground'
+                            )}
+                          >
+                            <div className={cn(
+                              'inline-flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br text-white',
+                              link.accentColor
+                            )}>
+                              {link.icon}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-foreground">{link.label}</p>
+                              <p className="text-xs text-foreground-muted truncate">{link.description}</p>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
               // Tools dropdown
               if (group.label === 'Tools') {
                 return (
@@ -410,21 +606,16 @@ const NavBar = React.memo(function NavBar() {
                     <button
                       onClick={handleToolsClick}
                       className={cn(
-                        'relative px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-1.5 cursor-pointer',
-                        isToolsActive()
-                          ? 'text-primary'
-                          : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary'
+                        'nav-pill-btn',
+                        isToolsActive() && 'nav-pill-btn--active'
                       )}
                     >
                       {group.icon}
-                      <span className="hidden lg:inline">{group.label}</span>
+                      <span className="hidden lg:inline nav-linktext" data-text={group.label}>{group.label}</span>
                       <ChevronDown className={cn(
-                        'h-3 w-3 transition-transform duration-200 hidden sm:block',
+                        'h-3 w-3 transition-transform duration-200',
                         isToolsOpen && 'rotate-180'
                       )} />
-                      {isToolsActive() && (
-                        <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
-                      )}
                     </button>
 
                     {isToolsOpen && (
@@ -442,7 +633,7 @@ const NavBar = React.memo(function NavBar() {
                             )}
                           >
                             <div className={cn(
-                              'inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br text-white',
+                              'inline-flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br text-white',
                               tool.accentColor
                             )}>
                               {tool.icon}
@@ -466,21 +657,16 @@ const NavBar = React.memo(function NavBar() {
                     <button
                       onClick={handleCommunityClick}
                       className={cn(
-                        'relative px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-1.5 cursor-pointer',
-                        isCommunityActive()
-                          ? 'text-primary'
-                          : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary'
+                        'nav-pill-btn',
+                        isCommunityActive() && 'nav-pill-btn--active'
                       )}
                     >
                       {group.icon}
-                      <span className="hidden lg:inline">{group.label}</span>
+                      <span className="hidden lg:inline nav-linktext" data-text={group.label}>{group.label}</span>
                       <ChevronDown className={cn(
-                        'h-3 w-3 transition-transform duration-200 hidden sm:block',
+                        'h-3 w-3 transition-transform duration-200',
                         isCommunityOpen && 'rotate-180'
                       )} />
-                      {isCommunityActive() && (
-                        <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
-                      )}
                     </button>
 
                     {isCommunityOpen && (
@@ -498,7 +684,7 @@ const NavBar = React.memo(function NavBar() {
                             )}
                           >
                             <div className={cn(
-                              'inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br text-white',
+                              'inline-flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br text-white',
                               link.accentColor
                             )}>
                               {link.icon}
@@ -522,21 +708,16 @@ const NavBar = React.memo(function NavBar() {
                     <button
                       onClick={handleAdminClick}
                       className={cn(
-                        'relative px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-1.5 cursor-pointer',
-                        isActive(group.href)
-                          ? 'text-primary'
-                          : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary'
+                        'nav-pill-btn',
+                        isActive(group.href) && 'nav-pill-btn--active'
                       )}
                     >
                       {group.icon}
-                      <span className="hidden lg:inline">{group.label}</span>
+                      <span className="hidden lg:inline nav-linktext" data-text={group.label}>{group.label}</span>
                       <ChevronDown className={cn(
-                        'h-3 w-3 transition-transform duration-200 hidden sm:block',
+                        'h-3 w-3 transition-transform duration-200',
                         isAdminOpen && 'rotate-180'
                       )} />
-                      {isActive(group.href) && (
-                        <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
-                      )}
                     </button>
 
                     {isAdminOpen && (
@@ -546,7 +727,7 @@ const NavBar = React.memo(function NavBar() {
                           onClick={() => setIsAdminOpen(false)}
                           className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-background-secondary transition-colors"
                         >
-                          <div className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 text-white">
+                          <div className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 text-white">
                             {group.icon}
                           </div>
                           <div className="flex-1">
@@ -587,19 +768,14 @@ const NavBar = React.memo(function NavBar() {
                   key={group.label}
                   href={group.href}
                   className={cn(
-                    'relative px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
-                    active
-                      ? 'text-primary'
-                      : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary'
+                    'nav-item',
+                    active && 'nav-item--active'
                   )}
                 >
                   <span className="flex items-center gap-1.5">
                     {group.icon}
-                    <span className="hidden lg:inline">{group.label}</span>
+                    <span className="hidden lg:inline nav-linktext" data-text={group.label}>{group.label}</span>
                   </span>
-                  {active && (
-                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
-                  )}
                   {group.badge && (
                     <span className="ml-1 text-[9px] font-bold uppercase tracking-wide bg-primary/15 text-primary px-1.5 py-0 rounded-full">
                       {group.badge}
@@ -611,15 +787,9 @@ const NavBar = React.memo(function NavBar() {
           </div>
 
           {/* ─── Right Section: Theme + User ─── */}
-          <div className="flex items-center gap-1 sm:gap-2">
-            {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg text-foreground-secondary hover:text-foreground hover:bg-background-secondary transition-all duration-200"
-              aria-label="Toggle theme"
-            >
-              {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            </button>
+          <div className="flex items-center gap-1 sm:gap-1.5">
+            {/* Theme & Color Accent Picker Dropdown */}
+            <ThemePickerDropdown variant="app" />
 
             {/* User Menu */}
             {user && (
@@ -627,7 +797,7 @@ const NavBar = React.memo(function NavBar() {
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   className={cn(
-                    'flex items-center gap-2 pl-1.5 pr-2 sm:pl-2 sm:pr-3 py-1.5 rounded-xl transition-all duration-200',
+                    'flex items-center gap-2 pl-1.5 pr-2 sm:pl-2 sm:pr-3 py-1.5 rounded-full transition-colors duration-200',
                     isUserMenuOpen
                       ? 'bg-primary/10 ring-2 ring-primary/30'
                       : 'hover:bg-background-secondary'
@@ -701,7 +871,7 @@ const NavBar = React.memo(function NavBar() {
 
       {/* ─── Mobile Menu ─── */}
       {isMobileOpen && (
-        <div className="md:hidden fixed inset-x-0 top-16 bottom-0 bg-background/95 backdrop-blur-xl border-t border-border animate-slide-down overflow-y-auto z-40">
+        <div className="md:hidden fixed inset-x-0 top-[68px] bottom-0 bg-background/95 backdrop-blur-xl border-t border-border animate-slide-down overflow-y-auto z-40">
           <div className="p-4 space-y-4">
             {/* Study Resources Grid */}
             <div>
@@ -771,11 +941,11 @@ const NavBar = React.memo(function NavBar() {
               {visibleGroups.map((group) => (
                 <Link
                   key={group.label}
-                  href={group.href === '#tools' || group.href === '#community' ? '/library' : group.href}
+                  href={group.href}
                   onClick={() => setIsMobileOpen(false)}
                   className={cn(
                     'flex items-center gap-3 px-3 py-3 rounded-xl transition-colors',
-                    isActive(group.href === '#tools' || group.href === '#community' ? '/library' : group.href)
+                    isActive(group.href)
                       ? 'bg-primary/10 text-primary'
                       : 'hover:bg-background-secondary'
                   )}
@@ -793,7 +963,7 @@ const NavBar = React.memo(function NavBar() {
                       <span
                         className={cn(
                           'font-medium',
-                          isActive(group.href === '#tools' || group.href === '#community' ? '/library' : group.href) ? 'text-primary' : 'text-foreground'
+                          isActive(group.href) ? 'text-primary' : 'text-foreground'
                         )}
                       >
                         {group.label}
@@ -809,7 +979,7 @@ const NavBar = React.memo(function NavBar() {
                   <ArrowRight
                     className={cn(
                       'h-4 w-4',
-                      isActive(group.href === '#tools' || group.href === '#community' ? '/library' : group.href) ? 'text-primary' : 'text-foreground-muted'
+                      isActive(group.href) ? 'text-primary' : 'text-foreground-muted'
                     )}
                   />
                 </Link>
@@ -868,7 +1038,7 @@ const NavBar = React.memo(function NavBar() {
                   onClick={() => setIsMobileOpen(false)}
                   className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-background-secondary transition-colors"
                 >
-                  <Target className="h-5 w-5 text-foreground-muted" />
+                  <Settings className="h-5 w-5 text-foreground-muted" />
                   <span className="font-medium text-foreground">Settings</span>
                 </Link>
                 <button

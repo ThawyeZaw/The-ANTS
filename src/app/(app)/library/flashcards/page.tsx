@@ -7,7 +7,7 @@ export default function FlashcardsRedirect() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/library?tab=flashcards');
+    router.replace('/flashcards');
   }, [router]);
 
   return null;

@@ -61,16 +61,25 @@ export async function actionGetQuizzes(userId: string) {
   return { success: true, data: quizzes ?? [] };
 }
 
+import { slugify } from '@/lib/utils';
+
 export async function actionGetQuizById(quizId: string) {
   const supabase = await createClient();
   const { data: quiz, error } = await supabase
     .from('quizzes_standalone' as any)
     .select('*')
     .eq('id', quizId)
-    .single();
+    .maybeSingle();
 
-  if (error || !quiz) return { success: false, error: 'Quiz not found' };
-  return { success: true, data: quiz };
+  if (quiz) return { success: true, data: quiz };
+
+  const { data: allQuizzes } = await supabase.from('quizzes_standalone' as any).select('*');
+  if (allQuizzes) {
+    const found = (allQuizzes as any[]).find(q => q.id === quizId || slugify(q.title) === quizId);
+    if (found) return { success: true, data: found };
+  }
+
+  return { success: false, error: 'Quiz not found' };
 }
 
 export async function actionGetPublicQuizzes() {

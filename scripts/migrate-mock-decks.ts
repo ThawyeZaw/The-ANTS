@@ -59,9 +59,9 @@ async function main() {
 
   try {
     // Dynamic import — path relative to project root
-    const mockModule = await import('../src/lib/mock/database');
-    mockDecks = mockModule.mockDecks ?? [];
-    mockCards = mockModule.mockCards ?? [];
+    const mockModule: any = await import('../src/lib/mock/database');
+    mockDecks = mockModule?.mockDecks ?? [];
+    mockCards = mockModule?.mockCards ?? [];
   } catch (err) {
     console.error('❌ Failed to load mock database:', err);
     process.exit(1);

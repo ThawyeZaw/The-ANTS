@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { BookOpen, Users } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import { type Classroom } from '@/types';
-import { cn } from '@/lib/utils';
+import { cn, slugify } from '@/lib/utils';
 
 interface ClassroomCardProps {
   classroom: Classroom;
@@ -23,7 +23,7 @@ export default function ClassroomCard({
 
   return (
     <Link
-      href={`/classrooms/${classroom.id}`}
+      href={`/classrooms/${slugify(classroom.name) || classroom.id}`}
       className="group relative flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--background-card)] p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[var(--primary)] hover:shadow-[var(--shadow-lg)]"
       style={{ boxShadow: 'var(--shadow-sm)' }}
     >

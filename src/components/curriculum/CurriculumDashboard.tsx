@@ -26,7 +26,6 @@ import {
   Globe,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { mockCurriculums, mockSubjects, mockExams } from '@/lib/mock/database';
 import { useCurriculumDashboard, type CountdownWithTime } from '@/hooks/useCurriculumDashboard';
 
 // ── Subject Selector ──────────────────────────────────────────────────────────
@@ -155,11 +154,6 @@ function CountdownCard({
   onDelete: (id: string) => void;
   canEdit: boolean;
 }) {
-  // Find related content links
-  const subject = item.countdown.exam_id
-    ? mockSubjects.find(s => mockExams.find(e => e.id === item.countdown.exam_id)?.subject_id === s.id)
-    : null;
-
   return (
     <div className="rounded-xl border border-border bg-background-card p-4 space-y-3 transition-all hover:border-border-hover hover:shadow-sm">
       {/* Title & Priority */}
@@ -190,26 +184,6 @@ function CountdownCard({
       <div className="rounded-lg bg-background-secondary px-3 py-2">
         <CountdownDigits timeLeft={item.timeLeft} />
       </div>
-
-      {/* Cross-links to related study resources */}
-      {subject && (
-        <div className="flex flex-wrap gap-1.5 pt-1 border-t border-border">
-          <Link
-            href={`/my-notes`}
-            className="inline-flex items-center gap-1 text-[10px] font-medium text-primary/80 hover:text-primary transition-colors"
-          >
-            <StickyNote className="h-3 w-3" />
-            Notes
-          </Link>
-          <Link
-            href={`/flashcards`}
-            className="inline-flex items-center gap-1 text-[10px] font-medium text-accent/80 hover:text-accent transition-colors"
-          >
-            <Layers className="h-3 w-3" />
-            Flashcards
-          </Link>
-        </div>
-      )}
     </div>
   );
 }
@@ -468,30 +442,20 @@ function NotesSection({ notes }: { notes: ReturnType<typeof useCurriculumDashboa
         </p>
       ) : (
         <div className="space-y-2">
-          {notes.slice(0, 5).map(note => {
-            const subject = note.subject_id ? mockSubjects.find(s => s.id === note.subject_id) : null;
-            return (
-              <Link
-                key={note.id}
-                href={`/library/${note.id}`}
-                className="block rounded-lg border border-border/60 bg-background-secondary/50 px-3 py-2.5 hover:border-primary/30 hover:bg-background-secondary transition-colors"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{note.title}</p>
-                    {note.summary && (
-                      <p className="text-xs text-foreground-muted truncate mt-0.5">{note.summary}</p>
-                    )}
-                  </div>
-                  {subject && (
-                    <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
-                      {subject.title}
-                    </span>
-                  )}
-                </div>
-              </Link>
-            );
-          })}
+          {notes.slice(0, 5).map(note => (
+            <Link
+              key={note.id}
+              href={`/my-notes/${note.id}`}
+              className="block rounded-lg border border-border/60 bg-background-secondary/50 px-3 py-2.5 hover:border-primary/30 hover:bg-background-secondary transition-colors"
+            >
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">{note.title}</p>
+                {note.summary && (
+                  <p className="text-xs text-foreground-muted truncate mt-0.5">{note.summary}</p>
+                )}
+              </div>
+            </Link>
+          ))}
         </div>
       )}
     </div>

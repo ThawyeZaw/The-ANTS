@@ -14,6 +14,7 @@ import {
   getOrgTeamMembersAction,
   getOrgTimelineItemsAction,
 } from '@/actions/org';
+import BridgesSection from '@/components/about/BridgesSection';
 import TeamMemberCard from '@/components/about/TeamMemberCard';
 import OrgTimeline from '@/components/about/OrgTimeline';
 import type { OrgTeamMember, OrgTimelineItem } from '@/types';
@@ -103,25 +104,17 @@ function TeamSection() {
 
   return (
     <div className="animate-fade-in space-y-8">
-      <div className="text-center max-w-2xl mx-auto">
-        <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
-          Meet Our Team
-        </h2>
-        <p className="text-foreground-secondary">
-          A diverse network of scholars, educators and student leaders working
-          together to build bridges to global education.
-        </p>
-      </div>
-
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-6 w-6 text-primary animate-spin" />
         </div>
+      ) : members.length > 0 ? (
+        <div className="rounded-3xl overflow-hidden border border-border">
+          <BridgesSection members={members} />
+        </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {members.map((member) => (
-            <TeamMemberCard key={member.id} member={member} />
-          ))}
+        <div className="text-center py-12 text-foreground-muted">
+          No team members listed yet.
         </div>
       )}
     </div>

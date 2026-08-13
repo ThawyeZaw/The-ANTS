@@ -5,19 +5,36 @@
 // Sidebar/header filter panel for the Notes Library.
 // ──────────────────────────────────────────────────────────────────────────────
 
+import { useState, useEffect } from 'react';
 import { Search, X, SlidersHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { NoteFilters } from '@/types';
-import { mockCurriculums, mockSubjects } from '@/lib/mock/database';
+import { createClient } from '@/lib/supabase/client';
 
 interface NoteFiltersProps {
   filters: NoteFilters;
   onFiltersChange: (filters: NoteFilters) => void;
 }
 
-
-
 export default function NoteFiltersPanel({ filters, onFiltersChange }: NoteFiltersProps) {
+  const [curriculums, setCurriculums] = useState<any[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function fetchFilterOptions() {
+      const supabase = createClient();
+      if (!supabase) return;
+      const [{ data: cData }, { data: sData }] = await Promise.all([
+        supabase.from('curriculums').select('*'),
+        supabase.from('subjects').select('*'),
+      ]);
+      if (cData) setCurriculums(cData);
+      if (sData) setSubjects(sData);
+    }
+
+    fetchFilterOptions();
+  }, []);
+
   const update = (partial: Partial<NoteFilters>) =>
     onFiltersChange({ ...filters, ...partial });
 
@@ -29,8 +46,8 @@ export default function NoteFiltersPanel({ filters, onFiltersChange }: NoteFilte
     filters.tags.length > 0;
 
   const filteredSubjects = filters.curriculumId
-    ? mockSubjects.filter((s) => s.curriculum_id === filters.curriculumId)
-    : mockSubjects;
+    ? subjects.filter((s) => s.curriculum_id === filters.curriculumId)
+    : subjects;
 
   return (
     <div className="flex flex-col gap-4">
@@ -84,7 +101,7 @@ export default function NoteFiltersPanel({ filters, onFiltersChange }: NoteFilte
           className="w-full px-3 py-2.5 rounded-xl bg-background-secondary border border-border text-sm text-foreground focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer appearance-none"
         >
           <option value="">All Curricula</option>
-          {mockCurriculums.map((c) => (
+          {curriculums.map((c) => (
             <option key={c.id} value={c.id}>
               {c.qualification} — {c.exam_board}
             </option>

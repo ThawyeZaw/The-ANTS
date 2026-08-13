@@ -20,9 +20,7 @@ import CourseSyncPanel from '@/components/layout/CourseSyncPanel';
 import QuickAccessToolbar from '@/components/layout/QuickAccessToolbar';
 import MyContributions from '@/components/layout/MyContributions';
 import { cn } from '@/lib/utils';
-import { mockReviewQueue, getMainContributorDashboardStats } from '@/lib/mock/database';
-
-// ── Icon & Color maps (replicated from DashboardLayout — PM-locked) ──────────
+import { createClient } from '@/lib/supabase/client';
 
 const iconMap: Record<string, React.ReactNode> = {
   'pending-reviews': <AlertTriangle className="h-5 w-5" />,
@@ -59,8 +57,26 @@ export default function MainContributorDashboard() {
 
   const loadData = useCallback(async () => {
     if (!user) return;
-    setPendingReviews(mockReviewQueue.filter((q) => q.status === 'pending'));
-    setStats(getMainContributorDashboardStats(user.id));
+    const supabase = createClient();
+    if (!supabase) return;
+
+    const [{ data: pReviews }, { data: statsData }] = await Promise.all([
+      supabase.from('review_queue').select('*').eq('status', 'pending'),
+      supabase.from('review_queue').select('*').eq('reviewer_id', user.id),
+    ]);
+
+    setPendingReviews(pReviews ?? []);
+
+    const approvedCount = (statsData ?? []).filter((r: any) => r.status === 'approved').length;
+    const rejectedCount = (statsData ?? []).filter((r: any) => r.status === 'rejected').length;
+    const totalCount = statsData?.length ?? 0;
+
+    setStats([
+      { id: 'pending-reviews', key: 'pending-reviews', label: 'Pending Reviews', value: pReviews?.length ?? 0, color: 'amber' },
+      { id: 'approved-this-week', key: 'approved-this-week', label: 'Approved by You', value: approvedCount, color: 'emerald' },
+      { id: 'rejected-this-week', key: 'rejected-this-week', label: 'Rejected by You', value: rejectedCount, color: 'red' },
+      { id: 'total-reviewed', key: 'total-reviewed', label: 'Total Reviewed', value: totalCount, color: 'violet' },
+    ]);
   }, [user]);
 
   useEffect(() => {

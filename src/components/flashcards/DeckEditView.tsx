@@ -5,12 +5,12 @@
 // Owner: ZLH
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   ArrowLeft, Plus, Pencil, Trash2, Check, X, Sparkles,
   BookOpen, Globe, Lock, Save,
 } from 'lucide-react';
-import { getCardsByDeck, updateCard, deleteCard, updateDeck } from '@/lib/mock/database';
+import { createClient } from '@/lib/supabase/client';
 import type { Deck, FlashCard } from '@/types';
 import CardCreatorManual from './CardCreatorManual';
 import CardCreatorAI from './CardCreatorAI';
@@ -25,7 +25,8 @@ interface DeckEditViewProps {
 }
 
 export default function DeckEditView({ deck, userId, onBack, onDeckUpdated }: DeckEditViewProps) {
-  const [cards, setCards] = useState<FlashCard[]>(getCardsByDeck(deck.id));
+  const [cards, setCards] = useState<FlashCard[]>([]);
+  const [loadingCards, setLoadingCards] = useState(true);
   const [subView, setSubView] = useState<SubView>('list');
   const [editingCardId, setEditingCardId] = useState<string | null>(null);
   const [editFront, setEditFront] = useState('');
@@ -35,37 +36,66 @@ export default function DeckEditView({ deck, userId, onBack, onDeckUpdated }: De
   const [editingDeckName, setEditingDeckName] = useState(false);
   const [deckNameValue, setDeckNameValue] = useState(deck.name);
 
+  useEffect(() => {
+    async function fetchCards() {
+      const supabase = createClient();
+      if (!supabase) return;
+      const { data } = await supabase
+        .from('cards')
+        .select('*')
+        .eq('deck_id', deck.id)
+        .order('created_at', { ascending: true });
+      if (data) setCards(data as unknown as FlashCard[]);
+      setLoadingCards(false);
+    }
+
+    fetchCards();
+  }, [deck.id]);
+
   function startEditCard(card: FlashCard) {
     setEditingCardId(card.id);
     setEditFront(card.front_text);
     setEditBack(card.back_text);
   }
 
-  function saveCardEdit(cardId: string) {
-    const result = updateCard(cardId, { front_text: editFront.trim(), back_text: editBack.trim() });
-    if (result.success) {
-      setCards(prev => prev.map(c => c.id === cardId ? result.card : c));
+  async function saveCardEdit(cardId: string) {
+    const supabase = createClient();
+    if (!supabase) return;
+    const { data, error } = await supabase
+      .from('cards')
+      .update({ front_text: editFront.trim(), back_text: editBack.trim() })
+      .eq('id', cardId)
+      .select('*')
+      .single();
+
+    if (!error && data) {
+      setCards(prev => prev.map(c => c.id === cardId ? (data as FlashCard) : c));
     }
     setEditingCardId(null);
   }
 
-  function handleDeleteCard(cardId: string) {
-    const result = deleteCard(cardId);
-    if (result.success) {
+  async function handleDeleteCard(cardId: string) {
+    const supabase = createClient();
+    if (!supabase) return;
+    const { error } = await supabase.from('cards').delete().eq('id', cardId);
+    if (!error) {
       setCards(prev => prev.filter(c => c.id !== cardId));
     }
   }
 
-  function saveDeckName() {
+  async function saveDeckName() {
     if (deckNameValue.trim()) {
-      updateDeck(deck.id, { name: deckNameValue.trim() });
+      const supabase = createClient();
+      if (supabase) {
+        await supabase.from('decks').update({ name: deckNameValue.trim() }).eq('id', deck.id);
+      }
       onDeckUpdated({ ...deck, name: deckNameValue.trim() });
     }
     setEditingDeckName(false);
   }
 
   function handleCardsAdded(newCards: FlashCard[]) {
-    setCards(getCardsByDeck(deck.id));
+    setCards(newCards);
     setSubView('list');
   }
 

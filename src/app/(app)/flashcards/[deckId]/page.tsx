@@ -8,7 +8,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { getDeck } from '@/lib/mock/database';
+import { createClient } from '@/lib/supabase/client';
+import { matchesSlugOrId } from '@/lib/utils';
 import type { Deck } from '@/types';
 import StudySession from '@/components/flashcards/StudySession';
 import DeckEditView from '@/components/flashcards/DeckEditView';
@@ -29,11 +30,28 @@ export default function DeckPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (deckId) {
-      const found = getDeck(deckId);
-      setDeck(found || null);
+    async function fetchDeck() {
+      if (!deckId) return;
+      setLoading(true);
+      const supabase = createClient();
+      if (!supabase) {
+        setLoading(false);
+        return;
+      }
+      const { data, error } = await supabase
+        .from('decks')
+        .select('*');
+
+      if (!error && data) {
+        const found = (data as unknown as Deck[]).find(d => matchesSlugOrId(d, deckId));
+        setDeck(found || null);
+      } else {
+        setDeck(null);
+      }
       setLoading(false);
     }
+
+    fetchDeck();
   }, [deckId]);
 
   if (loading) {

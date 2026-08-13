@@ -85,8 +85,16 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const action = searchParams.get('action') ?? 'status';
+  const cronSecret = process.env.CRON_SECRET;
 
   try {
+    if (action === 'set' || action === 'delete') {
+      const secretHeader = req.headers.get('x-cron-secret') || searchParams.get('secret');
+      if (cronSecret && secretHeader !== cronSecret) {
+        return NextResponse.json({ error: 'Unauthorized: Secret key mismatch' }, { status: 401 });
+      }
+    }
+
     if (action === 'set') {
       // Register the webhook
       const webhookUrl = searchParams.get('url') ?? `${req.nextUrl.origin}/api/telegram/webhook`;

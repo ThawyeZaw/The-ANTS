@@ -9,14 +9,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queryKeys';
 import { createClient } from '@/lib/supabase/client';
-import {
-  getAllCurriculums,
-  getAllSubjects,
-  mockTopics,
-  getUserEnrollments,
-  mockTopicProgress,
-  mockExams,
-} from '@/lib/mock/database';
 import type { Topic } from '@/types';
 
 // ── Query Hooks ──────────────────────────────────────────────────────────────
@@ -27,18 +19,14 @@ export function useCurriculums() {
     queryKey: queryKeys.curriculums.all,
     queryFn: async () => {
       const supabase = createClient();
-      if (!supabase) return getAllCurriculums();
+      if (!supabase) return [];
 
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('curriculums')
         .select('*')
         .order('title');
 
-      if (error || !data || data.length === 0) {
-        return getAllCurriculums();
-      }
-
-      return data;
+      return data ?? [];
     },
     staleTime: 10 * 60 * 1000,
   });
@@ -50,18 +38,14 @@ export function useSubjects() {
     queryKey: queryKeys.subjects.all,
     queryFn: async () => {
       const supabase = createClient();
-      if (!supabase) return getAllSubjects();
+      if (!supabase) return [];
 
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('subjects')
         .select('*')
         .order('order_no');
 
-      if (error || !data || data.length === 0) {
-        return getAllSubjects();
-      }
-
-      return data;
+      return data ?? [];
     },
     staleTime: 10 * 60 * 1000,
   });
@@ -73,18 +57,14 @@ export function useTopics() {
     queryKey: queryKeys.topics.all,
     queryFn: async () => {
       const supabase = createClient();
-      if (!supabase) return [...mockTopics] as unknown as Topic[];
+      if (!supabase) return [] as Topic[];
 
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('topics')
         .select('*')
         .order('order_no');
 
-      if (error || !data || data.length === 0) {
-        return [...mockTopics] as unknown as Topic[];
-      }
-
-      return data;
+      return (data ?? []) as unknown as Topic[];
     },
     staleTime: 10 * 60 * 1000,
   });
@@ -96,18 +76,14 @@ export function useUserEnrollments(userId: string) {
     queryKey: queryKeys.enrollments.byUser(userId),
     queryFn: async () => {
       const supabase = createClient();
-      if (!supabase) return getUserEnrollments(userId);
+      if (!supabase) return [];
 
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('user_enrollments')
         .select('*')
         .eq('user_id', userId);
 
-      if (error || !data) {
-        return getUserEnrollments(userId);
-      }
-
-      return data;
+      return data ?? [];
     },
     staleTime: 5 * 60 * 1000,
     enabled: !!userId,
@@ -120,18 +96,14 @@ export function useTopicProgress(userId: string) {
     queryKey: queryKeys.topicProgress.byUser(userId),
     queryFn: async () => {
       const supabase = createClient();
-      if (!supabase) return mockTopicProgress.filter(p => p.user_id === userId);
+      if (!supabase) return [];
 
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('topic_progress')
         .select('*')
         .eq('user_id', userId);
 
-      if (error || !data) {
-        return mockTopicProgress.filter(p => p.user_id === userId);
-      }
-
-      return data;
+      return data ?? [];
     },
     staleTime: 5 * 60 * 1000,
     enabled: !!userId,
@@ -144,24 +116,18 @@ export function useSubjectCountdowns(subjectIds: string[]) {
     queryKey: queryKeys.countdowns.bySubjects(subjectIds),
     queryFn: async () => {
       const supabase = createClient();
-      if (!supabase) {
-        return mockExams.filter(e => e.subject_id && subjectIds.includes(e.subject_id));
-      }
+      if (!supabase) return [];
 
       const today = new Date().toISOString().split('T')[0];
 
-      const { data, error } = await (supabase as any)
-        .from('exam_timetable')
+      const { data } = await (supabase as any)
+        .from('exams')
         .select('*')
         .in('subject_id', subjectIds)
         .gt('date', today)
         .order('date', { ascending: true });
 
-      if (error || !data || data.length === 0) {
-        return mockExams.filter(e => e.subject_id && subjectIds.includes(e.subject_id));
-      }
-
-      return data;
+      return data ?? [];
     },
     staleTime: 5 * 60 * 1000,
     enabled: subjectIds.length > 0,

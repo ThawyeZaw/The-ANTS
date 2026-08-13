@@ -12,7 +12,7 @@ import type { Note } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 import { useSavedNotes } from '@/hooks/useNotes';
 import BlockPreview from './BlockPreview';
-import { getProfile, mockCurriculums, mockSubjects } from '@/lib/mock/database';
+import { createClient } from '@/lib/supabase/client';
 
 interface NoteReaderModalProps {
   noteId: string | null;
@@ -26,6 +26,9 @@ export default function NoteReaderModal({ noteId, onClose, allNotes }: NoteReade
   const { toggleSave, checkSaved } = useSavedNotes(user?.id);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isSaved, setIsSaved] = useState(false);
+  const [contributor, setContributor] = useState<{ name: string | null } | null>(null);
+  const [curriculum, setCurriculum] = useState<any>(null);
+  const [subject, setSubject] = useState<any>(null);
 
   const note = allNotes.find((n) => n.id === noteId);
 
@@ -55,11 +58,30 @@ export default function NoteReaderModal({ noteId, onClose, allNotes }: NoteReade
     checkSaved(note.id).then(setIsSaved);
   }, [user, note, checkSaved]);
 
-  if (!note) return null;
+  useEffect(() => {
+    async function fetchMetadata() {
+      if (!note) return;
+      const supabase = createClient();
+      if (!supabase) return;
 
-  const contributor = getProfile(note.contributor_id);
-  const curriculum = note.curriculum_id ? mockCurriculums.find((c) => c.id === note.curriculum_id) : null;
-  const subject = note.subject_id ? mockSubjects.find((s) => s.id === note.subject_id) : null;
+      if (note.contributor_id) {
+        const { data: p } = await supabase.from('profiles').select('name').eq('id', note.contributor_id).single();
+        if (p) setContributor(p);
+      }
+      if (note.curriculum_id) {
+        const { data: c } = await supabase.from('curriculums').select('*').eq('id', note.curriculum_id).single();
+        if (c) setCurriculum(c);
+      }
+      if (note.subject_id) {
+        const { data: s } = await supabase.from('subjects').select('*').eq('id', note.subject_id).single();
+        if (s) setSubject(s);
+      }
+    }
+
+    fetchMetadata();
+  }, [note]);
+
+  if (!note) return null;
 
 
   const formattedDate = new Intl.DateTimeFormat('en-GB', {
@@ -86,7 +108,7 @@ export default function NoteReaderModal({ noteId, onClose, allNotes }: NoteReade
         <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-background-card shrink-0">
           <div className="flex items-center gap-2">
             <button
-              onClick={() => window.open(`/library/${note.id}`, '_blank')}
+              onClick={() => window.open(`/my-notes/${note.id}`, '_blank')}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border text-foreground-muted hover:text-foreground text-xs font-medium hover:bg-background-secondary transition-all cursor-pointer"
               title="Open in full page"
             >
@@ -173,9 +195,9 @@ export default function NoteReaderModal({ noteId, onClose, allNotes }: NoteReade
             {contributor && (
               <span className="flex items-center gap-1.5">
                 <div className="h-5 w-5 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-medium text-[10px]">
-                  {contributor.name.charAt(0)}
+                  {(contributor.name || '?').charAt(0)}
                 </div>
-                by <strong className="text-foreground">{contributor.name}</strong>
+                by <strong className="text-foreground">{contributor.name || 'Anonymous'}</strong>
               </span>
             )}
             <span className="flex items-center gap-1">

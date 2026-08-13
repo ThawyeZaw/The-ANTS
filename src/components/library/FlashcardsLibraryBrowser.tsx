@@ -16,10 +16,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
 import { useCourseManager } from '@/hooks/useCourseManager';
-import {
-  getLibraryDecks, cloneDeck, submitToLibrary,
-  getDecksByUser
-} from '@/lib/mock/database';
+import { createClient } from '@/lib/supabase/client';
 import { QUALIFICATION_REGISTRY } from '@/constants/qualifications';
 import { cn } from '@/lib/utils';
 import type { Deck } from '@/types';
@@ -173,19 +170,42 @@ export default function FlashcardsLibraryBrowser() {
     return boards;
   }, [enrolledCurriculumIds, allCurriculums]);
 
+  const [rawLibraryDecks, setRawLibraryDecks] = useState<Deck[]>([]);
+  const [ownedDeckIds, setOwnedDeckIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    async function fetchLibraryData() {
+      const supabase = createClient();
+      if (!supabase) return;
+
+      const { data: publicDecks } = await supabase
+        .from('decks')
+        .select('*')
+        .eq('is_public', true)
+        .order('created_at', { ascending: false });
+
+      if (publicDecks) setRawLibraryDecks(publicDecks as unknown as Deck[]);
+
+      if (user) {
+        const { data: userDecks } = await supabase
+          .from('decks')
+          .select('id')
+          .eq('owner_id', user.id);
+        if (userDecks) {
+          setOwnedDeckIds(new Set(userDecks.map(d => d.id)));
+        }
+      }
+    }
+
+    fetchLibraryData();
+  }, [user]);
+
   // Get library decks (smart or all)
   const libraryDecks = useMemo(() => {
-    const allDecks = getLibraryDecks();
-    if (!smartFilter || !user || enrolledBoards.size === 0) return allDecks;
-    const filtered = allDecks.filter(d => d.exam_board && enrolledBoards.has(d.exam_board));
-    return filtered.length > 0 ? filtered : allDecks;
-  }, [user, smartFilter, enrolledBoards]);
-
-  // User's owned deck IDs
-  const ownedDeckIds = useMemo(() => {
-    if (!user) return new Set<string>();
-    return new Set(getDecksByUser(user.id).map(d => d.id));
-  }, [user]);
+    if (!smartFilter || !user || enrolledBoards.size === 0) return rawLibraryDecks;
+    const filtered = rawLibraryDecks.filter(d => d.exam_board && enrolledBoards.has(d.exam_board));
+    return filtered.length > 0 ? filtered : rawLibraryDecks;
+  }, [user, smartFilter, enrolledBoards, rawLibraryDecks]);
 
   // Filter
   const filteredDecks = useMemo(() => {
@@ -211,24 +231,72 @@ export default function FlashcardsLibraryBrowser() {
 
   // Unique boards in library
   const allBoards = useMemo(() => {
-    const boards = getLibraryDecks()
+    const boards = rawLibraryDecks
       .map(d => d.exam_board)
       .filter(Boolean) as string[];
     return [...new Set(boards)];
-  }, []);
+  }, [rawLibraryDecks]);
 
-  const handleAddToWorkspace = (deckId: string) => {
+  const handleAddToWorkspace = async (deckId: string) => {
     if (!user) return;
     setAddingId(deckId);
-    const res = cloneDeck(deckId, user.id);
-    setTimeout(() => {
-      if (res.success) {
-        showToast('Deck added to My Workspace!', 'success');
-      } else {
-        showToast(res.error || 'Failed to add deck.', 'error');
-      }
+    const supabase = createClient();
+    if (!supabase) {
       setAddingId(null);
-    }, 400);
+      return;
+    }
+
+    const { data: sourceDeck } = await supabase
+      .from('decks')
+      .select('*')
+      .eq('id', deckId)
+      .single();
+
+    if (!sourceDeck) {
+      showToast('Deck not found.', 'error');
+      setAddingId(null);
+      return;
+    }
+
+    const { data: newDeck, error: deckErr } = await supabase
+      .from('decks')
+      .insert({
+        owner_id: user.id,
+        name: `${sourceDeck.name} (Copy)`,
+        description: sourceDeck.description,
+        category: sourceDeck.category,
+        curriculum_id: sourceDeck.curriculum_id,
+        subject_id: sourceDeck.subject_id,
+        exam_board: sourceDeck.exam_board,
+        syllabus_code: sourceDeck.syllabus_code,
+        is_public: false,
+      })
+      .select('*')
+      .single();
+
+    if (deckErr || !newDeck) {
+      showToast(deckErr?.message || 'Failed to clone deck.', 'error');
+      setAddingId(null);
+      return;
+    }
+
+    const { data: sourceCards } = await supabase
+      .from('cards')
+      .select('*')
+      .eq('deck_id', deckId);
+
+    if (sourceCards && sourceCards.length > 0) {
+      const cardCopies = sourceCards.map(c => ({
+        deck_id: newDeck.id,
+        front_text: c.front_text,
+        back_text: c.back_text,
+      }));
+      await supabase.from('cards').insert(cardCopies);
+    }
+
+    setOwnedDeckIds(prev => new Set([...prev, newDeck.id]));
+    showToast('Deck added to My Workspace!', 'success');
+    setAddingId(null);
   };
 
   const handleStudy = (deckId: string) => {

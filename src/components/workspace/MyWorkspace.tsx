@@ -21,7 +21,7 @@ import {
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { useCountdown } from '@/hooks/useCountdown';
-import { getUserWorkspace, getDecksByUser, deleteDeck, mockQuizzes } from '@/lib/mock/database';
+import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import type { Note, Deck, ExamCountdown, Quiz } from '@/types';
 import WorkspaceErrorBoundary from './WorkspaceErrorBoundary';
@@ -121,11 +121,19 @@ function QuizzesTab({ userId, isLoading }: { userId: string; isLoading: boolean 
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    try {
-      setQuizzes(mockQuizzes.filter(q => q.created_by === userId));
-    } catch {
-      // silently fail — mock data shouldn't throw
+    async function fetchQuizzes() {
+      const supabase = createClient();
+      if (!supabase || !userId) return;
+      const { data } = await (supabase as any)
+        .from('quizzes_standalone')
+        .select('*')
+        .eq('created_by', userId)
+        .order('created_at', { ascending: false });
+
+      if (data) setQuizzes(data as unknown as Quiz[]);
     }
+
+    fetchQuizzes();
   }, [userId]);
 
   const filtered = quizzes.filter(q =>
@@ -399,14 +407,23 @@ function DecksTab({ userId, isLoading }: { userId: string; isLoading: boolean })
 
   // Load decks on mount
   useEffect(() => {
-    try {
-      setDecks(getDecksByUser(userId));
-    } catch {
-      showToast('Failed to load your decks. Please refresh the page.', 'error', {
-        label: 'Refresh',
-        onClick: () => window.location.reload(),
-      });
+    async function fetchUserDecks() {
+      const supabase = createClient();
+      if (!supabase || !userId) return;
+      const { data, error } = await supabase
+        .from('decks')
+        .select('*')
+        .eq('owner_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        showToast('Failed to load your decks. Please refresh the page.', 'error');
+      } else if (data) {
+        setDecks(data as unknown as Deck[]);
+      }
     }
+
+    fetchUserDecks();
   }, [userId, showToast]);
 
   // ── Hooks defined BEFORE any early return (Rules of Hooks) ────────────────
@@ -415,17 +432,15 @@ function DecksTab({ userId, isLoading }: { userId: string; isLoading: boolean })
     router.push(`/flashcards/${deckId}?mode=study`);
   }, [router]);
 
-  const handleDelete = useCallback((deckId: string, deckName: string) => {
-    try {
-      const res = deleteDeck(deckId);
-      if (res.success) {
-        setDecks(prev => prev.filter(d => d.id !== deckId));
-        showToast(`"${deckName}" has been removed.`, 'info');
-      } else {
-        setDeleteError(`Failed to delete "${deckName}".`);
-      }
-    } catch {
-      showToast(`Failed to delete "${deckName}". Please try again.`, 'error');
+  const handleDelete = useCallback(async (deckId: string, deckName: string) => {
+    const supabase = createClient();
+    if (!supabase) return;
+    const { error } = await supabase.from('decks').delete().eq('id', deckId);
+    if (!error) {
+      setDecks(prev => prev.filter(d => d.id !== deckId));
+      showToast(`"${deckName}" has been removed.`, 'info');
+    } else {
+      setDeleteError(`Failed to delete "${deckName}". ${error.message}`);
     }
   }, [showToast]);
 
@@ -444,7 +459,7 @@ function DecksTab({ userId, isLoading }: { userId: string; isLoading: boolean })
         title="No flashcard decks yet"
         description="Create your own deck or add approved decks from the library. All decks support spaced repetition (SRS)."
         cta="Browse Library"
-        ctaHref="/library/flashcards"
+        ctaHref="/flashcards"
       />
     );
   }
@@ -586,7 +601,7 @@ function ExamsTab({
         title="No exam countdowns yet"
         description="Add official exam dates or create custom countdowns. Track days remaining and study with purpose."
         cta="Browse Exams"
-        ctaHref="/library/exams"
+        ctaHref="/resources"
       />
     );
   }
@@ -734,8 +749,13 @@ export default function MyWorkspace() {
 
   const { groupedCountdowns } = useCountdown(user?.id);
 
-  // Workspace data loaded via useEffect (no side-effects in useMemo)
-  const [workspace, setWorkspace] = useState<ReturnType<typeof getUserWorkspace> | null>(null);
+  interface WorkspaceData {
+    createdNotes: Note[];
+    savedNotes: Note[];
+    decks: Deck[];
+    quizCount: number;
+  }
+  const [workspace, setWorkspace] = useState<WorkspaceData | null>(null);
   const [workspaceLoading, setWorkspaceLoading] = useState(true);
 
   useEffect(() => {
@@ -744,17 +764,52 @@ export default function MyWorkspace() {
       setWorkspaceLoading(true);
       return;
     }
-    try {
-      const data = getUserWorkspace(user.id);
-      setWorkspace(data);
-      setGlobalError(null);
-      setWorkspaceLoading(false);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error loading workspace data.';
-      setGlobalError(message);
-      setWorkspace(null);
-      setWorkspaceLoading(false);
+
+    async function loadWorkspaceData() {
+      const supabase = createClient();
+      if (!supabase || !user) {
+        setWorkspaceLoading(false);
+        return;
+      }
+
+      const userId = user.id;
+
+      try {
+        const [
+          { data: createdNotes },
+          { data: savedRows },
+          { data: decks },
+          { data: quizzes },
+        ] = await Promise.all([
+          supabase.from('notes').select('*').eq('contributor_id', userId),
+          supabase.from('user_saved_notes').select('note_id').eq('user_id', userId),
+          supabase.from('decks').select('*').eq('owner_id', userId),
+          (supabase as any).from('quizzes_standalone').select('id').eq('created_by', userId),
+        ]);
+
+        let savedNotes: Note[] = [];
+        if (savedRows && savedRows.length > 0) {
+          const noteIds = savedRows.map((s: any) => s.note_id);
+          const { data: notesData } = await supabase.from('notes').select('*').in('id', noteIds);
+          if (notesData) savedNotes = notesData as unknown as Note[];
+        }
+
+        setWorkspace({
+          createdNotes: (createdNotes ?? []) as unknown as Note[],
+          savedNotes,
+          decks: (decks ?? []) as unknown as Deck[],
+          quizCount: quizzes?.length ?? 0,
+        });
+        setGlobalError(null);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Error loading workspace data.';
+        setGlobalError(message);
+      } finally {
+        setWorkspaceLoading(false);
+      }
     }
+
+    loadWorkspaceData();
   }, [user]);
 
   // ── Error recovery ──────────────────────────────────────────────────────────
@@ -787,7 +842,7 @@ export default function MyWorkspace() {
   const tabCounts: Record<TabKey, number> = {
     notes: workspace ? workspace.createdNotes.length + workspace.savedNotes.length : 0,
     decks: workspace?.decks?.length ?? 0,
-    quizzes: user ? mockQuizzes.filter(q => q.created_by === user.id).length : 0,
+    quizzes: workspace?.quizCount ?? 0,
     exams: Object.values(groupedCountdowns).flat().length,
   };
 
@@ -812,7 +867,7 @@ export default function MyWorkspace() {
         {/* Quick actions */}
         <div className="flex items-center gap-2 flex-wrap">
           <Link
-            href="/library/courses"
+            href="/courses"
             className="flex items-center gap-1.5 rounded-xl border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--foreground-secondary)] hover:text-[var(--foreground)] hover:bg-[var(--background-secondary)] transition-all"
           >
             <BookMarked size={13} /> Library

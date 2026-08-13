@@ -13,11 +13,11 @@
 // and MERMAID_KEYWORDS from the original implementation unmodified.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sparkles, Copy, CheckCheck, X, AlertCircle, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AIPromptContext, NoteStyle, NoteBlock, PromptType } from '@/types';
-import { mockCurriculums, mockSubjects } from '@/lib/mock/database';
+import { createClient } from '@/lib/supabase/client';
 
 interface AIPromptGeneratorProps {
   onImportBlocks: (blocks: NoteBlock[]) => void;
@@ -319,6 +319,17 @@ export default function AIPromptGenerator({ onImportBlocks, onClose }: AIPromptG
   const [aiResponse, setAiResponse] = useState('');
   const [parsedBlocks, setParsedBlocks] = useState<NoteBlock[]>([]);
   const [showPrompt, setShowPrompt] = useState(false);
+  const [curriculums, setCurriculums] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function fetchCurriculums() {
+      const supabase = createClient();
+      if (!supabase) return;
+      const { data } = await supabase.from('curriculums').select('*');
+      if (data) setCurriculums(data);
+    }
+    fetchCurriculums();
+  }, []);
 
   const [ctx, setCtx] = useState<AIPromptContext>({
     curriculum: '',
@@ -426,13 +437,13 @@ export default function AIPromptGenerator({ onImportBlocks, onClose }: AIPromptG
               <select
                 value={ctx.curriculum}
                 onChange={(e) => {
-                  const curr = mockCurriculums.find((c) => c.qualification === e.target.value);
+                  const curr = curriculums.find((c) => c.qualification === e.target.value);
                   setCtx((p) => ({ ...p, curriculum: e.target.value, examBoard: curr?.exam_board ?? '' }));
                 }}
                 className="w-full px-3 py-2 rounded-xl bg-[var(--background-secondary)] border border-[var(--border)] text-sm text-[var(--foreground)] focus:outline-none focus:border-violet-500/60 transition-all"
               >
                 <option value="">Select...</option>
-                {[...new Set(mockCurriculums.map((c) => c.qualification))].map((q) => (
+                {[...new Set(curriculums.map((c: any) => c.qualification))].map((q: any) => (
                   <option key={q} value={q}>{q}</option>
                 ))}
                 <option value="Other">Other (type below)</option>

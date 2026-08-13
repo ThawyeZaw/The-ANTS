@@ -3,15 +3,15 @@
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTs — Unified Resources Hub
 // Route: /library — accessible to all authenticated users.
-// Tabbed layout combining Courses, Notes, Flashcards, Exams & Tools.
-// URL-driven tab state: /library?tab=all|courses|notes|flashcards|exams|tools
+// 6-Card Grid layout replacing top tab-navigation for Courses, Notes, Flashcards,
+// Exams, Quizzes, and Tools.
+// URL-driven category state: /library?tab=courses|notes|flashcards|exams|quizzes|tools
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  Layers,
   Clock,
   Calculator,
   NotebookPen,
@@ -23,6 +23,8 @@ import {
   Sparkles,
   FlaskConical,
   Brain,
+  Layers,
+  ChevronLeft,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import CoursesLibraryBrowser from '@/components/library/CoursesLibraryBrowser';
@@ -31,120 +33,88 @@ import ExamsLibraryBrowser from '@/components/library/ExamsLibraryBrowser';
 import NotesLibrary from '@/components/notes/NotesLibrary';
 import QuizLibraryBrowser from '@/components/quizzes/QuizLibraryBrowser';
 
-// ── Tab Definition ───────────────────────────────────────────────────────────
+// ── Category Definition ───────────────────────────────────────────────────────
 
-type TabId = 'all' | 'courses' | 'notes' | 'flashcards' | 'exams' | 'tools' | 'quizzes';
+type CategoryId = 'courses' | 'notes' | 'flashcards' | 'exams' | 'quizzes' | 'tools';
 
-interface Tab {
-  id: TabId;
-  label: string;
+interface MainCategoryCard {
+  id: CategoryId;
+  title: string;
+  subtitle: string;
+  description: string;
   icon: React.ReactNode;
-  accentColor: string;
+  gradient: string;
+  borderGlow: string;
+  badge?: string;
+  itemCount?: string;
 }
 
-const TABS: Tab[] = [
-  {
-    id: 'all',
-    label: 'All',
-    icon: <Sparkles className="h-3.5 w-3.5" />,
-    accentColor: 'from-primary to-accent',
-  },
+const MAIN_CATEGORIES: MainCategoryCard[] = [
   {
     id: 'courses',
-    label: 'Courses',
-    icon: <GraduationCap className="h-3.5 w-3.5" />,
-    accentColor: 'from-emerald-500 to-teal-500',
+    title: 'Courses',
+    subtitle: 'Curriculum & Subjects',
+    description: 'Explore exam boards, syllabus specs & enroll in structured courses',
+    icon: <GraduationCap className="h-7 w-7 text-emerald-400" />,
+    gradient: 'from-emerald-500/20 via-teal-500/10 to-transparent hover:from-emerald-500/30 hover:via-teal-500/15',
+    borderGlow: 'hover:border-emerald-500/40 hover:shadow-emerald-500/10',
+    badge: 'Core Hub',
+    itemCount: 'Exam Boards & Syllabi',
   },
   {
     id: 'notes',
-    label: 'Notes',
-    icon: <NotebookPen className="h-3.5 w-3.5" />,
-    accentColor: 'from-amber-500 to-orange-500',
+    title: 'Notes',
+    subtitle: 'Study Notes & Guides',
+    description: 'Access topic-by-topic notes crafted by top students and contributors',
+    icon: <NotebookPen className="h-7 w-7 text-amber-400" />,
+    gradient: 'from-amber-500/20 via-orange-500/10 to-transparent hover:from-amber-500/30 hover:via-orange-500/15',
+    borderGlow: 'hover:border-amber-500/40 hover:shadow-amber-500/10',
+    itemCount: 'Topic Guides & Summaries',
   },
   {
     id: 'flashcards',
-    label: 'Flashcards',
-    icon: <Layers className="h-3.5 w-3.5" />,
-    accentColor: 'from-violet-500 to-purple-500',
+    title: 'Flashcards',
+    subtitle: 'Spaced Repetition',
+    description: 'Master key terms, definitions & formulas with smart flashcard decks',
+    icon: <Layers className="h-7 w-7 text-violet-400" />,
+    gradient: 'from-violet-500/20 via-purple-500/10 to-transparent hover:from-violet-500/30 hover:via-purple-500/15',
+    borderGlow: 'hover:border-violet-500/40 hover:shadow-violet-500/10',
+    itemCount: 'Interactive Decks',
   },
   {
     id: 'exams',
-    label: 'Exams',
-    icon: <FlaskConical className="h-3.5 w-3.5" />,
-    accentColor: 'from-rose-500 to-pink-500',
+    title: 'Exams',
+    subtitle: 'Papers & Schedule',
+    description: 'Track upcoming official exam dates, past papers and key assessments',
+    icon: <FlaskConical className="h-7 w-7 text-rose-400" />,
+    gradient: 'from-rose-500/20 via-pink-500/10 to-transparent hover:from-rose-500/30 hover:via-pink-500/15',
+    borderGlow: 'hover:border-rose-500/40 hover:shadow-rose-500/10',
+    itemCount: 'Timetables & Papers',
   },
   {
     id: 'quizzes',
-    label: 'Quizzes',
-    icon: <Brain className="h-3.5 w-3.5" />,
-    accentColor: 'from-amber-500 to-yellow-500',
+    title: 'Quizzes',
+    subtitle: 'Practice Tests',
+    description: 'Test your knowledge with instant feedback & interactive topic quizzes',
+    icon: <Brain className="h-7 w-7 text-yellow-400" />,
+    gradient: 'from-yellow-500/20 via-amber-500/10 to-transparent hover:from-yellow-500/30 hover:via-amber-500/15',
+    borderGlow: 'hover:border-yellow-500/40 hover:shadow-yellow-500/10',
+    badge: 'Popular',
+    itemCount: 'Interactive Practice',
   },
   {
     id: 'tools',
-    label: 'Tools',
-    icon: <Clock className="h-3.5 w-3.5" />,
-    accentColor: 'from-sky-500 to-blue-500',
+    title: 'Tools',
+    subtitle: 'Study Utilities',
+    description: 'Boost productivity with Pomodoro, Grade Calculators & Timetables',
+    icon: <Clock className="h-7 w-7 text-sky-400" />,
+    gradient: 'from-sky-500/20 via-blue-500/10 to-transparent hover:from-sky-500/30 hover:via-blue-500/15',
+    borderGlow: 'hover:border-sky-500/40 hover:shadow-sky-500/10',
+    itemCount: 'Productivity Apps',
   },
 ];
 
-// ── Overview Cards (for "All" tab) ───────────────────────────────────────────
-
-interface OverviewCard {
-  id: string;
-  label: string;
-  description: string;
-  tabTarget: TabId;
-  icon: React.ReactNode;
-  accentColor: string;
-  badge?: string;
-}
-
-const OVERVIEW_CARDS: OverviewCard[] = [
-  {
-    id: 'courses',
-    label: 'Courses',
-    description: 'Browse exam boards & enrol in subjects to unlock related resources',
-    tabTarget: 'courses',
-    icon: <GraduationCap className="h-5 w-5" />,
-    accentColor: 'from-emerald-500 to-teal-500',
-    badge: 'Start here',
-  },
-  {
-    id: 'notes',
-    label: 'Notes',
-    description: 'Curriculum-aligned study notes from verified contributors',
-    tabTarget: 'notes',
-    icon: <ScrollText className="h-5 w-5" />,
-    accentColor: 'from-amber-500 to-orange-500',
-  },
-  {
-    id: 'flashcards',
-    label: 'Flashcards',
-    description: 'Spaced-repetition decks tagged by exam board & syllabus',
-    tabTarget: 'flashcards',
-    icon: <Layers className="h-5 w-5" />,
-    accentColor: 'from-violet-500 to-purple-500',
-  },
-  {
-    id: 'exams',
-    label: 'Exams',
-    description: 'Official exam dates & papers — add to your countdown',
-    tabTarget: 'exams',
-    icon: <FlaskConical className="h-5 w-5" />,
-    accentColor: 'from-rose-500 to-pink-500',
-  },
-  {
-    id: 'quizzes',
-    label: 'Quizzes',
-    description: 'Official interactive quizzes from contributors — test your knowledge',
-    tabTarget: 'quizzes',
-    icon: <Brain className="h-5 w-5" />,
-    accentColor: 'from-amber-500 to-yellow-500',
-    badge: 'New',
-  },
-];
-
-// ── Tool Items ───────────────────────────────────────────────────────────────
+// ── Tool Items ────────────────────────────────────────────────────────────────
 
 interface ToolItem {
   id: string;
@@ -191,60 +161,21 @@ const TOOLS: ToolItem[] = [
   },
 ];
 
-// ── Overview Card Component ──────────────────────────────────────────────────
-
-function OverviewCardComponent({ card, onClick }: { card: OverviewCard; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        'group relative flex items-start gap-3 p-3 rounded-xl border border-border',
-        'bg-background-card hover:bg-background-secondary',
-        'transition-all duration-200 text-left cursor-pointer w-full'
-      )}
-    >
-      <div
-        className={cn(
-          'inline-flex items-center justify-center w-9 h-9 rounded-lg shrink-0 mt-0.5',
-          'bg-gradient-to-br text-white shadow-sm',
-          card.accentColor
-        )}
-      >
-        {card.icon}
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <h3 className="text-sm font-semibold text-foreground truncate">{card.label}</h3>
-          {card.badge && (
-            <span className="text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary/15 text-primary shrink-0">
-              {card.badge}
-            </span>
-          )}
-        </div>
-        <p className="text-xs text-foreground-muted mt-0.5 leading-snug line-clamp-1">
-          {card.description}
-        </p>
-      </div>
-      <ArrowRight className="h-4 w-4 text-foreground-muted group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0 mt-2" />
-    </button>
-  );
-}
-
-// ── Tool Card Component ──────────────────────────────────────────────────────
+// ── Tool Card Component ───────────────────────────────────────────────────────
 
 function ToolCard({ tool }: { tool: ToolItem }) {
   return (
     <Link
       href={tool.href}
       className={cn(
-        'group relative flex items-start gap-3 p-3 rounded-xl border border-border',
-        'bg-background-card hover:bg-background-secondary',
-        'transition-all duration-200'
+        'group relative flex items-start gap-3.5 p-4 rounded-2xl border border-border/80',
+        'bg-background-card hover:bg-background-secondary hover:border-border',
+        'transition-all duration-200 shadow-sm hover:shadow-md'
       )}
     >
       <div
         className={cn(
-          'inline-flex items-center justify-center w-9 h-9 rounded-lg shrink-0 mt-0.5',
+          'inline-flex items-center justify-center w-10 h-10 rounded-xl shrink-0 mt-0.5',
           'bg-gradient-to-br text-white shadow-sm',
           tool.accentColor
         )}
@@ -260,89 +191,12 @@ function ToolCard({ tool }: { tool: ToolItem }) {
             </span>
           )}
         </div>
-        <p className="text-xs text-foreground-muted mt-0.5 leading-snug line-clamp-1">
+        <p className="text-xs text-foreground-muted mt-1 leading-relaxed line-clamp-2">
           {tool.description}
         </p>
       </div>
       <ArrowRight className="h-4 w-4 text-foreground-muted group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0 mt-2" />
     </Link>
-  );
-}
-
-// ── All Tab Content ──────────────────────────────────────────────────────────
-
-function AllTabContent({ onTabChange }: { onTabChange: (tab: TabId) => void }) {
-  return (
-    <div className="space-y-4">
-      {/* Hero */}
-      <div className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-accent/5 to-primary/5 px-5 py-4">
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="space-y-0.5">
-            <h1 className="text-lg font-semibold text-foreground tracking-tight">
-              Resources
-            </h1>
-            <p className="text-xs text-foreground-secondary max-w-md">
-              Courses, notes, flashcards, exams, quizzes &amp; study tools — all in one place.
-            </p>
-          </div>
-        </div>
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 h-40 w-40 rounded-full bg-primary/15 blur-3xl pointer-events-none" />
-      </div>
-
-      {/* Resource overview */}
-      <section>
-        <h2 className="text-xs font-semibold text-foreground-muted uppercase tracking-wider mb-2">
-          Browse by category
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-          {OVERVIEW_CARDS.map((card) => (
-            <OverviewCardComponent
-              key={card.id}
-              card={card}
-              onClick={() => onTabChange(card.tabTarget)}
-            />
-          ))}
-        </div>
-      </section>
-
-      {/* Tools */}
-      <section>
-        <h2 className="text-xs font-semibold text-foreground-muted uppercase tracking-wider mb-2">
-          Study tools
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-          {TOOLS.map((tool) => (
-            <ToolCard key={tool.id} tool={tool} />
-          ))}
-        </div>
-      </section>
-
-      {/* Quick links */}
-      <div className="flex flex-wrap items-center gap-2 px-4 py-2.5 rounded-xl bg-background-card border border-border">
-        <Sparkles className="h-3.5 w-3.5 text-primary shrink-0" />
-        <span className="text-xs text-foreground-muted">Quick links:</span>
-        <button
-          onClick={() => onTabChange('courses')}
-          className="text-xs font-medium text-primary hover:underline underline-offset-2 cursor-pointer"
-        >
-          Browse all courses
-        </button>
-        <span className="text-foreground-muted/40">&middot;</span>
-        <Link
-          href="/my-notes"
-          className="text-xs font-medium text-foreground-secondary hover:text-foreground hover:underline underline-offset-2"
-        >
-          My Notes
-        </Link>
-        <span className="text-foreground-muted/40">&middot;</span>
-        <Link
-          href="/flashcards"
-          className="text-xs font-medium text-foreground-secondary hover:text-foreground hover:underline underline-offset-2"
-        >
-          My Decks
-        </Link>
-      </div>
-    </div>
   );
 }
 
@@ -352,106 +206,252 @@ function LibraryPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const tabParam = searchParams.get('tab') as TabId | null;
-  const activeTab: TabId = tabParam && TABS.some((t) => t.id === tabParam) ? tabParam : 'all';
+  const activeCategory = searchParams.get('tab') as CategoryId | null;
+  const isCategorySelected = activeCategory && MAIN_CATEGORIES.some((cat) => cat.id === activeCategory);
 
-  const setActiveTab = (tab: TabId) => {
+  const selectCategory = (categoryId: CategoryId | null) => {
     const params = new URLSearchParams(searchParams.toString());
-    if (tab === 'all') {
+    if (!categoryId) {
       params.delete('tab');
     } else {
-      params.set('tab', tab);
+      params.set('tab', categoryId);
     }
     const qs = params.toString();
     router.replace(qs ? `?${qs}` : window.location.pathname, { scroll: false });
   };
 
-  const isAllTab = activeTab === 'all';
+  const selectedCategoryObj = MAIN_CATEGORIES.find((c) => c.id === activeCategory);
 
   return (
-    <div className="animate-fade-in space-y-4">
-      {/* ═══ Filter Tabs (always visible) ══════════════════════════════════════ */}
-      <div className="flex items-center gap-1 p-1 rounded-xl bg-background-secondary border border-border overflow-x-auto scrollbar-none">
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={cn(
-              'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0',
-              activeTab === tab.id
-                ? 'bg-background-card text-foreground shadow-sm border border-border'
-                : 'text-foreground-muted hover:text-foreground hover:bg-background-card/50'
-            )}
-          >
-            <span
-              className={cn(
-                activeTab === tab.id ? 'text-primary' : 'text-foreground-muted'
-              )}
+    <div className="animate-fade-in min-h-[75vh] pb-12 space-y-5">
+      {/* ── Unified Header Section ─────────────────────────────────────────────── */}
+      <div className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-accent/5 to-primary/5 p-5 sm:p-6">
+        <div className="space-y-3">
+          {/* ── Breadcrumb trail (main nav indicator) ───────────────────────── */}
+          <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs">
+            <button
+              onClick={() => selectCategory(null)}
+              className="font-medium text-foreground-muted hover:text-foreground transition-colors cursor-pointer flex items-center gap-1"
             >
-              {tab.icon}
-            </span>
-            {tab.label}
-          </button>
-        ))}
-      </div>
+              {isCategorySelected && <ChevronLeft className="h-3.5 w-3.5" />}
+              Categories
+            </button>
+            {isCategorySelected && (
+              <>
+                <span className="text-foreground-muted/40">/</span>
+                <span className="font-semibold text-primary flex items-center gap-1.5">
+                  {selectedCategoryObj?.icon}
+                  {selectedCategoryObj?.title}
+                </span>
+              </>
+            )}
+          </nav>
 
-      {/* ═══ Tab Content ════════════════════════════════════════════════════════ */}
-      {isAllTab && <AllTabContent onTabChange={setActiveTab} />}
-
-      {activeTab === 'courses' && (
-        <Suspense fallback={<div className="h-64 rounded-2xl bg-background-secondary animate-pulse" />}>
-          <CoursesLibraryBrowser />
-        </Suspense>
-      )}
-
-      {activeTab === 'notes' && (
-        <Suspense fallback={<div className="h-64 rounded-2xl bg-background-secondary animate-pulse" />}>
-          <NotesLibrary />
-        </Suspense>
-      )}
-
-      {activeTab === 'flashcards' && (
-        <Suspense fallback={<div className="h-64 rounded-2xl bg-background-secondary animate-pulse" />}>
-          <FlashcardsLibraryBrowser />
-        </Suspense>
-      )}
-
-      {activeTab === 'exams' && (
-        <Suspense fallback={<div className="h-64 rounded-2xl bg-background-secondary animate-pulse" />}>
-          <ExamsLibraryBrowser />
-        </Suspense>
-      )}
-
-      {activeTab === 'quizzes' && (
-        <Suspense fallback={<div className="h-64 rounded-2xl bg-background-secondary animate-pulse" />}>
-          <QuizLibraryBrowser />
-        </Suspense>
-      )}
-
-      {activeTab === 'tools' && (
-        <div className="space-y-4">
-          <div className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-sky-500/10 via-blue-500/5 to-indigo-500/10 px-5 py-4">
-            <div className="relative z-10 space-y-0.5">
-              <h2 className="text-base font-semibold text-foreground tracking-tight">
-                Study Tools
-              </h2>
-              <p className="text-xs text-foreground-secondary max-w-md">
-                Productivity tools to boost your study efficiency
+          {/* ── Combined compact header ───────────────────────────────────────── */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="space-y-1 max-w-2xl">
+              <div className="flex items-center gap-2">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-semibold tracking-wide uppercase">
+                  <Sparkles className="h-3 w-3" />
+                  Study &amp; Learning Hub
+                </div>
+                {isCategorySelected && (
+                  <span className="text-[11px] font-semibold text-foreground-muted uppercase tracking-wide">
+                    &middot; Resource Center
+                  </span>
+                )}
+                {isCategorySelected && selectedCategoryObj?.badge && (
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/20">
+                    {selectedCategoryObj.badge}
+                  </span>
+                )}
+              </div>
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground leading-tight">
+                {isCategorySelected ? (
+                  <span className="flex items-center gap-2">
+                    {selectedCategoryObj?.title}
+                    <span className="text-sm font-normal text-foreground-muted">
+                      &middot; {selectedCategoryObj?.subtitle}
+                    </span>
+                  </span>
+                ) : (
+                  'Resource Library'
+                )}
+              </h1>
+              <p className="text-sm text-foreground-secondary leading-relaxed">
+                {isCategorySelected
+                  ? selectedCategoryObj?.description
+                  : 'Choose a category below to explore curated courses, comprehensive notes, interactive flashcards, exams, quizzes, and productivity tools.'}
               </p>
             </div>
+
+            {!isCategorySelected && (
+              <div className="flex items-center gap-4 sm:gap-5 shrink-0 self-start sm:self-auto">
+                <div className="text-center">
+                  <p className="text-xl font-semibold text-foreground">6</p>
+                  <p className="text-[11px] text-foreground-muted">Categories</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-xl font-semibold text-foreground">4+</p>
+                  <p className="text-[11px] text-foreground-muted">Tools</p>
+                </div>
+              </div>
+            )}
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-            {TOOLS.map((tool) => (
-              <ToolCard key={tool.id} tool={tool} />
+        </div>
+      </div>
+
+      {/* Dynamic Content: 6-Card Grid OR Category Detail Browser */}
+      {!isCategorySelected ? (
+        /* ═════════ 6-CARD GRID DESIGN ═════════ */
+        <div className="space-y-4">
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-xs font-semibold text-foreground-muted uppercase tracking-wider">
+              Select a Resource Category
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {MAIN_CATEGORIES.map((cat) => (
+              <div
+                key={cat.id}
+                onClick={() => selectCategory(cat.id)}
+                className={cn(
+                  'group relative flex flex-col justify-between p-6 rounded-2xl cursor-pointer',
+                  'border border-border/80 bg-background-card',
+                  'bg-gradient-to-br', cat.gradient,
+                  'transition-all duration-300 ease-out',
+                  'hover:-translate-y-1.5 hover:shadow-xl hover:shadow-black/5',
+                  cat.borderGlow
+                )}
+              >
+                <div className="space-y-4">
+                  {/* Header with Icon and Badge */}
+                  <div className="flex items-start justify-between">
+                    <div className="p-3.5 rounded-2xl bg-background-card/80 border border-border/50 shadow-sm group-hover:scale-110 group-hover:bg-background-card transition-all duration-300">
+                      {cat.icon}
+                    </div>
+
+                    {cat.badge && (
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-primary/15 text-primary border border-primary/20">
+                        {cat.badge}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Title and Description */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
+                        {cat.title}
+                      </h3>
+                      <span className="text-xs text-foreground-muted font-medium">
+                        &middot; {cat.subtitle}
+                      </span>
+                    </div>
+                    <p className="text-xs text-foreground-muted leading-relaxed line-clamp-2">
+                      {cat.description}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Footer — single clear metadata */}
+                <div className="pt-5 mt-4 border-t border-border/40 flex items-center justify-between text-xs">
+                  <span className="font-medium text-foreground-muted">{cat.itemCount}</span>
+                  <span className="font-semibold text-foreground-secondary group-hover:text-primary transition-colors inline-flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                    View <ArrowRight className="h-3.5 w-3.5" />
+                  </span>
+                </div>
+              </div>
             ))}
           </div>
+
+          {/* Quick Links Bar */}
+          <div className="mt-6 flex flex-wrap items-center gap-3 px-5 py-3.5 rounded-2xl bg-background-card border border-border/80 shadow-sm">
+            <Sparkles className="h-4 w-4 text-primary shrink-0" />
+            <span className="text-xs font-medium text-foreground-muted">Quick Navigation:</span>
+            <div className="flex flex-wrap items-center gap-2 text-xs font-medium">
+              <Link
+                href="/my-notes"
+                className="px-2.5 py-1 rounded-lg bg-background-secondary hover:bg-background-tertiary text-foreground-secondary hover:text-foreground transition-colors"
+              >
+                My Notes
+              </Link>
+              <Link
+                href="/flashcards"
+                className="px-2.5 py-1 rounded-lg bg-background-secondary hover:bg-background-tertiary text-foreground-secondary hover:text-foreground transition-colors"
+              >
+                My Decks
+              </Link>
+              <Link
+                href="/countdown"
+                className="px-2.5 py-1 rounded-lg bg-background-secondary hover:bg-background-tertiary text-foreground-secondary hover:text-foreground transition-colors"
+              >
+                Exam Timetable
+              </Link>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* ═════════ DETAILED SUB-CATEGORY / ITEM BROWSER ═════════ */
+        <div className="space-y-5">
+          {/* Render Category View Component */}
+          {activeCategory === 'courses' && (
+            <Suspense fallback={<div className="h-64 rounded-2xl bg-background-secondary animate-pulse" />}>
+              <CoursesLibraryBrowser />
+            </Suspense>
+          )}
+
+          {activeCategory === 'notes' && (
+            <Suspense fallback={<div className="h-64 rounded-2xl bg-background-secondary animate-pulse" />}>
+              <NotesLibrary />
+            </Suspense>
+          )}
+
+          {activeCategory === 'flashcards' && (
+            <Suspense fallback={<div className="h-64 rounded-2xl bg-background-secondary animate-pulse" />}>
+              <FlashcardsLibraryBrowser />
+            </Suspense>
+          )}
+
+          {activeCategory === 'exams' && (
+            <Suspense fallback={<div className="h-64 rounded-2xl bg-background-secondary animate-pulse" />}>
+              <ExamsLibraryBrowser />
+            </Suspense>
+          )}
+
+          {activeCategory === 'quizzes' && (
+            <Suspense fallback={<div className="h-64 rounded-2xl bg-background-secondary animate-pulse" />}>
+              <QuizLibraryBrowser />
+            </Suspense>
+          )}
+
+          {activeCategory === 'tools' && (
+            <div className="space-y-4">
+              <div className="rounded-2xl border border-border bg-gradient-to-br from-sky-500/10 via-blue-500/5 to-indigo-500/10 px-5 py-4">
+                <div className="space-y-0.5">
+                  <h2 className="text-base font-semibold text-foreground tracking-tight">
+                    Study Tools &amp; Utilities
+                  </h2>
+                  <p className="text-xs text-foreground-secondary max-w-md">
+                    Productivity tools designed to boost your daily study efficiency
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {TOOLS.map((tool) => (
+                  <ToolCard key={tool.id} tool={tool} />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 }
 
-// ── Exported Page (wrapped in Suspense for useSearchParams) ───────────────────
+// ── Exported Page (wrapped in Suspense for useSearchParams) ────────────────────
 
 export default function LibraryPage() {
   return (

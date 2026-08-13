@@ -5,9 +5,10 @@
 // Owner: ZLH
 // ──────────────────────────────────────────────────────────────────────────────
 
+import { useState, useEffect } from 'react';
 import { BookOpen, Brain, Globe, Lock, Link as LinkIcon, Play, Pencil, Copy, Trash2 } from 'lucide-react';
 import type { Deck } from '@/types';
-import { getCardsByDeck, getDueCards } from '@/lib/mock/database';
+import { createClient } from '@/lib/supabase/client';
 
 // Category color mapping for visual variety
 const CATEGORY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
@@ -48,10 +49,45 @@ export default function DeckCard({
   onClone,
   onDelete,
 }: DeckCardProps) {
-  const allCards = getCardsByDeck(deck.id);
-  const dueCards = getDueCards(deck.id, userId);
+  const [cardCount, setCardCount] = useState<number>(0);
+  const [dueCount, setDueCount] = useState<number>(0);
+
+  useEffect(() => {
+    async function fetchCounts() {
+      const supabase = createClient();
+      if (!supabase) return;
+
+      const { data: cards } = await supabase
+        .from('cards')
+        .select('id')
+        .eq('deck_id', deck.id);
+
+      if (!cards) return;
+      setCardCount(cards.length);
+
+      if (cards.length > 0 && userId) {
+        const cardIds = cards.map(c => c.id);
+        const { data: reviews } = await supabase
+          .from('card_reviews')
+          .select('card_id, next_review_date')
+          .eq('user_id', userId)
+          .in('card_id', cardIds);
+
+        const now = new Date().toISOString();
+        const due = cards.filter(c => {
+          const r = reviews?.find(rev => rev.card_id === c.id);
+          if (!r) return true;
+          return r.next_review_date && r.next_review_date <= now;
+        });
+        setDueCount(due.length);
+      }
+    }
+
+    fetchCounts();
+  }, [deck.id, userId]);
+
   const categoryColor = getCategoryColor(deck.category);
-  const hasDueCards = dueCards.length > 0;
+  const hasDueCards = dueCount > 0;
 
   return (
     <div
@@ -107,15 +143,15 @@ export default function DeckCard({
       <div className="mb-4 flex items-center gap-4 text-xs text-[var(--foreground-muted)]">
         <span className="flex items-center gap-1.5">
           <BookOpen size={13} />
-          <span>{allCards.length} card{allCards.length !== 1 ? 's' : ''}</span>
+          <span>{cardCount} card{cardCount !== 1 ? 's' : ''}</span>
         </span>
         {hasDueCards && (
           <span className="flex items-center gap-1.5 rounded-full bg-amber-500/10 px-2 py-0.5 text-amber-500 font-medium">
             <Brain size={13} />
-            <span>{dueCards.length} due</span>
+            <span>{dueCount} due</span>
           </span>
         )}
-        {!hasDueCards && allCards.length > 0 && (
+        {!hasDueCards && cardCount > 0 && (
           <span className="flex items-center gap-1.5 rounded-full bg-green-500/10 px-2 py-0.5 text-green-500 font-medium">
             <span>✓ All caught up</span>
           </span>
@@ -128,11 +164,11 @@ export default function DeckCard({
         <button
           id={`study-btn-${deck.id}`}
           onClick={() => onStudy(deck.id)}
-          disabled={allCards.length === 0}
+          disabled={cardCount === 0}
           className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[var(--primary)] px-3 py-2 text-sm font-semibold text-white transition-all hover:bg-[var(--primary-hover)] hover:shadow-[var(--shadow-glow)] disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <Play size={14} fill="white" />
-          {hasDueCards ? `Study (${dueCards.length})` : 'Study All'}
+          {hasDueCards ? `Study (${dueCount})` : 'Study All'}
         </button>
 
         {/* Secondary actions */}

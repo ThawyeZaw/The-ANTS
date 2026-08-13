@@ -16,7 +16,7 @@ import {
   CheckCircle2, Circle, Clock4, AlertTriangle,
 } from 'lucide-react';
 import { useLessonContext, type TopicItem, type TopicStatus } from '@/context/LessonContext';
-import { cn } from '@/lib/utils';
+import { cn, matchesSlugOrId, slugify } from '@/lib/utils';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -76,14 +76,14 @@ export default function SubjectLessonView({ curriculumId, subjectId }: SubjectLe
     updateProgress,
   } = useLessonContext();
 
-  // Find the curriculum and subject
+  // Find the curriculum and subject by ID, code or title slug
   const curriculum = useMemo(
-    () => enrolledCurriculums.find(c => c.id === curriculumId),
+    () => enrolledCurriculums.find(c => matchesSlugOrId(c, curriculumId)),
     [enrolledCurriculums, curriculumId]
   );
 
   const subject = useMemo(
-    () => curriculum?.subjects.find(s => s.id === subjectId) ?? null,
+    () => curriculum?.subjects.find(s => matchesSlugOrId(s, subjectId)) ?? null,
     [curriculum, subjectId]
   );
 

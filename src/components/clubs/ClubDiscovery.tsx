@@ -22,7 +22,7 @@ import { useClubList, useCreateClub } from '@/hooks/useClubQueries';
 import { actionGetClubsBatchData, actionJoinClub } from '@/actions/clubs';
 import type { Club, ClubField, ClubJoinMode } from '@/types';
 import EmptyState from '@/components/ui/EmptyState';
-import { cn, formatDate } from '@/lib/utils';
+import { cn, formatDate, slugify } from '@/lib/utils';
 
 const joinModeLabels: Record<ClubJoinMode, string> = {
   open: 'Open',
@@ -223,7 +223,7 @@ export default function ClubDiscovery() {
                 )}
 
                 <div className="flex gap-2">
-                  <Link href={`/clubs/${club.custom_slug || club.id}`} className="flex-1">
+                  <Link href={`/clubs/${club.custom_slug || slugify(club.name) || club.id}`} className="flex-1">
                     <Button variant="secondary" fullWidth>
                       View
                     </Button>

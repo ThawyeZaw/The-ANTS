@@ -43,10 +43,10 @@ interface SidebarLink {
 
 const CONTEXT_MAP: Record<string, SidebarLink[]> = {
   '/flashcards': [
-    { label: 'Library Decks', href: '/library/flashcards', icon: <SquareStack className="h-4 w-4" />, color: 'text-amber-400' },
-    { label: 'Pomodoro', href: '/pomodoro', icon: <Timer className="h-4 w-4" />, color: 'text-violet-400' },
     { label: 'Courses', href: '/courses', icon: <BookOpen className="h-4 w-4" />, color: 'text-emerald-400' },
     { label: 'My Notes', href: '/my-notes', icon: <NotebookPen className="h-4 w-4" />, color: 'text-sky-400' },
+    { label: 'Pomodoro', href: '/pomodoro', icon: <Timer className="h-4 w-4" />, color: 'text-violet-400' },
+    { label: 'Quizzes', href: '/quizzes', icon: <Layers className="h-4 w-4" />, color: 'text-amber-400' },
   ],
   '/pomodoro': [
     { label: 'Flashcards', href: '/flashcards', icon: <Layers className="h-4 w-4" />, color: 'text-violet-400' },
@@ -56,6 +56,7 @@ const CONTEXT_MAP: Record<string, SidebarLink[]> = {
   '/courses': [
     { label: 'Lesson Tracker', href: '/lessons', icon: <ClipboardCheck className="h-4 w-4" />, color: 'text-emerald-400' },
     { label: 'Flashcards', href: '/flashcards', icon: <Layers className="h-4 w-4" />, color: 'text-violet-400' },
+    { label: 'Resources & Exams', href: '/resources', icon: <FlaskConical className="h-4 w-4" />, color: 'text-rose-400' },
   ],
   '/lessons': [
     { label: 'Courses', href: '/courses', icon: <BookOpen className="h-4 w-4" />, color: 'text-emerald-400' },
@@ -63,9 +64,9 @@ const CONTEXT_MAP: Record<string, SidebarLink[]> = {
     { label: 'Exam Countdown', href: '/countdown', icon: <Clock className="h-4 w-4" />, color: 'text-sky-400' },
   ],
   '/my-notes': [
-    { label: 'Library Notes', href: '/library', icon: <Library className="h-4 w-4" />, color: 'text-amber-400' },
     { label: 'Courses', href: '/courses', icon: <BookOpen className="h-4 w-4" />, color: 'text-emerald-400' },
     { label: 'Flashcards', href: '/flashcards', icon: <Layers className="h-4 w-4" />, color: 'text-violet-400' },
+    { label: 'Quizzes', href: '/quizzes', icon: <Layers className="h-4 w-4" />, color: 'text-amber-400' },
   ],
   '/timetable': [
     { label: 'Exam Countdown', href: '/countdown', icon: <Clock className="h-4 w-4" />, color: 'text-sky-400' },
@@ -75,12 +76,12 @@ const CONTEXT_MAP: Record<string, SidebarLink[]> = {
   '/countdown': [
     { label: 'Timetable', href: '/timetable', icon: <CalendarDays className="h-4 w-4" />, color: 'text-sky-400' },
     { label: 'Grade Calc', href: '/calculator', icon: <Calculator className="h-4 w-4" />, color: 'text-amber-400' },
-    { label: 'Library Exams', href: '/library/exams', icon: <FlaskConical className="h-4 w-4" />, color: 'text-rose-400' },
+    { label: 'Resources & Exams', href: '/resources', icon: <FlaskConical className="h-4 w-4" />, color: 'text-rose-400' },
   ],
   '/calculator': [
     { label: 'Exam Countdown', href: '/countdown', icon: <Clock className="h-4 w-4" />, color: 'text-sky-400' },
     { label: 'Timetable', href: '/timetable', icon: <CalendarDays className="h-4 w-4" />, color: 'text-violet-400' },
-    { label: 'Library Exams', href: '/library/exams', icon: <FlaskConical className="h-4 w-4" />, color: 'text-rose-400' },
+    { label: 'Resources & Exams', href: '/resources', icon: <FlaskConical className="h-4 w-4" />, color: 'text-rose-400' },
   ],
   '/clubs': [
     { label: 'Classrooms', href: '/classrooms', icon: <GraduationCap className="h-4 w-4" />, color: 'text-emerald-400' },
@@ -103,15 +104,22 @@ const CONTEXT_MAP: Record<string, SidebarLink[]> = {
     { label: 'Clubs', href: '/clubs', icon: <MessageSquare className="h-4 w-4" />, color: 'text-pink-400' },
   ],
   '/library': [
-    { label: 'Courses', href: '/library/courses', icon: <GraduationCap className="h-4 w-4" />, color: 'text-emerald-400' },
+    { label: 'Courses', href: '/library?tab=courses', icon: <GraduationCap className="h-4 w-4" />, color: 'text-emerald-400' },
+    { label: 'Notes', href: '/library?tab=notes', icon: <NotebookPen className="h-4 w-4" />, color: 'text-amber-400' },
+    { label: 'Flashcards', href: '/library?tab=flashcards', icon: <Layers className="h-4 w-4" />, color: 'text-violet-400' },
+    { label: 'Exams', href: '/library?tab=exams', icon: <FlaskConical className="h-4 w-4" />, color: 'text-rose-400' },
+    { label: 'Tools', href: '/library?tab=tools', icon: <Clock className="h-4 w-4" />, color: 'text-sky-400' },
+  ],
+  '/resources': [
+    { label: 'Courses', href: '/courses', icon: <GraduationCap className="h-4 w-4" />, color: 'text-emerald-400' },
     { label: 'My Notes', href: '/my-notes', icon: <NotebookPen className="h-4 w-4" />, color: 'text-sky-400' },
     { label: 'Flashcards', href: '/flashcards', icon: <Layers className="h-4 w-4" />, color: 'text-violet-400' },
-    { label: 'Library Exams', href: '/library/exams', icon: <FlaskConical className="h-4 w-4" />, color: 'text-rose-400' },
-    { label: 'Tools', href: '/countdown', icon: <Clock className="h-4 w-4" />, color: 'text-amber-400' },
+    { label: 'Quizzes', href: '/quizzes', icon: <FlaskConical className="h-4 w-4" />, color: 'text-rose-400' },
+    { label: 'Tools', href: '/tools', icon: <Clock className="h-4 w-4" />, color: 'text-amber-400' },
   ],
   '/dashboard': [
-    { label: 'Study', href: '/library', icon: <BookOpen className="h-4 w-4" />, color: 'text-emerald-400' },
-    { label: 'Tools', href: '/countdown', icon: <Clock className="h-4 w-4" />, color: 'text-sky-400' },
+    { label: 'Courses', href: '/courses', icon: <BookOpen className="h-4 w-4" />, color: 'text-emerald-400' },
+    { label: 'Tools', href: '/tools', icon: <Clock className="h-4 w-4" />, color: 'text-sky-400' },
     { label: 'Community', href: '/community', icon: <Compass className="h-4 w-4" />, color: 'text-pink-400' },
     { label: 'Timetable', href: '/timetable', icon: <CalendarDays className="h-4 w-4" />, color: 'text-violet-400' },
   ],

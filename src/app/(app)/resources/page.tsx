@@ -1,26 +1,16 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTs — Resources Page (redirects to unified Resources hub at /library)
+// The ANTs — Official Resources & Exams Page
+// Route: /resources — Canonical view for exam papers & official syllabi.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import Image from 'next/image';
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import ExamsLibraryBrowser from '@/components/library/ExamsLibraryBrowser';
 
 export default function ResourcesPage() {
-  const router = useRouter();
-
-  useEffect(() => {
-    router.replace('/library');
-  }, [router]);
-
   return (
-    <div className="min-h-[50vh] flex items-center justify-center">
-      <div className="flex flex-col items-center gap-4 animate-pulse-soft">
-        <Image src="/logo.png" alt="The ANTs logo" width={40} height={40} />
-        <p className="text-sm text-foreground-muted">Redirecting to Resources...</p>
-      </div>
+    <div className="space-y-6">
+      <ExamsLibraryBrowser />
     </div>
   );
 }

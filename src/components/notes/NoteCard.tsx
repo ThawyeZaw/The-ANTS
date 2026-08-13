@@ -5,11 +5,12 @@
 // Card component for the Notes Library grid.
 // ──────────────────────────────────────────────────────────────────────────────
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Bookmark, BookmarkCheck, FlaskConical, GraduationCap, Zap, Pencil, Trash2, Globe, Lock, Link as LinkIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, slugify } from '@/lib/utils';
 import type { Note } from '@/types';
-import { mockCurriculums, mockSubjects } from '@/lib/mock/database';
+import { createClient } from '@/lib/supabase/client';
 
 interface NoteCardProps {
   note: Note;
@@ -31,12 +32,25 @@ const SUBJECT_COLORS: Record<string, string> = {
 };
 
 export default function NoteCard({ note, isSaved = false, onToggleSave, contributorName, onRead, onEdit, onDelete }: NoteCardProps) {
-  const curriculum = note.curriculum_id
-    ? mockCurriculums.find((c) => c.id === note.curriculum_id)
-    : null;
-  const subject = note.subject_id
-    ? mockSubjects.find((s) => s.id === note.subject_id)
-    : null;
+  const [curriculum, setCurriculum] = useState<any>(null);
+  const [subject, setSubject] = useState<any>(null);
+
+  useEffect(() => {
+    async function fetchMetadata() {
+      const supabase = createClient();
+      if (!supabase) return;
+      if (note.curriculum_id) {
+        const { data: c } = await supabase.from('curriculums').select('*').eq('id', note.curriculum_id).single();
+        if (c) setCurriculum(c);
+      }
+      if (note.subject_id) {
+        const { data: s } = await supabase.from('subjects').select('*').eq('id', note.subject_id).single();
+        if (s) setSubject(s);
+      }
+    }
+
+    fetchMetadata();
+  }, [note.curriculum_id, note.subject_id]);
 
 
   const subjectColor = subject
@@ -96,7 +110,7 @@ export default function NoteCard({ note, isSaved = false, onToggleSave, contribu
 
         {/* ── Title ── */}
         <Link
-          href={`/library/${note.id}`}
+          href={`/my-notes/${slugify(note.title) || note.id}`}
           onClick={(e) => {
             if (onRead) {
               e.preventDefault();

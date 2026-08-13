@@ -10,8 +10,8 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, MessageSquare, Users, Sun, Moon, Home } from 'lucide-react';
-import { useTheme } from '@/context/ThemeContext';
+import { ArrowRight, MessageSquare, Users, Home } from 'lucide-react';
+import ThemePickerDropdown from '@/components/theme/ThemePickerDropdown';
 import { useAuth } from '@/hooks/useAuth';
 import { getRoleLandingPath } from '@/lib/utils';
 import HeroVisual from '@/components/homepage/HeroVisual';
@@ -118,7 +118,6 @@ function SectionHead({
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function HomePage() {
-  const { theme, toggleTheme } = useTheme();
   const { isAuthenticated, user } = useAuth();
 
   return (
@@ -237,23 +236,8 @@ export default function HomePage() {
 
           {/* CTA area */}
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            {/* Theme toggle — keeps existing app behaviour */}
-            <button
-              onClick={toggleTheme}
-              style={{
-                background: 'none',
-                border: '1px solid var(--hp-border-strong)',
-                borderRadius: 999,
-                padding: '8px 10px',
-                color: 'var(--hp-ink-muted)',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-              }}
-              aria-label="Toggle theme"
-            >
-              {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
-            </button>
+            {/* Theme & Color Picker */}
+            <ThemePickerDropdown variant="landing" />
 
             {isAuthenticated && user ? (
               <Link href={getRoleLandingPath(user.profile.role)}>

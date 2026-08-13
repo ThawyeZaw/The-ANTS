@@ -258,7 +258,7 @@ export async function getUserUpgradeRequests(): Promise<RoleUpgradeRequest[]> {
     return [];
   }
 
-  return (data ?? []) as RoleUpgradeRequest[];
+  return (data ?? []) as unknown as RoleUpgradeRequest[];
 }
 
 // ── Main Contributor: Direct Role Change ──────────────────────────────────────

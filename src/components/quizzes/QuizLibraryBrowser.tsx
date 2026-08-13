@@ -12,6 +12,8 @@ import { actionGetPublicQuizzes } from '@/actions/quizzes';
 import QuizLibraryView from './QuizLibraryView';
 import type { QuizStandaloneOfficial } from '@/types/quiz';
 
+import { slugify } from '@/lib/utils';
+
 export default function QuizLibraryBrowser() {
   const router = useRouter();
   const [quizzes, setQuizzes] = useState<QuizStandaloneOfficial[]>([]);
@@ -31,7 +33,9 @@ export default function QuizLibraryBrowser() {
   }, [fetchQuizzes]);
 
   const handleTakeQuiz = (quizId: string) => {
-    router.push(`/quizzes/${quizId}/take`);
+    const q = quizzes.find((item) => item.id === quizId);
+    const slug = slugify(q?.title) || quizId;
+    router.push(`/quizzes/${slug}/take`);
   };
 
   if (loading) {

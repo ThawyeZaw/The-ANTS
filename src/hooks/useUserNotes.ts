@@ -99,12 +99,13 @@ export function useSingleUserNote(noteId: string | null) {
       setIsLoading(false);
       return;
     }
+    const userId = user.id;
     setIsLoading(true);
     (async () => {
       const { data } = await userNotes(supabase)
         .select('*')
         .eq('id', noteId)
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .single();
       setNote((data as UserNote) ?? null);
       setIsLoading(false);

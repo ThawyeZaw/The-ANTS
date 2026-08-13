@@ -7,7 +7,7 @@
 // premium dark glass-morphism aesthetic.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   BookOpen,
   Layers,
@@ -22,16 +22,10 @@ import {
   Music2,
   Link2,
 } from 'lucide-react';
-import type { Note, Profile, SocialPlatform } from '@/types';
+import type { Note, Profile, SocialPlatform, Deck } from '@/types';
 import { RoleBadge } from '@/components/ui/Badge';
 import AvatarImage from '@/components/ui/AvatarImage';
-import {
-  getNotesByContributor,
-  getLibraryDecks,
-  mockCurriculums,
-  mockSubjects,
-  mockContributorProfiles,
-} from '@/lib/mock/database';
+import { createClient } from '@/lib/supabase/client';
 import { cn, formatDate, formatRelativeTime } from '@/lib/utils';
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -80,12 +74,13 @@ function socialPlatformRing(platform: SocialPlatform | 'custom'): string {
 
 // ── Subcomponents ────────────────────────────────────────────────────────────
 
-/** Single published curriculum note card */
-function NoteCard({ note, curriculum, subject }: {
-  note: Note;
-  curriculum: { title: string; exam_board?: string } | null;
-  subject: { title: string } | null;
+function PublishedNoteCard({
+  note,
+}: {
+  note: Note & { curriculum?: any; subject?: any };
 }) {
+  const { curriculum, subject } = note;
+
   const gradient = note.curriculum_id
     ? (CURRICULUM_GRADIENTS[note.curriculum_id] ?? FALLBACK_GRADIENT)
     : FALLBACK_GRADIENT;
@@ -102,33 +97,25 @@ function NoteCard({ note, curriculum, subject }: {
         'group cursor-pointer'
       )}
     >
-      {/* Gradient accent bar at top */}
       <div className={`h-1 w-full bg-gradient-to-r ${gradient}`} />
-
       <div className="p-5">
-        {/* Subject chip */}
         {subject && (
           <span className={cn(
-            'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium mb-2.5',
-            'ring-1 ring-inset',
+            'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium mb-2.5 ring-1 ring-inset',
             examRing,
           )}>
             <BookOpen className="h-3 w-3 opacity-70" />
             {subject.title}
           </span>
         )}
-
         <h4 className="text-sm font-semibold text-white/90 leading-snug mb-1.5 group-hover:text-white transition-colors">
           {note.title}
         </h4>
-
         {note.summary && (
           <p className="text-xs text-white/50 leading-relaxed line-clamp-2 mb-3">
             {note.summary}
           </p>
         )}
-
-        {/* Footer: curriculum + date */}
         <div className="flex items-center justify-between text-[10px] text-white/35 font-mono pt-2 border-t border-white/5">
           <span className="flex items-center gap-1">
             <Layers className="h-3 w-3" />
@@ -141,7 +128,6 @@ function NoteCard({ note, curriculum, subject }: {
   );
 }
 
-/** Stat pill */
 function StatPill({ label, value, icon }: { label: string; value: string | number; icon: React.ReactNode }) {
   return (
     <div className="flex items-center gap-3 px-5 py-4 rounded-2xl border border-white/6 bg-white/[0.03] backdrop-blur-sm">
@@ -159,9 +145,7 @@ function StatPill({ label, value, icon }: { label: string; value: string | numbe
 // ── Props ────────────────────────────────────────────────────────────────────
 
 interface ContributorPublicProfileProps {
-  /** The contributor profile to display */
   profile: Profile;
-  /** Optional className for the outer wrapper */
   className?: string;
 }
 
@@ -171,34 +155,45 @@ export default function ContributorPublicProfile({
   profile,
   className,
 }: ContributorPublicProfileProps) {
-  const publishedNotes = useMemo(
-    () => getNotesByContributor(profile.id).filter((n) => n.visibility === 'public' && n.status === 'approved'),
-    [profile.id]
-  );
+  const [publishedNotes, setPublishedNotes] = useState<Note[]>([]);
+  const [decks, setDecks] = useState<Deck[]>([]);
+  const [curriculumMap, setCurriculumMap] = useState<Record<string, any>>({});
+  const [subjectMap, setSubjectMap] = useState<Record<string, any>>({});
 
-  const decks = useMemo(() => {
-    const allDecks = getLibraryDecks();
-    return allDecks.filter((d) => d.owner_id === profile.id && d.is_public);
+  useEffect(() => {
+    async function fetchData() {
+      const supabase = createClient();
+      if (!supabase) return;
+
+      const [
+        { data: notesData },
+        { data: decksData },
+        { data: curriculumsData },
+        { data: subjectsData },
+      ] = await Promise.all([
+        supabase.from('notes').select('*').eq('contributor_id', profile.id).eq('status', 'approved').eq('visibility', 'public'),
+        supabase.from('decks').select('*').eq('owner_id', profile.id).eq('is_public', true),
+        supabase.from('curriculums').select('*'),
+        supabase.from('subjects').select('*'),
+      ]);
+
+      if (notesData) setPublishedNotes(notesData as unknown as Note[]);
+      if (decksData) setDecks(decksData as unknown as Deck[]);
+
+      if (curriculumsData) {
+        const cmap: Record<string, any> = {};
+        curriculumsData.forEach((c: any) => { cmap[c.id] = c; });
+        setCurriculumMap(cmap);
+      }
+      if (subjectsData) {
+        const smap: Record<string, any> = {};
+        subjectsData.forEach((s: any) => { smap[s.id] = s; });
+        setSubjectMap(smap);
+      }
+    }
+
+    fetchData();
   }, [profile.id]);
-
-  const contributorProfile = useMemo(() => {
-    const cp = mockContributorProfiles.find((c: { id: string }) => c.id === profile.id);
-    return cp ?? null;
-  }, [profile.id]);
-
-  // ── Curriculum / subject lookup maps ─────────────────────────────────
-
-  const curriculumMap = useMemo(() => {
-    const map: Record<string, (typeof mockCurriculums)[number]> = {};
-    for (const c of mockCurriculums) map[c.id] = c;
-    return map;
-  }, []);
-
-  const subjectMap = useMemo(() => {
-    const map: Record<string, (typeof mockSubjects)[number]> = {};
-    for (const s of mockSubjects) map[s.id] = s;
-    return map;
-  }, []);
 
   // ── Build enriched note list ─────────────────────────────────────────
 
@@ -219,7 +214,7 @@ export default function ContributorPublicProfile({
   const statItems = [
     { label: 'Notes', value: publishedNotes.length, icon: <FileText className="h-4 w-4" /> },
     { label: 'Decks', value: decks.length, icon: <Layers className="h-4 w-4" /> },
-    { label: 'Curricula', value: '4', icon: <Globe className="h-4 w-4" /> },
+    { label: 'Curricula', value: Object.keys(curriculumMap).length || '4', icon: <Globe className="h-4 w-4" /> },
     { label: 'Students', value: '120+', icon: <Users className="h-4 w-4" /> },
   ];
 
@@ -277,9 +272,9 @@ export default function ContributorPublicProfile({
               {profile.title && (
                 <p className="text-base font-medium text-white/50">{profile.title}</p>
               )}
-              {contributorProfile?.bio && (
+              {profile.bio && (
                 <p className="text-sm text-white/60 leading-relaxed max-w-lg mt-3">
-                  {contributorProfile.bio}
+                  {profile.bio}
                 </p>
               )}
               <p className="text-sm text-amber-400/60 font-mono mt-1.5">@{profile.username}</p>
@@ -343,11 +338,9 @@ export default function ContributorPublicProfile({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {enrichedNotes.map((note) => (
-                <NoteCard
+                <PublishedNoteCard
                   key={note.id}
                   note={note}
-                  curriculum={note.curriculum}
-                  subject={note.subject}
                 />
               ))}
             </div>

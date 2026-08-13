@@ -6,7 +6,7 @@ import {
   Calculator, BookOpen, Layers, RotateCcw, TrendingUp,
   ArrowLeft, ArrowRight, GraduationCap, Clock, ChevronRight, Check, Info, BarChart3, FileText,
 } from 'lucide-react';
-import { getApprovedCalculatorPresets, getAllCurriculums, getPublicSubjects } from '@/lib/mock/database';
+import { createClient } from '@/lib/supabase/client';
 
 interface PresetBoundary { grade: string; min_mark: number; }
 interface PaperDef { name: string; max_mark: number; weight: number; unit_group?: string; paper_boundaries?: PresetBoundary[]; }
@@ -37,8 +37,26 @@ function computePUM(rawScore: number, boundaries: PresetBoundary[]): { pum: numb
 }
 
 export default function GradeCalculator() {
-  const curriculums = useMemo(() => getAllCurriculums(), []);
-  const allPresets = useMemo(() => getApprovedCalculatorPresets() as CalcPreset[], []);
+  const [curriculums, setCurriculums] = useState<any[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [presets, setPresets] = useState<CalcPreset[]>([]);
+
+  useEffect(() => {
+    async function fetchData() {
+      const supabase = createClient();
+      if (!supabase) return;
+      const [{ data: cData }, { data: sData }, { data: pData }] = await Promise.all([
+        supabase.from('curriculums').select('*'),
+        supabase.from('subjects').select('*'),
+        (supabase as any).from('grade_calculator_presets').select('*').eq('status', 'approved'),
+      ]);
+      if (cData) setCurriculums(cData);
+      if (sData) setSubjects(sData);
+      if (pData) setPresets(pData as CalcPreset[]);
+    }
+    fetchData();
+  }, []);
+  const allPresets = presets;
 
   const searchParams = useSearchParams();
   
@@ -48,10 +66,10 @@ export default function GradeCalculator() {
   const [selectedSeries, setSelectedSeries] = useState(searchParams.get('series') || '');
   const [rawMarks, setRawMarks] = useState<Record<string, number | string>>({});
 
-  const subjects = useMemo(() => {
-    if (!selectedCurriculum) return [];
-    return getPublicSubjects(selectedCurriculum).map(s => ({ id: s.id, title: s.title }));
-  }, [selectedCurriculum]);
+  const filteredSubjects = useMemo(() => {
+    if (!selectedCurriculum) return subjects;
+    return subjects.filter(s => s.curriculum_id === selectedCurriculum);
+  }, [selectedCurriculum, subjects]);
 
   const matchingPresets = useMemo(() => {
     let list = allPresets;

@@ -27,10 +27,8 @@ import { WorkspaceToastProvider } from '@/components/workspace/WorkspaceToast';
 import CourseSyncPanel from '@/components/layout/CourseSyncPanel';
 import QuickAccessToolbar from '@/components/layout/QuickAccessToolbar';
 import { cn } from '@/lib/utils';
-import {
-  mockClubAnnouncements,
-} from '@/lib/mock/database';
 import { useDashboardSync } from '@/hooks/useDashboardSync';
+import { createClient } from '@/lib/supabase/client';
 
 // ── Icon & Color maps (replicated from DashboardLayout — PM-locked) ──────────
 
@@ -63,6 +61,7 @@ export default function StudentDashboard() {
   const { role, isStudent } = useRole();
   const router = useRouter();
   const [recentPages, setRecentPages] = useState<any[]>([]);
+  const [announcements, setAnnouncements] = useState<any[]>([]);
 
   const { savedNotes, upcomingExams, stats } = useDashboardSync();
 
@@ -73,6 +72,18 @@ export default function StudentDashboard() {
   }, [role, isStudent, router]);
 
   useEffect(() => {
+    async function fetchAnnouncements() {
+      const supabase = createClient();
+      if (!supabase) return;
+      const { data } = await supabase
+        .from('classroom_announcements')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(5);
+      if (data) setAnnouncements(data);
+    }
+    fetchAnnouncements();
+
     try {
       const recentStr = localStorage.getItem('recentPages');
       if (recentStr) {
@@ -101,32 +112,32 @@ export default function StudentDashboard() {
   const mainContent = (
     <div className="space-y-6">
       {/* My Notes Card */}
-      <div className="rounded-2xl border border-[var(--border)] bg-[var(--background-card)] p-6">
-        <div className="flex items-center justify-between mb-4">
+      <div className="card-standard p-6">
+        <div className="flex items-center justify-between mb-5">
           <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
             <BookMarked className="h-5 w-5 text-violet-500" />
             My Notes
           </h2>
-          <Link href="/library" className="text-sm text-primary hover:text-primary/80 transition-colors flex items-center gap-1">
+          <Link href="/my-notes" className="text-sm font-medium text-primary hover:text-primary-hover transition-colors flex items-center gap-1.5 focus-ring rounded-md">
             <Library className="h-4 w-4" />
-            Browse Library
+            Browse Notes
           </Link>
         </div>
 
         {savedNotes.length === 0 ? (
-          <div className="bg-background-secondary/50 border border-dashed border-border rounded-xl p-6 text-center">
-            <Bookmark className="h-8 w-8 text-foreground-muted mx-auto mb-2" />
-            <p className="text-sm font-medium text-foreground">No saved notes yet</p>
-            <p className="text-xs text-foreground-muted mt-1">Browse the library and save notes to see them here.</p>
-            <Link href="/library" className="inline-flex items-center gap-1.5 mt-3 text-xs text-primary hover:text-primary/80 transition-colors">
-              <Library className="h-3.5 w-3.5" /> Explore Notes
+          <div className="bg-background-secondary/50 border border-dashed border-border rounded-2xl p-8 text-center">
+            <Bookmark className="h-10 w-10 text-foreground-muted mx-auto mb-3 opacity-50" />
+            <p className="text-sm font-semibold text-foreground">No saved notes yet</p>
+            <p className="text-xs text-foreground-muted mt-1.5 max-w-sm mx-auto">Browse and save notes to see them here.</p>
+            <Link href="/my-notes" className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium text-primary hover:text-primary-hover transition-colors focus-ring rounded-md">
+              <Library className="h-4 w-4" /> Explore Notes
             </Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {savedNotes.slice(0, 4).map((note) => (
-              <Link key={note.id} href={`/library/${note.id}`}
-                className="group flex flex-col gap-1.5 bg-background-card/50 border border-border rounded-xl p-4 hover:border-primary/40 hover:shadow-md transition-all duration-200">
+              <Link key={note.id} href={`/my-notes/${note.id}`}
+                className="group flex flex-col gap-2 card-standard p-4 focus-ring">
                 <p className="font-semibold text-foreground text-sm line-clamp-2 group-hover:text-primary transition-colors">{note.title}</p>
                 <p className="text-xs text-foreground-muted line-clamp-1">{note.summary}</p>
               </Link>
@@ -137,8 +148,8 @@ export default function StudentDashboard() {
 
       {/* Recently Accessed Card */}
       {recentPages.length > 0 && (
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--background-card)] p-6">
-          <div className="flex items-center justify-between mb-4">
+        <div className="card-standard p-6">
+          <div className="flex items-center justify-between mb-5">
             <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
               <History className="h-5 w-5 text-blue-500" />
               Recently Accessed
@@ -149,9 +160,9 @@ export default function StudentDashboard() {
               <Link
                 key={`${page.href}-${i}`}
                 href={page.href}
-                className="group flex items-center gap-3 bg-background-card/50 border border-border rounded-xl p-4 hover:border-border-hover hover:shadow-md transition-all duration-200"
+                className="group flex items-center gap-3 card-standard p-4 focus-ring"
               >
-                <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0">
+                <div className="p-2.5 rounded-xl bg-primary/10 text-primary shrink-0 transition-colors group-hover:bg-primary group-hover:text-white">
                   {page.icon}
                 </div>
                 <div className="min-w-0">
@@ -168,47 +179,47 @@ export default function StudentDashboard() {
   );
 
   const sidebarContent = (
-    <div className="space-y-3">
-      <div className="rounded-xl border border-[var(--border)] bg-[var(--background-card)] p-3">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="font-semibold flex items-center gap-1.5 text-foreground text-sm">
+    <div className="space-y-6">
+      <div className="card-standard p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-bold flex items-center gap-2 text-foreground text-sm uppercase tracking-wide">
             <Megaphone className="h-4 w-4 text-sky-500" />
             Club Announcements
           </h3>
         </div>
-        <div className="space-y-2">
-          {mockClubAnnouncements.slice(0, 3).map(ann => (
-            <div key={ann.id} className="p-2 bg-background-secondary/50 rounded-lg border border-border/50">
-              <p className="font-semibold text-xs text-foreground">{ann.title}</p>
-              <p className="text-[11px] text-foreground-muted mt-0.5">{ann.content}</p>
+        <div className="space-y-3">
+          {announcements.slice(0, 3).map(ann => (
+            <div key={ann.id} className="p-3 bg-background-secondary/40 rounded-xl border border-border/50 transition-colors hover:bg-background-secondary/80">
+              <p className="font-semibold text-sm text-foreground">{ann.title}</p>
+              <p className="text-xs text-foreground-muted mt-1 leading-relaxed">{ann.content}</p>
             </div>
           ))}
-          {mockClubAnnouncements.length === 0 && (
-            <p className="text-xs text-foreground-muted">No announcements right now.</p>
+          {announcements.length === 0 && (
+            <p className="text-sm text-foreground-muted py-2">No announcements right now.</p>
           )}
         </div>
       </div>
 
-      <div className="rounded-xl border border-[var(--border)] bg-[var(--background-card)] p-3">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="font-semibold flex items-center gap-1.5 text-foreground text-sm">
+      <div className="card-standard p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-bold flex items-center gap-2 text-foreground text-sm uppercase tracking-wide">
             <Clock className="h-4 w-4 text-rose-500" />
             Upcoming Exams
           </h3>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-3">
           {upcomingExams.slice(0, 3).map(exam => (
-            <div key={exam.id} className="p-2 bg-background-secondary/50 rounded-lg border border-border/50 flex flex-col justify-between">
+            <div key={exam.id} className="p-3 bg-background-secondary/40 rounded-xl border border-border/50 flex flex-col justify-between transition-colors hover:bg-background-secondary/80">
               <div>
-                <p className="font-semibold text-xs text-foreground">{exam.custom_title || 'Exam'}</p>
-                <p className="text-[11px] text-foreground-muted mt-0.5">{exam.qualification_group || ''}</p>
+                <p className="font-semibold text-sm text-foreground">{exam.custom_title || 'Exam'}</p>
+                <p className="text-xs text-foreground-muted mt-0.5">{exam.qualification_group || ''}</p>
               </div>
-              <div className="mt-1.5 flex items-center gap-2">
-                <span className="text-[10px] font-semibold text-rose-500 bg-rose-500/10 self-start px-1.5 py-0.5 rounded-md">
+              <div className="mt-3 flex items-center gap-2">
+                <span className="text-xs font-semibold text-rose-500 bg-rose-500/10 px-2 py-1 rounded-md">
                   {exam.target_date ? new Date(exam.target_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'TBD'}
                 </span>
                 {!exam.timeLeft.isPast && (
-                  <span className="text-[10px] font-semibold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded-md">
+                  <span className="text-xs font-semibold text-amber-500 bg-amber-500/10 px-2 py-1 rounded-md">
                     {exam.timeLeft.days}d left
                   </span>
                 )}
@@ -216,7 +227,7 @@ export default function StudentDashboard() {
             </div>
           ))}
           {upcomingExams.length === 0 && (
-            <p className="text-xs text-foreground-muted">No upcoming exams.</p>
+            <p className="text-sm text-foreground-muted py-2">No upcoming exams.</p>
           )}
         </div>
       </div>

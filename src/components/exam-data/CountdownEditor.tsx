@@ -7,7 +7,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { submitExamCountdownProposal } from '@/actions/exam-editor';
-import { getAllCurriculums, getPublicSubjects, getExamsByCurriculum } from '@/lib/mock/database';
+import { createClient } from '@/lib/supabase/client';
+import { useEffect } from 'react';
 
 interface CountdownDraft {
   id: string;
@@ -34,7 +35,27 @@ const PRIORITIES = [
 export default function CountdownEditor() {
   const { user } = useAuth();
   const [isPending, startTransition] = useTransition();
-  const curriculums = useMemo(() => getAllCurriculums(), []);
+
+  const [curriculums, setCurriculums] = useState<any[]>([]);
+  const [allSubjects, setAllSubjects] = useState<any[]>([]);
+  const [allExams, setAllExams] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function fetchData() {
+      const supabase = createClient();
+      if (!supabase) return;
+      const [{ data: cData }, { data: sData }, { data: eData }] = await Promise.all([
+        supabase.from('curriculums').select('*'),
+        supabase.from('subjects').select('*'),
+        supabase.from('exams').select('*'),
+      ]);
+      if (cData) setCurriculums(cData);
+      if (sData) setAllSubjects(sData);
+      if (eData) setAllExams(eData);
+    }
+
+    fetchData();
+  }, []);
 
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedCurriculum, setSelectedCurriculum] = useState('');
@@ -46,13 +67,16 @@ export default function CountdownEditor() {
 
   const subjects = useMemo(() => {
     if (!selectedCurriculum) return [];
-    return getPublicSubjects(selectedCurriculum).map(s => ({ id: s.id, title: s.title }));
-  }, [selectedCurriculum]);
+    return allSubjects.filter(s => s.curriculum_id === selectedCurriculum);
+  }, [selectedCurriculum, allSubjects]);
 
   const exams = useMemo(() => {
     if (!selectedCurriculum) return [];
-    return getExamsByCurriculum(selectedCurriculum, selectedSubject || null);
-  }, [selectedCurriculum, selectedSubject]);
+    return allExams.filter(e => {
+      if (selectedSubject) return e.subject_id === selectedSubject;
+      return true;
+    });
+  }, [selectedCurriculum, selectedSubject, allExams]);
 
   const selectedCurriculumTitle = useMemo(() => {
     return curriculums.find(c => c.id === selectedCurriculum)?.title || 'None selected';

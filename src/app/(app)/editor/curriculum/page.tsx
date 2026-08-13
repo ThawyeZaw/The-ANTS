@@ -22,7 +22,7 @@ export default function CurriculumLibraryPage() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated && !hasAccess) {
-      router.replace('/library');
+      router.replace('/courses');
     }
   }, [isLoading, isAuthenticated, hasAccess, router]);
 

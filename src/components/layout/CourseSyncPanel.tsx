@@ -18,7 +18,7 @@ import {
   Plus,
   Sparkles,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, slugify } from '@/lib/utils';
 import { useCourseSync } from '@/hooks/useCourseSync';
 
 export default function CourseSyncPanel() {
@@ -120,7 +120,7 @@ export default function CourseSyncPanel() {
                       <div className="flex items-center gap-3 mt-1">
                         {/* Lesson Tracker */}
                         <Link
-                          href={`/lessons/${course.curriculumId}/${subject.subjectId}`}
+                          href={`/lessons/${slugify(course.curriculumTitle)}/${slugify(subject.subjectTitle)}`}
                           className="inline-flex items-center gap-1 text-[11px] text-foreground-muted hover:text-primary transition-colors"
                         >
                           <BookOpen className="h-3 w-3" />
@@ -162,7 +162,7 @@ export default function CourseSyncPanel() {
                     </div>
 
                     <Link
-                      href={`/lessons/${course.curriculumId}/${subject.subjectId}`}
+                      href={`/lessons/${slugify(course.curriculumTitle)}/${slugify(subject.subjectTitle)}`}
                       className="shrink-0 ml-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline underline-offset-2"
                     >
                       Study
