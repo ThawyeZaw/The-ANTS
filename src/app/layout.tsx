@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Quicksand } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/context/ThemeContext";
 import { AuthProvider } from "@/context/AuthContext";
 import QueryProvider from "@/components/QueryProvider";
 
@@ -52,13 +51,11 @@ export default function RootLayout({
         <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:bg-background-card focus:px-4 focus:py-2 focus:rounded-lg">
           Skip to main content
         </a>
-        <ThemeProvider>
-          <AuthProvider>
-            <QueryProvider>
-              {children}
-            </QueryProvider>
-          </AuthProvider>
-        </ThemeProvider>
+        <AuthProvider>
+          <QueryProvider>
+            {children}
+          </QueryProvider>
+        </AuthProvider>
       </body>
     </html>
   );

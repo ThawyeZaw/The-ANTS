@@ -15,8 +15,6 @@ import {
   Pencil,
   ShieldCheck,
   UserCircle,
-  Sun,
-  Moon,
   LogOut,
   Menu,
   X,
@@ -40,7 +38,6 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
-import { useTheme } from '@/context/ThemeContext';
 import { cn, getInitials } from '@/lib/utils';
 import { RoleBadge } from '@/components/ui/Badge';
 import type { UserRole } from '@/types';
@@ -264,7 +261,6 @@ export function getAllNavItems(): NavItem[] {
 const NavBar = React.memo(function NavBar() {
   const { user, logout } = useAuth();
   const { role } = useRole();
-  const { theme, toggleTheme } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -670,17 +666,8 @@ const NavBar = React.memo(function NavBar() {
             })}
           </div>
 
-          {/* ─── Right Section: Theme + User ─── */}
+          {/* ─── Right Section: User ─── */}
           <div className="flex items-center gap-1 sm:gap-1.5">
-            {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="flex items-center justify-center w-9 h-9 rounded-full border border-border text-foreground-secondary hover:text-foreground hover:bg-background-secondary transition-colors duration-200"
-              aria-label="Toggle theme"
-            >
-              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </button>
-
             {/* User Menu */}
             {user && (
               <div ref={userMenuRef} className="relative">

@@ -2,14 +2,11 @@
 
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTs — Settings Page
-// Lets users edit their profile, change their role, and personalise appearance.
+// Lets users edit their profile, change their role, and manage notifications.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import BackButton from '@/components/ui/BackButton';
-import { Check, Sun, Moon, Palette, User, UserCog, Bell, Globe } from 'lucide-react';
-import type { Metadata } from 'next';
-import { useTheme, COLOR_PRESETS, type ThemeColor } from '@/context/ThemeContext';
-import { cn } from '@/lib/utils';
+import { User, UserCog, Bell, Globe } from 'lucide-react';
 import Link from 'next/link';
 import RoleUpgradeForm from '@/components/settings/RoleUpgradeForm';
 import TelegramConnect, { type NotificationPreferences } from '@/components/settings/TelegramConnect';
@@ -49,111 +46,6 @@ function SettingsSection({
   );
 }
 
-// ── Theme Mode Toggle ─────────────────────────────────────────────────────────
-
-function ThemeModeToggle() {
-  const { theme, setTheme } = useTheme();
-
-  const options = [
-    { value: 'light' as const, label: 'Light', icon: <Sun className="h-4 w-4" /> },
-    { value: 'dark' as const, label: 'Dark', icon: <Moon className="h-4 w-4" /> },
-  ];
-
-  return (
-    <div>
-      <p className="text-sm font-medium text-foreground mb-3">Mode</p>
-      <div className="flex gap-3">
-        {options.map((opt) => (
-          <button
-            key={opt.value}
-            onClick={() => setTheme(opt.value)}
-            className={cn(
-              'flex items-center gap-2 px-5 py-3 rounded-xl border text-sm font-medium transition-all duration-200 cursor-pointer',
-              theme === opt.value
-                ? 'border-primary bg-primary/10 text-primary shadow-sm'
-                : 'border-border text-foreground-secondary hover:border-border-hover hover:text-foreground hover:bg-background-secondary'
-            )}
-          >
-            {opt.icon}
-            {opt.label}
-            {theme === opt.value && (
-              <Check className="h-3.5 w-3.5 ml-0.5" />
-            )}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ── Color Palette Picker ──────────────────────────────────────────────────────
-
-function ColorPalettePicker() {
-  const { themeColor, setThemeColor } = useTheme();
-
-  return (
-    <div className="mt-6 pt-6 border-t border-border">
-      <p className="text-sm font-medium text-foreground mb-1">Accent Color</p>
-      <p className="text-xs text-foreground-muted mb-4">
-        Changes your primary buttons, links, and highlights across the whole app.
-      </p>
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
-        {(Object.entries(COLOR_PRESETS) as [ThemeColor, typeof COLOR_PRESETS[ThemeColor]][]).map(([key, preset]) => {
-          const isSelected = themeColor === key;
-          return (
-            <button
-              key={key}
-              onClick={() => setThemeColor(key)}
-              title={preset.label}
-              className={cn(
-                'group relative flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all duration-200 cursor-pointer',
-                isSelected
-                  ? 'border-primary bg-primary/5 shadow-md scale-105'
-                  : 'border-border hover:border-border-hover hover:scale-105 hover:shadow-sm'
-              )}
-            >
-              {/* Gradient swatch */}
-              <div
-                className={cn(
-                  'w-10 h-10 rounded-full bg-linear-to-br shadow-sm transition-transform duration-200',
-                  preset.gradient
-                )}
-              />
-              {/* Check overlay */}
-              {isSelected && (
-                <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-primary flex items-center justify-center shadow">
-                  <Check className="h-2.5 w-2.5 text-white" />
-                </div>
-              )}
-              <span className="text-xs font-medium text-foreground-secondary group-hover:text-foreground transition-colors">
-                {preset.label}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Live preview strip */}
-      <div className="mt-5 p-4 rounded-xl bg-background-secondary border border-border">
-        <p className="text-xs text-foreground-muted mb-3 font-medium uppercase tracking-wider">Preview</p>
-        <div className="flex flex-wrap items-center gap-3">
-          <button className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary-hover transition-colors cursor-pointer">
-            Primary Button
-          </button>
-          <button className="px-4 py-2 rounded-lg border border-primary text-primary text-sm font-medium hover:bg-primary/10 transition-colors cursor-pointer">
-            Outline Button
-          </button>
-          <span className="text-sm text-primary font-medium">Link style</span>
-          <div className="flex items-center gap-1.5">
-            <div className={cn('w-3 h-3 rounded-full bg-linear-to-br', COLOR_PRESETS[themeColor].gradient)} />
-            <span className="text-xs text-foreground-muted">{COLOR_PRESETS[themeColor].label} accent active</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ── Main Settings Page ────────────────────────────────────────────────────────
 
 export default function SettingsPage() {
@@ -188,16 +80,6 @@ export default function SettingsPage() {
         </div>
       </SettingsSection>
 
-      {/* Appearance Section */}
-      <SettingsSection
-        title="Appearance"
-        description="Customise how the app looks and feels"
-        icon={<Palette className="h-4 w-4" />}
-      >
-        <ThemeModeToggle />
-        <ColorPalettePicker />
-      </SettingsSection>
-
       {/* Telegram Notifications Section */}
       <SettingsPageInner />
 
@@ -229,13 +111,11 @@ function SettingsPageInner() {
     const supabase = createClient();
     if (!supabase) return;
     await supabase.from('profiles').update({ timezone: tz } as any).eq('id', user.id);
-    // Refetch profile to sync state
     await updateProfile({});
   };
 
   return (
     <div className="space-y-6">
-      {/* Telegram Section */}
       <SettingsSection
         title="Notifications"
         description="Manage your notification preferences"
@@ -249,7 +129,6 @@ function SettingsPageInner() {
         />
       </SettingsSection>
 
-      {/* Timezone Section */}
       <SettingsSection
         title="Timezone"
         description="Set your local timezone for notification scheduling"

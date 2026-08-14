@@ -73,17 +73,7 @@ const iconMap: Record<string, React.ReactNode> = {
   'total-reviewed': <ShieldCheck className="h-5 w-5" />,
 };
 
-const colorMap: Record<string, string> = {
-  orange: 'text-orange-500 bg-orange-500/10 dark:text-orange-400 dark:bg-orange-500/20',
-  violet: 'text-violet-500 bg-violet-500/10 dark:text-violet-400 dark:bg-violet-500/20',
-  red: 'text-red-500 bg-red-500/10 dark:text-red-400 dark:bg-red-500/20',
-  emerald: 'text-emerald-500 bg-emerald-500/10 dark:text-emerald-400 dark:bg-emerald-500/20',
-  mint: 'text-blue-500 bg-blue-500/10 dark:text-blue-300 dark:bg-blue-500/20',
-  amber: 'text-amber-500 bg-amber-500/10 dark:text-amber-400 dark:bg-amber-500/20',
-  teal: 'text-teal-500 bg-teal-500/10 dark:text-teal-400 dark:bg-teal-500/20',
-  pink: 'text-pink-500 bg-pink-500/10 dark:text-pink-400 dark:bg-pink-500/20',
-  sky: 'text-sky-500 bg-sky-500/10 dark:text-sky-400 dark:bg-sky-500/20',
-};
+import { STAT_COLOR_MAP } from '@/constants/statColors';
 
 // ── Default carousel slides ──────────────────────────────────────────────────
 function buildDefaultSlides(firstName: string, welcomeSubtitle: string): CarouselSlide[] {
