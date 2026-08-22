@@ -1,12 +1,15 @@
 # The ANTs — System Specification & Integration Manifest (`spec.md`)
 
-## 1. Project Architecture & Tech Stack
-- **Frontend Framework:** Next.js 16 (App Router)
-- **Styling:** Tailwind CSS v4
-- **Language:** TypeScript 5
-- **Backend/Database:** Supabase (PostgreSQL, Auth, Storage)
-- **State:** Supabase (PostgreSQL + Auth + Storage + Realtime) — live production database. Mock facade (`src/lib/mock/database.ts`) retained for local dev/testing fallback.
-- **Hosting:** Vercel
+## 1. Project Architecture & Tech Stack (HONC Stack)
+- **Frontend Framework:** Next.js 16 (App Router), React 19, Turbopack
+- **Styling:** Tailwind CSS v4, Lucide React icons
+- **Language:** TypeScript 5 (Strict Mode)
+- **API Backend:** Hono deployed on Cloudflare Workers (`https://the-ants-api.thawyezaw.workers.dev`)
+- **Database & ORM:** Neon Serverless PostgreSQL with Drizzle ORM (`packages/db`)
+- **Authentication:** Better Auth with session management and 4-tier upgrade-only role system
+- **Object Storage:** Cloudflare R2 (S3-compatible presigned upload/download, zero egress fees)
+- **Background Jobs & Notifications:** Cloudflare Scheduled Cron Triggers + Telegram Bot API
+- **Hosting & CDN:** Vercel for Frontend (`https://the-ants.org`), Cloudflare for API & Edge Caching
 
 ---
 
@@ -23,10 +26,10 @@ Privacy and access boundaries are strictly enforced. There are **four roles**. A
 ### Role Management Rules
 - **Signup defaults to `student`.** No other role is selectable at registration.
 - **Upgrade only.** Roles can only be upgraded (student → teacher → contributor → main_contributor). Downgrades are not permitted.
-- **Upgrade request flow:** Users submit a role upgrade request. A `main_contributor` reviews and approves/rejects it.
+- **Upgrade request flow:** Users submit a role upgrade request. A `main_contributor` reviews and approves/rejects it via `/main-contributor/review-queue`.
 - **Direct promotion:** Main contributors can also directly promote users without a prior request.
 - **One account, one role.** An email can only hold a single role at any time.
-- **JWT Role Claim:** On signup and role upgrade, a Supabase `custom_access_token` hook embeds the user's role as a `user_role` JWT claim. The `useRole()` hook reads this claim instead of querying the database on every request, eliminating redundant auth queries.
+- **Role Verification:** User session and permissions are verified via `useRole()` hook and server-side authorization guards on the Hono backend.
 
 ---
 
@@ -43,16 +46,16 @@ Refer to [`AGENTS.md`](./AGENTS.md) for the definitive, up-to-date ownership map
 
 ---
 
-## 4. Vibe-Coding Guardrails (Non-Negotiable)
+## 4. Engineering Guardrails (Non-Negotiable)
 To prevent "Schema Chaos" and integration breakdowns when using AI coding assistants, the following rules apply to all team members:
 
-1. **The Database Gatekeeper:** The Project Manager is the sole administrator of the live database instance. Developers may not alter tables, triggers, or Row-Level Security (RLS) rules without approval.
-2. **Unified Data Facade:** All mock data queries must pass through `src/lib/mock/database.ts`. Do not invent custom isolated data schemas.
+1. **The Database Gatekeeper:** Database migrations are defined centrally in `packages/db` with Drizzle ORM. Developers may not alter tables or relations without schema reviews.
+2. **Typed API Layer:** All backend interactions go through the typed Hono API (`@the-ants/api`) or typed actions.
 3. **Atomic Feature Branching:** All work must happen on dedicated task branches (e.g., `feature/timetable-ui`). Never push directly to `main` or `dev`.
-4. **Morning Sync:** Pull the latest stable code (`git pull origin dev`) every morning before vibe-coding.
+4. **Morning Sync:** Pull the latest stable code (`git pull origin dev`) every morning before development.
 5. **Client Components:** Any interactive UI (timers, calculators, interactive forms) must start with the `'use client';` directive to avoid crashing Next.js Server Components.
 6. **Four-Role Awareness:** The persona context exposes four roles: `student`, `teacher`, `contributor`, `main_contributor`. Always use `useRole()` to guard feature access — never hard-code role strings in component logic.
-7. **RLS-Aware Data Access:** All database queries must account for Row-Level Security policies. Never use `SUPABASE_SERVICE_ROLE_KEY` in client code. Role elevation (e.g., admin overrides) must go through server-side helper functions in `src/lib/supabase/server.ts`, never through client-side `select('*')` with override flags.
+7. **Secure Data Access:** Never commit secret credentials, database connection strings, or service tokens into client bundles or git. Use server environment variables for `DATABASE_URL` and `CRON_SECRET`.
 
 ---
 
@@ -1280,7 +1283,7 @@ Enhanced sharing and discoverability for public profiles.
 - Profile pages use `/(public)/` route group (no auth required for viewing).
 - `useProfile.ts` hook fetches profile by username; handles both authenticated (owner can edit) and unauthenticated (read-only) states.
 - `ProfileHero.tsx` renders the top section; `ProfileActivity.tsx` renders the timeline; `ProfileStats.tsx` renders stats.
-- Avatar upload uses Supabase Storage; stored under `avatars/{userId}/` with automatic 200×200 crop (client-side).
+- Avatar upload uses Cloudflare R2 presigned storage; stored under `avatars/{userId}/` with automatic 200×200 crop (client-side).
 
 ### 20.7 Error Handling
 - **Username not found**: 404 page with "User not found" message; link to Explore Profiles.
