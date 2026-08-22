@@ -297,6 +297,125 @@ export const examsRelations = relations(exams, ({ one, many }) => ({
   schedules: many(examSchedules),
 }));
 
+export const gradeBoundariesRelations = relations(gradeBoundaries, ({ one }) => ({
+  exam: one(exams, {
+    fields: [gradeBoundaries.exam_id],
+    references: [exams.id],
+  }),
+  subject: one(subjects, {
+    fields: [gradeBoundaries.subject_id],
+    references: [subjects.id],
+  }),
+}));
+
+export const examCountdownsRelations = relations(examCountdowns, ({ one }) => ({
+  user: one(profiles, {
+    fields: [examCountdowns.user_id],
+    references: [profiles.id],
+  }),
+  exam: one(exams, {
+    fields: [examCountdowns.exam_id],
+    references: [exams.id],
+  }),
+  subject: one(subjects, {
+    fields: [examCountdowns.subject_id],
+    references: [subjects.id],
+  }),
+}));
+
+export const gradeEntriesRelations = relations(gradeEntries, ({ one }) => ({
+  user: one(profiles, {
+    fields: [gradeEntries.user_id],
+    references: [profiles.id],
+  }),
+  exam: one(exams, {
+    fields: [gradeEntries.exam_id],
+    references: [exams.id],
+  }),
+  subject: one(subjects, {
+    fields: [gradeEntries.subject_id],
+    references: [subjects.id],
+  }),
+}));
+
+export const examSchedulesRelations = relations(examSchedules, ({ one }) => ({
+  exam: one(exams, {
+    fields: [examSchedules.exam_id],
+    references: [exams.id],
+  }),
+}));
+
+export const timetableEventsRelations = relations(timetableEvents, ({ one }) => ({
+  user: one(profiles, {
+    fields: [timetableEvents.user_id],
+    references: [profiles.id],
+  }),
+}));
+
+export const pomodoroSessionsRelations = relations(pomodoroSessions, ({ one }) => ({
+  user: one(profiles, {
+    fields: [pomodoroSessions.user_id],
+    references: [profiles.id],
+  }),
+  subject: one(subjects, {
+    fields: [pomodoroSessions.subject_id],
+    references: [subjects.id],
+  }),
+  topic: one(topics, {
+    fields: [pomodoroSessions.topic_id],
+    references: [topics.id],
+  }),
+}));
+
+export const userEnrollmentsRelations = relations(userEnrollments, ({ one }) => ({
+  user: one(profiles, {
+    fields: [userEnrollments.user_id],
+    references: [profiles.id],
+  }),
+  curriculum: one(curriculums, {
+    fields: [userEnrollments.curriculum_id],
+    references: [curriculums.id],
+  }),
+  subject: one(subjects, {
+    fields: [userEnrollments.subject_id],
+    references: [subjects.id],
+  }),
+  exam: one(exams, {
+    fields: [userEnrollments.exam_id],
+    references: [exams.id],
+  }),
+}));
+
+export const userExamOverridesRelations = relations(userExamOverrides, ({ one }) => ({
+  user: one(profiles, {
+    fields: [userExamOverrides.user_id],
+    references: [profiles.id],
+  }),
+  exam: one(exams, {
+    fields: [userExamOverrides.exam_id],
+    references: [exams.id],
+  }),
+}));
+
+export const userExamHistoryRelations = relations(userExamHistory, ({ one }) => ({
+  user: one(profiles, {
+    fields: [userExamHistory.user_id],
+    references: [profiles.id],
+  }),
+  curriculum: one(curriculums, {
+    fields: [userExamHistory.curriculum_id],
+    references: [curriculums.id],
+  }),
+  subject: one(subjects, {
+    fields: [userExamHistory.subject_id],
+    references: [subjects.id],
+  }),
+  exam: one(exams, {
+    fields: [userExamHistory.exam_id],
+    references: [exams.id],
+  }),
+}));
+
 export const notesRelations = relations(notes, ({ one, many }) => ({
   contributor: one(profiles, {
     fields: [notes.contributor_id],
@@ -315,6 +434,17 @@ export const notesRelations = relations(notes, ({ one, many }) => ({
     references: [topics.id],
   }),
   savedByUsers: many(userSavedNotes),
+}));
+
+export const userSavedNotesRelations = relations(userSavedNotes, ({ one }) => ({
+  user: one(profiles, {
+    fields: [userSavedNotes.user_id],
+    references: [profiles.id],
+  }),
+  note: one(notes, {
+    fields: [userSavedNotes.note_id],
+    references: [notes.id],
+  }),
 }));
 
 export const userNotesRelations = relations(userNotes, ({ one }) => ({
