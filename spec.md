@@ -103,317 +103,106 @@ The full PostgreSQL schema is maintained in [`schema.md`](./schema.md) — the s
 
 ## 7. Detailed Project Architecture & File Structure
 
-This directory tree is the **absolute source of truth** for file placement. AI Agents and Developers must follow this structure exactly. Do not create new top-level directories without PM approval.
+This directory tree is the **absolute source of truth** for file placement across the monorepo workspace.
 
 ```text
-the-ants/                                 # Project root
-├── spec.md                               # 🔒 PM — System specification (this file)
-├── schema.md                             # 🔒 PM — Database schema reference
-├── README.md                             # 🔒 PM — Project README
-├── The-ANTS-1/                           # 🔒 PM — Legacy / alternative asset directory (BridgesSection)
-├── design-system/                        # 🔒 PM — Design system documentation (color palette, typography, components, accessibility, etc.)
-├── supabase/                             # 🔒 PM — Supabase CLI local config
-│   ├── config.toml
-│   ├── seed.sql                          # Dev seed data
-│   └── migrations/                       # SQL migration files
+the-ants/                                 # Turborepo Monorepo Root
+├── package.json                          # Monorepo workspaces config (npm@11)
+├── turbo.json                            # Turborepo task pipeline & globalEnv
+├── vercel.json                           # Vercel deployment config for apps/web
+├── spec.md                               # System specification (this file)
+├── schema.md                             # Database schema reference
+├── AGENTS.md                             # Developer & Agent domain boundaries
+├── README.md                             # Project README
 │
-├── public/
-│   ├── sounds/                           # 🔒 ABC — Pomodoro background sounds (reserved; currently synthesized via Web Audio API, no static files needed)
-│   └── icons/                            # 🔒 PM — Exam board logos & app icons
+├── apps/
+│   ├── web/                              # Next.js 16 App Router Frontend (@the-ants/web)
+│   │   ├── package.json
+│   │   ├── tsconfig.json
+│   │   ├── public/                       # Static assets & icons
+│   │   └── src/
+│   │       ├── app/                      # Next.js App Router
+│   │       │   ├── layout.tsx            # Root layout (providers, Quicksand font, metadata)
+│   │       │   ├── globals.css           # Global Tailwind CSS v4 styles & design tokens
+│   │       │   ├── page.tsx              # Public landing / home page
+│   │       │   ├── (auth)/               # Auth route group (login, signup, error)
+│   │       │   ├── (public)/             # Public routes (explore, profiles, clubs, about)
+│   │       │   ├── (app)/                # Authenticated shell (dashboard, student, teacher, etc.)
+│   │       │   └── api/                  # Frontend edge routes & notification hooks
+│   │       ├── components/               # UI components
+│   │       │   ├── layout/               # NavBar, Footer, RelatedPagesSidebar
+│   │       │   ├── homepage/             # BentoFeatures, HeroVisual, RoleLadder, StatsRow
+│   │       │   ├── ui/                   # Button, Input, Badge, AvatarImage, AnimatedStat
+│   │       │   ├── auth/                 # LoginForm, SignupForm
+│   │       │   ├── settings/             # AdvancedProfileEditor, RoleUpgradeForm
+│   │       │   ├── profile/              # ProfileHero, ProfileActivity, ProfileStats
+│   │       │   ├── classrooms/           # ClassroomDetail, Assignments, Quizzes
+│   │       │   ├── clubs/                # ClubDetail, ClubDiscovery, MilestoneTracker
+│   │       │   ├── timetable/            # Smart Timetable & calendar views
+│   │       │   ├── pomodoro/             # TimerRing, TimerControls, Soundscapes
+│   │       │   ├── flashcards/           # DeckLibrary, StudySession, CardCreator
+│   │       │   ├── notes/                # BlockEditor, NotesLibrary, NoteReader
+│   │       │   ├── countdown/            # Exam Countdown cards & manager
+│   │       │   └── editor/               # Curriculum & Exam Editor tools
+│   │       ├── hooks/                    # Custom React Hooks
+│   │       │   ├── useRole.ts            # Persona context & role gating
+│   │       │   ├── useTimetable.ts       # Timetable state & undo/redo
+│   │       │   ├── useFlashcardSRS.ts    # SRS Leitner / SM-2 spaced repetition
+│   │       │   ├── useClassroom.ts       # Classroom state & actions
+│   │       │   ├── useClub.ts            # Club state & discussions
+│   │       │   ├── useNotes.ts           # Notes library & editor state
+│   │       │   └── useCountdown.ts       # Exam countdown state
+│   │       ├── context/                  # Context providers (AuthContext, PersonaContext, ThemeContext)
+│   │       ├── actions/                  # Server Actions (timetable, clubs, classrooms, editor)
+│   │       ├── lib/                      # Utilities & clients
+│   │       │   ├── supabase/             # Dynamic Proxy bridge for backward compatibility
+│   │       │   ├── srs/                  # Spaced repetition algorithms
+│   │       │   ├── pomodoro/             # Web Audio API soundscape synthesis
+│   │       │   └── utils.ts              # cn helper & formatters
+│   │       └── types/                    # Frontend TypeScript interfaces
+│   │
+│   └── api/                              # Hono API Backend (@the-ants/api)
+│       ├── package.json
+│       ├── wrangler.jsonc                # Cloudflare Worker configuration & crons
+│       └── src/
+│           ├── index.ts                  # Main Hono app, CORS, route mounting, scheduled worker
+│           ├── routes/                   # Domain API route handlers
+│           │   ├── timetable.ts          # /api/timetable
+│           │   ├── flashcards.ts         # /api/flashcards
+│           │   ├── classrooms.ts         # /api/classrooms
+│           │   ├── clubs.ts              # /api/clubs
+│           │   ├── exams.ts              # /api/exams
+│           │   ├── notes.ts              # /api/notes
+│           │   ├── curriculum.ts         # /api/curriculum
+│           │   ├── editor.ts             # /api/editor
+│           │   ├── role-upgrade.ts       # /api/role-upgrade
+│           │   └── storage.ts            # /api/storage (R2 presigned URLs)
+│           └── services/                 # Background processors & notification queue
+│               └── notification-processor.ts
 │
-└── src/
-    ├── app/                              # Next.js App Router (Server Components by default)
-    │   ├── layout.tsx                    # 🔒 PM — Root layout (providers, global fonts, metadata)
-    │   ├── globals.css                   # 🔒 PM — Global Tailwind CSS v4 styles & design tokens
-    │   ├── page.tsx                      # 🔒 PM (TYZ) — Public landing / home page
-    │   │
-    │   ├── (auth)/                       # 🔒 PM (TYZ) — Auth route group
-    │   │   ├── error.tsx                 # 🔒 PM — Auth route group error boundary
-    │   │   ├── login/page.tsx
-    │   │   └── signup/page.tsx
-    │   │
-    │   ├── (public)/                     # Public routes (no auth required)
-    │   │   ├── error.tsx                 # 🔒 PM — Public route group error boundary
-    │   │   ├── explore/
-    │   │   │   ├── page.tsx              # 🔒 PM — Unified explore hub (All/Profiles/Clubs tabs)
-    │   │   │   ├── clubs/page.tsx        # 🔒 PM — Public club discovery
-    │   │   │   └── profiles/page.tsx     # 🔒 PM — Public profile listing
-    │   │   ├── clubs/                    # 🔒 PM
-    │   │   │   └── [slug]/page.tsx       # Public club detail
-    │   │   ├── about/
-    │   │   │   └── page.tsx              # 🔒 PM — About page
-    │   │   └── profile/
-    │   │       └── [username]/page.tsx   # 🔒 PM — Public profile page
-    │   │
-    │   ├── (onboarding)/                 # Onboarding wizard
-    │   │   └── onboarding/
-    │   │       └── page.tsx              # 🔒 ABC — Onboarding wizard
-    │   │
-    │   ├── auth/                          # Standalone auth pages (no route group)
-    │   │   ├── update-password/
-    │   │   │   └── page.tsx              # 🔒 PM — Password reset page
-    │   │   └── confirm/
-    │   │       └── route.ts              # 🔒 PM — Auth confirmation API route
-    │   │
-    │   ├── api/                           # API routes
-    │   │   ├── cron/
-    │   │   │   └── send-notifications/
-    │   │   │       └── route.ts          # 🔒 PM — Cron notification handler
-    │   │   └── telegram/
-    │   │       └── webhook/
-    │   │           └── route.ts          # 🔒 PM — Telegram bot webhook
-    │   │
-    │   └── (app)/                        # Authenticated shell
-    │       ├── layout.tsx                # 🔒 PM — App shell (NavBar, RelatedPagesSidebar, BackButton, auth gate)
-    │       ├── loading.tsx               # 🔒 PM — Global app skeleton loader
-    │       ├── error.tsx                 # 🔒 PM — App route group error boundary
-    │       │
-    │       ├── dashboard/page.tsx        # 🔒 PM — Unified role-aware dashboard (redirects to /role)
-    │       ├── student/page.tsx          # 🔒 PM — Student workspace dashboard
-    │       ├── teacher/page.tsx          # 🔒 PM — Teacher workspace dashboard
-    │       ├── contributor/page.tsx      # 🔒 PM — Contributor workspace dashboard
-    │       ├── main-contributor/
-    │       │   ├── page.tsx              # 🔒 PM — Main Contributor workspace dashboard
-    │       │   ├── review-queue/
-    │       │   │   └── page.tsx          # 🔒 PM — Gatekeeper review queue
-    │       │   └── add-contributor/
-    │       │       └── page.tsx          # 🔒 PM — Invite new contributor flow
-    │       ├── timetable/page.tsx        # 🔒 ABC — Smart Timetable
-    │       ├── pomodoro/page.tsx         # 🔒 ABC — Pomodoro Timer
-    │       ├── flashcards/
-    │       │   ├── page.tsx              # 🔒 ZLH — Deck library
-    │       │   ├── loading.tsx           # 🔒 ZLH — Deck library skeleton
-    │       │   └── [deckId]/page.tsx     # 🔒 ZLH — Study session + RelatedContent
-    │       ├── lessons/page.tsx          # 🔒 ABC — Lesson Tracker
-    │       ├── courses/page.tsx          # 🔒 ABC — Course Manager
-    │       ├── my-notes/
-    │       │   ├── page.tsx              # My Notes hub (created + saved)
-    │       │   ├── loading.tsx           # My Notes skeleton
-    │       │   └── editor/
-    │       │       └── page.tsx          # Split-screen Notes Editor
-    │       ├── library/
-    │       │   ├── page.tsx              # Notes Library (All Roles)
-    │       │   ├── courses/
-    │       │   │   └── page.tsx          # Courses library browser
-    │       │   ├── exams/
-    │       │   │   └── page.tsx          # Exams library browser
-    │       │   ├── flashcards/
-    │       │   │   └── page.tsx          # Flashcards library browser
-    │       │   └── [noteId]/page.tsx     # Standalone note viewer + RelatedContent
-    │       ├── classrooms/
-    │       │   ├── page.tsx              # 🔒 TYZ — Classroom list
-    │       │   ├── loading.tsx           # 🔒 TYZ — Classroom list skeleton
-    │       │   └── [id]/page.tsx         # 🔒 TYZ — Classroom detail (tabs: assignments, quizzes, resources, discussions, links, members, settings)
-    │       ├── clubs/
-    │       │   ├── page.tsx              # 🔒 TYZ — Club Discovery
-    │       │   ├── loading.tsx           # 🔒 TYZ — Club Discovery skeleton
-    │       │   ├── create/
-    │       │   │   └── page.tsx          # 🔒 TYZ — Create new club
-    │       │   └── [slug]/
-    │       │       ├── page.tsx          # 🔒 TYZ — Club detail (tabs: chat, announcements, links, members, projects, activity_timeline)
-    │       │       └── manage/
-    │       │           └── page.tsx      # 🔒 TYZ — Club management settings
-    │       ├── countdown/
-    │       │   ├── page.tsx              # 🔒 ZLH — Exam Countdown
-    │       │   └── loading.tsx           # 🔒 ZLH — Exam Countdown skeleton
-    │       ├── calculator/page.tsx       # 🔒 ZLH — Grade Calculator
-    │       ├── settings/
-    │       │   ├── page.tsx              # 🔒 PM — User settings
-    │       │   ├── loading.tsx           # 🔒 PM — Settings skeleton
-    │       │   └── profile/
-    │       │       ├── page.tsx          # 🔒 PM — Profile editor
-    │       │       └── loading.tsx       # 🔒 PM — Profile editor skeleton
-    │       ├── editor/
-    │       │   ├── page.tsx              # 🔒 ABC — Curriculum editor
-    │       │   ├── notes/page.tsx        # Split-screen Notes Editor
-    │       │   ├── curriculum/
-    │       │   │   └── page.tsx          # Curriculum library admin
-    │       │   ├── exam/
-    │       │   │   ├── page.tsx          # 🔒 ZLH — Exam Data editor
-    │       │   │   └── schedule/
-    │       │   │       └── page.tsx      # Exam schedule timeline input
-    │       ├── contribute/
-    │       │   ├── page.tsx              # Contribute hub
-    │       │   ├── countdown/
-    │       │   │   └── page.tsx          # Submit countdown data
-    │       │   └── grade-calculator/
-    │       │       └── page.tsx          # Submit grade boundary data
-    │       ├── resources/page.tsx        # General resource listing
-    │       ├── org-activities/
-    │       │   ├── page.tsx              # Organization activity feed
-    │       │   └── manage/
-    │       │       └── page.tsx          # 🔒 PM — Organization management
-    │       ├── share/
-    │       │   ├── note/[token]/page.tsx # Shared note view (no auth required)
-    │       │   ├── deck/[token]/page.tsx # Shared deck view
-    │       │   └── countdown/[token]/page.tsx # Shared countdown view
-    │       └── profile/
-    │           └── [username]/page.tsx   # 🔒 PM — Authenticated user profile
+└── packages/
+    ├── db/                               # Neon Postgres & Drizzle ORM (@the-ants/db)
+    │   ├── package.json
+    │   ├── drizzle.config.ts             # Drizzle Kit configuration
+    │   └── src/
+    │       ├── index.ts                  # Drizzle database client instance
+    │       ├── client.ts                 # Neon connection manager
+    │       └── schema/                   # Drizzle schema definitions (62 tables)
+    │           ├── auth.ts               # Better Auth tables
+    │           ├── profiles.ts           # User profiles & roles
+    │           ├── classrooms.ts         # Classrooms, assignments, quizzes
+    │           ├── clubs.ts              # Clubs, discussions, members
+    │           ├── study-tools.ts        # Timetable, pomodoro, flashcards, notes
+    │           ├── curriculum.ts         # Curriculums, subjects, topics
+    │           ├── exams.ts              # Exams, boundaries, countdowns
+    │           └── system.ts             # Notification queues & review submissions
     │
-    ├── components/                       # UI components
-    │   ├── about/                        # 🔒 PM — About page components (OrgTimeline, TeamMemberCard)
-    │   ├── homepage/                     # 🔒 PM (TYZ) — Public landing page components (RevealSection, BentoFeatures, HeroVisual, QualTrail, QualCarousel, RoleLadder, StatsRow, DotGrid, AntTrailPattern, AntHeroAccent, HomepageFonts)
-    │   ├── ui/                           # 🔒 PM — Shared atomic components
-    │   │   ├── Button.tsx
-    │   │   ├── Input.tsx
-    │   │   ├── Badge.tsx
-    │   │   ├── AvatarImage.tsx           # LQIP-aware avatar component
-    │   │   ├── AnimatedStat.tsx          # Count-up stat animation
-    │   │   ├── BackButton.tsx            # Reusable back navigation button
-    │   │   └── RelatedContent.tsx        # Cross-feature linking (related flashcards/notes by topic/curriculum)
-    │   ├── layout/                       # 🔒 PM — Global shell
-    │   │   ├── NavBar.tsx                # Flexbox nav with scroll-hide, solid dropdowns, theme toggle, role-aware groups
-    │   │   ├── Footer.tsx                # Global footer
-    │   │   └── RelatedPagesSidebar.tsx   # Context-aware left sidebar
-    │   ├── auth/                         # 🔒 PM — Login & signup forms
-    │   │   ├── LoginForm.tsx
-    │   │   └── SignupForm.tsx
-    │   ├── settings/                     # 🔒 PM
-    │   │   ├── AdvancedProfileEditor.tsx
-    │   │   ├── ProfileEditor.tsx
-    │   │   ├── CertificationEditor.tsx
-    │   │   ├── RoleUpgradeForm.tsx
-    │   │   └── RoleSwitcher.tsx
-    │   ├── profile/                      # 🔒 PM — Profile components
-    │   │   ├── ProfileHero.tsx
-    │   │   ├── ProfileActivity.tsx
-    │   │   ├── ProfileStats.tsx
-    │   │   ├── ContributorPublicProfile.tsx  # Full contributor profile view
-    │   │   ├── CertificationSection.tsx      # Certifications display
-    │   │   ├── ClubMembershipsPanel.tsx      # Club membership showcase
-    │   │   └── ShareProfileButton.tsx        # Profile sharing
-    │   ├── contributor-manager/          # 🔒 PM
-    │   │   ├── CompleteProfileForm.tsx
-    │   │   ├── InviteForm.tsx
-    │   │   ├── OtpVerification.tsx
-    │   │   ├── StepIndicator.tsx
-    │   │   └── UsersTable.tsx
-    │   ├── Lessons/                      # 🔒 ABC
-    │   │   ├── LessonTracker.tsx
-    │   │   └── TopicCard.tsx
-    │   ├── classrooms/                   # 🔒 TYZ
-    │   │   ├── ClassroomCard.tsx         # Card shown in classroom grid
-    │   │   ├── ClassroomList.tsx         # Main classroom list page
-    │   │   ├── ClassroomDetail.tsx       # Classroom detail with tabs, search, feedback
-    │   │   ├── AssignmentsPanel.tsx      # Assignment CRUD with grading
-    │   │   ├── QuizzesPanel.tsx          # Quiz list, preview, take, results
-    │   │   ├── QuizCreator.tsx           # Quiz creation wizard (manual + AI)
-    │   │   ├── QuizTakeModal.tsx         # Full-screen quiz taking modal
-    │   │   ├── ResourcesPanel.tsx        # Resource browsing with add/edit/delete
-    │   │   ├── DiscussionsPanel.tsx      # Discussion topics + replies
-    │   │   ├── LinksPanel.tsx            # Quick link sharing
-    │   │   └── MembersPanel.tsx          # Member list with roles
-    │   ├── clubs/                        # 🔒 TYZ
-    │   │   ├── ClubDetail.tsx            # Club detail with tabs (chat, announcements, links, members, projects, activity_timeline)
-    │   │   ├── ClubDiscovery.tsx         # Club discovery page
-    │   │   ├── AddProjectForm.tsx        # Club project creation form
-    │   │   ├── MemberProgressPanel.tsx   # Per-member contribution stats
-    │   │   └── MilestoneTracker.tsx      # Kanban milestone board
-    │   ├── countdown/                    # 🔒 ZLH
-    │   │   ├── AddCountdownModal.tsx
-    │   │   ├── CountdownCard.tsx
-    │   │   └── CountdownManager.tsx
-    │   ├── pomodoro/                     # 🔒 ABC
-    │   │   ├── TimerRing.tsx             # SVG circular progress ring with MM:SS display
-    │   │   ├── TimerControls.tsx         # Play/Pause/Reset buttons + keyboard shortcuts
-    │   │   ├── SettingsDrawer.tsx        # Duration sliders, volume, auto-start toggle
-    │   │   ├── SoundscapePicker.tsx      # Synthesized ambient sound card selector
-    │   │   ├── StatsPanel.tsx            # Today stats pills + hand-rolled SVG 7-day bar chart
-    │   │   └── ZenMode.tsx               # Fullscreen distraction-free overlay
-    │   ├── flashcards/                   # 🔒 ZLH (11 files)
-    │   │   ├── AICardParser.tsx
-    │   │   ├── AIPromptGenerator.tsx
-    │   │   ├── CardCreatorAI.tsx
-    │   │   ├── CardCreatorManual.tsx
-    │   │   ├── CreateDeckModal.tsx
-    │   │   ├── DeckCard.tsx
-    │   │   ├── DeckEditView.tsx
-    │   │   ├── DeckLibrary.tsx
-    │   │   ├── FlashcardText.tsx
-    │   │   ├── SessionSummary.tsx
-    │   │   └── StudySession.tsx
-    │   └── notes/                        # Notes features (13 files)
-    │       ├── AIPromptGenerator.tsx
-    │       ├── AnimationBlock.tsx
-    │       ├── BlockEditor.tsx
-    │       ├── BlockPreview.tsx
-    │       ├── MyNotesLibrary.tsx
-    │       ├── NoteCard.tsx
-    │       ├── NoteFilters.tsx
-    │       ├── NoteReaderModal.tsx
-    │       ├── NoteSubmitModal.tsx
-    │       ├── NoteViewer.tsx
-    │       ├── NotesEditor.tsx
-    │       ├── NotesLibrary.tsx
-    │       └── SavedNotesLibrary.tsx
-    │
-    ├── hooks/                            # Custom React Hooks
-    │   ├── useAuth.ts                    # 🔒 PM — Auth session wrapper
-    │   ├── useRole.ts                    # 🔒 PM — Role-aware persona context
-    │   ├── useProfile.ts                 # 🔒 PM — Public profile fetcher
-    │   ├── useContributorManager.ts      # 🔒 PM — Multi-step invite flow
-    │   ├── usePomodoro.ts                # 🔒 ABC
-    │   ├── useTimetable.ts               # 🔒 ABC
-    │   ├── useFlashcardSRS.ts            # 🔒 ZLH
-    │   ├── useClub.ts                    # 🔒 TYZ
-    │   ├── useClassroom.ts               # 🔒 TYZ — Classroom state (CRUD, assignments, quizzes, discussions, resources)
-    │   ├── useCountdown.ts               # 🔒 ZLH
-    │   ├── useNotes.ts                   # Notes library + editor state
-    │   ├── useLessons.ts                 # 🔒 ABC — Lesson tracking state
-    │   ├── useCourseManager.ts           # 🔒 ABC — Course manager state
-    │   ├── useExamReview.ts              # 🔒 ZLH — Exam data review
-    │   ├── useRealtimeChat.ts            # 🔒 TYZ — Real-time club chat
-    │   ├── useRealtimeClassroom.ts       # 🔒 TYZ — Real-time classroom events
-    │   ├── useRealtimePresence.ts        # 🔒 PM — User presence tracking
-    │   └── useZoomToFit.ts               # 🔒 PM — Canvas zoom utility
-    │
-    ├── context/                          # Global React Context Providers
-    │   ├── AuthContext.tsx               # 🔒 PM — Supabase session + auth lifecycle
-    │   ├── PersonaContext.tsx            # 🔒 PM — User Role State
-    │   └── ThemeContext.tsx              # 🔒 PM — Theme toggle (light/dark)
-    │
-    ├── actions/                          # Next.js Server Actions
-    │   ├── timetable.ts                  # 🔒 ABC
-    │   ├── flashcards.ts                 # 🔒 ZLH
-    │   ├── classrooms.ts                 # 🔒 TYZ
-    │   ├── clubs.ts                      # 🔒 TYZ
-    │   ├── editor.ts                     # 🔒 ABC
-    │   ├── exam-editor.ts                # 🔒 ZLH
-    │   ├── roles.ts                      # 🔒 PM
-    │   └── notes.ts                      # Notes server actions
-    │
-    ├── constants/                        # Static reference data
-    │   ├── homepage.ts                   # 🔒 PM — Homepage stats & qualification boards
-    │   ├── avatars.tsx                   # 🔒 PM — Avatar SVG components
-    │   ├── qualifications.ts             # 🔒 PM — Exam boards, subjects, series
-    │   ├── timetable.ts                  # 🔒 ABC
-    │   └── pomodoro.ts                   # 🔒 ABC
-    │
-    ├── lib/                              # Infrastructure clients & utilities (🔒 PM)
-    │   ├── supabase/
-    │   │   ├── client.ts                 # Browser-side Supabase client
-    │   │   ├── server.ts                 # Server-side Supabase client
-    │   │   ├── auth-actions.ts           # Auth helper actions
-    │   │   ├── middleware.ts             # Supabase middleware client
-    │   │   ├── pool.ts                   # Connection pool manager
-    │   │   ├── realtime.ts               # Realtime subscriptions
-    │   │   └── health.ts                 # Health check endpoint
-    │   ├── mock/
-    │   │   ├── database.ts               # MVP: Typed mock data facade (ALL features import from here)
-    │   │   └── timetable.ts              # Timetable-specific mock data
-    │   ├── srs/
-    │   │   └── algorithm.ts              # SM-2 / FSRS core algorithm
-    │   ├── timetable/
-    │   │   └── layout.ts                 # Timetable layout utilities
-    │   ├── pomodoro/
-    │   │   └── audio-engine.ts           # Web Audio API synthesized soundscapes (rain, brown noise, cafe, forest)
-    │   ├── quiz-ai.ts                    # Quiz AI prompt generator & response parser
-    │   ├── validateEnv.ts                # Environment variable validation
-    │   └── utils.ts                      # General helpers (cn, date formatting, getInitials, generateUsername)
-    │
-    └── types/                            # TypeScript Definitions (🔒 PM)
-        ├── index.ts                      # Shared app-wide types & interfaces
-        └── supabase.ts                   # Supabase CLI auto-generated DB types
+    └── shared-types/                     # Shared Types & Contracts (@the-ants/shared-types)
+        ├── package.json
+        ├── tsconfig.json
+        └── src/
+            ├── index.ts                  # Shared interfaces, DTOs & response contracts
+            └── schemas.ts                # Zod validation schemas
 ```
 
 ---
@@ -626,7 +415,7 @@ Club activity and contributions can appear on a user's public profile portfolio,
 7. **Styling Consistency:** Use Tailwind CSS v4 utility classes with CSS custom properties (`var(--foreground)`, `var(--primary)`, `var(--border)`, etc.). Use `lucide-react` for all icons.
 8. **Respect 🔒 Ownership:** Do not create, edit, or delete files marked with another developer's lock.
 9. **Role Upgrade Constraint:** Users always sign up as `student`. Role upgrades require `main_contributor` approval.
-10. **Supabase Query Pattern:** All Supabase queries must use the `database.ts` facade. Never call `supabase.from()` directly in component code. When transitioning from mock to live data, replace the facade implementation — never change the consumer interface.
+10. **Typed API & Server Actions:** All backend communication routes through typed Hono API client endpoints or Next.js server actions backed by Drizzle ORM. Maintain strict type safety across all requests and responses using `@the-ants/shared-types`.
 
 ---
 
@@ -691,12 +480,11 @@ Timetable events are stored in the `timetable_events` table with a rich relation
 ### 12.6 Technical Implementation
 - `'use client'` directive for all drag-and-drop interactions.
 - `@dnd-kit/core` + `@dnd-kit/utilities` for drag-and-drop.
-- `src/lib/mock/timetable.ts` — full mock database with 12 rich events, CRUD, recurrence expansion, and cross-feature virtual event builders.
-- `src/hooks/useTimetable.ts` — state management, navigation, filtering, CRUD, and client-side undo/redo history.
-- `src/actions/timetable.ts` — server actions (ready for Supabase migration).
-- `src/lib/timetable/layout.ts` — overlap detection and column width algorithm.
-- `src/constants/timetable.ts` — event type configs, colour presets, grid config, labels.
-- `src/types/timetable.ts` — all timetable TypeScript types.
+- `apps/web/src/hooks/useTimetable.ts` — state management, navigation, filtering, CRUD, and client-side undo/redo history.
+- `apps/web/src/actions/timetable.ts` — server actions communicating with Hono backend API and Neon PostgreSQL.
+- `apps/web/src/lib/timetable/layout.ts` — overlap detection and column width algorithm.
+- `apps/web/src/constants/timetable.ts` — event type configs, colour presets, grid config, labels.
+- `packages/shared-types` — timetable TypeScript types and Zod schemas.
 - Timezone-aware rendering using the user's local timezone.
 - **Undo/redo design**: `useTimetable` keeps two in-memory stacks (`history` / `redoStack`) of full event snapshots (before/after). Each mutation pushes `{ before, after }`; undo applies `before`, redo applies `after` (restore via `upsert` on `id`, or `delete` for created events). History is client-only and cleared on page refresh.
 - **Telegram reminder sync**: Every timetable mutation that changes an event's time (modal edit, drag-and-drop move, undo/redo restore) calls `actionEnqueueTimetableReminders` to re-schedule the reminder in `notification_queue`; delete and reminder-off cases call `actionClearSourceQueue`. This keeps the Telegram queue in sync with the event's current time on production.
@@ -1734,494 +1522,178 @@ All columns that reference another table via foreign key must have an index. Key
 - All indexes are created `CONCURRENTLY` in production to avoid locking.
 - Composite indexes are ordered by selectivity (most selective column first).
 - Partial indexes are preferred over full-table indexes when a query always includes a status/visibility filter.
-- Index maintenance (REINDEX) is scheduled quarterly via a Supabase cron job.
+- Index maintenance (REINDEX) is scheduled quarterly via automated maintenance jobs.
 - New indexes are validated with `EXPLAIN ANALYZE` before deployment to confirm query plan changes.
 
 ---
 
-## 27. Storage Bucket Configuration — Detailed Specification
+## 27. Cloudflare R2 Object Storage & Presigned URLs — Detailed Specification
 
 ### 27.1 Overview
-Supabase Storage is used for file uploads across features: avatars, notes images, role upgrade evidence, and assignment attachments. Each bucket has distinct access controls, file size limits, and MIME type restrictions.
+The platform uses **Cloudflare R2** for fast, edge-cached object storage with zero egress fees. Files (avatars, notes images, role upgrade evidence, and classroom assignment attachments) are uploaded securely via time-limited presigned S3-compatible URLs generated by the `@the-ants/api` Hono backend.
 
-### 27.2 Bucket Definitions
+### 27.2 Storage Bucket Namespaces
 
-| Bucket Name | Public Read | Write Access | Max File Size | Allowed MIME Types | Folder Pattern |
+| Namespace | Public Read | Write Access | Max File Size | Allowed MIME Types | Folder Key Pattern |
 |---|---|---|---|---|---|
-| `avatars` | Yes | Owner only (`auth.uid()`) | 5 MB | `image/jpeg`, `image/png`, `image/webp` | `{userId}/avatar.{ext}` |
-| `notes-images` | No (authenticated only) | Owner only (`auth.uid()`) | 10 MB | `image/jpeg`, `image/png`, `image/webp`, `image/gif` | `{userId}/{noteId}/{filename}` |
-| `role-upgrade-evidence` | No (owner + main_contributor) | Owner only (`auth.uid()`) | 20 MB | `application/pdf`, `image/jpeg`, `image/png` | `{userId}/{requestId}/{filename}` |
-| `assignment-attachments` | No (classroom members + teacher) | Teacher of classroom | 50 MB | `application/pdf`, `application/zip`, `application/msword`, `application/vnd.openxmlformats-officedocument.*`, `image/jpeg`, `image/png` | `{classroomId}/{assignmentId}/{filename}` |
+| `avatars` | Yes (Public CDN) | Owner only (`auth.userId`) | 5 MB | `image/jpeg`, `image/png`, `image/webp` | `avatars/{userId}/avatar.{ext}` |
+| `notes-images` | Yes (Public CDN) | Contributor / Owner | 10 MB | `image/jpeg`, `image/png`, `image/webp`, `image/gif` | `notes/{userId}/{noteId}/{filename}` |
+| `role-upgrade-evidence` | No (Owner + Main Contributor) | Applicant | 20 MB | `application/pdf`, `image/jpeg`, `image/png` | `evidence/{userId}/{requestId}/{filename}` |
+| `assignment-attachments` | Classroom Members | Teacher | 50 MB | `application/pdf`, `application/zip`, `application/msword`, `image/jpeg`, `image/png` | `assignments/{classroomId}/{assignmentId}/{filename}` |
 
-### 27.3 Bucket-Level RLS Policies
+### 27.3 Upload Pattern & Presigned URLs
+All client uploads use AWS S3 SDK / Cloudflare R2 presigned PUT URLs generated by the API:
 
-#### 27.3.1 avatars
-- **Public read**: `bucket_id = 'avatars'` — `FOR SELECT TO anon USING (true)`
-- **Owner write**: `bucket_id = 'avatars'` — `FOR INSERT/UPDATE/DELETE TO authenticated USING (auth.uid() = owner)`
-
-#### 27.3.2 notes-images
-- **Authenticated read**: `bucket_id = 'notes-images'` — `FOR SELECT TO authenticated USING (true)`
-- **Owner write**: `bucket_id = 'notes-images'` — `FOR INSERT/UPDATE/DELETE TO authenticated USING (auth.uid() = owner)`
-
-#### 27.3.3 role-upgrade-evidence
-- **Restricted read**: `bucket_id = 'role-upgrade-evidence'` — `FOR SELECT TO authenticated USING (auth.uid() = owner OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'main_contributor'))`
-- **Owner write**: `bucket_id = 'role-upgrade-evidence'` — `FOR INSERT/UPDATE/DELETE TO authenticated USING (auth.uid() = owner)`
-
-#### 27.3.4 assignment-attachments
-- **Classroom read**: `bucket_id = 'assignment-attachments'` — `FOR SELECT TO authenticated USING (EXISTS (SELECT 1 FROM classroom_members WHERE classroom_id = (regexp_match(name, '^([^/]+)'))[1]::uuid AND user_id = auth.uid()))`
-- **Teacher write**: `bucket_id = 'assignment-attachments'` — `FOR INSERT/UPDATE/DELETE TO authenticated USING (EXISTS (SELECT 1 FROM classrooms WHERE id = (regexp_match(name, '^([^/]+)'))[1]::uuid AND creator_id = auth.uid()))`
-
-### 27.4 Configuration
-```toml
-# supabase/config.toml
-[storage]
-enabled = true
-
-[storage.buckets.avatars]
-public = true
-file_size_limit = 5242880  # 5 MB
-allowed_mime_types = ["image/jpeg", "image/png", "image/webp"]
-
-[storage.buckets.notes-images]
-public = false
-file_size_limit = 10485760  # 10 MB
-allowed_mime_types = ["image/jpeg", "image/png", "image/webp", "image/gif"]
-
-[storage.buckets.role-upgrade-evidence]
-public = false
-file_size_limit = 20971520  # 20 MB
-allowed_mime_types = ["application/pdf", "image/jpeg", "image/png"]
-
-[storage.buckets.assignment-attachments]
-public = false
-file_size_limit = 52428800  # 50 MB
-allowed_mime_types = ["application/pdf", "application/zip", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "image/jpeg", "image/png"]
+```text
+[ Client (Next.js) ]
+       │ 1. POST /api/storage/presigned-url { namespace, filename, contentType }
+       ▼
+[ Hono API Worker ]  ── (Validates Session & Role Permissions)
+       │ 2. Returns { uploadUrl (expires in 60s), publicUrl, key }
+       ▼
+[ Client (Next.js) ]
+       │ 3. Direct HTTP PUT to uploadUrl with raw binary payload
+       ▼
+[ Cloudflare R2 Bucket ]
+       │ 4. HTTP 200 OK
+       ▼
+[ Client (Next.js) ] ── 5. Calls Server Action / API to persist asset reference in Neon DB
 ```
-
-### 27.5 Client-Side Upload Pattern
-All uploads go through a server-side helper function to generate signed URLs or validate upload tokens. The pattern:
-
-1. Client calls `POST /api/storage/upload-url` with bucket name and file details.
-2. Server validates permissions (role, ownership, membership).
-3. Server returns a signed upload URL with a 60-second expiry.
-4. Client uploads directly to the signed URL.
-5. On success, client calls the relevant mutation (e.g., update profile avatar URL, insert note image reference).
-
-**Never upload directly from client to Supabase Storage using the anon key.** Always use the signed URL pattern to avoid exposing storage bucket names and paths.
 
 ---
 
-## 28. Realtime Subscriptions Architecture — Detailed Specification
+## 28. Realtime Architecture & Live Updates — Detailed Specification
 
 ### 28.1 Overview
-Supabase Realtime is used for live features: club chat messages, classroom notifications, and online presence tracking. Each subscription channel is scoped to a specific resource and gated by membership-based authorization.
+Realtime features (Club Chat, Classroom Live Activity, and Presence) are delivered via Hono WebSocket / Server-Sent Events (SSE) and client-side optimistic updates:
 
-### 28.2 Channel Definitions
+### 28.2 Channels & Event Handlers
 
-| Channel Pattern | Table(s) | Event Types | Authorization | Feature |
-|---|---|---|---|---|
-| `club:{club_id}` | `club_messages` | INSERT | Active club member (verified via `club_members`) | Club Chat |
-| `classroom:{classroom_id}` | `assignments`, `quizzes`, `announcements` | INSERT, UPDATE | Classroom member (verified via `classroom_members`) | Classroom Notifications |
-| `presence:global` | N/A (presence) | Presence sync | Authenticated user | Online Status |
+| Channel Pattern | Event Types | Authorization | Feature |
+|---|---|---|---|
+| `club:{clubId}` | `new_message`, `member_joined` | Active club member | Club Live Chat |
+| `classroom:{classroomId}` | `assignment_published`, `quiz_started` | Classroom member | Classroom Live Feeds |
+| `presence:user` | `heartbeat`, `status_change` | Authenticated user | Online Status & Activity |
 
-### 28.3 Channel Subscription Rules
-
-#### 28.3.1 Club Chat (`club:{club_id}`)
-- **Subscription**: Client subscribes to `club:{club_id}` when the club chat tab is open.
-- **Authorization**: Server-side `channel_authorization` hook checks `club_members` for `user_id = auth.uid() AND club_id = {club_id}`.
-- **Events**: `INSERT` only. Clients listen for new messages. Messages are never updated or deleted via Realtime (rely on page refresh for edits/deletions).
-- **Payload**: Full `club_messages` row (id, club_id, sender_id, message, created_at). Sender name resolved client-side from profile cache.
-- **Cleanup**: Unsubscribe when the component unmounts or the user navigates away from the chat tab.
-
-#### 28.3.2 Classroom Notifications (`classroom:{classroom_id}`)
-- **Subscription**: Client subscribes to `classroom:{classroom_id}` when viewing the classroom page.
-- **Authorization**: Server-side `channel_authorization` hook checks `classroom_members` for `user_id = auth.uid() AND classroom_id = {classroom_id}`.
-- **Events**: `INSERT` on `assignments`, `quizzes` tables. `UPDATE` on `assignments` (status change).
-- **Payload**: Minimal notification payload: `{ table, event, record_id, title, classroom_id }`. Full record fetched on click.
-- **UI Behavior**: Shows a toast notification ("New assignment: [title]") with a link to the relevant page.
-
-#### 28.3.3 Presence Tracking (`presence:global`)
-- **Subscription**: Client subscribes to `presence:global` on app load (authenticated routes only).
-- **Authorization**: Authenticated user.
-- **Events**: Presence sync (enter, leave, heartbeat every 30 seconds).
-- **Payload**: `{ user_id, display_name, avatar_url }`.
-- **UI Behavior**: Avatar indicator (green dot) on profile cards, club member list, and classroom member list. Not shown for privacy — users must have a public profile.
-
-### 28.4 Configuration
-```toml
-# supabase/config.toml
-[realtime]
-enabled = true
-wal_level = logical
-
-[realtime.channels.club_chat]
-enabled = true
-tables = ["club_messages"]
-publication = "supabase_realtime"
-
-[realtime.channels.classroom_notifications]
-enabled = true
-tables = ["assignments", "quizzes"]
-publication = "supabase_realtime"
-
-[realtime.channels.presence]
-enabled = true
-```
-
-### 28.5 Client-Side Subscription Pattern
+### 28.3 Chat & Event Subscription Hook
 ```typescript
-// Example: Club chat subscription
-import { supabase } from '@/lib/supabase/client'
+// apps/web/src/hooks/useRealtimeChat.ts
+import { useEffect, useState } from 'react';
+import type { ClubMessage } from '@the-ants/shared-types';
 
-export function subscribeToClubChat(clubId: string, onMessage: (msg: ClubMessage) => void) {
-  const channel = supabase
-    .channel(`club:${clubId}`)
-    .on(
-      'postgres_changes',
-      { event: 'INSERT', schema: 'public', table: 'club_messages', filter: `club_id=eq.${clubId}` },
-      (payload) => onMessage(payload.new as ClubMessage)
-    )
-    .subscribe()
+export function useRealtimeChat(clubId: string) {
+  const [messages, setMessages] = useState<ClubMessage[]>([]);
 
-  return () => { supabase.removeChannel(channel) }
+  useEffect(() => {
+    const eventSource = new EventSource(`${process.env.NEXT_PUBLIC_API_URL}/api/clubs/${clubId}/events`);
+    
+    eventSource.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'new_message') {
+        setMessages((prev) => [...prev, data.message]);
+      }
+    };
+
+    return () => eventSource.close();
+  }, [clubId]);
+
+  return { messages };
 }
 ```
 
-### 28.6 Error Handling
-- **Authorization failure**: If the server denies channel subscription, the client shows "You don't have access to this chat" and falls back to static list view.
-- **Reconnection**: Supabase client automatically reconnects. On reconnect, the client refreshes the full list to catch missed messages.
-- **Rate limiting**: Maximum 1 message per second per user per club chat. Enforced client-side and server-side.
-
-### 28.7 Realtime Publication Configuration
-The `supabase_realtime` publication must include only tables that need realtime subscriptions to minimize WAL overhead:
-- `club_messages`
-- `assignments`
-- `quizzes`
-
 ---
 
-## 29. Auth & Middleware Integration — Detailed Specification
+## 29. Better Auth & Session Middleware — Detailed Specification
 
 ### 29.1 Overview
-Authentication is handled by Supabase Auth with Next.js middleware for route protection. The session is managed via `@supabase/ssr` package for server-side rendering compatibility. Roles are embedded in JWT claims via a `custom_access_token` database hook.
+Authentication is powered by **Better Auth** with Neon PostgreSQL session persistence and Next.js App Router Edge middleware. Sessions are securely signed and transmitted via `httpOnly`, `SameSite=Lax` cookies.
 
-### 29.2 Session Management
+### 29.2 Session Lifecycle & Role Claims
+- **Sign Up**: New accounts are created with default `role: "student"`.
+- **JWT & Session Cookies**: Session cookies persist authentication state across `apps/web` and `apps/api`.
+- **Role Verification**: Middleware and API routes verify the 4-tier role hierarchy:
+  `student` (0) → `teacher` (1) → `contributor` (2) → `main_contributor` (3)
 
-#### 29.2.1 Session Refresh Strategy
-- **Client-side**: `supabase.auth.getSession()` on app load. Session auto-refresh via `onAuthStateChange` listener.
-- **Server-side (RSC)**: `createServerClient()` with cookies from `next/headers`. Session read from cookie on every request.
-- **Middleware**: `createMiddlewareClient()` refreshes the session cookie on every request. If expired, clears cookie and redirects to `/login`.
-- **Token expiry**: Access token expires after 3600 seconds (1 hour). Refresh token expires after 2592000 seconds (30 days). Refresh is handled transparently by the Supabase client library.
+### 29.3 Route Protection Matrix
 
-#### 29.2.2 Cookie Configuration
-```typescript
-// src/lib/supabase/middleware.ts
-import { createMiddlewareClient } from '@supabase/ssr'
-import { NextResponse, type NextRequest } from 'next/server'
-
-export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request })
-  const supabase = createMiddlewareClient({ request, response: supabaseResponse })
-  const { data: { user } } = await supabase.auth.getUser()
-  // No user → redirect to login unless on public route
-  if (!user && !request.nextUrl.pathname.startsWith('/(public)') && request.nextUrl.pathname !== '/login' && request.nextUrl.pathname !== '/signup') {
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    url.searchParams.set('redirect', request.nextUrl.pathname)
-    return NextResponse.redirect(url)
-  }
-  return supabaseResponse
-}
-```
-
-### 29.3 Custom Access Token Hook (JWT Role Claim)
-A Supabase Database Hook (`custom_access_token`) is created to embed the user's role into the JWT on every token refresh:
-
-```sql
--- supabase/migrations/YYYYMMDDHHMMSS_custom_access_token_hook.sql
-CREATE OR REPLACE FUNCTION public.custom_access_token_hook(event jsonb)
-RETURNS jsonb
-LANGUAGE plpgsql
-STABLE
-AS $$
-  DECLARE
-    claims jsonb;
-    user_role text;
-  BEGIN
-    claims := event->'claims';
-    SELECT role INTO user_role FROM public.profiles WHERE id = (event->>'user_id')::uuid;
-    claims := jsonb_set(claims, '{user_role}', to_jsonb(COALESCE(user_role, 'student')));
-    RETURN jsonb_set(event, '{claims}', claims);
-  END;
-$$;
-
-CREATE OR REPLACE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW
-  EXECUTE FUNCTION public.handle_new_user();
-```
-
-The `useRole()` hook reads `user_role` from the JWT claims:
-```typescript
-// src/hooks/useRole.ts
-import { useSupabase } from '@/providers/SupabaseProvider'
-
-export function useRole(): 'student' | 'teacher' | 'contributor' | 'main_contributor' | null {
-  const { session } = useSupabase()
-  return (session?.user?.app_metadata?.user_role as any) ?? null
-}
-```
-
-### 29.4 Route Protection Matrix
-
-| Route Pattern | Auth Required | Min Role | Redirect |
+| Route Pattern | Auth Required | Minimum Role Required | Unauthenticated Action |
 |---|---|---|---|
-| `/(public)/*` | No | None | N/A |
-| `/login`, `/signup` | No (redirect if authed) | None | `/dashboard` if already authed |
-| `/dashboard` | Yes | Student | `/login?redirect=/dashboard` |
-| `/classrooms/*` | Yes | Student | `/login` |
-| `/contributor/*` | Yes | Contributor | `/dashboard` with "Access denied" toast |
-| `/main-contributor/*` | Yes | Main Contributor | `/dashboard` with "Access denied" toast |
-| `/settings/*` | Yes | Student | `/login` |
-| `/profile/*` | No | None | N/A (public pages) |
-
-### 29.5 Role Upgrade & JWT Refresh
-When a user's role is upgraded:
-1. The `profiles.role` field is updated by the main_contributor.
-2. The user must sign out and sign back in to receive a new JWT with updated `user_role` claim.
-3. The middleware detects the expired session and forces re-authentication.
-4. Alternative: User can manually click "Refresh Session" in settings to trigger a token refresh without full logout.
-
-### 29.6 Error Handling
-- **Session expired**: Middleware redirects to `/login` with `?session_expired=true` query parameter. Login page shows "Your session has expired. Please log in again."
-- **Role denied**: Component-level `useRole()` check shows a toast "You don't have access to this feature." The page renders an empty state with an upgrade prompt.
-- **Auth API failure**: Fall back to cached session data for up to 5 minutes. Show "Authentication service unavailable" warning banner.
+| `/(public)/*`, `/explore/*`, `/about` | No | None | Accessible |
+| `/login`, `/signup` | No | None | Redirects to `/dashboard` if authenticated |
+| `/dashboard`, `/student/*` | Yes | Student | Redirects to `/login?redirect={path}` |
+| `/timetable`, `/pomodoro`, `/flashcards` | Yes | Student | Redirects to `/login` |
+| `/teacher/*`, `/classrooms/create` | Yes | Teacher | Shows access upgrade banner |
+| `/contributor/*`, `/editor/*` | Yes | Contributor | Redirects to `/dashboard` with 403 status |
+| `/main-contributor/*` | Yes | Main Contributor | Redirects to `/dashboard` with 403 status |
 
 ---
 
-## 30. Seed Data Strategy — Detailed Specification
+## 30. Neon Database Seeding Strategy — Detailed Specification
 
 ### 30.1 Overview
-Seed data provides realistic development and demo datasets for all features. Seeds are loaded in dependency order to respect foreign key constraints. Environment-specific seed variants allow different data sets for development, staging, and production.
+Database seed fixtures reside in `packages/db/src/seed.ts` and populate curriculum standards (CAIE, Edexcel, IGCSE, IAL, GED, Matriculation), subject boundaries, sample questions, and baseline test accounts.
 
-### 30.2 Seed File Structure
-
-```
-supabase/
-  seed.sql                          # Main seed file (development + demo data)
-  seed-dev.sql                      # Development-specific overrides (auto-generated content)
-  seed-staging.sql                  # Staging-specific data (subset for testing)
-```
-
-The main `seed.sql` is loaded via `supabase db seed` and follows the dependency order below.
-
-### 30.3 Seed Loading Order
-
-| Order | Table(s) | Purpose | Dependencies |
-|---|---|---|---|
-| 1 | `profiles` | 4 sample users (one per role) | None |
-| 2 | `contributor_profiles` | Extended profiles for Contributor + Main Contributor | `profiles.id` |
-| 3 | `student_profiles`, `teacher_profiles` | Role-specific extensions | `profiles.id` |
-| 4 | `curriculums` | 2 sample curriculums (IGCSE, A-Level) | `profiles.id` (created_by) |
-| 5 | `subjects` | Subjects per curriculum (Math, Physics, Chemistry, English, Biology) | `curriculums.id` |
-| 6 | `topics` | Topics per subject (5-10 each) | `subjects.id` |
-| 7 | `notes` | 3 sample notes (2 published, 1 draft) | `profiles.id`, `subjects.id` |
-| 8 | `decks` | 2 sample flashcard decks | `profiles.id` |
-| 9 | `cards` | 10 sample cards per deck | `decks.id` |
-| 10 | `classrooms` | 1 sample classroom | `profiles.id` (teacher) |
-| 11 | `classroom_members` | 2 students in sample classroom | `classrooms.id`, `profiles.id` |
-| 12 | `clubs` | 1 sample club | `profiles.id` (contributor) |
-| 13 | `club_members` | Contributor (leader) + 1 member in sample club | `clubs.id`, `profiles.id` |
-| 14 | `exams` | 5 sample exam records (IGCSE + A-Level papers) | `subjects.id` |
-| 15 | `exam_schedules` | 3 sample exam schedules | `exams.id` |
-| 16 | `grade_boundaries` | Boundary tables for 2 subjects | `subjects.id` |
-| 17 | `timetable_events` | 5 sample events for student user | `profiles.id` |
-| 18 | `pomodoro_sessions` | 3 sample session records | `profiles.id` |
-| 19 | `exam_countdowns` | 2 sample countdown entries | `profiles.id`, `exams.id` |
-| 20 | `grade_entries` | 1 sample grade calculation | `profiles.id` |
-| 21 | `topic_progress` | 3 sample topic progress records | `profiles.id`, `topics.id` |
-
-### 30.4 Sample Profile Data (seed.sql)
-
-```sql
--- Sample profiles covering all 4 roles
-INSERT INTO profiles (id, username, display_name, avatar_url, bio, role, is_public) VALUES
-  ('00000000-0000-0000-0000-000000000001', 'alice_student', 'Alice Johnson', NULL, 'A Level student studying Maths and Physics.', 'student', true),
-  ('00000000-0000-0000-0000-000000000002', 'bob_teacher', 'Bob Smith', NULL, 'Experienced Maths teacher.', 'teacher', true),
-  ('00000000-0000-0000-0000-000000000003', 'carol_contributor', 'Carol Williams', NULL, 'Physics curriculum contributor.', 'contributor', true),
-  ('00000000-0000-0000-0000-000000000004', 'dave_maintainer', 'Dave Brown', NULL, 'Platform maintainer and senior reviewer.', 'main_contributor', true);
-```
-
-### 30.5 Environment-Specific Seeds
-- **Development (`seed.sql`)**: All sample data from the loading order table above. Used for local development and manual testing.
-- **Staging (`seed-staging.sql`)**: Minimal subset — 2 profiles (student + main_contributor), 1 curriculum, 1 classroom, 1 club. Used for CI/CD pipeline tests.
-- **Production**: No seed data loaded in production. The production database starts empty except for curriculum/exam boundary data loaded via CSV import (see Section 24).
-
-### 30.6 Seed Loading Command
+### 30.2 Execution Command
 ```bash
-# Load all seeds (development)
-npx supabase db seed
-
-# Load specific seed file
-psql "$DATABASE_URL" -f supabase/seed.sql
-
-# Reset and re-seed
-npx supabase db reset
+# From repository root:
+npm run seed --workspace=@the-ants/db
 ```
 
-### 30.7 Seed Data Reset
-- **Local development**: `npx supabase db reset` drops all data and re-runs all migrations + seed.
-- **Staging**: Seeds are loaded once during initial deployment. Manual re-seed requires a database branch reset.
-- **Production**: Seeds are never automatically loaded. The database starts empty; curriculum/exam data is loaded via Contributor tools.
+### 30.3 Seed Data Ordering & Dependency Resolution
+1. **System Profiles**: 4 test accounts (Student, Teacher, Contributor, Main Contributor).
+2. **Curriculum Hierarchy**: Qualification boards → Subjects → Topics → Revision units.
+3. **Exam Metadata**: Exam dates, series codes, and grade boundary matrices.
+4. **Interactive Flashcards & Notes**: Curated high-yield study decks and verified notes.
 
 ---
 
-## 31. Connection Pooling Configuration — Detailed Specification
+## 31. Neon Serverless Postgres & Connection Pooling — Detailed Specification
 
 ### 31.1 Overview
-Supabase provides PgBouncer-based connection pooling to manage database connections efficiently. The pooler runs in **transaction mode**, which is compatible with serverless functions and Next.js server components.
+**Neon Serverless Postgres** scales compute independently from storage with instant branching and pooled WebSockets / HTTP endpoints via `@neondatabase/serverless`.
 
-### 31.2 Connection Pooler Settings
+### 31.2 Connection Modes
+- **Pooled WebSockets / HTTP (`DATABASE_URL`)**: Utilized in serverless environments (Cloudflare Workers, Next.js Server Components, Server Actions) to eliminate cold starts and avoid TCP connection limits.
+- **Direct Connection (`DIRECT_URL`)**: Utilized by Drizzle Kit for running schema migrations, introspection, and DDL commands.
 
-| Setting | Value | Description |
-|---|---|---|
-| Pool Mode | `transaction` | Connections are released after each transaction completes |
-| Default Pool Size | 15 | Max concurrent connections from the pooler to the database |
-| Prepared Statements | `false` (default) | Prepared statements persist across connections in transaction mode; must use `?` parameterized queries instead |
-| Connection String (Pooled) | `postgresql://[user]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1` | Pooled connection (port 6543) |
-| Connection String (Direct) | `postgresql://[user]:[password]@aws-0-[region].supabase.com:5432/postgres` | Direct connection (port 5432) |
-
-### 31.3 Application-Side Connection Management
-
-#### 31.3.1 Server Components (RSC)
-- Use the **pooled connection** (port 6543) via `createServerClient()`.
-- Each server component creates a short-lived connection, executes the query, and releases.
-- `connection_limit=1` in the connection string ensures each serverless invocation gets exactly one connection.
-
-#### 31.3.2 Server Actions & API Routes
-- Use the **pooled connection** (port 6543).
-- Wrap mutations in explicit transactions to ensure PgBouncer releases the connection promptly.
-- Never hold connections open across `await` boundaries inside Server Actions.
-
-#### 31.3.3 Client-Side
-- Supabase client library manages its own internal session-based connection pool.
-- No direct database connections from client code — all queries go through the Supabase client which automatically routes through the pooler.
-
-### 31.4 Prepared Statement Considerations
-In transaction mode, PgBouncer does not support prepared statements across transactions. All Supabase client queries use parameterized queries (not prepared statements), so this is handled automatically.
-
-### 31.5 Max Connections Per Feature
-
-| Feature | Expected Concurrent Users | Estimated Queries Per Request | Recommended Pool Connections |
-|---|---|---|---|
-| Dashboard | High (all authenticated users) | 5-8 | 5 |
-| Classroom | Medium (per classroom group) | 3-6 | 4 |
-| Club Chat | Medium (per club) | 1-2 (long-poll via Realtime) | 2 |
-| Flashcards | High (per user session) | 3-5 | 4 |
-| Exam Countdown | Medium | 2-3 | 2 |
-| Grade Calculator | Low-Medium | 4-6 | 2 |
-| Notes Editor | Low (Contributor-only) | 3-4 | 1 |
-| Review Queue | Very Low (Main Contributor only) | 2-3 | 1 |
-
-### 31.6 Monitoring
-- Monitor `pgbouncer.max_client_conn` — alerts if exceeding 80% (12 of 15).
-- Monitor average connection wait time — alert if > 100ms.
-- Monitor connection age — transaction mode connections should cycle every < 60 seconds.
-- Dashboard: Supabase Studio → Database → Pooling metrics.
-
-### 31.7 Error Handling
-- **Too many connections**: Application shows "Service temporarily unavailable. Please try again." Retry with exponential backoff (1s, 2s, 4s, max 16s).
-- **Connection timeout**: `statement_timeout = 30000` (30 seconds) set on the database. Queries exceeding this return a timeout error with the query text for debugging.
-- **Pool exhaustion**: If pool is full, new requests queue. Queue timeout after 10 seconds returns a 503 with "Too many requests. Please try again later."
+### 31.3 Reliability & Autoscaling
+- Autoscaling compute automatically adjusts from 0.25 CU to 4 CU under peak student revision loads (exam periods).
+- Neon connection pooler handles 10,000+ concurrent student sessions effortlessly with zero manual PgBouncer maintenance.
 
 ---
 
-## 32. Migration Strategy — Detailed Specification
+## 32. Drizzle ORM Schema & Drizzle Kit Migrations — Detailed Specification
 
 ### 32.1 Overview
-Database schema changes are managed through versioned migration files. Each migration is applied in order and is irreversible (no rollback migrations). Changes to the live database follow a review-and-test process before applying to production.
+All 62 database tables are defined using TypeScript in `packages/db/src/schema/`. Schema changes are managed declaratively using **Drizzle Kit**.
 
-### 32.2 Migration File Naming Convention
-```
-YYYYMMDDHHMMSS_descriptive_name.sql
-```
-
-Format:
-- **Timestamp**: UTC timestamp of migration creation (not application), e.g., `20260701120000`.
-- **Separator**: Single underscore `_`.
-- **Description**: Lowercase snake_case descriptive name, e.g., `create_profiles_table`, `add_rls_policies`.
-- **Extension**: `.sql`.
-
-Examples:
-```
-20260701120000_create_profiles_table.sql
-20260701130000_add_classroom_tables.sql
-20260701140000_enable_rls.sql
-20260701150000_add_indexes.sql
-20260701160000_seed_initial_data.sql
+### 32.2 Drizzle Schema Organization
+```text
+packages/db/src/schema/
+├── auth.ts          # Better Auth user, session, account, and verification tables
+├── profiles.ts      # Profiles, student_profiles, teacher_profiles, contributor_profiles
+├── classrooms.ts    # Classrooms, members, assignments, submissions, quizzes
+├── clubs.ts         # Clubs, members, discussions, announcements, milestones
+├── study-tools.ts   # Timetable events, pomodoro sessions, flashcard decks, cards, notes
+├── curriculum.ts    # Curriculums, subjects, topics, learning objectives
+├── exams.ts         # Exams, exam countdowns, grade boundaries, user enrollments
+└── system.ts        # Notification queue, review submissions, audit history
 ```
 
-### 32.3 Required Migration Files (In Order)
-
-| Order | Milestone | Migration File | Description |
-|---|---|---|---|
-| 1 | Foundation | `20260701120000_create_profiles_table.sql` | Create `profiles`, `contributor_profiles`, `student_profiles`, `teacher_profiles` tables. Auth trigger for new user profile creation. |
-| 2 | Curriculum | `20260701121000_create_curriculum_tables.sql` | Create `curriculums`, `subjects`, `topics`, `resources` tables with hierarchy. |
-| 3 | Classroom | `20260701122000_create_classroom_tables.sql` | Create `classrooms`, `classroom_members`, `classroom_curriculums`, `assignments`, `assignment_submissions`, `quizzes`, `quiz_attempts`, `discussion_topics`, `discussion_replies`, `classroom_resources` tables. |
-| 4 | Club | `20260701123000_create_club_tables.sql` | Create `clubs`, `club_members`, `club_messages`, `club_announcements`, `club_links`, `club_join_requests`, `club_projects`, `club_events`, `club_curriculums`, `club_subjects` tables. |
-| 5 | Study Tools | `20260701124000_create_study_tool_tables.sql` | Create `timetable_events`, `pomodoro_sessions`, `decks`, `cards`, `card_reviews`, `notes`, `user_saved_notes` tables. |
-| 6 | Exam | `20260701125000_create_exam_tables.sql` | Create `exams`, `exam_schedules`, `exam_countdowns`, `grade_boundaries`, `grade_entries`, `user_enrollments`, `user_exam_overrides`, `user_exam_history` tables. |
-| 7 | Curriculum Tracking | `20260701126000_create_tracking_tables.sql` | Create `user_curriculums`, `topic_progress` tables. |
-| 8 | Review | `20260701127000_create_review_tables.sql` | Create `editor_submissions`, `review_queue`, `version_history` tables. |
-| 9 | Role Upgrade | `20260701128000_create_role_upgrade_tables.sql` | Create `role_upgrade_requests`, `role_upgrade_applications` tables. |
-| 10 | Auth Hook | `20260701129000_custom_access_token_hook.sql` | Create `custom_access_token_hook` function and attach to auth event. |
-| 11 | RLS Enablement | `20260701130000_enable_rls.sql` | Enable RLS on all tables. Create all RLS policies from Section 25. |
-| 12 | Indexes | `20260701131000_add_indexes.sql` | Create all indexes from Section 26. |
-| 13 | Storage | `20260701132000_create_storage_buckets.sql` | Create Storage buckets from Section 27. Create bucket-level RLS policies. |
-| 14 | Realtime | `20260701133000_configure_realtime.sql` | Configure `supabase_realtime` publication for tables listed in Section 28. |
-| 15 | Seed Data | `20260701134000_seed_initial_data.sql` | Load seed data from Section 30 for development environments. |
-
-### 32.4 Migration Application Process
-
-#### 32.4.1 Local Development
+### 32.3 Migration Commands
 ```bash
-# Create a new migration
-npx supabase migration new create_classroom_tables
+# Generate SQL migration files from schema changes
+npm run db:generate --workspace=@the-ants/db
 
-# Apply all pending migrations
-npx supabase db push
+# Apply migrations to the Neon Postgres database
+npm run db:migrate --workspace=@the-ants/db
 
-# Reset (drop all + re-apply all migrations + seed)
-npx supabase db reset
+# Push schema directly to database (development)
+npm run db:push --workspace=@the-ants/db
+
+# Open Drizzle Studio UI to inspect tables
+npm run db:studio --workspace=@the-ants/db
 ```
-
-#### 32.4.2 Staging
-- Migrations are applied automatically via CI/CD pipeline when merged to `staging` branch.
-- `npx supabase db push --db-url "$STAGING_DATABASE_URL"`
-- Seed data is loaded only once during initial staging setup.
-
-#### 32.4.3 Production
-- **Review Required**: Every migration must be reviewed by a second developer (preferably PM).
-- **Applied manually**: PM applies migrations via `npx supabase db push --db-url "$PRODUCTION_DATABASE_URL"`.
-- **No auto-apply**: Production migrations are never applied via CI/CD.
-- **Backup required**: A full database backup is taken before applying any production migration.
-- **Rollback plan**: If a migration causes issues, restore from backup. There are no down migrations.
-
-### 32.5 Migration Testing Checklist
-Before applying any migration to production:
-- [ ] Migration applied successfully to staging environment
-- [ ] `EXPLAIN ANALYZE` run on all new queries to verify index usage
-- [ ] RLS policies tested with all 4 roles (including unauthenticated)
-- [ ] Seed data loads without foreign key violations
-- [ ] Application starts without TypeScript errors
-- [ ] No breaking changes to the `database.ts` facade interface
-- [ ] Backup of production database downloaded and verified
-
-### 32.6 Migration Version Control
-- All migration files are committed to the repository under `supabase/migrations/`.
-- Migrations are never edited after application (immutable).
-- If a change is needed, create a new migration — never modify an existing one.
-- The `supabase/migrations/` folder contains the single source of truth for database schema history.
 
 ---
 

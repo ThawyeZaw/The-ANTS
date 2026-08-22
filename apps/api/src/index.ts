@@ -16,6 +16,7 @@ import { createCurriculumRoutes } from './routes/curriculum';
 import { createEditorRoutes } from './routes/editor';
 import { createStorageRoutes } from './routes/storage';
 import { createCronRoutes } from './routes/cron';
+import { createProfileRoutes } from './routes/profile';
 
 type Bindings = {
   DATABASE_URL: string;
@@ -43,11 +44,20 @@ app.use(
   })
 );
 
+let currentEnv: Bindings | null = null;
+
+// Middleware to capture worker environment
+app.use('*', async (c, next) => {
+  currentEnv = c.env;
+  await next();
+});
+
 // DB getter helper
 const getDatabase = (c?: any) => {
+  const env = c?.env || currentEnv;
   const dbUrl =
-    c?.env?.NEON_DATABASE_URL ||
-    c?.env?.DATABASE_URL ||
+    env?.NEON_DATABASE_URL ||
+    env?.DATABASE_URL ||
     process.env.NEON_DATABASE_URL ||
     process.env.DATABASE_URL ||
     '';
@@ -60,10 +70,31 @@ app.get('/health', (c) => {
 });
 
 // Better Auth
-app.on(['POST', 'GET'], '/api/auth/**', (c) => {
-  const dbUrl = c.env.NEON_DATABASE_URL || c.env.DATABASE_URL || process.env.DATABASE_URL || '';
-  const auth = getAuth(dbUrl);
-  return auth.handler(c.req.raw);
+app.all('/api/auth/*', async (c) => {
+  try {
+    const dbUrl = c.env?.NEON_DATABASE_URL || c.env?.DATABASE_URL || process.env.DATABASE_URL || '';
+    console.log('[API Auth] dbUrl present:', !!dbUrl, 'length:', dbUrl.length, 'url:', c.req.url, 'method:', c.req.method);
+    const auth = getAuth(dbUrl);
+    const res = await auth.handler(c.req.raw);
+    console.log('[API Auth] Response status:', res.status);
+    return res;
+  } catch (err: any) {
+    console.error('[API Auth] Handler error:', err);
+    return c.json({ error: err?.message || 'Auth internal error', stack: err?.stack }, 500);
+  }
+});
+app.all('/api/auth', async (c) => {
+  try {
+    const dbUrl = c.env?.NEON_DATABASE_URL || c.env?.DATABASE_URL || process.env.DATABASE_URL || '';
+    console.log('[API Auth] dbUrl present:', !!dbUrl, 'length:', dbUrl.length, 'url:', c.req.url, 'method:', c.req.method);
+    const auth = getAuth(dbUrl);
+    const res = await auth.handler(c.req.raw);
+    console.log('[API Auth] Response status:', res.status);
+    return res;
+  } catch (err: any) {
+    console.error('[API Auth] Handler error:', err);
+    return c.json({ error: err?.message || 'Auth internal error', stack: err?.stack }, 500);
+  }
 });
 
 // Domain Routes
@@ -78,6 +109,7 @@ app.route('/api/curriculum', createCurriculumRoutes(() => getDatabase()));
 app.route('/api/editor', createEditorRoutes(() => getDatabase()));
 app.route('/api/storage', createStorageRoutes());
 app.route('/api/cron', createCronRoutes(() => getDatabase()));
+app.route('/api/profile', createProfileRoutes(() => getDatabase()));
 
 export default {
   fetch: app.fetch,

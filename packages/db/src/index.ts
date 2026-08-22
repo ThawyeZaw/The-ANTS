@@ -5,7 +5,10 @@ import * as schema from './schema';
 export * from './schema';
 
 export function createDb(connectionString: string) {
-  const sql = neon(connectionString);
+  const cleanUrl = (connectionString || '')
+    .replace(/[&?]channel_binding=[^&]+/g, '')
+    .trim();
+  const sql = neon(cleanUrl);
   return drizzle(sql, { schema });
 }
 

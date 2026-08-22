@@ -36,6 +36,7 @@ export const account = pgTable('account', {
   password: text('password'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  issuer: text('issuer'),
 });
 
 export const verification = pgTable('verification', {
