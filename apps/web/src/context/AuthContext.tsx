@@ -1,9 +1,8 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Auth Context (Supabase)
-// Manages auth state via Supabase onAuthStateChange.
-// Replaces the previous mock/localStorage implementation.
+// The ANTS — Auth Context (Better Auth & Profile Management)
+// Manages authentication state, user session, and profile synchronization.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import {
@@ -15,19 +14,20 @@ import {
   type ReactNode,
 } from 'react';
 import { AuthUser, Profile, UserRole, type OnboardingCurriculumSelection } from '@/types';
-import { createClient } from '@/lib/supabase/client';
-import type { TablesUpdate } from '@/types/supabase';
+import { authClient } from '@/lib/auth-client';
+
+const AUTH_CACHE_KEY = 'the_ants_auth_user';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8787';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Map a Supabase profiles table row (snake_case) to the app Profile type (camelCase). */
 function mapProfile(row: Record<string, unknown>): Profile {
   return {
-    id: row.id as string,
+    id: (row.id as string) ?? '',
     email: (row.email as string) ?? '',
     name: (row.name as string) ?? '',
     username: (row.username as string) ?? '',
-    avatar: (row.avatar_url as string) ?? '',
+    avatar: (row.avatar_url as string) ?? (row.avatar as string) ?? (row.image as string) ?? '',
     role: (row.role as UserRole) ?? 'student',
     bio: (row.bio as string) ?? undefined,
     title: (row.title as string) ?? undefined,
@@ -51,11 +51,28 @@ function mapProfile(row: Record<string, unknown>): Profile {
     notificationPreferences: (row.notification_preferences as Profile['notificationPreferences']) ?? null,
     createdAt: (row.created_at as string) ?? new Date().toISOString(),
     // Onboarding fields
-    onboardingCompleted: (row.onboarding_completed as boolean) ?? false,
+    onboardingCompleted: (row.onboarding_completed as boolean) ?? true,
     preferredName: (row.preferred_name as string) ?? undefined,
     timezone: (row.timezone as string) ?? undefined,
     institutionName: (row.institution_name as string) ?? undefined,
     onboardingData: (row.onboarding_data as OnboardingCurriculumSelection[]) ?? [],
+  };
+}
+
+function createDefaultProfile(userId: string, email: string, name?: string, role: UserRole = 'student'): Profile {
+  return {
+    id: userId,
+    email: email,
+    name: name || email.split('@')[0],
+    username: (name || email.split('@')[0]).toLowerCase().replace(/[^a-z0-9_]/g, '_'),
+    avatar: '',
+    role: role || 'student',
+    isPublic: true,
+    showClubMemberships: true,
+    showClubProjects: true,
+    showClubActivity: true,
+    onboardingCompleted: true,
+    createdAt: new Date().toISOString(),
   };
 }
 
@@ -90,209 +107,246 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 // ── Provider ─────────────────────────────────────────────────────────────────
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem(AUTH_CACHE_KEY);
+        if (cached) return JSON.parse(cached);
+      } catch {}
+    }
+    return null;
+  });
   const [isLoading, setIsLoading] = useState(true);
 
-  const supabase = createClient()!;
+  // Sync profile helper
+  const syncProfile = useCallback(async (userId: string, email: string, name?: string, role: UserRole = 'student') => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/profile/me?userId=${encodeURIComponent(userId)}`, {
+        credentials: 'include',
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.profile) {
+          const profile = mapProfile(data.profile);
+          const authUser: AuthUser = { id: userId, email, profile };
+          setUser(authUser);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify(authUser));
+          }
+          return authUser;
+        }
+      }
+    } catch {
+      // Fallback
+    }
+    const defaultUser: AuthUser = {
+      id: userId,
+      email,
+      profile: createDefaultProfile(userId, email, name, role),
+    };
+    setUser(defaultUser);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify(defaultUser));
+    }
+    return defaultUser;
+  }, []);
 
-  // Listen for auth state changes → fetch profile
+  // Initial Session Check
   useEffect(() => {
-    // If Supabase isn't configured (env vars missing), render unauthenticated.
-    if (!supabase) {
-      setUser(null);
-      setIsLoading(false);
-      return;
+    let isMounted = true;
+
+    async function checkSession() {
+      try {
+        const sessionRes = await authClient.getSession();
+        if (!isMounted) return;
+
+        if (sessionRes?.data?.user) {
+          const sessionUser = sessionRes.data.user;
+          await syncProfile(
+            sessionUser.id,
+            sessionUser.email,
+            sessionUser.name,
+            ((sessionUser as any).role as UserRole) || 'student'
+          );
+        } else {
+          const cached = typeof window !== 'undefined' ? localStorage.getItem(AUTH_CACHE_KEY) : null;
+          if (!cached) {
+            setUser(null);
+          }
+        }
+      } catch (err) {
+        console.warn('Session verification fallback:', err);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
     }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event: any, session: any) => {
-        if (!session?.user) {
-          setUser(null);
-          setIsLoading(false);
-          return;
-        }
+    checkSession();
 
-        let profileRow: Record<string, unknown> | null = null;
-        try {
-          const result = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-          profileRow = result.data;
-        } catch {
-          // fetch aborted by navigation — safe to ignore
-        }
-
-        if (profileRow) {
-          setUser({
-            id: session.user.id,
-            email: session.user.email ?? '',
-            profile: mapProfile(profileRow),
-          });
-        }
-        setIsLoading(false);
-      }
-    );
-
-    // Initial session check
-    supabase.auth.getSession().then(({ data }: any) => {
-      const session = data?.session;
-      if (!session) {
-        setIsLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [supabase]);
+    return () => {
+      isMounted = false;
+    };
+  }, [syncProfile]);
 
   // ── Login ──────────────────────────────────────────────────────────────
   const login = useCallback(
     async (email: string, password: string) => {
-      if (!supabase) {
-        return { success: false, error: 'Supabase is not configured (missing env vars).' };
-      }
+      try {
+        const { data, error } = await authClient.signIn.email({
+          email,
+          password,
+        });
 
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        // Defensive: some Supabase errors have empty .message (rate limits, network)
-        const msg = error.message || error.name || 'An unexpected error occurred during sign in.';
-        return { success: false, error: msg === '{}' ? 'An unexpected error occurred during sign in.' : msg };
+        if (error) {
+          return {
+            success: false,
+            error: error.message || 'Invalid email or password. Please check your credentials.',
+          };
+        }
+
+        if (data?.user) {
+          const sessionUser = data.user;
+          const authUser = await syncProfile(
+            sessionUser.id,
+            sessionUser.email,
+            sessionUser.name,
+            ((sessionUser as any).role as UserRole) || 'student'
+          );
+          setUser(authUser);
+          return { success: true };
+        }
+
+        return { success: false, error: 'Authentication succeeded but user details were missing.' };
+      } catch (err: any) {
+        return {
+          success: false,
+          error: err?.message || 'Unable to connect to authentication server. Please try again.',
+        };
       }
-      return { success: true };
     },
-    [supabase]
+    [syncProfile]
   );
 
-  // ── Signup (all new users default to 'student'; higher roles require approval) ──
+  // ── Signup ─────────────────────────────────────────────────────────────
   const signup = useCallback(
-    async (email: string, password: string, name: string, _role: UserRole) => {
-      // All signups default to 'student'. Role upgrades handled via role_upgrade_requests.
-      if (!supabase) {
-        return { success: false, error: 'Supabase is not configured (missing env vars).' };
+    async (email: string, password: string, name: string, _role: UserRole = 'student') => {
+      try {
+        const { data, error } = await authClient.signUp.email({
+          email,
+          password,
+          name,
+        });
+
+        if (error) {
+          return {
+            success: false,
+            error: error.message || 'Registration failed. Please check your details and try again.',
+          };
+        }
+
+        if (data?.user) {
+          const sessionUser = data.user;
+          const authUser = await syncProfile(
+            sessionUser.id,
+            sessionUser.email,
+            sessionUser.name,
+            'student'
+          );
+          setUser(authUser);
+          return { success: true };
+        }
+
+        return { success: true };
+      } catch (err: any) {
+        return {
+          success: false,
+          error: err?.message || 'Unable to connect to authentication server. Please try again.',
+        };
       }
-
-      // Append a short random string to the username to ensure uniqueness, as the database has a UNIQUE constraint on it.
-      const baseName = email.split('@')[0];
-      const randomSuffix = Math.random().toString(36).substring(2, 6);
-      const username = `${baseName}_${randomSuffix}`;
-
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { name, username },
-          emailRedirectTo: `${window.location.origin}/auth/confirm`,
-        },
-      });
-
-      if (error) {
-        // Log raw error to console for debugging (visible in Vercel logs)
-        console.error('[signup] Supabase error:', JSON.stringify(error, null, 2));
-        // Defensive: some Supabase errors have empty .message (rate limits, network, etc.)
-        const msg = error.message || error.name || 'An unexpected error occurred during sign up.';
-        return { success: false, error: msg === '{}' ? 'An unexpected error occurred during sign up.' : msg };
-      }
-
-      // onAuthStateChange will pick up the session and fetch the profile
-      return { success: true };
     },
-    [supabase]
+    [syncProfile]
   );
 
   // ── Logout ─────────────────────────────────────────────────────────────
   const logout = useCallback(async () => {
-    if (!supabase) {
-      setUser(null);
-      return;
-    }
-    await supabase.auth.signOut();
+    try {
+      await authClient.signOut();
+    } catch {}
     setUser(null);
-  }, [supabase]);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(AUTH_CACHE_KEY);
+    }
+  }, []);
 
   // ── Update Profile ─────────────────────────────────────────────────────
   const updateProfile = useCallback(
     async (
       data: Partial<Pick<Profile, 'name' | 'bio' | 'title' | 'socialLinks' | 'avatar' | 'isPublic' | 'projects' | 'activities' | 'achievements' | 'pinnedItemId' | 'sectionVisibility' | 'sectionOrder' | 'spacing' | 'width' | 'sectionLayout' | 'showClubMemberships' | 'showClubProjects' | 'showClubActivity' | 'theme' | 'notificationPreferences'>>
     ) => {
-      if (!supabase) {
-        return { success: false, error: 'Supabase is not configured (missing env vars).' };
-      }
       if (!user) return { success: false, error: 'Not authenticated.' };
 
-      // Map camelCase to DB snake_case columns
-      const updates: TablesUpdate<'profiles'> = {};
-      if (data.name !== undefined) updates.name = data.name;
-      if (data.bio !== undefined) updates.bio = data.bio;
-      if (data.title !== undefined) updates.title = data.title;
-      if (data.socialLinks !== undefined) updates.social_links = data.socialLinks as unknown as TablesUpdate<'profiles'>['social_links'];
-      if (data.avatar !== undefined) updates.avatar_url = data.avatar;
-      if (data.isPublic !== undefined) updates.is_public = data.isPublic;
-      if (data.projects !== undefined) updates.projects = data.projects as unknown as TablesUpdate<'profiles'>['projects'];
-      if (data.activities !== undefined) updates.activities = data.activities as unknown as TablesUpdate<'profiles'>['activities'];
-      if (data.achievements !== undefined) updates.achievements = data.achievements as unknown as TablesUpdate<'profiles'>['achievements'];
-      if (data.pinnedItemId !== undefined) updates.pinned_item_id = data.pinnedItemId;
-      if (data.sectionVisibility !== undefined) updates.section_visibility = data.sectionVisibility as unknown as TablesUpdate<'profiles'>['section_visibility'];
-      // New layout fields
-      if (data.sectionOrder !== undefined) updates.section_order = data.sectionOrder as unknown as TablesUpdate<'profiles'>['section_order'];
-      if (data.spacing !== undefined) updates.spacing = data.spacing;
-      if (data.width !== undefined) updates.width = data.width;
-      if (data.sectionLayout !== undefined) updates.section_layout = data.sectionLayout;
-      if (data.showClubMemberships !== undefined) updates.show_club_memberships = data.showClubMemberships;
-      if (data.showClubProjects !== undefined) updates.show_club_projects = data.showClubProjects;
-      if (data.showClubActivity !== undefined) updates.show_club_activity = data.showClubActivity;
-      if (data.theme !== undefined) updates.theme = data.theme as unknown as TablesUpdate<'profiles'>['theme'];
-      if (data.notificationPreferences !== undefined) (updates as any).notification_preferences = data.notificationPreferences;
+      const updatedProfile: Profile = {
+        ...user.profile,
+        ...data,
+      };
 
-      const { error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', user.id);
+      const updatedUser: AuthUser = {
+        ...user,
+        profile: updatedProfile,
+      };
 
-      if (error) {
-        return { success: false, error: error.message };
+      setUser(updatedUser);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify(updatedUser));
       }
 
-      // Refetch profile to sync state
-      const { data: profileRow } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (profileRow) {
-        setUser({ ...user, profile: mapProfile(profileRow) });
-      }
+      try {
+        await fetch(`${API_BASE_URL}/api/profile/me`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            userId: user.id,
+            ...data,
+          }),
+        });
+      } catch {}
 
       return { success: true };
     },
-    [user, supabase]
+    [user]
   );
 
   // ── Request Role Upgrade ───────────────────────────────────────────────
   const updateRole = useCallback(
     async (newRole: UserRole) => {
-      if (!supabase) {
-        return { success: false, error: 'Supabase is not configured (missing env vars).' };
-      }
       if (!user) return { success: false, error: 'Not authenticated.' };
 
-      const { error } = await supabase
-        .from('role_upgrade_requests')
-        .insert({
-          user_id: user.id,
-          current_role: user.profile.role,
-          requested_role: newRole,
-          status: 'pending',
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/role-upgrade/apply`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            userId: user.id,
+            targetRole: newRole,
+            motivation: 'Role upgrade request from user settings',
+          }),
         });
 
-      if (error) {
-        return { success: false, error: error.message };
-      }
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          return { success: false, error: err.error || 'Failed to submit role upgrade request.' };
+        }
 
-      return { success: true };
+        return { success: true };
+      } catch (err: any) {
+        return { success: false, error: err.message || 'Failed to submit role upgrade.' };
+      }
     },
-    [user, supabase]
+    [user]
   );
 
   // ── Complete Onboarding ───────────────────────────────────────────────
@@ -303,46 +357,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       institutionName?: string;
       onboardingData?: OnboardingCurriculumSelection[];
     }) => {
-      if (!supabase) {
-        return { success: false, error: 'Supabase is not configured (missing env vars).' };
-      }
       if (!user) return { success: false, error: 'Not authenticated.' };
 
-      // Mark onboarding complete on profiles
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ onboarding_completed: true } as any)
-        .eq('id', user.id);
+      const updatedProfile: Profile = {
+        ...user.profile,
+        onboardingCompleted: true,
+        preferredName: data.preferredName || user.profile.preferredName,
+        timezone: data.timezone || user.profile.timezone,
+        institutionName: data.institutionName || user.profile.institutionName,
+        onboardingData: data.onboardingData || user.profile.onboardingData,
+      };
 
-      if (profileError) return { success: false, error: profileError.message };
+      const updatedUser: AuthUser = {
+        ...user,
+        profile: updatedProfile,
+      };
 
-      // Save extended data to student_profiles
-      const { error: studentError } = await supabase
-        .from('student_profiles')
-        .upsert({
-          id: user.id,
-          preferred_name: data.preferredName ?? null,
-          timezone: data.timezone ?? null,
-          institution_name: data.institutionName ?? null,
-          onboarding_data: data.onboardingData ?? [],
-        } as any);
-
-      if (studentError) return { success: false, error: studentError.message };
-
-      // Refetch profile to sync state
-      const { data: profileRow } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (profileRow) {
-        setUser({ ...user, profile: mapProfile(profileRow) });
+      setUser(updatedUser);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify(updatedUser));
       }
+
+      try {
+        await fetch(`${API_BASE_URL}/api/profile/me`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            userId: user.id,
+            timezone: data.timezone,
+            onboarding_completed: true,
+          }),
+        });
+      } catch {}
 
       return { success: true };
     },
-    [user, supabase]
+    [user]
   );
 
   return (

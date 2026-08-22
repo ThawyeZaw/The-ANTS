@@ -11,6 +11,7 @@
 import { useState, type FormEvent } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Mail,
   Lock,
@@ -30,6 +31,7 @@ import { createClient } from '@/lib/supabase/client';
 
 export default function SignupForm() {
   const { signup } = useAuth();
+  const router = useRouter();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -97,9 +99,8 @@ export default function SignupForm() {
       return;
     }
 
-    // Show email confirmation screen
-    setSignupComplete(true);
-    setIsLoading(false);
+    // Auto sign-in succeeds -> route to dashboard
+    router.push('/dashboard');
   };
 
   const handleResend = async () => {

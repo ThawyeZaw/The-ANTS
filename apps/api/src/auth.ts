@@ -4,9 +4,25 @@ import { createDb } from '@the-ants/db';
 import * as schema from '@the-ants/db';
 
 export function getAuth(databaseUrl: string) {
+  console.log('[getAuth] databaseUrl typeof:', typeof databaseUrl, 'length:', databaseUrl ? databaseUrl.length : 0);
   const db = createDb(databaseUrl);
 
   return betterAuth({
+    baseURL: process.env.BETTER_AUTH_URL || 'http://127.0.0.1:8787',
+    secret: process.env.BETTER_AUTH_SECRET || process.env.CRON_SECRET || 'the-ants-auth-secret-production-2026',
+    trustedOrigins: [
+      'http://localhost:3000',
+      'http://localhost:3005',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:3005',
+      'https://the-ants.vercel.app',
+      'https://the-ants-api.thawyezaw.workers.dev',
+    ],
+    advanced: {
+      database: {
+        generateId: () => crypto.randomUUID(),
+      },
+    },
     database: drizzleAdapter(db, {
       provider: 'pg',
       schema: {
@@ -54,15 +70,17 @@ export function getAuth(databaseUrl: string) {
           after: async (createdUser) => {
             // Auto-create initial profile if it does not exist
             try {
+              const baseUsername = (createdUser.name || createdUser.email.split('@')[0])
+                .toLowerCase()
+                .replace(/[^a-z0-9_]/g, '_');
+              const randomSuffix = Math.random().toString(36).substring(2, 6);
               await db
                 .insert(schema.profiles)
                 .values({
                   id: createdUser.id as any,
                   email: createdUser.email,
                   name: createdUser.name || createdUser.email.split('@')[0],
-                  username:
-                    createdUser.name?.toLowerCase().replace(/\s+/g, '_') ||
-                    createdUser.email.split('@')[0],
+                  username: `${baseUsername}_${randomSuffix}`,
                   avatar_url: createdUser.image,
                   role: 'student',
                 })
