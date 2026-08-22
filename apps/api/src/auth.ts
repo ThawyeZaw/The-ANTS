@@ -23,6 +23,10 @@ export function getAuth(databaseUrl: string, baseUrl?: string, secret?: string) 
       database: {
         generateId: () => crypto.randomUUID(),
       },
+      defaultCookieAttributes: {
+        sameSite: 'none',
+        secure: true,
+      },
     },
     database: drizzleAdapter(db, {
       provider: 'pg',

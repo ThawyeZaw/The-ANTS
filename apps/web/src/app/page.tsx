@@ -120,16 +120,17 @@ export default function HomePage() {
   const { isAuthenticated, user } = useAuth();
 
   return (
-    <div className="hp" style={{ minHeight: '100vh', overflowX: 'hidden', position: 'relative' }}>
-      {/* ── Sticky Nav (theme-aware via .hp-nav class) ──────────────────── */}
+    <div className="hp" style={{ minHeight: '100vh', position: 'relative' }}>
+      {/* ── Fixed Nav (theme-aware via .hp-nav class) ──────────────────── */}
       <header
         style={{
-          position: 'sticky',
+          position: 'fixed',
           top: 16,
+          left: 0,
+          right: 0,
           zIndex: 50,
           display: 'flex',
           justifyContent: 'center',
-          marginBottom: -84,
           pointerEvents: 'none',
         }}
       >
@@ -609,6 +610,7 @@ export default function HomePage() {
           padding: '130px 28px',
           background: 'var(--hp-bg-soft)',
           position: 'relative',
+          scrollMarginTop: 90,
         }}
       >
         <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
@@ -737,7 +739,7 @@ export default function HomePage() {
       <section
         id="features"
         className="hp-grid-bg-strong"
-        style={{ padding: '130px 28px', position: 'relative' }}
+        style={{ padding: '130px 28px', position: 'relative', scrollMarginTop: 90 }}
       >
         {/* Ant brand accent — small, subtle floating silhouette */}
         <svg
@@ -779,6 +781,7 @@ export default function HomePage() {
           padding: '130px 28px',
           background: 'var(--hp-bg-soft)',
           position: 'relative',
+          scrollMarginTop: 90,
         }}
       >
         <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
@@ -809,7 +812,7 @@ export default function HomePage() {
       {/* ── Roles Section ────────────────────────────────────────────────── */}
       <section
         id="roles"
-        style={{ padding: '130px 28px', position: 'relative' }}
+        style={{ padding: '130px 28px', position: 'relative', scrollMarginTop: 90 }}
       >
         <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
           <SectionHead

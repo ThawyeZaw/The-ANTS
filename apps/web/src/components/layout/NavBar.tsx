@@ -327,9 +327,9 @@ const NavBar = React.memo(function NavBar() {
   const communityRef = useRef<HTMLDivElement>(null);
   const adminRef = useRef<HTMLDivElement>(null);
 
-  // Filter nav groups by current role
+  // Filter nav groups by current role (guests get Library, Tools, Community)
   const visibleGroups = NAV_GROUPS.filter(
-    (group) => role && group.allowedRoles.includes(role)
+    (group) => !role ? ['Library', 'Tools', 'Community'].includes(group.label) : group.allowedRoles.includes(role)
   );
 
   // Check if current page is active
@@ -437,12 +437,12 @@ const NavBar = React.memo(function NavBar() {
   return (
     <header
       className={cn(
-        'fixed top-0 left-0 right-0 z-50 flex justify-center px-4 pt-3 sm:pt-4 transition-transform duration-300',
+        'fixed top-0 left-0 right-0 z-50 flex justify-center px-4 pt-3 sm:pt-4 transition-transform duration-300 pointer-events-none',
         isNavHidden && '-translate-y-full'
       )}
     >
       {/* Nav Content — Pill-shaped floating card */}
-      <div className="w-[min(94%,980px)]">
+      <div className="w-[min(94%,980px)] pointer-events-auto">
         <nav className="flex items-center justify-between h-12 px-3 sm:pl-5 sm:pr-3 gap-2 rounded-full bg-background/85 backdrop-blur-[18px] border border-border shadow-lg">
           {/* ─── Logo ─── */}
           <Link
@@ -855,6 +855,24 @@ const NavBar = React.memo(function NavBar() {
               </div>
             )}
 
+            {/* Guest Sign In / Get Started */}
+            {!user && (
+              <div className="flex items-center gap-1 sm:gap-2">
+                <Link
+                  href="/login"
+                  className="px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium text-foreground-secondary hover:text-foreground hover:bg-background-secondary transition-colors"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/signup"
+                  className="px-3 sm:px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold bg-primary text-white hover:bg-primary-hover shadow-sm transition-all"
+                >
+                  Get Started
+                </Link>
+              </div>
+            )}
+
             {/* Mobile Menu Toggle */}
             <button
               onClick={() => setIsMobileOpen(!isMobileOpen)}
@@ -1046,6 +1064,25 @@ const NavBar = React.memo(function NavBar() {
                   <LogOut className="h-5 w-5" />
                   <span className="font-medium">Sign Out</span>
                 </button>
+              </div>
+            )}
+            {/* Mobile Guest Actions */}
+            {!user && (
+              <div className="pt-4 border-t border-border flex flex-col gap-2">
+                <Link
+                  href="/login"
+                  onClick={() => setIsMobileOpen(false)}
+                  className="w-full text-center py-2.5 rounded-xl border border-border text-sm font-medium text-foreground hover:bg-background-secondary transition-colors"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/signup"
+                  onClick={() => setIsMobileOpen(false)}
+                  className="w-full text-center py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary-hover transition-colors"
+                >
+                  Get Started — It's Free
+                </Link>
               </div>
             )}
           </div>

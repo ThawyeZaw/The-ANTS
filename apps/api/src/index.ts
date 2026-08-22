@@ -31,11 +31,27 @@ type Bindings = {
 
 const app = new Hono<{ Bindings: Bindings }>();
 
-// Enable CORS
+// Enable CORS with strict whitelist
+const ALLOWED_ORIGINS = [
+  'https://the-ants.org',
+  'https://www.the-ants.org',
+  'https://the-ants.vercel.app',
+  'http://localhost:3000',
+  'http://localhost:3005',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:3005',
+];
+
 app.use(
   '*',
   cors({
-    origin: (origin) => origin || '*',
+    origin: (origin) => {
+      if (!origin) return 'https://the-ants.org';
+      if (ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.the-ants.org') || origin.endsWith('.the-ants.vercel.app')) {
+        return origin;
+      }
+      return null;
+    },
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization', 'x-requested-with', 'x-cron-secret'],
     exposeHeaders: ['Content-Length'],
@@ -64,12 +80,49 @@ const getDatabase = (c?: any) => {
   return createDb(dbUrl);
 };
 
+// In-memory sliding window rate limiter
+const ipRequestCounts = new Map<string, { count: number; resetAt: number }>();
+
+const rateLimiter = (limit: number, windowMs: number) => {
+  return async (c: any, next: any) => {
+    const ip =
+      c.req.header('cf-connecting-ip') ||
+      c.req.header('x-real-ip') ||
+      c.req.header('x-forwarded-for')?.split(',')[0]?.trim() ||
+      '127.0.0.1';
+    const now = Date.now();
+
+    // Clean up cache periodically
+    if (ipRequestCounts.size > 2000) {
+      for (const [key, val] of ipRequestCounts.entries()) {
+        if (now > val.resetAt) ipRequestCounts.delete(key);
+      }
+    }
+
+    const record = ipRequestCounts.get(ip);
+    if (!record || now > record.resetAt) {
+      ipRequestCounts.set(ip, { count: 1, resetAt: now + windowMs });
+      await next();
+      return;
+    }
+
+    if (record.count >= limit) {
+      return c.json({ error: 'Too many requests. Please try again later.' }, 429);
+    }
+
+    record.count += 1;
+    await next();
+  };
+};
+
 // Health Check
 app.get('/health', (c) => {
   return c.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Better Auth
+// Better Auth with rate limiting (60 requests/minute per IP)
+app.use('/api/auth/*', rateLimiter(60, 60 * 1000));
+app.use('/api/auth', rateLimiter(60, 60 * 1000));
 app.all('/api/auth/*', async (c) => {
   try {
     const dbUrl = c.env?.NEON_DATABASE_URL || c.env?.DATABASE_URL || process.env.DATABASE_URL || '';
