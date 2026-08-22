@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Quicksand } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import { PersonaProvider } from "@/context/PersonaContext";
 import QueryProvider from "@/components/QueryProvider";
 
 
@@ -53,10 +54,12 @@ export default function RootLayout({
           Skip to main content
         </a>
         <AuthProvider>
+          <PersonaProvider>
             <QueryProvider>
               {children}
             </QueryProvider>
-          </AuthProvider>
+          </PersonaProvider>
+        </AuthProvider>
       </body>
     </html>
   );

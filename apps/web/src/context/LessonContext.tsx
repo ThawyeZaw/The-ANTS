@@ -116,23 +116,26 @@ export function LessonProvider({ children }: { children: ReactNode }) {
   const loadedRef = useRef(false);
 
   // ── Filter selection state (localStorage-persisted) ──────────────────────
-  const [selectedCurriculumIds, _setSelectedCurriculumIds] = useState<string[]>(() => {
-    if (typeof window === 'undefined') return [];
-    try { return JSON.parse(localStorage.getItem('cm_curricula') ?? '[]'); }
-    catch { return []; }
-  });
+  const [selectedCurriculumIds, _setSelectedCurriculumIds] = useState<string[]>([]);
+  const [selectedSubjectIds, _setSelectedSubjectIds] = useState<string[]>([]);
+
+  // Sync saved filters from localStorage on mount (client only)
+  useEffect(() => {
+    try {
+      const savedCurricula = localStorage.getItem('cm_curricula');
+      if (savedCurricula) _setSelectedCurriculumIds(JSON.parse(savedCurricula));
+      const savedSubjects = localStorage.getItem('cm_subjects');
+      if (savedSubjects) _setSelectedSubjectIds(JSON.parse(savedSubjects));
+    } catch {}
+  }, []);
+
   const setSelectedCurriculumIds = (ids: string[]) => {
-    localStorage.setItem('cm_curricula', JSON.stringify(ids));
+    try { localStorage.setItem('cm_curricula', JSON.stringify(ids)); } catch {}
     _setSelectedCurriculumIds(ids);
   };
 
-  const [selectedSubjectIds, _setSelectedSubjectIds] = useState<string[]>(() => {
-    if (typeof window === 'undefined') return [];
-    try { return JSON.parse(localStorage.getItem('cm_subjects') ?? '[]'); }
-    catch { return []; }
-  });
   const setSelectedSubjectIds = (ids: string[]) => {
-    localStorage.setItem('cm_subjects', JSON.stringify(ids));
+    try { localStorage.setItem('cm_subjects', JSON.stringify(ids)); } catch {}
     _setSelectedSubjectIds(ids);
   };
 

@@ -220,74 +220,51 @@ export default function HomePage() {
                 max-width: 100%;
               }
             `}</style>
-            <a className="hp-nav-item" href="#explore">
+            <a
+              className="hp-nav-item"
+              href="#explore"
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById('explore')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+            >
               <span className="hp-nav-linktext" data-text="Explore">Explore</span>
             </a>
-            <a className="hp-nav-item" href="#features">
+            <a
+              className="hp-nav-item"
+              href="#features"
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+            >
               <span className="hp-nav-linktext" data-text="Features">Features</span>
             </a>
-            <a className="hp-nav-item" href="#qualifications">
+            <a
+              className="hp-nav-item"
+              href="#qualifications"
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById('qualifications')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+            >
               <span className="hp-nav-linktext" data-text="Boards">Boards</span>
             </a>
-            <a className="hp-nav-item" href="#roles">
+            <a
+              className="hp-nav-item"
+              href="#roles"
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById('roles')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+            >
               <span className="hp-nav-linktext" data-text="Roles">Roles</span>
             </a>
           </div>
 
-
-          {isAuthenticated && user ? (
-            <Link href={getRoleLandingPath(user.profile.role)}>
-              <button
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  background: 'var(--hp-brand)',
-                  color: 'var(--hp-btn-text)',
-                  border: 'none',
-                  borderRadius: 999,
-                  padding: '9px 18px',
-                  fontFamily: 'var(--hp-font-body)',
-                  fontWeight: 700,
-                  fontSize: 13,
-                  cursor: 'pointer',
-                  transition: 'transform .18s ease, box-shadow .18s ease',
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)';
-                  (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 12px 28px -10px rgba(var(--hp-brand-rgb), 0.45)';
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)';
-                  (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
-                }}
-              >
-                Dashboard <ArrowRight size={14} />
-              </button>
-            </Link>
-          ) : (
-            <>
-              <Link href="/login">
-                <button
-                  style={{
-                    background: 'transparent',
-                    border: '1px solid var(--hp-border-strong)',
-                    borderRadius: 999,
-                    padding: '9px 18px',
-                    color: 'var(--hp-ink)',
-                    fontFamily: 'var(--hp-font-body)',
-                    fontWeight: 600,
-                    fontSize: 13,
-                    cursor: 'pointer',
-                    transition: 'background .18s ease',
-                  }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--hp-surface)'; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
-                >
-                  Sign In
-                </button>
-              </Link>
-              <Link href="/signup">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {isAuthenticated && user ? (
+              <Link href={getRoleLandingPath(user.profile.role)}>
                 <button
                   style={{
                     display: 'inline-flex',
@@ -303,7 +280,6 @@ export default function HomePage() {
                     fontSize: 13,
                     cursor: 'pointer',
                     transition: 'transform .18s ease, box-shadow .18s ease',
-                    whiteSpace: 'nowrap',
                   }}
                   onMouseEnter={(e) => {
                     (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)';
@@ -314,11 +290,64 @@ export default function HomePage() {
                     (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
                   }}
                 >
-                  Get Started
+                  Dashboard <ArrowRight size={14} />
                 </button>
               </Link>
-            </>
-          )}
+            ) : (
+              <>
+                <Link href="/login">
+                  <button
+                    style={{
+                      background: 'transparent',
+                      border: '1px solid var(--hp-border-strong)',
+                      borderRadius: 999,
+                      padding: '9px 18px',
+                      color: 'var(--hp-ink)',
+                      fontFamily: 'var(--hp-font-body)',
+                      fontWeight: 600,
+                      fontSize: 13,
+                      cursor: 'pointer',
+                      transition: 'background .18s ease',
+                    }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--hp-surface)'; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+                  >
+                    Sign In
+                  </button>
+                </Link>
+                <Link href="/signup">
+                  <button
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      background: 'var(--hp-brand)',
+                      color: 'var(--hp-btn-text)',
+                      border: 'none',
+                      borderRadius: 999,
+                      padding: '9px 18px',
+                      fontFamily: 'var(--hp-font-body)',
+                      fontWeight: 700,
+                      fontSize: 13,
+                      cursor: 'pointer',
+                      transition: 'transform .18s ease, box-shadow .18s ease',
+                      whiteSpace: 'nowrap',
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)';
+                      (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 12px 28px -10px rgba(var(--hp-brand-rgb), 0.45)';
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)';
+                      (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
+                    }}
+                  >
+                    Get Started
+                  </button>
+                </Link>
+              </>
+            )}
+          </div>
         </nav>
       </header>
 

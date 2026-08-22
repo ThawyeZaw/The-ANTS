@@ -48,7 +48,13 @@ export function PersonaProvider({ children }: { children: ReactNode }) {
 export function usePersonaContext(): PersonaContextValue {
   const context = useContext(PersonaContext);
   if (!context) {
-    throw new Error('usePersonaContext must be used within a PersonaProvider');
+    return {
+      role: null,
+      isStudent: false,
+      isTeacher: false,
+      isContributor: false,
+      isMainContributor: false,
+    };
   }
   return context;
 }

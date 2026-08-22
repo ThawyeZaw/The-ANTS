@@ -107,16 +107,18 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 // ── Provider ─────────────────────────────────────────────────────────────────
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const cached = localStorage.getItem(AUTH_CACHE_KEY);
-        if (cached) return JSON.parse(cached);
-      } catch {}
-    }
-    return null;
-  });
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Sync from localStorage on initial mount (client only)
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem(AUTH_CACHE_KEY);
+      if (cached) {
+        setUser(JSON.parse(cached));
+      }
+    } catch {}
+  }, []);
 
   // Sync profile helper
   const syncProfile = useCallback(async (userId: string, email: string, name?: string, role: UserRole = 'student') => {
