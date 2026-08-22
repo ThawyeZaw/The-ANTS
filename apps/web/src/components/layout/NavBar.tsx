@@ -437,13 +437,12 @@ const NavBar = React.memo(function NavBar() {
   return (
     <header
       className={cn(
-        'fixed top-0 left-0 right-0 z-50 flex justify-center px-4 pt-3 sm:pt-4 transition-transform duration-300 pointer-events-none',
+        'fixed top-3 sm:top-4 left-1/2 -translate-x-1/2 w-[min(94%,980px)] z-50 transition-transform duration-300',
         isNavHidden && '-translate-y-full'
       )}
     >
       {/* Nav Content — Pill-shaped floating card */}
-      <div className="w-[min(94%,980px)] pointer-events-auto">
-        <nav className="flex items-center justify-between h-12 px-3 sm:pl-5 sm:pr-3 gap-2 rounded-full bg-background/85 backdrop-blur-[18px] border border-border shadow-lg">
+      <nav className="flex items-center justify-between h-12 px-3 sm:pl-5 sm:pr-3 gap-2 rounded-full bg-background/85 backdrop-blur-[18px] border border-border shadow-lg">
           {/* ─── Logo ─── */}
           <Link
             href={role ? '/dashboard' : '/'}
@@ -883,7 +882,6 @@ const NavBar = React.memo(function NavBar() {
             </button>
           </div>
         </nav>
-      </div>
 
       {/* ─── Mobile Menu ─── */}
       {isMobileOpen && (

@@ -126,18 +126,15 @@ export default function HomePage() {
         style={{
           position: 'fixed',
           top: 16,
-          left: 0,
-          right: 0,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: 'min(94%, 980px)',
           zIndex: 50,
-          display: 'flex',
-          justifyContent: 'center',
-          pointerEvents: 'none',
         }}
       >
         <nav
           style={{
-            pointerEvents: 'auto',
-            width: 'min(94%, 980px)',
+            width: '100%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
