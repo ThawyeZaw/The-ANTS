@@ -73,10 +73,9 @@ app.get('/health', (c) => {
 app.all('/api/auth/*', async (c) => {
   try {
     const dbUrl = c.env?.NEON_DATABASE_URL || c.env?.DATABASE_URL || process.env.DATABASE_URL || '';
-    console.log('[API Auth] dbUrl present:', !!dbUrl, 'length:', dbUrl.length, 'url:', c.req.url, 'method:', c.req.method);
-    const auth = getAuth(dbUrl);
+    const origin = new URL(c.req.url).origin;
+    const auth = getAuth(dbUrl, origin, c.env?.CRON_SECRET);
     const res = await auth.handler(c.req.raw);
-    console.log('[API Auth] Response status:', res.status);
     return res;
   } catch (err: any) {
     console.error('[API Auth] Handler error:', err);
@@ -86,10 +85,9 @@ app.all('/api/auth/*', async (c) => {
 app.all('/api/auth', async (c) => {
   try {
     const dbUrl = c.env?.NEON_DATABASE_URL || c.env?.DATABASE_URL || process.env.DATABASE_URL || '';
-    console.log('[API Auth] dbUrl present:', !!dbUrl, 'length:', dbUrl.length, 'url:', c.req.url, 'method:', c.req.method);
-    const auth = getAuth(dbUrl);
+    const origin = new URL(c.req.url).origin;
+    const auth = getAuth(dbUrl, origin, c.env?.CRON_SECRET);
     const res = await auth.handler(c.req.raw);
-    console.log('[API Auth] Response status:', res.status);
     return res;
   } catch (err: any) {
     console.error('[API Auth] Handler error:', err);

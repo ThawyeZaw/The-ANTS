@@ -3,18 +3,19 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { createDb } from '@the-ants/db';
 import * as schema from '@the-ants/db';
 
-export function getAuth(databaseUrl: string) {
-  console.log('[getAuth] databaseUrl typeof:', typeof databaseUrl, 'length:', databaseUrl ? databaseUrl.length : 0);
+export function getAuth(databaseUrl: string, baseUrl?: string, secret?: string) {
   const db = createDb(databaseUrl);
 
   return betterAuth({
-    baseURL: process.env.BETTER_AUTH_URL || 'http://127.0.0.1:8787',
-    secret: process.env.BETTER_AUTH_SECRET || process.env.CRON_SECRET || 'the-ants-auth-secret-production-2026',
+    baseURL: baseUrl || process.env.BETTER_AUTH_URL || 'https://the-ants-api.thawyezaw.workers.dev',
+    secret: secret || process.env.BETTER_AUTH_SECRET || process.env.CRON_SECRET || 'the-ants-auth-secret-production-2026',
     trustedOrigins: [
       'http://localhost:3000',
       'http://localhost:3005',
       'http://127.0.0.1:3000',
       'http://127.0.0.1:3005',
+      'https://the-ants.org',
+      'https://www.the-ants.org',
       'https://the-ants.vercel.app',
       'https://the-ants-api.thawyezaw.workers.dev',
     ],
