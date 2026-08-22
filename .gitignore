@@ -1,5 +1,5 @@
 # dependencies
-/node_modules
+node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -11,16 +11,19 @@
 # turbo
 .turbo/
 
+# cloudflare wrangler
+.wrangler/
+
 # testing
-/coverage
+coverage/
 
 # next.js
-/.next/
-/out/
+.next/
+out/
 
-# production
-/build
-/dist/
+# production & builds
+build/
+dist/
 
 # misc
 .DS_Store
@@ -34,8 +37,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -46,4 +50,5 @@ next-env.d.ts
 
 .trae/*
 .refact/*
+
 

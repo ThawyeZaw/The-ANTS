@@ -1,0 +1,231 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+
+import { Exam } from '@/types';
+import { X } from 'lucide-react';
+
+interface AddCountdownModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  availableExams: Exam[];
+  onCreate: (data: {
+    exam_id?: string;
+    custom_title?: string;
+    target_date?: string;
+    priority_indicator?: string;
+    qualification_group?: string;
+  }) => void;
+  /** Pre-fill from a library exam (e.g. opened from Exams Library browser) */
+  prefilledExam?: Exam | null;
+}
+
+
+export function AddCountdownModal({ isOpen, onClose, availableExams, onCreate, prefilledExam }: AddCountdownModalProps) {
+  const [tab, setTab] = useState<'library' | 'custom'>('library');
+  
+  // Form states
+  const [selectedExamId, setSelectedExamId] = useState('');
+  const [customTitle, setCustomTitle] = useState('');
+  const [targetDate, setTargetDate] = useState('');
+  const [targetTime, setTargetTime] = useState('09:00');
+  const [priority, setPriority] = useState('medium');
+  const [group, setGroup] = useState('Custom');
+
+  // Pre-fill from library exam when provided
+  useEffect(() => {
+    if (prefilledExam) {
+      setTab('library');
+      setSelectedExamId(prefilledExam.id);
+      // Pre-fill date if fixed
+      if (prefilledExam.date_type === 'fixed' && prefilledExam.exam_date) {
+        setTargetDate(prefilledExam.exam_date.split('T')[0]);
+      }
+      // Auto-set group from board
+      if (prefilledExam.exam_board) setGroup(prefilledExam.exam_board);
+    }
+  }, [prefilledExam]);
+
+  if (!isOpen) return null;
+
+  const isPastDate = targetDate && targetTime ? new Date(`${targetDate}T${targetTime}`).getTime() < Date.now() : false;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (tab === 'library') {
+      if (!selectedExamId) return;
+      // When selected from library, group is typically set to the exam board/qualification, we'll ask user or default to Custom
+      // Let's add a group selector even for library if they want, but default to 'IGCSE' for test.
+      // Actually we'll just use the form's group.
+      onCreate({
+        exam_id: selectedExamId,
+        priority_indicator: priority,
+        qualification_group: group,
+      });
+    } else {
+      if (!customTitle || !targetDate) return;
+      onCreate({
+        custom_title: customTitle,
+        target_date: new Date(`${targetDate}T${targetTime}`).toISOString(),
+        priority_indicator: priority,
+        qualification_group: group,
+      });
+    }
+    
+    // Reset and close
+    setSelectedExamId('');
+    setCustomTitle('');
+    setTargetDate('');
+    setTargetTime('09:00');
+    setPriority('medium');
+    setGroup('Custom');
+    onClose();
+  };
+
+  return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--foreground)]/10 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--background-card)] p-6 shadow-2xl">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-[var(--foreground)]">Add Exam Countdown</h2>
+          <button 
+            onClick={onClose} 
+            className="rounded-lg p-1 text-[var(--foreground-secondary)] hover:text-[var(--foreground)] transition-colors focus-visible:ring-2 focus-visible:ring-[var(--primary)]/50 focus-visible:outline-none"
+            aria-label="Close modal"
+          >
+            <X className="h-5 w-5" aria-hidden="true" />
+          </button>
+        </div>
+
+        <div className="mb-6 flex rounded-lg bg-[var(--background-secondary)]/70 p-1">
+          <button
+            className={`flex-1 rounded-md py-2 text-sm font-medium transition-all focus-visible:ring-2 focus-visible:ring-[var(--primary)]/50 focus-visible:outline-none ${
+              tab === 'library' ? 'bg-[var(--primary-light)] text-[var(--primary)]' : 'text-[var(--foreground-secondary)] hover:text-[var(--foreground)]'
+            }`}
+            onClick={() => setTab('library')}
+            aria-label="Select from library exams"
+          >
+            Library Exam
+          </button>
+          <button
+            className={`flex-1 rounded-md py-2 text-sm font-medium transition-all focus-visible:ring-2 focus-visible:ring-[var(--primary)]/50 focus-visible:outline-none ${
+              tab === 'custom' ? 'bg-[var(--primary-light)] text-[var(--primary)]' : 'text-[var(--foreground-secondary)] hover:text-[var(--foreground)]'
+            }`}
+            onClick={() => setTab('custom')}
+            aria-label="Create a custom countdown"
+          >
+            Custom Countdown
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {tab === 'library' ? (
+            <div>
+              <label className="mb-1 block text-sm font-medium text-[var(--foreground-secondary)]">Select Exam</label>
+              <select
+                value={selectedExamId}
+                onChange={(e) => setSelectedExamId(e.target.value)}
+                className="w-full rounded-lg border border-[var(--border)] bg-[var(--background-secondary)] p-3 text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
+                required
+              >
+                <option value="">-- Choose an Exam --</option>
+                {availableExams.map(exam => (
+                  <option key={exam.id} value={exam.id}>
+                    {exam.title} ({exam.exam_series})
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[var(--foreground-secondary)]">Title</label>
+                <input
+                  type="text"
+                  value={customTitle}
+                  onChange={(e) => setCustomTitle(e.target.value)}
+                  placeholder="e.g. Physics Mock"
+                  className="w-full rounded-lg border border-[var(--border)] bg-[var(--background-secondary)] p-3 text-[var(--foreground)] placeholder:text-[var(--foreground-muted)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
+                  required
+                />
+              </div>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1">
+                  <label className="mb-1 block text-sm font-medium text-[var(--foreground-secondary)]">Target Date</label>
+                  <input
+                    type="date"
+                    value={targetDate}
+                    onChange={(e) => setTargetDate(e.target.value)}
+                    className={`w-full rounded-lg border bg-[var(--background-secondary)] p-3 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] ${isPastDate ? 'border-red-500/50 focus:border-red-500' : 'border-[var(--border)] focus:border-[var(--primary)]'}`}
+                    required
+                    aria-describedby={isPastDate ? "date-error" : undefined}
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="mb-1 block text-sm font-medium text-[var(--foreground-secondary)]">Time</label>
+                  <input
+                    type="time"
+                    value={targetTime}
+                    onChange={(e) => setTargetTime(e.target.value)}
+                    className={`w-full rounded-lg border bg-[var(--background-secondary)] p-3 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] ${isPastDate ? 'border-red-500/50 focus:border-red-500' : 'border-[var(--border)] focus:border-[var(--primary)]'}`}
+                    required
+                  />
+                </div>
+              </div>
+              {isPastDate && (
+                <p id="date-error" className="text-sm text-red-400" role="alert">
+                  Warning: This date and time is in the past!
+                </p>
+              )}
+            </>
+          )}
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-[var(--foreground-secondary)]">Qualification Group</label>
+            <select
+              value={group}
+              onChange={(e) => setGroup(e.target.value)}
+              className="w-full rounded-lg border border-[var(--border)] bg-[var(--background-secondary)] p-3 text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
+            >
+              <option value="IGCSE">IGCSE</option>
+              <option value="A LEVEL">A LEVEL</option>
+              <option value="OSSD">OSSD</option>
+              <option value="IELTS">IELTS</option>
+              <option value="Custom">Custom</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-[var(--foreground-secondary)]">Priority</label>
+            <select
+              value={priority}
+              onChange={(e) => setPriority(e.target.value)}
+              className="w-full rounded-lg border border-[var(--border)] bg-[var(--background-secondary)] p-3 text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
+            >
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+
+          <div className="mt-8 flex justify-end gap-3 pt-4 border-t border-[var(--border)]">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-lg px-4 py-2 text-sm font-medium text-[var(--foreground-secondary)] hover:bg-[var(--background-secondary)] hover:text-[var(--foreground)] transition-colors focus-visible:ring-2 focus-visible:ring-[var(--primary)]/50 focus-visible:outline-none"
+              aria-label="Cancel and close modal"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="rounded-lg bg-[var(--primary)] px-6 py-2 text-sm font-medium text-white hover:bg-[var(--primary-hover)] transition-colors focus-visible:ring-2 focus-visible:ring-[var(--primary)]/40 focus-visible:outline-none"
+              aria-label="Submit and add countdown"
+            >
+              Add Countdown
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}

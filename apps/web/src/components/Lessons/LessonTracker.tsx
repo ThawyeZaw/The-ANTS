@@ -1,0 +1,543 @@
+'use client';
+
+// ──────────────────────────────────────────────────────────────────────────────
+// The ANTS — LessonTracker
+// Main Lesson Tracker page component. Curriculum tabs → subject filter bar →
+// subject accordion → per-topic confidence + status cards.
+// Now uses LessonContext (single source of truth).
+// ──────────────────────────────────────────────────────────────────────────────
+
+import { useState, useMemo } from 'react';
+import Link from 'next/link';
+import {
+  BookOpen,
+  ChevronDown,
+  ChevronUp,
+  ClipboardCheck,
+  Layers,
+  Sparkles,
+  Filter,
+  ChevronRight,
+  AlertTriangle,
+  CheckCircle2,
+} from 'lucide-react';
+import { useRole } from '@/hooks/useRole';
+import { useLessonContext, type TopicItem, type TopicProgressRecord, type TopicStatus } from '@/context/LessonContext';
+import { cn } from '@/lib/utils';
+import TopicCard from './TopicCard';
+import ProgressOverview from './ProgressOverview';
+import WeeklyActivityChart from './WeeklyActivityChart';
+import ConfidenceTrend from './ConfidenceTrend';
+import EnrollmentSwitcher from './EnrollmentSwitcher';
+
+// ── Role-aware subtitle ───────────────────────────────────────────────────────
+
+function usePageSubtitle() {
+  const { isTeacher, isContributor, isMainContributor } = useRole();
+  if (isTeacher) return 'Track your personal topic confidence across your enrolled curricula.';
+  if (isContributor || isMainContributor)
+    return 'Review your own topic mastery — and inform the curriculum content you create.';
+  return 'Track your confidence on every topic and mark your study progress as you go.';
+}
+
+// ── Subject progress bar ──────────────────────────────────────────────────────
+
+function SubjectProgressBar({ completed, total }: { completed: number; total: number }) {
+  const pct = total === 0 ? 0 : Math.round((completed / total) * 100);
+  return (
+    <div className="flex items-center gap-3 min-w-0">
+      <div className="flex-1 h-1.5 rounded-full bg-border overflow-hidden">
+        <div
+          className="h-full rounded-full bg-gradient-to-br from-primary to-accent transition-all duration-500"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <span className="text-xs font-medium text-foreground-muted shrink-0">
+        {completed}/{total}
+      </span>
+    </div>
+  );
+}
+
+// ── Sticky Breadcrumb ─────────────────────────────────────────────────────────
+
+function StickyBreadcrumb({
+  subject,
+  topicTitle,
+  onReset,
+}: {
+  subject: { title: string };
+  topicTitle?: string;
+  onReset?: () => void;
+}) {
+  return (
+    <div className="sticky top-[calc(var(--nav-height)+8px)] z-10 flex items-center gap-1.5 py-2 px-3 mb-3 rounded-lg border border-border bg-background-card/95 backdrop-blur-sm">
+      <span className="text-[10px] font-medium text-foreground-muted uppercase tracking-widest">
+        {subject.title}
+      </span>
+      {topicTitle && (
+        <>
+          <ChevronRight className="h-3 w-3 text-foreground-muted shrink-0" aria-hidden="true" />
+          <span className="text-[10px] font-medium text-foreground-muted uppercase tracking-widest truncate">
+            {topicTitle}
+          </span>
+        </>
+      )}
+      {onReset && (
+        <button
+          type="button"
+          onClick={onReset}
+          className="ml-auto text-[10px] font-medium text-primary hover:text-primary-hover uppercase tracking-widest cursor-pointer focus-ring rounded transition-colors duration-150"
+        >
+          Reset
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ── Bulk-Complete Confirmation Modal ──────────────────────────────────────────
+
+function BulkCompleteModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  count,
+  label,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  count: number;
+  label: string;
+}) {
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Confirm bulk complete"
+    >
+      <div
+        className="rounded-2xl border border-border bg-background-card p-6 max-w-md w-[calc(100%-2rem)] shadow-lg animate-slide-down"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start gap-3 mb-4">
+          <div className="shrink-0 rounded-xl bg-[var(--warning)]/10 p-2 text-[var(--warning)]">
+            <AlertTriangle className="h-5 w-5" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-foreground">Confirm Bulk Complete</h3>
+            <p className="mt-1 text-sm text-foreground-muted leading-relaxed">
+              <span className="font-semibold text-foreground">{count} topics</span> under{' '}
+              &lsquo;{label}&rsquo; will be marked complete.
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground-secondary hover:bg-background-secondary transition-colors duration-150 cursor-pointer focus-ring"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              onConfirm();
+              onClose();
+            }}
+            className="rounded-xl bg-error px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity duration-150 cursor-pointer focus-ring"
+            style={{ backgroundColor: 'var(--error)' }}
+          >
+            Mark {count} Complete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Subject accordion row ─────────────────────────────────────────────────────
+
+function SubjectAccordion({
+  subject,
+  completedCount,
+  progressRecords,
+  curriculumId,
+  onConfidenceChange,
+  onStatusChange,
+}: {
+  subject: { id: string; curriculum_id: string; title: string; description: string | null; order_no: number | null; topics: TopicItem[] };
+  completedCount: number;
+  progressRecords: TopicProgressRecord[];
+  curriculumId: string | null;
+  onConfidenceChange: (topicId: string, level: number) => void;
+  onStatusChange: (topicId: string, status: TopicStatus) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(true);
+  const [bulkModalOpen, setBulkModalOpen] = useState(false);
+  const total = subject.topics.length;
+
+  const handleBulkComplete = () => {
+    subject.topics.forEach((t) => onStatusChange(t.id, 'completed'));
+  };
+
+  return (
+    <div className="rounded-xl border border-border bg-background-card overflow-hidden">
+      {/* Header */}
+      <button
+        id={`subject-accordion-${subject.id}`}
+        type="button"
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen((v) => !v)}
+        className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-background-secondary/50 transition-colors duration-150 cursor-pointer focus-ring"
+      >
+        <div className="shrink-0 rounded-lg bg-primary/10 p-2 text-primary">
+          <Layers className="h-4 w-4" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-foreground">{subject.title}</p>
+          {subject.description && (
+            <p className="text-xs text-foreground-muted truncate mt-0.5">{subject.description}</p>
+          )}
+          <div className="mt-2 max-w-xs">
+            <SubjectProgressBar completed={completedCount} total={total} />
+          </div>
+        </div>
+        <div className="shrink-0 text-foreground-muted">
+          {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        </div>
+      </button>
+
+      {/* Topics */}
+      {isOpen && (
+        <div className="border-t border-border p-4 grid gap-3 sm:grid-cols-2 animate-slide-down">
+          {subject.topics.length === 0 ? (
+            <p className="text-sm text-foreground-muted col-span-2 py-4 text-center">
+              No topics found for this subject.
+            </p>
+          ) : (
+            <>
+              {/* Sticky breadcrumb for subject context */}
+              <div className="col-span-2">
+                <StickyBreadcrumb subject={subject} />
+              </div>
+
+              {subject.topics.map((topic) => {
+                const progress = progressRecords.find((r) => r.topic_id === topic.id);
+
+                return (
+                  <TopicCard
+                    key={topic.id}
+                    topic={topic}
+                    progress={progress}
+                    curriculumId={curriculumId}
+                    onConfidenceChange={onConfidenceChange}
+                    onStatusChange={onStatusChange}
+                  />
+                );
+              })}
+            </>
+          )}
+
+          {/* Bulk complete button */}
+          {subject.topics.length > 0 && (
+            <div className="col-span-2 pt-2 border-t border-border flex justify-end">
+              <button
+                type="button"
+                onClick={() => setBulkModalOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-foreground-muted hover:text-foreground hover:bg-background-secondary transition-colors duration-150 cursor-pointer focus-ring"
+              >
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Mark all complete
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Bulk-complete confirmation modal */}
+      <BulkCompleteModal
+        isOpen={bulkModalOpen}
+        onClose={() => setBulkModalOpen(false)}
+        onConfirm={handleBulkComplete}
+        count={total}
+        label={subject.title}
+      />
+    </div>
+  );
+}
+
+// ── Subject filter bar ────────────────────────────────────────────────────────
+
+function SubjectFilterBar({
+  subjects,
+  selectedIds,
+  onToggle,
+}: {
+  subjects: { id: string; title: string }[];
+  selectedIds: string[];
+  onToggle: (ids: string[]) => void;
+}) {
+  const allSelected = selectedIds.length === 0 || selectedIds.length === subjects.length;
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <Filter className="h-4 w-4 text-foreground-muted" />
+      <button
+        onClick={() => onToggle([])}
+        className={cn(
+          'rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-150 border',
+          allSelected
+            ? 'bg-primary text-primary-foreground border-primary'
+            : 'border-border text-foreground-muted hover:border-primary/50 hover:text-foreground'
+        )}
+      >
+        All
+      </button>
+      {subjects.map(subject => {
+        const isSelected = allSelected || selectedIds.includes(subject.id);
+        return (
+          <button
+            key={subject.id}
+            onClick={() => {
+              if (allSelected) {
+                onToggle([subject.id]);
+              } else if (selectedIds.includes(subject.id)) {
+                const next = selectedIds.filter(id => id !== subject.id);
+                onToggle(next.length === 0 ? [] : next);
+              } else {
+                const next = [...selectedIds, subject.id];
+                onToggle(next.length === subjects.length ? [] : next);
+              }
+            }}
+            className={cn(
+              'rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-150 border',
+              isSelected
+                ? 'bg-primary/10 text-primary border-primary/30'
+                : 'border-border text-foreground-muted hover:border-border-hover'
+            )}
+          >
+            {subject.title}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
+
+export default function LessonTracker() {
+  const subtitle = usePageSubtitle();
+  const {
+    enrolledCurriculums,
+    activeCurriculumId,
+    setActiveCurriculumId,
+    subjects: allSubjects,
+    topics,
+    progressRecords,
+    selectedSubjectIds,
+    setSelectedSubjectIds,
+    updateProgress,
+  } = useLessonContext();
+
+  // ── Derived: active curriculum object ──────────────────────────────────────
+  const activeCurriculum = useMemo(
+    () => enrolledCurriculums.find(c => c.id === activeCurriculumId) ?? null,
+    [enrolledCurriculums, activeCurriculumId]
+  );
+
+  // ── Derived: progress helpers ──────────────────────────────────────────────
+  const getCurriculumTopicCount = (c: typeof enrolledCurriculums[number]) =>
+    c.subjects.reduce((sum, s) => sum + s.topics.length, 0);
+  const getCurriculumCompletedCount = (c: typeof enrolledCurriculums[number]) => {
+    const topicIds = new Set(c.subjects.flatMap(s => s.topics.map(t => t.id)));
+    return progressRecords.filter(r => topicIds.has(r.topic_id) && r.status === 'completed').length;
+  };
+  const getSubjectCompletedCount = (subject: typeof allSubjects[number]) => {
+    const topicIds = new Set(subject.topics.map(t => t.id));
+    return progressRecords.filter(r => topicIds.has(r.topic_id) && r.status === 'completed').length;
+  };
+
+  // ── Subject filter ────────────────────────────────────────────────────────
+  const filteredSubjects = useMemo(() => {
+    if (selectedSubjectIds.length === 0) return allSubjects;
+    return allSubjects.filter(s => selectedSubjectIds.includes(s.id));
+  }, [allSubjects, selectedSubjectIds]);
+
+  const activeSubjects = useMemo(
+    () => allSubjects.filter(s => s.id && activeCurriculum?.subjects.some(cs => cs.id === s.id)),
+    [allSubjects, activeCurriculum]
+  );
+
+  // ── Confidence / status handlers ─────────────────────────────────────────
+  const updateConfidence = (topicId: string, level: number) => {
+    updateProgress(topicId, { confidence_level: level });
+  };
+  const updateStatus = (topicId: string, status: TopicStatus) => {
+    updateProgress(topicId, { status });
+  };
+
+  // ── Empty state ─────────────────────────────────────────────────────────────
+
+  if (enrolledCurriculums.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-96 gap-6 animate-fade-in">
+        <div className="rounded-2xl border border-border bg-background-card p-10 text-center max-w-md w-full shadow-sm">
+          <div className="inline-flex rounded-2xl bg-primary/10 p-4 text-primary mb-5">
+            <BookOpen className="h-8 w-8" />
+          </div>
+          <h2 className="text-xl font-bold text-foreground">No courses enrolled yet</h2>
+          <p className="mt-2 text-sm text-foreground-muted leading-relaxed">
+            You haven&apos;t enrolled in a course yet. Browse the curriculum library to get started.
+          </p>
+          <Link
+            href="/courses"
+            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary-hover transition-colors duration-150"
+          >
+            <Sparkles className="h-4 w-4" />
+            Browse Courses
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Render ──────────────────────────────────────────────────────────────────
+
+  return (
+    <div className="space-y-8 animate-fade-in">
+
+      {/* ── Page header with EnrollmentSwitcher ────────────────────────────── */}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p className="text-sm font-medium text-primary">Learn</p>
+          <h1 className="text-3xl font-bold text-foreground mt-1 flex items-center gap-3">
+            <ClipboardCheck className="h-8 w-8 text-primary" />
+            Lesson Tracker
+          </h1>
+          <p className="text-foreground-muted mt-2 max-w-2xl text-sm leading-relaxed">
+            {subtitle}
+          </p>
+        </div>
+        <EnrollmentSwitcher />
+      </div>
+
+      {/* ── Curriculum tab bar ─────────────────────────────────────────────── */}
+      {enrolledCurriculums.length > 1 && (
+        <div className="flex flex-wrap gap-2" role="tablist" aria-label="Curriculum tabs">
+          {enrolledCurriculums.map((curriculum) => {
+            const cTotal = getCurriculumTopicCount(curriculum);
+            const cCompleted = getCurriculumCompletedCount(curriculum);
+            const cPct = cTotal === 0 ? 0 : Math.round((cCompleted / cTotal) * 100);
+            const isActive = curriculum.id === activeCurriculumId;
+
+            return (
+              <button
+                key={curriculum.id}
+                id={`curriculum-tab-${curriculum.id}`}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => setActiveCurriculumId(curriculum.id)}
+                className={cn(
+                  'inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all duration-200 cursor-pointer focus-ring',
+                  isActive
+                    ? 'border-primary bg-primary/10 text-primary shadow-sm'
+                    : 'border-border bg-background-card text-foreground-secondary hover:border-border-hover hover:text-foreground'
+                )}
+              >
+                <span>{curriculum.title}</span>
+                <span
+                  className={cn(
+                    'rounded-full px-2 py-0.5 text-xs font-semibold',
+                    isActive ? 'bg-primary text-primary-foreground' : 'bg-border text-foreground-muted'
+                  )}
+                >
+                  {cPct}%
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── Progress Dashboard ────────────────────────────────────────────── */}
+      <ProgressOverview curriculumId={activeCurriculumId} />
+
+      {/* ── Activity + Confidence grid ────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <WeeklyActivityChart />
+        <ConfidenceTrend curriculumId={activeCurriculumId} />
+      </div>
+
+      {/* ── Curriculum meta ────────────────────────────────────────────────── */}
+      {activeCurriculum && (
+        <div className="rounded-xl border border-border bg-gradient-to-br from-primary/5 to-accent/5 px-5 py-4 flex flex-wrap items-center gap-4">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-lg font-bold text-foreground">{activeCurriculum.title}</h2>
+            {activeCurriculum.description && (
+              <p className="text-sm text-foreground-muted mt-0.5 truncate">
+                {activeCurriculum.description}
+              </p>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2 shrink-0">
+            {activeCurriculum.qualification && (
+              <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                {activeCurriculum.qualification}
+              </span>
+            )}
+            {activeCurriculum.exam_board && (
+              <span className="rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
+                {activeCurriculum.exam_board}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Subject filter bar ─────────────────────────────────────────────── */}
+      {activeSubjects.length > 0 && (
+        <SubjectFilterBar
+          subjects={activeSubjects.map(s => ({ id: s.id, title: s.title }))}
+          selectedIds={selectedSubjectIds}
+          onToggle={setSelectedSubjectIds}
+        />
+      )}
+
+      {/* ── Subject accordion list ─────────────────────────────────────────── */}
+      {filteredSubjects.length === 0 ? (
+        <div className="rounded-xl border border-border bg-background-card p-8 text-center">
+          <Layers className="mx-auto h-8 w-8 text-foreground-muted" />
+          <p className="mt-3 font-semibold text-foreground">No subjects to show</p>
+          <p className="text-sm text-foreground-muted">
+            {allSubjects.length === 0
+              ? 'This curriculum has no subjects defined yet.'
+              : 'All subjects are filtered out. Try selecting different filters.'}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {filteredSubjects.map((subject) => (
+            <SubjectAccordion
+              key={subject.id}
+              subject={subject}
+              completedCount={getSubjectCompletedCount(subject)}
+              progressRecords={progressRecords}
+              curriculumId={activeCurriculumId}
+              onConfidenceChange={updateConfidence}
+              onStatusChange={updateStatus}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

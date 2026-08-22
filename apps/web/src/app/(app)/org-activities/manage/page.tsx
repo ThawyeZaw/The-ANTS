@@ -1,0 +1,341 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import BackButton from '@/components/ui/BackButton';
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  MapPin,
+  ImageIcon,
+  X,
+  Save,
+  Loader2,
+  Target,
+  Users,
+  Clock,
+} from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import {
+  getOrgTimelineItemsAction,
+  addOrgTimelineItemAction,
+  updateOrgTimelineItemAction,
+  deleteOrgTimelineItemAction,
+} from '@/actions/org';
+import type { OrgTimelineItem, OrgTimelineItemFormData } from '@/types';
+import { cn } from '@/lib/utils';
+import MissionEditor from '@/components/about/MissionEditor';
+import TeamManager from '@/components/about/TeamManager';
+import ImageUploader from '@/components/about/ImageUploader';
+
+// ── Tabs ─────────────────────────────────────────────────────────────────────
+
+const TABS = [
+  { key: 'mission', label: 'Mission', icon: <Target className="h-4 w-4" /> },
+  { key: 'team', label: 'Team', icon: <Users className="h-4 w-4" /> },
+  { key: 'timeline', label: 'Timeline', icon: <Clock className="h-4 w-4" /> },
+] as const;
+
+type TabKey = (typeof TABS)[number]['key'];
+
+const CATEGORY_OPTIONS = [
+  { value: 'milestone', label: 'Milestone' },
+  { value: 'workshop', label: 'Workshop' },
+  { value: 'competition', label: 'Competition' },
+  { value: 'camp', label: 'Camp' },
+  { value: 'community', label: 'Community' },
+  { value: 'other', label: 'Other' },
+] as const;
+
+const CATEGORY_COLORS: Record<string, string> = {
+  milestone: 'bg-primary/15 text-primary border-primary/25',
+  workshop: 'bg-blue-500/15 text-blue-400 border-blue-500/25',
+  competition: 'bg-amber-500/15 text-amber-400 border-amber-500/25',
+  camp: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25',
+  community: 'bg-violet-500/15 text-violet-400 border-violet-500/25',
+  other: 'bg-foreground-muted/15 text-foreground-muted border-foreground-muted/25',
+};
+
+const EMPTY_FORM: OrgTimelineItemFormData = {
+  title: '',
+  description: '',
+  date: '',
+  category: 'workshop',
+  imageUrls: [],
+  location: '',
+};
+
+// ── Timeline Tab ──────────────────────────────────────────────────────────────
+
+function TimelineTab() {
+  const [items, setItems] = useState<OrgTimelineItem[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formData, setFormData] = useState<OrgTimelineItemFormData>(EMPTY_FORM);
+  const [isSaving, setIsSaving] = useState(false);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  const refresh = async () => {
+    const data = await getOrgTimelineItemsAction();
+    setItems(data);
+  };
+
+  useEffect(() => {
+    refresh();
+  }, []);
+
+  const showFeedback = (type: 'success' | 'error', message: string) => {
+    setFeedback({ type, message });
+    setTimeout(() => setFeedback(null), 3000);
+  };
+
+  const openCreate = () => {
+    setEditingId(null); setFormData(EMPTY_FORM); setIsModalOpen(true);
+  };
+
+  const openEdit = (item: OrgTimelineItem) => {
+    setEditingId(item.id);
+    setFormData({
+      title: item.title, description: item.description, date: item.date,
+      category: item.category, imageUrls: [...item.imageUrls], location: item.location || '',
+      showOnTimeline: item.showOnTimeline,
+    });
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => { setIsModalOpen(false); setEditingId(null); setFeedback(null); };
+
+  const handleSave = async () => {
+    if (!formData.title.trim() || !formData.date.trim()) {
+      showFeedback('error', 'Title and date are required.'); return;
+    }
+    setIsSaving(true);
+    try {
+      if (editingId) {
+        const r = await updateOrgTimelineItemAction(editingId, formData);
+        if (r.success) showFeedback('success', 'Item updated.'); else showFeedback('error', r.error || 'Failed to update.');
+      } else {
+        const r = await addOrgTimelineItemAction(formData);
+        if (r.success) showFeedback('success', 'Item created.'); else showFeedback('error', r.error || 'Failed to create.');
+      }
+      await refresh(); closeModal();
+    } catch {
+      showFeedback('error', 'An error occurred while saving.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    const r = await deleteOrgTimelineItemAction(id);
+    if (r.success) { showFeedback('success', 'Item deleted.'); await refresh(); }
+    else { showFeedback('error', r.error || 'Failed to delete.'); }
+    setConfirmDeleteId(null);
+  };
+
+  return (
+    <div className="animate-fade-in space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-foreground">Timeline & Activities</h2>
+          <p className="text-sm text-foreground-muted mt-1">Add milestones, events, workshops, and more to <span className="font-brand">The ANTs</span> timeline.</p>
+        </div>
+        <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground hover:bg-primary-hover rounded-xl text-sm font-semibold transition-all cursor-pointer">
+          <Plus className="h-4 w-4" /> New Item
+        </button>
+      </div>
+
+      {feedback && (
+        <div className={cn('px-4 py-3 rounded-xl text-sm font-medium animate-fade-in', feedback.type === 'success' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25' : 'bg-red-500/15 text-red-400 border border-red-500/25')}>
+          {feedback.message}
+        </div>
+      )}
+
+      {items.length === 0 ? (
+        <div className="text-center py-16">
+          <ImageIcon className="h-12 w-12 text-foreground-muted mx-auto mb-4" />
+          <p className="text-sm text-foreground-muted">No items yet. Create your first one!</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {items.map((item) => (
+            <div key={item.id} className="flex items-center justify-between gap-4 p-4 bg-background-card border border-border rounded-xl hover:border-primary/10 transition-colors">
+              <div className="flex items-center gap-4 min-w-0">
+                <span className={cn('shrink-0 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border', CATEGORY_COLORS[item.category || 'other'])}>{item.category || 'other'}</span>
+                {item.showOnTimeline && (
+                  <span className="shrink-0 px-2 py-0.5 rounded-lg text-[10px] font-medium bg-primary/15 text-primary border border-primary/25">
+                    Timeline
+                  </span>
+                )}
+                <span className="shrink-0 text-xs font-mono text-foreground-muted">{item.date}</span>
+                <div className="min-w-0">
+                  <h3 className="text-sm font-bold text-foreground truncate">{item.title}</h3>
+                  <p className="text-xs text-foreground-muted truncate mt-0.5">{item.description}</p>
+                  {(item.imageUrls.length > 0 || item.location) && (
+                    <div className="flex items-center gap-3 mt-1 text-[10px] text-foreground-muted">
+                      {item.imageUrls.length > 0 && <span>{item.imageUrls.length} image(s)</span>}
+                      {item.location && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{item.location}</span>}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button onClick={() => openEdit(item)} className="p-2 rounded-lg text-foreground-muted hover:text-foreground hover:bg-background-secondary transition-colors cursor-pointer"><Pencil className="h-3.5 w-3.5" /></button>
+                {confirmDeleteId === item.id ? (
+                  <div className="flex items-center gap-1.5">
+                    <button onClick={() => handleDelete(item.id)} className="px-2 py-1 rounded-lg text-[11px] font-medium bg-red-500/15 text-red-400 hover:bg-red-500/25 transition-colors cursor-pointer">Confirm</button>
+                    <button onClick={() => setConfirmDeleteId(null)} className="px-2 py-1 rounded-lg text-[11px] font-medium text-foreground-muted hover:text-foreground transition-colors cursor-pointer">Cancel</button>
+                  </div>
+                ) : (
+                  <button onClick={() => setConfirmDeleteId(item.id)} className="p-2 rounded-lg text-foreground-muted hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"><Trash2 className="h-3.5 w-3.5" /></button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+          <div className="bg-background-card border border-border rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-bold text-foreground">{editingId ? 'Edit Item' : 'New Item'}</h2>
+              <button onClick={closeModal} className="p-2 rounded-lg text-foreground-muted hover:text-foreground hover:bg-background-secondary transition-colors cursor-pointer"><X className="h-5 w-5" /></button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground-secondary mb-1.5">Title *</label>
+                <input type="text" value={formData.title} onChange={(e) => setFormData((p) => ({ ...p, title: e.target.value }))} className="w-full px-3 py-2.5 rounded-xl bg-background-secondary border border-border text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:border-primary/50 transition-colors" placeholder="e.g. IGCSE Intensive Bootcamp" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-foreground-secondary mb-1.5">Date / Year *</label>
+                  <input type="text" value={formData.date} onChange={(e) => setFormData((p) => ({ ...p, date: e.target.value }))} className="w-full px-3 py-2.5 rounded-xl bg-background-secondary border border-border text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:border-primary/50 transition-colors" placeholder="e.g. 2024 Q1 or 2025-06-10" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground-secondary mb-1.5">Category</label>
+                  <select value={formData.category || ''} onChange={(e) => setFormData((p) => ({ ...p, category: e.target.value as OrgTimelineItemFormData['category'] }))} className="w-full px-3 py-2.5 rounded-xl bg-background-secondary border border-border text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors cursor-pointer">
+                    {CATEGORY_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              {/* Show on Timeline Toggle */}
+              <div className="flex items-center justify-between p-4 rounded-xl bg-background-secondary border border-border">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Show on Timeline</p>
+                  <p className="text-xs text-foreground-muted mt-0.5">Display this item on the public About page timeline</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFormData((p) => ({ ...p, showOnTimeline: !p.showOnTimeline }))}
+                  className={`relative w-11 h-6 rounded-full transition-colors cursor-pointer ${
+                    formData.showOnTimeline ? 'bg-primary' : 'bg-foreground-muted/30'
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
+                      formData.showOnTimeline ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground-secondary mb-1.5">Location</label>
+                <input type="text" value={formData.location || ''} onChange={(e) => setFormData((p) => ({ ...p, location: e.target.value }))} className="w-full px-3 py-2.5 rounded-xl bg-background-secondary border border-border text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:border-primary/50 transition-colors" placeholder="e.g. Online (Zoom), Yangon" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground-secondary mb-1.5">Description</label>
+                <textarea value={formData.description} onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))} rows={4} className="w-full px-3 py-2.5 rounded-xl bg-background-secondary border border-border text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:border-primary/50 transition-colors resize-none" placeholder="Describe..." />
+              </div>
+              <div>
+                <ImageUploader
+                  images={formData.imageUrls}
+                  onAdd={(url) => setFormData((p) => ({ ...p, imageUrls: [...p.imageUrls, url] }))}
+                  onRemove={(index) =>
+                    setFormData((p) => ({ ...p, imageUrls: p.imageUrls.filter((_, i) => i !== index) }))
+                  }
+                />
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-3 mt-8 pt-5 border-t border-border">
+              <button onClick={closeModal} className="px-4 py-2.5 rounded-xl text-sm font-medium text-foreground-secondary hover:text-foreground hover:bg-background-secondary transition-colors cursor-pointer">Cancel</button>
+              <button onClick={handleSave} disabled={isSaving} className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground hover:bg-primary-hover rounded-xl text-sm font-semibold transition-all cursor-pointer disabled:opacity-50">
+                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                {isSaving ? 'Saving...' : editingId ? 'Update' : 'Create'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Main Page ────────────────────────────────────────────────────────────────
+
+export default function ManageOrgPage() {
+  const router = useRouter();
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<TabKey>('mission');
+
+  const isMainContributor = user?.profile?.role === 'main_contributor';
+
+  useEffect(() => {
+    if (user && !isMainContributor) router.replace('/dashboard');
+  }, [user, isMainContributor, router]);
+
+  if (!isMainContributor) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <Loader2 className="h-6 w-6 text-primary animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="max-w-5xl mx-auto px-4 py-8">
+        <div className="mb-8">
+          <BackButton href="/org-activities" label="Back to Activities" />
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground mt-2">Manage Organization</h1>
+          <p className="text-sm text-foreground-secondary mt-1">Edit <span className="font-brand">The ANTs</span> about page content — mission, team, and timeline.</p>
+        </div>
+
+        {/* Tab Nav with sliding pill indicator */}
+        <div className="relative flex flex-wrap gap-1 p-1 bg-background-secondary rounded-xl border border-border mb-10 max-w-md">
+          {/* Sliding indicator pill */}
+          <div
+            className="absolute top-1 bottom-1 rounded-lg bg-background-card shadow-sm border border-border transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+            style={{
+              left: `calc(${TABS.findIndex((t) => t.key === activeTab) * (100 / TABS.length)}% + 0.25rem)`,
+              width: `calc(${100 / TABS.length}% - 0.5rem)`,
+            }}
+          />
+          {TABS.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`relative z-10 flex-1 min-w-[100px] flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 cursor-pointer ${
+                activeTab === tab.key
+                  ? 'text-foreground'
+                  : 'text-foreground-muted hover:text-foreground-secondary'
+              }`}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'mission' && <MissionEditor />}
+        {activeTab === 'team' && <TeamManager />}
+        {activeTab === 'timeline' && <TimelineTab />}
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,348 @@
+'use client';
+
+import { useCallback, useMemo, useState, useEffect } from 'react';
+import {
+  ClassroomFeature, AssignmentPriority, AssignmentStatus, ResourceType,
+  type Classroom, type Assignment, type AssignmentSubmission,
+  type DiscussionTopic, type DiscussionReply, type ClassroomResource, type ClassroomMember,
+} from '@/types';
+import { createClient } from '@/lib/supabase/client';
+
+import { matchesSlugOrId } from '@/lib/utils';
+
+type Result = { success: boolean; error?: string };
+
+export function useClassroom() {
+  const supabase = createClient()!;
+  const [version, setVersion] = useState(0);
+  const refresh = useCallback(() => setVersion((v) => v + 1), []);
+
+  const [classrooms, setClassrooms] = useState<Classroom[]>([]);
+  const [profiles, setProfiles] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!supabase) return;
+    (async () => {
+      // Fetch classrooms scoped to those the user is a member of, joined with full classroom data.
+      // Falls back to all classrooms if the user's membership list is empty (e.g. teacher browsing).
+      const [cRes, pRes] = await Promise.all([
+        supabase
+          .from('classrooms')
+          .select('*, classroom_members!inner(user_id)')
+          .order('created_at', { ascending: false }),
+        supabase.from('profiles').select('id, name, username, avatar_url'),
+      ]);
+      setClassrooms((cRes.data as unknown as Classroom[]) ?? []);
+      setProfiles(pRes.data ?? []);
+    })();
+  }, [version, supabase]);
+
+  const getProfile = useCallback(
+    (userId: string) => profiles.find((p) => p.id === userId),
+    [profiles]
+  );
+
+  const getClassroom = useCallback(
+    (id: string) => classrooms.find((c) => matchesSlugOrId(c, id) || c.invite_code === id),
+    [classrooms]
+  );
+
+  const getClassroomsByUser = useCallback(
+    async (userId: string) => {
+      if (!supabase) return [];
+      const { data: members } = await supabase.from('classroom_members').select('classroom_id').eq('user_id', userId);
+      const ids = (members ?? []).map((m: any) => m.classroom_id);
+      return classrooms.filter((c) => ids.includes(c.id));
+    },
+    [classrooms, supabase]
+  );
+
+  const getMembers = useCallback(
+    async (classroomId: string) => {
+      if (!supabase) return [];
+      const { data } = await supabase.from('classroom_members').select('*, profiles(*)').eq('classroom_id', classroomId);
+      return (data as unknown as ClassroomMember[]) ?? [];
+    },
+    [supabase]
+  );
+
+  const getMember = useCallback(
+    async (classroomId: string, userId: string) => {
+      if (!supabase) return null;
+      const { data } = await supabase.from('classroom_members').select('*').eq('classroom_id', classroomId).eq('user_id', userId).single();
+      return data as unknown as ClassroomMember ?? null;
+    },
+    [supabase]
+  );
+
+  const getAssignments = useCallback(
+    async (classroomId: string) => {
+      if (!supabase) return [];
+      const { data } = await supabase.from('assignments').select('*').eq('classroom_id', classroomId).order('created_at', { ascending: false });
+      return (data as unknown as Assignment[]) ?? [];
+    },
+    [supabase]
+  );
+
+  const getSubmissionsByAssignment = useCallback(
+    async (assignmentId: string) => {
+      if (!supabase) return [];
+      const { data } = await supabase.from('assignment_submissions').select('*, profiles(name)').eq('assignment_id', assignmentId);
+      return (data as unknown as AssignmentSubmission[]) ?? [];
+    },
+    [supabase]
+  );
+
+  const getSubmission = useCallback(
+    async (assignmentId: string, studentId: string) => {
+      if (!supabase) return null;
+      const { data } = await supabase.from('assignment_submissions').select('*').eq('assignment_id', assignmentId).eq('student_id', studentId).single();
+      return data as unknown as AssignmentSubmission ?? null;
+    },
+    [supabase]
+  );
+
+  const getTopics = useCallback(
+    async (classroomId: string) => {
+      if (!supabase) return [];
+      const { data } = await supabase.from('discussion_topics').select('*').eq('classroom_id', classroomId).order('created_at', { ascending: false });
+      return (data as DiscussionTopic[]) ?? [];
+    },
+    [supabase]
+  );
+
+  const getReplies = useCallback(
+    async (topicId: string) => {
+      if (!supabase) return [];
+      const { data } = await supabase.from('discussion_replies').select('*').eq('topic_id', topicId).order('created_at');
+      return (data as DiscussionReply[]) ?? [];
+    },
+    [supabase]
+  );
+
+  const getResources = useCallback(
+    async (classroomId: string) => {
+      if (!supabase) return [];
+      const { data } = await supabase.from('classroom_resources').select('*').eq('classroom_id', classroomId);
+      return (data as unknown as ClassroomResource[]) ?? [];
+    },
+    [supabase]
+  );
+
+  // ── Mutations ──
+
+  const createNewClassroom = useCallback(
+    async (data: { name: string; description?: string; curriculum_ids: string[]; created_by: string; enabled_features?: ClassroomFeature[] }) => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
+      const inviteCode = data.name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 4) + Math.floor(Math.random() * 100).toString().padStart(2, '0');
+
+      const { data: classroom, error } = await supabase.from('classrooms').insert({
+        name: data.name, description: data.description || null, invite_code: inviteCode,
+        curriculum_ids: data.curriculum_ids, created_by: data.created_by,
+        enabled_features: data.enabled_features || [
+          { key: 'assignments', enabled: true }, { key: 'quizzes', enabled: false },
+          { key: 'resources', enabled: true }, { key: 'discussions', enabled: false }, { key: 'links', enabled: false },
+        ],
+      } as any).select().single();
+
+      if (error) return { success: false, error: error.message };
+      if (classroom) {
+        await supabase.from('classroom_members').insert({ classroom_id: classroom.id, user_id: data.created_by, role: 'teacher' });
+        refresh();
+        return { success: true, classroom };
+      }
+      return { success: false, error: 'Failed to create classroom' };
+    },
+    [refresh, supabase]
+  );
+
+  const joinByCode = useCallback(
+    async (userId: string, inviteCode: string): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
+      const { data: classroom } = await supabase.from('classrooms').select('id, invite_code').ilike('invite_code', inviteCode).single();
+      if (!classroom) return { success: false, error: 'Invalid invite code' };
+      const { error } = await supabase.from('classroom_members').upsert({ classroom_id: classroom.id, user_id: userId, role: 'student' });
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
+    },
+    [refresh, supabase]
+  );
+
+  const leave = useCallback(
+    async (userId: string, classroomId: string): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
+      const { error } = await supabase.from('classroom_members').delete().eq('classroom_id', classroomId).eq('user_id', userId);
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
+    },
+    [refresh, supabase]
+  );
+
+  const createNewAssignment = useCallback(
+    async (data: { classroom_id: string; title: string; description?: string; due_date: string; priority?: AssignmentPriority; total_points?: number; attachment_urls?: string[]; created_by: string }): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
+      const { error } = await supabase.from('assignments').insert({
+        classroom_id: data.classroom_id, title: data.title, description: data.description || null,
+        due_date: data.due_date, priority: data.priority || 'medium', status: 'draft',
+        total_points: data.total_points || null, attachment_urls: data.attachment_urls || [], created_by: data.created_by,
+      });
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
+    },
+    [refresh, supabase]
+  );
+
+  const publishAssignment = useCallback(
+    async (assignmentId: string, status: AssignmentStatus): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
+      const { error } = await supabase.from('assignments').update({ status }).eq('id', assignmentId);
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
+    },
+    [refresh, supabase]
+  );
+
+  const updateAssignmentData = useCallback(
+    async (assignmentId: string, data: Partial<Assignment>): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
+      const { error } = await supabase.from('assignments').update(data).eq('id', assignmentId);
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
+    },
+    [refresh, supabase]
+  );
+
+  const submitToAssignment = useCallback(
+    async (assignmentId: string, studentId: string, content: string | null, attachmentUrls: string[] = []): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
+      const { error } = await supabase.from('assignment_submissions').upsert({
+        assignment_id: assignmentId, student_id: studentId, content, attachment_urls: attachmentUrls, submitted_at: new Date().toISOString(),
+      });
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
+    },
+    [refresh, supabase]
+  );
+
+  const gradeSub = useCallback(
+    async (submissionId: string, grade: number, feedback: string | null): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
+      const { error } = await supabase.from('assignment_submissions').update({ grade, feedback }).eq('id', submissionId);
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
+    },
+    [refresh, supabase]
+  );
+
+  const createTopic = useCallback(
+    async (data: { classroom_id: string; title: string; content: string; assignment_id?: string; created_by: string }): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
+      const { error } = await supabase.from('discussion_topics').insert({
+        classroom_id: data.classroom_id, title: data.title, content: data.content,
+        assignment_id: data.assignment_id || null, is_pinned: false, is_locked: false, created_by: data.created_by,
+      });
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
+    },
+    [refresh, supabase]
+  );
+
+  const replyToTopic = useCallback(
+    async (topicId: string, content: string, createdBy: string): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
+      const { error } = await supabase.from('discussion_replies').insert({ topic_id: topicId, content, created_by: createdBy });
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
+    },
+    [refresh, supabase]
+  );
+
+  const addNewResource = useCallback(
+    async (data: { classroom_id: string; title: string; description?: string; type: ResourceType; url: string; uploaded_by: string }): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
+      const { error } = await supabase.from('classroom_resources').insert({
+        classroom_id: data.classroom_id, title: data.title, description: data.description || null,
+        type: data.type, url: data.url, uploaded_by: data.uploaded_by,
+      });
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
+    },
+    [refresh, supabase]
+  );
+
+  const removeResource = useCallback(
+    async (resourceId: string): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
+      const { error } = await supabase.from('classroom_resources').delete().eq('id', resourceId);
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
+    },
+    [refresh, supabase]
+  );
+
+  const updateClassroomData = useCallback(
+    async (classroomId: string, data: Partial<Classroom>): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
+      const { error } = await supabase.from('classrooms').update(data as any).eq('id', classroomId);
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
+    },
+    [refresh, supabase]
+  );
+
+  const editResource = useCallback(
+    async (resourceId: string, data: Partial<ClassroomResource>): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
+      const { error } = await supabase.from('classroom_resources').update(data).eq('id', resourceId);
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
+    },
+    [refresh, supabase]
+  );
+
+  const removeAssignment = useCallback(
+    async (assignmentId: string): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
+      const { error } = await supabase.from('assignments').delete().eq('id', assignmentId);
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
+    },
+    [refresh, supabase]
+  );
+
+  const removeTopic = useCallback(
+    async (topicId: string): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
+      const { error } = await supabase.from('discussion_topics').delete().eq('id', topicId);
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
+    },
+    [refresh, supabase]
+  );
+
+  const editTopic = useCallback(
+    async (topicId: string, data: Partial<DiscussionTopic>): Promise<Result> => {
+      if (!supabase) return { success: false, error: 'Configuration error' };
+      const { error } = await supabase.from('discussion_topics').update(data).eq('id', topicId);
+      if (!error) refresh();
+      return error ? { success: false, error: error.message } : { success: true };
+    },
+    [refresh, supabase]
+  );
+
+  return {
+    classrooms,
+    getProfile, getClassroom, getClassroomsByUser,
+    getMembers, getMember,
+    getAssignments, getSubmissionsByAssignment, getSubmission,
+    getTopics, getReplies, getResources,
+    createNewClassroom, joinByCode, leave,
+    createNewAssignment, publishAssignment, updateAssignmentData,
+    submitToAssignment, gradeSub,
+    createTopic, replyToTopic,
+    addNewResource, removeResource,
+    updateClassroomData, editResource,
+    removeAssignment, removeTopic, editTopic,
+    refresh,
+  };
+}
