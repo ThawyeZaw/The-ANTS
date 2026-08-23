@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import AdvancedProfileEditor from '@/components/settings/AdvancedProfileEditor';
 import BackButton from '@/components/ui/BackButton';
 import { Metadata } from 'next';
@@ -16,13 +17,15 @@ export default function ProfileEditorPage() {
           <h1 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
             Edit Profile
           </h1>
-          <p className="text-sm text-foreground-muted mt-1">
+          <p className="text-xs sm:text-sm text-foreground-muted mt-1">
             Customize your public profile, manage your portfolio, and showcase your achievements.
           </p>
         </div>
       </div>
 
-      <AdvancedProfileEditor />
+      <Suspense fallback={<div className="text-center py-12 text-xs text-foreground-muted">Loading profile editor...</div>}>
+        <AdvancedProfileEditor />
+      </Suspense>
     </div>
   );
 }

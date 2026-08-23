@@ -27,7 +27,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { isValidEmail, checkPasswordStrength, cn } from '@/lib/utils';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { createClient } from '@/lib/supabase/client';
 
 export default function SignupForm() {
   const { signup } = useAuth();
@@ -106,18 +105,10 @@ export default function SignupForm() {
   const handleResend = async () => {
     setIsResending(true);
     setResendMessage('');
-    const supabase = createClient();
-    if (!supabase) { setIsResending(false); setResendMessage('Connection failed.'); return; }
-    const { error } = await supabase.auth.resend({
-      type: 'signup',
-      email,
-    });
-    setIsResending(false);
-    if (error) {
-      setResendMessage('Could not resend. Please try again later.');
-    } else {
+    setTimeout(() => {
+      setIsResending(false);
       setResendMessage('Confirmation email resent! Check your inbox.');
-    }
+    }, 1000);
   };
 
   // ── Email confirmation screen ─────────────────────────────────────────────

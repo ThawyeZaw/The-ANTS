@@ -1,32 +1,31 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — TanStack Query Hooks for Lessons
-// Query hooks replacing the cachedQuery calls in LessonContext.
-// Uses real Supabase queries with mock fallback when DB is empty/unavailable.
+// The ANTS — TanStack Query Hooks for Lessons (Hono API / Neon Backend)
+// Query hooks replacing Supabase calls with typed API queries.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queryKeys';
-import { createClient } from '@/lib/supabase/client';
 import type { Topic } from '@/types';
 
-// ── Query Hooks ──────────────────────────────────────────────────────────────
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8787';
 
 /** Fetches all curriculums (reference data — rarely changes). */
 export function useCurriculums() {
   return useQuery({
     queryKey: queryKeys.curriculums.all,
     queryFn: async () => {
-      const supabase = createClient();
-      if (!supabase) return [];
-
-      const { data } = await supabase
-        .from('curriculums')
-        .select('*')
-        .order('title');
-
-      return data ?? [];
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/curriculum`);
+        if (res.ok) {
+          const json = await res.json();
+          return json.curriculums ?? [];
+        }
+      } catch (err) {
+        console.error('Error fetching curriculums:', err);
+      }
+      return [];
     },
     staleTime: 10 * 60 * 1000,
   });
@@ -37,15 +36,24 @@ export function useSubjects() {
   return useQuery({
     queryKey: queryKeys.subjects.all,
     queryFn: async () => {
-      const supabase = createClient();
-      if (!supabase) return [];
-
-      const { data } = await supabase
-        .from('subjects')
-        .select('*')
-        .order('order_no');
-
-      return data ?? [];
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/curriculum`);
+        if (res.ok) {
+          const json = await res.json();
+          const list: any[] = [];
+          if (json.curriculums) {
+            for (const c of json.curriculums) {
+              if (c.subjects) {
+                list.push(...c.subjects);
+              }
+            }
+          }
+          return list;
+        }
+      } catch (err) {
+        console.error('Error fetching subjects:', err);
+      }
+      return [];
     },
     staleTime: 10 * 60 * 1000,
   });
@@ -56,15 +64,28 @@ export function useTopics() {
   return useQuery({
     queryKey: queryKeys.topics.all,
     queryFn: async () => {
-      const supabase = createClient();
-      if (!supabase) return [] as Topic[];
-
-      const { data } = await supabase
-        .from('topics')
-        .select('*')
-        .order('order_no');
-
-      return (data ?? []) as unknown as Topic[];
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/curriculum`);
+        if (res.ok) {
+          const json = await res.json();
+          const list: Topic[] = [];
+          if (json.curriculums) {
+            for (const c of json.curriculums) {
+              if (c.subjects) {
+                for (const s of c.subjects) {
+                  if (s.topics) {
+                    list.push(...s.topics);
+                  }
+                }
+              }
+            }
+          }
+          return list;
+        }
+      } catch (err) {
+        console.error('Error fetching topics:', err);
+      }
+      return [] as Topic[];
     },
     staleTime: 10 * 60 * 1000,
   });
@@ -75,15 +96,17 @@ export function useUserEnrollments(userId: string) {
   return useQuery({
     queryKey: queryKeys.enrollments.byUser(userId),
     queryFn: async () => {
-      const supabase = createClient();
-      if (!supabase) return [];
-
-      const { data } = await supabase
-        .from('user_enrollments')
-        .select('*')
-        .eq('user_id', userId);
-
-      return data ?? [];
+      if (!userId) return [];
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/curriculum/user-curriculums?userId=${encodeURIComponent(userId)}`);
+        if (res.ok) {
+          const json = await res.json();
+          return json.userCurriculums ?? [];
+        }
+      } catch (err) {
+        console.error('Error fetching user enrollments:', err);
+      }
+      return [];
     },
     staleTime: 5 * 60 * 1000,
     enabled: !!userId,
@@ -95,15 +118,17 @@ export function useTopicProgress(userId: string) {
   return useQuery({
     queryKey: queryKeys.topicProgress.byUser(userId),
     queryFn: async () => {
-      const supabase = createClient();
-      if (!supabase) return [];
-
-      const { data } = await supabase
-        .from('topic_progress')
-        .select('*')
-        .eq('user_id', userId);
-
-      return data ?? [];
+      if (!userId) return [];
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/curriculum/progress?userId=${encodeURIComponent(userId)}`);
+        if (res.ok) {
+          const json = await res.json();
+          return json.progress ?? [];
+        }
+      } catch (err) {
+        console.error('Error fetching topic progress:', err);
+      }
+      return [];
     },
     staleTime: 5 * 60 * 1000,
     enabled: !!userId,
@@ -115,19 +140,18 @@ export function useSubjectCountdowns(subjectIds: string[]) {
   return useQuery({
     queryKey: queryKeys.countdowns.bySubjects(subjectIds),
     queryFn: async () => {
-      const supabase = createClient();
-      if (!supabase) return [];
-
-      const today = new Date().toISOString().split('T')[0];
-
-      const { data } = await (supabase as any)
-        .from('exams')
-        .select('*')
-        .in('subject_id', subjectIds)
-        .gt('date', today)
-        .order('date', { ascending: true });
-
-      return data ?? [];
+      if (subjectIds.length === 0) return [];
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/exams`);
+        if (res.ok) {
+          const json = await res.json();
+          const list: any[] = json.exams || [];
+          return list.filter((e) => subjectIds.includes(e.subject_id));
+        }
+      } catch (err) {
+        console.error('Error fetching subject countdowns:', err);
+      }
+      return [];
     },
     staleTime: 5 * 60 * 1000,
     enabled: subjectIds.length > 0,

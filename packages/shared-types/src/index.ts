@@ -1,6 +1,22 @@
 import { z } from 'zod';
 
-export type UserRole = 'student' | 'teacher' | 'contributor' | 'main_contributor';
+export type UserRole = 'student' | 'tutor' | 'contributor' | 'admin' | 'teacher' | 'main_contributor';
+
+export interface ProfileDTO {
+  id: string;
+  email: string;
+  name: string;
+  username: string;
+  avatar_url?: string | null;
+  role: UserRole;
+  roles: UserRole[];
+  bio?: string | null;
+  title?: string | null;
+  is_public?: boolean | null;
+  timezone?: string | null;
+  telegram_chat_id?: string | null;
+  created_at?: string | null;
+}
 
 export interface TimetableEventDTO {
   id: string;
@@ -16,7 +32,7 @@ export interface TimetableEventDTO {
   metadata?: Record<string, any> | null;
   created_at?: string | null;
   is_virtual?: boolean;
-  source_type?: 'timetable' | 'exam' | 'assignment' | 'club_event' | 'club_milestone';
+  source_type?: 'timetable' | 'exam' | 'assignment';
 }
 
 export interface FlashcardDeckDTO {
@@ -78,28 +94,4 @@ export interface UserNoteDTO {
   curriculum_id?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
-}
-
-export interface ClassroomDTO {
-  id: string;
-  name: string;
-  code: string;
-  description?: string | null;
-  teacher_id: string;
-  is_archived?: boolean | null;
-  created_at?: string | null;
-}
-
-export interface ClubDTO {
-  id: string;
-  name: string;
-  slug: string;
-  description?: string | null;
-  icon_url?: string | null;
-  banner_url?: string | null;
-  is_public?: boolean | null;
-  join_mode?: string | null;
-  owner_id: string;
-  enabled_features?: Record<string, boolean> | null;
-  created_at?: string | null;
 }

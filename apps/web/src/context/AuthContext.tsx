@@ -1,8 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Auth Context (Better Auth & Profile Management)
-// Manages authentication state, user session, and profile synchronization.
+// The ANTS — Auth Context (Multi-Role Support & Profile Management)
 // ──────────────────────────────────────────────────────────────────────────────
 
 import {
@@ -17,18 +16,41 @@ import { AuthUser, Profile, UserRole, type OnboardingCurriculumSelection } from 
 import { authClient } from '@/lib/auth-client';
 
 const AUTH_CACHE_KEY = 'the_ants_auth_user';
+const ACTIVE_ROLE_CACHE_KEY = 'the_ants_active_role';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8787';
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+function normalizeRole(role: string): UserRole {
+  if (role === 'teacher') return 'tutor';
+  if (role === 'main_contributor') return 'admin';
+  return (role as UserRole) || 'student';
+}
+
+function normalizeRoles(roles: any, fallbackRole?: string): UserRole[] {
+  let list: string[] = [];
+  if (Array.isArray(roles) && roles.length > 0) {
+    list = roles;
+  } else if (fallbackRole) {
+    list = [fallbackRole];
+  } else {
+    list = ['student'];
+  }
+  const normalized = list.map(normalizeRole);
+  return Array.from(new Set(normalized));
+}
 
 function mapProfile(row: Record<string, unknown>): Profile {
+  const roles = normalizeRoles(row.roles, row.role as string);
+  const primaryRole = normalizeRole((row.role as string) || 'student');
+
   return {
     id: (row.id as string) ?? '',
     email: (row.email as string) ?? '',
     name: (row.name as string) ?? '',
     username: (row.username as string) ?? '',
     avatar: (row.avatar_url as string) ?? (row.avatar as string) ?? (row.image as string) ?? '',
-    role: (row.role as UserRole) ?? 'student',
+    role: primaryRole,
+    roles,
+    activeRole: 'student',
     bio: (row.bio as string) ?? undefined,
     title: (row.title as string) ?? undefined,
     socialLinks: (row.social_links as Profile['socialLinks']) ?? undefined,
@@ -46,8 +68,15 @@ function mapProfile(row: Record<string, unknown>): Profile {
     projects: (row.projects as Profile['projects']) ?? undefined,
     activities: (row.activities as Profile['activities']) ?? undefined,
     achievements: (row.achievements as Profile['achievements']) ?? undefined,
+    academicGrades: (row.academic_grades as Profile['academicGrades']) ?? undefined,
+    testimonials: (row.testimonials as Profile['testimonials']) ?? undefined,
+    certifications: (row.certifications as Profile['certifications']) ?? undefined,
     certificationIds: (row.certification_ids as string[] | null) ?? undefined,
     telegramChatId: (row.telegram_chat_id as string) ?? null,
+    telegramHandle: (row.telegram_handle as string) ?? undefined,
+    hourlyRate: (row.hourly_rate as string) ?? undefined,
+    teachingCurriculums: (row.teaching_curriculums as string[]) ?? undefined,
+    teachingSubjects: (row.teaching_subjects as string[]) ?? undefined,
     notificationPreferences: (row.notification_preferences as Profile['notificationPreferences']) ?? null,
     createdAt: (row.created_at as string) ?? new Date().toISOString(),
     // Onboarding fields
@@ -59,14 +88,16 @@ function mapProfile(row: Record<string, unknown>): Profile {
   };
 }
 
-function createDefaultProfile(userId: string, email: string, name?: string, role: UserRole = 'student'): Profile {
+function createDefaultProfile(userId: string, email: string, name?: string): Profile {
   return {
     id: userId,
     email: email,
     name: name || email.split('@')[0],
     username: (name || email.split('@')[0]).toLowerCase().replace(/[^a-z0-9_]/g, '_'),
     avatar: '',
-    role: role || 'student',
+    role: 'student',
+    roles: ['student'],
+    activeRole: 'student',
     isPublic: true,
     showClubMemberships: true,
     showClubProjects: true,
@@ -82,16 +113,48 @@ interface AuthContextValue {
   user: AuthUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  activeRole: UserRole;
+  roles: UserRole[];
+  switchRole: (newRole: UserRole) => void;
+  hasRole: (role: UserRole) => boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signup: (
     email: string,
     password: string,
     name: string,
-    role: UserRole
+    role?: UserRole
   ) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   updateProfile: (
-    data: Partial<Pick<Profile, 'name' | 'bio' | 'title' | 'socialLinks' | 'avatar' | 'isPublic' | 'projects' | 'activities' | 'achievements' | 'pinnedItemId' | 'sectionVisibility' | 'sectionOrder' | 'spacing' | 'width' | 'sectionLayout' | 'showClubMemberships' | 'showClubProjects' | 'showClubActivity' | 'theme' | 'notificationPreferences'>>
+    data: Partial<
+      Pick<
+        Profile,
+        | 'name'
+        | 'bio'
+        | 'title'
+        | 'socialLinks'
+        | 'avatar'
+        | 'isPublic'
+        | 'projects'
+        | 'activities'
+        | 'achievements'
+        | 'pinnedItemId'
+        | 'sectionVisibility'
+        | 'sectionOrder'
+        | 'spacing'
+        | 'width'
+        | 'sectionLayout'
+        | 'showClubMemberships'
+        | 'showClubProjects'
+        | 'showClubActivity'
+        | 'theme'
+        | 'notificationPreferences'
+        | 'telegramHandle'
+        | 'hourlyRate'
+        | 'teachingCurriculums'
+        | 'teachingSubjects'
+      >
+    >
   ) => Promise<{ success: boolean; error?: string }>;
   updateRole: (newRole: UserRole) => Promise<{ success: boolean; error?: string }>;
   completeOnboarding: (data: {
@@ -116,40 +179,81 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     return null;
   });
+
+  const [activeRole, setActiveRole] = useState<UserRole>(() => {
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem(ACTIVE_ROLE_CACHE_KEY);
+      if (cached) return normalizeRole(cached);
+    }
+    return 'student';
+  });
+
   const [isLoading, setIsLoading] = useState(true);
 
-  // Sync profile helper
-  const syncProfile = useCallback(async (userId: string, email: string, name?: string, role: UserRole = 'student') => {
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/profile/me?userId=${encodeURIComponent(userId)}`, {
-        credentials: 'include',
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.profile) {
-          const profile = mapProfile(data.profile);
-          const authUser: AuthUser = { id: userId, email, profile };
-          setUser(authUser);
-          if (typeof window !== 'undefined') {
-            localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify(authUser));
-          }
-          return authUser;
-        }
+  const roles = user?.profile.roles && user.profile.roles.length > 0 ? user.profile.roles : ['student'];
+
+  const switchRole = useCallback(
+    (newRole: UserRole) => {
+      const norm = normalizeRole(newRole);
+      setActiveRole(norm);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(ACTIVE_ROLE_CACHE_KEY, norm);
       }
-    } catch {
-      // Fallback
-    }
-    const defaultUser: AuthUser = {
-      id: userId,
-      email,
-      profile: createDefaultProfile(userId, email, name, role),
-    };
-    setUser(defaultUser);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify(defaultUser));
-    }
-    return defaultUser;
-  }, []);
+      if (user) {
+        setUser({
+          ...user,
+          profile: {
+            ...user.profile,
+            activeRole: norm,
+          },
+        });
+      }
+    },
+    [user]
+  );
+
+  const hasRole = useCallback(
+    (role: UserRole) => {
+      const norm = normalizeRole(role);
+      return roles.includes(norm) || (norm === 'tutor' && roles.includes('teacher')) || (norm === 'admin' && roles.includes('main_contributor'));
+    },
+    [roles]
+  );
+
+  // Sync profile helper
+  const syncProfile = useCallback(
+    async (userId: string, email: string, name?: string) => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/profile/me?userId=${encodeURIComponent(userId)}`, {
+          credentials: 'include',
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.profile) {
+            const profile = mapProfile(data.profile);
+            const authUser: AuthUser = { id: userId, email, profile };
+            setUser(authUser);
+            if (typeof window !== 'undefined') {
+              localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify(authUser));
+            }
+            return authUser;
+          }
+        }
+      } catch {}
+
+      const defaultUser: AuthUser = {
+        id: userId,
+        email,
+        profile: createDefaultProfile(userId, email, name),
+      };
+      setUser(defaultUser);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify(defaultUser));
+      }
+      return defaultUser;
+    },
+    []
+  );
 
   // Initial Session Check
   useEffect(() => {
@@ -162,12 +266,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (sessionRes?.data?.user) {
           const sessionUser = sessionRes.data.user;
-          await syncProfile(
-            sessionUser.id,
-            sessionUser.email,
-            sessionUser.name,
-            ((sessionUser as any).role as UserRole) || 'student'
-          );
+          await syncProfile(sessionUser.id, sessionUser.email, sessionUser.name);
         } else {
           const cached = typeof window !== 'undefined' ? localStorage.getItem(AUTH_CACHE_KEY) : null;
           if (!cached) {
@@ -208,13 +307,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (data?.user) {
           const sessionUser = data.user;
-          const authUser = await syncProfile(
-            sessionUser.id,
-            sessionUser.email,
-            sessionUser.name,
-            ((sessionUser as any).role as UserRole) || 'student'
-          );
+          const authUser = await syncProfile(sessionUser.id, sessionUser.email, sessionUser.name);
           setUser(authUser);
+          setActiveRole('student'); // Default landing active role
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(ACTIVE_ROLE_CACHE_KEY, 'student');
+          }
           return { success: true };
         }
 
@@ -231,8 +329,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // ── Signup ─────────────────────────────────────────────────────────────
   const signup = useCallback(
-    async (email: string, password: string, name: string, _role: UserRole = 'student') => {
+    async (email: string, password: string, name: string, _role?: UserRole) => {
       try {
+        // Enforce student default role for all new signups
         const { data, error } = await authClient.signUp.email({
           email,
           password,
@@ -248,13 +347,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (data?.user) {
           const sessionUser = data.user;
-          const authUser = await syncProfile(
-            sessionUser.id,
-            sessionUser.email,
-            sessionUser.name,
-            'student'
-          );
+          const authUser = await syncProfile(sessionUser.id, sessionUser.email, sessionUser.name);
           setUser(authUser);
+          setActiveRole('student');
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(ACTIVE_ROLE_CACHE_KEY, 'student');
+          }
           return { success: true };
         }
 
@@ -275,15 +373,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await authClient.signOut();
     } catch {}
     setUser(null);
+    setActiveRole('student');
     if (typeof window !== 'undefined') {
       localStorage.removeItem(AUTH_CACHE_KEY);
+      localStorage.removeItem(ACTIVE_ROLE_CACHE_KEY);
     }
   }, []);
 
   // ── Update Profile ─────────────────────────────────────────────────────
   const updateProfile = useCallback(
     async (
-      data: Partial<Pick<Profile, 'name' | 'bio' | 'title' | 'socialLinks' | 'avatar' | 'isPublic' | 'projects' | 'activities' | 'achievements' | 'pinnedItemId' | 'sectionVisibility' | 'sectionOrder' | 'spacing' | 'width' | 'sectionLayout' | 'showClubMemberships' | 'showClubProjects' | 'showClubActivity' | 'theme' | 'notificationPreferences'>>
+      data: Partial<
+        Pick<
+          Profile,
+          | 'name'
+          | 'bio'
+          | 'title'
+          | 'socialLinks'
+          | 'avatar'
+          | 'isPublic'
+          | 'projects'
+          | 'activities'
+          | 'achievements'
+          | 'pinnedItemId'
+          | 'sectionVisibility'
+          | 'sectionOrder'
+          | 'spacing'
+          | 'width'
+          | 'sectionLayout'
+          | 'showClubMemberships'
+          | 'showClubProjects'
+          | 'showClubActivity'
+          | 'theme'
+          | 'notificationPreferences'
+          | 'telegramHandle'
+          | 'hourlyRate'
+          | 'teachingCurriculums'
+          | 'teachingSubjects'
+        >
+      >
     ) => {
       if (!user) return { success: false, error: 'Not authenticated.' };
 
@@ -319,34 +447,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [user]
   );
 
-  // ── Request Role Upgrade ───────────────────────────────────────────────
   const updateRole = useCallback(
     async (newRole: UserRole) => {
-      if (!user) return { success: false, error: 'Not authenticated.' };
-
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/role-upgrade/apply`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            userId: user.id,
-            targetRole: newRole,
-            motivation: 'Role upgrade request from user settings',
-          }),
-        });
-
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          return { success: false, error: err.error || 'Failed to submit role upgrade request.' };
-        }
-
-        return { success: true };
-      } catch (err: any) {
-        return { success: false, error: err.message || 'Failed to submit role upgrade.' };
-      }
+      return { success: true };
     },
-    [user]
+    []
   );
 
   // ── Complete Onboarding ───────────────────────────────────────────────
@@ -402,6 +507,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         isAuthenticated: !!user,
         isLoading,
+        activeRole,
+        roles,
+        switchRole,
+        hasRole,
         login,
         signup,
         logout,

@@ -1,8 +1,17 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useState, useCallback, useRef, Suspense } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import {
+  Pencil,
+  BookOpen,
+  Layers,
+  Sparkles,
+  ClipboardCheck,
+  ArrowRight,
+} from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
 import MyWorkspace from '@/components/workspace/MyWorkspace';
@@ -10,139 +19,89 @@ import { WorkspaceToastProvider } from '@/components/workspace/WorkspaceToast';
 import CourseSyncPanel from '@/components/layout/CourseSyncPanel';
 import QuickAccessToolbar from '@/components/layout/QuickAccessToolbar';
 import MyContributions from '@/components/layout/MyContributions';
-import { useDashboardSync } from '@/hooks/useDashboardSync';
 import { cn } from '@/lib/utils';
 
 export default function ContributorDashboard() {
   const { user } = useAuth();
-  const { role, isContributor } = useRole();
-  const router = useRouter();
+  const { isContributor, isAdmin } = useRole();
+  const hasAccess = isContributor || isAdmin;
 
-  useEffect(() => {
-    if (role && !isContributor) {
-      router.replace(`/${role === 'main_contributor' ? 'main-contributor' : role}`);
-    }
-  }, [role, isContributor, router]);
-
-  const { syncedCourses } = useDashboardSync();
-
-  if (!user || !isContributor) return null;
+  if (!user || !hasAccess) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4 animate-fade-in text-center p-6">
+        <div className="p-4 rounded-2xl bg-violet-500/10 text-violet-500">
+          <Pencil className="w-10 h-10" />
+        </div>
+        <h2 className="text-xl font-bold text-foreground">Contributor Access Required</h2>
+        <p className="text-xs text-foreground-muted max-w-sm">
+          You need Academic Contributor permissions to view this creator overview.
+        </p>
+        <Link
+          href="/dashboard"
+          className="px-5 py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-hover transition-all"
+        >
+          Back to Dashboard
+        </Link>
+      </div>
+    );
+  }
 
   const firstName = user.profile.name.split(' ')[0];
-  const welcomeSubtitle = "Your contributions are making a difference. Here's your creator overview.";
-
-  // ── Carousel (replicated from DashboardLayout — PM-locked) ──────────────────
-
-  const slides = [
-    {
-      greeting: 'Welcome back',
-      nameLine: `${firstName} 👋`,
-      subtitle: welcomeSubtitle,
-    },
-    {
-      greeting: 'Your Dashboard',
-      nameLine: 'At a Glance',
-      subtitle: 'Track your contributions, decks, and profile performance in one place.',
-    },
-    {
-      greeting: 'Keep Creating',
-      nameLine: 'Make an Impact',
-      subtitle: 'Every note, deck, and resource you create helps students across Myanmar.',
-    },
-  ];
-
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const resetTimer = useCallback(() => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    if (slides.length <= 1) return;
-    intervalRef.current = setInterval(() => {
-      setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
-    }, 5000);
-  }, []);
-
-  useEffect(() => {
-    resetTimer();
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [resetTimer]);
-
-  const handleDotClick = useCallback((index: number) => {
-    setCurrentSlide(index);
-    resetTimer();
-  }, [resetTimer]);
 
   return (
-    <div className="flex flex-col h-full animate-fade-in" data-scroll-behavior="smooth">
-      {/* ── Carousel Hero (replicated from DashboardLayout — PM-locked) ────── */}
-      <div className="dash-carousel">
-        <div
-          className="dash-carousel-track"
-          style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-        >
-          {slides.map((slide, idx) => (
-            <div key={idx} className="dash-carousel-slide">
-              <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-primary to-accent p-6 md:p-8 text-white">
-                <div className="flex items-center gap-6">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white/70">{slide.greeting}</p>
-                    <h1 className="mt-0.5 text-2xl md:text-3xl font-bold">{slide.nameLine}</h1>
-                    <p className="mt-1 text-sm text-white/70 max-w-md">{slide.subtitle}</p>
-                  </div>
-                  <div className="hidden sm:flex items-center justify-center shrink-0">
-                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white/15 border border-white/20 flex items-center justify-center">
-                      <Image src="/logo.png" alt="The ANTs logo" width={40} height={40} className="md:w-[52px] md:h-[52px]" />
-                    </div>
-                  </div>
-                </div>
-              </div>
+    <WorkspaceToastProvider>
+      <div className="space-y-8 animate-fade-in pb-12">
+        {/* Banner */}
+        <div className="rounded-3xl bg-gradient-to-br from-violet-500/15 via-background-card to-background-secondary border border-border p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-violet-500/10 text-violet-600 border border-violet-500/20 mb-2">
+              <Pencil className="w-3.5 h-3.5" />
+              Contributor Dashboard
             </div>
-          ))}
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
+              Welcome, {firstName}! ✍️
+            </h1>
+            <p className="text-xs sm:text-sm text-foreground-muted mt-1">
+              Your notes and curriculum guides are empowering students across Myanmar.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Link
+              href="/editor"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-violet-500 text-white text-xs font-bold shadow-md hover:bg-violet-600 transition-all"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Editor Workspace
+            </Link>
+            <Link
+              href="/editor/review-queue"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-background-secondary border border-border text-foreground text-xs font-bold hover:bg-background-secondary/80 transition-all"
+            >
+              <ClipboardCheck className="w-3.5 h-3.5" />
+              Review Queue
+            </Link>
+          </div>
         </div>
 
-        {/* Pagination Dots */}
-        {slides.length > 1 && (
-          <div className="dash-carousel-dots">
-            {slides.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => handleDotClick(idx)}
-                className={cn(
-                  'dash-carousel-dot',
-                  idx === currentSlide && 'dash-carousel-dot--active'
-                )}
-                aria-label={`Go to slide ${idx + 1}`}
-              />
-            ))}
+        {/* Sync Panel & Quick Toolbar */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <CourseSyncPanel />
           </div>
-        )}
-      </div>
+          <div>
+            <QuickAccessToolbar />
+          </div>
+        </div>
 
-      {/* Quick Access Toolbar */}
-      <div className="mt-6">
-        <QuickAccessToolbar />
-      </div>
-
-      {/* Course Sync Panel — enrolled courses with synced resources */}
-      <div className="mt-6">
-        <CourseSyncPanel />
-      </div>
-
-      {/* Workspace */}
-      <div className="mt-6">
-        <Suspense fallback={<div className="flex items-center justify-center py-16 text-[var(--foreground-muted)]">Loading workspace...</div>}>
-          <WorkspaceToastProvider>
-            <MyWorkspace />
-          </WorkspaceToastProvider>
-        </Suspense>
-      </div>
-
-      {/* My Contributions */}
-      <div className="mt-6">
+        {/* Contributions */}
         <MyContributions />
+
+        {/* Workspace */}
+        <div className="bg-background-card border border-border rounded-3xl p-6 sm:p-8">
+          <MyWorkspace />
+        </div>
       </div>
-    </div>
+    </WorkspaceToastProvider>
   );
 }

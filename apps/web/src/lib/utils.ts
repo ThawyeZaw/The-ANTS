@@ -132,7 +132,7 @@ export function generateClubSlug(): string {
 }
 
 /**
- * Translate a raw Supabase auth error string into a user-friendly message.
+ * Translate a raw auth error string into a user-friendly message.
  * Falls back to the original error message for unrecognised errors.
  */
 export function humanizeAuthError(error?: string): string {

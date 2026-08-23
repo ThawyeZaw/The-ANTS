@@ -1,17 +1,15 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — useCourseSync hook
-// Provides synced course-resource data for dashboards. Fetches real data from
-// Supabase (user_enrollments, notes, decks, exams) via LessonContext and direct
-// queries, grouped by curriculum and subject for prominent dashboard display.
+// The ANTS — useCourseSync hook (Hono API / Neon Backend)
+// Provides synced course-resource data for dashboards.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
 import { useLessonContext } from '@/context/LessonContext';
-import { createClient } from '@/lib/supabase/client';
-import { cachedQuery } from '@/lib/cache';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8787';
 
 export interface SyncedCourse {
   curriculumId: string;
@@ -45,7 +43,6 @@ export function useCourseSync() {
   const [isLoading, setIsLoading] = useState(true);
   const [hasTriggeredFetch, setHasTriggeredFetch] = useState(false);
 
-  // ── Trigger LessonContext to fetch data on non-lesson routes (e.g. dashboard) ──
   useEffect(() => {
     if (user && !hasTriggeredFetch) {
       refetch();
@@ -53,7 +50,6 @@ export function useCourseSync() {
     }
   }, [user, hasTriggeredFetch, refetch]);
 
-  // ── Build synced courses from LessonContext + Supabase resource queries ──
   useEffect(() => {
     if (!user) {
       setSyncedCourses([]);
@@ -69,35 +65,18 @@ export function useCourseSync() {
       return;
     }
 
-    const supabase = createClient();
-    const subjectIds = enrolledSubjectIds;
-
     const fetchResources = async () => {
       try {
-        const queries: any[] = [];
+        const [notesRes, decksRes, examsRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/api/notes/library`),
+          fetch(`${API_BASE_URL}/api/flashcards/decks?userId=${encodeURIComponent(user.id)}`),
+          fetch(`${API_BASE_URL}/api/exams`),
+        ]);
 
-        if (subjectIds.length > 0) {
-          const idsKey = subjectIds.sort().join(',');
-          queries.push(
-            cachedQuery(`notes_${idsKey}`, () => supabase.from('notes').select('*').in('subject_id', subjectIds), { staleTimeMs: 120_000 })
-          );
-          queries.push(
-            cachedQuery(`decks_${idsKey}`, () => supabase.from('decks').select('*').in('subject_id', subjectIds), { staleTimeMs: 120_000 })
-          );
-          queries.push(
-            cachedQuery(`exams_${idsKey}`, () => supabase.from('exams').select('*').in('subject_id', subjectIds), { staleTimeMs: 120_000 })
-          );
-        }
+        const notes = notesRes.ok ? (await notesRes.json()).notes || [] : [];
+        const decks = decksRes.ok ? (await decksRes.json()).decks || [] : [];
+        const exams = examsRes.ok ? (await examsRes.json()).exams || [] : [];
 
-        const [notesRes, decksRes, examsRes] = subjectIds.length > 0
-          ? await Promise.all(queries)
-          : [{ data: [] }, { data: [] }, { data: [] }];
-
-        const notes = (notesRes?.data ?? []) as any[];
-        const decks = (decksRes?.data ?? []) as any[];
-        const exams = (examsRes?.data ?? []) as any[];
-
-        // Map countdowns from LessonContext (SubjectCountdown[] -> { subjectId, exam })
         const countdownsBySubject = new Map<string, any>();
         for (const cd of ctxCountdowns) {
           if (cd.exam) {
@@ -110,17 +89,10 @@ export function useCourseSync() {
           curriculumTitle: curriculum.title,
           examBoard: (curriculum as any).exam_board ?? null,
           subjects: curriculum.subjects.map((subject) => {
-            const subjectNotes = notes.filter(
-              (n: any) => n.subject_id === subject.id
-            );
-            const subjectDecks = decks.filter(
-              (d: any) => d.subject_id === subject.id
-            );
-            const subjectExams = exams.filter(
-              (e: any) => e.subject_id === subject.id
-            );
+            const subjectNotes = notes.filter((n: any) => n.subject_id === subject.id);
+            const subjectDecks = decks.filter((d: any) => d.subject_id === subject.id);
+            const subjectExams = exams.filter((e: any) => e.subject_id === subject.id);
 
-            // Build countdowns array for this subject
             const subjectCountdowns: any[] = [];
             const cd = countdownsBySubject.get(subject.id);
             if (cd) {
@@ -149,28 +121,7 @@ export function useCourseSync() {
     };
 
     fetchResources();
+  }, [user, ctxLoading, enrolledCurriculums, enrolledSubjectIds, ctxCountdowns]);
 
-    const handleCacheInvalidate = () => {
-      fetchResources();
-    };
-    window.addEventListener('supabase-cache-invalidate', handleCacheInvalidate);
-
-    return () => {
-      window.removeEventListener('supabase-cache-invalidate', handleCacheInvalidate);
-    };
-  }, [user, enrolledCurriculums, enrolledSubjectIds, ctxCountdowns, ctxLoading]);
-
-  const hasEnrollments = syncedCourses.length > 0;
-  const totalResources = syncedCourses.reduce(
-    (acc, c) =>
-      acc +
-      c.subjects.reduce(
-        (sAcc, s) =>
-          sAcc + s.notes.length + s.flashcards.length + s.exams.length + s.countdowns.length,
-        0
-      ),
-    0
-  );
-
-  return { syncedCourses, hasEnrollments, totalResources, isLoading };
+  return { syncedCourses, isLoading };
 }

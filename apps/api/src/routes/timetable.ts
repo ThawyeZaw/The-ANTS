@@ -1,24 +1,16 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { eq, and, gte, lte, inArray } from 'drizzle-orm';
+import { eq, and, gte, lte } from 'drizzle-orm';
 import {
   createDb,
   timetableEvents,
   examCountdowns,
-  assignments,
-  classroomMembers,
-  clubEvents,
-  clubMilestones,
-  clubMembers,
 } from '@the-ants/db';
 import type { TimetableEventDTO } from '@the-ants/shared-types';
 
 export function createTimetableRoutes(getDb: () => ReturnType<typeof createDb>) {
   const router = new Hono();
 
-  // ── Original RLS Policy: timetable_events_owner_all ────────────────────────
-  // Replaces Supabase RLS: USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id)
-  
   // 1. Get user timetable events
   router.get('/events', async (c) => {
     const db = getDb();
@@ -46,7 +38,7 @@ export function createTimetableRoutes(getDb: () => ReturnType<typeof createDb>) 
     return c.json({ success: true, events });
   });
 
-  // 2. Integrated Timetable (Joins exam countdowns, assignments, club events, club milestones)
+  // 2. Integrated Timetable (Joins personal events + exam countdowns)
   router.get('/integrated', async (c) => {
     const db = getDb();
     const userId = c.req.query('userId');
@@ -77,50 +69,6 @@ export function createTimetableRoutes(getDb: () => ReturnType<typeof createDb>) 
         lte(examCountdowns.exam_date, endDate)
       ),
     });
-
-    // Stream 3: Classrooms user belongs to -> Assignments
-    const memberships = await db.query.classroomMembers.findMany({
-      where: eq(classroomMembers.user_id, userId),
-    });
-    const classroomIds = memberships.map((m) => m.classroom_id);
-
-    let assignmentEvents: typeof assignments.$inferSelect[] = [];
-    if (classroomIds.length > 0) {
-      assignmentEvents = await db.query.assignments.findMany({
-        where: and(
-          inArray(assignments.classroom_id, classroomIds),
-          gte(assignments.due_date, startDate),
-          lte(assignments.due_date, endDate)
-        ),
-      });
-    }
-
-    // Stream 4: Clubs user belongs to -> Club Events & Milestones
-    const clubMemberships = await db.query.clubMembers.findMany({
-      where: eq(clubMembers.user_id, userId),
-    });
-    const clubIds = clubMemberships.map((m) => m.club_id);
-
-    let clubEventsList: typeof clubEvents.$inferSelect[] = [];
-    let clubMilestonesList: typeof clubMilestones.$inferSelect[] = [];
-
-    if (clubIds.length > 0) {
-      clubEventsList = await db.query.clubEvents.findMany({
-        where: and(
-          inArray(clubEvents.club_id, clubIds),
-          gte(clubEvents.start_time, startDate),
-          lte(clubEvents.start_time, endDate)
-        ),
-      });
-
-      clubMilestonesList = await db.query.clubMilestones.findMany({
-        where: and(
-          inArray(clubMilestones.club_id, clubIds),
-          gte(clubMilestones.target_date, startDate),
-          lte(clubMilestones.target_date, endDate)
-        ),
-      });
-    }
 
     // Combine into unified TimetableEventDTO list
     const combined: TimetableEventDTO[] = [
@@ -153,47 +101,9 @@ export function createTimetableRoutes(getDb: () => ReturnType<typeof createDb>) 
         is_virtual: true,
         source_type: 'exam' as const,
       })),
-      ...assignmentEvents.map((asg) => ({
-        id: `asg-${asg.id}`,
-        user_id: userId,
-        title: `Assignment Due: ${asg.title}`,
-        event_type: 'assignment',
-        start_time: (asg.due_date || new Date()).toISOString(),
-        end_time: (asg.due_date || new Date()).toISOString(),
-        all_day: false,
-        color_code: '#F59E0B',
-        metadata: { classroom_id: asg.classroom_id, total_points: asg.total_points },
-        is_virtual: true,
-        source_type: 'assignment' as const,
-      })),
-      ...clubEventsList.map((ce) => ({
-        id: `club-evt-${ce.id}`,
-        user_id: userId,
-        title: `Club: ${ce.title}`,
-        event_type: 'club_event',
-        start_time: ce.start_time.toISOString(),
-        end_time: (ce.end_time || new Date(ce.start_time.getTime() + 3600000)).toISOString(),
-        all_day: false,
-        color_code: '#3B82F6',
-        metadata: { club_id: ce.club_id, location: ce.location, meeting_url: ce.meeting_url },
-        is_virtual: true,
-        source_type: 'club_event' as const,
-      })),
-      ...clubMilestonesList.map((cm) => ({
-        id: `club-ms-${cm.id}`,
-        user_id: userId,
-        title: `Milestone: ${cm.title}`,
-        event_type: 'club_milestone',
-        start_time: (cm.target_date || new Date()).toISOString(),
-        end_time: (cm.target_date || new Date()).toISOString(),
-        all_day: true,
-        color_code: '#8B5CF6',
-        metadata: { club_id: cm.club_id, is_completed: cm.is_completed },
-        is_virtual: true,
-        source_type: 'club_milestone' as const,
-      })),
     ];
 
+    // Sort by start_time ascending
     combined.sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
 
     return c.json({ success: true, events: combined });
@@ -204,20 +114,20 @@ export function createTimetableRoutes(getDb: () => ReturnType<typeof createDb>) 
     const db = getDb();
     const body = await c.req.json();
 
-    const EventSchema = z.object({
+    const CreateSchema = z.object({
       userId: z.string().uuid(),
       title: z.string().min(1),
-      eventType: z.string().optional().default('study'),
+      eventType: z.string().default('study'),
       startTime: z.string(),
       endTime: z.string(),
-      allDay: z.boolean().optional().default(false),
-      isRecurring: z.boolean().optional().default(false),
-      recurrencePattern: z.record(z.string(), z.any()).optional(),
+      allDay: z.boolean().default(false),
+      isRecurring: z.boolean().default(false),
+      recurrencePattern: z.any().optional(),
       colorCode: z.string().optional(),
-      metadata: z.record(z.string(), z.any()).optional().default({}),
+      metadata: z.any().optional(),
     });
 
-    const parsed = EventSchema.safeParse(body);
+    const parsed = CreateSchema.safeParse(body);
     if (!parsed.success) {
       return c.json({ error: parsed.error.format() }, 400);
     }
@@ -245,9 +155,9 @@ export function createTimetableRoutes(getDb: () => ReturnType<typeof createDb>) 
         end_time: new Date(endTime),
         all_day: allDay,
         is_recurring: isRecurring,
-        recurrence_pattern: recurrencePattern,
-        color_code: colorCode,
-        metadata,
+        recurrence_pattern: recurrencePattern || null,
+        color_code: colorCode || null,
+        metadata: metadata || {},
       })
       .returning();
 
@@ -262,15 +172,15 @@ export function createTimetableRoutes(getDb: () => ReturnType<typeof createDb>) 
 
     const UpdateSchema = z.object({
       userId: z.string().uuid(),
-      title: z.string().optional(),
+      title: z.string().min(1).optional(),
       eventType: z.string().optional(),
       startTime: z.string().optional(),
       endTime: z.string().optional(),
       allDay: z.boolean().optional(),
       isRecurring: z.boolean().optional(),
-      recurrencePattern: z.record(z.string(), z.any()).optional(),
+      recurrencePattern: z.any().optional(),
       colorCode: z.string().optional(),
-      metadata: z.record(z.string(), z.any()).optional(),
+      metadata: z.any().optional(),
     });
 
     const parsed = UpdateSchema.safeParse(body);
@@ -278,9 +188,20 @@ export function createTimetableRoutes(getDb: () => ReturnType<typeof createDb>) 
       return c.json({ error: parsed.error.format() }, 400);
     }
 
-    const { userId, startTime, endTime, ...rest } = parsed.data;
+    const {
+      userId,
+      title,
+      eventType,
+      startTime,
+      endTime,
+      allDay,
+      isRecurring,
+      recurrencePattern,
+      colorCode,
+      metadata,
+    } = parsed.data;
 
-    // Verify ownership
+    // Check ownership
     const existing = await db.query.timetableEvents.findFirst({
       where: and(eq(timetableEvents.id, eventId), eq(timetableEvents.user_id, userId)),
     });
@@ -289,17 +210,24 @@ export function createTimetableRoutes(getDb: () => ReturnType<typeof createDb>) 
       return c.json({ error: 'Event not found or unauthorized' }, 404);
     }
 
-    const updateData: Partial<typeof timetableEvents.$inferInsert> = { ...rest };
-    if (startTime) updateData.start_time = new Date(startTime);
-    if (endTime) updateData.end_time = new Date(endTime);
+    const updateData: any = {};
+    if (title !== undefined) updateData.title = title;
+    if (eventType !== undefined) updateData.event_type = eventType;
+    if (startTime !== undefined) updateData.start_time = new Date(startTime);
+    if (endTime !== undefined) updateData.end_time = new Date(endTime);
+    if (allDay !== undefined) updateData.all_day = allDay;
+    if (isRecurring !== undefined) updateData.is_recurring = isRecurring;
+    if (recurrencePattern !== undefined) updateData.recurrence_pattern = recurrencePattern;
+    if (colorCode !== undefined) updateData.color_code = colorCode;
+    if (metadata !== undefined) updateData.metadata = metadata;
 
-    const [updatedEvent] = await db
+    const [updated] = await db
       .update(timetableEvents)
       .set(updateData)
       .where(eq(timetableEvents.id, eventId))
       .returning();
 
-    return c.json({ success: true, event: updatedEvent });
+    return c.json({ success: true, event: updated });
   });
 
   // 5. Delete timetable event
@@ -309,10 +237,9 @@ export function createTimetableRoutes(getDb: () => ReturnType<typeof createDb>) 
     const userId = c.req.query('userId');
 
     if (!userId) {
-      return c.json({ error: 'userId is required' }, 400);
+      return c.json({ error: 'userId query parameter is required' }, 400);
     }
 
-    // Verify ownership
     const existing = await db.query.timetableEvents.findFirst({
       where: and(eq(timetableEvents.id, eventId), eq(timetableEvents.user_id, userId)),
     });
@@ -323,7 +250,7 @@ export function createTimetableRoutes(getDb: () => ReturnType<typeof createDb>) 
 
     await db.delete(timetableEvents).where(eq(timetableEvents.id, eventId));
 
-    return c.json({ success: true, eventId });
+    return c.json({ success: true, deletedId: eventId });
   });
 
   return router;

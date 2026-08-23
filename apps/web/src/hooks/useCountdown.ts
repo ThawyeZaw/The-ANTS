@@ -1,10 +1,14 @@
+'use client';
+
+// ──────────────────────────────────────────────────────────────────────────────
+// The ANTS — useCountdown Hook (Hono API / Neon Backend)
+// ──────────────────────────────────────────────────────────────────────────────
+
 import { useState, useEffect, useCallback } from 'react';
-import { ExamCountdown, Exam } from '@/types';
-import { createClient } from '@/lib/supabase/client';
-import {
-  actionEnqueueExamReminders,
-  actionClearSourceQueue,
-} from '@/actions/notifications';
+import type { ExamCountdown, Exam } from '@/types';
+import { actionClearSourceQueue } from '@/actions/notifications';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8787';
 
 export interface TimeLeft {
   days: number;
@@ -24,7 +28,7 @@ function calculateTimeLeft(targetDate: string | null): TimeLeft {
   if (!targetDate) return { days: 0, hours: 0, minutes: 0, seconds: 0, isPast: true };
 
   const difference = new Date(targetDate).getTime() - Date.now();
-  
+
   if (difference <= 0) {
     return { days: 0, hours: 0, minutes: 0, seconds: 0, isPast: true };
   }
@@ -41,7 +45,6 @@ function calculateTimeLeft(targetDate: string | null): TimeLeft {
 export function useCountdown(userId: string | undefined) {
   const [countdowns, setCountdowns] = useState<CountdownWithTime[]>([]);
   const [availableExams, setAvailableExams] = useState<Exam[]>([]);
-  const supabase = createClient()!;
 
   // Load initial data
   useEffect(() => {
@@ -49,15 +52,14 @@ export function useCountdown(userId: string | undefined) {
 
     const loadData = async () => {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8787';
         const [cdRes, exRes] = await Promise.all([
-          fetch(`${apiUrl}/api/exams/countdowns?userId=${userId}`),
-          fetch(`${apiUrl}/api/exams`),
+          fetch(`${API_BASE_URL}/api/exams/countdowns?userId=${encodeURIComponent(userId)}`),
+          fetch(`${API_BASE_URL}/api/exams`),
         ]);
 
         if (cdRes.ok && exRes.ok) {
           const [cdJson, exJson] = await Promise.all([cdRes.json(), exRes.json()]);
-          if (cdJson.success && cdJson.countdowns && exJson.success && exJson.exams) {
+          if (cdJson.success && cdJson.countdowns) {
             setCountdowns(
               (cdJson.countdowns as any[]).map((c) => ({
                 ...c,
@@ -65,31 +67,13 @@ export function useCountdown(userId: string | undefined) {
                 timeLeft: calculateTimeLeft(c.exam_date || c.target_date),
               }))
             );
+          }
+          if (exJson.success && exJson.exams) {
             setAvailableExams(exJson.exams as unknown as Exam[]);
-            return;
           }
         }
-      } catch {
-        // Fallback to Supabase
-      }
-
-      if (!supabase) return;
-      const [countdownRes, examRes] = await Promise.all([
-        supabase.from('exam_countdowns').select('*').eq('user_id', userId),
-        supabase.from('exams').select('*'),
-      ]);
-
-      if (countdownRes.data) {
-        setCountdowns(
-          (countdownRes.data as ExamCountdown[]).map((c) => ({
-            ...c,
-            timeLeft: calculateTimeLeft(c.target_date),
-          }))
-        );
-      }
-
-      if (examRes.data) {
-        setAvailableExams(examRes.data as unknown as Exam[]);
+      } catch (err) {
+        console.error('Error loading countdowns:', err);
       }
     };
 
@@ -101,10 +85,10 @@ export function useCountdown(userId: string | undefined) {
     if (countdowns.length === 0) return;
 
     const interval = setInterval(() => {
-      setCountdowns(prev => 
-        prev.map(c => ({
+      setCountdowns((prev) =>
+        prev.map((c) => ({
           ...c,
-          timeLeft: calculateTimeLeft(c.target_date)
+          timeLeft: calculateTimeLeft(c.target_date),
         }))
       );
     }, 1000);
@@ -112,72 +96,80 @@ export function useCountdown(userId: string | undefined) {
     return () => clearInterval(interval);
   }, [countdowns.length]);
 
-  const handleCreateCountdown = useCallback(async (
-    data: {
+  const handleCreateCountdown = useCallback(
+    async (data: {
       exam_id?: string;
       custom_title?: string;
       target_date?: string;
       priority_indicator?: string;
       qualification_group?: string;
-    }
-  ) => {
-    if (!userId) return;
+    }) => {
+      if (!userId) return;
 
-    // Use exam data if exam_id is provided and we don't have explicit custom details
-    let title = data.custom_title;
-    let target = data.target_date;
-    let group = data.qualification_group;
+      let title = data.custom_title;
+      let target = data.target_date;
+      let group = data.qualification_group;
 
-    if (data.exam_id) {
-      const exam = availableExams.find(e => e.id === data.exam_id) as any;
-      if (exam) {
-        title = title || exam.subject || '';
-        target = target || exam.date || '';
+      if (data.exam_id) {
+        const exam = availableExams.find((e) => e.id === data.exam_id) as any;
+        if (exam) {
+          title = title || exam.title || exam.subject || '';
+          target = target || exam.exam_date || exam.date || '';
+        }
       }
-    }
 
-    const { data: newCountdown, error } = await supabase
-      .from('exam_countdowns')
-      .insert({
-        user_id: userId,
-        exam_id: data.exam_id || null,
-        custom_title: title || null,
-        target_date: target || null,
-        priority_indicator: data.priority_indicator || 'medium',
-        qualification_group: group || 'Custom',
-      })
-      .select()
-      .single();
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/exams/countdowns`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId,
+            examId: data.exam_id || undefined,
+            title: title || 'Upcoming Exam',
+            examDate: target || new Date(Date.now() + 30 * 86400000).toISOString(),
+            colorCode: '#EF4444',
+          }),
+        });
 
-    if (error || !newCountdown) return;
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.countdown) {
+            const newCountdown = json.countdown;
+            setCountdowns((prev) => [
+              ...prev,
+              {
+                ...newCountdown,
+                target_date: newCountdown.exam_date,
+                qualification_group: group || 'Custom',
+                timeLeft: calculateTimeLeft(newCountdown.exam_date),
+              },
+            ]);
+          }
+        }
+      } catch (err) {
+        console.error('Error creating countdown:', err);
+      }
+    },
+    [userId, availableExams]
+  );
 
-    // Enqueue exam reminders
-    actionEnqueueExamReminders(
-      (newCountdown as ExamCountdown).id,
-      userId
-    );
-
-    setCountdowns(prev => [
-      ...prev,
-      {
-        ...(newCountdown as ExamCountdown),
-        timeLeft: calculateTimeLeft((newCountdown as ExamCountdown).target_date),
-      },
-    ]);
-  }, [userId, availableExams]);
-
-  const handleDeleteCountdown = useCallback(async (id: string) => {
-    const { error } = await supabase
-      .from('exam_countdowns')
-      .delete()
-      .eq('id', id);
-
-    if (!error) {
-      // Clear pending queue items
-      actionClearSourceQueue('exam_countdown', id);
-      setCountdowns(prev => prev.filter(c => c.id !== id));
-    }
-  }, []);
+  const handleDeleteCountdown = useCallback(
+    async (id: string) => {
+      if (!userId) return;
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/exams/countdowns/${id}?userId=${encodeURIComponent(userId)}`, {
+          method: 'DELETE',
+        });
+        if (res.ok) {
+          actionClearSourceQueue('exam_countdown', id);
+          setCountdowns((prev) => prev.filter((c) => c.id !== id));
+        }
+      } catch (err) {
+        console.error('Error deleting countdown:', err);
+      }
+    },
+    [userId]
+  );
 
   const groupedCountdowns: GroupedCountdowns = countdowns.reduce((acc, current) => {
     const group = current.qualification_group || 'Custom';

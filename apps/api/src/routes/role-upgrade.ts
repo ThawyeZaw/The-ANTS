@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { eq, and } from 'drizzle-orm';
-import { createDb, profiles, user, roleUpgradeRequests, roleUpgradeApplications } from '@the-ants/db';
+import { createDb, profiles, user, roleUpgradeRequests } from '@the-ants/db';
 import type { UserRole } from '@the-ants/shared-types';
 
 export const ROLE_HIERARCHY: Record<UserRole, number> = {
@@ -52,12 +52,12 @@ export function createRoleUpgradeRoutes(getDb: () => ReturnType<typeof createDb>
 
     // Insert request
     const [request] = await db
-      .insert(roleUpgradeApplications)
+      .insert(roleUpgradeRequests)
       .values({
         user_id: userId,
-        target_role: targetRole,
-        motivation,
-        portfolio_links: portfolioLinks || [],
+        current_role: currentRole,
+        requested_role: targetRole,
+        reason: motivation,
         status: 'pending',
       })
       .returning();
@@ -84,18 +84,18 @@ export function createRoleUpgradeRoutes(getDb: () => ReturnType<typeof createDb>
 
     const { reviewerId, requestId, action, reviewerNotes } = parsed.data;
 
-    // Verify reviewer is main_contributor
+    // Verify reviewer is main_contributor / admin
     const reviewerProfile = await db.query.profiles.findFirst({
       where: eq(profiles.id, reviewerId),
     });
 
-    if (!reviewerProfile || reviewerProfile.role !== 'main_contributor') {
-      return c.json({ error: 'Unauthorized: Only main_contributors can review role upgrade requests' }, 403);
+    if (!reviewerProfile || (reviewerProfile.role !== 'main_contributor' && reviewerProfile.role !== 'admin')) {
+      return c.json({ error: 'Unauthorized: Only main_contributors/admins can review role upgrade requests' }, 403);
     }
 
     // Find request
-    const request = await db.query.roleUpgradeApplications.findFirst({
-      where: eq(roleUpgradeApplications.id, requestId),
+    const request = await db.query.roleUpgradeRequests.findFirst({
+      where: eq(roleUpgradeRequests.id, requestId),
     });
 
     if (!request) {
@@ -110,21 +110,29 @@ export function createRoleUpgradeRoutes(getDb: () => ReturnType<typeof createDb>
 
     // Update request
     await db
-      .update(roleUpgradeApplications)
+      .update(roleUpgradeRequests)
       .set({
         status: newStatus,
         reviewer_id: reviewerId,
-        reviewer_notes: reviewerNotes || null,
         reviewed_at: new Date(),
       })
-      .where(eq(roleUpgradeApplications.id, requestId));
+      .where(eq(roleUpgradeRequests.id, requestId));
 
     // If approved, update user's role in profiles and Better Auth user table
     if (action === 'approve') {
+      const existingUser = await db.query.profiles.findFirst({
+        where: eq(profiles.id, request.user_id),
+      });
+
+      const updatedRoles = Array.from(
+        new Set([...(existingUser?.roles || [existingUser?.role || 'student']), request.requested_role])
+      );
+
       await db
         .update(profiles)
         .set({
-          role: request.target_role,
+          role: request.requested_role,
+          roles: updatedRoles,
           updated_at: new Date(),
         })
         .where(eq(profiles.id, request.user_id));
@@ -132,7 +140,7 @@ export function createRoleUpgradeRoutes(getDb: () => ReturnType<typeof createDb>
       await db
         .update(user)
         .set({
-          role: request.target_role,
+          role: request.requested_role,
           updatedAt: new Date(),
         })
         .where(eq(user.id, request.user_id));
@@ -142,7 +150,7 @@ export function createRoleUpgradeRoutes(getDb: () => ReturnType<typeof createDb>
       success: true,
       requestId,
       status: newStatus,
-      newRole: action === 'approve' ? request.target_role : undefined,
+      newRole: action === 'approve' ? request.requested_role : undefined,
     });
   });
 
@@ -164,13 +172,13 @@ export function createRoleUpgradeRoutes(getDb: () => ReturnType<typeof createDb>
 
     const { promoterId, targetUserId, newRole } = parsed.data;
 
-    // Verify promoter is main_contributor
+    // Verify promoter is main_contributor / admin
     const promoterProfile = await db.query.profiles.findFirst({
       where: eq(profiles.id, promoterId),
     });
 
-    if (!promoterProfile || promoterProfile.role !== 'main_contributor') {
-      return c.json({ error: 'Unauthorized: Only main_contributors can directly promote users' }, 403);
+    if (!promoterProfile || (promoterProfile.role !== 'main_contributor' && promoterProfile.role !== 'admin')) {
+      return c.json({ error: 'Unauthorized: Only main_contributors/admins can directly promote users' }, 403);
     }
 
     const targetProfile = await db.query.profiles.findFirst({
@@ -189,11 +197,16 @@ export function createRoleUpgradeRoutes(getDb: () => ReturnType<typeof createDb>
       );
     }
 
+    const updatedRoles = Array.from(
+      new Set([...(targetProfile.roles || [targetProfile.role || 'student']), newRole])
+    );
+
     // Apply promotion to profiles and Better Auth user
     await db
       .update(profiles)
       .set({
         role: newRole,
+        roles: updatedRoles,
         updated_at: new Date(),
       })
       .where(eq(profiles.id, targetUserId));

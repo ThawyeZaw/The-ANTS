@@ -136,13 +136,15 @@ export default function ProfileHero({ profile, isOwnProfile }: ProfileHeroProps)
             </div>
           </div>
 
-          {/* ── Name + Role ── */}
+          {/* ── Name + Role Badges ── */}
           <div className="flex flex-col items-center mb-3">
-            <div className="flex flex-wrap justify-center items-center gap-3 mb-1.5">
-              <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight leading-none">
+            <div className="flex flex-wrap justify-center items-center gap-2 mb-1.5">
+              <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight leading-none mr-1">
                 {profile.name}
               </h1>
-              <RoleBadge role={profile.role} />
+              {(profile.roles && profile.roles.length > 0 ? profile.roles : [profile.role]).map((r) => (
+                <RoleBadge key={r} role={r as any} />
+              ))}
             </div>
             {profile.title && (
               <p className="text-base font-medium text-foreground-secondary/80 mt-1">{profile.title}</p>

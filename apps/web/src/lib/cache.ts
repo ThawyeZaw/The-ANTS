@@ -69,7 +69,7 @@ function clearAllLS(): void {
 // ── invalidation via window event ─────────────────────────────────
 
 if (isBrowser()) {
-  window.addEventListener("supabase-cache-invalidate", ((e: CustomEvent<string | undefined>) => {
+  window.addEventListener("app-cache-invalidate", ((e: CustomEvent<string | undefined>) => {
     const key = e.detail;
     if (key) {
       invalidateCache(key);

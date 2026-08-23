@@ -27,28 +27,28 @@ import Footer from '@/components/layout/Footer';
 
 const EXPLORE_CARDS = [
   {
-    title: 'Clubs',
+    title: 'Verified Tutors',
     description:
-      'Discover community spaces for subjects, CCAs and projects. Browse clubs and see what members are building.',
-    Icon: MessageSquare,
-    href: '/explore/clubs',
+      'Browse academic tutors offering class slots across Cambridge, Edexcel, and Matriculation. View weekly availability and inquire directly.',
+    Icon: Users,
+    href: '/explore?tab=tutors',
     iconBg: 'rgba(var(--hp-brand-rgb), 0.12)',
     iconColor: 'var(--hp-brand)',
     stats: [
-      { value: '120+', label: 'ACTIVE CLUBS' },
-      { value: 'Open', label: 'JOIN MODES VARY' },
+      { value: 'Verified', label: 'TUTOR PROFILES' },
+      { value: 'Telegram', label: 'DIRECT INQUIRIES' },
     ],
   },
   {
-    title: 'Profiles',
+    title: 'Academic Portfolios',
     description:
-      'Browse student portfolios, projects, CCA activities and verified educators & contributors. View achievements and credentials.',
+      'Browse student portfolios, projects, CCA activities, and verified curriculum contributors. View study achievements and credentials.',
     Icon: Users,
-    href: '/explore/profiles',
+    href: '/explore',
     iconBg: 'rgba(var(--hp-violet-rgb), 0.14)',
     iconColor: 'var(--hp-violet)',
     stats: [
-      { value: '4', label: 'ROLE TYPES' },
+      { value: 'Multi-Role', label: 'ACADEMIC PERSONAS' },
       { value: 'Public', label: 'SHAREABLE LINK' },
     ],
   },
@@ -266,14 +266,14 @@ export default function HomePage() {
               </button>
             </Link>
           ) : (
-            <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
               <Link href="/login">
                 <button
                   style={{
                     background: 'transparent',
                     border: '1px solid var(--hp-border-strong)',
                     borderRadius: 999,
-                    padding: '9px 18px',
+                    padding: '8px 16px',
                     color: 'var(--hp-ink)',
                     fontFamily: 'var(--hp-font-body)',
                     fontWeight: 600,
@@ -297,7 +297,7 @@ export default function HomePage() {
                     color: 'var(--hp-btn-text)',
                     border: 'none',
                     borderRadius: 999,
-                    padding: '9px 18px',
+                    padding: '8px 18px',
                     fontFamily: 'var(--hp-font-body)',
                     fontWeight: 700,
                     fontSize: 13,
@@ -317,7 +317,7 @@ export default function HomePage() {
                   Get Started
                 </button>
               </Link>
-            </>
+            </div>
           )}
         </nav>
       </header>

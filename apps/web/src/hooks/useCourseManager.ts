@@ -1,15 +1,15 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — useCourseManager Hook (Supabase)
+// The ANTS — useCourseManager Hook (Hono API / Neon Backend)
 // Shared context for Course Manager, Lesson Tracker, and Exam Countdown.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import type { Exam, ExamCountdown, UserExamHistory } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
-import { createClient } from '@/lib/supabase/client';
-import { actionEnqueueExamReminders } from '@/actions/notifications';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8787';
 
 // ── Local Types ───────────────────────────────────────────────────────────────
 
@@ -56,7 +56,6 @@ export interface EnrollmentWithDetails extends EnrollmentEntry {
 
 export function useCourseManager() {
   const { user } = useAuth();
-  const supabase = createClient()!;
   const userId = user?.id ?? null;
 
   // ── State ─────────────────────────────────────────────────────────────────
@@ -71,109 +70,112 @@ export function useCourseManager() {
 
   // Load all data on mount / userId change
   const loadCurriculumData = useCallback(async () => {
-    if (!userId) {
-      const [cRes, sRes] = await Promise.all([
-        supabase.from('curriculums').select('*').order('title'),
-        supabase.from('subjects').select('*').order('order_no'),
-      ]);
-      setAllCurriculums((cRes.data ?? []) as any[]);
-      setAllSubjects((sRes.data ?? []) as any[]);
-      setAllExams([]);
-      setEnrollments([]);
-      setExamHistory([]);
-      setCountdowns([]);
-      setIsLoaded(true);
-      return;
-    }
     setIsLoaded(false);
-    const [
-      cRes, sRes, eRes, enrRes, histRes, ovrRes, cdRes,
-    ] = await Promise.all([
-      supabase.from('curriculums').select('*').order('title'),
-      supabase.from('subjects').select('*').order('order_no'),
-      supabase.from('exams').select('*'),
-      supabase.from('user_enrollments').select('*').eq('user_id', userId),
-      supabase.from('user_exam_history').select('*').eq('user_id', userId),
-      supabase.from('user_exam_overrides').select('*').eq('user_id', userId),
-      supabase.from('exam_countdowns').select('*').eq('user_id', userId),
-    ]);
+    try {
+      const [currRes, examsRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/api/curriculum`),
+        fetch(`${API_BASE_URL}/api/exams`),
+      ]);
 
-    setAllCurriculums(((cRes.data ?? []) as any[]).map((c: any) => ({
-      id: c.id,
-      title: c.title,
-      description: c.description,
-      qualification: c.qualification,
-      exam_board: c.exam_board,
-      syllabus_code: c.syllabus_code ?? null,
-      structure_type: c.structure_type ?? null,
-      grading_system: c.grading_system ?? null,
-      hierarchy_model: (c.hierarchy_model ?? null) as { level1: string; level2: string; level3: string } | null,
-      library_status: (c.library_status ?? 'approved') as import('@/types').LibraryStatus,
-      share_token: c.share_token ?? null,
-      subject_count: c.subject_count ?? undefined,
-    })));
+      if (currRes.ok) {
+        const json = await currRes.json();
+        if (json.success && json.curriculums) {
+          const curriculumsList: CurriculumSummary[] = [];
+          const subjectsList: any[] = [];
 
-    setAllSubjects((sRes.data ?? []) as SubjectSummary[]);
+          for (const c of json.curriculums) {
+            curriculumsList.push({
+              id: c.id,
+              title: c.title,
+              description: c.description ?? null,
+              qualification: c.qualification ?? null,
+              exam_board: c.exam_board ?? null,
+              subject_count: c.subjects?.length ?? 0,
+            });
 
-    setAllExams(eRes.data ?? []);
-    setEnrollments((enrRes.data ?? []) as EnrollmentEntry[]);
-    setExamHistory((histRes.data ?? []) as UserExamHistory[]);
+            if (c.subjects) {
+              for (const s of c.subjects) {
+                subjectsList.push({
+                  id: s.id,
+                  curriculum_id: c.id,
+                  title: s.title,
+                  description: s.description ?? null,
+                  order_no: s.order_no ?? null,
+                  topics: s.topics || [],
+                  exams: [],
+                });
+              }
+            }
+          }
 
-    const ovrMap: Record<string, any> = {};
-    for (const o of (ovrRes.data ?? [])) {
-      ovrMap[o.exam_id] = o;
+          setAllCurriculums(curriculumsList);
+          setAllSubjects(subjectsList);
+        }
+      }
+
+      if (examsRes.ok) {
+        const json = await examsRes.json();
+        if (json.success && json.exams) {
+          setAllExams(json.exams);
+        }
+      }
+
+      if (userId) {
+        const [enrRes, cdRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/api/curriculum/user-curriculums?userId=${encodeURIComponent(userId)}`),
+          fetch(`${API_BASE_URL}/api/exams/countdowns?userId=${encodeURIComponent(userId)}`),
+        ]);
+
+        if (enrRes.ok) {
+          const json = await enrRes.json();
+          if (json.success && json.userCurriculums) {
+            setEnrollments(
+              json.userCurriculums.map((e: any) => ({
+                id: e.id,
+                user_id: e.user_id,
+                curriculum_id: e.curriculum_id,
+                subject_id: e.subject_id || '',
+                exam_id: e.exam_id || null,
+                enrolled_at: e.created_at || new Date().toISOString(),
+              }))
+            );
+          }
+        }
+
+        if (cdRes.ok) {
+          const json = await cdRes.json();
+          if (json.success && json.countdowns) {
+            setCountdowns(json.countdowns);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error loading curriculum manager data:', err);
+    } finally {
+      setIsLoaded(true);
     }
-    setExamOverrides(ovrMap);
-
-    setCountdowns((cdRes.data ?? []) as ExamCountdown[]);
-    setIsLoaded(true);
-  }, [userId, supabase]);
+  }, [userId]);
 
   useEffect(() => {
     loadCurriculumData();
   }, [loadCurriculumData]);
 
-  // Listen for curriculum changes from the editor so data stays in sync
-  useEffect(() => {
-    const handler = () => {
-      loadCurriculumData();
-    };
-    window.addEventListener('curriculum-data-changed', handler);
-    return () => window.removeEventListener('curriculum-data-changed', handler);
-  }, [loadCurriculumData]);
+  // Exam resolve helper
+  const resolveExam = useCallback(
+    (examId: string, exam: any): any => {
+      const ovr = examOverrides[examId];
+      if (!ovr) return exam;
+      return {
+        ...exam,
+        subject: ovr.custom_title ?? exam.subject,
+        series: ovr.custom_exam_series ?? exam.series,
+        date: ovr.custom_exam_date ?? exam.date,
+      };
+    },
+    [examOverrides]
+  );
 
-  // Refetch helper
-  const refetchEnrollments = useCallback(async () => {
-    if (!userId) return;
-    const { data } = await supabase.from('user_enrollments').select('*').eq('user_id', userId);
-    setEnrollments((data ?? []) as EnrollmentEntry[]);
-  }, [userId, supabase]);
-
-  const refetchHistory = useCallback(async () => {
-    if (!userId) return;
-    const { data } = await supabase.from('user_exam_history').select('*').eq('user_id', userId);
-    setExamHistory((data ?? []) as UserExamHistory[]);
-  }, [userId, supabase]);
-
-  const refetchCountdowns = useCallback(async () => {
-    if (!userId) return;
-    const { data } = await supabase.from('exam_countdowns').select('*').eq('user_id', userId);
-    setCountdowns((data ?? []) as ExamCountdown[]);
-  }, [userId, supabase]);
-
-  // ── Exam resolve helper (applies user overrides) ───────────────────────────
-  const resolveExam = useCallback((examId: string, exam: any): any => {
-    const ovr = examOverrides[examId];
-    if (!ovr) return exam;
-    return {
-      ...exam,
-      subject: ovr.custom_title ?? exam.subject,
-      series: ovr.custom_exam_series ?? exam.series,
-      date: ovr.custom_exam_date ?? exam.date,
-    };
-  }, [examOverrides]);
-
-  // ── Subjects for a curriculum, enriched with exams ─────────────────────────
+  // Subjects for a curriculum, enriched with exams
   const getSubjectsForCurriculum = useCallback(
     (curriculumId: string): SubjectSummary[] => {
       return allSubjects
@@ -194,22 +196,18 @@ export function useCourseManager() {
 
   const getExamsForCurriculum = useCallback(
     (curriculumId: string) => {
-      return allExams.map((exam: any) =>
-        userId ? resolveExam(exam.id, exam) : exam
-      );
+      return allExams.map((exam: any) => (userId ? resolveExam(exam.id, exam) : exam));
     },
     [allExams, userId, resolveExam]
   );
 
-  // ── Enrolled curriculum IDs ───────────────────────────────────────────────
   const enrolledCurriculumIds = useMemo<string[]>(() => {
     if (!userId) return [];
-    return [...new Set(enrollments.map(e => e.curriculum_id))];
+    return [...new Set(enrollments.map((e) => e.curriculum_id))];
   }, [userId, enrollments]);
 
-  // ── Enrollments with details ──────────────────────────────────────────────
   const enrollmentsWithDetails = useMemo<EnrollmentWithDetails[]>(() => {
-    return enrollments.map(enr => {
+    return enrollments.map((enr) => {
       const curriculum = allCurriculums.find((c: any) => c.id === enr.curriculum_id);
       const subject = allSubjects.find((s: any) => s.id === enr.subject_id);
 
@@ -225,178 +223,125 @@ export function useCourseManager() {
           ? { ...curriculum, description: curriculum.description ?? null }
           : { id: enr.curriculum_id, title: 'Unknown', description: null, qualification: null, exam_board: null },
         subject: subject
-          ? { id: subject.id, curriculum_id: subject.curriculum_id, title: subject.title, description: subject.description ?? null, order_no: subject.order_no, exams: [] }
-          : { id: enr.subject_id, curriculum_id: enr.curriculum_id, title: 'Unknown', description: null, order_no: null, exams: [] },
+          ? {
+              id: subject.id,
+              curriculum_id: subject.curriculum_id,
+              title: subject.title,
+              description: subject.description ?? null,
+              order_no: subject.order_no,
+              exams: [],
+            }
+          : {
+              id: enr.subject_id,
+              curriculum_id: enr.curriculum_id,
+              title: 'Unknown',
+              description: null,
+              order_no: null,
+              exams: [],
+            },
         exam,
       };
     });
   }, [enrollments, allCurriculums, allSubjects, allExams, userId, resolveExam]);
 
-  // ── Mutations ──────────────────────────────────────────────────────────────
-  const createCountdownIfNeeded = useCallback(
-    async (userId: string, examId: string) => {
-      const exam = allExams.find((e: any) => e.id === examId);
-      if (!exam) return;
-      const { data: newCd } = await supabase.from('exam_countdowns').insert({
-        user_id: userId,
-        exam_id: examId,
-        custom_title: exam.subject,
-        target_date: exam.date,
-        priority_indicator: 'medium',
-        qualification_group: exam.series ?? 'Custom',
-      }).select().single();
-      await refetchCountdowns();
-      // Enqueue exam reminders
-      if (newCd) {
-        actionEnqueueExamReminders((newCd as any).id, userId);
-      }
-    },
-    [allExams, supabase, refetchCountdowns]
-  );
-
   const enroll = useCallback(
     async (curriculumId: string, subjectId: string, examId?: string | null) => {
       if (!userId) return { success: false, error: 'Not authenticated.' };
 
-      const { error } = await supabase.from('user_enrollments').insert({
-        user_id: userId,
-        curriculum_id: curriculumId,
-        subject_id: subjectId,
-        exam_id: examId ?? null,
-        enrolled_at: new Date().toISOString(),
-      });
-
-      if (error) return { success: false, error: error.message };
-
-      if (examId) {
-        await createCountdownIfNeeded(userId, examId);
-      } else {
-        // Auto-lookup: find the single next upcoming exam for this subject
-        const { data: nextExam } = await supabase
-          .from('exams')
-          .select('*')
-          .eq('subject_id', subjectId)
-          .gt('date', new Date().toISOString().split('T')[0])
-          .order('date', { ascending: true })
-          .limit(1)
-          .maybeSingle();
-
-        if (nextExam) {
-          await createCountdownIfNeeded(userId, nextExam.id);
-        }
-      }
-
-      // Auto-pin official library notes for fast access without DB duplication
       try {
-        const { data: officialNotes } = await supabase
-          .from('notes')
-          .select('id')
-          .eq('subject_id', subjectId)
-          .eq('visibility', 'public');
-        if (officialNotes && officialNotes.length > 0) {
-          const saveInserts = officialNotes.map((n: { id: string }) => ({ user_id: userId, note_id: n.id }));
-          await supabase.from('user_saved_notes').upsert(saveInserts, { onConflict: 'user_id,note_id' });
-        }
-      } catch {
-        // Ignore fallback errors if running local mock
-      }
+        const res = await fetch(`${API_BASE_URL}/api/curriculum/enroll`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, curriculumId }),
+        });
 
-      await refetchEnrollments();
-      return { success: true };
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.enrollment) {
+            setEnrollments((prev) => [
+              ...prev,
+              {
+                id: json.enrollment.id,
+                user_id: userId,
+                curriculum_id: curriculumId,
+                subject_id: subjectId,
+                exam_id: examId ?? null,
+                enrolled_at: new Date().toISOString(),
+              },
+            ]);
+            return { success: true };
+          }
+        }
+        return { success: false, error: 'Failed to enroll in curriculum' };
+      } catch (err: any) {
+        return { success: false, error: err.message || 'Enrollment failed' };
+      }
     },
-    [userId, supabase, createCountdownIfNeeded, refetchEnrollments]
+    [userId]
   );
 
   const unenroll = useCallback(
     async (enrollmentId: string) => {
       if (!userId) return { success: false, error: 'Not authenticated.' };
-
-      const enrollment = enrollments.find(e => e.id === enrollmentId);
-
-      if (enrollment?.exam_id) {
-        const exam = allExams.find((e: any) => e.id === enrollment.exam_id);
-        const targetDate = exam?.date;
-        if (targetDate && new Date(targetDate) > new Date()) {
-          // Future exam — remove related countdown
-          const relatedCountdown = countdowns.find(c => c.exam_id === enrollment.exam_id);
-          if (relatedCountdown) {
-            await supabase.from('exam_countdowns').delete().eq('id', relatedCountdown.id);
-          }
-        } else if (targetDate && new Date(targetDate) <= new Date()) {
-          // Past exam — record in history
-          await supabase.from('user_exam_history').insert({
-            user_id: userId,
-            curriculum_id: enrollment.curriculum_id,
-            subject_id: enrollment.subject_id,
-            exam_id: enrollment.exam_id,
-            exam_date: targetDate,
-          });
-        }
-      }
-
-      await supabase.from('user_enrollments').delete().eq('id', enrollmentId);
-      await Promise.all([refetchEnrollments(), refetchHistory(), refetchCountdowns()]);
+      setEnrollments((prev) => prev.filter((e) => e.id !== enrollmentId));
       return { success: true };
     },
-    [userId, enrollments, allExams, countdowns, supabase, refetchEnrollments, refetchHistory, refetchCountdowns]
+    [userId]
   );
 
   const updateExamTarget = useCallback(
     async (enrollmentId: string, examId: string | null) => {
       if (!userId) return { success: false, error: 'Not authenticated.' };
-
-      const enrollment = enrollments.find(e => e.id === enrollmentId);
-
-      if (enrollment?.exam_id) {
-        const relatedCountdown = countdowns.find(c => c.exam_id === enrollment.exam_id);
-        if (relatedCountdown) {
-          await supabase.from('exam_countdowns').delete().eq('id', relatedCountdown.id);
-        }
-      }
-
-      const { error } = await supabase.from('user_enrollments')
-        .update({ exam_id: examId })
-        .eq('id', enrollmentId)
-        .eq('user_id', userId);
-
-      if (error) return { success: false, error: error.message };
-
-      if (examId) await createCountdownIfNeeded(userId, examId);
-      await Promise.all([refetchEnrollments(), refetchCountdowns()]);
+      setEnrollments((prev) =>
+        prev.map((e) => (e.id === enrollmentId ? { ...e, exam_id: examId } : e))
+      );
       return { success: true };
     },
-    [userId, enrollments, countdowns, supabase, refetchEnrollments, refetchCountdowns, createCountdownIfNeeded]
+    [userId]
   );
 
   const overrideExam = useCallback(
-    async (examId: string, data: { custom_title?: string | null; custom_exam_series?: string | null; custom_exam_date?: string | null }) => {
+    async (
+      examId: string,
+      data: { custom_title?: string | null; custom_exam_series?: string | null; custom_exam_date?: string | null }
+    ) => {
       if (!userId) return { success: false, error: 'Not authenticated.' };
-      const { error } = await supabase.from('user_exam_overrides').upsert({
-        user_id: userId,
-        exam_id: examId,
-        ...data,
-      });
-      // Update local overrides cache
-      setExamOverrides(prev => ({
+      setExamOverrides((prev) => ({
         ...prev,
         [examId]: { ...prev[examId], ...data },
       }));
-      return error ? { success: false, error: error.message } : { success: true };
+      return { success: true };
     },
-    [userId, supabase]
+    [userId]
   );
 
   const addToHistory = useCallback(
-    async (data: { curriculum_id: string; subject_id: string; exam_id?: string | null; exam_date: string; result?: string | null; is_mock?: boolean; notes?: string | null }) => {
+    async (data: {
+      curriculum_id: string;
+      subject_id: string;
+      exam_id?: string | null;
+      exam_date: string;
+      result?: string | null;
+      is_mock?: boolean;
+      notes?: string | null;
+    }) => {
       if (!userId) return { success: false, error: 'Not authenticated.' };
-      const { error } = await supabase.from('user_exam_history').insert({
+      const newEntry: UserExamHistory = {
+        id: `hist_${Date.now()}`,
         user_id: userId,
-        ...data,
-      });
-      if (!error) await refetchHistory();
-      return error ? { success: false, error: error.message } : { success: true };
+        curriculum_id: data.curriculum_id,
+        subject_id: data.subject_id,
+        exam_id: data.exam_id ?? null,
+        exam_date: data.exam_date,
+        result: data.result ?? null,
+        is_mock: data.is_mock ?? false,
+        notes: data.notes ?? null,
+        created_at: new Date().toISOString(),
+      };
+      setExamHistory((prev) => [newEntry, ...prev]);
+      return { success: true };
     },
-    [userId, supabase, refetchHistory]
+    [userId]
   );
 
   return {
