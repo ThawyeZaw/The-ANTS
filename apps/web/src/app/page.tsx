@@ -126,18 +126,15 @@ export default function HomePage() {
         style={{
           position: 'fixed',
           top: 16,
-          left: 0,
-          right: 0,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: 'min(94%, 980px)',
           zIndex: 50,
-          display: 'flex',
-          justifyContent: 'center',
-          pointerEvents: 'none',
         }}
       >
         <nav
           style={{
-            pointerEvents: 'auto',
-            width: 'min(94%, 980px)',
+            width: '100%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -220,16 +217,44 @@ export default function HomePage() {
                 max-width: 100%;
               }
             `}</style>
-            <a className="hp-nav-item" href="#explore">
+            <a
+              className="hp-nav-item"
+              href="#explore"
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById('explore')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+            >
               <span className="hp-nav-linktext" data-text="Explore">Explore</span>
             </a>
-            <a className="hp-nav-item" href="#features">
+            <a
+              className="hp-nav-item"
+              href="#features"
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+            >
               <span className="hp-nav-linktext" data-text="Features">Features</span>
             </a>
-            <a className="hp-nav-item" href="#qualifications">
+            <a
+              className="hp-nav-item"
+              href="#qualifications"
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById('qualifications')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+            >
               <span className="hp-nav-linktext" data-text="Boards">Boards</span>
             </a>
-            <a className="hp-nav-item" href="#roles">
+            <a
+              className="hp-nav-item"
+              href="#roles"
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById('roles')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+            >
               <span className="hp-nav-linktext" data-text="Roles">Roles</span>
             </a>
           </div>
@@ -303,7 +328,6 @@ export default function HomePage() {
                     fontSize: 13,
                     cursor: 'pointer',
                     transition: 'transform .18s ease, box-shadow .18s ease',
-                    whiteSpace: 'nowrap',
                   }}
                   onMouseEnter={(e) => {
                     (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)';
@@ -314,7 +338,7 @@ export default function HomePage() {
                     (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
                   }}
                 >
-                  Get Started
+                  Dashboard <ArrowRight size={14} />
                 </button>
               </Link>
             </div>
@@ -442,7 +466,7 @@ export default function HomePage() {
                   marginBottom: 28,
                 }}
               >
-                <Image src="/logo.png" alt="" width={16} height={16} className="inline-block align-middle mr-1" /> Built for Myanmar students
+                <Image src="/logo.png" alt="" width={16} height={16} priority className="inline-block align-middle mr-1" /> Built for Myanmar students
               </div>
             </div>
 

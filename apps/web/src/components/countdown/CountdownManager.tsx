@@ -322,12 +322,14 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
         </section>
       ) : null}
 
-      <AddCountdownModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        availableExams={availableExams}
-        onCreate={createCountdown}
-      />
+      {isModalOpen && (
+        <AddCountdownModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          availableExams={availableExams}
+          onCreate={createCountdown}
+        />
+      )}
     </div>
   );
 }

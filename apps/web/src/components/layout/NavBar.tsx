@@ -173,6 +173,10 @@ export default function NavBar() {
 
   // Close dropdown on outside click
   useEffect(() => {
+    if (!isUserMenuOpen && !isLibraryOpen && !isToolsOpen && !isCommunityOpen && !isAdminOpen) {
+      return;
+    }
+
     function handleClickOutside(e: MouseEvent) {
       if (navRef.current && !navRef.current.contains(e.target as Node)) {
         setOpenDropdown(null);
@@ -180,7 +184,7 @@ export default function NavBar() {
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [isUserMenuOpen, isLibraryOpen, isToolsOpen, isCommunityOpen, isAdminOpen]);
 
   // Close on route change
   useEffect(() => {

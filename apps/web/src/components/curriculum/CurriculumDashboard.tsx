@@ -669,12 +669,14 @@ export default function CurriculumDashboard() {
       </div>
 
       {/* ── Add Countdown Modal ──────────────────────────────────────────────── */}
-      <AddCountdownModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        availableExams={availableExams}
-        onCreate={(data) => { addCountdown(data); }}
-      />
+      {isAddModalOpen && (
+        <AddCountdownModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          availableExams={availableExams}
+          onCreate={(data) => { addCountdown(data); }}
+        />
+      )}
     </div>
   );
 }

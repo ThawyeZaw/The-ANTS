@@ -136,7 +136,7 @@ export function LessonProvider({ children }: { children: ReactNode }) {
   });
 
   const setSelectedSubjectIds = (ids: string[]) => {
-    localStorage.setItem('cm_subjects', JSON.stringify(ids));
+    try { localStorage.setItem('cm_subjects', JSON.stringify(ids)); } catch {}
     _setSelectedSubjectIds(ids);
   };
 
