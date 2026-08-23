@@ -104,23 +104,18 @@ export function useFlashcardSRS(): UseFlashcardSRSReturn {
 
       const quality = QUALITY_MAP[rating];
       const existing = reviewCache[currentCard.id];
-      const currentProgress = existing
-        ? {
-            interval_days: existing.interval_days,
-            ease_factor: existing.ease_factor,
-            repetitions: existing.repetitions,
-          }
-        : getNewCardDefaults();
+      const currentInterval = existing?.interval_days ?? 1;
+      const currentEase = existing?.ease_factor ?? 2.5;
 
-      const next = computeNextReview(currentProgress, quality);
+      const next = computeNextReview(rating, currentInterval, currentEase);
 
       // Optimistically update reviewCache
       setReviewCache((prev) => ({
         ...prev,
         [currentCard.id]: {
-          interval_days: next.interval_days,
-          ease_factor: next.ease_factor,
-          repetitions: next.repetitions,
+          interval_days: next.newInterval,
+          ease_factor: next.newEaseFactor,
+          repetitions: (existing?.repetitions ?? 0) + 1,
         },
       }));
 
@@ -135,9 +130,9 @@ export function useFlashcardSRS(): UseFlashcardSRSReturn {
               cardId: currentCard.id,
               rating: quality,
               state: 'review',
-              easeFactor: next.ease_factor,
-              intervalDays: next.interval_days,
-              dueDate: next.next_review_date.toISOString(),
+              easeFactor: next.newEaseFactor,
+              intervalDays: next.newInterval,
+              dueDate: next.nextReviewDate.toISOString(),
               lapses: 0,
             }),
           });

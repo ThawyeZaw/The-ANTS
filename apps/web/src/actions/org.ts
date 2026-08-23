@@ -81,16 +81,20 @@ export async function getOrgTimelineAction(): Promise<OrgTimelineItem[]> {
   return [];
 }
 
+export const getOrgTimelineItemsAction = getOrgTimelineAction;
+
 export async function addOrgTimelineItemAction(formData: OrgTimelineItemFormData): Promise<{ success: boolean; item?: OrgTimelineItem; error?: string }> {
   const item: OrgTimelineItem = {
-    id: `tl_${Date.now()}`,
+    id: `item_${Date.now()}`,
     title: formData.title,
     description: formData.description,
     date: formData.date,
     category: formData.category,
     imageUrls: formData.imageUrls || [],
     order: 0,
-    highlight: Boolean(formData.highlight),
+    showOnTimeline: formData.showOnTimeline ?? true,
+    location: formData.location,
+    createdAt: new Date().toISOString(),
   };
   return { success: true, item };
 }
@@ -104,7 +108,9 @@ export async function updateOrgTimelineItemAction(id: string, formData: OrgTimel
     category: formData.category,
     imageUrls: formData.imageUrls || [],
     order: 0,
-    highlight: Boolean(formData.highlight),
+    showOnTimeline: formData.showOnTimeline ?? true,
+    location: formData.location,
+    createdAt: new Date().toISOString(),
   };
   return { success: true, item };
 }

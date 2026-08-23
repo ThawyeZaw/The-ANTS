@@ -46,6 +46,12 @@ export async function actionGetPublicQuizzes() {
   return { success: true, data: publicList };
 }
 
+export async function actionGetSessionByCode(joinCode: string): Promise<{ success: true; data: any } | { success: false; error: string }> {
+  const session = liveQuizSessions.get(joinCode);
+  if (!session) return { success: false, error: 'Session not found. Check your join code.' };
+  return { success: true, data: session };
+}
+
 export async function actionCreateQuiz(data: {
   title: string;
   description?: string;
@@ -55,7 +61,7 @@ export async function actionCreateQuiz(data: {
   difficulty?: string;
   time_limit_minutes?: number;
   userId?: string;
-}) {
+}): Promise<{ success: true; data: any } | { success: false; error: string }> {
   const id = `quiz_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
   const newQuiz = {
     id,
@@ -64,6 +70,8 @@ export async function actionCreateQuiz(data: {
     questions: data.questions,
     created_by: data.userId || 'user',
     is_public: data.is_public ?? false,
+    status: 'published',
+    share_code: null,
     curriculum_id: data.curriculum_id ?? null,
     difficulty: data.difficulty ?? null,
     time_limit_minutes: data.time_limit_minutes ?? null,
@@ -110,7 +118,7 @@ export async function actionShareQuiz(quizId: string) {
 
 // ── Session Actions ──────────────────────────────────────────────────────────
 
-export async function actionCreateSession(quizId: string, hostId: string) {
+export async function actionCreateSession(quizId: string, hostId: string): Promise<{ success: true; data: any } | { success: false; error: string }> {
   const quiz = standaloneQuizzes.get(quizId);
   const sessionId = `session_${Date.now()}`;
   const joinCode = generateJoinCode();

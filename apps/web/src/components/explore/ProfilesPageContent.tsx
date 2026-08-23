@@ -27,9 +27,11 @@ import AvatarImage from '@/components/ui/AvatarImage';
 // Precomputed role badge classes — Tailwind requires statically detectable class names
 const ROLE_BADGE_CLASSES: Record<UserRole, string> = {
   student: 'text-blue-500 bg-blue-500/10',
-  teacher: 'text-emerald-500 bg-emerald-500/10',
+  tutor: 'text-emerald-500 bg-emerald-500/10',
+  teacher: 'text-teal-500 bg-teal-500/10',
   contributor: 'text-violet-500 bg-violet-500/10',
   main_contributor: 'text-amber-500 bg-amber-500/10',
+  admin: 'text-rose-500 bg-rose-500/10',
 };
 
 const ROLE_FILTERS: { label: string; roles: UserRole[]; icon: React.ReactNode }[] = [

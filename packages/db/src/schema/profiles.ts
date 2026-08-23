@@ -41,8 +41,6 @@ export const profiles = pgTable('profiles', {
   custom_url_slug: text('custom_url_slug').unique(),
   certification_ids: uuid('certification_ids').array(),
   timezone: text('timezone').default('UTC'),
-  telegram_chat_id: text('telegram_chat_id'),
-  notification_preferences: jsonb('notification_preferences'),
 });
 
 export const studentProfiles = pgTable('student_profiles', {

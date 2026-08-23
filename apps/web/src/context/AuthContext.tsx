@@ -14,6 +14,7 @@ import {
 } from 'react';
 import { AuthUser, Profile, UserRole, type OnboardingCurriculumSelection } from '@/types';
 import { authClient } from '@/lib/auth-client';
+import { actionUpdateProfile } from '@/actions/profile';
 
 const AUTH_CACHE_KEY = 'the_ants_auth_user';
 const ACTIVE_ROLE_CACHE_KEY = 'the_ants_active_role';
@@ -130,6 +131,7 @@ interface AuthContextValue {
       Pick<
         Profile,
         | 'name'
+        | 'username'
         | 'bio'
         | 'title'
         | 'socialLinks'
@@ -138,6 +140,7 @@ interface AuthContextValue {
         | 'projects'
         | 'activities'
         | 'achievements'
+        | 'academicGrades'
         | 'pinnedItemId'
         | 'sectionVisibility'
         | 'sectionOrder'
@@ -150,9 +153,13 @@ interface AuthContextValue {
         | 'theme'
         | 'notificationPreferences'
         | 'telegramHandle'
+        | 'telegramChatId'
         | 'hourlyRate'
         | 'teachingCurriculums'
         | 'teachingSubjects'
+        | 'timezone'
+        | 'preferredName'
+        | 'institutionName'
       >
     >
   ) => Promise<{ success: boolean; error?: string }>;
@@ -190,7 +197,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const [isLoading, setIsLoading] = useState(true);
 
-  const roles = user?.profile.roles && user.profile.roles.length > 0 ? user.profile.roles : ['student'];
+  const roles: UserRole[] = user?.profile.roles && user.profile.roles.length > 0 ? (user.profile.roles as UserRole[]) : ['student'];
 
   const switchRole = useCallback(
     (newRole: UserRole) => {
@@ -387,6 +394,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         Pick<
           Profile,
           | 'name'
+          | 'username'
           | 'bio'
           | 'title'
           | 'socialLinks'
@@ -395,6 +403,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           | 'projects'
           | 'activities'
           | 'achievements'
+          | 'academicGrades'
           | 'pinnedItemId'
           | 'sectionVisibility'
           | 'sectionOrder'
@@ -407,9 +416,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           | 'theme'
           | 'notificationPreferences'
           | 'telegramHandle'
+          | 'telegramChatId'
           | 'hourlyRate'
           | 'teachingCurriculums'
           | 'teachingSubjects'
+          | 'timezone'
+          | 'preferredName'
+          | 'institutionName'
         >
       >
     ) => {
@@ -431,16 +444,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        await fetch(`${API_BASE_URL}/api/profile/me`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            userId: user.id,
-            ...data,
+        await Promise.allSettled([
+          actionUpdateProfile(user.id, data),
+          fetch(`${API_BASE_URL}/api/profile/me`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              userId: user.id,
+              ...data,
+            }),
           }),
-        });
-      } catch {}
+        ]);
+      } catch (err) {
+        console.warn('[updateProfile] Sync failed:', err);
+      }
 
       return { success: true };
     },

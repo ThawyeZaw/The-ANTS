@@ -113,10 +113,10 @@ export function useCurriculumDashboard() {
                   list.push({
                     enrollmentId: item.id,
                     subjectId: s.id,
-                    subjectTitle: s.title,
+                    subjectTitle: s.title || s.name || '',
                     curriculumId: c.id,
-                    curriculumTitle: c.title,
-                    examBoard: c.exam_board ?? null,
+                    curriculumTitle: c.title || c.name || '',
+                    examBoard: c.exam_board ?? c.code ?? null,
                   });
                 }
               }
@@ -227,21 +227,70 @@ export function useCurriculumDashboard() {
     return decks.filter((d) => !d.subject_id || selectedSubjectIds.includes(d.subject_id));
   }, [decks, selectedSubjectIds]);
 
-  const totalCompletedTopics = 0;
-  const totalTopics = 0;
+  const unselectedSubjects = useMemo(() => {
+    return enrolledSubjects.filter((s) => !selectedSubjectIds.includes(s.subjectId));
+  }, [enrolledSubjects, selectedSubjectIds]);
 
   const refresh = useCallback(() => {
     setRefreshKey((k) => k + 1);
   }, []);
 
+  const addCountdown = useCallback(async (data: {
+    exam_id?: string;
+    custom_title?: string;
+    target_date: string;
+    priority_indicator: string;
+    qualification_group: string;
+  }) => {
+    if (!userId) return;
+    try {
+      await fetch(`${API_BASE_URL}/api/exams/countdowns`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          examId: data.exam_id,
+          customTitle: data.custom_title,
+          targetDate: data.target_date,
+          priorityIndicator: data.priority_indicator,
+          qualificationGroup: data.qualification_group,
+        }),
+      });
+      refresh();
+    } catch (err) {
+      console.error('Failed to add countdown:', err);
+    }
+  }, [userId, refresh]);
+
+  const removeCountdown = useCallback(async (countdownId: string) => {
+    if (!userId) return;
+    try {
+      await fetch(`${API_BASE_URL}/api/exams/countdowns/${countdownId}?userId=${encodeURIComponent(userId)}`, {
+        method: 'DELETE',
+      });
+      refresh();
+    } catch (err) {
+      console.error('Failed to remove countdown:', err);
+    }
+  }, [userId, refresh]);
+
+  const totalCompletedTopics = 0;
+  const totalTopics = 0;
+
   return {
     enrolledSubjects,
     selectedSubjectIds,
+    unselectedSubjects,
     toggleSubject,
     selectAll,
+    selectAllSubjects: selectAll,
     deselectAll,
     countdowns: filteredCountdowns,
     urgentCountdowns,
+    imminentExams: urgentCountdowns,
+    availableExams,
+    addCountdown,
+    removeCountdown,
     notes: filteredNotes,
     decks: filteredDecks,
     progress: {

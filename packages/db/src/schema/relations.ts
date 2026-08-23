@@ -341,6 +341,139 @@ export const userNotesRelations = relations(userNotes, ({ one }) => ({
   }),
 }));
 
+export const userCurriculumsRelations = relations(userCurriculums, ({ one }) => ({
+  user: one(profiles, {
+    fields: [userCurriculums.user_id],
+    references: [profiles.id],
+  }),
+  curriculum: one(curriculums, {
+    fields: [userCurriculums.curriculum_id],
+    references: [curriculums.id],
+  }),
+}));
+
+export const topicProgressRelations = relations(topicProgress, ({ one }) => ({
+  user: one(profiles, {
+    fields: [topicProgress.user_id],
+    references: [profiles.id],
+  }),
+  topic: one(topics, {
+    fields: [topicProgress.topic_id],
+    references: [topics.id],
+  }),
+}));
+
+export const resourcesRelations = relations(resources, ({ one }) => ({
+  topic: one(topics, {
+    fields: [resources.topic_id],
+    references: [topics.id],
+  }),
+  subject: one(subjects, {
+    fields: [resources.subject_id],
+    references: [subjects.id],
+  }),
+  curriculum: one(curriculums, {
+    fields: [resources.curriculum_id],
+    references: [curriculums.id],
+  }),
+  author: one(profiles, {
+    fields: [resources.author_id],
+    references: [profiles.id],
+  }),
+}));
+
+export const studentProfilesRelations = relations(studentProfiles, ({ one }) => ({
+  profile: one(profiles, {
+    fields: [studentProfiles.id],
+    references: [profiles.id],
+  }),
+}));
+
+export const tutorProfilesRelations = relations(tutorProfiles, ({ one }) => ({
+  profile: one(profiles, {
+    fields: [tutorProfiles.id],
+    references: [profiles.id],
+  }),
+}));
+
+export const contributorProfilesRelations = relations(contributorProfiles, ({ one }) => ({
+  profile: one(profiles, {
+    fields: [contributorProfiles.id],
+    references: [profiles.id],
+  }),
+}));
+
+export const certificationsRelations = relations(certifications, ({ one }) => ({
+  user: one(profiles, {
+    fields: [certifications.user_id],
+    references: [profiles.id],
+  }),
+}));
+
+export const roleUpgradeRequestsRelations = relations(roleUpgradeRequests, ({ one }) => ({
+  user: one(profiles, {
+    fields: [roleUpgradeRequests.user_id],
+    references: [profiles.id],
+  }),
+  reviewer: one(profiles, {
+    fields: [roleUpgradeRequests.reviewer_id],
+    references: [profiles.id],
+  }),
+}));
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  user: one(profiles, {
+    fields: [notifications.user_id],
+    references: [profiles.id],
+  }),
+}));
+
+export const notificationQueueRelations = relations(notificationQueue, ({ one }) => ({
+  user: one(profiles, {
+    fields: [notificationQueue.user_id],
+    references: [profiles.id],
+  }),
+}));
+
+export const notificationPreferencesRelations = relations(notificationPreferences, ({ one }) => ({
+  user: one(profiles, {
+    fields: [notificationPreferences.user_id],
+    references: [profiles.id],
+  }),
+}));
+
+export const activityFeedRelations = relations(activityFeed, ({ one }) => ({
+  user: one(profiles, {
+    fields: [activityFeed.user_id],
+    references: [profiles.id],
+  }),
+}));
+
+export const reviewQueueRelations = relations(reviewQueue, ({ one }) => ({
+  contributor: one(profiles, {
+    fields: [reviewQueue.contributor_id],
+    references: [profiles.id],
+  }),
+  reviewer: one(profiles, {
+    fields: [reviewQueue.reviewer_id],
+    references: [profiles.id],
+  }),
+}));
+
+export const versionHistoryRelations = relations(versionHistory, ({ one }) => ({
+  changedBy: one(profiles, {
+    fields: [versionHistory.changed_by],
+    references: [profiles.id],
+  }),
+}));
+
+export const editorSubmissionsRelations = relations(editorSubmissions, ({ one }) => ({
+  submittedBy: one(profiles, {
+    fields: [editorSubmissions.submitted_by],
+    references: [profiles.id],
+  }),
+}));
+
 // ── Better Auth Relations ──────────────────────────────────────────────────
 
 export const userRelations = relations(user, ({ many }) => ({

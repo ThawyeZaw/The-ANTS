@@ -29,7 +29,7 @@ export default function ExamEditorPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Link
-            href="/contribute/grade-calculator"
+            href="/editor/exam/grade-calculator"
             className="group flex flex-col items-start gap-4 rounded-3xl border border-[var(--border)] bg-[var(--background-card)] p-6 shadow-xl transition-all hover:shadow-2xl hover:border-[var(--primary)]"
           >
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-400">
@@ -47,7 +47,7 @@ export default function ExamEditorPage() {
           </Link>
 
           <Link
-            href="/contribute/countdown"
+            href="/editor/exam/countdown"
             className="group flex flex-col items-start gap-4 rounded-3xl border border-[var(--border)] bg-[var(--background-card)] p-6 shadow-xl transition-all hover:shadow-2xl hover:border-[var(--primary)]"
           >
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-500/10 text-orange-400">

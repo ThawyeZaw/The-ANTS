@@ -9,7 +9,17 @@ import { type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/types';
 
-type BadgeVariant = 'default' | 'student' | 'teacher' | 'contributor' | 'main_contributor' | 'success' | 'warning' | 'error';
+type BadgeVariant =
+  | 'default'
+  | 'student'
+  | 'tutor'
+  | 'teacher'
+  | 'contributor'
+  | 'main_contributor'
+  | 'admin'
+  | 'success'
+  | 'warning'
+  | 'error';
 
 interface BadgeProps {
   children: ReactNode;
@@ -19,10 +29,12 @@ interface BadgeProps {
 
 const variantStyles: Record<BadgeVariant, string> = {
   default: 'bg-background-secondary text-foreground-secondary',
-  student: 'bg-role-student/15 text-role-student',
-  teacher: 'bg-role-teacher/15 text-role-teacher',
-  contributor: 'bg-role-contributor/15 text-role-contributor',
-  main_contributor: 'bg-role-main-contributor/15 text-role-main-contributor',
+  student: 'bg-blue-500/15 text-blue-500',
+  tutor: 'bg-emerald-500/15 text-emerald-500',
+  teacher: 'bg-teal-500/15 text-teal-500',
+  contributor: 'bg-purple-500/15 text-purple-500',
+  main_contributor: 'bg-amber-500/15 text-amber-500',
+  admin: 'bg-rose-500/15 text-rose-500',
   success: 'bg-success/15 text-success',
   warning: 'bg-warning/15 text-warning',
   error: 'bg-error/15 text-error',
@@ -46,9 +58,11 @@ export default function Badge({ children, variant = 'default', className }: Badg
 export function RoleBadge({ role }: { role: UserRole }) {
   const labels: Record<UserRole, string> = {
     student: 'Student',
+    tutor: 'Tutor',
     teacher: 'Teacher',
     contributor: 'Contributor',
     main_contributor: 'Main Contributor',
+    admin: 'Admin',
   };
-  return <Badge variant={role}>{labels[role]}</Badge>;
+  return <Badge variant={role}>{labels[role] || role}</Badge>;
 }

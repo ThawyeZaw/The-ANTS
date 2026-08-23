@@ -7,7 +7,36 @@
 import type { TimetableEvent, TimetableEventFormData } from '@/types/timetable';
 import { getDb, timetableEvents } from '@/lib/db';
 import { eq, and, gte, lte } from 'drizzle-orm';
-import { combineDateTime } from '@/hooks/useTimetable';
+
+function combineDateTime(dateStr: string, timeStr: string): string {
+  return new Date(`${dateStr}T${timeStr}:00`).toISOString();
+}
+
+function formatDbEvent(e: any): TimetableEvent {
+  const meta = (e.metadata as Record<string, any>) ?? {};
+  return {
+    id: e.id,
+    user_id: e.user_id,
+    title: e.title,
+    description: meta.description ?? undefined,
+    event_type: (e.event_type as any) ?? 'study',
+    subject: meta.subject ?? undefined,
+    location: meta.location ?? undefined,
+    start_time: e.start_time ? (e.start_time instanceof Date ? e.start_time.toISOString() : new Date(e.start_time).toISOString()) : new Date().toISOString(),
+    end_time: e.end_time ? (e.end_time instanceof Date ? e.end_time.toISOString() : new Date(e.end_time).toISOString()) : new Date().toISOString(),
+    all_day: e.all_day ?? false,
+    is_recurring: e.is_recurring ?? false,
+    recurrence_rule: (e.recurrence_pattern || meta.recurrence_rule) as any,
+    color_code: e.color_code ?? '#3B82F6',
+    is_todo: meta.is_todo ?? false,
+    is_completed: meta.is_completed ?? false,
+    completed_at: meta.completed_at ?? null,
+    event_source: (meta.event_source as any) ?? 'user',
+    source_id: meta.source_id ?? null,
+    metadata: meta,
+    created_at: e.created_at ? (e.created_at instanceof Date ? e.created_at.toISOString() : new Date(e.created_at).toISOString()) : new Date().toISOString(),
+  };
+}
 
 // ---------------------------------------------------------------------------
 // Read
@@ -17,7 +46,7 @@ export async function fetchTimetableEventsAction(
   userId: string,
   rangeStart: Date,
   rangeEnd: Date,
-  showExternalEvents = true
+  _showExternalEvents = true
 ): Promise<{ success: true; events: TimetableEvent[] } | { success: false; error: string }> {
   try {
     const db = getDb();
@@ -27,41 +56,31 @@ export async function fetchTimetableEventsAction(
       lte(timetableEvents.start_time, rangeEnd),
     ];
 
-    if (!showExternalEvents) {
-      conditions.push(eq(timetableEvents.event_source, 'user'));
-    }
-
     const data = await db.query.timetableEvents.findMany({
       where: and(...conditions),
       orderBy: (events, { asc }) => [asc(events.start_time)],
     });
 
-    const events: TimetableEvent[] = data.map((e) => ({
-      id: e.id,
-      user_id: e.user_id,
-      title: e.title,
-      description: e.description ?? undefined,
-      event_type: (e.event_type as any) ?? 'study',
-      subject: e.subject ?? undefined,
-      location: e.location ?? undefined,
-      start_time: e.start_time.toISOString(),
-      end_time: e.end_time.toISOString(),
-      all_day: e.all_day ?? false,
-      is_recurring: e.is_recurring ?? false,
-      recurrence_rule: e.recurrence_rule as any,
-      color_code: e.color_code ?? '#3B82F6',
-      is_todo: e.is_todo ?? false,
-      is_completed: e.is_completed ?? false,
-      completed_at: e.completed_at?.toISOString() ?? null,
-      event_source: (e.event_source as any) ?? 'user',
-      source_id: e.source_id ?? null,
-      metadata: (e.metadata as any) ?? {},
-      created_at: e.created_at?.toISOString() ?? new Date().toISOString(),
-    }));
+    const events: TimetableEvent[] = data.map(formatDbEvent);
 
     return { success: true, events };
   } catch (err) {
     return { success: false, error: `Failed to fetch events: ${String(err)}` };
+  }
+}
+
+export async function actionGetTimetableEvents(userId: string): Promise<TimetableEvent[]> {
+  try {
+    const db = getDb();
+    const data = await db.query.timetableEvents.findMany({
+      where: eq(timetableEvents.user_id, userId),
+      orderBy: (events, { asc }) => [asc(events.start_time)],
+    });
+
+    return data.map(formatDbEvent);
+  } catch (err) {
+    console.error('Failed to get timetable events:', err);
+    return [];
   }
 }
 
@@ -101,49 +120,69 @@ export async function createEventAction(
       .values({
         user_id: userId,
         title: rest.title,
-        description: rest.description,
         event_type: rest.event_type as any,
-        subject: rest.subject,
-        location: rest.location,
         start_time: startDate,
         end_time: endDate,
         all_day: allDay,
         is_recurring: rest.is_recurring ?? false,
-        recurrence_rule: rest.recurrence_rule as any,
+        recurrence_pattern: rest.recurrence_rule as any,
         color_code: rest.color_code,
-        is_todo: rest.is_todo ?? false,
-        is_completed: false,
-        completed_at: null,
-        event_source: 'user',
-        source_id: null,
-        metadata: rest.metadata as any,
+        metadata: {
+          description: rest.description,
+          location: rest.location,
+          subject: rest.subject,
+          reminder_minutes: rest.reminder_minutes,
+          is_todo: rest.is_todo ?? false,
+          is_completed: false,
+          completed_at: null,
+          event_source: 'user',
+          source_id: null,
+        } as any,
       })
       .returning();
 
-    const formatted: TimetableEvent = {
-      id: newEvent.id,
-      user_id: newEvent.user_id,
-      title: newEvent.title,
-      description: newEvent.description ?? undefined,
-      event_type: (newEvent.event_type as any) ?? 'study',
-      subject: newEvent.subject ?? undefined,
-      location: newEvent.location ?? undefined,
-      start_time: newEvent.start_time.toISOString(),
-      end_time: newEvent.end_time.toISOString(),
-      all_day: newEvent.all_day ?? false,
-      is_recurring: newEvent.is_recurring ?? false,
-      recurrence_rule: newEvent.recurrence_rule as any,
-      color_code: newEvent.color_code ?? '#3B82F6',
-      is_todo: newEvent.is_todo ?? false,
-      is_completed: newEvent.is_completed ?? false,
-      completed_at: newEvent.completed_at?.toISOString() ?? null,
-      event_source: (newEvent.event_source as any) ?? 'user',
-      source_id: newEvent.source_id ?? null,
-      metadata: (newEvent.metadata as any) ?? {},
-      created_at: newEvent.created_at?.toISOString() ?? new Date().toISOString(),
-    };
+    return { success: true, event: formatDbEvent(newEvent) };
+  } catch (err) {
+    return { success: false, error: `Failed to create event: ${String(err)}` };
+  }
+}
 
-    return { success: true, event: formatted };
+export async function actionCreateTimetableEvent(
+  userId: string,
+  data: Partial<TimetableEvent> & { metadata?: any }
+): Promise<{ success: boolean; event?: TimetableEvent; error?: string }> {
+  try {
+    const db = getDb();
+    const startDate = data.start_time ? new Date(data.start_time) : new Date();
+    const endDate = data.end_time ? new Date(data.end_time) : new Date(startDate.getTime() + 3600000);
+
+    const [newEvent] = await db
+      .insert(timetableEvents)
+      .values({
+        user_id: userId,
+        title: data.title || 'Untitled Event',
+        event_type: (data.event_type as any) ?? 'study',
+        start_time: startDate,
+        end_time: endDate,
+        all_day: data.all_day ?? false,
+        is_recurring: data.is_recurring ?? false,
+        recurrence_pattern: data.recurrence_rule as any,
+        color_code: data.color_code ?? '#3B82F6',
+        metadata: {
+          ...(data.metadata || {}),
+          description: data.description || (data.metadata?.description as string) || null,
+          subject: data.subject || (data.metadata?.subject as string) || null,
+          location: data.location || (data.metadata?.location as string) || null,
+          is_todo: data.is_todo ?? false,
+          is_completed: false,
+          completed_at: null,
+          event_source: 'user',
+          source_id: null,
+        } as any,
+      })
+      .returning();
+
+    return { success: true, event: formatDbEvent(newEvent) };
   } catch (err) {
     return { success: false, error: `Failed to create event: ${String(err)}` };
   }
@@ -180,16 +219,18 @@ export async function updateEventAction(
     const baseId = eventId.includes('::') ? eventId.split('::')[0] : eventId;
     const updatePayload: any = {
       title: rest.title,
-      description: rest.description,
       event_type: rest.event_type as any,
-      subject: rest.subject,
-      location: rest.location,
       all_day: allDay,
       is_recurring: rest.is_recurring,
-      recurrence_rule: rest.recurrence_rule as any,
+      recurrence_pattern: rest.recurrence_rule as any,
       color_code: rest.color_code,
-      is_todo: rest.is_todo,
-      metadata: rest.metadata as any,
+      metadata: {
+        description: rest.description,
+        location: rest.location,
+        subject: rest.subject,
+        reminder_minutes: rest.reminder_minutes,
+        is_todo: rest.is_todo,
+      } as any,
     };
 
     if (startIso) updatePayload.start_time = new Date(startIso);
@@ -203,30 +244,41 @@ export async function updateEventAction(
 
     if (!updated) return { success: false, error: 'Event not found or unauthorized' };
 
-    const formatted: TimetableEvent = {
-      id: updated.id,
-      user_id: updated.user_id,
-      title: updated.title,
-      description: updated.description ?? undefined,
-      event_type: (updated.event_type as any) ?? 'study',
-      subject: updated.subject ?? undefined,
-      location: updated.location ?? undefined,
-      start_time: updated.start_time.toISOString(),
-      end_time: updated.end_time.toISOString(),
-      all_day: updated.all_day ?? false,
-      is_recurring: updated.is_recurring ?? false,
-      recurrence_rule: updated.recurrence_rule as any,
-      color_code: updated.color_code ?? '#3B82F6',
-      is_todo: updated.is_todo ?? false,
-      is_completed: updated.is_completed ?? false,
-      completed_at: updated.completed_at?.toISOString() ?? null,
-      event_source: (updated.event_source as any) ?? 'user',
-      source_id: updated.source_id ?? null,
-      metadata: (updated.metadata as any) ?? {},
-      created_at: updated.created_at?.toISOString() ?? new Date().toISOString(),
-    };
+    return { success: true, event: formatDbEvent(updated) };
+  } catch (err) {
+    return { success: false, error: `Failed to update event: ${String(err)}` };
+  }
+}
 
-    return { success: true, event: formatted };
+export async function actionUpdateTimetableEvent(
+  userId: string,
+  eventId: string,
+  data: Partial<TimetableEvent> & { metadata?: any }
+): Promise<{ success: boolean; event?: TimetableEvent; error?: string }> {
+  try {
+    const db = getDb();
+    const baseId = eventId.includes('::') ? eventId.split('::')[0] : eventId;
+    const updatePayload: any = {};
+
+    if (data.title !== undefined) updatePayload.title = data.title;
+    if (data.event_type !== undefined) updatePayload.event_type = data.event_type as any;
+    if (data.all_day !== undefined) updatePayload.all_day = data.all_day;
+    if (data.is_recurring !== undefined) updatePayload.is_recurring = data.is_recurring;
+    if (data.recurrence_rule !== undefined) updatePayload.recurrence_pattern = data.recurrence_rule as any;
+    if (data.color_code !== undefined) updatePayload.color_code = data.color_code;
+    if (data.metadata !== undefined) updatePayload.metadata = data.metadata as any;
+    if (data.start_time) updatePayload.start_time = new Date(data.start_time);
+    if (data.end_time) updatePayload.end_time = new Date(data.end_time);
+
+    const [updated] = await db
+      .update(timetableEvents)
+      .set(updatePayload)
+      .where(and(eq(timetableEvents.id, baseId), eq(timetableEvents.user_id, userId)))
+      .returning();
+
+    if (!updated) return { success: false, error: 'Event not found or unauthorized' };
+
+    return { success: true, event: formatDbEvent(updated) };
   } catch (err) {
     return { success: false, error: `Failed to update event: ${String(err)}` };
   }
@@ -252,6 +304,13 @@ export async function deleteEventAction(
   }
 }
 
+export async function actionDeleteTimetableEvent(
+  userId: string,
+  eventId: string
+): Promise<{ success: boolean; error?: string }> {
+  return deleteEventAction(eventId, userId);
+}
+
 // ---------------------------------------------------------------------------
 // Toggle Complete
 // ---------------------------------------------------------------------------
@@ -262,46 +321,66 @@ export async function toggleEventCompleteAction(
 ): Promise<{ success: true; event: TimetableEvent } | { success: false; error: string }> {
   try {
     const db = getDb();
+    const baseId = eventId.includes('::') ? eventId.split('::')[0] : eventId;
     const existing = await db.query.timetableEvents.findFirst({
-      where: and(eq(timetableEvents.id, eventId), eq(timetableEvents.user_id, userId)),
+      where: and(eq(timetableEvents.id, baseId), eq(timetableEvents.user_id, userId)),
     });
 
     if (!existing) return { success: false, error: 'Event not found' };
 
-    const newVal = !existing.is_completed;
+    const currentMeta = (existing.metadata as Record<string, any>) ?? {};
+    const newVal = !currentMeta.is_completed;
+    const updatedMeta = {
+      ...currentMeta,
+      is_completed: newVal,
+      completed_at: newVal ? new Date().toISOString() : null,
+    };
+
     const [updated] = await db
       .update(timetableEvents)
       .set({
-        is_completed: newVal,
-        completed_at: newVal ? new Date() : null,
+        metadata: updatedMeta,
       })
-      .where(eq(timetableEvents.id, eventId))
+      .where(eq(timetableEvents.id, baseId))
       .returning();
 
-    const formatted: TimetableEvent = {
-      id: updated.id,
-      user_id: updated.user_id,
-      title: updated.title,
-      description: updated.description ?? undefined,
-      event_type: (updated.event_type as any) ?? 'study',
-      subject: updated.subject ?? undefined,
-      location: updated.location ?? undefined,
-      start_time: updated.start_time.toISOString(),
-      end_time: updated.end_time.toISOString(),
-      all_day: updated.all_day ?? false,
-      is_recurring: updated.is_recurring ?? false,
-      recurrence_rule: updated.recurrence_rule as any,
-      color_code: updated.color_code ?? '#3B82F6',
-      is_todo: updated.is_todo ?? false,
-      is_completed: updated.is_completed ?? false,
-      completed_at: updated.completed_at?.toISOString() ?? null,
-      event_source: (updated.event_source as any) ?? 'user',
-      source_id: updated.source_id ?? null,
-      metadata: (updated.metadata as any) ?? {},
-      created_at: updated.created_at?.toISOString() ?? new Date().toISOString(),
+    return { success: true, event: formatDbEvent(updated) };
+  } catch (err) {
+    return { success: false, error: `Failed to toggle event: ${String(err)}` };
+  }
+}
+
+export async function actionToggleTimetableEventComplete(
+  userId: string,
+  eventId: string,
+  isCompleted?: boolean
+): Promise<{ success: boolean; event?: TimetableEvent; error?: string }> {
+  try {
+    const db = getDb();
+    const baseId = eventId.includes('::') ? eventId.split('::')[0] : eventId;
+    const existing = await db.query.timetableEvents.findFirst({
+      where: and(eq(timetableEvents.id, baseId), eq(timetableEvents.user_id, userId)),
+    });
+
+    if (!existing) return { success: false, error: 'Event not found' };
+
+    const currentMeta = (existing.metadata as Record<string, any>) ?? {};
+    const newVal = isCompleted !== undefined ? isCompleted : !currentMeta.is_completed;
+    const updatedMeta = {
+      ...currentMeta,
+      is_completed: newVal,
+      completed_at: newVal ? new Date().toISOString() : null,
     };
 
-    return { success: true, event: formatted };
+    const [updated] = await db
+      .update(timetableEvents)
+      .set({
+        metadata: updatedMeta,
+      })
+      .where(eq(timetableEvents.id, baseId))
+      .returning();
+
+    return { success: true, event: formatDbEvent(updated) };
   } catch (err) {
     return { success: false, error: `Failed to toggle event: ${String(err)}` };
   }
@@ -319,42 +398,22 @@ export async function moveEventAction(
 ): Promise<{ success: true; event: TimetableEvent } | { success: false; error: string }> {
   try {
     const db = getDb();
+    const baseId = eventId.includes('::') ? eventId.split('::')[0] : eventId;
     const [updated] = await db
       .update(timetableEvents)
       .set({
         start_time: new Date(newStartTime),
         end_time: newEndTime ? new Date(newEndTime) : new Date(new Date(newStartTime).getTime() + 3600000),
       })
-      .where(and(eq(timetableEvents.id, eventId), eq(timetableEvents.user_id, userId)))
+      .where(and(eq(timetableEvents.id, baseId), eq(timetableEvents.user_id, userId)))
       .returning();
 
     if (!updated) return { success: false, error: 'Event not found' };
 
-    const formatted: TimetableEvent = {
-      id: updated.id,
-      user_id: updated.user_id,
-      title: updated.title,
-      description: updated.description ?? undefined,
-      event_type: (updated.event_type as any) ?? 'study',
-      subject: updated.subject ?? undefined,
-      location: updated.location ?? undefined,
-      start_time: updated.start_time.toISOString(),
-      end_time: updated.end_time.toISOString(),
-      all_day: updated.all_day ?? false,
-      is_recurring: updated.is_recurring ?? false,
-      recurrence_rule: updated.recurrence_rule as any,
-      color_code: updated.color_code ?? '#3B82F6',
-      is_todo: updated.is_todo ?? false,
-      is_completed: updated.is_completed ?? false,
-      completed_at: updated.completed_at?.toISOString() ?? null,
-      event_source: (updated.event_source as any) ?? 'user',
-      source_id: updated.source_id ?? null,
-      metadata: (updated.metadata as any) ?? {},
-      created_at: updated.created_at?.toISOString() ?? new Date().toISOString(),
-    };
-
-    return { success: true, event: formatted };
+    return { success: true, event: formatDbEvent(updated) };
   } catch (err) {
     return { success: false, error: `Failed to move event: ${String(err)}` };
   }
 }
+
+export const actionMoveTimetableEvent = moveEventAction;

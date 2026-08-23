@@ -90,12 +90,13 @@ async function upsertQueueItems(
   // Batch insert
   for (const item of items) {
     await db.insert(notificationQueue).values({
+      user_id: item.user_id,
+      channel: 'telegram',
       payload: {
         telegram_chat_id: item.telegram_chat_id,
         message: item.message_text,
         source_type: item.source_type,
         source_id: item.source_id,
-        user_id: item.user_id,
       },
       scheduled_for: new Date(item.scheduled_for),
       status: 'pending',
@@ -191,14 +192,16 @@ export async function actionEnqueueTimetableReminders(
   if (event.is_recurring && event.recurrence_rule) {
     const horizonEnd = new Date(now + 14 * 24 * 60 * 60 * 1000);
     const expanded = expandRecurringEvents(
-      [event],
+      event,
       new Date(now),
       horizonEnd
     );
     for (const exp of expanded) {
-      timeInstances.push(new Date(exp.start_time));
+      if (exp.start_time) {
+        timeInstances.push(new Date(exp.start_time));
+      }
     }
-  } else {
+  } else if (event.start_time) {
     timeInstances.push(new Date(event.start_time));
   }
 
@@ -280,6 +283,8 @@ export async function actionEnqueueExamCountdownReminders(
   await upsertQueueItems('exam_countdown', examCountdownId, queueItems);
   await scheduleQStashTriggers(queueItems);
 }
+
+export const actionEnqueueExamReminders = actionEnqueueExamCountdownReminders;
 
 // ── Clear Queue for a Source ─────────────────────────────────────────────────
 

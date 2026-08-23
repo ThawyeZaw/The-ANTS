@@ -7,6 +7,7 @@
 import BackButton from '@/components/ui/BackButton';
 import { useEffect, useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import Link from 'next/link';
 import {
   Loader2,
   ExternalLink,
@@ -14,6 +15,7 @@ import {
   Star,
   GraduationCap,
   Layers,
+  Lock,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
@@ -136,9 +138,6 @@ export default function ProfilePage() {
     return (
       <ContributorPublicProfile
         profile={profile}
-        contributorProfile={contributorProfile}
-        stats={stats}
-        activities={timelineActivities}
       />
     );
   }
@@ -199,6 +198,29 @@ export default function ProfilePage() {
       style={themeColors ? (themeColors as React.CSSProperties) : undefined}
     >
       <BackButton noFallback label="Back to Explore" />
+
+      {/* Private Profile Banner for Owner */}
+      {isOwnProfile && profile.isPublic === false && (
+        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-semibold text-amber-600 dark:text-amber-400 animate-fade-in">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0">
+              <Lock className="w-4 h-4 text-amber-500" />
+            </div>
+            <div>
+              <p className="font-bold text-foreground">Private Profile</p>
+              <p className="text-[11px] text-foreground-muted font-normal">
+                Only you can see this page. Other users and visitors cannot view this profile.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/settings/profile"
+            className="px-4 py-2 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 transition-colors whitespace-nowrap self-start sm:self-center shadow-xs"
+          >
+            Change in Settings
+          </Link>
+        </div>
+      )}
 
       {/* Profile Hero */}
       <ProfileHero profile={profile} isOwnProfile={isOwnProfile} />

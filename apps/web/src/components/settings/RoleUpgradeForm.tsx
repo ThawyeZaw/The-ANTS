@@ -33,17 +33,21 @@ import {
 
 const ROLE_ICONS: Record<UserRole, React.ReactNode> = {
   student: <GraduationCap className="h-4 w-4" />,
+  tutor: <BookOpen className="h-4 w-4" />,
   teacher: <BookOpen className="h-4 w-4" />,
   contributor: <Pencil className="h-4 w-4" />,
   main_contributor: <Shield className="h-4 w-4" />,
+  admin: <Shield className="h-4 w-4" />,
 };
 
 /** Role hierarchy: higher number = higher role */
 const ROLE_HIERARCHY: Record<UserRole, number> = {
   student: 0,
+  tutor: 1,
   teacher: 1,
   contributor: 2,
   main_contributor: 3,
+  admin: 4,
 };
 
 export default function RoleUpgradeForm() {
@@ -63,7 +67,7 @@ export default function RoleUpgradeForm() {
   useEffect(() => {
     if (!user) return;
     setRequestsLoading(true);
-    getUserUpgradeRequests()
+    getUserUpgradeRequests(user.id)
       .then(setExistingRequests)
       .finally(() => setRequestsLoading(false));
   }, [user, success]);

@@ -10,10 +10,11 @@ export async function submitExamData(payload: any, contributorId: string) {
   try {
     const db = getDb();
     await db.insert(editorSubmissions).values({
-      contributor_id: contributorId as any,
-      submission_type: 'exam_data',
-      status: 'pending_review',
-      submitted_data: payload ?? {},
+      title: payload?.subject || payload?.title || 'Exam Data Submission',
+      entity_type: 'exam_data',
+      submitted_by: contributorId as any,
+      status: 'pending',
+      data: payload ?? {},
     });
     return { success: true };
   } catch (err: any) {
@@ -25,10 +26,11 @@ export async function submitExamCalculatorPreset(payload: any, contributorId: st
   try {
     const db = getDb();
     await db.insert(editorSubmissions).values({
-      contributor_id: contributorId as any,
-      submission_type: 'exam_calculator_preset',
-      status: 'pending_review',
-      submitted_data: payload ?? {},
+      title: payload?.title || payload?.qualification || 'Exam Calculator Preset',
+      entity_type: 'exam_calculator_preset',
+      submitted_by: contributorId as any,
+      status: 'pending',
+      data: payload ?? {},
     });
     return { success: true };
   } catch (err: any) {
@@ -40,10 +42,11 @@ export async function submitExamCountdownProposal(payload: any, contributorId: s
   try {
     const db = getDb();
     await db.insert(editorSubmissions).values({
-      contributor_id: contributorId as any,
-      submission_type: 'exam_countdown_proposal',
-      status: 'pending_review',
-      submitted_data: payload ?? {},
+      title: payload?.title || payload?.subject || 'Exam Countdown Proposal',
+      entity_type: 'exam_countdown_proposal',
+      submitted_by: contributorId as any,
+      status: 'pending',
+      data: payload ?? {},
     });
     return { success: true };
   } catch (err: any) {

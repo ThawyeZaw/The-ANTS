@@ -27,9 +27,11 @@ interface InviteFormProps {
 
 const ROLE_ICONS: Record<UserRole, React.ReactNode> = {
   student: <GraduationCap className="w-5 h-5" />,
+  tutor: <BookOpen className="w-5 h-5" />,
   teacher: <BookOpen className="w-5 h-5" />,
   contributor: <Pencil className="w-5 h-5" />,
   main_contributor: <Shield className="w-5 h-5" />,
+  admin: <Shield className="w-5 h-5" />,
 };
 
 const ROLE_OPTIONS: UserRole[] = ['student', 'teacher', 'contributor', 'main_contributor'];

@@ -164,7 +164,12 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
       }).select().single();
       // Enqueue exam reminders
       if (inserted) {
-        actionEnqueueExamReminders((inserted as any).id, userId);
+        actionEnqueueExamReminders(
+          (inserted as any).id,
+          userId,
+          newExamData.data.subject || 'Exam',
+          new Date(newExamData.data.date || Date.now())
+        );
       }
       // Refresh the page to reflect changes
       window.location.reload();
@@ -242,8 +247,9 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {autoCountdowns.map(cd => {
               if (cd.exam) {
+                const examDate = (cd.exam as any).date || (cd.exam as any).exam_date || new Date().toISOString();
                 const daysUntil = Math.ceil(
-                  (new Date(cd.exam.date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+                  (new Date(examDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
                 );
                 return (
                   <CountdownCard
@@ -252,9 +258,9 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
                       id: cd.exam.id,
                       user_id: userId,
                       exam_id: cd.exam.id,
-                      custom_title: subjectNameMap[cd.subjectId] ?? cd.exam.subject,
-                      target_date: cd.exam.date,
-                      qualification_group: cd.exam.series ?? 'Custom',
+                      custom_title: subjectNameMap[cd.subjectId] ?? (cd.exam as any).subject ?? 'Exam',
+                      target_date: examDate,
+                      qualification_group: (cd.exam as any).series ?? 'Custom',
                       priority_indicator: 'medium',
                     } as any}
                     onDelete={() => {}}

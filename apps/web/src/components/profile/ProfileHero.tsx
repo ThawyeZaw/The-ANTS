@@ -18,6 +18,7 @@ import {
   Star,
   Share2,
   Check,
+  Send,
 } from 'lucide-react';
 import { useState } from 'react';
 import { RoleBadge } from '@/components/ui/Badge';
@@ -182,9 +183,23 @@ export default function ProfileHero({ profile, isOwnProfile }: ProfileHeroProps)
             </div>
           )}
 
-          {/* ── Social Links ── */}
-          {visibleLinks.length > 0 && (
+          {/* ── Social & Telegram Links ── */}
+          {(visibleLinks.length > 0 || profile.telegramHandle) && (
             <div className="flex flex-wrap justify-center gap-2.5 mt-3 max-w-lg">
+              {profile.telegramHandle && !visibleLinks.some((l) => l.url.includes('t.me')) && (
+                <a
+                  href={`https://t.me/${profile.telegramHandle.replace('@', '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border border-sky-500/20 hover:border-sky-500/40 hover:bg-sky-500/10 text-sky-400 backdrop-blur-sm transition-all duration-300 group"
+                >
+                  <span className="shrink-0 transition-transform group-hover:scale-110">
+                    <Send className="h-4 w-4" />
+                  </span>
+                  <span>@{profile.telegramHandle.replace('@', '')}</span>
+                  <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                </a>
+              )}
               {visibleLinks.map((link) => (
                 <a
                   key={link.id}

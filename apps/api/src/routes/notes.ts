@@ -26,7 +26,19 @@ export function createNoteRoutes(getDb: () => ReturnType<typeof createDb>) {
       where: and(...conditions),
       orderBy: [desc(notes.created_at)],
       with: {
-        contributor: true,
+        contributor: {
+          columns: {
+            id: true,
+            name: true,
+            username: true,
+            avatar_url: true,
+            role: true,
+            roles: true,
+            is_public: true,
+            bio: true,
+            title: true,
+          },
+        },
         subject: true,
         topic: true,
       },

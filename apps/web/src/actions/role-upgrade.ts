@@ -48,7 +48,7 @@ export async function getPendingUpgradeRequests(): Promise<RoleUpgradeRequest[]>
   return [];
 }
 
-export async function getUserUpgradeRequests(userId: string): Promise<RoleUpgradeRequest[]> {
+export async function getUserUpgradeRequests(userId?: string): Promise<RoleUpgradeRequest[]> {
   return [];
 }
 

@@ -219,7 +219,7 @@ function AddCountdownModal({
   if (!isOpen) return null;
 
   const selectedExam = examId
-    ? availableExams.find(e => e.id === examId)
+    ? availableExams.find((e: any) => e.id === examId)
     : null;
 
   function handleSubmit(e: React.FormEvent) {
@@ -317,7 +317,7 @@ function AddCountdownModal({
                 className="w-full rounded-xl border border-border bg-background-secondary px-3 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
               >
                 <option value="">Choose an exam...</option>
-                {availableExams.map(exam => (
+                {availableExams.map((exam: any) => (
                   <option key={exam.id} value={exam.id}>
                     {exam.title} ({exam.exam_series})
                   </option>
@@ -611,7 +611,7 @@ export default function CurriculumDashboard() {
               {imminentExams.length} exam{imminentExams.length > 1 ? 's' : ''} within 7 days
             </p>
             <p className="text-xs text-foreground-muted mt-0.5">
-              {imminentExams.map(e => e.examTitle).join(', ')}
+              {imminentExams.map((e: any) => e.examTitle).join(', ')}
             </p>
           </div>
         </div>
