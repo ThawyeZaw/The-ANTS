@@ -2,11 +2,10 @@ import { relations } from 'drizzle-orm';
 import {
   profiles,
   studentProfiles,
-  teacherProfiles,
+  tutorProfiles,
   contributorProfiles,
   certifications,
   roleUpgradeRequests,
-  roleUpgradeApplications,
 } from './profiles';
 import {
   curriculums,
@@ -17,32 +16,6 @@ import {
   resources,
   editorSubmissions,
 } from './curriculums';
-import {
-  classrooms,
-  classroomMembers,
-  classroomCurriculums,
-  assignments,
-  assignmentSubmissions,
-  quizzes,
-  quizAttempts,
-  discussionTopics,
-  discussionReplies,
-  classroomResources,
-} from './classrooms';
-import {
-  clubs,
-  clubMembers,
-  clubCurriculums,
-  clubSubjects,
-  clubMessages,
-  clubAnnouncements,
-  clubLinks,
-  clubJoinRequests,
-  clubProjects,
-  clubEvents,
-  clubMilestones,
-  clubMemberContributions,
-} from './clubs';
 import {
   timetableEvents,
   pomodoroSessions,
@@ -78,9 +51,9 @@ export const profilesRelations = relations(profiles, ({ one, many }) => ({
     fields: [profiles.id],
     references: [studentProfiles.id],
   }),
-  teacherProfile: one(teacherProfiles, {
+  tutorProfile: one(tutorProfiles, {
     fields: [profiles.id],
-    references: [teacherProfiles.id],
+    references: [tutorProfiles.id],
   }),
   contributorProfile: one(contributorProfiles, {
     fields: [profiles.id],
@@ -88,7 +61,6 @@ export const profilesRelations = relations(profiles, ({ one, many }) => ({
   }),
   certifications: many(certifications),
   roleUpgradeRequests: many(roleUpgradeRequests),
-  roleUpgradeApplications: many(roleUpgradeApplications),
   timetableEvents: many(timetableEvents),
   pomodoroSessions: many(pomodoroSessions),
   decks: many(decks),
@@ -100,8 +72,6 @@ export const profilesRelations = relations(profiles, ({ one, many }) => ({
   userEnrollments: many(userEnrollments),
   userCurriculums: many(userCurriculums),
   topicProgress: many(topicProgress),
-  classroomMemberships: many(classroomMembers),
-  clubMemberships: many(clubMembers),
   notifications: many(notifications),
   notificationPreferences: one(notificationPreferences, {
     fields: [profiles.id],
@@ -114,8 +84,6 @@ export const profilesRelations = relations(profiles, ({ one, many }) => ({
 export const curriculumsRelations = relations(curriculums, ({ many }) => ({
   subjects: many(subjects),
   userCurriculums: many(userCurriculums),
-  classroomCurriculums: many(classroomCurriculums),
-  clubCurriculums: many(clubCurriculums),
   userEnrollments: many(userEnrollments),
   exams: many(exams),
   notes: many(notes),
@@ -135,8 +103,6 @@ export const subjectsRelations = relations(subjects, ({ one, many }) => ({
   gradeBoundaries: many(gradeBoundaries),
   gradeEntries: many(gradeEntries),
   examCountdowns: many(examCountdowns),
-  classroomCurriculums: many(classroomCurriculums),
-  clubSubjects: many(clubSubjects),
 }));
 
 export const topicsRelations = relations(topics, ({ one, many }) => ({
@@ -150,97 +116,6 @@ export const topicsRelations = relations(topics, ({ one, many }) => ({
   notes: many(notes),
   userNotes: many(userNotes),
   pomodoroSessions: many(pomodoroSessions),
-}));
-
-// ── Classroom Relations ────────────────────────────────────────────────────
-
-export const classroomsRelations = relations(classrooms, ({ one, many }) => ({
-  teacher: one(profiles, {
-    fields: [classrooms.teacher_id],
-    references: [profiles.id],
-  }),
-  members: many(classroomMembers),
-  curriculums: many(classroomCurriculums),
-  assignments: many(assignments),
-  quizzes: many(quizzes),
-  discussions: many(discussionTopics),
-  resources: many(classroomResources),
-}));
-
-export const classroomMembersRelations = relations(classroomMembers, ({ one }) => ({
-  classroom: one(classrooms, {
-    fields: [classroomMembers.classroom_id],
-    references: [classrooms.id],
-  }),
-  user: one(profiles, {
-    fields: [classroomMembers.user_id],
-    references: [profiles.id],
-  }),
-}));
-
-export const assignmentsRelations = relations(assignments, ({ one, many }) => ({
-  classroom: one(classrooms, {
-    fields: [assignments.classroom_id],
-    references: [classrooms.id],
-  }),
-  submissions: many(assignmentSubmissions),
-}));
-
-export const assignmentSubmissionsRelations = relations(assignmentSubmissions, ({ one }) => ({
-  assignment: one(assignments, {
-    fields: [assignmentSubmissions.assignment_id],
-    references: [assignments.id],
-  }),
-  student: one(profiles, {
-    fields: [assignmentSubmissions.student_id],
-    references: [profiles.id],
-  }),
-  grader: one(profiles, {
-    fields: [assignmentSubmissions.graded_by],
-    references: [profiles.id],
-  }),
-}));
-
-// ── Club Relations ─────────────────────────────────────────────────────────
-
-export const clubsRelations = relations(clubs, ({ one, many }) => ({
-  owner: one(profiles, {
-    fields: [clubs.owner_id],
-    references: [profiles.id],
-  }),
-  members: many(clubMembers),
-  curriculums: many(clubCurriculums),
-  subjects: many(clubSubjects),
-  messages: many(clubMessages),
-  announcements: many(clubAnnouncements),
-  links: many(clubLinks),
-  joinRequests: many(clubJoinRequests),
-  projects: many(clubProjects),
-  events: many(clubEvents),
-  milestones: many(clubMilestones),
-  contributions: many(clubMemberContributions),
-}));
-
-export const clubMembersRelations = relations(clubMembers, ({ one }) => ({
-  club: one(clubs, {
-    fields: [clubMembers.club_id],
-    references: [clubs.id],
-  }),
-  user: one(profiles, {
-    fields: [clubMembers.user_id],
-    references: [profiles.id],
-  }),
-}));
-
-export const clubMessagesRelations = relations(clubMessages, ({ one }) => ({
-  club: one(clubs, {
-    fields: [clubMessages.club_id],
-    references: [clubs.id],
-  }),
-  user: one(profiles, {
-    fields: [clubMessages.user_id],
-    references: [profiles.id],
-  }),
 }));
 
 // ── Flashcards & SRS Relations ─────────────────────────────────────────────

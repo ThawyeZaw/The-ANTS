@@ -162,33 +162,37 @@ export default function ContributorPublicProfile({
 
   useEffect(() => {
     async function fetchData() {
-      const supabase = createClient();
-      if (!supabase) return;
+      try {
+        const supabase = createClient();
+        if (!supabase) return;
 
-      const [
-        { data: notesData },
-        { data: decksData },
-        { data: curriculumsData },
-        { data: subjectsData },
-      ] = await Promise.all([
-        supabase.from('notes').select('*').eq('contributor_id', profile.id).eq('status', 'approved').eq('visibility', 'public'),
-        supabase.from('decks').select('*').eq('owner_id', profile.id).eq('is_public', true),
-        supabase.from('curriculums').select('*'),
-        supabase.from('subjects').select('*'),
-      ]);
+        const [
+          { data: notesData },
+          { data: decksData },
+          { data: curriculumsData },
+          { data: subjectsData },
+        ] = await Promise.all([
+          supabase.from('notes').select('*').eq('contributor_id', profile.id).eq('status', 'approved').eq('visibility', 'public'),
+          supabase.from('decks').select('*').eq('owner_id', profile.id).eq('is_public', true),
+          supabase.from('curriculums').select('*'),
+          supabase.from('subjects').select('*'),
+        ]);
 
-      if (notesData) setPublishedNotes(notesData as unknown as Note[]);
-      if (decksData) setDecks(decksData as unknown as Deck[]);
+        if (notesData) setPublishedNotes(notesData as unknown as Note[]);
+        if (decksData) setDecks(decksData as unknown as Deck[]);
 
-      if (curriculumsData) {
-        const cmap: Record<string, any> = {};
-        curriculumsData.forEach((c: any) => { cmap[c.id] = c; });
-        setCurriculumMap(cmap);
-      }
-      if (subjectsData) {
-        const smap: Record<string, any> = {};
-        subjectsData.forEach((s: any) => { smap[s.id] = s; });
-        setSubjectMap(smap);
+        if (curriculumsData) {
+          const cmap: Record<string, any> = {};
+          curriculumsData.forEach((c: any) => { cmap[c.id] = c; });
+          setCurriculumMap(cmap);
+        }
+        if (subjectsData) {
+          const smap: Record<string, any> = {};
+          subjectsData.forEach((s: any) => { smap[s.id] = s; });
+          setSubjectMap(smap);
+        }
+      } catch (err) {
+        console.warn('[ContributorPublicProfile] Could not fetch remote resources:', err);
       }
     }
 

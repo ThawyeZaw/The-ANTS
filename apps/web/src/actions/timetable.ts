@@ -1,13 +1,12 @@
 'use server';
 
-/**
- * @deprecated This file is deprecated. All timetable CRUD is handled directly
- * by useTimetable.ts hook using the Supabase client. Keep this file for
- * reference only; no new code should import from here.
- */
+// ──────────────────────────────────────────────────────────────────────────────
+// The ANTS — Timetable Server Actions (Neon Drizzle DB)
+// ──────────────────────────────────────────────────────────────────────────────
 
 import type { TimetableEvent, TimetableEventFormData } from '@/types/timetable';
-import { createClient } from '@/lib/supabase/server';
+import { getDb, timetableEvents } from '@/lib/db';
+import { eq, and, gte, lte } from 'drizzle-orm';
 import { combineDateTime } from '@/hooks/useTimetable';
 
 // ---------------------------------------------------------------------------
@@ -21,21 +20,46 @@ export async function fetchTimetableEventsAction(
   showExternalEvents = true
 ): Promise<{ success: true; events: TimetableEvent[] } | { success: false; error: string }> {
   try {
-    const supabase = await createClient();
-    let query = supabase
-      .from('timetable_events')
-      .select('*')
-      .eq('user_id', userId)
-      .gte('start_time', rangeStart.toISOString())
-      .lte('start_time', rangeEnd.toISOString());
+    const db = getDb();
+    const conditions = [
+      eq(timetableEvents.user_id, userId),
+      gte(timetableEvents.start_time, rangeStart),
+      lte(timetableEvents.start_time, rangeEnd),
+    ];
 
     if (!showExternalEvents) {
-      query = query.eq('event_source', 'user');
+      conditions.push(eq(timetableEvents.event_source, 'user'));
     }
 
-    const { data, error } = await query;
-    if (error) return { success: false, error: error.message };
-    return { success: true, events: (data as unknown as TimetableEvent[]) ?? [] };
+    const data = await db.query.timetableEvents.findMany({
+      where: and(...conditions),
+      orderBy: (events, { asc }) => [asc(events.start_time)],
+    });
+
+    const events: TimetableEvent[] = data.map((e) => ({
+      id: e.id,
+      user_id: e.user_id,
+      title: e.title,
+      description: e.description ?? undefined,
+      event_type: (e.event_type as any) ?? 'study',
+      subject: e.subject ?? undefined,
+      location: e.location ?? undefined,
+      start_time: e.start_time.toISOString(),
+      end_time: e.end_time.toISOString(),
+      all_day: e.all_day ?? false,
+      is_recurring: e.is_recurring ?? false,
+      recurrence_rule: e.recurrence_rule as any,
+      color_code: e.color_code ?? '#3B82F6',
+      is_todo: e.is_todo ?? false,
+      is_completed: e.is_completed ?? false,
+      completed_at: e.completed_at?.toISOString() ?? null,
+      event_source: (e.event_source as any) ?? 'user',
+      source_id: e.source_id ?? null,
+      metadata: (e.metadata as any) ?? {},
+      created_at: e.created_at?.toISOString() ?? new Date().toISOString(),
+    }));
+
+    return { success: true, events };
   } catch (err) {
     return { success: false, error: `Failed to fetch events: ${String(err)}` };
   }
@@ -50,7 +74,7 @@ export async function createEventAction(
   data: TimetableEventFormData
 ): Promise<{ success: true; event: TimetableEvent } | { success: false; error: string }> {
   try {
-    const supabase = await createClient();
+    const db = getDb();
     const { time_mode, date, start_time, end_time, ...rest } = data;
 
     let startIso: string | null = null;
@@ -63,24 +87,63 @@ export async function createEventAction(
     } else if (time_mode === 'all_day') {
       allDay = true;
       startIso = new Date(`${date}T00:00:00`).toISOString();
+      endIso = new Date(`${date}T23:59:59`).toISOString();
     } else if (time_mode === 'deadline') {
       endIso = combineDateTime(date, end_time);
+      startIso = endIso;
     }
 
-    const { data: event, error } = await supabase.from('timetable_events').insert({
-      user_id: userId,
-      ...rest,
-      start_time: startIso,
-      end_time: endIso,
-      all_day: allDay,
-      is_completed: false,
-      completed_at: null,
-      event_source: 'user',
-      source_id: null,
-    } as any).select().single();
+    const startDate = startIso ? new Date(startIso) : new Date();
+    const endDate = endIso ? new Date(endIso) : new Date(startDate.getTime() + 3600000);
 
-    if (error || !event) return { success: false, error: error?.message ?? 'Failed to create event' };
-    return { success: true, event: event as unknown as TimetableEvent };
+    const [newEvent] = await db
+      .insert(timetableEvents)
+      .values({
+        user_id: userId,
+        title: rest.title,
+        description: rest.description,
+        event_type: rest.event_type as any,
+        subject: rest.subject,
+        location: rest.location,
+        start_time: startDate,
+        end_time: endDate,
+        all_day: allDay,
+        is_recurring: rest.is_recurring ?? false,
+        recurrence_rule: rest.recurrence_rule as any,
+        color_code: rest.color_code,
+        is_todo: rest.is_todo ?? false,
+        is_completed: false,
+        completed_at: null,
+        event_source: 'user',
+        source_id: null,
+        metadata: rest.metadata as any,
+      })
+      .returning();
+
+    const formatted: TimetableEvent = {
+      id: newEvent.id,
+      user_id: newEvent.user_id,
+      title: newEvent.title,
+      description: newEvent.description ?? undefined,
+      event_type: (newEvent.event_type as any) ?? 'study',
+      subject: newEvent.subject ?? undefined,
+      location: newEvent.location ?? undefined,
+      start_time: newEvent.start_time.toISOString(),
+      end_time: newEvent.end_time.toISOString(),
+      all_day: newEvent.all_day ?? false,
+      is_recurring: newEvent.is_recurring ?? false,
+      recurrence_rule: newEvent.recurrence_rule as any,
+      color_code: newEvent.color_code ?? '#3B82F6',
+      is_todo: newEvent.is_todo ?? false,
+      is_completed: newEvent.is_completed ?? false,
+      completed_at: newEvent.completed_at?.toISOString() ?? null,
+      event_source: (newEvent.event_source as any) ?? 'user',
+      source_id: newEvent.source_id ?? null,
+      metadata: (newEvent.metadata as any) ?? {},
+      created_at: newEvent.created_at?.toISOString() ?? new Date().toISOString(),
+    };
+
+    return { success: true, event: formatted };
   } catch (err) {
     return { success: false, error: `Failed to create event: ${String(err)}` };
   }
@@ -96,7 +159,7 @@ export async function updateEventAction(
   data: TimetableEventFormData
 ): Promise<{ success: true; event: TimetableEvent } | { success: false; error: string }> {
   try {
-    const supabase = await createClient();
+    const db = getDb();
     const { time_mode, date, start_time, end_time, ...rest } = data;
     let startIso: string | null = null;
     let endIso: string | null = null;
@@ -108,20 +171,62 @@ export async function updateEventAction(
     } else if (time_mode === 'all_day') {
       allDay = true;
       startIso = new Date(`${date}T00:00:00`).toISOString();
+      endIso = new Date(`${date}T23:59:59`).toISOString();
     } else if (time_mode === 'deadline') {
       endIso = combineDateTime(date, end_time);
+      startIso = endIso;
     }
 
     const baseId = eventId.includes('::') ? eventId.split('::')[0] : eventId;
-    const { data: event, error } = await supabase.from('timetable_events').update({
-      ...rest,
-      start_time: startIso,
-      end_time: endIso,
+    const updatePayload: any = {
+      title: rest.title,
+      description: rest.description,
+      event_type: rest.event_type as any,
+      subject: rest.subject,
+      location: rest.location,
       all_day: allDay,
-    } as any).eq('id', baseId).select().single();
+      is_recurring: rest.is_recurring,
+      recurrence_rule: rest.recurrence_rule as any,
+      color_code: rest.color_code,
+      is_todo: rest.is_todo,
+      metadata: rest.metadata as any,
+    };
 
-    if (error || !event) return { success: false, error: error?.message ?? 'Failed to update event' };
-    return { success: true, event: event as unknown as TimetableEvent };
+    if (startIso) updatePayload.start_time = new Date(startIso);
+    if (endIso) updatePayload.end_time = new Date(endIso);
+
+    const [updated] = await db
+      .update(timetableEvents)
+      .set(updatePayload)
+      .where(and(eq(timetableEvents.id, baseId), eq(timetableEvents.user_id, userId)))
+      .returning();
+
+    if (!updated) return { success: false, error: 'Event not found or unauthorized' };
+
+    const formatted: TimetableEvent = {
+      id: updated.id,
+      user_id: updated.user_id,
+      title: updated.title,
+      description: updated.description ?? undefined,
+      event_type: (updated.event_type as any) ?? 'study',
+      subject: updated.subject ?? undefined,
+      location: updated.location ?? undefined,
+      start_time: updated.start_time.toISOString(),
+      end_time: updated.end_time.toISOString(),
+      all_day: updated.all_day ?? false,
+      is_recurring: updated.is_recurring ?? false,
+      recurrence_rule: updated.recurrence_rule as any,
+      color_code: updated.color_code ?? '#3B82F6',
+      is_todo: updated.is_todo ?? false,
+      is_completed: updated.is_completed ?? false,
+      completed_at: updated.completed_at?.toISOString() ?? null,
+      event_source: (updated.event_source as any) ?? 'user',
+      source_id: updated.source_id ?? null,
+      metadata: (updated.metadata as any) ?? {},
+      created_at: updated.created_at?.toISOString() ?? new Date().toISOString(),
+    };
+
+    return { success: true, event: formatted };
   } catch (err) {
     return { success: false, error: `Failed to update event: ${String(err)}` };
   }
@@ -135,10 +240,16 @@ export async function deleteEventAction(
   eventId: string,
   userId: string
 ): Promise<{ success: true } | { success: false; error: string }> {
-  const supabase = await createClient();
-  const baseId = eventId.includes('::') ? eventId.split('::')[0] : eventId;
-  const { error } = await supabase.from('timetable_events').delete().eq('id', baseId);
-  return error ? { success: false, error: error.message } : { success: true };
+  try {
+    const db = getDb();
+    const baseId = eventId.includes('::') ? eventId.split('::')[0] : eventId;
+    await db
+      .delete(timetableEvents)
+      .where(and(eq(timetableEvents.id, baseId), eq(timetableEvents.user_id, userId)));
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: `Failed to delete event: ${String(err)}` };
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -149,18 +260,51 @@ export async function toggleEventCompleteAction(
   eventId: string,
   userId: string
 ): Promise<{ success: true; event: TimetableEvent } | { success: false; error: string }> {
-  const supabase = await createClient();
-  const { data: existing } = await supabase.from('timetable_events')
-    .select('is_completed').eq('id', eventId).single();
+  try {
+    const db = getDb();
+    const existing = await db.query.timetableEvents.findFirst({
+      where: and(eq(timetableEvents.id, eventId), eq(timetableEvents.user_id, userId)),
+    });
 
-  const newVal = !(existing?.is_completed ?? false);
-  const { data: event, error } = await supabase.from('timetable_events').update({
-    is_completed: newVal,
-    completed_at: newVal ? new Date().toISOString() : null,
-  }).eq('id', eventId).select().single();
+    if (!existing) return { success: false, error: 'Event not found' };
 
-  if (error || !event) return { success: false, error: error?.message ?? 'Failed to toggle' };
-  return { success: true, event: event as unknown as TimetableEvent };
+    const newVal = !existing.is_completed;
+    const [updated] = await db
+      .update(timetableEvents)
+      .set({
+        is_completed: newVal,
+        completed_at: newVal ? new Date() : null,
+      })
+      .where(eq(timetableEvents.id, eventId))
+      .returning();
+
+    const formatted: TimetableEvent = {
+      id: updated.id,
+      user_id: updated.user_id,
+      title: updated.title,
+      description: updated.description ?? undefined,
+      event_type: (updated.event_type as any) ?? 'study',
+      subject: updated.subject ?? undefined,
+      location: updated.location ?? undefined,
+      start_time: updated.start_time.toISOString(),
+      end_time: updated.end_time.toISOString(),
+      all_day: updated.all_day ?? false,
+      is_recurring: updated.is_recurring ?? false,
+      recurrence_rule: updated.recurrence_rule as any,
+      color_code: updated.color_code ?? '#3B82F6',
+      is_todo: updated.is_todo ?? false,
+      is_completed: updated.is_completed ?? false,
+      completed_at: updated.completed_at?.toISOString() ?? null,
+      event_source: (updated.event_source as any) ?? 'user',
+      source_id: updated.source_id ?? null,
+      metadata: (updated.metadata as any) ?? {},
+      created_at: updated.created_at?.toISOString() ?? new Date().toISOString(),
+    };
+
+    return { success: true, event: formatted };
+  } catch (err) {
+    return { success: false, error: `Failed to toggle event: ${String(err)}` };
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -173,12 +317,44 @@ export async function moveEventAction(
   newStartTime: string,
   newEndTime: string | null
 ): Promise<{ success: true; event: TimetableEvent } | { success: false; error: string }> {
-  const supabase = await createClient();
-  const { data: event, error } = await supabase.from('timetable_events').update({
-    start_time: newStartTime,
-    end_time: newEndTime,
-  }).eq('id', eventId).select().single();
+  try {
+    const db = getDb();
+    const [updated] = await db
+      .update(timetableEvents)
+      .set({
+        start_time: new Date(newStartTime),
+        end_time: newEndTime ? new Date(newEndTime) : new Date(new Date(newStartTime).getTime() + 3600000),
+      })
+      .where(and(eq(timetableEvents.id, eventId), eq(timetableEvents.user_id, userId)))
+      .returning();
 
-  if (error || !event) return { success: false, error: error?.message ?? 'Failed to move event' };
-  return { success: true, event: event as unknown as TimetableEvent };
+    if (!updated) return { success: false, error: 'Event not found' };
+
+    const formatted: TimetableEvent = {
+      id: updated.id,
+      user_id: updated.user_id,
+      title: updated.title,
+      description: updated.description ?? undefined,
+      event_type: (updated.event_type as any) ?? 'study',
+      subject: updated.subject ?? undefined,
+      location: updated.location ?? undefined,
+      start_time: updated.start_time.toISOString(),
+      end_time: updated.end_time.toISOString(),
+      all_day: updated.all_day ?? false,
+      is_recurring: updated.is_recurring ?? false,
+      recurrence_rule: updated.recurrence_rule as any,
+      color_code: updated.color_code ?? '#3B82F6',
+      is_todo: updated.is_todo ?? false,
+      is_completed: updated.is_completed ?? false,
+      completed_at: updated.completed_at?.toISOString() ?? null,
+      event_source: (updated.event_source as any) ?? 'user',
+      source_id: updated.source_id ?? null,
+      metadata: (updated.metadata as any) ?? {},
+      created_at: updated.created_at?.toISOString() ?? new Date().toISOString(),
+    };
+
+    return { success: true, event: formatted };
+  } catch (err) {
+    return { success: false, error: `Failed to move event: ${String(err)}` };
+  }
 }

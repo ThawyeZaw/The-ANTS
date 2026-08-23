@@ -5,7 +5,6 @@ import { AuthProvider } from "@/context/AuthContext";
 import { PersonaProvider } from "@/context/PersonaContext";
 import QueryProvider from "@/components/QueryProvider";
 
-
 const quicksand = Quicksand({
   variable: "--font-quicksand",
   subsets: ["latin"],
@@ -15,10 +14,10 @@ const quicksand = Quicksand({
 });
 
 export const metadata: Metadata = {
-  title: "The ANTs — Academic Productivity Ecosystem",
+  title: "The ANTs — Academic Productivity & Tutoring Platform",
   icons: [{ rel: "icon", url: "/logo.png" }],
   description:
-    "The ANTs is a curriculum-focused productivity and learning platform for Myanmar students pursuing IGCSE, A Levels, IELTS, SAT, OSSD, and more. Timetables, flashcards, classrooms, clubs, grade calculators, and exam countdowns — all in one place.",
+    "The ANTs is a curriculum-aware productivity and tutoring platform for Myanmar students pursuing Cambridge IGCSE, A Levels, Edexcel, IELTS, and Matriculation.",
   keywords: [
     "ANTS",
     "study",
@@ -27,7 +26,7 @@ export const metadata: Metadata = {
     "Myanmar",
     "timetable",
     "flashcards",
-    "classrooms",
+    "tutors",
     "pomodoro",
     "exam countdown",
     "grade calculator",
@@ -50,14 +49,15 @@ export default function RootLayout({
         className="min-h-full flex flex-col antialiased"
         suppressHydrationWarning
       >
-        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:bg-background-card focus:px-4 focus:py-2 focus:rounded-lg">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:bg-background-card focus:px-4 focus:py-2 focus:rounded-lg"
+        >
           Skip to main content
         </a>
         <AuthProvider>
           <PersonaProvider>
-            <QueryProvider>
-              {children}
-            </QueryProvider>
+            <QueryProvider>{children}</QueryProvider>
           </PersonaProvider>
         </AuthProvider>
       </body>

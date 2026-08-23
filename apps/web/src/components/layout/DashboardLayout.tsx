@@ -58,17 +58,9 @@ const iconMap: Record<string, React.ReactNode> = {
   'cards-due': <Zap className="h-5 w-5" />,
   'next-exam': <Clock className="h-5 w-5" />,
   'avg-confidence': <TrendingUp className="h-5 w-5" />,
-
-  'active-classrooms': <GraduationCap className="h-5 w-5" />,
-  'total-students': <Users className="h-5 w-5" />,
-  'pending-assignments': <FileText className="h-5 w-5" />,
-  'completed-this-week': <CheckSquare className="h-5 w-5" />,
-
   'published': <Star className="h-5 w-5" />,
   'pending-review': <Send className="h-5 w-5" />,
-  'clubs-led': <MessageSquare className="h-5 w-5" />,
   'profile-views': <UserCircle className="h-5 w-5" />,
-
   'pending-reviews': <AlertTriangle className="h-5 w-5" />,
   'approved-this-week': <CheckCircle className="h-5 w-5" />,
   'rejected-this-week': <XCircle className="h-5 w-5" />,

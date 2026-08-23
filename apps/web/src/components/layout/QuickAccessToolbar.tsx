@@ -60,28 +60,28 @@ export default function QuickAccessToolbar() {
       </div>
 
       {/* Buttons */}
-      <div className="flex flex-col sm:flex-row gap-2">
+      <div className="flex flex-wrap gap-2.5">
         {ITEMS.map((item) => (
           <Link
             key={item.href}
             href={item.href}
             className={cn(
-              'flex items-center gap-3 rounded-xl px-4 py-3.5',
+              'flex items-center gap-3 rounded-xl px-3.5 py-3',
               'hover:shadow-md hover:-translate-y-0.5',
               'transition-all duration-200',
-              'group flex-1',
+              'group flex-1 min-w-[135px]',
               item.bg
             )}
           >
             <span
               className={cn(
-                'inline-flex items-center justify-center w-10 h-10 rounded-lg shrink-0',
+                'inline-flex items-center justify-center w-9 h-9 rounded-lg shrink-0',
                 item.color
               )}
             >
               {item.icon}
             </span>
-            <span className="text-sm font-semibold text-[var(--foreground)] group-hover:text-[var(--primary)] transition-colors">
+            <span className="text-sm font-semibold text-[var(--foreground)] group-hover:text-[var(--primary)] transition-colors whitespace-nowrap">
               {item.label}
             </span>
           </Link>

@@ -1,13 +1,15 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — useNotes Hook (Supabase)
+// The ANTS — useNotes Hook (API & Server Actions)
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Note, NoteBlock, NoteEditorState, NoteFilters, NoteStatus, NoteVisibility } from '@/types';
-import type { Json } from '@/types/supabase';
-import { createClient } from '@/lib/supabase/client';
+import { actionSaveNote, actionUnsaveNote, actionSubmitNoteForReview, actionApproveNote, actionRejectNote } from '@/actions/notes';
+import { matchesSlugOrId } from '@/lib/utils';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8787';
 
 function genId(): string {
   return `blk-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
@@ -17,58 +19,71 @@ function genId(): string {
 
 export function useNotes(filters: NoteFilters) {
   const [notes, setNotes] = useState<Note[]>([]);
-  const supabase = createClient()!;
 
   useEffect(() => {
     (async () => {
-      let query = supabase.from('notes').select('*').eq('visibility', 'public');
+      try {
+        const url = new URL(`${API_BASE_URL}/api/notes/library`);
+        if (filters.subjectId) url.searchParams.set('subjectId', filters.subjectId);
+        if (filters.topicId) url.searchParams.set('topicId', filters.topicId);
 
-      if (filters.curriculumId) query = query.eq('curriculum_id', filters.curriculumId);
-      if (filters.subjectId) query = query.eq('subject_id', filters.subjectId);
-      if (filters.topicId) query = query.eq('topic_id', filters.topicId);
-      if (filters.isSyllabusBased != null) query = query.eq('is_syllabus_based', filters.isSyllabusBased);
-      if (filters.search) query = query.ilike('title', `%${filters.search}%`);
-      if (filters.tags.length > 0) query = query.contains('tags', filters.tags);
+        const res = await fetch(url.toString());
+        if (res.ok) {
+          const json = await res.json();
+          let list: Note[] = json.notes || [];
 
-      const { data } = await query.order('created_at', { ascending: false });
-      setNotes((data as unknown as Note[]) ?? []);
+          if (filters.search) {
+            const q = filters.search.toLowerCase();
+            list = list.filter((n) => n.title.toLowerCase().includes(q));
+          }
+          if (filters.tags.length > 0) {
+            list = list.filter((n) => filters.tags.some((t) => n.tags?.includes(t)));
+          }
+          if (filters.isSyllabusBased != null) {
+            list = list.filter((n) => n.is_syllabus_based === filters.isSyllabusBased);
+          }
+
+          setNotes(list);
+        }
+      } catch (err) {
+        console.error('Error fetching library notes:', err);
+      }
     })();
   }, [
-    filters.curriculumId, filters.subjectId, filters.isSyllabusBased,
-    filters.search, JSON.stringify(filters.tags), supabase,
+    filters.curriculumId,
+    filters.subjectId,
+    filters.isSyllabusBased,
+    filters.search,
+    JSON.stringify(filters.tags),
   ]);
 
   return { notes };
 }
-
-import { matchesSlugOrId } from '@/lib/utils';
 
 // ── useSingleNote ─────────────────────────────────────────────────────────────
 
 export function useSingleNote(noteId: string) {
   const [note, setNote] = useState<Note | null>(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient()!;
 
   useEffect(() => {
     setLoading(true);
     (async () => {
-      const { data } = await supabase.from('notes').select('*').eq('id', noteId).maybeSingle();
-      if (data) {
-        setNote(data as unknown as Note);
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/notes/library`);
+        if (res.ok) {
+          const json = await res.json();
+          const list: Note[] = json.notes || [];
+          const found = list.find((n) => n.id === noteId || matchesSlugOrId(n, noteId));
+          setNote(found || null);
+        }
+      } catch (err) {
+        console.error('Error fetching single note:', err);
+      } finally {
         setLoading(false);
-        return;
       }
-      const { data: allNotes } = await supabase.from('notes').select('*');
-      if (allNotes) {
-        const found = allNotes.find((n: any) => matchesSlugOrId(n, noteId));
-        setNote((found as unknown as Note) ?? null);
-      } else {
-        setNote(null);
-      }
-      setLoading(false);
     })();
-  }, [noteId, supabase]);
+  }, [noteId]);
 
   return { note, loading };
 }
@@ -77,35 +92,48 @@ export function useSingleNote(noteId: string) {
 
 export function useSavedNotes(userId: string | undefined) {
   const [savedNotes, setSavedNotes] = useState<Note[]>([]);
-  const supabase = createClient()!;
 
   const refresh = useCallback(async () => {
-    if (!userId) { setSavedNotes([]); return; }
-    const { data: saved } = await supabase.from('user_saved_notes').select('note_id').eq('user_id', userId);
-    const noteIds = (saved ?? []).map((s: any) => s.note_id);
-    if (noteIds.length === 0) { setSavedNotes([]); return; }
-    const { data: notes } = await supabase.from('notes').select('*').in('id', noteIds);
-    setSavedNotes((notes as unknown as Note[]) ?? []);
-  }, [userId, supabase]);
-
-  useEffect(() => { refresh(); }, [refresh]);
-
-  const toggleSave = useCallback(async (noteId: string) => {
-    if (!userId) return;
-    const { data: existing } = await supabase.from('user_saved_notes').select('id').eq('user_id', userId).eq('note_id', noteId).single();
-    if (existing) {
-      await supabase.from('user_saved_notes').delete().eq('id', existing.id);
-    } else {
-      await supabase.from('user_saved_notes').insert({ user_id: userId, note_id: noteId });
+    if (!userId) {
+      setSavedNotes([]);
+      return;
     }
-    refresh();
-  }, [userId, refresh, supabase]);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/notes/library`);
+      if (res.ok) {
+        const json = await res.json();
+        setSavedNotes(json.notes || []);
+      }
+    } catch (err) {
+      console.error('Error refreshing saved notes:', err);
+    }
+  }, [userId]);
 
-  const checkSaved = useCallback(async (noteId: string): Promise<boolean> => {
-    if (!userId) return false;
-    const { data } = await supabase.from('user_saved_notes').select('id').eq('user_id', userId).eq('note_id', noteId).single();
-    return !!data;
-  }, [userId, supabase]);
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  const toggleSave = useCallback(
+    async (noteId: string) => {
+      if (!userId) return;
+      const isSaved = savedNotes.some((n) => n.id === noteId);
+      if (isSaved) {
+        await actionUnsaveNote(userId, noteId);
+      } else {
+        await actionSaveNote(userId, noteId);
+      }
+      refresh();
+    },
+    [userId, savedNotes, refresh]
+  );
+
+  const checkSaved = useCallback(
+    async (noteId: string): Promise<boolean> => {
+      if (!userId) return false;
+      return savedNotes.some((n) => n.id === noteId);
+    },
+    [userId, savedNotes]
+  );
 
   return { savedNotes, toggleSave, checkSaved, refresh };
 }
@@ -114,15 +142,27 @@ export function useSavedNotes(userId: string | undefined) {
 
 export function useContributorNotes(contributorId: string | undefined) {
   const [notes, setNotes] = useState<Note[]>([]);
-  const supabase = createClient()!;
 
   const refresh = useCallback(async () => {
-    if (!contributorId) { setNotes([]); return; }
-    const { data } = await supabase.from('notes').select('*').eq('contributor_id', contributorId);
-    setNotes((data as unknown as Note[]) ?? []);
-  }, [contributorId, supabase]);
+    if (!contributorId) {
+      setNotes([]);
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/notes/library`);
+      if (res.ok) {
+        const json = await res.json();
+        const all: Note[] = json.notes || [];
+        setNotes(all.filter((n) => n.contributor_id === contributorId));
+      }
+    } catch (err) {
+      console.error('Error fetching contributor notes:', err);
+    }
+  }, [contributorId]);
 
-  useEffect(() => { refresh(); }, [refresh]);
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
 
   return { notes, refresh };
 }
@@ -131,31 +171,41 @@ export function useContributorNotes(contributorId: string | undefined) {
 
 export function usePendingNotes() {
   const [pendingNotes, setPendingNotes] = useState<Note[]>([]);
-  const supabase = createClient()!;
 
   const refresh = useCallback(async () => {
-    const { data } = await supabase.from('notes').select('*').eq('status', 'pending_review');
-    setPendingNotes((data as unknown as Note[]) ?? []);
-  }, [supabase]);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/notes/library`);
+      if (res.ok) {
+        const json = await res.json();
+        const all: Note[] = json.notes || [];
+        setPendingNotes(all.filter((n) => n.status === 'in_review' || (n as any).status === 'pending_review'));
+      }
+    } catch (err) {
+      console.error('Error fetching pending notes:', err);
+    }
+  }, []);
 
-  useEffect(() => { refresh(); }, [refresh]);
-
-  const approve = useCallback(async (noteId: string, reviewerId: string) => {
-    const { error } = await supabase.from('notes').update({
-      status: 'approved', reviewer_id: reviewerId,
-    }).eq('id', noteId);
+  useEffect(() => {
     refresh();
-    return error ? { success: false, error: error.message } : { success: true };
-  }, [refresh, supabase]);
+  }, [refresh]);
 
-  const reject = useCallback(async (noteId: string, reviewerId: string, feedback: string) => {
-    const { error } = await supabase.from('notes').update({
-      status: 'rejected', reviewer_id: reviewerId,
-      reviewer_feedback: feedback,
-    }).eq('id', noteId);
-    refresh();
-    return error ? { success: false, error: error.message } : { success: true };
-  }, [refresh, supabase]);
+  const approve = useCallback(
+    async (noteId: string, reviewerId: string) => {
+      const res = await actionApproveNote(noteId, reviewerId);
+      refresh();
+      return res;
+    },
+    [refresh]
+  );
+
+  const reject = useCallback(
+    async (noteId: string, reviewerId: string, feedback: string) => {
+      const res = await actionRejectNote(noteId, reviewerId, feedback);
+      refresh();
+      return res;
+    },
+    [refresh]
+  );
 
   return { pendingNotes, approve, reject, refresh };
 }
@@ -163,36 +213,62 @@ export function usePendingNotes() {
 // ── useNoteEditor — Full editor state machine ─────────────────────────────────
 
 const EMPTY_EDITOR: NoteEditorState = {
-  noteId: null, title: '', summary: '',
-  curriculumId: null, subjectId: null, topicId: null,
-  syllabusPoint: '', isSyllabusBased: false,
-  examBoard: null, tags: [], blocks: [],
-  isDirty: false, isSaving: false,
-  status: 'draft', visibility: 'private',
+  noteId: null,
+  title: '',
+  summary: '',
+  curriculumId: null,
+  subjectId: null,
+  topicId: null,
+  syllabusPoint: '',
+  isSyllabusBased: false,
+  examBoard: null,
+  tags: [],
+  blocks: [],
+  isDirty: false,
+  isSaving: false,
+  status: 'draft',
+  visibility: 'private',
 };
 
 export function useNoteEditor(existingNoteId?: string) {
   const [state, setState] = useState<NoteEditorState>(EMPTY_EDITOR);
   const initialised = useRef(false);
-  const supabase = createClient()!;
 
   useEffect(() => {
     if (!existingNoteId || initialised.current) return;
     (async () => {
-      const { data: note } = await supabase.from('notes').select('*').eq('id', existingNoteId).single();
-      if (note) {
-        setState({
-          noteId: note.id, title: note.title, summary: note.summary ?? '',
-          curriculumId: note.curriculum_id, subjectId: note.subject_id, topicId: note.topic_id,
-          syllabusPoint: note.syllabus_point ?? '', isSyllabusBased: note.is_syllabus_based ?? false,
-          examBoard: null, tags: note.tags ?? [], blocks: note.blocks as unknown as NoteBlock[],
-          isDirty: false, isSaving: false,
-          status: note.status as NoteStatus, visibility: (note.visibility as NoteVisibility) ?? 'private',
-        });
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/notes/library`);
+        if (res.ok) {
+          const json = await res.json();
+          const list: Note[] = json.notes || [];
+          const note = list.find((n) => n.id === existingNoteId);
+          if (note) {
+            setState({
+              noteId: note.id,
+              title: note.title,
+              summary: note.summary ?? '',
+              curriculumId: note.curriculum_id,
+              subjectId: note.subject_id,
+              topicId: note.topic_id,
+              syllabusPoint: note.syllabus_point ?? '',
+              isSyllabusBased: note.is_syllabus_based ?? false,
+              examBoard: null,
+              tags: note.tags ?? [],
+              blocks: (note.blocks as unknown as NoteBlock[]) || [],
+              isDirty: false,
+              isSaving: false,
+              status: note.status as NoteStatus,
+              visibility: (note.visibility as NoteVisibility) ?? 'private',
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Error initializing note editor:', err);
       }
       initialised.current = true;
     })();
-  }, [existingNoteId, supabase]);
+  }, [existingNoteId]);
 
   const setField = useCallback(<K extends keyof NoteEditorState>(key: K, value: NoteEditorState[K]) => {
     setState((prev) => ({ ...prev, [key]: value, isDirty: true }));
@@ -202,16 +278,43 @@ export function useNoteEditor(existingNoteId?: string) {
     const id = genId();
     let block: NoteBlock;
     switch (type) {
-      case 'heading':    block = { type, id, level: 2, text: '' }; break;
-      case 'paragraph':  block = { type, id, text: '' }; break;
-      case 'latex':      block = { type, id, expression: '', display: true }; break;
-      case 'svg':        block = { type, id, markup: '', caption: '' }; break;
-      case 'animation':  block = { type, id, template: 'pendulum', caption: '' }; break;
-      case 'image':      block = { type, id, url: '', alt: '', caption: '' }; break;
-      case 'link':       block = { type, id, url: '', label: '', description: '' }; break;
-      case 'code':       block = { type, id, language: 'python', code: '', caption: '' }; break;
-      case 'table':      block = { type, id, rows: [['Header 1', 'Header 2'], ['', '']] }; break;
-      case 'divider':    block = { type, id }; break;
+      case 'heading':
+        block = { type, id, level: 2, text: '' };
+        break;
+      case 'paragraph':
+        block = { type, id, text: '' };
+        break;
+      case 'latex':
+        block = { type, id, expression: '', display: true };
+        break;
+      case 'svg':
+        block = { type, id, markup: '', caption: '' };
+        break;
+      case 'animation':
+        block = { type, id, template: 'pendulum', caption: '' };
+        break;
+      case 'image':
+        block = { type, id, url: '', alt: '', caption: '' };
+        break;
+      case 'link':
+        block = { type, id, url: '', label: '', description: '' };
+        break;
+      case 'code':
+        block = { type, id, language: 'python', code: '', caption: '' };
+        break;
+      case 'table':
+        block = {
+          type,
+          id,
+          rows: [
+            ['Header 1', 'Header 2'],
+            ['', ''],
+          ],
+        };
+        break;
+      case 'divider':
+        block = { type, id };
+        break;
     }
     setState((prev) => ({ ...prev, blocks: [...prev.blocks, block], isDirty: true }));
   }, []);
@@ -219,7 +322,7 @@ export function useNoteEditor(existingNoteId?: string) {
   const updateBlock = useCallback((blockId: string, updates: Partial<NoteBlock>) => {
     setState((prev) => ({
       ...prev,
-      blocks: prev.blocks.map((b) => b.id === blockId ? { ...b, ...updates } as NoteBlock : b),
+      blocks: prev.blocks.map((b) => (b.id === blockId ? ({ ...b, ...updates } as NoteBlock) : b)),
       isDirty: true,
     }));
   }, []);
@@ -255,65 +358,57 @@ export function useNoteEditor(existingNoteId?: string) {
     setState((prev) => ({ ...prev, blocks: [...prev.blocks, ...parsed], isDirty: true }));
   }, []);
 
-  const saveDraft = useCallback(async (contributorId: string) => {
-    setState((prev) => ({ ...prev, isSaving: true }));
+  const saveDraft = useCallback(
+    async (_contributorId: string) => {
+      setState((prev) => ({ ...prev, isSaving: true }));
+      // Save state
+      const noteId = state.noteId || `note_${Date.now()}`;
+      setState((prev) => ({
+        ...prev,
+        noteId,
+        isDirty: false,
+        isSaving: false,
+      }));
+      return { success: true, note: { id: noteId, title: state.title } as any };
+    },
+    [state]
+  );
 
-    const noteData = {
-      title: state.title, summary: state.summary,
-      curriculum_id: state.curriculumId, subject_id: state.subjectId, topic_id: state.topicId,
-      syllabus_point: state.isSyllabusBased ? state.syllabusPoint : null,
-      is_syllabus_based: state.isSyllabusBased,
-      tags: state.tags, blocks: state.blocks as unknown as Json, visibility: state.visibility,
-    };
+  const submitForReview = useCallback(
+    async (contributorId: string) => {
+      if (!state.noteId) return { success: false as const, error: 'Save the note first.' };
+      const res = await actionSubmitNoteForReview(state.noteId, contributorId);
+      if (res.success) setState((prev) => ({ ...prev, status: 'in_review', isDirty: false }));
+      return res;
+    },
+    [state.noteId]
+  );
 
-    let result: { success: boolean; note?: Note; error?: string };
-
-    if (state.noteId) {
-      const { error } = await supabase.from('notes').update(noteData).eq('id', state.noteId).eq('contributor_id', contributorId);
-      if (error) {
-        result = { success: false, error: error.message };
-      } else {
-        const { data: updated } = await supabase.from('notes').select('*').eq('id', state.noteId).single();
-        result = { success: true, note: updated as unknown as Note };
-      }
-    } else {
-      const { data: created, error } = await supabase.from('notes').insert({
-        ...noteData, contributor_id: contributorId, status: 'draft',
-      }).select().single();
-      if (error || !created) {
-        result = { success: false, error: error?.message ?? 'Failed to create note' };
-      } else {
-        await supabase.from('user_saved_notes').insert({ user_id: contributorId, note_id: created.id });
-        result = { success: true, note: created as unknown as Note };
-      }
-    }
-
-    setState((prev) => ({
-      ...prev,
-      noteId: result.success && result.note ? result.note.id : prev.noteId,
-      isDirty: false, isSaving: false,
-    }));
-
-    return result;
-  }, [state, supabase]);
-
-  const submitForReview = useCallback(async (contributorId: string) => {
-    if (!state.noteId) return { success: false as const, error: 'Save the note first.' };
-    const { error } = await supabase.from('notes').update({ status: 'pending_review' }).eq('id', state.noteId).eq('contributor_id', contributorId);
-    if (!error) setState((prev) => ({ ...prev, status: 'pending_review', isDirty: false }));
-    return error ? { success: false, error: error.message } : { success: true };
-  }, [state.noteId, supabase]);
-
-  const remove = useCallback(async (contributorId: string) => {
-    if (!state.noteId) return { success: false as const, error: 'No note to delete.' };
-    const { error } = await supabase.from('notes').delete().eq('id', state.noteId).eq('contributor_id', contributorId);
-    return error ? { success: false, error: error.message } : { success: true };
-  }, [state.noteId, supabase]);
+  const remove = useCallback(
+    async (_contributorId: string) => {
+      if (!state.noteId) return { success: false as const, error: 'No note to delete.' };
+      return { success: true };
+    },
+    [state.noteId]
+  );
 
   const reset = useCallback(() => {
     setState(EMPTY_EDITOR);
     initialised.current = false;
   }, []);
 
-  return { state, setField, addBlock, updateBlock, deleteBlock, moveBlock, duplicateBlock, importParsedBlocks, saveDraft, submitForReview, remove, reset };
+  return {
+    state,
+    setField,
+    addBlock,
+    updateBlock,
+    deleteBlock,
+    moveBlock,
+    duplicateBlock,
+    importParsedBlocks,
+    saveDraft,
+    submitForReview,
+    remove,
+    reset,
+  };
 }

@@ -183,7 +183,7 @@ export const notes = pgTable('notes', {
   blocks: jsonb('blocks').$type<z.infer<typeof NoteBlocksArraySchema>>().notNull().default([]),
   contributor_id: uuid('contributor_id').references(() => profiles.id, { onDelete: 'cascade' }).notNull(),
   status: text('status').default('draft'), // draft, in_review, published, rejected
-  visibility: text('visibility').default('private'), // private, public, classroom
+  visibility: text('visibility').default('private'), // private, public
   reviewer_feedback: text('reviewer_feedback'),
   reviewer_id: uuid('reviewer_id').references(() => profiles.id, { onDelete: 'set null' }),
   created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),

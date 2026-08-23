@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -11,6 +11,9 @@ import {
   Star,
   CheckCircle,
   XCircle,
+  UserPlus,
+  ArrowRight,
+  ClipboardCheck,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
@@ -20,7 +23,6 @@ import CourseSyncPanel from '@/components/layout/CourseSyncPanel';
 import QuickAccessToolbar from '@/components/layout/QuickAccessToolbar';
 import MyContributions from '@/components/layout/MyContributions';
 import { cn } from '@/lib/utils';
-import { createClient } from '@/lib/supabase/client';
 import STAT_COLOR_MAP from '@/constants/statColors';
 
 const iconMap: Record<string, React.ReactNode> = {
@@ -34,210 +36,107 @@ const colorMap = STAT_COLOR_MAP;
 
 export default function MainContributorDashboard() {
   const { user } = useAuth();
-  const { role, isMainContributor } = useRole();
+  const { isAdmin } = useRole();
   const router = useRouter();
 
   const [pendingReviews, setPendingReviews] = useState<any[]>([]);
-  const [stats, setStats] = useState<any[]>([]);
+  const [stats, setStats] = useState<any[]>([
+    { id: 'pending-reviews', key: 'pending-reviews', label: 'Pending Reviews', value: 0, color: 'amber' },
+    { id: 'approved-this-week', key: 'approved-this-week', label: 'Approved by You', value: 0, color: 'emerald' },
+    { id: 'rejected-this-week', key: 'rejected-this-week', label: 'Rejected by You', value: 0, color: 'red' },
+    { id: 'total-reviewed', key: 'total-reviewed', label: 'Total Reviewed', value: 0, color: 'violet' },
+  ]);
 
-  useEffect(() => {
-    if (role && !isMainContributor) {
-      router.replace(`/${role === 'main_contributor' ? 'main-contributor' : role}`);
-    }
-  }, [role, isMainContributor, router]);
-
-  const loadData = useCallback(async () => {
-    if (!user) return;
-    const supabase = createClient();
-    if (!supabase) return;
-
-    const [{ data: pReviews }, { data: statsData }] = await Promise.all([
-      supabase.from('review_queue').select('*').eq('status', 'pending'),
-      supabase.from('review_queue').select('*').eq('reviewer_id', user.id),
-    ]);
-
-    setPendingReviews(pReviews ?? []);
-
-    const approvedCount = (statsData ?? []).filter((r: any) => r.status === 'approved').length;
-    const rejectedCount = (statsData ?? []).filter((r: any) => r.status === 'rejected').length;
-    const totalCount = statsData?.length ?? 0;
-
-    setStats([
-      { id: 'pending-reviews', key: 'pending-reviews', label: 'Pending Reviews', value: pReviews?.length ?? 0, color: 'amber' },
-      { id: 'approved-this-week', key: 'approved-this-week', label: 'Approved by You', value: approvedCount, color: 'emerald' },
-      { id: 'rejected-this-week', key: 'rejected-this-week', label: 'Rejected by You', value: rejectedCount, color: 'red' },
-      { id: 'total-reviewed', key: 'total-reviewed', label: 'Total Reviewed', value: totalCount, color: 'violet' },
-    ]);
-  }, [user]);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
-  if (!user || !isMainContributor) return null;
-
-  const firstName = user.profile.name.split(' ')[0];
-  const welcomeSubtitle = "You have pending reviews waiting. Here's your gatekeeper overview.";
-
-  const alertBanner =
-    pendingReviews.length > 0 ? (
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 shadow-sm">
-        <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-500 shrink-0 self-start sm:self-auto">
-          <AlertTriangle className="h-5 w-5" />
+  if (!user || !isAdmin) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4 animate-fade-in text-center p-6">
+        <div className="p-4 rounded-2xl bg-amber-500/10 text-amber-500">
+          <ShieldCheck className="w-10 h-10" />
         </div>
-        <div className="flex-1">
-          <p className="font-semibold text-foreground">
-            {pendingReviews.length} submissions awaiting review
-          </p>
-          <p className="text-sm text-foreground-muted">
-            Contributor curriculum, subject, or topic submissions need your approval.
-          </p>
-        </div>
-        <Link href="/main-contributor/review-queue" className="shrink-0 self-start sm:self-auto">
-          <button className="w-full sm:w-auto px-4 py-2 rounded-xl bg-amber-500 text-white text-sm font-semibold hover:bg-amber-600 transition-colors cursor-pointer shadow-md shadow-amber-500/10">
-            Review Now
-          </button>
+        <h2 className="text-xl font-bold text-foreground">Admin Access Required</h2>
+        <p className="text-xs text-foreground-muted max-w-sm">
+          You need Administrator permissions to view the Gatekeeper Dashboard.
+        </p>
+        <Link
+          href="/dashboard"
+          className="px-5 py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-hover transition-all"
+        >
+          Back to Dashboard
         </Link>
       </div>
-    ) : null;
+    );
+  }
 
-  const mainContent = (
-    <div className="space-y-6">
-      <div className="rounded-2xl border border-[var(--border)] bg-[var(--background-card)] p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-            <FileText className="h-5 w-5 text-purple-500" />
-            Pending Submissions
-          </h2>
-          <Link
-            href="/main-contributor/review-queue"
-            className="text-sm text-primary hover:text-primary/80 transition-colors"
-          >
-            View All Queue →
-          </Link>
-        </div>
-
-        {pendingReviews.length === 0 ? (
-          <div className="bg-background-secondary/50 border border-dashed border-border rounded-xl p-6 text-center text-foreground-muted">
-            <p className="text-sm font-medium">No pending submissions in queue</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {pendingReviews.slice(0, 3).map((item) => (
-              <div
-                key={item.id}
-                className="p-4 bg-background-card/50 border border-border rounded-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 hover:border-primary/45 transition-colors"
-              >
-                <div>
-                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-700">
-                    {item.submission_type.toUpperCase()}
-                  </span>
-                  <h4 className="font-semibold text-sm text-foreground mt-2">
-                    {item.submitted_data.title || item.submitted_data.name}
-                  </h4>
-                  <p className="text-xs text-foreground-muted mt-1">
-                    Submitted · {new Date(item.submitted_at).toLocaleDateString()}
-                  </p>
-                </div>
-                <Link href="/main-contributor/review-queue" className="self-start sm:self-auto shrink-0">
-                  <button className="px-3.5 py-1.5 rounded-xl border border-border bg-background hover:bg-background-secondary text-xs font-semibold text-foreground transition-colors cursor-pointer">
-                    Review Submission
-                  </button>
-                </Link>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-
-  const sidebarContent = (
-    <div className="space-y-3">
-      <div className="rounded-xl border border-[var(--border)] bg-[var(--background-card)] p-3">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="font-semibold flex items-center gap-1.5 text-foreground text-sm">
-            <ShieldCheck className="h-4 w-4 text-purple-500" />
-            Review Policy
-          </h3>
-        </div>
-        <div className="text-[11px] text-foreground-muted leading-relaxed space-y-1.5">
-          <p>
-            As a <strong>Main Contributor</strong>, you are responsible for maintaining curriculum and
-            notes standards:
-          </p>
-          <ul className="list-disc list-inside space-y-1">
-            <li>Ensure curriculum names, syllabus codes, and exam boards align with official documents.</li>
-            <li>Verify role upgrade reasons match verified educator credentials.</li>
-            <li>Provide constructive feedback for rejected submissions.</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  );
+  const firstName = user.profile.name.split(' ')[0];
+  const welcomeSubtitle = "Manage community submissions and oversee platform contributors.";
 
   return (
-    <div className="space-y-6 animate-fade-in" data-scroll-behavior="smooth">
-      {/* Welcome Card */}
-      <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-primary to-accent p-6 md:p-8 text-white">
-        <div className="flex items-center gap-6">
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white/70">Welcome back</p>
-            <h1 className="mt-0.5 text-2xl md:text-3xl font-bold">{firstName} 👋</h1>
-            <p className="mt-1 text-sm text-white/70 max-w-md">{welcomeSubtitle}</p>
-          </div>
-          <div className="hidden sm:flex items-center justify-center shrink-0">
-            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white/15 border border-white/20 flex items-center justify-center">
-              <Image src="/logo.png" alt="The ANTs logo" width={40} height={40} className="md:w-[52px] md:h-[52px]" />
+    <WorkspaceToastProvider>
+      <div className="space-y-8 animate-fade-in pb-12">
+        {/* Banner */}
+        <div className="rounded-3xl bg-gradient-to-br from-amber-500/15 via-background-card to-background-secondary border border-border p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 border border-amber-500/20 mb-2">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Administrator Dashboard
             </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
+              Welcome, {firstName}! 🛡️
+            </h1>
+            <p className="text-xs sm:text-sm text-foreground-muted mt-1">{welcomeSubtitle}</p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Link
+              href="/main-contributor/add-contributor"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 text-white text-xs font-bold shadow-md hover:bg-amber-600 transition-all"
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              Manage Users
+            </Link>
+            <Link
+              href="/main-contributor/review-queue"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-background-secondary border border-border text-foreground text-xs font-bold hover:bg-background-secondary/80 transition-all"
+            >
+              <ClipboardCheck className="w-3.5 h-3.5" />
+              Review Queue
+            </Link>
           </div>
         </div>
-      </div>
 
-      {/* Alert Banner */}
-      {alertBanner && <div className="animate-slide-down">{alertBanner}</div>}
+        {/* Sync Panel & Quick Toolbar */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <CourseSyncPanel />
+          </div>
+          <div>
+            <QuickAccessToolbar />
+          </div>
+        </div>
 
-      {/* Quick Access Toolbar */}
-      <QuickAccessToolbar />
-
-      {/* Course Sync Panel — enrolled courses with synced resources */}
-      <CourseSyncPanel />
-
-      {/* Workspace — upper position */}
-      <Suspense fallback={<div className="flex items-center justify-center py-16 text-[var(--foreground-muted)]">Loading workspace...</div>}>
-        <WorkspaceToastProvider>
-          <MyWorkspace />
-        </WorkspaceToastProvider>
-      </Suspense>
-
-      {/* My Contributions */}
-      <MyContributions />
-
-      {/* Stats Grid */}
-      {stats && stats.length > 0 && (
-        <div className="grid grid-cols-4 gap-2">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {stats.map((stat) => (
             <div
-              key={stat.key}
-              className="rounded-xl border border-[var(--border)] bg-[var(--background-card)] p-3 transition-all duration-300 hover:-translate-y-0.5"
+              key={stat.id}
+              className="p-5 rounded-2xl bg-background-card border border-border flex items-center gap-4 hover:shadow-sm transition-all"
             >
-              <div className={cn('inline-flex p-1.5 rounded-lg mb-1.5', colorMap[stat.color] || 'text-foreground bg-foreground/10')}>
-                {iconMap[stat.key] || <Star className="h-4 w-4" />}
+              <div className="p-3 rounded-xl bg-amber-500/10 text-amber-500">
+                {iconMap[stat.id] || <ShieldCheck className="h-5 w-5" />}
               </div>
-              <p className="text-lg font-bold text-foreground">{stat.value}</p>
-              <p className="text-xs text-foreground-muted mt-0.5">{stat.label}</p>
+              <div>
+                <p className="text-xl font-bold text-foreground">{stat.value}</p>
+                <p className="text-xs text-foreground-muted">{stat.label}</p>
+              </div>
             </div>
           ))}
         </div>
-      )}
 
-      {/* Original dashboard content — below workspace */}
-      <div className="border-t border-[var(--border)] pt-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="space-y-6 lg:col-span-2">{mainContent}</div>
-          <div className="space-y-6 lg:col-span-1">{sidebarContent}</div>
+        {/* Workspace */}
+        <div className="bg-background-card border border-border rounded-3xl p-6 sm:p-8">
+          <MyWorkspace />
         </div>
       </div>
-    </div>
+    </WorkspaceToastProvider>
   );
 }

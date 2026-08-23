@@ -1,32 +1,36 @@
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Email Confirmation Handler
-// Exchanges a token_hash from the email confirmation link for a session.
+// The ANTS — Email Confirmation Handler (Neon Drizzle DB)
 // ──────────────────────────────────────────────────────────────────────────────
 
-type EmailOtpType = string;
-import { type NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { type NextRequest, NextResponse } from 'next/server';
+import { getDb, verification, user } from '@/lib/db';
+import { eq, and, gte } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url)
-  const token_hash = searchParams.get('token_hash')
-  const type = searchParams.get('type') as EmailOtpType | null
-  const next = searchParams.get('next') ?? '/'
+  const { searchParams } = new URL(request.url);
+  const token = searchParams.get('token') || searchParams.get('token_hash');
+  const next = searchParams.get('next') ?? '/login?verified=true';
 
-  if (!token_hash || !type) {
-    return NextResponse.redirect(new URL('/login?error=invalid_confirmation_link', request.url))
+  if (!token) {
+    return NextResponse.redirect(new URL('/login?error=invalid_confirmation_link', request.url));
   }
 
-  const supabase = await createClient()
+  try {
+    const db = getDb();
+    const record = await db.query.verification.findFirst({
+      where: and(
+        eq(verification.value, token),
+        gte(verification.expiresAt, new Date())
+      ),
+    });
 
-  const { error } = await supabase.auth.verifyOtp({
-    token_hash,
-    type,
-  })
-
-  if (error) {
-    return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error.message)}`, request.url))
+    if (record) {
+      await db.update(user).set({ emailVerified: true }).where(eq(user.id, record.identifier));
+      await db.delete(verification).where(eq(verification.id, record.id));
+    }
+  } catch (err) {
+    console.error('[auth/confirm]', err);
   }
 
-  return NextResponse.redirect(new URL(next, request.url))
+  return NextResponse.redirect(new URL(next, request.url));
 }

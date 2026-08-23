@@ -1,10 +1,8 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTs — Add Contributor Page
-// Main Contributor only — invite flow via Supabase Admin API + Users Table.
-// The main contributor enters name, email, and role; Supabase sends the new
-// user a magic-link email so they can set their own password.
+// The ANTS — Add & Manage Users Page
+// Admin user management: assign/toggle roles (student, tutor, contributor, admin).
 // Route: /main-contributor/add-contributor
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -18,12 +16,14 @@ import { useContributorManager } from '@/hooks/useContributorManager';
 import { cn } from '@/lib/utils';
 import InviteForm from '@/components/contributor-manager/InviteForm';
 import UsersTable from '@/components/contributor-manager/UsersTable';
-import { changeUserRole } from '@/actions/role-upgrade';
+import { actionUpdateUserRoles } from '@/actions/role-upgrade';
 import type { UserRole } from '@/types';
 
 export default function AddContributorPage() {
   const { user } = useAuth();
-  const { isMainContributor } = useRole();
+  const { isMainContributor, isAdmin } = useRole();
+  const canAccess = isMainContributor || isAdmin;
+
   const {
     inviteData,
     isLoading,
@@ -35,31 +35,27 @@ export default function AddContributorPage() {
     fetchAllUsers,
   } = useContributorManager();
 
-  // Fetch users — re-evaluates when success changes (new user added)
   const [users, setUsers] = useState<any[]>([]);
 
   useEffect(() => {
     fetchAllUsers().then(setUsers);
   }, [fetchAllUsers, success]);
 
-  // ── Role Change Handler ──────────────────────────────────────────────────
-  const handleRoleChange = useCallback(
-    async (userId: string, newRole: UserRole) => {
-      const result = await changeUserRole(userId, newRole);
+  const handleRolesChange = useCallback(
+    async (userId: string, newRoles: UserRole[]) => {
+      const result = await actionUpdateUserRoles(userId, newRoles);
       if (result.success) {
-        // Refresh the users list
         fetchAllUsers().then(setUsers);
       } else {
-        console.error('Failed to change role:', result.error);
+        console.error('Failed to update roles:', result.error);
       }
     },
     [fetchAllUsers]
   );
 
-  // ── Access Guard ──────────────────────────────────────────────────────────
   if (!user) return null;
 
-  if (!isMainContributor) {
+  if (!canAccess) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] animate-fade-in">
         <div className="p-4 rounded-2xl bg-error/10 text-error mb-4">
@@ -67,7 +63,7 @@ export default function AddContributorPage() {
         </div>
         <h2 className="text-xl font-bold text-foreground">Access Denied</h2>
         <p className="text-foreground-muted mt-2 text-center max-w-sm">
-          Only Main Contributors can access this page. Contact your administrator
+          Only Administrators can access this page. Contact your administrator
           to request access.
         </p>
         <Link
@@ -89,66 +85,19 @@ export default function AddContributorPage() {
           <div>
             <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
               <UserPlus className="w-6 h-6 text-amber-500" />
-              Add New User
+              Manage & Promote Users
             </h1>
             <p className="text-sm text-foreground-muted mt-0.5">
-              Invite new team members — they&apos;ll receive a magic link to set their password
+              Directly assign or toggle roles (Student, Tutor, Contributor, Admin)
             </p>
           </div>
         </div>
       </div>
 
-      {/* Invite Flow Card */}
-      <div className="bg-background-card border border-border rounded-2xl overflow-hidden">
-        {/* Card Body */}
-        <div className="p-6 sm:p-8 max-w-lg mx-auto">
-          {/* Not yet sent — show the invite form */}
-          {!success && (
-            <InviteForm
-              onSubmit={submitInvite}
-              isLoading={isLoading}
-              error={error}
-            />
-          )}
-
-          {/* Success state */}
-          {success && (
-            <div className="flex flex-col items-center text-center gap-5 py-4 animate-fade-in">
-              <div className="p-5 rounded-2xl bg-emerald-500/10 text-emerald-500">
-                <MailCheck className="w-10 h-10" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-foreground">Invite Sent!</h3>
-                <p className="text-sm text-foreground-muted mt-1.5">
-                  A magic-link email has been sent to{' '}
-                  <span className="font-semibold text-foreground">{invitedEmail}</span>.
-                  They&apos;ll click it to set their password and join <span className="font-brand">The ANTs</span>.
-                </p>
-              </div>
-              <div className={cn(
-                'flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium',
-                'bg-background-secondary border border-border text-foreground-muted'
-              )}>
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                {inviteData.name} · {inviteData.role.replace('_', ' ')}
-              </div>
-
-              {/* Invite another */}
-              <button
-                onClick={reset}
-                className="inline-flex items-center gap-2 text-sm text-foreground-muted hover:text-primary transition-colors cursor-pointer"
-              >
-                <RotateCcw className="w-4 h-4" />
-                Invite Another User
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
       {/* Users Table */}
       <div className="bg-background-card border border-border rounded-2xl p-6">
-        <UsersTable users={users} onRoleChange={handleRoleChange} />
+        <h2 className="text-lg font-bold text-foreground mb-4">Platform Users & Permissions</h2>
+        <UsersTable users={users} onRolesChange={handleRolesChange} />
       </div>
     </div>
   );

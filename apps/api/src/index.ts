@@ -8,8 +8,6 @@ import { processNotificationQueue } from './services/notification-processor';
 import { createRoleUpgradeRoutes } from './routes/role-upgrade';
 import { createTimetableRoutes } from './routes/timetable';
 import { createFlashcardRoutes } from './routes/flashcards';
-import { createClassroomRoutes } from './routes/classrooms';
-import { createClubRoutes } from './routes/clubs';
 import { createExamRoutes } from './routes/exams';
 import { createNoteRoutes } from './routes/notes';
 import { createCurriculumRoutes } from './routes/curriculum';
@@ -152,8 +150,6 @@ app.all('/api/auth', async (c) => {
 app.route('/api/role-upgrade', createRoleUpgradeRoutes(() => getDatabase()));
 app.route('/api/timetable', createTimetableRoutes(() => getDatabase()));
 app.route('/api/flashcards', createFlashcardRoutes(() => getDatabase()));
-app.route('/api/classrooms', createClassroomRoutes(() => getDatabase()));
-app.route('/api/clubs', createClubRoutes(() => getDatabase()));
 app.route('/api/exams', createExamRoutes(() => getDatabase()));
 app.route('/api/notes', createNoteRoutes(() => getDatabase()));
 app.route('/api/curriculum', createCurriculumRoutes(() => getDatabase()));

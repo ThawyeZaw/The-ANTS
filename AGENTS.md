@@ -1,91 +1,75 @@
-# Multi-Agent & Developer Guidelines — The ANTS
+# Multi-Agent & UI Developer Guidelines — The ANTS
 
-## 1. Project Overview & Architecture
+## 1. Project Overview & Scope
 - **Application**: The ANTS — Curriculum-aware academic productivity platform for Myanmar students.
-- **Architecture Stack (HONC Monorepo)**:
-  - **Frontend**: Next.js 16 (App Router), React 19, TypeScript 5, Tailwind CSS v4 (`apps/web`)
-  - **API Backend**: Hono deployed to Cloudflare Workers (`apps/api`)
-  - **Database & ORM**: Neon Serverless Postgres with Drizzle ORM (`packages/db`)
-  - **Shared Types & Contracts**: Shared TypeScript interfaces & Zod validation schemas (`packages/shared-types`)
-  - **Auth & Permissions**: Better Auth with 4-tier upgrade-only role system:
-    `student` → `teacher` → `contributor` → `main_contributor`
+- **Current Objective**: **Frontend & UI/UX Design Iterations Only**. The backend database, server actions, and Cloudflare Worker API are stabilized and locked.
+- **Tech Stack (HONC Monorepo)**:
+  - **Frontend UI (`apps/web`)**: Next.js 16 (App Router), React 19, TypeScript 5, Tailwind CSS v4.
+  - **API Backend (`apps/api`)**: Hono on Cloudflare Workers *(LOCKED — Do not modify)*.
+  - **Database & ORM (`packages/db`)**: Neon Serverless Postgres with Drizzle ORM *(LOCKED — Do not modify)*.
+  - **Shared Types (`packages/shared-types`)**: Shared interfaces and Zod schemas *(LOCKED — Do not modify)*.
 
 ---
 
-## 2. Executable Commands
-- **Root Monorepo**:
-  - `npm run dev` — Run all workspace dev servers via Turborepo
-  - `npm run build` — Build all workspace packages
-  - `npm run lint` — Run ESLint across packages
-  - `npm run typecheck` — Run TypeScript type checking
-- **Workspace-specific**:
-  - `npm run dev:web` — Run Next.js web application (`apps/web` on port 3005)
-  - `npm run dev:api` — Run Hono backend worker (`apps/api` via Wrangler)
-  - `npm run build:web` — Production build for web
+## 2. Developer Commands
+- `npm run dev` — Run all monorepo workspace packages via Turborepo.
+- `npm run dev:web` — Run Next.js web application on port `3005`.
+- `npm run dev:api` — Run Hono backend worker on port `8787`.
+- `npm run typecheck` — Verify TypeScript compiler with zero errors.
+- `npm run build` — Full monorepo production build.
 
 ---
 
-## 3. Developer & Agent Ownership Boundaries
-
-### TYZ Domain
-- **Components**:
-  - `apps/web/src/components/clubs/`
-  - `apps/web/src/components/classrooms/`
-  - `apps/web/src/components/profile/`
-  - `apps/web/src/components/layout/` (NavBar, DashboardLayout, Footer)
-  - `apps/web/src/components/settings/`
-  - `apps/web/src/components/explore/`
-  - `apps/web/src/components/about/`
-- **Hooks & Actions**:
-  - `useClub.ts`, `useRealtimeChat.ts`, `useClassroom.ts`, `useRealtimeClassroom.ts`, `useProfile.ts`
-  - `src/actions/clubs.ts`, `src/actions/classrooms.ts`
-
-### ZLH Domain
-- **Components**:
-  - `apps/web/src/components/courses/`
-  - `apps/web/src/components/notes/`
-  - `apps/web/src/components/flashcards/`
-  - `apps/web/src/components/countdown/`
-  - `apps/web/src/components/exam-data/`
-  - `apps/web/src/components/exam-editor/`
-  - `apps/web/src/components/library/`
-  - `apps/web/src/components/share/`
-- **Hooks & Actions**:
-  - `useCourseManager.ts`, `useNotes.ts`, `useUserNotes.ts`, `useFlashcardSRS.ts`, `useCountdown.ts`, `useExamReview.ts`
-  - `src/actions/notes.ts`, `src/actions/exam-editor.ts`
-
-### ABC Domain
-- **Components**:
-  - `apps/web/src/components/timetable/`
-  - `apps/web/src/components/pomodoro/`
-  - `apps/web/src/components/Lessons/`
-  - `apps/web/src/components/editor/`
-  - `apps/web/src/components/curriculum/`
-  - `apps/web/src/components/homepage/`
-  - `apps/web/src/components/auth/`
-  - `apps/web/src/components/onboarding/`
-  - `apps/web/src/components/workspace/`
-  - `apps/web/src/components/contributor-manager/`
-  - `apps/web/src/components/review-queue/`
-- **Hooks & Actions**:
-  - `useTimetable.ts`, `useIntegratedTimetable.ts`, `usePomodoro.ts`, `useCurriculum.ts`, `useRole.ts`
-  - `src/actions/timetable.ts`, `src/actions/role-upgrade.ts`, `src/actions/editor.ts`
+## 3. Strict Rules & Backend Protection (CRITICAL)
+1. **DO NOT modify Backend or Database Code**:
+   - Do NOT edit schema files in `packages/db/src/schema/`.
+   - Do NOT add migrations or alter tables.
+   - Do NOT modify Cloudflare Worker routes in `apps/api/src/routes/`.
+   - Do NOT modify server actions in `apps/web/src/actions/` unless specifically fixing a contract typo.
+2. **No Clubs or Classrooms**:
+   - Clubs and Classrooms have been completely retired from The ANTS. Do not re-import, reference, or create pages for them.
+3. **Role Management Rules**:
+   - Standard signups are assigned only as `student`.
+   - Only `admin` accounts can upgrade or modify user roles (via the Admin Dashboard).
+   - Self-service role upgrade requests in settings have been removed.
 
 ---
 
-## 4. Code Style & Engineering Guidelines
-- **Client Components**: Always include `'use client'` as the very first line of any interactive component.
-- **Component Design**: Default export per component, named props interface with JSDoc descriptions.
-- **Styling**: Use `cn()` helper with semantic Tailwind CSS v4 classes. Avoid hardcoded hex colors or magic spacing numbers.
-- **Iconography**: Exclusively use `lucide-react`.
-- **Accessibility & Focus**: Every interactive control must have visible `.focus-ring` and complete keyboard navigation support.
-- **Animations**: Prefer `transform` and `opacity` transitions, respect `prefers-reduced-motion`, duration $\le$ 800ms.
-- **Assets**: Use real assets or vector SVGs; do not use generic lorem ipsum or placeholder images.
+## 4. UI Architecture & Context Usage
+
+### Role & Persona Checks
+Always use `useRole()` or `useAuth()` to query the user's role status:
+```tsx
+'use client';
+import { useRole } from '@/hooks/useRole';
+
+export default function MyComponent() {
+  const { role, isStudent, isTutor, isContributor, isAdmin, hasRole } = useRole();
+  // ...
+}
+```
+
+### Global Shell & Route Structure
+- **Public Routes (`apps/web/src/app/(public)/`)**:
+  - `/explore` — Explore notes, tutors, and subjects.
+  - `/about` — Platform philosophy and team.
+  - `/profile/[username]` — Unified public profile (Student portfolio, Tutor schedule, or Contributor showcase).
+- **Protected App Routes (`apps/web/src/app/(app)/`)**:
+  - `/student` or `/dashboard` — Main student dashboard.
+  - `/library` & `/courses` & `/notes` — Curriculum and study notes library.
+  - `/timetable` — Integrated calendar (events & exam countdowns).
+  - `/pomodoro` & `/calculator` & `/flashcards` — Study productivity tools.
+  - `/settings` & `/settings/profile` — Account, Telegram notifications, and profile editor.
+  - `/editor` & `/main-contributor` — Contributor & Admin portals.
 
 ---
 
-## 5. Hard Constraints
-- Never commit secret credentials, service role keys, or `.env.local` to git.
-- Database schema changes must go through `packages/db` migrations and schema definitions.
-- All API communication from `apps/web` must use typed RPC / client calls to `apps/api`.
-- Verification requirement: `npx tsc --noEmit` must pass with zero new errors.
+## 5. UI/UX Style & Design Tokens
+- **Client Directives**: Every interactive React component MUST start with `'use client'` as line 1.
+- **Design Tokens**: Exclusively use semantic Tailwind CSS variables (`bg-background`, `bg-background-card`, `text-foreground`, `text-foreground-muted`, `border-border`, `text-primary`, `bg-primary`, `focus-ring`).
+- **Icons**: Exclusively use `lucide-react`.
+- **Responsive Layout**: Ensure all toolbar buttons, grids, and header items include `flex-wrap` and mobile drawer navigation breakpoints.
+- **Zero TypeScript Errors**: Every change must pass `npx tsc --noEmit` cleanly without new diagnostics.
+
+---
+

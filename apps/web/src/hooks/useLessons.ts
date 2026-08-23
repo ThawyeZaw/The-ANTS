@@ -1,15 +1,16 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — useLessons
+// The ANTS — useLessons (Hono API / Neon Backend)
 // Hook for lesson tracker cross-feature data: linked content, weekly activity,
-// and progress statistics. Pulls data directly from Supabase.
+// and progress statistics.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useCallback } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import type { Note } from '@/types';
 import { useAuthContext } from '@/context/AuthContext';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8787';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -38,34 +39,35 @@ export function useLessonLinkedContent(topicId: string | null) {
   const [data, setData] = useState<TopicLinkedContent | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const fetch = useCallback(async () => {
+  const fetchContent = useCallback(async () => {
     if (!topicId) {
       setData(null);
       return;
     }
     setLoading(true);
-    const supabase = createClient();
-    if (!supabase) { setLoading(false); return; }
 
-    const [{ data: notes }, { data: decks }] = await Promise.all([
-      supabase.from('notes').select('*').eq('topic_id', topicId),
-      supabase.from('decks').select('id').eq('subject_id', topicId).limit(1),
-    ]);
-
-    const deckId = (decks && decks.length > 0) ? (decks[0] as { id: string }).id : null;
-    setData({
-      notes: (notes ?? []) as unknown as Note[],
-      dueCards: 0,
-      deckId,
-    });
-    setLoading(false);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/notes/library?topicId=${encodeURIComponent(topicId)}`);
+      if (res.ok) {
+        const json = await res.json();
+        setData({
+          notes: (json.notes ?? []) as Note[],
+          dueCards: 0,
+          deckId: null,
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching linked content:', err);
+    } finally {
+      setLoading(false);
+    }
   }, [topicId]);
 
   useEffect(() => {
-    fetch();
-  }, [fetch]);
+    fetchContent();
+  }, [fetchContent]);
 
-  return { data, loading, refetch: fetch };
+  return { data, loading, refetch: fetchContent };
 }
 
 export function useWeeklyActivity() {
@@ -80,25 +82,20 @@ export function useWeeklyActivity() {
       return;
     }
     setLoading(true);
-    async function fetchActivity() {
-      const supabase = createClient();
-      if (!supabase) { setLoading(false); return; }
 
-      const days: WeeklyActivityDay[] = [];
-      const today = new Date();
-      for (let i = 6; i >= 0; i--) {
-        const d = new Date(today);
-        d.setDate(today.getDate() - i);
-        days.push({
-          date: d.toISOString().split('T')[0],
-          topicsCompleted: 0,
-          cardsReviewed: 0,
-        });
-      }
-      setData(days);
-      setLoading(false);
+    const days: WeeklyActivityDay[] = [];
+    const today = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      days.push({
+        date: d.toISOString().split('T')[0],
+        topicsCompleted: 0,
+        cardsReviewed: 0,
+      });
     }
-    fetchActivity();
+    setData(days);
+    setLoading(false);
   }, [user?.id]);
 
   return { data, loading };
@@ -116,26 +113,29 @@ export function useLessonStats(curriculumId: string | null) {
       return;
     }
     setLoading(true);
+
     async function fetchStats(uid: string) {
-      const supabase = createClient();
-      if (!supabase) { setLoading(false); return; }
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/curriculum/progress?userId=${encodeURIComponent(uid)}`);
+        if (res.ok) {
+          const json = await res.json();
+          const progress: any[] = json.progress || [];
+          const completed = progress.filter((p: any) => p.status === 'completed').length;
+          const total = progress.length;
+          const overallPercent = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-      const { data: progress } = await supabase
-        .from('topic_progress')
-        .select('*')
-        .eq('user_id', uid);
-
-      const completed = ((progress ?? []) as any[]).filter((p: any) => p.status === 'completed').length;
-      const total = progress?.length ?? 0;
-      const overallPercent = total > 0 ? Math.round((completed / total) * 100) : 0;
-
-      setData({
-        overallPercent,
-        subjectBreakdown: [],
-        currentStreak: 1,
-        confidenceTrend: [],
-      });
-      setLoading(false);
+          setData({
+            overallPercent,
+            subjectBreakdown: [],
+            currentStreak: 1,
+            confidenceTrend: [],
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching lesson stats:', err);
+      } finally {
+        setLoading(false);
+      }
     }
 
     fetchStats(userId);

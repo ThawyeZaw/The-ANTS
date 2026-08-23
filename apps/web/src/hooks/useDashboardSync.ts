@@ -1,8 +1,8 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — useDashboardSync hook
-// Aggregates real Supabase data for dashboard display:
+// The ANTS — useDashboardSync hook (Hono API / Neon Backend)
+// Aggregates real data for dashboard display:
 // - Enrolled courses & synced resources (via useCourseSync)
 // - Saved notes (via useSavedNotes)
 // - User exam countdowns (via useCountdown)
@@ -26,15 +26,23 @@ export function useDashboardSync() {
   const { user } = useAuth();
   const userId = user?.id;
 
-  const {
-    syncedCourses,
-    hasEnrollments,
-    totalResources,
-    isLoading: coursesLoading,
-  } = useCourseSync();
-
+  const { syncedCourses, isLoading: coursesLoading } = useCourseSync();
   const { savedNotes } = useSavedNotes(userId);
   const { groupedCountdowns, availableExams } = useCountdown(userId);
+
+  const hasEnrollments = syncedCourses.length > 0;
+
+  const totalResources = useMemo(() => {
+    return syncedCourses.reduce(
+      (acc, c) =>
+        acc +
+        c.subjects.reduce(
+          (sAcc, s) => sAcc + s.notes.length + s.flashcards.length + s.exams.length,
+          0
+        ),
+      0
+    );
+  }, [syncedCourses]);
 
   // ── Flattened countdowns sorted by time left ──────────────────────────────
   const allCountdowns = useMemo(() => {
@@ -45,9 +53,7 @@ export function useDashboardSync() {
 
   // ── Upcoming exams (not past, sorted nearest first, limited to 5) ─────────
   const upcomingExams = useMemo(() => {
-    return allCountdowns
-      .filter((c) => !c.timeLeft.isPast)
-      .slice(0, 5);
+    return allCountdowns.filter((c) => !c.timeLeft.isPast).slice(0, 5);
   }, [allCountdowns]);
 
   // ── Dashboard stats computed from real data ────────────────────────────────

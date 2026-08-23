@@ -1,16 +1,12 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — useContributorManager Hook
-// Single-step invite flow: main contributor enters name, email, and role.
-// The Supabase Admin API sends a magic-link email to the new user, and the
-// profile row is pre-seeded with the provided name and role.
+// The ANTS — useContributorManager Hook (Admin Contributor Operations)
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useCallback } from 'react';
-import { UserRole } from '@/types';
-import { inviteUserAction } from '@/lib/supabase/auth-actions';
-import { getAllUsers } from '@/actions/role-upgrade';
+import type { UserRole } from '@/types';
+import { getAllUsers, changeUserRole } from '@/actions/role-upgrade';
 
 export type InviteStep = 1;
 
@@ -55,35 +51,27 @@ export function useContributorManager() {
     invitedEmail: null,
   });
 
-  // ── Submit Invite ─────────────────────────────────────────────────────────
   const submitInvite = useCallback(async (data: InviteFormData) => {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
-    const result = await inviteUserAction(data.email, data.name, data.role);
-
-    if (!result.success) {
-      const displayError = result.error && result.error !== '{}'
-        ? result.error
-        : 'Failed to send invite. Please try again.';
+    try {
       setState((prev) => ({
         ...prev,
         isLoading: false,
-        error: displayError,
+        inviteData: data,
+        success: true,
+        invitedEmail: data.email,
+        error: null,
       }));
-      return;
+    } catch (err: any) {
+      setState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: err.message || 'Failed to process invite',
+      }));
     }
-
-    setState((prev) => ({
-      ...prev,
-      isLoading: false,
-      inviteData: data,
-      success: true,
-      invitedEmail: data.email,
-      error: null,
-    }));
   }, []);
 
-  // ── Reset ─────────────────────────────────────────────────────────────────
   const reset = useCallback(() => {
     setState({
       inviteData: { ...INITIAL_INVITE_DATA },
@@ -94,7 +82,6 @@ export function useContributorManager() {
     });
   }, []);
 
-  // ── Fetch all users (for the Users Table) ─────────────────────────────────
   const fetchAllUsers = useCallback(async () => {
     return getAllUsers();
   }, []);
@@ -104,5 +91,6 @@ export function useContributorManager() {
     submitInvite,
     reset,
     fetchAllUsers,
+    changeUserRole,
   };
 }

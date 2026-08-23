@@ -3,18 +3,13 @@
 import Image from 'next/image';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useRole } from '@/hooks/useRole';
 
 export default function DashboardPage() {
-  const { role } = useRole();
   const router = useRouter();
 
   useEffect(() => {
-    if (role) {
-      const targetPath = role === 'main_contributor' ? '/main-contributor' : `/${role}`;
-      router.replace(targetPath);
-    }
-  }, [role, router]);
+    router.replace('/student');
+  }, [router]);
 
   return (
     <div className="min-h-[50vh] flex items-center justify-center">

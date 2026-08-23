@@ -27,28 +27,28 @@ import Footer from '@/components/layout/Footer';
 
 const EXPLORE_CARDS = [
   {
-    title: 'Clubs',
+    title: 'Verified Tutors',
     description:
-      'Discover community spaces for subjects, CCAs and projects. Browse clubs and see what members are building.',
-    Icon: MessageSquare,
-    href: '/explore/clubs',
+      'Browse academic tutors offering class slots across Cambridge, Edexcel, and Matriculation. View weekly availability and inquire directly.',
+    Icon: Users,
+    href: '/explore?tab=tutors',
     iconBg: 'rgba(var(--hp-brand-rgb), 0.12)',
     iconColor: 'var(--hp-brand)',
     stats: [
-      { value: '120+', label: 'ACTIVE CLUBS' },
-      { value: 'Open', label: 'JOIN MODES VARY' },
+      { value: 'Verified', label: 'TUTOR PROFILES' },
+      { value: 'Telegram', label: 'DIRECT INQUIRIES' },
     ],
   },
   {
-    title: 'Profiles',
+    title: 'Academic Portfolios',
     description:
-      'Browse student portfolios, projects, CCA activities and verified educators & contributors. View achievements and credentials.',
+      'Browse student portfolios, projects, CCA activities, and verified curriculum contributors. View study achievements and credentials.',
     Icon: Users,
-    href: '/explore/profiles',
+    href: '/explore',
     iconBg: 'rgba(var(--hp-violet-rgb), 0.14)',
     iconColor: 'var(--hp-violet)',
     stats: [
-      { value: '4', label: 'ROLE TYPES' },
+      { value: 'Multi-Role', label: 'ACADEMIC PERSONAS' },
       { value: 'Public', label: 'SHAREABLE LINK' },
     ],
   },
@@ -259,9 +259,60 @@ export default function HomePage() {
             </a>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {isAuthenticated && user ? (
-              <Link href={getRoleLandingPath(user.profile.role)}>
+
+          {isAuthenticated && user ? (
+            <Link href={getRoleLandingPath(user.profile.role)}>
+              <button
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  background: 'var(--hp-brand)',
+                  color: 'var(--hp-btn-text)',
+                  border: 'none',
+                  borderRadius: 999,
+                  padding: '9px 18px',
+                  fontFamily: 'var(--hp-font-body)',
+                  fontWeight: 700,
+                  fontSize: 13,
+                  cursor: 'pointer',
+                  transition: 'transform .18s ease, box-shadow .18s ease',
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)';
+                  (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 12px 28px -10px rgba(var(--hp-brand-rgb), 0.45)';
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)';
+                  (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
+                }}
+              >
+                Dashboard <ArrowRight size={14} />
+              </button>
+            </Link>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+              <Link href="/login">
+                <button
+                  style={{
+                    background: 'transparent',
+                    border: '1px solid var(--hp-border-strong)',
+                    borderRadius: 999,
+                    padding: '8px 16px',
+                    color: 'var(--hp-ink)',
+                    fontFamily: 'var(--hp-font-body)',
+                    fontWeight: 600,
+                    fontSize: 13,
+                    cursor: 'pointer',
+                    transition: 'background .18s ease',
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--hp-surface)'; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+                >
+                  Sign In
+                </button>
+              </Link>
+              <Link href="/signup">
                 <button
                   style={{
                     display: 'inline-flex',
@@ -271,7 +322,7 @@ export default function HomePage() {
                     color: 'var(--hp-btn-text)',
                     border: 'none',
                     borderRadius: 999,
-                    padding: '9px 18px',
+                    padding: '8px 18px',
                     fontFamily: 'var(--hp-font-body)',
                     fontWeight: 700,
                     fontSize: 13,
@@ -290,61 +341,8 @@ export default function HomePage() {
                   Dashboard <ArrowRight size={14} />
                 </button>
               </Link>
-            ) : (
-              <>
-                <Link href="/login">
-                  <button
-                    style={{
-                      background: 'transparent',
-                      border: '1px solid var(--hp-border-strong)',
-                      borderRadius: 999,
-                      padding: '9px 18px',
-                      color: 'var(--hp-ink)',
-                      fontFamily: 'var(--hp-font-body)',
-                      fontWeight: 600,
-                      fontSize: 13,
-                      cursor: 'pointer',
-                      transition: 'background .18s ease',
-                    }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--hp-surface)'; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
-                  >
-                    Sign In
-                  </button>
-                </Link>
-                <Link href="/signup">
-                  <button
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      background: 'var(--hp-brand)',
-                      color: 'var(--hp-btn-text)',
-                      border: 'none',
-                      borderRadius: 999,
-                      padding: '9px 18px',
-                      fontFamily: 'var(--hp-font-body)',
-                      fontWeight: 700,
-                      fontSize: 13,
-                      cursor: 'pointer',
-                      transition: 'transform .18s ease, box-shadow .18s ease',
-                      whiteSpace: 'nowrap',
-                    }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)';
-                      (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 12px 28px -10px rgba(var(--hp-brand-rgb), 0.45)';
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)';
-                      (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
-                    }}
-                  >
-                    Get Started
-                  </button>
-                </Link>
-              </>
-            )}
-          </div>
+            </div>
+          )}
         </nav>
       </header>
 

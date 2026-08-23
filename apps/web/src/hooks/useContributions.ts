@@ -1,8 +1,13 @@
 'use client';
 
+// ──────────────────────────────────────────────────────────────────────────────
+// The ANTS — useContributions Hook (Hono API / Neon Backend)
+// ──────────────────────────────────────────────────────────────────────────────
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { createClient } from '@/lib/supabase/client';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8787';
 
 export type ContributionItem = {
   id: string;
@@ -19,64 +24,59 @@ export function useContributions() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) { setIsLoading(false); return; }
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
 
     const userId = user.id;
 
     async function fetchContributions() {
-      const supabase = createClient();
-      if (!supabase) { setIsLoading(false); return; }
-
       try {
-        const [
-          { data: notes },
-          { data: decks },
-          { data: quizzes },
-        ] = await Promise.all([
-          supabase.from('notes').select('*').eq('contributor_id', userId),
-          supabase.from('decks').select('*').eq('owner_id', userId),
-          (supabase as any).from('quizzes_standalone').select('*').eq('created_by', userId),
+        const [notesRes, decksRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/api/notes/library`),
+          fetch(`${API_BASE_URL}/api/flashcards/decks?userId=${encodeURIComponent(userId)}`),
         ]);
 
         const items: ContributionItem[] = [];
 
-        (notes ?? []).forEach((n: any) => {
-          items.push({
-            id: n.id,
-            type: 'note',
-            title: n.title,
-            status: n.status || 'published',
-            lastModified: n.updated_at || n.created_at || new Date().toISOString(),
-            editHref: `/editor/notes?id=${n.id}&edit=true`,
-          });
-        });
+        if (notesRes.ok) {
+          const json = await notesRes.json();
+          const notes: any[] = json.notes || [];
+          notes
+            .filter((n) => n.contributor_id === userId)
+            .forEach((n) => {
+              items.push({
+                id: n.id,
+                type: 'note',
+                title: n.title,
+                status: n.status || 'published',
+                lastModified: n.updated_at || n.created_at || new Date().toISOString(),
+                editHref: `/editor/notes?id=${n.id}&edit=true`,
+              });
+            });
+        }
 
-        (decks ?? []).forEach((d: any) => {
-          items.push({
-            id: d.id,
-            type: 'flashcard',
-            title: d.name,
-            status: d.visibility || 'private',
-            lastModified: d.created_at || new Date().toISOString(),
-            editHref: `/flashcards/${d.id}`,
-          });
-        });
+        if (decksRes.ok) {
+          const json = await decksRes.json();
+          const decks: any[] = json.decks || [];
+          decks
+            .filter((d) => d.owner_id === userId)
+            .forEach((d) => {
+              items.push({
+                id: d.id,
+                type: 'flashcard',
+                title: d.name,
+                status: d.is_public ? 'public' : 'private',
+                lastModified: d.created_at || new Date().toISOString(),
+                editHref: `/editor/flashcards?id=${d.id}&edit=true`,
+              });
+            });
+        }
 
-        (quizzes ?? []).forEach((q: any) => {
-          items.push({
-            id: q.id,
-            type: 'quiz',
-            title: q.title,
-            status: q.status || 'draft',
-            lastModified: q.created_at || new Date().toISOString(),
-            editHref: `/classrooms`,
-          });
-        });
-
-        items.sort((a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime());
         setContributions(items);
-      } catch (e) {
-        setContributions([]);
+      } catch (err) {
+        console.error('Error fetching contributions:', err);
       } finally {
         setIsLoading(false);
       }

@@ -1,19 +1,15 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTs — NavBar Component (v6 — Study + Tools grouping)
-// Structure: Library | Tools | Community | [Contribute] | [Admin]
+// The ANTS — Top Navigation Bar (3 Pillars: Library, Tools, Explore & Tutors)
+// Features responsive breakpoints, keyboard accessibility, and role-based portals.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import React, { useState, useRef, useEffect } from 'react';
-import Image from 'next/image';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import {
   BookOpen,
-  Users,
-  Pencil,
-  ShieldCheck,
   UserCircle,
   LogOut,
   Menu,
@@ -21,7 +17,6 @@ import {
   ChevronDown,
   CalendarDays,
   Timer,
-  ArrowRight,
   Layers,
   Clock,
   Calculator,
@@ -36,1062 +31,672 @@ import {
   Compass,
   Info,
   FlaskConical,
+  Sparkles,
+  Pencil,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
 import { cn, getInitials } from '@/lib/utils';
-import { RoleBadge } from '@/components/ui/Badge';
-import type { UserRole } from '@/types';
 
-// ── Nav Group Definition ─────────────────────────────────────────────────────
-
-interface NavGroup {
+interface NavItem {
   label: string;
   href: string;
-  icon: React.ReactNode;
+  icon: any;
   description: string;
-  allowedRoles: UserRole[];
-  accentColor: string;
   badge?: string;
-  children?: { label: string; href: string; icon: React.ReactNode; description: string }[];
+  accentColor?: string;
 }
 
-interface ToolLink {
-  label: string;
-  href: string;
-  icon: React.ReactNode;
-  description: string;
-  accentColor: string;
-}
-
-const ALL_ROLES: UserRole[] = ['student', 'teacher', 'contributor', 'main_contributor'];
-
-const NAV_GROUPS: NavGroup[] = [
-  {
-    label: 'Library',
-    href: '/library',
-    icon: <BookOpen className="h-4 w-4" />,
-    description: 'Courses, notes, flashcards & quizzes',
-    allowedRoles: ALL_ROLES,
-    accentColor: 'from-emerald-500 to-teal-500',
-  },
-  {
-    label: 'Tools',
-    href: '/tools',
-    icon: <Wrench className="h-4 w-4" />,
-    description: 'Countdown, calculator, timetable & pomodoro',
-    allowedRoles: ALL_ROLES,
-    accentColor: 'from-amber-500 to-yellow-500',
-  },
-  {
-    label: 'Community',
-    href: '/community',
-    icon: <Users className="h-4 w-4" />,
-    description: 'Classrooms, clubs, profiles & about',
-    allowedRoles: ALL_ROLES,
-    accentColor: 'from-pink-500 to-rose-500',
-  },
-  {
-    label: 'Contribute',
-    href: '/contribute',
-    icon: <Pencil className="h-4 w-4" />,
-    description: 'Add official resources',
-    allowedRoles: ['contributor', 'main_contributor'],
-    accentColor: 'from-indigo-500 to-violet-500',
-  },
-  {
-    label: 'Admin',
-    href: '/main-contributor',
-    icon: <ShieldCheck className="h-4 w-4" />,
-    description: 'Manage users & review queue',
-    allowedRoles: ['main_contributor'],
-    accentColor: 'from-amber-500 to-orange-500',
-    children: [
-      { label: 'Add Contributor', href: '/main-contributor/add-contributor', icon: <UserPlus className="h-3.5 w-3.5" />, description: 'Invite new contributors' },
-      { label: 'Review Queue', href: '/main-contributor/review-queue', icon: <ClipboardCheck className="h-3.5 w-3.5" />, description: 'Review submitted content' },
-      { label: 'Manage Organization', href: '/org-activities/manage', icon: <Building2 className="h-3.5 w-3.5" />, description: 'Organization settings' },
-    ],
-  },
-];
-
-// ── Library Dropdown Items ────────────────────────────────────────────────────
-
-const LIBRARY_LINKS: ToolLink[] = [
+const LIBRARY_LINKS: NavItem[] = [
   {
     label: 'All Resources',
     href: '/library',
-    icon: <BookOpen className="h-4 w-4" />,
-    description: 'Explore 6 resource categories & tools',
+    icon: BookOpen,
+    description: 'Explore all courses, notes, and study decks',
     accentColor: 'from-sky-500 to-blue-500',
   },
   {
-    label: 'Courses',
+    label: 'Courses & Curriculums',
     href: '/library?tab=courses',
-    icon: <GraduationCap className="h-4 w-4" />,
-    description: 'Browse curriculum courses & syllabi',
+    icon: GraduationCap,
+    description: 'Cambridge, Edexcel & Matriculation syllabi',
     accentColor: 'from-emerald-500 to-teal-500',
   },
   {
-    label: 'Notes',
+    label: 'Notes Library',
     href: '/library?tab=notes',
-    icon: <NotebookPen className="h-4 w-4" />,
-    description: 'Official & community notes library',
+    icon: NotebookPen,
+    description: 'Verified syllabus summaries and study guides',
     accentColor: 'from-amber-500 to-orange-500',
   },
   {
-    label: 'Flashcards',
+    label: 'Flashcards (SRS)',
     href: '/library?tab=flashcards',
-    icon: <Layers className="h-4 w-4" />,
-    description: 'Study decks with SRS algorithm',
+    icon: Layers,
+    description: 'Spaced repetition decks for active recall',
     accentColor: 'from-purple-500 to-violet-500',
   },
   {
-    label: 'Exams',
+    label: 'Past Exams & Papers',
     href: '/library?tab=exams',
-    icon: <FlaskConical className="h-4 w-4" />,
-    description: 'Past papers & syllabus specifications',
+    icon: FlaskConical,
+    description: 'Past exam papers and boundary tables',
     accentColor: 'from-rose-500 to-pink-500',
   },
   {
-    label: 'Quizzes',
+    label: 'Revision Quizzes',
     href: '/library?tab=quizzes',
-    icon: <Brain className="h-4 w-4" />,
-    description: 'Practice questions & quiz sessions',
+    icon: Brain,
+    description: 'Practice questions and diagnostic quizzes',
     accentColor: 'from-yellow-500 to-amber-500',
   },
 ];
 
-// ── Tools Dropdown Items ──────────────────────────────────────────────────────
-
-const TOOLS_LINKS: ToolLink[] = [
+const TOOLS_LINKS: NavItem[] = [
+  {
+    label: 'Smart Timetable',
+    href: '/timetable',
+    icon: CalendarDays,
+    description: 'Weekly schedule with conflict detection',
+    accentColor: 'from-blue-500 to-indigo-500',
+  },
+  {
+    label: 'Pomodoro Focus Timer',
+    href: '/pomodoro',
+    icon: Timer,
+    description: 'Customizable work/break study sessions',
+    accentColor: 'from-red-500 to-rose-500',
+  },
   {
     label: 'Exam Countdown',
     href: '/countdown',
-    icon: <Clock className="h-4 w-4" />,
-    description: 'Track time until target exams',
-    accentColor: 'from-sky-500 to-blue-500',
+    icon: Clock,
+    description: 'Live countdowns for target exam dates',
+    accentColor: 'from-amber-500 to-yellow-500',
   },
   {
     label: 'Grade Calculator',
     href: '/calculator',
-    icon: <Calculator className="h-4 w-4" />,
-    description: 'Predict & calculate subject grades',
-    accentColor: 'from-emerald-500 to-teal-500',
+    icon: Calculator,
+    description: 'Calculate composite grades and thresholds',
+    accentColor: 'from-teal-500 to-emerald-500',
   },
   {
-    label: 'Timetable',
-    href: '/timetable',
-    icon: <CalendarDays className="h-4 w-4" />,
-    description: 'Scheduling & time blocking',
-    accentColor: 'from-indigo-500 to-violet-500',
-  },
-  {
-    label: 'Pomodoro Timer',
-    href: '/pomodoro',
-    icon: <Timer className="h-4 w-4" />,
-    description: 'Focused study session timer',
-    accentColor: 'from-rose-500 to-red-500',
+    label: 'My Workspace',
+    href: '/workspace',
+    icon: Wrench,
+    description: 'Personal saved notes and study materials',
+    accentColor: 'from-violet-500 to-purple-500',
   },
 ];
 
-// ── Community Dropdown Items ──────────────────────────────────────────────
-
-const COMMUNITY_LINKS: ToolLink[] = [
+const EXPLORE_LINKS: NavItem[] = [
   {
-    label: 'Classrooms',
-    href: '/classrooms',
-    icon: <GraduationCap className="h-4 w-4" />,
-    description: 'Virtual classrooms & assignments',
-    accentColor: 'from-blue-500 to-cyan-500',
-  },
-  {
-    label: 'Clubs',
-    href: '/clubs',
-    icon: <Users className="h-4 w-4" />,
-    description: 'Subject clubs & CCA projects',
-    accentColor: 'from-pink-500 to-rose-500',
-  },
-  {
-    label: 'Explore Profiles',
+    label: 'Explore Directory',
     href: '/explore',
-    icon: <Compass className="h-4 w-4" />,
-    description: 'Discover community member profiles',
+    icon: Compass,
+    description: 'Discover verified tutors, contributors & peers',
+    accentColor: 'from-primary to-indigo-500',
+  },
+  {
+    label: 'Tutors & Schedules',
+    href: '/explore?tab=tutors',
+    icon: GraduationCap,
+    description: 'Browse academic tutors offering class slots',
+    accentColor: 'from-emerald-500 to-teal-500',
+  },
+  {
+    label: 'Academic Contributors',
+    href: '/explore?tab=contributors',
+    icon: Pencil,
+    description: 'Curriculum editors and resource creators',
     accentColor: 'from-violet-500 to-purple-500',
   },
   {
     label: 'About The ANTs',
     href: '/about',
-    icon: <Info className="h-4 w-4" />,
-    description: 'Our organization, team & mission',
-    accentColor: 'from-amber-500 to-orange-500',
+    icon: Info,
+    description: 'Platform mission, methodology & team',
+    accentColor: 'from-pink-500 to-rose-500',
   },
 ];
 
-// ── Quick Links for Mobile Menu ──────────────────────────────────────────────
-
-const STUDY_QUICK_LINKS = [
-  { label: 'Courses', href: '/courses', icon: <GraduationCap className="h-4 w-4" /> },
-  { label: 'Notes', href: '/library', icon: <NotebookPen className="h-4 w-4" /> },
-  { label: 'Flashcards', href: '/flashcards', icon: <Layers className="h-4 w-4" /> },
-  { label: 'Quizzes', href: '/quizzes', icon: <Brain className="h-4 w-4" /> },
-];
-
-const TOOLS_QUICK_LINKS = [
-  { label: 'Countdown', href: '/countdown', icon: <Clock className="h-4 w-4" /> },
-  { label: 'Calculator', href: '/calculator', icon: <Calculator className="h-4 w-4" /> },
-  { label: 'Timetable', href: '/timetable', icon: <CalendarDays className="h-4 w-4" /> },
-  { label: 'Pomodoro', href: '/pomodoro', icon: <Timer className="h-4 w-4" /> },
-];
-
-const COMMUNITY_QUICK_LINKS = [
-  { label: 'Classrooms', href: '/classrooms', icon: <GraduationCap className="h-4 w-4" /> },
-  { label: 'Clubs', href: '/clubs', icon: <Users className="h-4 w-4" /> },
-  { label: 'Explore', href: '/explore', icon: <Compass className="h-4 w-4" /> },
-  { label: 'About', href: '/about', icon: <Info className="h-4 w-4" /> },
-];
-
-// ── Shared NavItem Type & getAllNavItems Export ───────────────────────────────
-
-export interface NavItem {
-  label: string;
-  href: string;
-  icon: React.ReactNode;
-  description?: string;
-}
-
-export function getAllNavItems(): NavItem[] {
-  const groupItems: NavItem[] = NAV_GROUPS
-    .filter(g => g.href !== '#library' && g.href !== '#tools' && g.href !== '#community')
-    .map(g => ({ label: g.label, href: g.href, icon: g.icon, description: g.description }));
-
-  const libraryItems: NavItem[] = LIBRARY_LINKS.map(l => ({
-    label: l.label,
-    href: l.href,
-    icon: l.icon,
-    description: l.description,
-  }));
-
-  const toolItems: NavItem[] = TOOLS_LINKS.map(t => ({
-    label: t.label,
-    href: t.href,
-    icon: t.icon,
-    description: t.description,
-  }));
-
-  const communityItems: NavItem[] = COMMUNITY_LINKS.map(c => ({
-    label: c.label,
-    href: c.href,
-    icon: c.icon,
-    description: c.description,
-  }));
-
-  const studyQuickItems: NavItem[] = STUDY_QUICK_LINKS.map(l => ({
-    label: l.label,
-    href: l.href,
-    icon: l.icon,
-  }));
-
-  const toolsQuickItems: NavItem[] = TOOLS_QUICK_LINKS.map(l => ({
-    label: l.label,
-    href: l.href,
-    icon: l.icon,
-  }));
-
-  const communityQuickItems: NavItem[] = COMMUNITY_QUICK_LINKS.map(l => ({
-    label: l.label,
-    href: l.href,
-    icon: l.icon,
-  }));
-
-  return [...groupItems, ...libraryItems, ...toolItems, ...communityItems, ...studyQuickItems, ...toolsQuickItems, ...communityQuickItems];
-}
-
-// ── Main NavBar Component ────────────────────────────────────────────────────
-
-const NavBar = React.memo(function NavBar() {
-  const { user, logout } = useAuth();
-  const { role } = useRole();
-  const router = useRouter();
+export default function NavBar() {
   const pathname = usePathname();
+  const { user, isAuthenticated, logout } = useAuth();
+  const { isTutor, isContributor, isAdmin } = useRole();
 
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
-  const [isToolsOpen, setIsToolsOpen] = useState(false);
-  const [isCommunityOpen, setIsCommunityOpen] = useState(false);
-  const [isAdminOpen, setIsAdminOpen] = useState(false);
-  const [isNavHidden, setIsNavHidden] = useState(false);
-  const userMenuRef = useRef<HTMLDivElement>(null);
-  const libraryRef = useRef<HTMLDivElement>(null);
-  const toolsRef = useRef<HTMLDivElement>(null);
-  const communityRef = useRef<HTMLDivElement>(null);
-  const adminRef = useRef<HTMLDivElement>(null);
+  const [openDropdown, setOpenDropdown] = useState<'library' | 'tools' | 'explore' | 'role' | 'user' | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Filter nav groups by current role (guests get Library, Tools, Community)
-  const visibleGroups = NAV_GROUPS.filter(
-    (group) => !role ? ['Library', 'Tools', 'Community'].includes(group.label) : group.allowedRoles.includes(role)
-  );
+  const navRef = useRef<HTMLDivElement>(null);
 
-  // Check if current page is active
-  const isActive = (href: string) => {
-    if (href === '#library' || href === '#tools' || href === '#community') return false;
-    return pathname === href || pathname.startsWith(`${href}/`);
-  };
-
-  const isLibraryActive = () => {
-    return pathname.startsWith('/library') || LIBRARY_LINKS.some(l => pathname.startsWith(l.href));
-  };
-
-  const isToolsActive = () => {
-    return TOOLS_LINKS.some(t => pathname.startsWith(t.href));
-  };
-
-  const isCommunityActive = () => {
-    return COMMUNITY_LINKS.some(c => pathname.startsWith(c.href));
-  };
-
-  // Hide navbar on scroll down, show on scroll up
-  useEffect(() => {
-    let lastScrollY = window.scrollY;
-    let ticking = false;
-
-    function handleScroll() {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const currentScrollY = window.scrollY;
-          if (currentScrollY > lastScrollY && currentScrollY > 80) {
-            setIsNavHidden(true);
-          } else {
-            setIsNavHidden(false);
-          }
-          lastScrollY = currentScrollY;
-          ticking = false;
-        });
-        ticking = true;
-      }
-    }
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // Close dropdowns on outside click
+  // Close dropdown on outside click
   useEffect(() => {
     if (!isUserMenuOpen && !isLibraryOpen && !isToolsOpen && !isCommunityOpen && !isAdminOpen) {
       return;
     }
 
     function handleClickOutside(e: MouseEvent) {
-      if (isUserMenuOpen && userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
-        setIsUserMenuOpen(false);
-      }
-      if (isLibraryOpen && libraryRef.current && !libraryRef.current.contains(e.target as Node)) {
-        setIsLibraryOpen(false);
-      }
-      if (isToolsOpen && toolsRef.current && !toolsRef.current.contains(e.target as Node)) {
-        setIsToolsOpen(false);
-      }
-      if (isCommunityOpen && communityRef.current && !communityRef.current.contains(e.target as Node)) {
-        setIsCommunityOpen(false);
-      }
-      if (isAdminOpen && adminRef.current && !adminRef.current.contains(e.target as Node)) {
-        setIsAdminOpen(false);
+      if (navRef.current && !navRef.current.contains(e.target as Node)) {
+        setOpenDropdown(null);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isUserMenuOpen, isLibraryOpen, isToolsOpen, isCommunityOpen, isAdminOpen]);
 
-  const handleLogout = () => {
-    logout();
-    setIsUserMenuOpen(false);
-    router.push('/');
-  };
+  // Close on route change
+  useEffect(() => {
+    setOpenDropdown(null);
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
-  const handleLibraryClick = () => {
-    setIsLibraryOpen(!isLibraryOpen);
-    setIsToolsOpen(false);
-    setIsCommunityOpen(false);
-    setIsAdminOpen(false);
-  };
+  const toggleDropdown = useCallback(
+    (name: 'library' | 'tools' | 'explore' | 'role' | 'user') => {
+      setOpenDropdown((curr) => (curr === name ? null : name));
+    },
+    []
+  );
 
-  const handleToolsClick = () => {
-    setIsToolsOpen(!isToolsOpen);
-    setIsLibraryOpen(false);
-    setIsCommunityOpen(false);
-    setIsAdminOpen(false);
-  };
-
-  const handleCommunityClick = () => {
-    setIsCommunityOpen(!isCommunityOpen);
-    setIsLibraryOpen(false);
-    setIsToolsOpen(false);
-    setIsAdminOpen(false);
-  };
-
-  const handleAdminClick = () => {
-    setIsAdminOpen(!isAdminOpen);
-    setIsLibraryOpen(false);
-    setIsToolsOpen(false);
-    setIsCommunityOpen(false);
-  };
-
-  const isMainContributor = role === 'main_contributor';
+  const hasStaffRole = isTutor || isContributor || isAdmin;
 
   return (
     <header
-      className={cn(
-        'fixed top-3 sm:top-4 left-1/2 -translate-x-1/2 w-[min(94%,980px)] z-50 transition-transform duration-300',
-        isNavHidden && '-translate-y-full'
-      )}
+      ref={navRef}
+      className="sticky top-0 z-40 w-full bg-background/90 backdrop-blur-md border-b border-border transition-all"
     >
-      {/* Nav Content — Pill-shaped floating card */}
-      <nav className="flex items-center justify-between h-12 px-3 sm:pl-5 sm:pr-3 gap-2 rounded-full bg-background/85 backdrop-blur-[18px] border border-border shadow-lg">
-          {/* ─── Logo ─── */}
-          <Link
-            href={role ? '/dashboard' : '/'}
-            className="flex items-center gap-2 shrink-0 no-underline"
-          >
-            <Image
-              src="/logo.png"
-              alt="The ANTs logo"
-              width={20}
-              height={20}
-              priority
-              className="sm:w-[22px] sm:h-[22px]"
-            />
-            <span className="hidden sm:block font-bold text-[15px] text-foreground font-brand">
-              The ANTs
-            </span>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4">
+        {/* Brand Logo */}
+        <div className="flex items-center gap-3 sm:gap-6 shrink-0">
+          <Link href={isAuthenticated ? '/dashboard' : '/'} className="flex items-center gap-2.5 group">
+            <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center text-white font-bold text-sm shadow-md group-hover:scale-105 transition-transform">
+              🐜
+            </div>
+            <div className="flex flex-col">
+              <span className="font-brand font-black text-lg tracking-tight text-foreground leading-none">
+                The ANTS
+              </span>
+              <span className="text-[9px] font-semibold text-primary uppercase tracking-widest leading-tight">
+                Academic
+              </span>
+            </div>
           </Link>
 
-          {/* ─── Desktop Nav Groups ─── */}
-          <div className="hidden md:flex items-center gap-1">
-            <style>{`
-              @media (max-width: 767px) { .nav-desktop-links { display: none !important; } }
+          {/* Desktop & Tablet 3-Pillar Nav */}
+          <nav className="hidden md:flex items-center gap-1">
+            {/* 1. Library Pillar */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => toggleDropdown('library')}
+                className={cn(
+                  'inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer',
+                  pathname.startsWith('/library')
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary',
+                  openDropdown === 'library' && 'bg-background-secondary text-foreground'
+                )}
+              >
+                <BookOpen className="w-3.5 h-3.5 shrink-0" />
+                <span>Library</span>
+                <ChevronDown
+                  className={cn(
+                    'w-3 h-3 opacity-60 transition-transform duration-200',
+                    openDropdown === 'library' && 'rotate-180'
+                  )}
+                />
+              </button>
 
-              .nav-item {
-                position: relative;
-                display: inline-flex;
-                align-items: center;
-                cursor: pointer;
-                text-decoration: none;
-                font-size: 13px;
-                font-weight: 500;
-                color: var(--foreground-secondary);
-                padding: 6px 10px;
-                border-radius: 999px;
-                transition: background-color 0.2s ease, color 0.3s ease;
-              }
-              .nav-item:hover {
-                background: var(--background-secondary);
-                color: var(--foreground);
-              }
-
-              .nav-linktext {
-                position: relative;
-                z-index: 2;
-                transition: color 0.3s ease;
-              }
-              .nav-linktext::before {
-                display: inline-block;
-                content: attr(data-text);
-                position: absolute;
-                top: 0;
-                left: 0;
-                overflow: hidden;
-                max-width: 0%;
-                white-space: nowrap;
-                color: var(--primary);
-                transition: max-width 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-              }
-              .nav-item:hover .nav-linktext {
-                color: transparent;
-              }
-              .nav-item:hover .nav-linktext::before {
-                max-width: 100%;
-              }
-
-              .nav-item--active {
-                color: var(--primary);
-                background: var(--primary-light);
-              }
-              .nav-item--active .nav-linktext {
-                color: var(--primary);
-              }
-              .nav-item--active:hover .nav-linktext {
-                color: var(--primary);
-              }
-              .nav-item--active:hover .nav-linktext::before {
-                max-width: 0%;
-              }
-
-              /* Dropdown trigger pill button */
-              .nav-pill-btn {
-                display: inline-flex;
-                align-items: center;
-                gap: 4px;
-                padding: 6px 10px;
-                border-radius: 999px;
-                font-size: 13px;
-                font-weight: 500;
-                cursor: pointer;
-                border: none;
-                background: transparent;
-                color: var(--foreground-secondary);
-                transition: background-color 0.2s ease, color 0.2s ease;
-              }
-              .nav-pill-btn:hover {
-                background: var(--background-secondary);
-                color: var(--foreground);
-              }
-              .nav-pill-btn--active {
-                color: var(--primary);
-                background: var(--primary-light);
-              }
-            `}</style>
-            {visibleGroups.map((group) => {
-              // Library dropdown
-              if (group.label === 'Library') {
-                return (
-                  <div key="library" ref={libraryRef} className="relative">
-                    <button
-                      onClick={handleLibraryClick}
-                      className={cn(
-                        'nav-pill-btn',
-                        isLibraryActive() && 'nav-pill-btn--active'
-                      )}
-                    >
-                      {group.icon}
-                      <span className="hidden lg:inline nav-linktext" data-text={group.label}>{group.label}</span>
-                      <ChevronDown className={cn(
-                        'h-3 w-3 transition-transform duration-200',
-                        isLibraryOpen && 'rotate-180'
-                      )} />
-                    </button>
-
-                    {isLibraryOpen && (
-                      <div className="absolute top-full left-0 mt-2 w-56 bg-background-card border border-border rounded-2xl p-2 animate-slide-down z-50 shadow-xl">
-                        {LIBRARY_LINKS.map((link) => (
-                          <Link
-                            key={link.href}
-                            href={link.href}
-                            onClick={() => setIsLibraryOpen(false)}
-                            className={cn(
-                              'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors',
-                              isActive(link.href)
-                                ? 'bg-primary/10 text-primary'
-                                : 'hover:bg-background-secondary text-foreground-secondary hover:text-foreground'
-                            )}
-                          >
-                            <div className={cn(
-                              'inline-flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br text-white',
-                              link.accentColor
-                            )}>
-                              {link.icon}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-foreground">{link.label}</p>
-                              <p className="text-xs text-foreground-muted truncate">{link.description}</p>
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
-                    )}
+              {openDropdown === 'library' && (
+                <div className="absolute left-0 top-full mt-2 w-72 sm:w-80 bg-background-card border border-border rounded-2xl shadow-2xl p-2 z-50 animate-scale-in">
+                  <div className="p-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-foreground-muted">
+                    Curriculum & Learning
                   </div>
-                );
-              }
-              // Tools dropdown
-              if (group.label === 'Tools') {
-                return (
-                  <div key="tools" ref={toolsRef} className="relative">
-                    <button
-                      onClick={handleToolsClick}
-                      className={cn(
-                        'nav-pill-btn',
-                        isToolsActive() && 'nav-pill-btn--active'
-                      )}
-                    >
-                      {group.icon}
-                      <span className="hidden lg:inline nav-linktext" data-text={group.label}>{group.label}</span>
-                      <ChevronDown className={cn(
-                        'h-3 w-3 transition-transform duration-200',
-                        isToolsOpen && 'rotate-180'
-                      )} />
-                    </button>
-
-                    {isToolsOpen && (
-                      <div className="absolute top-full left-0 mt-2 w-56 bg-background-card border border-border rounded-2xl p-2 animate-slide-down z-50 shadow-xl">
-                        {TOOLS_LINKS.map((tool) => (
-                          <Link
-                            key={tool.href}
-                            href={tool.href}
-                            onClick={() => setIsToolsOpen(false)}
-                            className={cn(
-                              'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors',
-                              isActive(tool.href)
-                                ? 'bg-primary/10 text-primary'
-                                : 'hover:bg-background-secondary text-foreground-secondary hover:text-foreground'
-                            )}
-                          >
-                            <div className={cn(
-                              'inline-flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br text-white',
-                              tool.accentColor
-                            )}>
-                              {tool.icon}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-foreground">{tool.label}</p>
-                              <p className="text-xs text-foreground-muted truncate">{tool.description}</p>
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              }
-
-              // Community dropdown
-              if (group.label === 'Community') {
-                return (
-                  <div key="community" ref={communityRef} className="relative">
-                    <button
-                      onClick={handleCommunityClick}
-                      className={cn(
-                        'nav-pill-btn',
-                        isCommunityActive() && 'nav-pill-btn--active'
-                      )}
-                    >
-                      {group.icon}
-                      <span className="hidden lg:inline nav-linktext" data-text={group.label}>{group.label}</span>
-                      <ChevronDown className={cn(
-                        'h-3 w-3 transition-transform duration-200',
-                        isCommunityOpen && 'rotate-180'
-                      )} />
-                    </button>
-
-                    {isCommunityOpen && (
-                      <div className="absolute top-full left-0 mt-2 w-56 bg-background-card border border-border rounded-2xl p-2 animate-slide-down z-50 shadow-xl">
-                        {COMMUNITY_LINKS.map((link) => (
-                          <Link
-                            key={link.href}
-                            href={link.href}
-                            onClick={() => setIsCommunityOpen(false)}
-                            className={cn(
-                              'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors',
-                              isActive(link.href)
-                                ? 'bg-primary/10 text-primary'
-                                : 'hover:bg-background-secondary text-foreground-secondary hover:text-foreground'
-                            )}
-                          >
-                            <div className={cn(
-                              'inline-flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br text-white',
-                              link.accentColor
-                            )}>
-                              {link.icon}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-foreground">{link.label}</p>
-                              <p className="text-xs text-foreground-muted truncate">{link.description}</p>
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              }
-
-              // Admin dropdown (main-contributor sub-navigation)
-              if (group.label === 'Admin' && group.children) {
-                return (
-                  <div key="admin" ref={adminRef} className="relative">
-                    <button
-                      onClick={handleAdminClick}
-                      className={cn(
-                        'nav-pill-btn',
-                        isActive(group.href) && 'nav-pill-btn--active'
-                      )}
-                    >
-                      {group.icon}
-                      <span className="hidden lg:inline nav-linktext" data-text={group.label}>{group.label}</span>
-                      <ChevronDown className={cn(
-                        'h-3 w-3 transition-transform duration-200',
-                        isAdminOpen && 'rotate-180'
-                      )} />
-                    </button>
-
-                    {isAdminOpen && (
-                      <div className="absolute top-full right-0 mt-2 w-60 bg-background-card border border-border rounded-2xl p-2 animate-slide-down z-50 shadow-xl">
+                  <div className="space-y-1">
+                    {LIBRARY_LINKS.map((item) => {
+                      const Icon = item.icon;
+                      return (
                         <Link
-                          href={group.href}
-                          onClick={() => setIsAdminOpen(false)}
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-background-secondary transition-colors"
+                          key={item.label}
+                          href={item.href}
+                          className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-background-secondary text-foreground transition-colors group"
                         >
-                          <div className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 text-white">
-                            {group.icon}
+                          <div
+                            className={cn(
+                              'p-2 rounded-lg bg-gradient-to-br text-white shrink-0 mt-0.5 shadow-xs',
+                              item.accentColor
+                            )}
+                          >
+                            <Icon className="w-3.5 h-3.5" />
                           </div>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-foreground">Dashboard</p>
-                            <p className="text-xs text-foreground-muted">Overview</p>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-semibold group-hover:text-primary transition-colors">
+                              {item.label}
+                            </p>
+                            <p className="text-[11px] text-foreground-muted leading-tight mt-0.5">
+                              {item.description}
+                            </p>
                           </div>
                         </Link>
-                        <div className="h-px bg-border my-1" />
-                        {group.children.map((child) => (
-                          <Link
-                            key={child.href}
-                            href={child.href}
-                            onClick={() => setIsAdminOpen(false)}
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 2. Tools Pillar */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => toggleDropdown('tools')}
+                className={cn(
+                  'inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer',
+                  pathname.startsWith('/timetable') ||
+                    pathname.startsWith('/pomodoro') ||
+                    pathname.startsWith('/countdown') ||
+                    pathname.startsWith('/calculator')
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary',
+                  openDropdown === 'tools' && 'bg-background-secondary text-foreground'
+                )}
+              >
+                <Wrench className="w-3.5 h-3.5 shrink-0" />
+                <span>Tools</span>
+                <ChevronDown
+                  className={cn(
+                    'w-3 h-3 opacity-60 transition-transform duration-200',
+                    openDropdown === 'tools' && 'rotate-180'
+                  )}
+                />
+              </button>
+
+              {openDropdown === 'tools' && (
+                <div className="absolute left-0 top-full mt-2 w-72 sm:w-80 bg-background-card border border-border rounded-2xl shadow-2xl p-2 z-50 animate-scale-in">
+                  <div className="p-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-foreground-muted">
+                    Productivity & Study Tools
+                  </div>
+                  <div className="space-y-1">
+                    {TOOLS_LINKS.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <Link
+                          key={item.label}
+                          href={item.href}
+                          className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-background-secondary text-foreground transition-colors group"
+                        >
+                          <div
                             className={cn(
-                              'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors',
-                              isActive(child.href)
-                                ? 'bg-primary/10 text-primary'
-                                : 'hover:bg-background-secondary text-foreground-secondary hover:text-foreground'
+                              'p-2 rounded-lg bg-gradient-to-br text-white shrink-0 mt-0.5 shadow-xs',
+                              item.accentColor
                             )}
                           >
-                            <span className="text-foreground-muted">{child.icon}</span>
-                            <div className="flex-1">
-                              <p className="text-sm font-medium text-foreground">{child.label}</p>
-                              <p className="text-xs text-foreground-muted">{child.description}</p>
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
-                    )}
+                            <Icon className="w-3.5 h-3.5" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-semibold group-hover:text-primary transition-colors">
+                              {item.label}
+                            </p>
+                            <p className="text-[11px] text-foreground-muted leading-tight mt-0.5">
+                              {item.description}
+                            </p>
+                          </div>
+                        </Link>
+                      );
+                    })}
                   </div>
-                );
-              }
+                </div>
+              )}
+            </div>
 
-              // Regular nav group
-              const active = isActive(group.href);
-              return (
-                <Link
-                  key={group.label}
-                  href={group.href}
+            {/* 3. Explore & Tutors Pillar */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => toggleDropdown('explore')}
+                className={cn(
+                  'inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer',
+                  pathname.startsWith('/explore') || pathname.startsWith('/about')
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary',
+                  openDropdown === 'explore' && 'bg-background-secondary text-foreground'
+                )}
+              >
+                <Compass className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden lg:inline">Explore & Tutors</span>
+                <span className="lg:hidden">Explore</span>
+                <ChevronDown
                   className={cn(
-                    'nav-item',
-                    active && 'nav-item--active'
+                    'w-3 h-3 opacity-60 transition-transform duration-200',
+                    openDropdown === 'explore' && 'rotate-180'
                   )}
-                >
-                  <span className="flex items-center gap-1.5">
-                    {group.icon}
-                    <span className="hidden lg:inline nav-linktext" data-text={group.label}>{group.label}</span>
-                  </span>
-                  {group.badge && (
-                    <span className="ml-1 text-[9px] font-bold uppercase tracking-wide bg-primary/15 text-primary px-1.5 py-0 rounded-full">
-                      {group.badge}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
+                />
+              </button>
 
+              {openDropdown === 'explore' && (
+                <div className="absolute left-0 top-full mt-2 w-72 sm:w-80 bg-background-card border border-border rounded-2xl shadow-2xl p-2 z-50 animate-scale-in">
+                  <div className="p-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-foreground-muted">
+                    Community & Guidance
+                  </div>
+                  <div className="space-y-1">
+                    {EXPLORE_LINKS.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <Link
+                          key={item.label}
+                          href={item.href}
+                          className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-background-secondary text-foreground transition-colors group"
+                        >
+                          <div
+                            className={cn(
+                              'p-2 rounded-lg bg-gradient-to-br text-white shrink-0 mt-0.5 shadow-xs',
+                              item.accentColor
+                            )}
+                          >
+                            <Icon className="w-3.5 h-3.5" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-semibold group-hover:text-primary transition-colors">
+                              {item.label}
+                            </p>
+                            <p className="text-[11px] text-foreground-muted leading-tight mt-0.5">
+                              {item.description}
+                            </p>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
 
-          {/* ─── Right Section: User ─── */}
-          <div className="flex items-center gap-1 sm:gap-1.5">
-
-            {/* User Menu */}
-            {user && (
-              <div ref={userMenuRef} className="relative">
+            {/* Role-Specific Portal Button (if user is Tutor, Contributor, or Admin) */}
+            {hasStaffRole && (
+              <div className="relative">
                 <button
-                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  type="button"
+                  onClick={() => toggleDropdown('role')}
                   className={cn(
-                    'flex items-center gap-2 pl-1.5 pr-2 sm:pl-2 sm:pr-3 py-1.5 rounded-full transition-colors duration-200',
-                    isUserMenuOpen
-                      ? 'bg-primary/10 ring-2 ring-primary/30'
-                      : 'hover:bg-background-secondary'
+                    'inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer',
+                    isAdmin
+                      ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
+                      : isContributor
+                      ? 'bg-violet-500/10 text-violet-600 border border-violet-500/20'
+                      : 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20',
+                    openDropdown === 'role' && 'shadow-xs ring-2 ring-primary/20'
                   )}
                 >
-                  <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-xs sm:text-sm font-bold">
-                    {getInitials(user.profile.name)}
-                  </div>
-                  <span className="hidden sm:block text-sm font-medium text-foreground max-w-[80px] lg:max-w-[120px] truncate">
-                    {user.profile.name.split(' ')[0]}
-                  </span>
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Workspace Tools</span>
                   <ChevronDown
                     className={cn(
-                      'h-3 w-3 text-foreground-muted transition-transform duration-200 hidden sm:block',
-                      isUserMenuOpen && 'rotate-180'
+                      'w-3 h-3 opacity-60 transition-transform duration-200',
+                      openDropdown === 'role' && 'rotate-180'
                     )}
                   />
                 </button>
 
-                {/* User Dropdown */}
-                {isUserMenuOpen && (
-                  <div className="absolute top-full right-0 mt-2 w-64 bg-background-card border border-border rounded-2xl p-3 animate-slide-down z-50 shadow-xl">
-                    <div className="pb-3 mb-3 border-b border-border">
-                      <p className="font-semibold text-sm text-foreground">{user.profile.name}</p>
-                      <p className="text-xs text-foreground-muted mt-0.5">{user.email}</p>
-                      {role && (
-                        <div className="mt-2">
-                          <RoleBadge role={role} />
-                        </div>
+                {openDropdown === 'role' && (
+                  <div className="absolute left-0 top-full mt-2 w-72 bg-background-card border border-border rounded-2xl shadow-2xl p-2 z-50 animate-scale-in">
+                    <div className="p-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-foreground-muted">
+                      Your Role Privileges
+                    </div>
+                    <div className="space-y-1">
+                      {isTutor && (
+                        <Link
+                          href={`/profile/${user?.profile.username}`}
+                          className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-background-secondary text-xs font-semibold text-foreground transition-colors"
+                        >
+                          <GraduationCap className="w-4 h-4 text-emerald-500" />
+                          View My Tutor Schedule
+                        </Link>
+                      )}
+                      {(isContributor || isAdmin) && (
+                        <>
+                          <Link
+                            href="/editor"
+                            className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-background-secondary text-xs font-semibold text-foreground transition-colors"
+                          >
+                            <Pencil className="w-4 h-4 text-violet-500" />
+                            Curriculum & Notes Editor
+                          </Link>
+                          <Link
+                            href="/editor/review-queue"
+                            className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-background-secondary text-xs font-semibold text-foreground transition-colors"
+                          >
+                            <ClipboardCheck className="w-4 h-4 text-indigo-500" />
+                            Review Queue Proposals
+                          </Link>
+                        </>
+                      )}
+                      {isAdmin && (
+                        <>
+                          <Link
+                            href="/main-contributor/add-contributor"
+                            className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-background-secondary text-xs font-semibold text-foreground transition-colors"
+                          >
+                            <UserPlus className="w-4 h-4 text-amber-500" />
+                            Manage & Promote Users
+                          </Link>
+                          <Link
+                            href="/org-activities"
+                            className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-background-secondary text-xs font-semibold text-foreground transition-colors"
+                          >
+                            <Building2 className="w-4 h-4 text-amber-500" />
+                            Manage Organization Team
+                          </Link>
+                        </>
                       )}
                     </div>
-                    <Link
-                      href={`/profile/${user.profile.username}`}
-                      onClick={() => setIsUserMenuOpen(false)}
-                      className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-foreground-secondary hover:text-foreground hover:bg-background-secondary transition-colors"
-                    >
-                      <UserCircle className="h-4 w-4" />
-                      My Profile
-                    </Link>
-                    <Link
-                      href="/settings"
-                      onClick={() => setIsUserMenuOpen(false)}
-                      className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-foreground-secondary hover:text-foreground hover:bg-background-secondary transition-colors"
-                    >
-                      <ArrowRight className="h-4 w-4" />
-                      Settings
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-error hover:bg-error/10 transition-colors mt-1"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      Sign Out
-                    </button>
                   </div>
                 )}
               </div>
             )}
+          </nav>
+        </div>
 
-            {/* Guest Sign In / Get Started */}
-            {!user && (
-              <div className="flex items-center gap-1 sm:gap-2">
-                <Link
-                  href="/login"
-                  className="px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium text-foreground-secondary hover:text-foreground hover:bg-background-secondary transition-colors"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href="/signup"
-                  className="px-3 sm:px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold bg-primary text-white hover:bg-primary-hover shadow-sm transition-all"
-                >
-                  Get Started
-                </Link>
-              </div>
-            )}
-
-            {/* Mobile Menu Toggle */}
-            <button
-              onClick={() => setIsMobileOpen(!isMobileOpen)}
-              className="md:hidden p-2 rounded-lg text-foreground-secondary hover:text-foreground hover:bg-background-secondary transition-all"
-              aria-label="Toggle menu"
-            >
-              {isMobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
-          </div>
-        </nav>
-
-      {/* ─── Mobile Menu ─── */}
-      {isMobileOpen && (
-        <div className="md:hidden fixed inset-x-0 top-[68px] bottom-0 bg-background/95 backdrop-blur-xl border-t border-border animate-slide-down overflow-y-auto z-40">
-          <div className="p-4 space-y-4">
-            {/* Study Resources Grid */}
-            <div>
-              <p className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-foreground-muted">
-                Study Resources
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                {STUDY_QUICK_LINKS.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setIsMobileOpen(false)}
-                    className="flex flex-col items-center gap-1 p-3 rounded-xl bg-background-card border border-border hover:bg-background-secondary hover:border-primary/30 transition-all"
-                  >
-                    <span className="text-foreground-muted">{link.icon}</span>
-                    <span className="text-xs font-medium text-foreground text-center">{link.label}</span>
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            {/* Tools Grid */}
-            <div>
-              <p className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-foreground-muted">
-                Study Tools
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                {TOOLS_QUICK_LINKS.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setIsMobileOpen(false)}
-                    className="flex flex-col items-center gap-1 p-3 rounded-xl bg-background-card border border-border hover:bg-background-secondary hover:border-primary/30 transition-all"
-                  >
-                    <span className="text-foreground-muted">{link.icon}</span>
-                    <span className="text-xs font-medium text-foreground text-center">{link.label}</span>
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            {/* Community Grid */}
-            <div>
-              <p className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-foreground-muted">
-                Community
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                {COMMUNITY_QUICK_LINKS.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setIsMobileOpen(false)}
-                    className="flex flex-col items-center gap-1 p-3 rounded-xl bg-background-card border border-border hover:bg-background-secondary hover:border-primary/30 transition-all"
-                  >
-                    <span className="text-foreground-muted">{link.icon}</span>
-                    <span className="text-xs font-medium text-foreground text-center">{link.label}</span>
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            {/* Main Navigation Groups */}
-            <div className="space-y-1">
-              <p className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-foreground-muted">
-                Main Navigation
-              </p>
-              {visibleGroups.map((group) => (
-                <Link
-                  key={group.label}
-                  href={group.href}
-                  onClick={() => setIsMobileOpen(false)}
+        {/* Right Controls & User Account Menu */}
+        <div className="flex items-center gap-2">
+          {isAuthenticated && user ? (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => toggleDropdown('user')}
+                className="flex items-center gap-2 p-1.5 pr-2.5 rounded-2xl border border-border hover:border-primary/40 bg-background-secondary/50 transition-all cursor-pointer"
+              >
+                <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-primary to-emerald-500 flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-xs">
+                  {getInitials(user.profile.name)}
+                </div>
+                <span className="text-xs font-semibold text-foreground max-w-[100px] truncate hidden sm:inline">
+                  {user.profile.name}
+                </span>
+                <ChevronDown
                   className={cn(
-                    'flex items-center gap-3 px-3 py-3 rounded-xl transition-colors',
-                    isActive(group.href)
-                      ? 'bg-primary/10 text-primary'
-                      : 'hover:bg-background-secondary'
+                    'w-3 h-3 opacity-60 transition-transform duration-200',
+                    openDropdown === 'user' && 'rotate-180'
                   )}
-                >
-                  <div
-                    className={cn(
-                      'inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br text-white',
-                      group.accentColor
-                    )}
-                  >
-                    {group.icon}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={cn(
-                          'font-medium',
-                          isActive(group.href) ? 'text-primary' : 'text-foreground'
-                        )}
-                      >
-                        {group.label}
-                      </span>
-                      {group.badge && (
-                        <span className="text-[10px] font-bold uppercase tracking-wide bg-primary/15 text-primary px-1.5 py-0.5 rounded-full">
-                          {group.badge}
+                />
+              </button>
+
+              {openDropdown === 'user' && (
+                <div className="absolute right-0 top-full mt-2 w-60 bg-background-card border border-border rounded-2xl shadow-2xl p-2 z-50 animate-scale-in">
+                  <div className="px-3 py-2 border-b border-border/60 mb-1">
+                    <p className="text-xs font-bold text-foreground truncate">{user.profile.name}</p>
+                    <p className="text-[11px] text-foreground-muted truncate font-mono">
+                      @{user.profile.username}
+                    </p>
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      {(user.profile.roles || [user.profile.role]).map((r) => (
+                        <span
+                          key={r}
+                          className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20"
+                        >
+                          {r}
                         </span>
-                      )}
+                      ))}
                     </div>
-                    <p className="text-xs text-foreground-muted">{group.description}</p>
                   </div>
-                  <ArrowRight
-                    className={cn(
-                      'h-4 w-4',
-                      isActive(group.href) ? 'text-primary' : 'text-foreground-muted'
-                    )}
-                  />
+
+                  <div className="space-y-0.5">
+                    <Link
+                      href={`/profile/${user.profile.username}`}
+                      className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-foreground hover:bg-background-secondary transition-colors"
+                    >
+                      <UserCircle className="w-3.5 h-3.5" />
+                      View Public Profile
+                    </Link>
+
+                    <Link
+                      href="/settings/profile"
+                      className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-foreground hover:bg-background-secondary transition-colors"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                      Edit Profile & Schedule
+                    </Link>
+
+                    <Link
+                      href="/settings"
+                      className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-foreground hover:bg-background-secondary transition-colors"
+                    >
+                      <Settings className="w-3.5 h-3.5" />
+                      Settings & Telegram
+                    </Link>
+
+                    <button
+                      type="button"
+                      onClick={logout}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-destructive hover:bg-destructive/10 transition-colors cursor-pointer text-left"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                      Sign Out
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Link
+                href="/login"
+                className="px-3.5 py-2 rounded-xl text-xs font-semibold text-foreground hover:bg-background-secondary transition-colors"
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/signup"
+                className="px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold shadow-md hover:bg-primary-hover active:scale-98 transition-all"
+              >
+                Get Started
+              </Link>
+            </div>
+          )}
+
+          {/* Mobile Menu Hamburger Button */}
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-2 rounded-xl text-foreground-muted hover:text-foreground hover:bg-background-secondary transition-colors cursor-pointer"
+            aria-label="Toggle mobile menu"
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Drawer Menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t border-border bg-background-card p-4 space-y-4 max-h-[85vh] overflow-y-auto animate-fade-in">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-foreground-muted mb-2">
+              Library
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {LIBRARY_LINKS.map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className="p-2.5 rounded-xl bg-background-secondary text-xs font-medium text-foreground flex items-center gap-2 hover:bg-background-secondary/80 transition-colors"
+                >
+                  <item.icon className="w-3.5 h-3.5 text-primary shrink-0" />
+                  <span className="truncate">{item.label}</span>
                 </Link>
               ))}
             </div>
-
-            {/* Main Contributor Quick Links (mobile) */}
-            {isMainContributor && (
-              <div className="space-y-1 pt-4 border-t border-border">
-                <p className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-foreground-muted">
-                  Admin Actions
-                </p>
-                <Link
-                  href="/main-contributor/add-contributor"
-                  onClick={() => setIsMobileOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-background-secondary transition-colors"
-                >
-                  <UserPlus className="h-5 w-5 text-foreground-muted" />
-                  <span className="font-medium text-foreground">Add Contributor</span>
-                </Link>
-                <Link
-                  href="/main-contributor/review-queue"
-                  onClick={() => setIsMobileOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-background-secondary transition-colors"
-                >
-                  <ClipboardCheck className="h-5 w-5 text-foreground-muted" />
-                  <span className="font-medium text-foreground">Review Queue</span>
-                </Link>
-                <Link
-                  href="/org-activities/manage"
-                  onClick={() => setIsMobileOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-background-secondary transition-colors"
-                >
-                  <Building2 className="h-5 w-5 text-foreground-muted" />
-                  <span className="font-medium text-foreground">Manage Organization</span>
-                </Link>
-              </div>
-            )}
-
-            {/* Mobile User Actions */}
-            {user && (
-              <div className="pt-4 border-t border-border space-y-1">
-                <p className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-foreground-muted">
-                  Account
-                </p>
-                <Link
-                  href={`/profile/${user.profile.username}`}
-                  onClick={() => setIsMobileOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-background-secondary transition-colors"
-                >
-                  <UserCircle className="h-5 w-5 text-foreground-muted" />
-                  <span className="font-medium text-foreground">My Profile</span>
-                </Link>
-                <Link
-                  href="/settings"
-                  onClick={() => setIsMobileOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-background-secondary transition-colors"
-                >
-                  <Settings className="h-5 w-5 text-foreground-muted" />
-                  <span className="font-medium text-foreground">Settings</span>
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-error hover:bg-error/10 transition-colors"
-                >
-                  <LogOut className="h-5 w-5" />
-                  <span className="font-medium">Sign Out</span>
-                </button>
-              </div>
-            )}
-            {/* Mobile Guest Actions */}
-            {!user && (
-              <div className="pt-4 border-t border-border flex flex-col gap-2">
-                <Link
-                  href="/login"
-                  onClick={() => setIsMobileOpen(false)}
-                  className="w-full text-center py-2.5 rounded-xl border border-border text-sm font-medium text-foreground hover:bg-background-secondary transition-colors"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href="/signup"
-                  onClick={() => setIsMobileOpen(false)}
-                  className="w-full text-center py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary-hover transition-colors"
-                >
-                  Get Started — It's Free
-                </Link>
-              </div>
-            )}
           </div>
+
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-foreground-muted mb-2">
+              Tools
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {TOOLS_LINKS.map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className="p-2.5 rounded-xl bg-background-secondary text-xs font-medium text-foreground flex items-center gap-2 hover:bg-background-secondary/80 transition-colors"
+                >
+                  <item.icon className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                  <span className="truncate">{item.label}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-foreground-muted mb-2">
+              Explore & Tutors
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {EXPLORE_LINKS.map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className="p-2.5 rounded-xl bg-background-secondary text-xs font-medium text-foreground flex items-center gap-2 hover:bg-background-secondary/80 transition-colors"
+                >
+                  <item.icon className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                  <span className="truncate">{item.label}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {hasStaffRole && (
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-foreground-muted mb-2">
+                Staff Portals
+              </p>
+              <div className="space-y-1.5">
+                {isTutor && (
+                  <Link
+                    href={`/profile/${user?.profile.username}`}
+                    className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-600 text-xs font-semibold flex items-center gap-2"
+                  >
+                    <GraduationCap className="w-4 h-4" /> My Tutor Schedule
+                  </Link>
+                )}
+                {(isContributor || isAdmin) && (
+                  <Link
+                    href="/editor"
+                    className="p-2.5 rounded-xl bg-violet-500/10 text-violet-600 text-xs font-semibold flex items-center gap-2"
+                  >
+                    <Pencil className="w-4 h-4" /> Curriculum & Notes Editor
+                  </Link>
+                )}
+                {isAdmin && (
+                  <Link
+                    href="/main-contributor/add-contributor"
+                    className="p-2.5 rounded-xl bg-amber-500/10 text-amber-600 text-xs font-semibold flex items-center gap-2"
+                  >
+                    <UserPlus className="w-4 h-4" /> Manage & Promote Users
+                  </Link>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </header>
   );
-});
-
-export default NavBar;
+}

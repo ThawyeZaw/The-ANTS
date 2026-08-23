@@ -3,8 +3,8 @@
 // All app-wide types & interfaces live here. Import from '@/types'.
 // ──────────────────────────────────────────────────────────────────────────────
 
-/** The four user roles in the system. Matches the PostgreSQL enum. */
-export type UserRole = 'student' | 'teacher' | 'contributor' | 'main_contributor';
+/** User roles in the system. */
+export type UserRole = 'student' | 'tutor' | 'contributor' | 'admin' | 'teacher' | 'main_contributor';
 
 /** Predefined social platforms available for profile links */
 export type SocialPlatform = 'github' | 'tiktok' | 'facebook' | 'website' | 'instagram';
@@ -167,6 +167,12 @@ export interface Profile {
   username: string;
   avatar: string;
   role: UserRole;
+  roles?: UserRole[];
+  activeRole?: UserRole;
+  telegramHandle?: string;
+  hourlyRate?: string;
+  teachingCurriculums?: string[];
+  teachingSubjects?: string[];
   bio?: string;
   title?: string;
   socialLinks?: SocialLinkItem[];

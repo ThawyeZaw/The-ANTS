@@ -12,8 +12,10 @@ import { z } from 'zod';
 
 export const userRoleEnum = pgEnum('user_role', [
   'student',
+  'tutor',
   'teacher',
   'contributor',
+  'admin',
   'main_contributor',
 ]);
 
@@ -25,7 +27,8 @@ export const profiles = pgTable('profiles', {
   avatar_url: text('avatar_url'),
   created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-  role: userRoleEnum('role').default('student').notNull(),
+  role: text('role').default('student').notNull(), // Active or primary role
+  roles: text('roles').array().notNull().default(sql`ARRAY['student']::text[]`), // Multi-role array
   is_public: boolean('is_public').default(true),
   bio: text('bio'),
   title: text('title'),
@@ -36,11 +39,10 @@ export const profiles = pgTable('profiles', {
   pinned_item_id: text('pinned_item_id'),
   section_visibility: jsonb('section_visibility').$type<z.infer<typeof SectionVisibilitySchema>>(),
   custom_url_slug: text('custom_url_slug').unique(),
-  show_club_memberships: boolean('show_club_memberships').default(true),
-  show_club_projects: boolean('show_club_projects').default(true),
-  show_club_activity: boolean('show_club_activity').default(true),
   certification_ids: uuid('certification_ids').array(),
   timezone: text('timezone').default('UTC'),
+  telegram_chat_id: text('telegram_chat_id'),
+  notification_preferences: jsonb('notification_preferences'),
 });
 
 export const studentProfiles = pgTable('student_profiles', {
@@ -49,13 +51,21 @@ export const studentProfiles = pgTable('student_profiles', {
   study_goals_metadata: jsonb('study_goals_metadata').$type<z.infer<typeof StudyGoalsMetadataSchema>>(),
 });
 
-export const teacherProfiles = pgTable('teacher_profiles', {
+export const tutorProfiles = pgTable('tutor_profiles', {
   id: uuid('id').primaryKey().references(() => profiles.id, { onDelete: 'cascade' }),
   institution: text('institution'),
   department: text('department'),
   specialization: text('specialization'),
+  telegram_handle: text('telegram_handle'),
+  hourly_rate: text('hourly_rate'),
+  teaching_curriculums: text('teaching_curriculums').array(),
+  teaching_subjects: text('teaching_subjects').array(),
+  availability_slots: jsonb('availability_slots'), // Sunday to Saturday slots: { [day: string]: { [hour: string]: 'available' | 'flexible' | 'unavailable' } }
+  is_active: boolean('is_active').default(true),
   verified: boolean('verified').default(false),
 });
+
+export const teacherProfiles = tutorProfiles; // Alias for backward compatibility
 
 export const contributorProfiles = pgTable('contributor_profiles', {
   id: uuid('id').primaryKey().references(() => profiles.id, { onDelete: 'cascade' }),
@@ -84,8 +94,8 @@ export const certifications = pgTable('certifications', {
 export const roleUpgradeRequests = pgTable('role_upgrade_requests', {
   id: uuid('id').primaryKey().defaultRandom(),
   user_id: uuid('user_id').references(() => profiles.id, { onDelete: 'cascade' }).notNull(),
-  current_role: userRoleEnum('current_role').notNull(),
-  requested_role: userRoleEnum('requested_role').notNull(),
+  current_role: text('current_role').notNull(),
+  requested_role: text('requested_role').notNull(),
   reason: text('reason'),
   status: text('status').default('pending'),
   reviewer_id: uuid('reviewer_id').references(() => profiles.id, { onDelete: 'set null' }),
@@ -93,15 +103,4 @@ export const roleUpgradeRequests = pgTable('role_upgrade_requests', {
   reviewed_at: timestamp('reviewed_at', { withTimezone: true }),
 });
 
-export const roleUpgradeApplications = pgTable('role_upgrade_applications', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  user_id: uuid('user_id').references(() => profiles.id, { onDelete: 'cascade' }).notNull(),
-  target_role: userRoleEnum('target_role').notNull(),
-  motivation: text('motivation'),
-  portfolio_links: text('portfolio_links').array(),
-  status: text('status').default('pending'),
-  reviewer_id: uuid('reviewer_id').references(() => profiles.id, { onDelete: 'set null' }),
-  reviewer_notes: text('reviewer_notes'),
-  created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  reviewed_at: timestamp('reviewed_at', { withTimezone: true }),
-});
+export const roleUpgradeApplications = roleUpgradeRequests; // Alias for backward compatibility

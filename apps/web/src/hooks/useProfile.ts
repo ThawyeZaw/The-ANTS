@@ -1,12 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — useProfile Hook
-// Fetches public profile data by username for the /profile/[username] page.
-//
-// ⚡ Performance: delegates all data fetching to the batched server action
-// `actionGetFullProfile` which runs all queries in parallel, eliminating the
-// previous N+1 waterfall (one Supabase call per club per membership count).
+// The ANTS — useProfile Hook (Unified Multi-Role & Tutor Support)
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect } from 'react';
@@ -14,17 +9,17 @@ import { Profile, ProjectEntry, ActivityEntry, AchievementEntry } from '@/types'
 import { useAuth } from './useAuth';
 import { actionGetFullProfile } from '@/actions/profile';
 import type {
+  TutorProfileData,
   ContributorProfileData,
   ContributorStatsData,
   ActivityItem,
-  ClubMembershipInfo,
 } from '@/actions/profile';
 
-// Re-export action types for convenience (consumers previously imported from here)
-export type { ContributorProfileData, ContributorStatsData, ActivityItem, ClubMembershipInfo };
+export type { TutorProfileData, ContributorProfileData, ContributorStatsData, ActivityItem };
 
 interface UseProfileReturn {
   profile: Profile | null;
+  tutorProfile: TutorProfileData | null;
   contributorProfile: ContributorProfileData | null;
   stats: ContributorStatsData | null;
   activities: ActivityItem[];
@@ -32,12 +27,10 @@ interface UseProfileReturn {
   portfolioActivities: ActivityEntry[];
   achievements: AchievementEntry[];
   certifications: any[];
-  clubMemberships: ClubMembershipInfo[];
-  clubProjects: ProjectEntry[];
-  clubActivity: ActivityItem[];
   isLoading: boolean;
   isOwnProfile: boolean;
   notFound: boolean;
+  refetch: () => Promise<void>;
 }
 
 export function useProfile(username: string): UseProfileReturn {
@@ -45,74 +38,60 @@ export function useProfile(username: string): UseProfileReturn {
 
   const [isLoading, setIsLoading] = useState(true);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [tutorProfile, setTutorProfile] = useState<TutorProfileData | null>(null);
   const [contributorProfile, setContributorProfile] = useState<ContributorProfileData | null>(null);
   const [stats, setStats] = useState<ContributorStatsData | null>(null);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [notFound, setNotFound] = useState(false);
   const [certifications, setCertifications] = useState<any[]>([]);
-  const [clubMemberships, setClubMemberships] = useState<ClubMembershipInfo[]>([]);
-  const [clubProjects, setClubProjects] = useState<ProjectEntry[]>([]);
-  // clubActivity is derived from activities — kept for API compatibility
-  const [clubActivity] = useState<ActivityItem[]>([]);
 
   const isOwnProfile = !!(user && profile && user.id === profile.id);
 
-  useEffect(() => {
-    let cancelled = false;
+  const fetchProfile = async () => {
+    setIsLoading(true);
+    setNotFound(false);
 
-    async function fetchProfile() {
-      setIsLoading(true);
-      setNotFound(false);
+    const resolvedUsername = username === 'me' && user
+      ? user.profile?.username
+      : username;
 
-      // Resolve "me" to the current user's username
-      const resolvedUsername = username === 'me' && user
-        ? user.profile?.username
-        : username;
-
-      if (!resolvedUsername) {
-        if (!cancelled) {
-          setNotFound(true);
-          setIsLoading(false);
-        }
-        return;
-      }
-
-      // ── Single batched server action (replaces 8+ sequential Supabase calls) ─
-      const data = await actionGetFullProfile(resolvedUsername);
-
-      if (cancelled) return;
-
-      if (data.notFound || !data.profile) {
-        setProfile(null);
-        setContributorProfile(null);
-        setStats(null);
-        setActivities([]);
-        setCertifications([]);
-        setClubMemberships([]);
-        setClubProjects([]);
-        setNotFound(true);
-        setIsLoading(false);
-        return;
-      }
-
-      setProfile(data.profile);
-      setCertifications(data.certifications);
-      setClubMemberships(data.clubMemberships);
-      setClubProjects(data.clubProjects);
-      setContributorProfile(data.contributorProfile);
-      setStats(data.stats);
-      setActivities(data.activities);
-      setNotFound(false);
+    if (!resolvedUsername) {
+      setNotFound(true);
       setIsLoading(false);
+      return;
     }
 
-    fetchProfile();
+    const data = await actionGetFullProfile(resolvedUsername);
 
-    return () => { cancelled = true; };
+    if (data.notFound || !data.profile) {
+      setProfile(null);
+      setTutorProfile(null);
+      setContributorProfile(null);
+      setStats(null);
+      setActivities([]);
+      setCertifications([]);
+      setNotFound(true);
+      setIsLoading(false);
+      return;
+    }
+
+    setProfile(data.profile);
+    setTutorProfile(data.tutorProfile);
+    setContributorProfile(data.contributorProfile);
+    setStats(data.stats);
+    setActivities(data.activities);
+    setCertifications(data.certifications);
+    setNotFound(false);
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    fetchProfile();
   }, [username, user]);
 
   return {
     profile,
+    tutorProfile,
     contributorProfile,
     stats,
     activities,
@@ -120,11 +99,9 @@ export function useProfile(username: string): UseProfileReturn {
     portfolioActivities: profile?.activities || [],
     achievements: profile?.achievements || [],
     certifications,
-    clubMemberships,
-    clubProjects,
-    clubActivity,
     isLoading,
     isOwnProfile,
     notFound,
+    refetch: fetchProfile,
   };
 }

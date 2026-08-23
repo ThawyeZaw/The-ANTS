@@ -1,8 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Persona Context
-// Manages the active user role (persona) for role-gated feature access.
+// The ANTS — Persona Context (Multi-Role & Active Persona Management)
 // ──────────────────────────────────────────────────────────────────────────────
 
 import {
@@ -15,28 +14,56 @@ import { UserRole } from '@/types';
 import { useAuthContext } from './AuthContext';
 
 interface PersonaContextValue {
-  role: UserRole | null;
+  role: UserRole;
+  activeRole: UserRole;
+  roles: UserRole[];
   isStudent: boolean;
-  isTeacher: boolean;
+  isTutor: boolean;
+  isTeacher: boolean; // Alias for backward compatibility
   isContributor: boolean;
-  isMainContributor: boolean;
+  isAdmin: boolean;
+  isMainContributor: boolean; // Alias for backward compatibility
+  hasRole: (role: UserRole) => boolean;
+  switchRole: (role: UserRole) => void;
 }
 
-const PersonaContext = createContext<PersonaContextValue | undefined>(undefined);
+const DEFAULT_PERSONA_VALUE: PersonaContextValue = {
+  role: 'student',
+  activeRole: 'student',
+  roles: ['student'],
+  isStudent: true,
+  isTutor: false,
+  isTeacher: false,
+  isContributor: false,
+  isAdmin: false,
+  isMainContributor: false,
+  hasRole: (r: UserRole) => r === 'student',
+  switchRole: () => {},
+};
+
+const PersonaContext = createContext<PersonaContextValue>(DEFAULT_PERSONA_VALUE);
 
 export function PersonaProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuthContext();
+  const { activeRole, roles, hasRole, switchRole } = useAuthContext();
 
   const value = useMemo<PersonaContextValue>(() => {
-    const role = user?.profile?.role ?? null;
+    const isTutor = hasRole('tutor') || hasRole('teacher');
+    const isAdmin = hasRole('admin') || hasRole('main_contributor');
+
     return {
-      role,
-      isStudent: role === 'student',
-      isTeacher: role === 'teacher',
-      isContributor: role === 'contributor',
-      isMainContributor: role === 'main_contributor',
+      role: activeRole,
+      activeRole,
+      roles,
+      isStudent: hasRole('student'),
+      isTutor,
+      isTeacher: isTutor,
+      isContributor: hasRole('contributor'),
+      isAdmin,
+      isMainContributor: isAdmin,
+      hasRole,
+      switchRole,
     };
-  }, [user]);
+  }, [activeRole, roles, hasRole, switchRole]);
 
   return (
     <PersonaContext.Provider value={value}>
@@ -47,14 +74,5 @@ export function PersonaProvider({ children }: { children: ReactNode }) {
 
 export function usePersonaContext(): PersonaContextValue {
   const context = useContext(PersonaContext);
-  if (!context) {
-    return {
-      role: null,
-      isStudent: false,
-      isTeacher: false,
-      isContributor: false,
-      isMainContributor: false,
-    };
-  }
-  return context;
+  return context || DEFAULT_PERSONA_VALUE;
 }

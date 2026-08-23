@@ -1,7 +1,12 @@
 'use client';
 
+// ──────────────────────────────────────────────────────────────────────────────
+// The ANTS — useExamReview Hook (Hono API / Neon Backend)
+// ──────────────────────────────────────────────────────────────────────────────
+
 import { useCallback, useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8787';
 
 export interface ExamReviewSubmission {
   id: string;
@@ -12,67 +17,84 @@ export interface ExamReviewSubmission {
   status: 'pending_review' | 'approved' | 'rejected';
 }
 
-export function usePendingExamSubmissions() {
+export function usePendingExamSubmissions(userId?: string) {
   const [submissions, setSubmissions] = useState<ExamReviewSubmission[]>([]);
-  const supabase = createClient()!;
 
   const refresh = useCallback(async () => {
-    const { data } = await supabase
-      .from('editor_submissions')
-      .select('*, profiles!editor_submissions_contributor_id_fkey(name)')
-      .eq('status', 'pending_review');
-
-    if (data) {
-      const mapped: ExamReviewSubmission[] = data.map((item: any) => ({
-        id: item.id,
-        title: item.submitted_data?.title ?? '',
-        type: item.submitted_data?.type ?? item.submission_type ?? 'exam',
-        contributorName: item.profiles?.name ?? 'Unknown',
-        summary: item.submitted_data?.summary ?? '',
-        status: item.status,
-      }));
-      setSubmissions(mapped);
+    if (!userId) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/editor/review-queue?userId=${encodeURIComponent(userId)}`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.queue) {
+          const mapped: ExamReviewSubmission[] = json.queue.map((item: any) => ({
+            id: item.id,
+            title: item.submitted_data?.title ?? '',
+            type: item.submitted_data?.type ?? item.submission_type ?? 'exam',
+            contributorName: 'Contributor',
+            summary: item.submitted_data?.summary ?? '',
+            status: item.status,
+          }));
+          setSubmissions(mapped);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching pending submissions:', err);
     }
-  }, [supabase]);
+  }, [userId]);
 
   useEffect(() => {
     refresh();
   }, [refresh]);
 
-  const approve = useCallback(async (submissionId: string, reviewerId: string) => {
-    const { error } = await supabase
-      .from('editor_submissions')
-      .update({
-        status: 'approved',
-        reviewed_at: new Date().toISOString(),
-        reviewer_id: reviewerId,
-      })
-      .eq('id', submissionId);
+  const approve = useCallback(
+    async (submissionId: string, reviewerId: string) => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/editor/review`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reviewerId,
+            queueId: submissionId,
+            action: 'approve',
+          }),
+        });
+        if (res.ok) {
+          await refresh();
+          return { success: true };
+        }
+      } catch (err) {
+        console.error('Error approving submission:', err);
+      }
+      return { success: false };
+    },
+    [refresh]
+  );
 
-    if (!error) {
-      await refresh();
-    }
-
-    return { success: !error };
-  }, [refresh, supabase]);
-
-  const reject = useCallback(async (submissionId: string, reviewerId: string, feedback: string) => {
-    const { error } = await supabase
-      .from('editor_submissions')
-      .update({
-        status: 'revision_requested',
-        reviewed_at: new Date().toISOString(),
-        reviewer_id: reviewerId,
-        feedback,
-      })
-      .eq('id', submissionId);
-
-    if (!error) {
-      await refresh();
-    }
-
-    return { success: !error };
-  }, [refresh, supabase]);
+  const reject = useCallback(
+    async (submissionId: string, reviewerId: string, feedback: string) => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/editor/review`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reviewerId,
+            queueId: submissionId,
+            action: 'reject',
+            feedback: { comment: feedback },
+          }),
+        });
+        if (res.ok) {
+          await refresh();
+          return { success: true };
+        }
+      } catch (err) {
+        console.error('Error rejecting submission:', err);
+      }
+      return { success: false };
+    },
+    [refresh]
+  );
 
   return { submissions, approve, reject, refresh };
 }
