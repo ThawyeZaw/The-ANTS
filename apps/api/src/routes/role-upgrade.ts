@@ -7,62 +7,24 @@ import type { UserRole } from '@the-ants/shared-types';
 export const ROLE_HIERARCHY: Record<UserRole, number> = {
   student: 0,
   teacher: 1,
+  tutor: 1,
   contributor: 2,
   main_contributor: 3,
+  admin: 4,
 };
 
 export function createRoleUpgradeRoutes(getDb: () => ReturnType<typeof createDb>) {
   const router = new Hono();
 
-  // 1. Submit a role upgrade application
+  // 1. Submit a role upgrade application (Deprecated — Role assignments are managed by Admins)
   router.post('/apply', async (c) => {
-    const db = getDb();
-    const body = await c.req.json();
-
-    const ApplySchema = z.object({
-      userId: z.string().uuid(),
-      targetRole: z.enum(['teacher', 'contributor', 'main_contributor']),
-      motivation: z.string().min(10, 'Motivation must be at least 10 characters'),
-      portfolioLinks: z.array(z.string().url()).optional(),
-    });
-
-    const parsed = ApplySchema.safeParse(body);
-    if (!parsed.success) {
-      return c.json({ error: parsed.error.format() }, 400);
-    }
-
-    const { userId, targetRole, motivation, portfolioLinks } = parsed.data;
-
-    // Fetch user current profile
-    const existingProfile = await db.query.profiles.findFirst({
-      where: eq(profiles.id, userId),
-    });
-
-    if (!existingProfile) {
-      return c.json({ error: 'Profile not found' }, 404);
-    }
-
-    const currentRole = (existingProfile.role || 'student') as UserRole;
-    if (ROLE_HIERARCHY[targetRole] <= ROLE_HIERARCHY[currentRole]) {
-      return c.json(
-        { error: `Cannot upgrade from ${currentRole} to ${targetRole}. Upgrades must increase role level.` },
-        400
-      );
-    }
-
-    // Insert request
-    const [request] = await db
-      .insert(roleUpgradeRequests)
-      .values({
-        user_id: userId,
-        current_role: currentRole,
-        requested_role: targetRole,
-        reason: motivation,
-        status: 'pending',
-      })
-      .returning();
-
-    return c.json({ success: true, request });
+    return c.json(
+      {
+        error: 'Self-service role application is retired. User roles are assigned directly by platform administrators via the Admin Portal.',
+        deprecated: true,
+      },
+      410
+    );
   });
 
   // 2. Review role upgrade application (Guarded: Main Contributor only)

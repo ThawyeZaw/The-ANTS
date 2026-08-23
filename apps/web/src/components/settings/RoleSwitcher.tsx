@@ -78,7 +78,7 @@ export default function RoleSwitcher() {
   const activeInfo = ROLE_INFO[activeRole] || ROLE_INFO.student;
   const ActiveIcon = activeInfo.icon;
 
-  const userRolesList = roles && roles.length > 0 ? roles : ['student'];
+  const userRolesList: UserRole[] = (roles && roles.length > 0 ? roles : ['student']) as UserRole[];
 
   return (
     <div className="relative inline-block text-left" ref={dropdownRef}>

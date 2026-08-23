@@ -336,7 +336,7 @@ export function useCourseManager() {
         result: data.result ?? null,
         is_mock: data.is_mock ?? false,
         notes: data.notes ?? null,
-        created_at: new Date().toISOString(),
+        recorded_at: new Date().toISOString(),
       };
       setExamHistory((prev) => [newEntry, ...prev]);
       return { success: true };

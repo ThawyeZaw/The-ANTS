@@ -10,7 +10,7 @@ import {
   certifications,
   tutorProfiles,
   contributorProfiles,
-  editorSubmissions,
+  reviewQueue,
   user,
   account,
   session,
@@ -136,7 +136,7 @@ export async function actionGetFullProfile(username: string): Promise<FullProfil
       activities: profileRow.activities as unknown as Profile['activities'],
       achievements: profileRow.achievements as unknown as Profile['achievements'],
       certificationIds: (profileRow.certification_ids as string[]) ?? undefined,
-      telegramChatId: profileRow.telegram_chat_id ?? undefined,
+      telegramChatId: (profileRow as any).telegram_chat_id ?? undefined,
       createdAt: profileRow.created_at?.toISOString() ?? '',
     };
 
@@ -144,28 +144,45 @@ export async function actionGetFullProfile(username: string): Promise<FullProfil
     const isContributor = userRoles.includes('contributor') || userRoles.includes('admin') || userRoles.includes('main_contributor');
 
     const [userCerts, userTutorProfile, userContribProfile, submissions] = await Promise.all([
-      db.query.certifications.findMany({
-        where: eq(certifications.user_id, profile.id as any),
-      }),
+      db.query.certifications
+        .findMany({
+          where: eq(certifications.user_id, profile.id as any),
+        })
+        .catch((err) => {
+          console.warn('[actionGetFullProfile] certifications query skipped/failed:', err?.message || err);
+          return [];
+        }),
       isTutor
-        ? db.query.tutorProfiles.findFirst({
-            where: eq(tutorProfiles.id, profile.id as any),
-          })
+        ? db.query.tutorProfiles
+            .findFirst({
+              where: eq(tutorProfiles.id, profile.id as any),
+            })
+            .catch(() => null)
         : Promise.resolve(null),
       isContributor
-        ? db.query.contributorProfiles.findFirst({
-            where: eq(contributorProfiles.id, profile.id as any),
-          })
+        ? db.query.contributorProfiles
+            .findFirst({
+              where: eq(contributorProfiles.id, profile.id as any),
+            })
+            .catch((err) => {
+              console.warn('[actionGetFullProfile] contributorProfiles query skipped/failed:', err?.message || err);
+              return null;
+            })
         : Promise.resolve(null),
       isContributor
-        ? db.query.editorSubmissions.findMany({
-            where: and(
-              eq(editorSubmissions.contributor_id, profile.id as any),
-              eq(editorSubmissions.status, 'approved')
-            ),
-            orderBy: [desc(editorSubmissions.reviewed_at)],
-            limit: 20,
-          })
+        ? db.query.reviewQueue
+            .findMany({
+              where: and(
+                eq(reviewQueue.contributor_id, profile.id as any),
+                eq(reviewQueue.status, 'approved')
+              ),
+              orderBy: [desc(reviewQueue.reviewed_at)],
+              limit: 20,
+            })
+            .catch((err) => {
+              console.warn('[actionGetFullProfile] reviewQueue query skipped/failed:', err?.message || err);
+              return [];
+            })
         : Promise.resolve([]),
     ]);
 
@@ -189,11 +206,11 @@ export async function actionGetFullProfile(username: string): Promise<FullProfil
       };
     }
 
-    const activityItems: ActivityItem[] = submissions.map((s) => ({
+    const activityItems: ActivityItem[] = (submissions as any[]).map((s) => ({
       id: s.id,
       activity_type: 'submission_approved',
-      description: `Submission approved for ${s.submission_type}`,
-      created_at: s.reviewed_at?.toISOString() ?? s.created_at?.toISOString() ?? new Date().toISOString(),
+      description: `Submission approved for ${s.submission_type || 'content'}`,
+      created_at: s.reviewed_at?.toISOString() ?? s.submitted_at?.toISOString() ?? new Date().toISOString(),
     }));
 
     return {
@@ -259,9 +276,11 @@ export async function actionUpdateTutorProfile(
     const db = getDb();
 
     // Check if tutor profile row already exists
-    const existing = await db.query.tutorProfiles.findFirst({
-      where: eq(tutorProfiles.id, userId as any),
-    });
+    const existing = await db.query.tutorProfiles
+      .findFirst({
+        where: eq(tutorProfiles.id, userId as any),
+      })
+      .catch(() => null);
 
     if (existing) {
       await db
@@ -462,7 +481,8 @@ export async function actionRequestPasswordReset(
     });
 
     let sentViaTelegram = false;
-    if (profile.telegram_chat_id && (channel === 'telegram' || channel === 'both')) {
+    const telegramChatId = (profile as any).telegram_chat_id;
+    if (telegramChatId && (channel === 'telegram' || channel === 'both')) {
       const text = `🐜 <b>The ANTS — Password Reset Request</b>\n\nHello <b>${profile.name}</b>,\n\nYour 6-digit verification code is: <code>${code}</code>\n\nThis code expires in 15 minutes. Enter this code to reset your password. If you did not request this, please ignore this message.`;
 
       try {
@@ -472,7 +492,7 @@ export async function actionRequestPasswordReset(
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              chat_id: profile.telegram_chat_id,
+              chat_id: telegramChatId,
               text,
               parse_mode: 'HTML',
             }),

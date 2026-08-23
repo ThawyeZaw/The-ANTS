@@ -22,8 +22,6 @@ import {
   X,
   Award,
   Globe,
-  Github,
-  Linkedin,
   Clock,
   RotateCcw,
 } from 'lucide-react';

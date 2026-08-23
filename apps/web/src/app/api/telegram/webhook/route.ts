@@ -3,7 +3,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb, profiles } from '@/lib/db';
+import { getDb, profiles, notificationPreferences } from '@/lib/db';
 import { eq } from 'drizzle-orm';
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -32,7 +32,7 @@ async function getUserByUsername(username: string) {
     const user = await db.query.profiles.findFirst({
       where: eq(profiles.username, username),
     });
-    return user ? { id: user.id, username: user.username, telegram_chat_id: user.telegram_chat_id, role: user.role } : null;
+    return user ? { id: user.id, username: user.username, role: user.role } : null;
   } catch {
     return null;
   }
@@ -41,13 +41,31 @@ async function getUserByUsername(username: string) {
 async function linkTelegramChat(username: string, chatId: number) {
   try {
     const db = getDb();
-    await db
-      .update(profiles)
-      .set({
-        telegram_chat_id: String(chatId),
-        updated_at: new Date(),
-      })
-      .where(eq(profiles.username, username));
+    const user = await db.query.profiles.findFirst({
+      where: eq(profiles.username, username),
+    });
+    if (!user) return false;
+
+    const existing = await db.query.notificationPreferences.findFirst({
+      where: eq(notificationPreferences.user_id, user.id as any),
+    });
+
+    if (existing) {
+      await db
+        .update(notificationPreferences)
+        .set({
+          telegram_enabled: true,
+          channels: { telegram_chat_id: String(chatId) },
+          updated_at: new Date(),
+        })
+        .where(eq(notificationPreferences.user_id, user.id as any));
+    } else {
+      await db.insert(notificationPreferences).values({
+        user_id: user.id as any,
+        telegram_enabled: true,
+        channels: { telegram_chat_id: String(chatId) },
+      });
+    }
     return true;
   } catch {
     return false;
@@ -58,12 +76,13 @@ async function unlinkTelegramChat(chatId: number) {
   try {
     const db = getDb();
     await db
-      .update(profiles)
+      .update(notificationPreferences)
       .set({
-        telegram_chat_id: null,
+        telegram_enabled: false,
+        channels: {},
         updated_at: new Date(),
       })
-      .where(eq(profiles.telegram_chat_id, String(chatId)));
+      .where(eq(notificationPreferences.channels, { telegram_chat_id: String(chatId) } as any));
     return true;
   } catch {
     return false;

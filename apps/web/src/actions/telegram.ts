@@ -5,7 +5,7 @@
 // Real-time Telegram messaging and notifications pipeline.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { getDb, profiles, timetableEvents, examCountdowns, notificationQueue } from '@/lib/db';
+import { getDb, profiles, timetableEvents, examCountdowns, notificationQueue, notificationPreferences } from '@/lib/db';
 import { eq, and, gte, lte, asc } from 'drizzle-orm';
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -48,16 +48,23 @@ async function sendTelegramMessage(chatId: string, text: string) {
   // Log final failure to database for administrative auditing
   try {
     const db = getDb();
-    await db.insert(notificationQueue).values({
-      payload: {
-        telegram_chat_id: chatId,
-        message: text,
-        error_log: JSON.stringify(lastError || 'Max retries exceeded'),
-      },
-      scheduled_for: new Date(),
-      status: 'failed',
-      last_error: JSON.stringify(lastError || 'Max retries exceeded'),
+    const notifPref = await db.query.notificationPreferences.findFirst({
+      where: eq(notificationPreferences.channels, chatId as any),
     });
+    if (notifPref?.user_id) {
+      await db.insert(notificationQueue).values({
+        user_id: notifPref.user_id,
+        channel: 'telegram',
+        payload: {
+          telegram_chat_id: chatId,
+          message: text,
+          error_log: JSON.stringify(lastError || 'Max retries exceeded'),
+        },
+        scheduled_for: new Date(),
+        status: 'failed',
+        last_error: JSON.stringify(lastError || 'Max retries exceeded'),
+      });
+    }
   } catch (logErr) {
     console.error('[telegram] Failed to log Telegram failure to notification_queue:', logErr);
   }
@@ -132,7 +139,8 @@ export async function actionSendWelcomeMessage(telegramChatId: string, userId: s
     if (upcomingEvents?.length) {
       for (const ev of upcomingEvents) {
         const d = new Date(ev.start_time);
-        allDeadlines.push(`📅 ${formatDate(d)} ${formatTime(d)} — ${ev.title}${ev.location ? ` @ ${ev.location}` : ''}`);
+        const loc = (ev.metadata as any)?.location;
+        allDeadlines.push(`📅 ${formatDate(d)} ${formatTime(d)} — ${ev.title}${loc ? ` @ ${loc}` : ''}`);
       }
     }
 

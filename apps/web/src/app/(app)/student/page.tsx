@@ -122,12 +122,12 @@ export default function StudentDashboard() {
         {/* Stats Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {stats.map((stat, i) => {
-            const Icon = iconMap[stat.id] || <Layers className="h-5 w-5" />;
-            const colorClass = colorMap[stat.id] || 'bg-primary/10 text-primary';
+            const Icon = iconMap[stat.key] || <Layers className="h-5 w-5" />;
+            const colorClass = colorMap[stat.key] || 'bg-primary/10 text-primary';
 
             return (
               <div
-                key={stat.id || i}
+                key={stat.key || i}
                 className="p-5 rounded-2xl bg-background-card border border-border flex items-center gap-4 hover:shadow-sm transition-all"
               >
                 <div className={cn('p-3 rounded-xl shrink-0', colorClass)}>{Icon}</div>

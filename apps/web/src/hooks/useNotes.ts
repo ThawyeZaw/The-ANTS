@@ -178,7 +178,7 @@ export function usePendingNotes() {
       if (res.ok) {
         const json = await res.json();
         const all: Note[] = json.notes || [];
-        setPendingNotes(all.filter((n) => n.status === 'in_review' || (n as any).status === 'pending_review'));
+        setPendingNotes(all.filter((n) => (n.status as any) === 'in_review' || n.status === 'pending_review'));
       }
     } catch (err) {
       console.error('Error fetching pending notes:', err);
@@ -378,7 +378,7 @@ export function useNoteEditor(existingNoteId?: string) {
     async (contributorId: string) => {
       if (!state.noteId) return { success: false as const, error: 'Save the note first.' };
       const res = await actionSubmitNoteForReview(state.noteId, contributorId);
-      if (res.success) setState((prev) => ({ ...prev, status: 'in_review', isDirty: false }));
+      if (res.success) setState((prev) => ({ ...prev, status: 'pending_review', isDirty: false }));
       return res;
     },
     [state.noteId]

@@ -130,6 +130,7 @@ interface AuthContextValue {
       Pick<
         Profile,
         | 'name'
+        | 'username'
         | 'bio'
         | 'title'
         | 'socialLinks'
@@ -150,9 +151,13 @@ interface AuthContextValue {
         | 'theme'
         | 'notificationPreferences'
         | 'telegramHandle'
+        | 'telegramChatId'
         | 'hourlyRate'
         | 'teachingCurriculums'
         | 'teachingSubjects'
+        | 'timezone'
+        | 'preferredName'
+        | 'institutionName'
       >
     >
   ) => Promise<{ success: boolean; error?: string }>;
@@ -190,7 +195,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const [isLoading, setIsLoading] = useState(true);
 
-  const roles = user?.profile.roles && user.profile.roles.length > 0 ? user.profile.roles : ['student'];
+  const roles: UserRole[] = user?.profile.roles && user.profile.roles.length > 0 ? (user.profile.roles as UserRole[]) : ['student'];
 
   const switchRole = useCallback(
     (newRole: UserRole) => {
@@ -387,6 +392,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         Pick<
           Profile,
           | 'name'
+          | 'username'
           | 'bio'
           | 'title'
           | 'socialLinks'
@@ -407,9 +413,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           | 'theme'
           | 'notificationPreferences'
           | 'telegramHandle'
+          | 'telegramChatId'
           | 'hourlyRate'
           | 'teachingCurriculums'
           | 'teachingSubjects'
+          | 'timezone'
+          | 'preferredName'
+          | 'institutionName'
         >
       >
     ) => {

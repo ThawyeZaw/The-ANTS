@@ -61,14 +61,14 @@ export default function MyContributions() {
             No contributions yet. Start creating resources to see them here.
           </p>
           <Link
-            href="/contribute"
+            href="/editor"
             className={cn(
               'text-sm font-medium text-[var(--primary)]',
               'hover:underline underline-offset-2',
               'transition-colors'
             )}
           >
-            Go to Contribute →
+            Go to Contributor Workspace →
           </Link>
         </div>
       ) : (

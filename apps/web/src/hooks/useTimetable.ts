@@ -100,7 +100,7 @@ function toSnapshot(e: TimetableEvent): EventSnapshot {
     is_todo: e.is_todo,
     is_completed: e.is_completed,
     completed_at: e.completed_at,
-    reminder_minutes: e.reminder_minutes ?? null,
+    reminder_minutes: ((e.metadata as any)?.reminder_minutes as number) ?? null,
   };
 }
 

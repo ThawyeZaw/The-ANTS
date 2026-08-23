@@ -123,5 +123,17 @@ export function useCourseSync() {
     fetchResources();
   }, [user, ctxLoading, enrolledCurriculums, enrolledSubjectIds, ctxCountdowns]);
 
-  return { syncedCourses, isLoading };
+  const hasEnrollments = syncedCourses.length > 0;
+  const totalResources = syncedCourses.reduce((acc, course) => {
+    return (
+      acc +
+      course.subjects.reduce(
+        (subAcc, sub) =>
+          subAcc + sub.notes.length + sub.flashcards.length + sub.exams.length + sub.countdowns.length,
+        0
+      )
+    );
+  }, 0);
+
+  return { syncedCourses, isLoading, hasEnrollments, totalResources };
 }

@@ -2,9 +2,10 @@
 
 ## 1. Project Overview & Scope
 - **Application**: The ANTS — Curriculum-aware academic productivity platform for Myanmar students.
+- **Current Status**: **Fully Build-Ready & Stabilized**. All monorepo packages (`@the-ants/web`, `@the-ants/api`, `@the-ants/db`, `@the-ants/shared-types`) pass `npm run typecheck` and `npm run build` with **0 errors**.
 - **Current Objective**: **Frontend & UI/UX Design Iterations Only**. The backend database, server actions, and Cloudflare Worker API are stabilized and locked.
 - **Tech Stack (HONC Monorepo)**:
-  - **Frontend UI (`apps/web`)**: Next.js 16 (App Router), React 19, TypeScript 5, Tailwind CSS v4.
+  - **Frontend UI (`apps/web`)**: Next.js 16 (App Router with Turbopack), React 19, TypeScript 5, Tailwind CSS v4.
   - **API Backend (`apps/api`)**: Hono on Cloudflare Workers *(LOCKED — Do not modify)*.
   - **Database & ORM (`packages/db`)**: Neon Serverless Postgres with Drizzle ORM *(LOCKED — Do not modify)*.
   - **Shared Types (`packages/shared-types`)**: Shared interfaces and Zod schemas *(LOCKED — Do not modify)*.
@@ -15,8 +16,8 @@
 - `npm run dev` — Run all monorepo workspace packages via Turborepo.
 - `npm run dev:web` — Run Next.js web application on port `3005`.
 - `npm run dev:api` — Run Hono backend worker on port `8787`.
-- `npm run typecheck` — Verify TypeScript compiler with zero errors.
-- `npm run build` — Full monorepo production build.
+- `npm run typecheck` — Verify TypeScript compiler across all packages with zero errors.
+- `npm run build` — Full monorepo production build (Next.js Turbopack + Wrangler dry-run).
 
 ---
 
@@ -30,6 +31,7 @@
    - Clubs and Classrooms have been completely retired from The ANTS. Do not re-import, reference, or create pages for them.
 3. **Role Management Rules**:
    - Standard signups are assigned only as `student`.
+   - Valid User Roles: `'student' | 'tutor' | 'teacher' | 'contributor' | 'main_contributor' | 'admin'`.
    - Only `admin` accounts can upgrade or modify user roles (via the Admin Dashboard).
    - Self-service role upgrade requests in settings have been removed.
 
@@ -49,6 +51,18 @@ export default function MyComponent() {
 }
 ```
 
+### Core Frontend Hooks (`apps/web/src/hooks/`)
+- `useAuth()` — Authentication state, current user, login, register, logout, profile update.
+- `useRole()` — Granular role checks (`isStudent`, `isTutor`, `isContributor`, `isAdmin`).
+- `useTimetable()` — Timetable event CRUD, recurrence expansion, reminders.
+- `useNotes()` — Subject notes, markdown editor state, reviews, attachments.
+- `useFlashcardSRS()` — Spaced repetition system (SM-2 rating: Again/Hard/Good/Easy).
+- `useCurriculumDashboard()` — Enrolled subject selector, exam countdowns, notes & deck aggregation.
+- `useCourseManager()` — Curriculums, enrolled subjects, qualifications, syllabus codes.
+- `useCountdown()` — Custom & auto-calculated exam countdowns.
+- `useContributorManager()` — Contributor team management, invites, review queue.
+- `useNotifications()` — In-app and Telegram notification preferences & queue.
+
 ### Global Shell & Route Structure
 - **Public Routes (`apps/web/src/app/(public)/`)**:
   - `/explore` — Explore notes, tutors, and subjects.
@@ -66,10 +80,23 @@ export default function MyComponent() {
 
 ## 5. UI/UX Style & Design Tokens
 - **Client Directives**: Every interactive React component MUST start with `'use client'` as line 1.
-- **Design Tokens**: Exclusively use semantic Tailwind CSS variables (`bg-background`, `bg-background-card`, `text-foreground`, `text-foreground-muted`, `border-border`, `text-primary`, `bg-primary`, `focus-ring`).
+- **Design Tokens**: Exclusively use semantic Tailwind CSS variables:
+  - Backgrounds: `bg-background`, `bg-background-secondary`, `bg-background-card`
+  - Foregrounds: `text-foreground`, `text-foreground-secondary`, `text-foreground-muted`
+  - Borders: `border-border`, `border-border-hover`
+  - Accents: `bg-primary`, `text-primary`, `bg-primary/10`, `border-primary/20`
+  - Focus Ring: `focus-ring` / `focus-visible:ring-2 focus-visible:ring-primary`
 - **Icons**: Exclusively use `lucide-react`.
 - **Responsive Layout**: Ensure all toolbar buttons, grids, and header items include `flex-wrap` and mobile drawer navigation breakpoints.
-- **Zero TypeScript Errors**: Every change must pass `npx tsc --noEmit` cleanly without new diagnostics.
+- **Zero TypeScript Errors**: Every change must pass `npm run typecheck` (`npx tsc --noEmit`) cleanly without new diagnostics before committing.
 
 ---
 
+## 6. Profile & Public Identity Architecture
+- **Username & Name Synchronization**:
+  - `updateProfile()` in `AuthContext.tsx` updates `user.profile.username` and `user.profile.name` across local state and storage.
+  - Server actions `actionUpdateUsername` and `actionUpdateDisplayName` enforce uniqueness and persistence in Neon DB.
+- **Profile Privacy**:
+  - `profile.isPublic` (boolean) controls whether the user's public profile is publicly discoverable and viewable at `/profile/[username]`.
+  - When `isPublic: false`, non-owners receive a friendly private profile screen; the profile owner sees a private indicator banner with quick settings access.
+  - Users can toggle profile visibility anytime in `AdvancedProfileEditor.tsx` under the Basic Information sub-tab.

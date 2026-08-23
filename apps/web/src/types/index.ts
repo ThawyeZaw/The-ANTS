@@ -260,23 +260,31 @@ export const ROLE_METADATA: Record<UserRole, RoleMetadata> = {
   student: {
     key: 'student',
     displayName: 'Student',
-    description: 'Access all personal study tools — timetables, flashcards, pomodoro, grade calculators, and more. Join classrooms and clubs.',
+    description: 'Access all personal study tools — timetables, flashcards, pomodoro, grade calculators, and more.',
     icon: 'GraduationCap',
     color: 'text-blue-500',
     gradient: 'from-blue-500 to-cyan-400',
   },
-  teacher: {
-    key: 'teacher',
-    displayName: 'Teacher',
-    description: 'Everything students get, plus create & manage virtual classrooms, issue assignments, and monitor student progress.',
+  tutor: {
+    key: 'tutor',
+    displayName: 'Tutor',
+    description: 'Provide tutoring, offer study schedules and curriculum sessions for students.',
     icon: 'BookOpen',
     color: 'text-emerald-500',
     gradient: 'from-emerald-500 to-teal-400',
   },
+  teacher: {
+    key: 'teacher',
+    displayName: 'Teacher',
+    description: 'Academic resources, study guides, and curriculum materials for learners.',
+    icon: 'BookOpen',
+    color: 'text-teal-500',
+    gradient: 'from-teal-500 to-emerald-400',
+  },
   contributor: {
     key: 'contributor',
     displayName: 'Contributor',
-    description: 'Build and maintain global curriculum templates, create notes, lead clubs, and get a public contributor profile.',
+    description: 'Build and maintain global curriculum templates, create notes, and get a public contributor profile.',
     icon: 'Pencil',
     color: 'text-violet-500',
     gradient: 'from-violet-500 to-purple-400',
@@ -284,15 +292,23 @@ export const ROLE_METADATA: Record<UserRole, RoleMetadata> = {
   main_contributor: {
     key: 'main_contributor',
     displayName: 'Main Contributor',
-    description: 'Senior gatekeeper — review, approve, or reject contributor submissions before they go public. Full platform access.',
+    description: 'Senior gatekeeper — review, approve, or reject contributor submissions before they go public.',
     icon: 'Shield',
     color: 'text-amber-500',
     gradient: 'from-amber-500 to-orange-400',
   },
+  admin: {
+    key: 'admin',
+    displayName: 'Admin',
+    description: 'Platform administrator with full governance, role management, and system administration privileges.',
+    icon: 'ShieldAlert',
+    color: 'text-rose-500',
+    gradient: 'from-rose-500 to-red-400',
+  },
 };
 
 /** All role keys as an array */
-export const ALL_ROLES: UserRole[] = ['student', 'teacher', 'contributor', 'main_contributor'];
+export const ALL_ROLES: UserRole[] = ['student', 'tutor', 'teacher', 'contributor', 'main_contributor', 'admin'];
 
 /** Feature card metadata for the home page and landing pages */
 export interface FeatureCard {

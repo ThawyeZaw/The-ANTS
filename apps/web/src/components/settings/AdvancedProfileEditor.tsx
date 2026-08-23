@@ -32,6 +32,7 @@ import {
   AlertCircle,
   GraduationCap,
   Sparkles,
+  Lock,
 } from 'lucide-react';
 import {
   Profile,
@@ -179,23 +180,37 @@ export default function AdvancedProfileEditor() {
     setSaveSuccess(false);
 
     try {
+      const cleanUsername = usernameInput.trim().toLowerCase();
+      let finalUsername = user.profile.username;
+
       // 1. Update username if changed
-      if (usernameInput && usernameInput.toLowerCase() !== user.profile.username.toLowerCase()) {
-        const usernameRes = await actionUpdateUsername(user.id, usernameInput);
+      if (cleanUsername && cleanUsername !== user.profile.username.toLowerCase()) {
+        const usernameRes = await actionUpdateUsername(user.id, cleanUsername);
         if (!usernameRes.success) {
           setUsernameError(usernameRes.error || 'Failed to update username');
           setIsSaving(false);
           return;
         }
+        finalUsername = cleanUsername;
       }
 
       // 2. Update display name if changed
-      if (formData.name && formData.name !== user.profile.name) {
-        await actionUpdateDisplayName(user.id, formData.name);
+      const cleanName = (formData.name || '').trim();
+      if (cleanName && cleanName !== user.profile.name) {
+        await actionUpdateDisplayName(user.id, cleanName);
       }
 
       // 3. Update profile fields in context/db
-      await updateProfile(formData);
+      await updateProfile({
+        ...formData,
+        name: cleanName || user.profile.name,
+        username: finalUsername,
+        isPublic: formData.isPublic !== false,
+      });
+
+      setUsernameInput(finalUsername);
+      setUsernameStatus('idle');
+      setUsernameError(null);
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } finally {
@@ -217,7 +232,7 @@ export default function AdvancedProfileEditor() {
     setAvatarUploading(true);
     setAvatarUploadError(null);
 
-    const result = await uploadAvatar(file);
+    const result = await uploadAvatar(file, user?.id || 'user');
     setAvatarUploading(false);
 
     if (result.success && result.url) {
@@ -278,6 +293,37 @@ export default function AdvancedProfileEditor() {
         { id: `grd_${Date.now()}`, title: '', description: '', fileUrl: '', order: prev.academicGrades?.length || 0 },
       ],
     }));
+  };
+
+  const handleAddCert = (data: {
+    type: string;
+    subject?: string | null;
+    exam_board?: string | null;
+    grade?: string | null;
+    year?: number | null;
+  }) => {
+    const newCert: Certification = {
+      id: `cert_${Date.now()}`,
+      type: data.type,
+      subject: data.subject || null,
+      exam_board: data.exam_board || null,
+      grade: data.grade || null,
+      year: data.year || null,
+      is_verified: false,
+      is_hidden: false,
+    };
+    setCerts((prev) => [...prev, newCert]);
+    return { success: true };
+  };
+
+  const handleUpdateCert = (certId: string, updates: Record<string, unknown>) => {
+    setCerts((prev) => prev.map((c) => (c.id === certId ? { ...c, ...updates } : c)));
+    return { success: true };
+  };
+
+  const handleDeleteCert = (certId: string) => {
+    setCerts((prev) => prev.filter((c) => c.id !== certId));
+    return { success: true };
   };
 
   const updateItem = (category: keyof Profile, index: number, field: string, value: any) => {
@@ -491,6 +537,59 @@ export default function AdvancedProfileEditor() {
                       </p>
                     )}
                   </div>
+                </div>
+
+                {/* Profile Privacy / Visibility Toggle */}
+                <div className="p-4 rounded-2xl bg-background-secondary/60 border border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-start sm:items-center gap-3">
+                    <div className={cn(
+                      'w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border transition-all',
+                      formData.isPublic !== false
+                        ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500'
+                        : 'bg-amber-500/10 border-amber-500/20 text-amber-500'
+                    )}>
+                      {formData.isPublic !== false ? (
+                        <Globe className="w-5 h-5" />
+                      ) : (
+                        <Lock className="w-5 h-5" />
+                      )}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-xs font-bold text-foreground">Profile Visibility</h3>
+                        <span className={cn(
+                          'px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider',
+                          formData.isPublic !== false
+                            ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                            : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                        )}>
+                          {formData.isPublic !== false ? 'Public Profile' : 'Private Profile'}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-foreground-muted mt-0.5">
+                        {formData.isPublic !== false
+                          ? 'Your profile is public. It can be found in explore directories and viewed at your profile URL.'
+                          : 'Your profile is private. Only you can view it when signed in. External visitors see a private profile message.'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setFormData((p) => ({ ...p, isPublic: p.isPublic === false ? true : false }))}
+                    className={cn(
+                      'relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none self-end sm:self-center',
+                      formData.isPublic !== false ? 'bg-emerald-500' : 'bg-zinc-600'
+                    )}
+                    aria-label="Toggle profile visibility"
+                  >
+                    <span
+                      className={cn(
+                        'pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out',
+                        formData.isPublic !== false ? 'translate-x-5' : 'translate-x-0'
+                      )}
+                    />
+                  </button>
                 </div>
 
                 {/* Form Fields */}
@@ -779,7 +878,12 @@ export default function AdvancedProfileEditor() {
             {/* Certifications */}
             {activeSubTab === 'certifications' && (
               <div className="space-y-5 animate-fade-in">
-                <CertificationEditor />
+                <CertificationEditor
+                  certifications={certs}
+                  onAdd={handleAddCert}
+                  onUpdate={handleUpdateCert}
+                  onDelete={handleDeleteCert}
+                />
               </div>
             )}
 
