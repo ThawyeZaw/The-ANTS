@@ -152,7 +152,7 @@ const DashboardLayout = React.memo(function DashboardLayout({
                     </div>
                     <div className="hidden sm:flex items-center justify-center shrink-0">
                       <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white/15 border border-white/20 flex items-center justify-center">
-                        <Image src="/logo.png" alt="The ANTs logo" width={40} height={40} className="md:w-[52px] md:h-[52px]" />
+                        <Image src="/logo.png" alt="The ANTs logo" width={40} height={40} priority className="md:w-[52px] md:h-[52px]" />
                       </div>
                     </div>
                   </div>
@@ -222,7 +222,7 @@ const DashboardLayout = React.memo(function DashboardLayout({
           </div>
           <div className="hidden sm:flex items-center justify-center shrink-0">
             <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white/15 border border-white/20 flex items-center justify-center">
-              <Image src="/logo.png" alt="The ANTs logo" width={40} height={40} className="md:w-[52px] md:h-[52px]" />
+              <Image src="/logo.png" alt="The ANTs logo" width={40} height={40} priority className="md:w-[52px] md:h-[52px]" />
             </div>
           </div>
         </div>

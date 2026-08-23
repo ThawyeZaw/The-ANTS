@@ -34,7 +34,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-4 animate-pulse-soft">
-          <Image src="/logo.png" alt="The ANTs logo" width={40} height={40} />
+          <Image src="/logo.png" alt="The ANTs logo" width={40} height={40} priority />
           <p className="text-sm text-foreground-muted">Loading...</p>
         </div>
       </div>
