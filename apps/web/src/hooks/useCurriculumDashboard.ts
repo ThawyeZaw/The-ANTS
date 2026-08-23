@@ -113,10 +113,10 @@ export function useCurriculumDashboard() {
                   list.push({
                     enrollmentId: item.id,
                     subjectId: s.id,
-                    subjectTitle: s.title,
+                    subjectTitle: s.title || s.name || '',
                     curriculumId: c.id,
-                    curriculumTitle: c.title,
-                    examBoard: c.exam_board ?? null,
+                    curriculumTitle: c.title || c.name || '',
+                    examBoard: c.exam_board ?? c.code ?? null,
                   });
                 }
               }

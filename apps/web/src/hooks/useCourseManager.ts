@@ -86,10 +86,10 @@ export function useCourseManager() {
           for (const c of json.curriculums) {
             curriculumsList.push({
               id: c.id,
-              title: c.title,
+              title: c.title || c.name || '',
               description: c.description ?? null,
               qualification: c.qualification ?? null,
-              exam_board: c.exam_board ?? null,
+              exam_board: c.exam_board ?? c.code ?? null,
               subject_count: c.subjects?.length ?? 0,
             });
 
@@ -98,9 +98,9 @@ export function useCourseManager() {
                 subjectsList.push({
                   id: s.id,
                   curriculum_id: c.id,
-                  title: s.title,
+                  title: s.title || s.name || '',
                   description: s.description ?? null,
-                  order_no: s.order_no ?? null,
+                  order_no: s.order_no ?? s.order_index ?? null,
                   topics: s.topics || [],
                   exams: [],
                 });

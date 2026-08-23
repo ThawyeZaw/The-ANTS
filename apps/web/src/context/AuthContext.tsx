@@ -14,6 +14,7 @@ import {
 } from 'react';
 import { AuthUser, Profile, UserRole, type OnboardingCurriculumSelection } from '@/types';
 import { authClient } from '@/lib/auth-client';
+import { actionUpdateProfile } from '@/actions/profile';
 
 const AUTH_CACHE_KEY = 'the_ants_auth_user';
 const ACTIVE_ROLE_CACHE_KEY = 'the_ants_active_role';
@@ -139,6 +140,7 @@ interface AuthContextValue {
         | 'projects'
         | 'activities'
         | 'achievements'
+        | 'academicGrades'
         | 'pinnedItemId'
         | 'sectionVisibility'
         | 'sectionOrder'
@@ -401,6 +403,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           | 'projects'
           | 'activities'
           | 'achievements'
+          | 'academicGrades'
           | 'pinnedItemId'
           | 'sectionVisibility'
           | 'sectionOrder'
@@ -441,16 +444,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        await fetch(`${API_BASE_URL}/api/profile/me`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            userId: user.id,
-            ...data,
+        await Promise.allSettled([
+          actionUpdateProfile(user.id, data),
+          fetch(`${API_BASE_URL}/api/profile/me`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              userId: user.id,
+              ...data,
+            }),
           }),
-        });
-      } catch {}
+        ]);
+      } catch (err) {
+        console.warn('[updateProfile] Sync failed:', err);
+      }
 
       return { success: true };
     },

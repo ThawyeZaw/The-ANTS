@@ -117,6 +117,51 @@ export async function actionGetFullProfile(username: string): Promise<FullProfil
         ? (profileRow.roles as UserRole[])
         : [(profileRow.role ?? 'student') as UserRole];
 
+    const isTutor = userRoles.includes('tutor') || userRoles.includes('teacher');
+    const isContributor = userRoles.includes('contributor') || userRoles.includes('admin') || userRoles.includes('main_contributor');
+
+    const [userCerts, userTutorProfile, userContribProfile, submissions] = await Promise.all([
+      db.query.certifications
+        .findMany({
+          where: eq(certifications.user_id, profileRow.id as any),
+        })
+        .catch((err) => {
+          console.warn('[actionGetFullProfile] certifications query skipped/failed:', err?.message || err);
+          return [];
+        }),
+      db.query.tutorProfiles
+        .findFirst({
+          where: eq(tutorProfiles.id, profileRow.id as any),
+        })
+        .catch((err) => {
+          console.warn('[actionGetFullProfile] tutorProfiles query skipped/failed:', err?.message || err);
+          return null;
+        }),
+      db.query.contributorProfiles
+        .findFirst({
+          where: eq(contributorProfiles.id, profileRow.id as any),
+        })
+        .catch((err) => {
+          console.warn('[actionGetFullProfile] contributorProfiles query skipped/failed:', err?.message || err);
+          return null;
+        }),
+      isContributor
+        ? db.query.reviewQueue
+            .findMany({
+              where: and(
+                eq(reviewQueue.contributor_id, profileRow.id as any),
+                eq(reviewQueue.status, 'approved')
+              ),
+              orderBy: [desc(reviewQueue.reviewed_at)],
+              limit: 20,
+            })
+            .catch((err) => {
+              console.warn('[actionGetFullProfile] reviewQueue query skipped/failed:', err?.message || err);
+              return [];
+            })
+        : Promise.resolve([]),
+    ]);
+
     const profile: Profile = {
       id: profileRow.id,
       email: profileRow.email ?? '',
@@ -135,56 +180,15 @@ export async function actionGetFullProfile(username: string): Promise<FullProfil
       projects: profileRow.projects as unknown as Profile['projects'],
       activities: profileRow.activities as unknown as Profile['activities'],
       achievements: profileRow.achievements as unknown as Profile['achievements'],
+      timezone: profileRow.timezone ?? undefined,
       certificationIds: (profileRow.certification_ids as string[]) ?? undefined,
-      telegramChatId: (profileRow as any).telegram_chat_id ?? undefined,
+      telegramHandle: userTutorProfile?.telegram_handle || undefined,
+      hourlyRate: userTutorProfile?.hourly_rate || undefined,
+      teachingCurriculums: (userTutorProfile?.teaching_curriculums as string[]) || undefined,
+      teachingSubjects: (userTutorProfile?.teaching_subjects as string[]) || undefined,
+      institutionName: userTutorProfile?.institution || undefined,
       createdAt: profileRow.created_at?.toISOString() ?? '',
     };
-
-    const isTutor = userRoles.includes('tutor') || userRoles.includes('teacher');
-    const isContributor = userRoles.includes('contributor') || userRoles.includes('admin') || userRoles.includes('main_contributor');
-
-    const [userCerts, userTutorProfile, userContribProfile, submissions] = await Promise.all([
-      db.query.certifications
-        .findMany({
-          where: eq(certifications.user_id, profile.id as any),
-        })
-        .catch((err) => {
-          console.warn('[actionGetFullProfile] certifications query skipped/failed:', err?.message || err);
-          return [];
-        }),
-      isTutor
-        ? db.query.tutorProfiles
-            .findFirst({
-              where: eq(tutorProfiles.id, profile.id as any),
-            })
-            .catch(() => null)
-        : Promise.resolve(null),
-      isContributor
-        ? db.query.contributorProfiles
-            .findFirst({
-              where: eq(contributorProfiles.id, profile.id as any),
-            })
-            .catch((err) => {
-              console.warn('[actionGetFullProfile] contributorProfiles query skipped/failed:', err?.message || err);
-              return null;
-            })
-        : Promise.resolve(null),
-      isContributor
-        ? db.query.reviewQueue
-            .findMany({
-              where: and(
-                eq(reviewQueue.contributor_id, profile.id as any),
-                eq(reviewQueue.status, 'approved')
-              ),
-              orderBy: [desc(reviewQueue.reviewed_at)],
-              limit: 20,
-            })
-            .catch((err) => {
-              console.warn('[actionGetFullProfile] reviewQueue query skipped/failed:', err?.message || err);
-              return [];
-            })
-        : Promise.resolve([]),
-    ]);
 
     let contributorData: ContributorProfileData | null = null;
     let stats: ContributorStatsData | null = null;
@@ -275,29 +279,366 @@ export async function actionUpdateTutorProfile(
   try {
     const db = getDb();
 
-    // Check if tutor profile row already exists
-    const existing = await db.query.tutorProfiles
+    // 1. Guarantee parent profiles row exists for foreign key constraint
+    const existingProfile = await db.query.profiles
       .findFirst({
-        where: eq(tutorProfiles.id, userId as any),
+        where: eq(profiles.id, userId as any),
       })
       .catch(() => null);
 
-    if (existing) {
-      await db
-        .update(tutorProfiles)
-        .set(data)
-        .where(eq(tutorProfiles.id, userId as any));
-    } else {
-      await db.insert(tutorProfiles).values({
+    if (!existingProfile) {
+      const authUser = await db.query.user
+        .findFirst({
+          where: eq(user.id, userId),
+        })
+        .catch(() => null);
+
+      if (authUser) {
+        const baseUsername = (authUser.name || authUser.email.split('@')[0])
+          .toLowerCase()
+          .replace(/[^a-z0-9_]/g, '_');
+        await db
+          .insert(profiles)
+          .values({
+            id: authUser.id as any,
+            email: authUser.email,
+            name: authUser.name || 'User',
+            username: `${baseUsername}_${Math.random().toString(36).substring(2, 6)}`,
+            avatar_url: authUser.image,
+            role: 'student',
+            roles: ['student'],
+          })
+          .onConflictDoNothing();
+      }
+    }
+
+    // 2. Perform atomic UPSERT for tutor profile
+    const insertPayload = {
+      id: userId as any,
+      institution: data.institution || null,
+      department: data.department || null,
+      specialization: data.specialization || null,
+      telegram_handle: data.telegram_handle ? data.telegram_handle.replace('@', '').trim() : null,
+      hourly_rate: data.hourly_rate || null,
+      teaching_curriculums: Array.isArray(data.teaching_curriculums) ? data.teaching_curriculums : [],
+      teaching_subjects: Array.isArray(data.teaching_subjects) ? data.teaching_subjects : [],
+      availability_slots: data.availability_slots || {},
+      is_active: data.is_active !== undefined ? data.is_active : true,
+    };
+
+    await db
+      .insert(tutorProfiles)
+      .values(insertPayload)
+      .onConflictDoUpdate({
+        target: tutorProfiles.id,
+        set: {
+          institution: insertPayload.institution,
+          department: insertPayload.department,
+          specialization: insertPayload.specialization,
+          telegram_handle: insertPayload.telegram_handle,
+          hourly_rate: insertPayload.hourly_rate,
+          teaching_curriculums: insertPayload.teaching_curriculums,
+          teaching_subjects: insertPayload.teaching_subjects,
+          availability_slots: insertPayload.availability_slots,
+          is_active: insertPayload.is_active,
+        },
+      });
+
+    return { success: true };
+  } catch (err: any) {
+    // Attempt automatic schema healing and retry once
+    try {
+      const { neon } = await import('@neondatabase/serverless');
+      const dbUrl = (
+        process.env.NEON_DATABASE_URL ||
+        process.env.DATABASE_URL ||
+        ''
+      ).replace(/[&?]channel_binding=[^&]+/g, '').trim();
+
+      if (dbUrl) {
+        const sql = neon(dbUrl);
+        await sql`
+          CREATE TABLE IF NOT EXISTS "tutor_profiles" (
+            "id" uuid PRIMARY KEY REFERENCES "profiles"("id") ON DELETE CASCADE,
+            "institution" text,
+            "department" text,
+            "specialization" text,
+            "telegram_handle" text,
+            "hourly_rate" text,
+            "teaching_curriculums" text[],
+            "teaching_subjects" text[],
+            "availability_slots" jsonb,
+            "is_active" boolean DEFAULT true,
+            "verified" boolean DEFAULT false
+          );
+        `;
+        await sql`ALTER TABLE "tutor_profiles" ADD COLUMN IF NOT EXISTS "institution" text;`;
+        await sql`ALTER TABLE "tutor_profiles" ADD COLUMN IF NOT EXISTS "department" text;`;
+        await sql`ALTER TABLE "tutor_profiles" ADD COLUMN IF NOT EXISTS "specialization" text;`;
+        await sql`ALTER TABLE "tutor_profiles" ADD COLUMN IF NOT EXISTS "telegram_handle" text;`;
+        await sql`ALTER TABLE "tutor_profiles" ADD COLUMN IF NOT EXISTS "hourly_rate" text;`;
+        await sql`ALTER TABLE "tutor_profiles" ADD COLUMN IF NOT EXISTS "teaching_curriculums" text[];`;
+        await sql`ALTER TABLE "tutor_profiles" ADD COLUMN IF NOT EXISTS "teaching_subjects" text[];`;
+        await sql`ALTER TABLE "tutor_profiles" ADD COLUMN IF NOT EXISTS "availability_slots" jsonb;`;
+        await sql`ALTER TABLE "tutor_profiles" ADD COLUMN IF NOT EXISTS "is_active" boolean DEFAULT true;`;
+        await sql`ALTER TABLE "tutor_profiles" ADD COLUMN IF NOT EXISTS "verified" boolean DEFAULT false;`;
+      }
+
+      const retryDb = getDb();
+      const insertPayload = {
         id: userId as any,
-        ...data,
+        institution: data.institution || null,
+        department: data.department || null,
+        specialization: data.specialization || null,
+        telegram_handle: data.telegram_handle ? data.telegram_handle.replace('@', '').trim() : null,
+        hourly_rate: data.hourly_rate || null,
+        teaching_curriculums: Array.isArray(data.teaching_curriculums) ? data.teaching_curriculums : [],
+        teaching_subjects: Array.isArray(data.teaching_subjects) ? data.teaching_subjects : [],
+        availability_slots: data.availability_slots || {},
+        is_active: data.is_active !== undefined ? data.is_active : true,
+      };
+
+      await retryDb
+        .insert(tutorProfiles)
+        .values(insertPayload)
+        .onConflictDoUpdate({
+          target: tutorProfiles.id,
+          set: {
+            institution: insertPayload.institution,
+            department: insertPayload.department,
+            specialization: insertPayload.specialization,
+            telegram_handle: insertPayload.telegram_handle,
+            hourly_rate: insertPayload.hourly_rate,
+            teaching_curriculums: insertPayload.teaching_curriculums,
+            teaching_subjects: insertPayload.teaching_subjects,
+            availability_slots: insertPayload.availability_slots,
+            is_active: insertPayload.is_active,
+          },
+        });
+
+      return { success: true };
+    } catch (retryErr: any) {
+      console.error('[actionUpdateTutorProfile] Retry failed:', retryErr);
+      return { success: false, error: retryErr.message || 'Failed to update tutor profile' };
+    }
+  }
+}
+
+export async function actionUpdateProfile(
+  userId: string,
+  data: Partial<Profile>
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const db = getDb();
+
+    // 1. Ensure parent profiles row exists
+    const existingProfile = await db.query.profiles
+      .findFirst({
+        where: eq(profiles.id, userId as any),
+      })
+      .catch(() => null);
+
+    if (!existingProfile) {
+      const authUser = await db.query.user
+        .findFirst({
+          where: eq(user.id, userId),
+        })
+        .catch(() => null);
+
+      if (authUser) {
+        const baseUsername = (authUser.name || authUser.email.split('@')[0])
+          .toLowerCase()
+          .replace(/[^a-z0-9_]/g, '_');
+        await db
+          .insert(profiles)
+          .values({
+            id: authUser.id as any,
+            email: authUser.email,
+            name: authUser.name || 'User',
+            username: `${baseUsername}_${Math.random().toString(36).substring(2, 6)}`,
+            avatar_url: authUser.image,
+            role: 'student',
+            roles: ['student'],
+          })
+          .onConflictDoNothing();
+      }
+    }
+
+    const setPayload: Record<string, any> = {
+      updated_at: new Date(),
+    };
+
+    if (data.name !== undefined) setPayload.name = data.name;
+    if (data.title !== undefined) setPayload.title = data.title;
+    if (data.bio !== undefined) setPayload.bio = data.bio;
+    if (data.avatar !== undefined) setPayload.avatar_url = data.avatar;
+    if (data.isPublic !== undefined) setPayload.is_public = data.isPublic;
+    if (data.socialLinks !== undefined) setPayload.social_links = data.socialLinks;
+    if (data.projects !== undefined) setPayload.projects = data.projects;
+    if (data.activities !== undefined) setPayload.activities = data.activities;
+    if (data.achievements !== undefined) setPayload.achievements = data.achievements;
+    if (data.pinnedItemId !== undefined) setPayload.pinned_item_id = data.pinnedItemId;
+    if (data.sectionVisibility !== undefined) setPayload.section_visibility = data.sectionVisibility;
+    if (data.timezone !== undefined) setPayload.timezone = data.timezone;
+    if (data.customUrlSlug !== undefined) setPayload.custom_url_slug = data.customUrlSlug;
+
+    await db
+      .update(profiles)
+      .set(setPayload)
+      .where(eq(profiles.id, userId as any));
+
+    // 2. If tutor fields are passed, synchronize tutor_profiles
+    const cleanTelegram = data.telegramHandle
+      ? data.telegramHandle.replace('@', '').trim()
+      : (data as any).telegram_handle
+      ? String((data as any).telegram_handle).replace('@', '').trim()
+      : undefined;
+
+    if (
+      cleanTelegram !== undefined ||
+      data.hourlyRate !== undefined ||
+      data.teachingCurriculums !== undefined ||
+      data.teachingSubjects !== undefined ||
+      data.institutionName !== undefined
+    ) {
+      await actionUpdateTutorProfile(userId, {
+        ...(cleanTelegram !== undefined ? { telegram_handle: cleanTelegram } : {}),
+        ...(data.hourlyRate !== undefined ? { hourly_rate: data.hourlyRate } : {}),
+        ...(data.teachingCurriculums !== undefined ? { teaching_curriculums: data.teachingCurriculums } : {}),
+        ...(data.teachingSubjects !== undefined ? { teaching_subjects: data.teachingSubjects } : {}),
+        ...(data.institutionName !== undefined ? { institution: data.institutionName } : {}),
       });
     }
 
     return { success: true };
   } catch (err: any) {
-    console.error('[actionUpdateTutorProfile]', err);
-    return { success: false, error: err.message || 'Failed to update tutor profile' };
+    console.error('[actionUpdateProfile]', err);
+    return { success: false, error: err.message || 'Failed to update profile' };
+  }
+}
+
+export async function actionUpdateContributorProfile(
+  userId: string,
+  data: {
+    website_url?: string;
+    linkedin_url?: string;
+    github_url?: string;
+    contributor_level?: string;
+  }
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const db = getDb();
+
+    // 1. Guarantee parent profiles row exists
+    const existingProfile = await db.query.profiles
+      .findFirst({
+        where: eq(profiles.id, userId as any),
+      })
+      .catch(() => null);
+
+    if (!existingProfile) {
+      const authUser = await db.query.user
+        .findFirst({
+          where: eq(user.id, userId),
+        })
+        .catch(() => null);
+
+      if (authUser) {
+        const baseUsername = (authUser.name || authUser.email.split('@')[0])
+          .toLowerCase()
+          .replace(/[^a-z0-9_]/g, '_');
+        await db
+          .insert(profiles)
+          .values({
+            id: authUser.id as any,
+            email: authUser.email,
+            name: authUser.name || 'User',
+            username: `${baseUsername}_${Math.random().toString(36).substring(2, 6)}`,
+            avatar_url: authUser.image,
+            role: 'student',
+            roles: ['student'],
+          })
+          .onConflictDoNothing();
+      }
+    }
+
+    // 2. Perform atomic UPSERT for contributor profile
+    const insertPayload = {
+      id: userId as any,
+      website_url: data.website_url || null,
+      linkedin_url: data.linkedin_url || null,
+      github_url: data.github_url || null,
+      contributor_level: data.contributor_level || 'contributor',
+    };
+
+    await db
+      .insert(contributorProfiles)
+      .values(insertPayload)
+      .onConflictDoUpdate({
+        target: contributorProfiles.id,
+        set: {
+          website_url: insertPayload.website_url,
+          linkedin_url: insertPayload.linkedin_url,
+          github_url: insertPayload.github_url,
+          contributor_level: insertPayload.contributor_level,
+        },
+      });
+
+    return { success: true };
+  } catch (err: any) {
+    // Attempt automatic schema healing and retry once
+    try {
+      const { neon } = await import('@neondatabase/serverless');
+      const dbUrl = (
+        process.env.NEON_DATABASE_URL ||
+        process.env.DATABASE_URL ||
+        ''
+      ).replace(/[&?]channel_binding=[^&]+/g, '').trim();
+
+      if (dbUrl) {
+        const sql = neon(dbUrl);
+        await sql`
+          CREATE TABLE IF NOT EXISTS "contributor_profiles" (
+            "id" uuid PRIMARY KEY REFERENCES "profiles"("id") ON DELETE CASCADE,
+            "website_url" text,
+            "linkedin_url" text,
+            "github_url" text,
+            "contributor_level" text DEFAULT 'contributor'
+          );
+        `;
+        await sql`ALTER TABLE "contributor_profiles" ADD COLUMN IF NOT EXISTS "website_url" text;`;
+        await sql`ALTER TABLE "contributor_profiles" ADD COLUMN IF NOT EXISTS "linkedin_url" text;`;
+        await sql`ALTER TABLE "contributor_profiles" ADD COLUMN IF NOT EXISTS "github_url" text;`;
+        await sql`ALTER TABLE "contributor_profiles" ADD COLUMN IF NOT EXISTS "contributor_level" text DEFAULT 'contributor';`;
+      }
+
+      const retryDb = getDb();
+      const insertPayload = {
+        id: userId as any,
+        website_url: data.website_url || null,
+        linkedin_url: data.linkedin_url || null,
+        github_url: data.github_url || null,
+        contributor_level: data.contributor_level || 'contributor',
+      };
+
+      await retryDb
+        .insert(contributorProfiles)
+        .values(insertPayload)
+        .onConflictDoUpdate({
+          target: contributorProfiles.id,
+          set: {
+            website_url: insertPayload.website_url,
+            linkedin_url: insertPayload.linkedin_url,
+            github_url: insertPayload.github_url,
+            contributor_level: insertPayload.contributor_level,
+          },
+        });
+
+      return { success: true };
+    } catch (retryErr: any) {
+      console.error('[actionUpdateContributorProfile] Retry failed:', retryErr);
+      return { success: false, error: retryErr.message || 'Failed to update contributor profile' };
+    }
   }
 }
 

@@ -58,8 +58,47 @@ export async function ensureTutorProfilesTable(connectionString?: string) {
   }
 }
 
-if (require.main === module || (typeof process !== 'undefined' && process.argv[1]?.includes('ensure-tutor-table'))) {
-  ensureTutorProfilesTable()
+export async function ensureContributorProfilesTable(connectionString?: string) {
+  const dbUrl = (
+    connectionString ||
+    process.env.DATABASE_URL ||
+    process.env.NEON_DATABASE_URL ||
+    process.env.DIRECT_URL ||
+    ''
+  ).replace(/[&?]channel_binding=[^&]+/g, '').trim();
+
+  if (!dbUrl) return;
+
+  try {
+    const sql = neon(dbUrl);
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS "contributor_profiles" (
+        "id" uuid PRIMARY KEY REFERENCES "profiles"("id") ON DELETE CASCADE,
+        "website_url" text,
+        "linkedin_url" text,
+        "github_url" text,
+        "contributor_level" text DEFAULT 'contributor'
+      );
+    `;
+
+    await sql`ALTER TABLE "contributor_profiles" ADD COLUMN IF NOT EXISTS "website_url" text;`;
+    await sql`ALTER TABLE "contributor_profiles" ADD COLUMN IF NOT EXISTS "linkedin_url" text;`;
+    await sql`ALTER TABLE "contributor_profiles" ADD COLUMN IF NOT EXISTS "github_url" text;`;
+    await sql`ALTER TABLE "contributor_profiles" ADD COLUMN IF NOT EXISTS "contributor_level" text DEFAULT 'contributor';`;
+
+    console.log('✓ Successfully ensured "contributor_profiles" table schema in Neon PostgreSQL.');
+  } catch (err: any) {
+    console.error('[ensureContributorProfilesTable] Error ensuring table:', err?.message || err);
+  }
+}
+
+if (
+  typeof require !== 'undefined' &&
+  typeof module !== 'undefined' &&
+  (require.main === module || (typeof process !== 'undefined' && process.argv?.[1]?.includes('ensure-tutor-table')))
+) {
+  Promise.all([ensureTutorProfilesTable(), ensureContributorProfilesTable()])
     .then(() => process.exit(0))
     .catch((err) => {
       console.error(err);

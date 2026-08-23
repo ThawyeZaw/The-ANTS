@@ -7,7 +7,7 @@ export default function ExamsRedirect() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/resources');
+    router.replace('/library?tab=exams');
   }, [router]);
 
   return null;

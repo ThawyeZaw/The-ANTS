@@ -177,7 +177,7 @@ function QuizzesTab({ userId, isLoading }: { userId: string; isLoading: boolean 
           />
         </div>
         <Link
-          href="/classrooms"
+          href="/quizzes"
           className="flex items-center gap-1.5 text-xs font-semibold text-[var(--primary)] hover:underline shrink-0"
         >
           <Plus size={12} /> New Quiz

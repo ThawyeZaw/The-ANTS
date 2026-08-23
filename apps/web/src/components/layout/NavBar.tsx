@@ -166,16 +166,21 @@ export default function NavBar() {
   const { user, isAuthenticated, logout } = useAuth();
   const { isTutor, isContributor, isAdmin } = useRole();
 
+  const [mounted, setMounted] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<'library' | 'tools' | 'explore' | 'role' | 'user' | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Close dropdown on outside click
+
   // Close dropdown on outside click
   useEffect(() => {
-    if (!isUserMenuOpen && !isLibraryOpen && !isToolsOpen && !isCommunityOpen && !isAdminOpen) {
-      return;
-    }
+    if (!openDropdown) return;
 
     function handleClickOutside(e: MouseEvent) {
       if (navRef.current && !navRef.current.contains(e.target as Node)) {
@@ -184,7 +189,7 @@ export default function NavBar() {
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isUserMenuOpen, isLibraryOpen, isToolsOpen, isCommunityOpen, isAdminOpen]);
+  }, [openDropdown]);
 
   // Close on route change
   useEffect(() => {
@@ -209,7 +214,7 @@ export default function NavBar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4">
         {/* Brand Logo */}
         <div className="flex items-center gap-3 sm:gap-6 shrink-0">
-          <Link href={isAuthenticated ? '/dashboard' : '/'} className="flex items-center gap-2.5 group">
+          <Link href={mounted && isAuthenticated ? '/dashboard' : '/'} className="flex items-center gap-2.5 group">
             <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center text-white font-bold text-sm shadow-md group-hover:scale-105 transition-transform">
               🐜
             </div>
@@ -413,7 +418,7 @@ export default function NavBar() {
             </div>
 
             {/* Role-Specific Portal Button (if user is Tutor, Contributor, or Admin) */}
-            {hasStaffRole && (
+            {mounted && hasStaffRole && (
               <div className="relative">
                 <button
                   type="button"
@@ -499,7 +504,7 @@ export default function NavBar() {
 
         {/* Right Controls & User Account Menu */}
         <div className="flex items-center gap-2">
-          {isAuthenticated && user ? (
+          {mounted && isAuthenticated && user ? (
             <div className="relative">
               <button
                 type="button"
@@ -662,7 +667,7 @@ export default function NavBar() {
             </div>
           </div>
 
-          {hasStaffRole && (
+          {mounted && hasStaffRole && (
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-foreground-muted mb-2">
                 Staff Portals

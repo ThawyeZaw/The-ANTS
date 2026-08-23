@@ -34,7 +34,7 @@ import TutorWeeklySchedule, {
   DAYS_OF_WEEK,
   TIME_SLOTS,
 } from '@/components/profile/TutorWeeklySchedule';
-import { actionGetFullProfile, actionUpdateTutorProfile } from '@/actions/profile';
+import { actionGetFullProfile, actionUpdateTutorProfile, actionUpdateContributorProfile } from '@/actions/profile';
 import { cn } from '@/lib/utils';
 
 const POPULAR_SUBJECTS = [
@@ -211,6 +211,13 @@ export default function TutorContributorEditor() {
       if (!res.success) {
         setError(res.error || 'Failed to save tutor profile');
       } else {
+        if (isContributor || isAdmin || websiteUrl || githubUrl || linkedinUrl) {
+          await actionUpdateContributorProfile(user.id, {
+            website_url: websiteUrl.trim(),
+            github_url: githubUrl.trim(),
+            linkedin_url: linkedinUrl.trim(),
+          });
+        }
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 3000);
       }

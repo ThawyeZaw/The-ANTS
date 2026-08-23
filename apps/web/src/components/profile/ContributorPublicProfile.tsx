@@ -21,6 +21,7 @@ import {
   Camera,
   Music2,
   Link2,
+  Send,
 } from 'lucide-react';
 import type { Note, Profile, SocialPlatform, Deck } from '@/types';
 import { RoleBadge } from '@/components/ui/Badge';
@@ -265,7 +266,7 @@ export default function ContributorPublicProfile({
               </div>
             </div>
 
-            {/* ── Name + Role ───────────────────────────────────────── */}
+            {/* ── Name + Role ───────────────────────── */}
             <div className="flex flex-col items-center mb-4">
               <div className="flex flex-wrap justify-center items-center gap-3 mb-1.5">
                 <h1 className="text-3xl font-bold text-white tracking-tight">
@@ -297,9 +298,23 @@ export default function ContributorPublicProfile({
               ))}
             </div>
 
-            {/* ── Social links ───────────────────────────────────────── */}
-            {visibleLinks.length > 0 && (
+            {/* ── Social & Telegram links ───────────────────────────── */}
+            {(visibleLinks.length > 0 || profile.telegramHandle) && (
               <div className="flex flex-wrap justify-center gap-2.5 max-w-lg">
+                {profile.telegramHandle && !visibleLinks.some((l) => l.url.includes('t.me')) && (
+                  <a
+                    href={`https://t.me/${profile.telegramHandle.replace('@', '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ring-1 ring-inset ring-sky-500/20 hover:ring-sky-500/40 hover:bg-sky-500/10 text-sky-400 backdrop-blur-md transition-all duration-300 group"
+                  >
+                    <span className="shrink-0 transition-transform group-hover:scale-110">
+                      <Send className="h-4 w-4" />
+                    </span>
+                    <span>@{profile.telegramHandle.replace('@', '')}</span>
+                    <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                  </a>
+                )}
                 {visibleLinks.map((link) => (
                   <a
                     key={link.id}
