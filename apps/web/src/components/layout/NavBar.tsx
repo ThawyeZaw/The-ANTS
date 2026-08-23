@@ -377,26 +377,30 @@ const NavBar = React.memo(function NavBar() {
 
   // Close dropdowns on outside click
   useEffect(() => {
+    if (!isUserMenuOpen && !isLibraryOpen && !isToolsOpen && !isCommunityOpen && !isAdminOpen) {
+      return;
+    }
+
     function handleClickOutside(e: MouseEvent) {
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+      if (isUserMenuOpen && userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
         setIsUserMenuOpen(false);
       }
-      if (libraryRef.current && !libraryRef.current.contains(e.target as Node)) {
+      if (isLibraryOpen && libraryRef.current && !libraryRef.current.contains(e.target as Node)) {
         setIsLibraryOpen(false);
       }
-      if (toolsRef.current && !toolsRef.current.contains(e.target as Node)) {
+      if (isToolsOpen && toolsRef.current && !toolsRef.current.contains(e.target as Node)) {
         setIsToolsOpen(false);
       }
-      if (communityRef.current && !communityRef.current.contains(e.target as Node)) {
+      if (isCommunityOpen && communityRef.current && !communityRef.current.contains(e.target as Node)) {
         setIsCommunityOpen(false);
       }
-      if (adminRef.current && !adminRef.current.contains(e.target as Node)) {
+      if (isAdminOpen && adminRef.current && !adminRef.current.contains(e.target as Node)) {
         setIsAdminOpen(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [isUserMenuOpen, isLibraryOpen, isToolsOpen, isCommunityOpen, isAdminOpen]);
 
   const handleLogout = () => {
     logout();

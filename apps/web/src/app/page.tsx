@@ -468,7 +468,7 @@ export default function HomePage() {
                   marginBottom: 28,
                 }}
               >
-                <Image src="/logo.png" alt="" width={16} height={16} className="inline-block align-middle mr-1" /> Built for Myanmar students
+                <Image src="/logo.png" alt="" width={16} height={16} priority className="inline-block align-middle mr-1" /> Built for Myanmar students
               </div>
             </div>
 

@@ -49,35 +49,41 @@ function createAuthProxy(): any {
   return authProxyInstance;
 }
 
+let browserClientInstance: any = null;
+
 export function createClient(): any {
-  return {
-    from: (_table: string) => createQueryProxy(),
-    channel: (_name: string) => {
-      const ch: any = {
-        on: () => ch,
-        subscribe: (cb?: any) => {
-          if (cb) cb('SUBSCRIBED');
-          return { unsubscribe: () => {} };
-        },
-        track: async () => {},
-        untrack: async () => {},
-        send: async () => {},
-        presenceState: () => ({}),
-      };
-      return ch;
-    },
-    removeChannel: (_channel: any) => {},
-    storage: {
-      from: (bucket: string) => ({
-        upload: async (fileName: string) => ({
-          data: { path: `${bucket}/${fileName}` },
-          error: null,
+  if (!browserClientInstance) {
+    browserClientInstance = {
+      from: (_table: string) => createQueryProxy(),
+      channel: (_name: string) => {
+        const ch: any = {
+          on: () => ch,
+          subscribe: (cb?: any) => {
+            if (cb) cb('SUBSCRIBED');
+            return { unsubscribe: () => {} };
+          },
+          track: async () => {},
+          untrack: async () => {},
+          send: async () => {},
+          presenceState: () => ({}),
+        };
+        return ch;
+      },
+      removeChannel: (_channel: any) => {},
+      storage: {
+        from: (bucket: string) => ({
+          upload: async (fileName: string) => ({
+            data: { path: `${bucket}/${fileName}` },
+            error: null,
+          }),
+          getPublicUrl: (path: string) => ({
+            data: { publicUrl: `https://assets.the-ants.org/${bucket}/${path}` },
+          }),
         }),
-        getPublicUrl: (path: string) => ({
-          data: { publicUrl: `https://assets.the-ants.org/${bucket}/${path}` },
-        }),
-      }),
-    },
-    auth: createAuthProxy(),
-  };
+      },
+      auth: createAuthProxy(),
+    };
+  }
+  return browserClientInstance;
 }
+
