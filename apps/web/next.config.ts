@@ -8,6 +8,28 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: '**.supabase.co',
       },
+      {
+        protocol: 'https',
+        hostname: 'the-ants-api.thawyezaw.workers.dev',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.workers.dev',
+      },
+      {
+        protocol: 'https',
+        hostname: 'api.the-ants.org',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '8787',
+      },
+      {
+        protocol: 'http',
+        hostname: '127.0.0.1',
+        port: '8787',
+      },
     ],
   },
   headers: async () => [
