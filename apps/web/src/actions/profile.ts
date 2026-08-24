@@ -484,6 +484,7 @@ export async function actionUpdateProfile(
     if (data.onboardingCompleted !== undefined) setPayload.onboarding_completed = data.onboardingCompleted;
     if (data.preferredName !== undefined) setPayload.preferred_name = data.preferredName;
     if (data.institutionName !== undefined) setPayload.institution_name = data.institutionName;
+    if (data.notificationPreferences !== undefined) setPayload.notification_preferences = data.notificationPreferences;
 
     await db
       .update(profiles)
