@@ -49,6 +49,22 @@ export async function uploadTimelineImage(file: File): Promise<UploadResult> {
     }
 
     const data = await res.json();
+    if (!data.uploadUrl) {
+      return { success: false, error: 'Upload endpoint missing from API response.' };
+    }
+
+    // Upload the binary to R2 via the Worker proxy endpoint.
+    const uploadRes = await fetch(`${API_BASE_URL}${data.uploadUrl}`, {
+      method: 'POST',
+      headers: { 'Content-Type': file.type },
+      body: file,
+    });
+
+    if (!uploadRes.ok) {
+      const uploadErr = await uploadRes.json().catch(() => ({}));
+      return { success: false, error: uploadErr.error || 'Failed to upload image to storage.' };
+    }
+
     return { success: true, url: data.publicUrl };
   } catch (err: any) {
     return { success: false, error: err.message || 'Image upload failed.' };

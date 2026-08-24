@@ -17,17 +17,18 @@
 ## 2. User Roles & Permissions
 Privacy and access boundaries are strictly enforced. The system supports multi-role accounts with native PostgreSQL arrays (`roles: text[]`).
 
-### The Four Roles:
+### The Six Roles:
 | Role | Who | Capabilities & Tooling Access |
 |---|---|---|
 | **Student** | Default for all users | Full access to Library (Courses, Notes, Flashcards SRS, Exams, Quizzes) and Study Tools (Smart Timetable, Pomodoro, Exam Countdown, Grade Calculator, Workspace), Public Profile. |
-| **Tutor** | Teaching educators | Everything Student gets + Public Tutor Profile with Sunday–Saturday Weekly Teaching Schedule, Telegram direct inquiry modal with mobile QR code, and Tutor Profile Editor tab. |
+| **Tutor / Teacher** | Teaching educators | Everything Student gets + Public Tutor Profile with Sunday–Saturday Weekly Teaching Schedule, Telegram direct inquiry modal with mobile QR code, and Tutor Profile Editor tab. |
 | **Contributor** | Verified academic authors | Everything Student gets + Curriculum & Notes Editor, Exam Data Editor, Review Queue proposal submissions, Contributor Profile tab. |
-| **Admin** | Platform managers | Everything Contributor gets + User Management & direct role assignment (multi-select badge toggle), Organization mission/team editor, and full moderation review queue. |
+| **Main Contributor** | Senior academic reviewers | Everything Contributor gets + full moderation of the review queue (approve/reject submissions) and contributor team management. |
+| **Admin** | Platform managers | Everything Main Contributor gets + User Management & direct role assignment (multi-select badge toggle), Organization mission/team editor. |
 
 ### Role Management Rules
 - **Signup defaults strictly to `student`.** Users can only register as students.
-- **Multi-Role Assignment:** Administrators assign or revoke roles (`tutor`, `contributor`, `admin`) directly from the Admin User Management table.
+- **Multi-Role Assignment:** Administrators assign or revoke roles (`tutor`/`teacher`, `contributor`, `main_contributor`, `admin`) directly from the Admin User Management table.
 - **Immediate Multi-Role Access:** Users automatically have access to all portals and features permitted by any of their assigned roles simultaneously (no manual role switching required).
 - **Session Verification:** User permissions are verified via `useRole()` hook and server-side authorization guards on the Hono backend and Server Actions.
 

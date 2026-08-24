@@ -23,7 +23,6 @@ export interface ScheduleOptions {
   /** Optional content type (default: application/json) */
   contentType?: string;
 }
-
 /**
  * Schedule a one-time QStash message.
  *
@@ -41,6 +40,13 @@ export async function scheduleQStashMessage(
   }
 
   const url = options.url ?? `${getBaseUrl()}/api/qstash/process-notifications`;
+
+  // The receiving route guards with x-cron-secret. QStash forwards custom
+  // headers declared in the publish payload, so attach the secret here.
+  const forwardHeaders: Record<string, string> = {};
+  if (process.env.CRON_SECRET) {
+    forwardHeaders['x-cron-secret'] = process.env.CRON_SECRET;
+  }
 
   try {
     const headers: Record<string, string> = {
@@ -60,6 +66,7 @@ export async function scheduleQStashMessage(
       body: JSON.stringify({
         url,
         body: JSON.stringify(options.body ?? {}),
+        ...(Object.keys(forwardHeaders).length > 0 ? { headers: forwardHeaders } : {}),
       }),
     });
 

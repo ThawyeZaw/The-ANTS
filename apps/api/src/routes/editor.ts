@@ -11,7 +11,15 @@ import {
 export function createEditorRoutes(getDb: () => ReturnType<typeof createDb>) {
   const router = new Hono();
 
-  // 1. Get review queue (Guarded: Main Contributor only)
+  // Spec §2: Admin has everything Contributor/Main Contributor gets, including
+  // the full moderation review queue. Guard accepts main_contributor OR admin.
+  const hasModeratorAccess = (profile: { role: string | null; roles: string[] | null } | undefined) => {
+    if (!profile) return false;
+    const roles = profile.roles && profile.roles.length > 0 ? profile.roles : [profile.role];
+    return roles.includes('main_contributor') || roles.includes('admin');
+  };
+
+  // 1. Get review queue (Guarded: Main Contributor / Admin only)
   // RLS replacement: review_queue_main_contributor_all
   router.get('/review-queue', async (c) => {
     const db = getDb();
@@ -25,8 +33,8 @@ export function createEditorRoutes(getDb: () => ReturnType<typeof createDb>) {
       where: eq(profiles.id, userId),
     });
 
-    if (!userProfile || userProfile.role !== 'main_contributor') {
-      return c.json({ error: 'Unauthorized: Only main_contributors can access the review queue' }, 403);
+    if (!hasModeratorAccess(userProfile)) {
+      return c.json({ error: 'Unauthorized: Only main_contributors or admins can access the review queue' }, 403);
     }
 
     const queue = await db.query.reviewQueue.findMany({
@@ -101,8 +109,8 @@ export function createEditorRoutes(getDb: () => ReturnType<typeof createDb>) {
       where: eq(profiles.id, reviewerId),
     });
 
-    if (!reviewer || reviewer.role !== 'main_contributor') {
-      return c.json({ error: 'Unauthorized: Only main_contributors can review items' }, 403);
+    if (!hasModeratorAccess(reviewer)) {
+      return c.json({ error: 'Unauthorized: Only main_contributors or admins can review items' }, 403);
     }
 
     const item = await db.query.reviewQueue.findFirst({

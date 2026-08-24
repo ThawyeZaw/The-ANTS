@@ -444,18 +444,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        await Promise.allSettled([
-          actionUpdateProfile(user.id, data),
-          fetch(`${API_BASE_URL}/api/profile/me`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-              userId: user.id,
-              ...data,
-            }),
-          }),
-        ]);
+        // Single source of truth: persist via the Neon server action only.
+        await actionUpdateProfile(user.id, data);
       } catch (err) {
         console.warn('[updateProfile] Sync failed:', err);
       }
@@ -502,17 +492,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        await fetch(`${API_BASE_URL}/api/profile/me`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            userId: user.id,
-            timezone: data.timezone,
-            onboarding_completed: true,
-          }),
+        // Persist onboarding via the Neon server action (single write path).
+        await actionUpdateProfile(user.id, {
+          timezone: data.timezone,
+          preferredName: data.preferredName,
+          institutionName: data.institutionName,
+          onboardingCompleted: true,
         });
-      } catch {}
+      } catch (err) {
+        console.warn('[completeOnboarding] Sync failed:', err);
+      }
 
       return { success: true };
     },

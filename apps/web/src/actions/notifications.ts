@@ -156,7 +156,7 @@ async function triggerLocalProcessing(): Promise<void> {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-qstash-signature': 'local-dev-bypass',
+        'x-cron-secret': process.env.CRON_SECRET ?? '',
       },
       body: JSON.stringify({ source: 'local-dev-timer' }),
     });
