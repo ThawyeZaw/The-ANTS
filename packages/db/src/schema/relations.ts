@@ -42,6 +42,11 @@ import {
   notificationPreferences,
   activityFeed,
 } from './system';
+import {
+  standaloneQuizzes,
+  quizSessions,
+  quizParticipants,
+} from './community';
 import { user, session, account } from './auth';
 
 // ── Profile Relations ───────────────────────────────────────────────────────
@@ -492,5 +497,38 @@ export const accountRelations = relations(account, ({ one }) => ({
   user: one(user, {
     fields: [account.userId],
     references: [user.id],
+  }),
+}));
+
+// ── Community Relations (Standalone Quizzes & Org Content) ─────────────────
+
+export const standaloneQuizzesRelations = relations(standaloneQuizzes, ({ one, many }) => ({
+  author: one(profiles, {
+    fields: [standaloneQuizzes.created_by],
+    references: [profiles.id],
+  }),
+  sessions: many(quizSessions),
+}));
+
+export const quizSessionsRelations = relations(quizSessions, ({ one, many }) => ({
+  quiz: one(standaloneQuizzes, {
+    fields: [quizSessions.quiz_id],
+    references: [standaloneQuizzes.id],
+  }),
+  host: one(profiles, {
+    fields: [quizSessions.host_id],
+    references: [profiles.id],
+  }),
+  participants: many(quizParticipants),
+}));
+
+export const quizParticipantsRelations = relations(quizParticipants, ({ one }) => ({
+  session: one(quizSessions, {
+    fields: [quizParticipants.session_id],
+    references: [quizSessions.id],
+  }),
+  user: one(profiles, {
+    fields: [quizParticipants.user_id],
+    references: [profiles.id],
   }),
 }));

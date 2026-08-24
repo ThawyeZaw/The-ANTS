@@ -10,6 +10,12 @@
   "vars": {
     "ENVIRONMENT": "production"
   },
+  "r2_buckets": [
+    {
+      "binding": "ASSETS_BUCKET",
+      "bucket_name": "the-ants-assets"
+    }
+  ],
   "triggers": {
     "crons": ["* * * * *"]
   }

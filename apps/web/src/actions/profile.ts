@@ -481,6 +481,9 @@ export async function actionUpdateProfile(
     if (data.sectionVisibility !== undefined) setPayload.section_visibility = data.sectionVisibility;
     if (data.timezone !== undefined) setPayload.timezone = data.timezone;
     if (data.customUrlSlug !== undefined) setPayload.custom_url_slug = data.customUrlSlug;
+    if (data.onboardingCompleted !== undefined) setPayload.onboarding_completed = data.onboardingCompleted;
+    if (data.preferredName !== undefined) setPayload.preferred_name = data.preferredName;
+    if (data.institutionName !== undefined) setPayload.institution_name = data.institutionName;
 
     await db
       .update(profiles)

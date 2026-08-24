@@ -50,7 +50,7 @@ app.use(
       }
       return null;
     },
-    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization', 'x-requested-with', 'x-cron-secret'],
     exposeHeaders: ['Content-Length'],
     maxAge: 600,

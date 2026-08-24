@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
-import { eq } from 'drizzle-orm';
+import { z } from 'zod';
+import { eq, and, arrayContains } from 'drizzle-orm';
 import { createDb, profiles } from '@the-ants/db';
 
 export function createProfileRoutes(getDb: () => ReturnType<typeof createDb>) {
@@ -32,12 +33,58 @@ export function createProfileRoutes(getDb: () => ReturnType<typeof createDb>) {
   // 2. Update profile
   router.put('/me', async (c) => {
     const db = getDb();
-    const body = await c.req.json();
-    const { userId, ...updates } = body;
 
-    if (!userId) {
-      return c.json({ error: 'Missing userId' }, 400);
+    // Permissive schema: preserves the camelCase/snake_case alias contract while
+    // validating types and stripping unknown fields (prevents mass-assignment).
+    const UpdateSchema = z
+      .object({
+        userId: z.string().uuid(),
+        name: z.string().optional(),
+        title: z.string().nullable().optional(),
+        bio: z.string().nullable().optional(),
+        avatar: z.string().nullable().optional(),
+        avatar_url: z.string().nullable().optional(),
+        isPublic: z.boolean().optional(),
+        is_public: z.boolean().optional(),
+        telegramHandle: z.string().optional(),
+        telegram_handle: z.string().optional(),
+        hourlyRate: z.union([z.string(), z.number()]).nullable().optional(),
+        hourly_rate: z.union([z.string(), z.number()]).nullable().optional(),
+        teachingCurriculums: z.array(z.string()).optional(),
+        teaching_curriculums: z.array(z.string()).optional(),
+        teachingSubjects: z.array(z.string()).optional(),
+        teaching_subjects: z.array(z.string()).optional(),
+        socialLinks: z.unknown().optional(),
+        social_links: z.unknown().optional(),
+        projects: z.unknown().optional(),
+        activities: z.unknown().optional(),
+        achievements: z.unknown().optional(),
+        academicGrades: z.unknown().optional(),
+        academic_grades: z.unknown().optional(),
+        pinnedItemId: z.string().nullable().optional(),
+        pinned_item_id: z.string().nullable().optional(),
+        sectionVisibility: z.unknown().optional(),
+        section_visibility: z.unknown().optional(),
+        theme: z.string().optional(),
+        spacing: z.string().optional(),
+        width: z.string().optional(),
+        sectionLayout: z.string().optional(),
+        section_layout: z.string().optional(),
+        preferredName: z.string().optional(),
+        preferred_name: z.string().optional(),
+        institutionName: z.string().optional(),
+        institution_name: z.string().optional(),
+        timezone: z.string().optional(),
+      })
+      .strip();
+
+    const body = await c.req.json();
+    const parsed = UpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return c.json({ error: parsed.error.format() }, 400);
     }
+
+    const { userId, ...updates } = parsed.data;
 
     try {
       const setPayload: Record<string, any> = {
@@ -116,19 +163,15 @@ export function createProfileRoutes(getDb: () => ReturnType<typeof createDb>) {
     const roleFilter = c.req.query('role');
 
     try {
+      // Role filter is applied in SQL BEFORE the limit so results are not truncated.
       const publicProfiles = await db.query.profiles.findMany({
-        where: eq(profiles.is_public, true),
+        where: roleFilter
+          ? and(eq(profiles.is_public, true), arrayContains(profiles.roles, [roleFilter]))
+          : eq(profiles.is_public, true),
         limit: 100,
       });
 
-      const filtered = roleFilter
-        ? publicProfiles.filter((p) => {
-            const roles: string[] = (p.roles as string[]) || [p.role];
-            return roles.includes(roleFilter);
-          })
-        : publicProfiles;
-
-      return c.json({ success: true, profiles: filtered });
+      return c.json({ success: true, profiles: publicProfiles });
     } catch (err: any) {
       return c.json({ error: err.message }, 500);
     }
