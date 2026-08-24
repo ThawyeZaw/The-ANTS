@@ -15,6 +15,13 @@
       "when": 1787500000000,
       "tag": "0001_community_persistence",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1787600000000,
+      "tag": "0002_telegram_chat_id",
+      "breakpoints": true
     }
   ]
 }

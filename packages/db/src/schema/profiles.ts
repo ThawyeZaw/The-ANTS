@@ -44,6 +44,8 @@ export const profiles = pgTable('profiles', {
   onboarding_completed: boolean('onboarding_completed').default(true),
   preferred_name: text('preferred_name'),
   institution_name: text('institution_name'),
+  telegram_chat_id: text('telegram_chat_id'),
+  notification_preferences: jsonb('notification_preferences'),
 });
 
 export const studentProfiles = pgTable('student_profiles', {

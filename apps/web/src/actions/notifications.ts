@@ -5,7 +5,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { getDb, notificationQueue, profiles } from '@/lib/db';
-import { eq, and, inArray } from 'drizzle-orm';
+import { eq, and, inArray, sql } from 'drizzle-orm';
 import { scheduleQStashMessage } from '@/lib/qstash';
 import { expandRecurringEvents } from '@/lib/timetable/recurrence';
 import type { TimetableEvent, RecurrenceRule } from '@/types/timetable';
@@ -77,13 +77,13 @@ async function upsertQueueItems(
 
   const db = getDb();
 
-  // Delete existing pending/processing items for this source
+  // Delete existing pending items for this source (payload.source_id match)
   await db
     .delete(notificationQueue)
     .where(
       and(
         eq(notificationQueue.status, 'pending'),
-        eq(notificationQueue.id, sourceId) // Or matching payload source if needed
+        sql`${notificationQueue.payload}->>'source_id' = ${sourceId}`
       )
     );
 

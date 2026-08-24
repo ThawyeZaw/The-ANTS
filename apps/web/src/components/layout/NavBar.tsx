@@ -511,9 +511,18 @@ export default function NavBar() {
                 onClick={() => toggleDropdown('user')}
                 className="flex items-center gap-2 p-1.5 pr-2.5 rounded-2xl border border-border hover:border-primary/40 bg-background-secondary/50 transition-all cursor-pointer"
               >
-                <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-primary to-emerald-500 flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-xs">
-                  {getInitials(user.profile.name)}
-                </div>
+                {user.profile.avatar ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={user.profile.avatar}
+                    alt={user.profile.name}
+                    className="w-7 h-7 rounded-xl object-cover shrink-0 shadow-xs"
+                  />
+                ) : (
+                  <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-primary to-emerald-500 flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-xs">
+                    {getInitials(user.profile.name)}
+                  </div>
+                )}
                 <span className="text-xs font-semibold text-foreground max-w-[100px] truncate hidden sm:inline">
                   {user.profile.name}
                 </span>

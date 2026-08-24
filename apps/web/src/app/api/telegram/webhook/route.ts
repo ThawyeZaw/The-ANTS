@@ -4,9 +4,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, profiles, notificationPreferences } from '@/lib/db';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const CRON_SECRET = process.env.CRON_SECRET;
 const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
 
 async function sendMessage(chatId: number, text: string) {
@@ -46,6 +47,14 @@ async function linkTelegramChat(username: string, chatId: number) {
     });
     if (!user) return false;
 
+    // Primary linkage: profiles.telegram_chat_id is what the notification
+    // enqueue pipeline reads. Keep notification_preferences in sync too so
+    // the settings UI and telegram_enabled flag stay accurate.
+    await db
+      .update(profiles)
+      .set({ telegram_chat_id: String(chatId), updated_at: new Date() })
+      .where(eq(profiles.id, user.id as any));
+
     const existing = await db.query.notificationPreferences.findFirst({
       where: eq(notificationPreferences.user_id, user.id as any),
     });
@@ -75,14 +84,25 @@ async function linkTelegramChat(username: string, chatId: number) {
 async function unlinkTelegramChat(chatId: number) {
   try {
     const db = getDb();
-    await db
-      .update(notificationPreferences)
-      .set({
-        telegram_enabled: false,
-        channels: {},
-        updated_at: new Date(),
-      })
-      .where(eq(notificationPreferences.channels, { telegram_chat_id: String(chatId) } as any));
+    const linked = await db.query.notificationPreferences.findFirst({
+      where: sql`${notificationPreferences.channels}->>'telegram_chat_id' = ${String(chatId)}`,
+    });
+
+    if (linked) {
+      await db
+        .update(notificationPreferences)
+        .set({
+          telegram_enabled: false,
+          channels: {},
+          updated_at: new Date(),
+        })
+        .where(eq(notificationPreferences.user_id, linked.user_id as any));
+
+      await db
+        .update(profiles)
+        .set({ telegram_chat_id: null, updated_at: new Date() })
+        .where(eq(profiles.id, linked.user_id as any));
+    }
     return true;
   } catch {
     return false;
@@ -99,12 +119,18 @@ export async function GET(req: NextRequest) {
 
   try {
     if (action === 'set') {
+      // Guard webhook management with the cron secret — otherwise anyone
+      // could repoint or delete the bot's webhook.
+      if (!CRON_SECRET || req.headers.get('x-cron-secret') !== CRON_SECRET) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
       const webhookUrl = searchParams.get('url') ?? `${req.nextUrl.origin}/api/telegram/webhook`;
       const setRes = await fetch(`${TELEGRAM_API}/setWebhook`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           url: webhookUrl,
+          secret_token: CRON_SECRET,
           allowed_updates: ['message'],
           drop_pending_updates: false,
         }),
@@ -114,6 +140,9 @@ export async function GET(req: NextRequest) {
     }
 
     if (action === 'delete') {
+      if (!CRON_SECRET || req.headers.get('x-cron-secret') !== CRON_SECRET) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
       const delRes = await fetch(`${TELEGRAM_API}/deleteWebhook`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -139,6 +168,12 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   if (!BOT_TOKEN) {
     return NextResponse.json({ error: 'Telegram bot token not configured' }, { status: 500 });
+  }
+
+  // Telegram sends our secret_token back as a header on every update —
+  // reject anything that isn't a genuine Telegram delivery.
+  if (CRON_SECRET && req.headers.get('x-telegram-bot-api-secret-token') !== CRON_SECRET) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   let body: Record<string, any>;

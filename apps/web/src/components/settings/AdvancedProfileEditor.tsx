@@ -184,6 +184,7 @@ export default function AdvancedProfileEditor() {
 
     setUsernameInput(user.profile.username || '');
     setFormData({
+      avatar: user.profile.avatar || '',
       name: user.profile.name || '',
       bio: user.profile.bio || '',
       title: user.profile.title || '',
