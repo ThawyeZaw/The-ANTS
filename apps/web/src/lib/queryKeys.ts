@@ -18,25 +18,6 @@ export const queryKeys = {
     announcements: (clubId: string) => ['clubs', clubId, 'announcements'] as const,
   },
 
-  // Classrooms
-  classrooms: {
-    all: ['classrooms'] as const,
-    byId: (id: string) => ['classrooms', id] as const,
-    assignments: (classroomId: string) => ['classrooms', classroomId, 'assignments'] as const,
-    discussions: (classroomId: string) => ['classrooms', classroomId, 'discussions'] as const,
-    resources: (classroomId: string) => ['classrooms', classroomId, 'resources'] as const,
-    members: (classroomId: string) => ['classrooms', classroomId, 'members'] as const,
-  },
-
-  // Quizzes (standalone)
-  quizzes: {
-    all: ['quizzes'] as const,
-    byId: (id: string) => ['quizzes', id] as const,
-    myQuizzes: ['quizzes', 'mine'] as const,
-    library: ['quizzes', 'library'] as const,
-    session: (sessionId: string) => ['quizzes', 'session', sessionId] as const,
-  },
-
   // Lessons
   curriculums: {
     all: ['curriculums'] as const,

@@ -1,7 +1,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTs — Curriculum Dashboard Page
-// Route: /curriculum — Unified curriculum hub with exam countdowns,
-// study notes, and flashcard decks filtered by enrolled subjects.
+// Route: /curriculum — Unified curriculum hub with exam countdowns and
+// course progress filtered by enrolled subjects.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import CurriculumDashboard from '@/components/curriculum/CurriculumDashboard';

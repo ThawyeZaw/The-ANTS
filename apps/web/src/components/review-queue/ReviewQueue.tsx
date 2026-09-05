@@ -8,17 +8,15 @@
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
-  Shield, CheckCircle, XCircle, Pencil, Eye, EyeOff,
-  Clock, BookOpen, FileText, Layers, Database, GraduationCap, Calculator,
-  ChevronDown, ChevronRight, Tag, MessageSquare, Maximize2,
+  Shield, CheckCircle, Pencil, Eye,
+  Clock, BookOpen, Layers, Database, GraduationCap, Calculator,
+  Tag,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
-import BlockPreview from '@/components/notes/BlockPreview';
-import FlashcardText from '@/components/flashcards/FlashcardText';
 import { createClient } from '@/lib/supabase/client';
-import type { ReviewQueueItem, ReviewSubmissionType, ReviewFeedbackCategory, ReviewFeedback, NoteBlock } from '@/types';
+import type { ReviewQueueItem, ReviewSubmissionType, ReviewFeedbackCategory, ReviewFeedback } from '@/types';
 
 // ── Tab Config ───────────────────────────────────────────────────────────────
 
@@ -27,14 +25,10 @@ const SUBMISSION_TABS: { key: ReviewSubmissionType | 'all'; label: string; icon:
   { key: 'curriculum', label: 'Curricula', icon: <GraduationCap className="h-4 w-4" /> },
   { key: 'subject', label: 'Subjects', icon: <BookOpen className="h-4 w-4" /> },
   { key: 'topic', label: 'Topics', icon: <Layers className="h-4 w-4" /> },
-  { key: 'note', label: 'Notes', icon: <FileText className="h-4 w-4" /> },
-  { key: 'resource', label: 'Resources', icon: <Database className="h-4 w-4" /> },
-  { key: 'flashcard_deck', label: 'Flashcards', icon: <Layers className="h-4 w-4" /> },
   { key: 'exam', label: 'Exams', icon: <Clock className="h-4 w-4" /> },
   { key: 'calculator', label: 'Grade Calc', icon: <Calculator className="h-4 w-4" /> },
   { key: 'countdown', label: 'Countdowns', icon: <Clock className="h-4 w-4" /> },
 ];
-
 const FEEDBACK_CATEGORIES: { key: ReviewFeedbackCategory; label: string }[] = [
   { key: 'inaccurate_content', label: 'Inaccurate Information' },
   { key: 'formatting_issues', label: 'Formatting / Styling Issues' },
@@ -60,7 +54,6 @@ export default function ReviewQueue() {
   const [feedbackNote, setFeedbackNote] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
   const [statusType, setStatusType] = useState<'success' | 'error'>('success');
-  const [previewItems, setPreviewItems] = useState<Set<string>>(new Set());
 
   const [queueItems, setQueueItems] = useState<ReviewQueueItem[]>([]);
 
@@ -186,24 +179,6 @@ export default function ReviewQueue() {
     setTimeout(() => setStatusMessage(''), 3000);
   }, [editingData, editJsonText, refreshQueue]);
 
-  // ── Preview toggle ────────────────────────────────────────────────────────
-
-  const togglePreview = useCallback((itemId: string) => {
-    setPreviewItems(prev => {
-      const next = new Set(prev);
-      if (next.has(itemId)) {
-        next.delete(itemId);
-        // Exit edit mode when toggling back from preview
-        if (editingData === itemId) setEditingData(null);
-      } else {
-        next.add(itemId);
-        // Exit edit mode when entering preview
-        if (editingData === itemId) setEditingData(null);
-      }
-      return next;
-    });
-  }, [editingData]);
-
   // ── Get count by type for tabs ────────────────────────────────────────────
 
   const getCount = (key: ReviewSubmissionType | 'all') => {
@@ -325,9 +300,6 @@ export default function ReviewQueue() {
                       item.submission_type === 'curriculum' && 'bg-violet-500/10 text-violet-500',
                       item.submission_type === 'subject' && 'bg-blue-500/10 text-blue-500',
                       item.submission_type === 'topic' && 'bg-cyan-500/10 text-cyan-500',
-                      item.submission_type === 'note' && 'bg-amber-500/10 text-amber-500',
-                      item.submission_type === 'resource' && 'bg-emerald-500/10 text-emerald-500',
-                      item.submission_type === 'flashcard_deck' && 'bg-pink-500/10 text-pink-500',
                       item.submission_type === 'exam' && 'bg-red-500/10 text-red-500',
                       item.submission_type === 'calculator' && 'bg-indigo-500/10 text-indigo-500',
                       item.submission_type === 'countdown' && 'bg-orange-500/10 text-orange-500',
@@ -378,153 +350,51 @@ export default function ReviewQueue() {
                 {/* Expanded details */}
                 {(isExpanded || isEditing || isRejecting) && (
                   <div className="border-t border-border px-5 py-4 space-y-4 bg-background-secondary/30">
-                    {/* Preview / Edit toggle */}
-                    {(item.submission_type === 'note' || item.submission_type === 'flashcard_deck') && !isRejecting && (
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => togglePreview(item.id)}
-                          className={cn(
-                            'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all',
-                            previewItems.has(item.id)
-                              ? 'bg-primary/10 text-primary border border-primary/30'
-                              : 'border border-border text-foreground-muted hover:text-foreground'
-                          )}
-                        >
-                          {previewItems.has(item.id) ? (
-                            <><Eye className="h-3.5 w-3.5" /> Preview Mode</>
-                          ) : (
-                            <><Maximize2 className="h-3.5 w-3.5" /> Preview</>
-                          )}
-                        </button>
-                        {!previewItems.has(item.id) && (
-                          <button
-                            onClick={() => openEdit(item)}
-                            className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium border border-border text-foreground-muted hover:text-foreground transition-all"
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                            Edit Raw Data
-                          </button>
-                        )}
-                      </div>
-                    )}
+                    {/* Submitted data */}
+                    <div>
+                      <p className="text-xs font-semibold text-foreground-secondary mb-2">Submitted Data</p>
 
-                    {/* ── Preview: Note ──────────────────────────────────── */}
-                    {previewItems.has(item.id) && item.submission_type === 'note' && (
-                      <div className="rounded-xl border border-primary/20 bg-background p-5 space-y-4">
-                        <div className="flex items-center gap-2 pb-3 border-b border-border">
-                          <FileText className="h-4 w-4 text-amber-500" />
-                          <h4 className="font-semibold text-foreground text-sm">
-                            {(item.submitted_data as any)?.title ?? 'Untitled Note'}
-                          </h4>
-                        </div>
-                        <div className="space-y-4 max-w-none">
-                          {((item.submitted_data as any)?.blocks as NoteBlock[] | undefined)?.map((block, idx) => (
-                            <BlockPreview key={idx} block={block} />
-                          )) ?? (
-                            <p className="text-sm text-foreground-muted italic">No content blocks found.</p>
-                          )}
-                        </div>
-                        {(item.submitted_data as any)?.tags?.length > 0 && (
-                          <div className="flex flex-wrap gap-1.5 pt-3 border-t border-border">
-                            {((item.submitted_data as any).tags as string[]).map((tag: string) => (
-                              <span
-                                key={tag}
-                                className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-600"
-                              >
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* ── Preview: Flashcard Deck ────────────────────────── */}
-                    {previewItems.has(item.id) && item.submission_type === 'flashcard_deck' && (
-                      <div className="rounded-xl border border-violet-500/20 bg-background p-5 space-y-4">
-                        <div className="flex items-center gap-2 pb-3 border-b border-border">
-                          <Layers className="h-4 w-4 text-violet-500" />
-                          <h4 className="font-semibold text-foreground text-sm">
-                            {(item.submitted_data as any)?.name ?? 'Untitled Deck'}
-                          </h4>
-                          {((item.submitted_data as any)?.cards as any[] | undefined) && (
-                            <span className="text-xs text-foreground-muted">
-                              ({((item.submitted_data as any).cards).length} cards)
-                            </span>
-                          )}
-                        </div>
-                        <div className="grid gap-3">
-                          {((item.submitted_data as any)?.cards as Array<{ front_text: string; back_text: string }> | undefined)?.map((card, idx) => (
-                            <div
-                              key={idx}
-                              className="rounded-lg border border-border bg-background-secondary/50 overflow-hidden"
+                      {isEditing ? (
+                        <div className="space-y-3">
+                          <textarea
+                            value={editJsonText}
+                            onChange={e => setEditJsonText(e.target.value)}
+                            rows={10}
+                            className="w-full rounded-lg border border-border bg-background-secondary p-3 text-sm text-foreground font-mono focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                          />
+                          <div className="flex justify-end gap-2">
+                            <button
+                              onClick={() => setEditingData(null)}
+                              className="rounded-lg px-3 py-1.5 text-xs font-medium text-foreground-muted hover:bg-background-secondary transition-colors"
                             >
-                              <div className="px-4 py-2.5 border-b border-border bg-violet-500/5">
-                                <span className="text-[10px] font-semibold text-violet-500 uppercase tracking-wider">Front</span>
-                                <p className="text-sm text-foreground mt-0.5"><FlashcardText text={card.front_text} /></p>
-                              </div>
-                              <div className="px-4 py-2.5">
-                                <span className="text-[10px] font-semibold text-emerald-500 uppercase tracking-wider">Back</span>
-                                <p className="text-sm text-foreground mt-0.5"><FlashcardText text={card.back_text} /></p>
-                              </div>
-                            </div>
-                          )) ?? (
-                            <p className="text-sm text-foreground-muted italic">No cards found.</p>
-                          )}
+                              Cancel
+                            </button>
+                            <button
+                              onClick={handleSaveEdit}
+                              className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary-hover transition-colors"
+                            >
+                              Save Changes
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    )}
-
-                    {/* ── Edit mode (raw JSON) or non-preview types ──────────── */}
-                    {(!previewItems.has(item.id) || (item.submission_type !== 'note' && item.submission_type !== 'flashcard_deck')) && (
-                      <>
-                        {/* Submitted data */}
-                        <div>
-                          <p className="text-xs font-semibold text-foreground-secondary mb-2">Submitted Data</p>
-
-                          {isEditing ? (
-                            <div className="space-y-3">
-                              <textarea
-                                value={editJsonText}
-                                onChange={e => setEditJsonText(e.target.value)}
-                                rows={10}
-                                className="w-full rounded-lg border border-border bg-background-secondary p-3 text-sm text-foreground font-mono focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary resize-none"
-                              />
-                              <div className="flex justify-end gap-2">
-                                <button
-                                  onClick={() => setEditingData(null)}
-                                  className="rounded-lg px-3 py-1.5 text-xs font-medium text-foreground-muted hover:bg-background-secondary transition-colors"
-                                >
-                                  Cancel
-                                </button>
-                                <button
-                                  onClick={handleSaveEdit}
-                                  className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary-hover transition-colors"
-                                >
-                                  Save Changes
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="rounded-lg border border-border bg-background-secondary p-3">
-                              <pre className="text-xs text-foreground font-mono whitespace-pre-wrap overflow-x-auto">
-                                {JSON.stringify(item.submitted_data, null, 2)}
-                              </pre>
-                            </div>
-                          )}
+                      ) : (
+                        <div className="rounded-lg border border-border bg-background-secondary p-3">
+                          <pre className="text-xs text-foreground font-mono whitespace-pre-wrap overflow-x-auto">
+                            {JSON.stringify(item.submitted_data, null, 2)}
+                          </pre>
                         </div>
+                      )}
+                    </div>
 
-                        {/* Edit button */}
-                        {!isEditing && (
-                          <button
-                            onClick={() => openEdit(item)}
-                            className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary-hover transition-colors"
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                            Edit Data Before Approving
-                          </button>
-                        )}
-                      </>
+                    {/* Edit button */}
+                    {!isEditing && !isRejecting && (
+                      <button
+                        onClick={() => openEdit(item)}
+                        className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary-hover transition-colors"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                        Edit Data Before Approving
+                      </button>
                     )}
 
                     {/* Reject form */}
@@ -587,8 +457,7 @@ export default function ReviewQueue() {
                       )}
                     </div>
                   </div>
-                )}
-              </div>
+                )}              </div>
             );
           })}
         </div>

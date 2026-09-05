@@ -2,14 +2,13 @@
 
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTS — useCurriculumDashboard Hook (Hono API / Neon Backend)
-// Aggregates exam countdowns, notes, and flashcard decks filtered by the
-// user's enrolled subjects. Powers the Curriculum Dashboard page.
+// Aggregates exam countdowns filtered by the user's enrolled subjects.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
-import type { ExamCountdown, Note, Deck } from '@/types';
+import type { ExamCountdown } from '@/types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8787';
 
@@ -86,20 +85,16 @@ export function useCurriculumDashboard() {
   const [enrolledSubjects, setEnrolledSubjects] = useState<EnrolledSubjectInfo[]>([]);
   const [rawCountdowns, setRawCountdowns] = useState<ExamCountdown[]>([]);
   const [availableExams, setAvailableExams] = useState<any[]>([]);
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [decks, setDecks] = useState<Deck[]>([]);
 
   useEffect(() => {
     async function fetchData() {
       if (!userId) return;
 
       try {
-        const [currRes, cdRes, examsRes, notesRes, decksRes] = await Promise.all([
+        const [currRes, cdRes, examsRes] = await Promise.all([
           fetch(`${API_BASE_URL}/api/curriculum/user-curriculums?userId=${encodeURIComponent(userId)}`),
           fetch(`${API_BASE_URL}/api/exams/countdowns?userId=${encodeURIComponent(userId)}`),
           fetch(`${API_BASE_URL}/api/exams`),
-          fetch(`${API_BASE_URL}/api/notes/library`),
-          fetch(`${API_BASE_URL}/api/flashcards/decks?isPublic=true`),
         ]);
 
         if (currRes.ok) {
@@ -136,20 +131,6 @@ export function useCurriculumDashboard() {
           const json = await examsRes.json();
           if (json.success && json.exams) {
             setAvailableExams(json.exams);
-          }
-        }
-
-        if (notesRes.ok) {
-          const json = await notesRes.json();
-          if (json.success && json.notes) {
-            setNotes(json.notes);
-          }
-        }
-
-        if (decksRes.ok) {
-          const json = await decksRes.json();
-          if (json.success && json.decks) {
-            setDecks(json.decks);
           }
         }
       } catch (err) {
@@ -217,16 +198,6 @@ export function useCurriculumDashboard() {
     });
   }, [filteredCountdowns]);
 
-  const filteredNotes = useMemo(() => {
-    if (selectedSubjectIds.length === 0) return [];
-    return notes.filter((n) => !n.subject_id || selectedSubjectIds.includes(n.subject_id));
-  }, [notes, selectedSubjectIds]);
-
-  const filteredDecks = useMemo(() => {
-    if (selectedSubjectIds.length === 0) return [];
-    return decks.filter((d) => !d.subject_id || selectedSubjectIds.includes(d.subject_id));
-  }, [decks, selectedSubjectIds]);
-
   const unselectedSubjects = useMemo(() => {
     return enrolledSubjects.filter((s) => !selectedSubjectIds.includes(s.subjectId));
   }, [enrolledSubjects, selectedSubjectIds]);
@@ -291,8 +262,6 @@ export function useCurriculumDashboard() {
     availableExams,
     addCountdown,
     removeCountdown,
-    notes: filteredNotes,
-    decks: filteredDecks,
     progress: {
       completedTopics: totalCompletedTopics,
       totalTopics,

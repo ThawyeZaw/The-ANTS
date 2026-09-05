@@ -12,12 +12,10 @@ import {
   CalendarDays,
   Timer,
   BookOpen,
-  Layers,
   GraduationCap,
   Clock,
   Calculator,
   Compass,
-  NotebookPen,
   FlaskConical,
   UserCircle,
   Settings,
@@ -32,21 +30,15 @@ interface SidebarLink {
 }
 
 const CONTEXT_MAP: Record<string, SidebarLink[]> = {
-  '/flashcards': [
-    { label: 'Courses', href: '/library?tab=courses', icon: <GraduationCap className="h-4 w-4" />, color: 'text-emerald-500' },
-    { label: 'Notes', href: '/library?tab=notes', icon: <NotebookPen className="h-4 w-4" />, color: 'text-amber-500' },
-    { label: 'Pomodoro', href: '/pomodoro', icon: <Timer className="h-4 w-4" />, color: 'text-rose-500' },
-    { label: 'Timetable', href: '/timetable', icon: <CalendarDays className="h-4 w-4" />, color: 'text-blue-500' },
-  ],
   '/pomodoro': [
-    { label: 'Flashcards', href: '/library?tab=flashcards', icon: <Layers className="h-4 w-4" />, color: 'text-violet-500' },
     { label: 'Timetable', href: '/timetable', icon: <CalendarDays className="h-4 w-4" />, color: 'text-blue-500' },
     { label: 'Countdown', href: '/countdown', icon: <Clock className="h-4 w-4" />, color: 'text-amber-500' },
+    { label: 'Courses', href: '/library?tab=courses', icon: <GraduationCap className="h-4 w-4" />, color: 'text-emerald-500' },
   ],
   '/courses': [
     { label: 'Library', href: '/library', icon: <BookOpen className="h-4 w-4" />, color: 'text-emerald-500' },
-    { label: 'Flashcards', href: '/library?tab=flashcards', icon: <Layers className="h-4 w-4" />, color: 'text-violet-500' },
     { label: 'Exams', href: '/library?tab=exams', icon: <FlaskConical className="h-4 w-4" />, color: 'text-rose-500' },
+    { label: 'Countdown', href: '/countdown', icon: <Clock className="h-4 w-4" />, color: 'text-amber-500' },
   ],
   '/timetable': [
     { label: 'Countdown', href: '/countdown', icon: <Clock className="h-4 w-4" />, color: 'text-amber-500' },
@@ -65,9 +57,8 @@ const CONTEXT_MAP: Record<string, SidebarLink[]> = {
   ],
   '/library': [
     { label: 'Courses', href: '/library?tab=courses', icon: <GraduationCap className="h-4 w-4" />, color: 'text-emerald-500' },
-    { label: 'Notes', href: '/library?tab=notes', icon: <NotebookPen className="h-4 w-4" />, color: 'text-amber-500' },
-    { label: 'Flashcards', href: '/library?tab=flashcards', icon: <Layers className="h-4 w-4" />, color: 'text-violet-500' },
     { label: 'Exams', href: '/library?tab=exams', icon: <FlaskConical className="h-4 w-4" />, color: 'text-rose-500' },
+    { label: 'Tools', href: '/library?tab=tools', icon: <Timer className="h-4 w-4" />, color: 'text-sky-500' },
   ],
   '/profile': [
     { label: 'Settings', href: '/settings', icon: <Settings className="h-4 w-4" />, color: 'text-foreground-muted' },
@@ -135,7 +126,7 @@ export default function RelatedPagesSidebar({ className }: { className?: string 
     <aside
       className={cn(
         'hidden lg:flex flex-col items-center gap-1 w-12 shrink-0 py-4 px-1',
-        'sticky top-20 self-start z-10',
+        'sticky top-6 self-start z-10',
         'rounded-2xl border border-border bg-background-card/70 backdrop-blur-md shadow-xs',
         className
       )}

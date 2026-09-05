@@ -24,7 +24,7 @@ const ROLE_INFO: Record<string, { label: string; icon: any; color: string; desc:
     label: 'Student',
     icon: BookOpen,
     color: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
-    desc: 'Access study tools, personal notes, timetable & library',
+    desc: 'Access study tools, timetable & library',
   },
   tutor: {
     label: 'Tutor',
@@ -42,7 +42,7 @@ const ROLE_INFO: Record<string, { label: string; icon: any; color: string; desc:
     label: 'Contributor',
     icon: Pencil,
     color: 'bg-violet-500/10 text-violet-600 border-violet-500/20',
-    desc: 'Create official curriculum notes, decks & submit proposals',
+    desc: 'Maintain curriculum & exam data and submit proposals',
   },
   admin: {
     label: 'Admin',

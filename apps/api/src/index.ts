@@ -7,9 +7,7 @@ import { processNotificationQueue } from './services/notification-processor';
 // Route Handlers
 import { createRoleUpgradeRoutes } from './routes/role-upgrade';
 import { createTimetableRoutes } from './routes/timetable';
-import { createFlashcardRoutes } from './routes/flashcards';
 import { createExamRoutes } from './routes/exams';
-import { createNoteRoutes } from './routes/notes';
 import { createCurriculumRoutes } from './routes/curriculum';
 import { createEditorRoutes } from './routes/editor';
 import { createStorageRoutes } from './routes/storage';
@@ -149,9 +147,7 @@ app.all('/api/auth', async (c) => {
 // Domain Routes
 app.route('/api/role-upgrade', createRoleUpgradeRoutes(() => getDatabase()));
 app.route('/api/timetable', createTimetableRoutes(() => getDatabase()));
-app.route('/api/flashcards', createFlashcardRoutes(() => getDatabase()));
 app.route('/api/exams', createExamRoutes(() => getDatabase()));
-app.route('/api/notes', createNoteRoutes(() => getDatabase()));
 app.route('/api/curriculum', createCurriculumRoutes(() => getDatabase()));
 app.route('/api/editor', createEditorRoutes(() => getDatabase()));
 app.route('/api/storage', createStorageRoutes());

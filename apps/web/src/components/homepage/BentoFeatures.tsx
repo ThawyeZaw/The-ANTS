@@ -2,17 +2,14 @@
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Homepage — BentoFeatures
-// Bento-grid layout for the 8 features section.
+// Bento-grid layout for the features section.
 // Smart Timetable → col-span-2 with mini timetable preview inside.
-// Flashcard Decks → col-span-2 with clickable flip card demo inside.
 // Other 6 features → col-span-1 standard tiles.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useState } from 'react';
 import {
   CalendarDays,
   Timer,
-  Layers,
   ClipboardCheck,
   GraduationCap,
   MessageSquare,
@@ -80,33 +77,6 @@ function MiniTimetable() {
   );
 }
 
-// ── Flip card (inside Flashcard Decks big tile) ───────────────────────────────
-function FlipCardDemo() {
-  const [flipped, setFlipped] = useState(false);
-
-  return (
-    <button
-      onClick={() => setFlipped((f) => !f)}
-      aria-label="Flip flashcard demo"
-      style={{
-        width: 118,
-        height: 74,
-        flexShrink: 0,
-        background: 'none',
-        border: 'none',
-        padding: 0,
-        cursor: 'pointer',
-      }}
-      className={`hp-flip-card${flipped ? ' flipped' : ''}`}
-    >
-      <div className="hp-flip-inner" style={{ width: '100%', height: '100%' }}>
-        <div className="hp-flip-face hp-flip-front">tap to flip</div>
-        <div className="hp-flip-face hp-flip-back">F = ma</div>
-      </div>
-    </button>
-  );
-}
-
 // ── Feature tile data ─────────────────────────────────────────────────────────
 
 interface Feature {
@@ -115,7 +85,7 @@ interface Feature {
   Icon: LucideIcon;
   iconColor: string;
   big?: boolean;
-  preview?: 'timetable' | 'flashcard';
+  preview?: 'timetable';
 }
 
 const FEATURES: Feature[] = [
@@ -127,14 +97,6 @@ const FEATURES: Feature[] = [
     iconColor: '#1D9BF0',
     big: true,
     preview: 'timetable',
-  },
-  {
-    title: 'Flashcard Decks',
-    description: "Create or browse decks with spaced-repetition. Never forget what you've learnt.",
-    Icon: Layers,
-    iconColor: '#9D5CFF',
-    big: true,
-    preview: 'flashcard',
   },
   {
     title: 'Pomodoro Timer',
@@ -227,7 +189,6 @@ function BentoCard({ feature, index }: { feature: Feature; index: number }) {
             />
           </div>
           {preview === 'timetable' && <MiniTimetable />}
-          {preview === 'flashcard' && <FlipCardDemo />}
         </div>
 
         {/* Text */}

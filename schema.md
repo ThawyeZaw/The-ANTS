@@ -53,7 +53,7 @@
 | `linkedin_url` | `text` | LinkedIn profile |
 | `github_url` | `text` | GitHub profile |
 | `contributor_level` | `text` | Default: `'contributor'` |
-| `contributions_count` | `integer` | Count of published notes & decks |
+| `contributions_count` | `integer` | Count of published curriculum/exam contributions |
 | `verified_at` | `timestamp with time zone` | Verification timestamp |
 
 ### Table `certifications`
@@ -80,20 +80,12 @@
 ### Table `timetable_events`
 - `id`, `user_id`, `title`, `event_type` (`'class'` | `'study'` | `'exam'` | `'general'`), `start_time`, `end_time`, `all_day`, `is_recurring`, `recurrence_pattern`, `color_code`, `metadata`.
 
-### Table `notes`, `user_saved_notes`, `user_notes`
-- `notes`: Official verified curriculum notes with block data (`id`, `title`, `summary`, `curriculum_id`, `subject_id`, `topic_id`, `blocks`, `contributor_id`, `status`).
-- `user_saved_notes`: Junction linking students to bookmarked official notes.
-- `user_notes`: Personal student notes created in workspace.
-
-### Table `decks`, `cards`, `card_reviews`
-- `decks`: Flashcard deck metadata with SRS algorithm settings.
-- `cards`: Individual flashcard front/back items.
-- `card_reviews`: Review history with interval, ease factor, and recall rating.
-
 ### Table `exams`, `exam_countdowns`, `grade_boundaries`
 - `exams`: Official syllabus exam series.
 - `exam_countdowns`: User pinned target exam countdowns with Telegram notification reminders.
 - `grade_boundaries`: Historical raw score to letter grade conversion tables.
+
+> **Removed (migration `0003_drop_legacy_resources`):** `notes`, `user_notes`, `user_saved_notes`, `decks`, `cards`, `card_reviews`, `resources`, `standalone_quizzes`, `quiz_live_sessions`, `quiz_live_participants`, and legacy classroom tables (`classrooms`, `classroom_*`, `quizzes`, `quiz_attempts`, `assignments`, `assignment_submissions`, `discussion_*`). Study notes/flashcards are replaced by an external Notion content pipeline.
 
 ---
 

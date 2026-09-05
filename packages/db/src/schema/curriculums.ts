@@ -30,7 +30,6 @@ export const topics = pgTable('topics', {
   description: text('description'),
   order_index: integer('order_index').default(0),
   subtopics_count: integer('subtopics_count').default(0),
-  resources_count: integer('resources_count').default(0),
   difficulty_level: text('difficulty_level'),
   estimated_hours: integer('estimated_hours'),
   created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
@@ -54,24 +53,10 @@ export const topicProgress = pgTable('topic_progress', {
   notes: text('notes'),
 });
 
-export const resources = pgTable('resources', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  title: text('title').notNull(),
-  description: text('description'),
-  url: text('url').notNull(),
-  resource_type: text('resource_type').notNull(), // pdf, video, link, document
-  topic_id: uuid('topic_id').references(() => topics.id, { onDelete: 'set null' }),
-  subject_id: uuid('subject_id').references(() => subjects.id, { onDelete: 'set null' }),
-  curriculum_id: uuid('curriculum_id').references(() => curriculums.id, { onDelete: 'set null' }),
-  author_id: uuid('author_id').references(() => profiles.id, { onDelete: 'set null' }),
-  is_public: boolean('is_public').default(true),
-  created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
-
 export const editorSubmissions = pgTable('editor_submissions', {
   id: uuid('id').primaryKey().defaultRandom(),
   title: text('title').notNull(),
-  entity_type: text('entity_type').notNull(), // curriculum, subject, topic, note
+  entity_type: text('entity_type').notNull(), // curriculum, subject, topic, exam
   entity_id: uuid('entity_id'),
   submitted_by: uuid('submitted_by').references(() => profiles.id, { onDelete: 'cascade' }).notNull(),
   data: jsonb('data').$type<z.infer<typeof GenericMetadataSchema>>().notNull(),

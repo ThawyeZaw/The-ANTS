@@ -55,9 +55,7 @@ export default function MyComponent() {
 - `useAuth()` — Authentication state, current user, login, register, logout, profile update.
 - `useRole()` — Granular role checks (`isStudent`, `isTutor`, `isContributor`, `isAdmin`).
 - `useTimetable()` — Timetable event CRUD, recurrence expansion, reminders.
-- `useNotes()` — Subject notes, markdown editor state, reviews, attachments.
-- `useFlashcardSRS()` — Spaced repetition system (SM-2 rating: Again/Hard/Good/Easy).
-- `useCurriculumDashboard()` — Enrolled subject selector, exam countdowns, notes & deck aggregation.
+- `useCurriculumDashboard()` — Enrolled subject selector, exam countdowns aggregation.
 - `useCourseManager()` — Curriculums, enrolled subjects, qualifications, syllabus codes.
 - `useCountdown()` — Custom & auto-calculated exam countdowns.
 - `useContributorManager()` — Contributor team management, invites, review queue.
@@ -70,9 +68,9 @@ export default function MyComponent() {
   - `/profile/[username]` — Unified public profile (Student portfolio, Tutor schedule, or Contributor showcase).
 - **Protected App Routes (`apps/web/src/app/(app)/`)**:
   - `/student` or `/dashboard` — Main student dashboard.
-  - `/library` & `/courses` & `/notes` — Curriculum and study notes library.
+  - `/library` & `/courses` — Curriculum library (courses, exams, study tools).
   - `/timetable` — Integrated calendar (events & exam countdowns).
-  - `/pomodoro` & `/calculator` & `/flashcards` — Study productivity tools.
+  - `/pomodoro` & `/calculator` — Study productivity tools.
   - `/settings` & `/settings/profile` — Account, Telegram notifications, and profile editor.
   - `/editor` & `/main-contributor` — Contributor & Admin portals.
 

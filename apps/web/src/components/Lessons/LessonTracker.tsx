@@ -71,7 +71,7 @@ function StickyBreadcrumb({
   onReset?: () => void;
 }) {
   return (
-    <div className="sticky top-[calc(var(--nav-height)+8px)] z-10 flex items-center gap-1.5 py-2 px-3 mb-3 rounded-lg border border-border bg-background-card/95 backdrop-blur-sm">
+    <div className="sticky top-2 z-10 flex items-center gap-1.5 py-2 px-3 mb-3 rounded-lg border border-border bg-background-card/95 backdrop-blur-sm">
       <span className="text-[10px] font-medium text-foreground-muted uppercase tracking-widest">
         {subject.title}
       </span>

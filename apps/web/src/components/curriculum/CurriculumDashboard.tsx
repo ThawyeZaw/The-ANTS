@@ -2,7 +2,7 @@
 
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTs — CurriculumDashboard
-// Unified curriculum hub: subject selector + exam countdowns + notes + flashcards.
+// Unified curriculum hub: subject selector + exam countdowns.
 // Cross-links between sections for integrated study workflow.
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -11,8 +11,6 @@ import Link from 'next/link';
 import {
   BookOpen,
   Clock,
-  Layers,
-  StickyNote,
   Timer,
   X,
   Plus,
@@ -23,7 +21,6 @@ import {
   MinusCircle,
   ArrowDownCircle,
   CheckCircle2,
-  Globe,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCurriculumDashboard, type CountdownWithTime } from '@/hooks/useCurriculumDashboard';
@@ -418,104 +415,6 @@ function AddCountdownModal({
   );
 }
 
-// ── Section: Notes ────────────────────────────────────────────────────────────
-
-function NotesSection({ notes }: { notes: ReturnType<typeof useCurriculumDashboard>['notes'] }) {
-  return (
-    <div className="rounded-xl border border-border bg-background-card p-5">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-500/10">
-            <StickyNote className="h-4 w-4 text-violet-500" />
-          </div>
-          <h3 className="font-semibold text-foreground">Study Notes</h3>
-          <span className="text-xs text-foreground-muted">({notes.length})</span>
-        </div>
-        <Link href="/my-notes" className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary-hover transition-colors">
-          View All <ChevronRight className="h-3 w-3" />
-        </Link>
-      </div>
-
-      {notes.length === 0 ? (
-        <p className="text-sm text-foreground-muted py-6 text-center">
-          No notes available for selected subjects.
-        </p>
-      ) : (
-        <div className="space-y-2">
-          {notes.slice(0, 5).map(note => (
-            <Link
-              key={note.id}
-              href={`/my-notes/${note.id}`}
-              className="block rounded-lg border border-border/60 bg-background-secondary/50 px-3 py-2.5 hover:border-primary/30 hover:bg-background-secondary transition-colors"
-            >
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{note.title}</p>
-                {note.summary && (
-                  <p className="text-xs text-foreground-muted truncate mt-0.5">{note.summary}</p>
-                )}
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── Section: Flashcards ───────────────────────────────────────────────────────
-
-function FlashcardSection({ decks }: { decks: ReturnType<typeof useCurriculumDashboard>['decks'] }) {
-  return (
-    <div className="rounded-xl border border-border bg-background-card p-5">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10">
-            <Layers className="h-4 w-4 text-accent" />
-          </div>
-          <h3 className="font-semibold text-foreground">Flashcard Decks</h3>
-          <span className="text-xs text-foreground-muted">({decks.length})</span>
-        </div>
-        <Link href="/flashcards" className="flex items-center gap-1 text-xs font-medium text-accent hover:text-accent-hover transition-colors">
-          View All <ChevronRight className="h-3 w-3" />
-        </Link>
-      </div>
-
-      {decks.length === 0 ? (
-        <p className="text-sm text-foreground-muted py-6 text-center">
-          No flashcard decks available for selected subjects.
-        </p>
-      ) : (
-        <div className="space-y-2">
-          {decks.slice(0, 5).map(deck => (
-            <Link
-              key={deck.id}
-              href={`/flashcards/${deck.id}?mode=study`}
-              className="block rounded-lg border border-border/60 bg-background-secondary/50 px-3 py-2.5 hover:border-accent/30 hover:bg-background-secondary transition-colors"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{deck.name}</p>
-                  {deck.description && (
-                    <p className="text-xs text-foreground-muted truncate mt-0.5">{deck.description}</p>
-                  )}
-                </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  {deck.is_public && <Globe className="h-3 w-3 text-foreground-muted" />}
-                  {deck.category && (
-                    <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-medium text-accent">
-                      {deck.category}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ── Empty state (no enrolled subjects) ────────────────────────────────────────
 
 function EmptyEnrollment() {
@@ -526,7 +425,7 @@ function EmptyEnrollment() {
       </div>
       <h2 className="text-xl font-bold text-foreground">No subjects enrolled</h2>
       <p className="mt-2 text-sm text-foreground-muted max-w-sm">
-        Enrol in subjects from the Course Manager to see your personalized exam countdowns, study notes, and flashcards here.
+        Enrol in subjects from the Course Manager to see your personalized exam countdowns here.
       </p>
       <Link
         href="/courses"
@@ -549,8 +448,6 @@ export default function CurriculumDashboard() {
     selectedSubjectIds,
     countdowns,
     availableExams,
-    notes,
-    decks,
     imminentExams,
     toggleSubject,
     selectAllSubjects,
@@ -578,7 +475,7 @@ export default function CurriculumDashboard() {
             My Curriculum
           </h1>
           <p className="text-foreground-muted mt-2 max-w-2xl text-sm">
-            Personalised exam countdowns, study notes, and flashcard decks for your enrolled subjects.
+            Personalised exam countdowns for your enrolled subjects.
           </p>
         </div>
 
@@ -617,55 +514,46 @@ export default function CurriculumDashboard() {
         </div>
       )}
 
-      {/* ── Three-column grid ────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* ── Column 1: Exam Countdowns ──────────────────────────────────────── */}
-        <div className="rounded-xl border border-border bg-background-card p-5">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                <Timer className="h-4 w-4 text-primary" />
-              </div>
-              <h3 className="font-semibold text-foreground">Exam Countdowns</h3>
-              <span className="text-xs text-foreground-muted">({countdowns.length})</span>
+      {/* ── Exam Countdowns ──────────────────────────────────────────────────── */}
+      <div className="rounded-xl border border-border bg-background-card p-5 max-w-2xl">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+              <Timer className="h-4 w-4 text-primary" />
             </div>
-            <Link href="/countdown" className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary-hover transition-colors">
-              View All <ChevronRight className="h-3 w-3" />
-            </Link>
+            <h3 className="font-semibold text-foreground">Exam Countdowns</h3>
+            <span className="text-xs text-foreground-muted">({countdowns.length})</span>
           </div>
-
-          {countdowns.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 py-8 text-center">
-              <Clock className="h-8 w-8 text-foreground-muted/40" />
-              <p className="text-sm text-foreground-muted">No exam countdowns for selected subjects.</p>
-              {canEdit && (
-                <button
-                  onClick={() => setIsAddModalOpen(true)}
-                  className="mt-1 text-xs font-medium text-primary hover:text-primary-hover transition-colors cursor-pointer"
-                >
-                  + Add your first countdown
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1 scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-              {countdowns.map(item => (
-                <CountdownCard
-                  key={item.countdown.id}
-                  item={item}
-                  onDelete={removeCountdown}
-                  canEdit={canEdit}
-                />
-              ))}
-            </div>
-          )}
+          <Link href="/countdown" className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary-hover transition-colors">
+            View All <ChevronRight className="h-3 w-3" />
+          </Link>
         </div>
 
-        {/* ── Column 2: Study Notes ──────────────────────────────────────────── */}
-        <NotesSection notes={notes} />
-
-        {/* ── Column 3: Flashcard Decks ──────────────────────────────────────── */}
-        <FlashcardSection decks={decks} />
+        {countdowns.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 py-8 text-center">
+            <Clock className="h-8 w-8 text-foreground-muted/40" />
+            <p className="text-sm text-foreground-muted">No exam countdowns for selected subjects.</p>
+            {canEdit && (
+              <button
+                onClick={() => setIsAddModalOpen(true)}
+                className="mt-1 text-xs font-medium text-primary hover:text-primary-hover transition-colors cursor-pointer"
+              >
+                + Add your first countdown
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1 scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            {countdowns.map(item => (
+              <CountdownCard
+                key={item.countdown.id}
+                item={item}
+                onDelete={removeCountdown}
+                canEdit={canEdit}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ── Add Countdown Modal ──────────────────────────────────────────────── */}

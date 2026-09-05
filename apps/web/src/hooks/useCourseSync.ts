@@ -2,7 +2,7 @@
 
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTS — useCourseSync hook (Hono API / Neon Backend)
-// Provides synced course-resource data for dashboards.
+// Provides synced course-resource data for dashboards (exams & countdowns).
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect } from 'react';
@@ -23,8 +23,6 @@ export interface SyncedSubject {
   subjectTitle: string;
   topicCount: number;
   completedTopics: number;
-  notes: any[];
-  flashcards: any[];
   exams: any[];
   countdowns: any[];
 }
@@ -67,14 +65,7 @@ export function useCourseSync() {
 
     const fetchResources = async () => {
       try {
-        const [notesRes, decksRes, examsRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/api/notes/library`),
-          fetch(`${API_BASE_URL}/api/flashcards/decks?userId=${encodeURIComponent(user.id)}`),
-          fetch(`${API_BASE_URL}/api/exams`),
-        ]);
-
-        const notes = notesRes.ok ? (await notesRes.json()).notes || [] : [];
-        const decks = decksRes.ok ? (await decksRes.json()).decks || [] : [];
+        const examsRes = await fetch(`${API_BASE_URL}/api/exams`);
         const exams = examsRes.ok ? (await examsRes.json()).exams || [] : [];
 
         const countdownsBySubject = new Map<string, any>();
@@ -89,10 +80,7 @@ export function useCourseSync() {
           curriculumTitle: curriculum.title,
           examBoard: (curriculum as any).exam_board ?? null,
           subjects: curriculum.subjects.map((subject) => {
-            const subjectNotes = notes.filter((n: any) => n.subject_id === subject.id);
-            const subjectDecks = decks.filter((d: any) => d.subject_id === subject.id);
             const subjectExams = exams.filter((e: any) => e.subject_id === subject.id);
-
             const subjectCountdowns: any[] = [];
             const cd = countdownsBySubject.get(subject.id);
             if (cd) {
@@ -104,8 +92,6 @@ export function useCourseSync() {
               subjectTitle: subject.title,
               topicCount: subject.topics.length,
               completedTopics: 0,
-              notes: subjectNotes,
-              flashcards: subjectDecks,
               exams: subjectExams,
               countdowns: subjectCountdowns,
             };
@@ -128,8 +114,7 @@ export function useCourseSync() {
     return (
       acc +
       course.subjects.reduce(
-        (subAcc, sub) =>
-          subAcc + sub.notes.length + sub.flashcards.length + sub.exams.length + sub.countdowns.length,
+        (subAcc, sub) => subAcc + sub.exams.length + sub.countdowns.length,
         0
       )
     );

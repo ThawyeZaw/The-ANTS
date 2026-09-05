@@ -32,15 +32,6 @@ interface EditorItem {
 
 const EDITOR_ITEMS: EditorItem[] = [
   {
-    id: 'notes',
-    label: 'Notes Editor',
-    description: 'Create, refine, and submit syllabus-aligned study notes to the public library.',
-    href: '/editor/notes',
-    icon: <Pencil className="h-6 w-6" />,
-    accentColor: 'from-amber-500 to-orange-500',
-    features: ['Rich text & LaTeX formula editing', 'Curriculum topic mapping', 'Version history', 'Community publishing'],
-  },
-  {
     id: 'curriculum',
     label: 'Curriculum Editor',
     description: 'Structure academic boards, subjects, and topic hierarchies with prerequisites.',
@@ -61,7 +52,7 @@ const EDITOR_ITEMS: EditorItem[] = [
   {
     id: 'review-queue',
     label: 'Review Queue Proposals',
-    description: 'Review pending curriculum changes and note proposals before publishing.',
+    description: 'Review pending curriculum and exam proposals before publishing.',
     href: '/editor/review-queue',
     icon: <ShieldCheck className="h-6 w-6" />,
     accentColor: 'from-blue-500 to-indigo-500',
@@ -164,7 +155,7 @@ export default function EditorPortalPage() {
             Academic Contributor Workspace
           </h1>
           <p className="text-xs sm:text-sm text-foreground-muted max-w-xl">
-            Author comprehensive study summaries, structure curriculum frameworks, and update official exam schedules.
+            Structure curriculum frameworks and update official exam schedules.
           </p>
         </div>
 
@@ -195,13 +186,13 @@ export default function EditorPortalPage() {
             Curriculum Authoring Standard
           </h3>
           <p className="text-xs text-foreground-muted leading-relaxed">
-            All submitted notes and curriculum topics are mapped against official syllabus codes (Cambridge, Edexcel, and Matriculation) and go through the moderation queue before going live.
+            All submitted curriculum topics are mapped against official syllabus codes (Cambridge, Edexcel, and Matriculation) and go through the moderation queue before going live.
           </p>
         </div>
       </div>
 
       {/* Editors Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {editors.map((editor) => (
           <EditorCard key={editor.id} editor={editor} />
         ))}
@@ -216,7 +207,7 @@ export default function EditorPortalPage() {
           <div>
             <h3 className="text-sm font-bold text-foreground">Open Educational Resources for Myanmar</h3>
             <p className="text-xs text-foreground-muted mt-0.5">
-              Your authored guides and revision formulas are accessed by students and educators nationwide.
+              Your curriculum frameworks and exam schedules are accessed by students and educators nationwide.
             </p>
           </div>
         </div>

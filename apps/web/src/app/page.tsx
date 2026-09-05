@@ -8,6 +8,7 @@
 // Dark palette is scoped to the .hp class — does not affect authenticated pages.
 // ──────────────────────────────────────────────────────────────────────────────
 
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, MessageSquare, Users, Home } from 'lucide-react';
@@ -118,6 +119,11 @@ function SectionHead({
 
 export default function HomePage() {
   const { isAuthenticated, user } = useAuth();
+  // Auth seeds from localStorage on the client only — gate until mount to match SSR HTML.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <div className="hp" style={{ minHeight: '100vh', position: 'relative' }}>
@@ -260,7 +266,7 @@ export default function HomePage() {
           </div>
 
 
-          {isAuthenticated && user ? (
+          {mounted && isAuthenticated && user ? (
             <Link href={getRoleLandingPath(user.profile.role)}>
               <button
                 style={{

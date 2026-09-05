@@ -4,12 +4,8 @@
 // The ANTs — Student & Unified Study Dashboard
 // ──────────────────────────────────────────────────────────────────────────────
 
-import Image from 'next/image';
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
-  BookMarked,
-  Library,
   Clock,
   Flame,
   Zap,
@@ -17,11 +13,9 @@ import {
   GraduationCap,
   Layers,
   Bell,
-  Calendar,
   Pencil,
   Shield,
   Sparkles,
-  ArrowRight,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
@@ -40,8 +34,6 @@ const iconMap: Record<string, React.ReactNode> = {
   'avg-confidence': <TrendingUp className="h-5 w-5" />,
   'enrolled-courses': <GraduationCap className="h-5 w-5" />,
   'synced-resources': <Layers className="h-5 w-5" />,
-  'saved-notes': <BookMarked className="h-5 w-5" />,
-  'flashcard-decks': <Layers className="h-5 w-5" />,
   'active-countdowns': <Bell className="h-5 w-5" />,
 };
 
@@ -51,7 +43,7 @@ export default function StudentDashboard() {
   const { user } = useAuth();
   const { isTutor, isContributor, isAdmin } = useRole();
 
-  const { savedNotes, upcomingExams, stats } = useDashboardSync();
+  const { stats } = useDashboardSync();
 
   if (!user) return null;
 
@@ -72,7 +64,7 @@ export default function StudentDashboard() {
                 Welcome back, {firstName}! 👋
               </h1>
               <p className="text-xs sm:text-sm text-foreground-muted">
-                Track your syllabus mastery, flashcards recall, and upcoming exam countdowns.
+                Track your syllabus mastery and upcoming exam countdowns.
               </p>
             </div>
 

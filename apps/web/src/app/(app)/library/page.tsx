@@ -3,9 +3,8 @@
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTs — Unified Resources Hub
 // Route: /library — accessible to all authenticated users.
-// 6-Card Grid layout replacing top tab-navigation for Courses, Notes, Flashcards,
-// Exams, Quizzes, and Tools.
-// URL-driven category state: /library?tab=courses|notes|flashcards|exams|quizzes|tools
+// Category grid: Courses, Exams, and Tools.
+// URL-driven category state: /library?tab=courses|exams|tools
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { Suspense } from 'react';
@@ -14,28 +13,21 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Clock,
   Calculator,
-  NotebookPen,
-  ScrollText,
   CalendarDays,
   Timer,
   GraduationCap,
   ArrowRight,
   Sparkles,
   FlaskConical,
-  Brain,
-  Layers,
   ChevronLeft,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import CoursesLibraryBrowser from '@/components/library/CoursesLibraryBrowser';
-import FlashcardsLibraryBrowser from '@/components/library/FlashcardsLibraryBrowser';
 import ExamsLibraryBrowser from '@/components/library/ExamsLibraryBrowser';
-import NotesLibrary from '@/components/notes/NotesLibrary';
-import QuizLibraryBrowser from '@/components/quizzes/QuizLibraryBrowser';
 
 // ── Category Definition ───────────────────────────────────────────────────────
 
-type CategoryId = 'courses' | 'notes' | 'flashcards' | 'exams' | 'quizzes' | 'tools';
+type CategoryId = 'courses' | 'exams' | 'tools';
 
 interface MainCategoryCard {
   id: CategoryId;
@@ -62,26 +54,6 @@ const MAIN_CATEGORIES: MainCategoryCard[] = [
     itemCount: 'Exam Boards & Syllabi',
   },
   {
-    id: 'notes',
-    title: 'Notes',
-    subtitle: 'Study Notes & Guides',
-    description: 'Access topic-by-topic notes crafted by top students and contributors',
-    icon: <NotebookPen className="h-7 w-7 text-amber-400" />,
-    gradient: 'from-amber-500/20 via-orange-500/10 to-transparent hover:from-amber-500/30 hover:via-orange-500/15',
-    borderGlow: 'hover:border-amber-500/40 hover:shadow-amber-500/10',
-    itemCount: 'Topic Guides & Summaries',
-  },
-  {
-    id: 'flashcards',
-    title: 'Flashcards',
-    subtitle: 'Spaced Repetition',
-    description: 'Master key terms, definitions & formulas with smart flashcard decks',
-    icon: <Layers className="h-7 w-7 text-violet-400" />,
-    gradient: 'from-violet-500/20 via-purple-500/10 to-transparent hover:from-violet-500/30 hover:via-purple-500/15',
-    borderGlow: 'hover:border-violet-500/40 hover:shadow-violet-500/10',
-    itemCount: 'Interactive Decks',
-  },
-  {
     id: 'exams',
     title: 'Exams',
     subtitle: 'Papers & Schedule',
@@ -92,23 +64,12 @@ const MAIN_CATEGORIES: MainCategoryCard[] = [
     itemCount: 'Timetables & Papers',
   },
   {
-    id: 'quizzes',
-    title: 'Quizzes',
-    subtitle: 'Practice Tests',
-    description: 'Test your knowledge with instant feedback & interactive topic quizzes',
-    icon: <Brain className="h-7 w-7 text-yellow-400" />,
-    gradient: 'from-yellow-500/20 via-amber-500/10 to-transparent hover:from-yellow-500/30 hover:via-amber-500/15',
-    borderGlow: 'hover:border-yellow-500/40 hover:shadow-yellow-500/10',
-    badge: 'Popular',
-    itemCount: 'Interactive Practice',
-  },
-  {
     id: 'tools',
     title: 'Tools',
     subtitle: 'Study Utilities',
     description: 'Boost productivity with Pomodoro, Grade Calculators & Timetables',
     icon: <Clock className="h-7 w-7 text-sky-400" />,
-    gradient: 'from-sky-500/20 via-blue-500/10 to-transparent hover:from-sky-500/30 hover:via-blue-500/15',
+    gradient: 'from-sky-500/20 via-blue-500/10 to-transparent hover:from-sky-500/30 hover:via-sky-500/15',
     borderGlow: 'hover:border-sky-500/40 hover:shadow-sky-500/10',
     itemCount: 'Productivity Apps',
   },
@@ -281,14 +242,14 @@ function LibraryPageInner() {
               <p className="text-sm text-foreground-secondary leading-relaxed">
                 {isCategorySelected
                   ? selectedCategoryObj?.description
-                  : 'Choose a category below to explore curated courses, comprehensive notes, interactive flashcards, exams, quizzes, and productivity tools.'}
+                  : 'Choose a category below to explore curated courses, exams, and productivity tools.'}
               </p>
             </div>
 
             {!isCategorySelected && (
               <div className="flex items-center gap-4 sm:gap-5 shrink-0 self-start sm:self-auto">
                 <div className="text-center">
-                  <p className="text-xl font-semibold text-foreground">6</p>
+                  <p className="text-xl font-semibold text-foreground">3</p>
                   <p className="text-[11px] text-foreground-muted">Categories</p>
                 </div>
                 <div className="text-center">
@@ -301,9 +262,8 @@ function LibraryPageInner() {
         </div>
       </div>
 
-      {/* Dynamic Content: 6-Card Grid OR Category Detail Browser */}
+      {/* Dynamic Content: Card Grid OR Category Detail Browser */}
       {!isCategorySelected ? (
-        /* ═════════ 6-CARD GRID DESIGN ═════════ */
         <div className="space-y-4">
           <div className="flex items-center justify-between px-1">
             <h2 className="text-xs font-semibold text-foreground-muted uppercase tracking-wider">
@@ -326,7 +286,6 @@ function LibraryPageInner() {
                 )}
               >
                 <div className="space-y-4">
-                  {/* Header with Icon and Badge */}
                   <div className="flex items-start justify-between">
                     <div className="p-3.5 rounded-2xl bg-background-card/80 border border-border/50 shadow-sm group-hover:scale-110 group-hover:bg-background-card transition-all duration-300">
                       {cat.icon}
@@ -339,7 +298,6 @@ function LibraryPageInner() {
                     )}
                   </div>
 
-                  {/* Title and Description */}
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-2">
                       <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
@@ -355,7 +313,6 @@ function LibraryPageInner() {
                   </div>
                 </div>
 
-                {/* Footer — single clear metadata */}
                 <div className="pt-5 mt-4 border-t border-border/40 flex items-center justify-between text-xs">
                   <span className="font-medium text-foreground-muted">{cat.itemCount}</span>
                   <span className="font-semibold text-foreground-secondary group-hover:text-primary transition-colors inline-flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
@@ -372,16 +329,16 @@ function LibraryPageInner() {
             <span className="text-xs font-medium text-foreground-muted">Quick Navigation:</span>
             <div className="flex flex-wrap items-center gap-2 text-xs font-medium">
               <Link
-                href="/my-notes"
+                href="/library?tab=courses"
                 className="px-2.5 py-1 rounded-lg bg-background-secondary hover:bg-background-tertiary text-foreground-secondary hover:text-foreground transition-colors"
               >
-                My Notes
+                Courses
               </Link>
               <Link
-                href="/flashcards"
+                href="/library?tab=exams"
                 className="px-2.5 py-1 rounded-lg bg-background-secondary hover:bg-background-tertiary text-foreground-secondary hover:text-foreground transition-colors"
               >
-                My Decks
+                Exams
               </Link>
               <Link
                 href="/countdown"
@@ -393,36 +350,16 @@ function LibraryPageInner() {
           </div>
         </div>
       ) : (
-        /* ═════════ DETAILED SUB-CATEGORY / ITEM BROWSER ═════════ */
         <div className="space-y-5">
-          {/* Render Category View Component */}
           {activeCategory === 'courses' && (
             <Suspense fallback={<div className="h-64 rounded-2xl bg-background-secondary animate-pulse" />}>
               <CoursesLibraryBrowser />
             </Suspense>
           )}
 
-          {activeCategory === 'notes' && (
-            <Suspense fallback={<div className="h-64 rounded-2xl bg-background-secondary animate-pulse" />}>
-              <NotesLibrary />
-            </Suspense>
-          )}
-
-          {activeCategory === 'flashcards' && (
-            <Suspense fallback={<div className="h-64 rounded-2xl bg-background-secondary animate-pulse" />}>
-              <FlashcardsLibraryBrowser />
-            </Suspense>
-          )}
-
           {activeCategory === 'exams' && (
             <Suspense fallback={<div className="h-64 rounded-2xl bg-background-secondary animate-pulse" />}>
               <ExamsLibraryBrowser />
-            </Suspense>
-          )}
-
-          {activeCategory === 'quizzes' && (
-            <Suspense fallback={<div className="h-64 rounded-2xl bg-background-secondary animate-pulse" />}>
-              <QuizLibraryBrowser />
             </Suspense>
           )}
 

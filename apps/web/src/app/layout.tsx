@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     "A Level",
     "Myanmar",
     "timetable",
-    "flashcards",
+    "lesson tracker",
     "tutors",
     "pomodoro",
     "exam countdown",

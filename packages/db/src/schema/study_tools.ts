@@ -3,7 +3,6 @@ import { profiles } from './profiles';
 import { curriculums, subjects, topics } from './curriculums';
 import {
   RecurrenceRuleSchema,
-  NoteBlocksArraySchema,
   GenericMetadataSchema,
 } from './zod';
 import { z } from 'zod';
@@ -33,53 +32,6 @@ export const pomodoroSessions = pgTable('pomodoro_sessions', {
   started_at: timestamp('started_at', { withTimezone: true }).notNull(),
   completed_at: timestamp('completed_at', { withTimezone: true }),
   notes: text('notes'),
-});
-
-export const decks = pgTable('decks', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  owner_id: uuid('owner_id').references(() => profiles.id, { onDelete: 'cascade' }).notNull(),
-  subject_id: uuid('subject_id').references(() => subjects.id, { onDelete: 'set null' }),
-  topic_id: uuid('topic_id').references(() => topics.id, { onDelete: 'set null' }),
-  name: text('name').notNull(),
-  description: text('description'),
-  is_public: boolean('is_public').default(false),
-  tags: text('tags').array(),
-  card_count: integer('card_count').default(0),
-  // Drift columns synced from library and exam additions
-  exam_board: text('exam_board'),
-  exam_series: text('exam_series'),
-  exam_paper: text('exam_paper'),
-  syllabus_code: text('syllabus_code'),
-  library_status: text('library_status').default('draft'), // draft, published, archived
-  share_token: text('share_token').unique(),
-  forked_from_id: uuid('forked_from_id'),
-  created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-});
-
-export const cards = pgTable('cards', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  deck_id: uuid('deck_id').references(() => decks.id, { onDelete: 'cascade' }).notNull(),
-  front: text('front').notNull(),
-  back: text('back').notNull(),
-  order_index: integer('order_index').default(0),
-  image_url: text('image_url'),
-  created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-});
-
-export const cardReviews = pgTable('card_reviews', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  card_id: uuid('card_id').references(() => cards.id, { onDelete: 'cascade' }).notNull(),
-  user_id: uuid('user_id').references(() => profiles.id, { onDelete: 'cascade' }).notNull(),
-  state: text('state').default('new'), // new, learning, review, relearning
-  ease_factor: real('ease_factor').default(2.5),
-  interval_days: integer('interval_days').default(0),
-  due_date: timestamp('due_date', { withTimezone: true }).defaultNow(),
-  lapses: integer('lapses').default(0),
-  rating: integer('rating'), // 1 (Again), 2 (Hard), 3 (Good), 4 (Easy)
-  review_duration_ms: integer('review_duration_ms'),
-  reviewed_at: timestamp('reviewed_at', { withTimezone: true }).defaultNow(),
 });
 
 export const exams = pgTable('exams', {
@@ -168,49 +120,6 @@ export const userExamHistory = pgTable('user_exam_history', {
   is_mock: boolean('is_mock').default(false),
   notes: text('notes'),
   recorded_at: timestamp('recorded_at', { withTimezone: true }).defaultNow(),
-});
-
-export const notes = pgTable('notes', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  title: text('title').notNull(),
-  summary: text('summary'),
-  curriculum_id: uuid('curriculum_id').references(() => curriculums.id, { onDelete: 'set null' }),
-  subject_id: uuid('subject_id').references(() => subjects.id, { onDelete: 'set null' }),
-  topic_id: uuid('topic_id').references(() => topics.id, { onDelete: 'set null' }),
-  syllabus_point: text('syllabus_point'),
-  is_syllabus_based: boolean('is_syllabus_based').default(false),
-  tags: text('tags').array(),
-  blocks: jsonb('blocks').$type<z.infer<typeof NoteBlocksArraySchema>>().notNull().default([]),
-  contributor_id: uuid('contributor_id').references(() => profiles.id, { onDelete: 'cascade' }).notNull(),
-  status: text('status').default('draft'), // draft, in_review, published, rejected
-  visibility: text('visibility').default('private'), // private, public
-  reviewer_feedback: text('reviewer_feedback'),
-  reviewer_id: uuid('reviewer_id').references(() => profiles.id, { onDelete: 'set null' }),
-  created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-});
-
-export const userSavedNotes = pgTable('user_saved_notes', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  user_id: uuid('user_id').references(() => profiles.id, { onDelete: 'cascade' }).notNull(),
-  note_id: uuid('note_id').references(() => notes.id, { onDelete: 'cascade' }).notNull(),
-  saved_at: timestamp('saved_at', { withTimezone: true }).defaultNow(),
-});
-
-export const userNotes = pgTable('user_notes', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  user_id: uuid('user_id').references(() => profiles.id, { onDelete: 'cascade' }).notNull(),
-  topic_id: uuid('topic_id').references(() => topics.id, { onDelete: 'set null' }),
-  subject_id: uuid('subject_id').references(() => subjects.id, { onDelete: 'set null' }),
-  curriculum_id: uuid('curriculum_id').references(() => curriculums.id, { onDelete: 'set null' }),
-  title: text('title').notNull().default('Untitled Note'),
-  content: text('content'),
-  blocks: jsonb('blocks').$type<z.infer<typeof NoteBlocksArraySchema>>().notNull().default([]),
-  tags: text('tags').array().default([]),
-  color: text('color'),
-  is_pinned: boolean('is_pinned').default(false),
-  created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
 
 export const examSchedules = pgTable('exam_schedules', {
