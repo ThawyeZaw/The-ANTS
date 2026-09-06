@@ -114,54 +114,6 @@ export const RecurrenceRuleSchema = z.object({
   count: z.number().optional(),
 });
 
-export const NoteBlockSchema = z.object({
-  id: z.string(),
-  type: z.enum([
-    'paragraph',
-    'heading',
-    'subheading',
-    'heading_1',
-    'heading_2',
-    'heading_3',
-    'bullet',
-    'numbered',
-    'code',
-    'callout',
-    'image',
-    'math',
-    'table',
-    'divider',
-    'quote',
-    'todo',
-  ]),
-  content: z.string().optional(),
-  properties: z.record(z.string(), z.any()).optional(),
-  children: z.array(z.any()).optional(),
-});
-export const NoteBlocksArraySchema = z.array(NoteBlockSchema);
-
-// ── Quizzes & Assessment JSONB Schemas ───────────────────────────────────
-
-export const QuizQuestionOptionSchema = z.object({
-  id: z.string(),
-  text: z.string(),
-  isCorrect: z.boolean().optional(),
-  explanation: z.string().optional(),
-});
-
-export const QuizQuestionSchema = z.object({
-  id: z.string(),
-  prompt: z.string(),
-  type: z.enum(['multiple_choice', 'single_choice', 'true_false', 'short_answer']),
-  options: z.array(QuizQuestionOptionSchema).optional(),
-  correctAnswer: z.any().optional(),
-  points: z.number().optional().default(1),
-  explanation: z.string().optional(),
-});
-export const QuizQuestionsArraySchema = z.array(QuizQuestionSchema);
-
-export const QuizAnswersSchema = z.record(z.string(), z.any());
-
 // ── System & Audit Trail JSONB Schemas ───────────────────────────────────
 
 export const VersionChangeItemSchema = z.object({

@@ -70,9 +70,9 @@ function ExamBoardCard({ curriculum, onSelectSubjects, totalSelected, isTopMatch
       className={cn(
         'group relative flex flex-col rounded-2xl border p-5 transition-all duration-300',
         'hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5',
-        isTopMatch && 'border-[var(--primary)]/40 shadow-[var(--shadow-glow)]',
-        !isTopMatch && curriculum.isEnrolled && 'border-[var(--primary)]/30 bg-[var(--primary)]/5',
-        !isTopMatch && !curriculum.isEnrolled && 'border-[var(--border)] bg-[var(--background-card)] hover:border-[var(--primary)]/30',
+        isTopMatch && 'border-primary/40',
+        !isTopMatch && curriculum.isEnrolled && 'border-primary/30 bg-primary/5',
+        !isTopMatch && !curriculum.isEnrolled && 'border-border bg-background-card hover:border-border-hover',
         noMatch && 'opacity-70 hover:opacity-100',
       )}
     >
@@ -415,33 +415,31 @@ export default function CoursesLibraryBrowser() {
     <div className="space-y-8 max-w-7xl mx-auto">
 
       {/* ═══ Hero ═════════════════════════════════════════════════════════════ */}
-      <div className="relative overflow-hidden rounded-3xl border border-[var(--border)] bg-gradient-to-br from-emerald-500/10 via-cyan-500/5 to-blue-500/10 p-6 md:p-8">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+      <div className="rounded-3xl border border-border bg-background-card p-6 md:p-8">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700">
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary border border-primary/20">
               <BookMarked size={12} /> Verified by Contributors
             </div>
-            <h1 className="text-2xl md:text-3xl font-semibold text-[var(--foreground)] tracking-tight">
+            <h1 className="text-2xl md:text-3xl font-semibold text-foreground tracking-tight">
               Courses
             </h1>
-            <p className="max-w-xl text-sm md:text-base text-[var(--foreground-secondary)]">
+            <p className="max-w-xl text-sm md:text-base text-foreground-secondary">
               Browse verified curriculum templates from CAIE, Edexcel, IELTS and more.
               Adding a course automatically populates your Lesson Tracker and Grade Calculator.
             </p>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <div className="text-center">
-              <p className="text-2xl font-semibold text-[var(--foreground)]">{allCurriculums.length}</p>
-              <p className="text-xs text-[var(--foreground-muted)]">Curricula</p>
+              <p className="text-2xl font-semibold text-foreground">{allCurriculums.length}</p>
+              <p className="text-xs text-foreground-muted">Curricula</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-semibold text-[var(--foreground)]">{totalBoards}</p>
-              <p className="text-xs text-[var(--foreground-muted)]">Boards</p>
+              <p className="text-2xl font-semibold text-foreground">{totalBoards}</p>
+              <p className="text-xs text-foreground-muted">Boards</p>
             </div>
           </div>
         </div>
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-56 w-56 rounded-full bg-emerald-400/15 blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 -ml-16 -mb-16 h-48 w-48 rounded-full bg-blue-400/15 blur-3xl pointer-events-none" />
       </div>
 
       {/* ═══ Phase 1: Subject Selection ═══════════════════════════════════════ */}

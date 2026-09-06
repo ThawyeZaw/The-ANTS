@@ -22,7 +22,7 @@ const FEATURE_HIGHLIGHTS = [
   { icon: BookOpen, label: 'Lesson Tracker', desc: 'Track every topic across all curricula' },
   { icon: Calculator, label: 'Grade Calculator', desc: 'UMS, raw marks, IELTS bands & more' },
   { icon: Timer, label: 'Exam Countdown', desc: 'Never miss a Cambridge or Edexcel deadline' },
-  { icon: Sparkles, label: 'Flashcards', desc: 'Tagged by board and syllabus code' },
+  { icon: Sparkles, label: 'Smart Timetable', desc: 'Colour-coded blocks with reminders' },
 ];
 
 export default function LoginForm() {

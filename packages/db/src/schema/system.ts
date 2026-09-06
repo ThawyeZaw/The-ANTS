@@ -10,7 +10,7 @@ import { z } from 'zod';
 export const reviewQueue = pgTable('review_queue', {
   id: uuid('id').primaryKey().defaultRandom(),
   contributor_id: uuid('contributor_id').references(() => profiles.id, { onDelete: 'cascade' }).notNull(),
-  submission_type: text('submission_type').notNull(), // note, deck, curriculum, question
+  submission_type: text('submission_type').notNull(), // curriculum, exam, subject, topic, calculator, countdown
   entity_id: uuid('entity_id').notNull(),
   submitted_data: jsonb('submitted_data').$type<z.infer<typeof GenericMetadataSchema>>().notNull(),
   is_update: boolean('is_update').default(false),

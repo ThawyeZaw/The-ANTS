@@ -2,7 +2,7 @@
 
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTs — Authenticated App Shell Layout
-// Wraps all authenticated routes with universal NavBar and LessonProvider.
+// Wraps all authenticated routes with sidebar/bottom-nav shell and LessonProvider.
 // Redirects to /login if the user is not authenticated.
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -12,7 +12,6 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { LessonProvider } from '@/context/LessonContext';
 import NavBar from '@/components/layout/NavBar';
-import RelatedPagesSidebar from '@/components/layout/RelatedPagesSidebar';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -49,11 +48,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <Suspense fallback={null}>
       <LessonProvider>
-        <div className="min-h-screen bg-background flex flex-col">
+        <div className="min-h-screen bg-background">
           <NavBar />
-          <div className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex items-start gap-6">
-            <RelatedPagesSidebar />
-            <main className="flex-1 min-w-0">{children}</main>
+          <div className="md:pl-[var(--sidebar-width-collapsed)] lg:pl-[var(--sidebar-width)] pb-[calc(var(--bottom-nav-height)+env(safe-area-inset-bottom))] md:pb-0 min-h-screen transition-[padding] duration-200 ease-out motion-reduce:transition-none">
+            <main id="main-content" className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+              {children}
+            </main>
           </div>
         </div>
       </LessonProvider>

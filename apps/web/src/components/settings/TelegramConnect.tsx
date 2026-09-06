@@ -18,9 +18,7 @@ interface NotificationSection {
 
 export interface NotificationPreferences {
   timetable?: NotificationSection;
-  assignments?: NotificationSection;
   exams?: NotificationSection;
-  quizzes?: NotificationSection;
 }
 
 interface TelegramConnectProps {
@@ -50,22 +48,10 @@ const NOTIFICATION_TYPES = [
     availableReminders: [0, 10, 30, 60, 1440, 4320, 10080],
   },
   {
-    key: 'assignments' as const,
-    label: 'Assignments',
-    description: 'Classroom assignment due dates',
-    availableReminders: [60, 1440, 4320, 10080],
-  },
-  {
     key: 'exams' as const,
     label: 'Exam Countdowns',
     description: 'Upcoming exam dates',
     availableReminders: [1440, 4320, 10080],
-  },
-  {
-    key: 'quizzes' as const,
-    label: 'Quizzes',
-    description: 'Classroom quiz due dates',
-    availableReminders: [60, 1440],
   },
 ];
 

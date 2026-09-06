@@ -16,6 +16,7 @@ import {
   Code2,
   Share2,
   CheckCircle,
+  AlertTriangle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { checkPasswordStrength } from '@/lib/utils';
@@ -70,9 +71,6 @@ export default function CompleteProfileForm({
           <div className="w-20 h-20 rounded-full bg-accent/20 flex items-center justify-center mb-4">
             <CheckCircle className="w-10 h-10 text-accent" />
           </div>
-          {/* Decorative sparkles */}
-          <div className="absolute -top-2 -right-2 text-2xl animate-float">✨</div>
-          <div className="absolute -bottom-1 -left-3 text-xl animate-float delay-300">🎉</div>
         </div>
         <h3 className="text-xl font-bold text-foreground mt-2">
           Registration Complete!
@@ -294,7 +292,7 @@ export default function CompleteProfileForm({
       {/* Error */}
       {error && (
         <div className="flex items-center gap-2 p-3 rounded-lg bg-error/10 border border-error/20 text-error text-sm animate-fade-in">
-          <span>⚠️</span>
+          <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
           <span>{error}</span>
         </div>
       )}

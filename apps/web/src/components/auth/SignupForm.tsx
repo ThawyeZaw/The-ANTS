@@ -22,6 +22,10 @@ import {
   MailCheck,
   RefreshCw,
   AlertCircle,
+  BookOpen,
+  GraduationCap,
+  Globe,
+  Zap,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { isValidEmail, checkPasswordStrength, cn } from '@/lib/utils';
@@ -197,13 +201,13 @@ export default function SignupForm() {
 
           <div className="relative z-10 space-y-3">
             {[
-              { emoji: '📚', text: 'IGCSE Cambridge & Edexcel' },
-              { emoji: '🎓', text: 'Cambridge & IAL A-Levels' },
-              { emoji: '🌍', text: 'IELTS Academic' },
-              { emoji: '⚡', text: 'Free forever for students' },
-            ].map(({ emoji, text }) => (
+              { Icon: BookOpen, text: 'IGCSE Cambridge & Edexcel' },
+              { Icon: GraduationCap, text: 'Cambridge & IAL A-Levels' },
+              { Icon: Globe, text: 'IELTS Academic' },
+              { Icon: Zap, text: 'Free forever for students' },
+            ].map(({ Icon, text }) => (
               <div key={text} className="flex items-center gap-3">
-                <span className="text-lg">{emoji}</span>
+                <Icon className="h-4 w-4 text-white/90 shrink-0" strokeWidth={2} aria-hidden />
                 <p className="text-white/90 text-sm font-medium text-on-accent">{text}</p>
               </div>
             ))}

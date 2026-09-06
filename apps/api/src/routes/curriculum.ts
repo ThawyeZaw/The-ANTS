@@ -8,7 +8,6 @@ import {
   topics,
   userCurriculums,
   topicProgress,
-  resources,
 } from '@the-ants/db';
 
 export function createCurriculumRoutes(getDb: () => ReturnType<typeof createDb>) {

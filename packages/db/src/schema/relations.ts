@@ -13,15 +13,11 @@ import {
   topics,
   userCurriculums,
   topicProgress,
-  resources,
   editorSubmissions,
 } from './curriculums';
 import {
   timetableEvents,
   pomodoroSessions,
-  decks,
-  cards,
-  cardReviews,
   exams,
   examCountdowns,
   gradeBoundaries,
@@ -29,9 +25,6 @@ import {
   userEnrollments,
   userExamOverrides,
   userExamHistory,
-  notes,
-  userSavedNotes,
-  userNotes,
   examSchedules,
 } from './study_tools';
 import {
@@ -42,11 +35,6 @@ import {
   notificationPreferences,
   activityFeed,
 } from './system';
-import {
-  standaloneQuizzes,
-  quizSessions,
-  quizParticipants,
-} from './community';
 import { user, session, account } from './auth';
 
 // ── Profile Relations ───────────────────────────────────────────────────────
@@ -68,10 +56,6 @@ export const profilesRelations = relations(profiles, ({ one, many }) => ({
   roleUpgradeRequests: many(roleUpgradeRequests),
   timetableEvents: many(timetableEvents),
   pomodoroSessions: many(pomodoroSessions),
-  decks: many(decks),
-  notes: many(notes),
-  userNotes: many(userNotes),
-  userSavedNotes: many(userSavedNotes),
   examCountdowns: many(examCountdowns),
   gradeEntries: many(gradeEntries),
   userEnrollments: many(userEnrollments),
@@ -91,7 +75,6 @@ export const curriculumsRelations = relations(curriculums, ({ many }) => ({
   userCurriculums: many(userCurriculums),
   userEnrollments: many(userEnrollments),
   exams: many(exams),
-  notes: many(notes),
 }));
 
 export const subjectsRelations = relations(subjects, ({ one, many }) => ({
@@ -101,10 +84,6 @@ export const subjectsRelations = relations(subjects, ({ one, many }) => ({
   }),
   topics: many(topics),
   exams: many(exams),
-  decks: many(decks),
-  notes: many(notes),
-  userNotes: many(userNotes),
-  resources: many(resources),
   gradeBoundaries: many(gradeBoundaries),
   gradeEntries: many(gradeEntries),
   examCountdowns: many(examCountdowns),
@@ -115,49 +94,8 @@ export const topicsRelations = relations(topics, ({ one, many }) => ({
     fields: [topics.subject_id],
     references: [subjects.id],
   }),
-  resources: many(resources),
   topicProgress: many(topicProgress),
-  decks: many(decks),
-  notes: many(notes),
-  userNotes: many(userNotes),
   pomodoroSessions: many(pomodoroSessions),
-}));
-
-// ── Flashcards & SRS Relations ─────────────────────────────────────────────
-
-export const decksRelations = relations(decks, ({ one, many }) => ({
-  owner: one(profiles, {
-    fields: [decks.owner_id],
-    references: [profiles.id],
-  }),
-  subject: one(subjects, {
-    fields: [decks.subject_id],
-    references: [subjects.id],
-  }),
-  topic: one(topics, {
-    fields: [decks.topic_id],
-    references: [topics.id],
-  }),
-  cards: many(cards),
-}));
-
-export const cardsRelations = relations(cards, ({ one, many }) => ({
-  deck: one(decks, {
-    fields: [cards.deck_id],
-    references: [decks.id],
-  }),
-  reviews: many(cardReviews),
-}));
-
-export const cardReviewsRelations = relations(cardReviews, ({ one }) => ({
-  card: one(cards, {
-    fields: [cardReviews.card_id],
-    references: [cards.id],
-  }),
-  user: one(profiles, {
-    fields: [cardReviews.user_id],
-    references: [profiles.id],
-  }),
 }));
 
 // ── Exams & Study Tools Relations ──────────────────────────────────────────
@@ -296,56 +234,6 @@ export const userExamHistoryRelations = relations(userExamHistory, ({ one }) => 
   }),
 }));
 
-export const notesRelations = relations(notes, ({ one, many }) => ({
-  contributor: one(profiles, {
-    fields: [notes.contributor_id],
-    references: [profiles.id],
-  }),
-  curriculum: one(curriculums, {
-    fields: [notes.curriculum_id],
-    references: [curriculums.id],
-  }),
-  subject: one(subjects, {
-    fields: [notes.subject_id],
-    references: [subjects.id],
-  }),
-  topic: one(topics, {
-    fields: [notes.topic_id],
-    references: [topics.id],
-  }),
-  savedByUsers: many(userSavedNotes),
-}));
-
-export const userSavedNotesRelations = relations(userSavedNotes, ({ one }) => ({
-  user: one(profiles, {
-    fields: [userSavedNotes.user_id],
-    references: [profiles.id],
-  }),
-  note: one(notes, {
-    fields: [userSavedNotes.note_id],
-    references: [notes.id],
-  }),
-}));
-
-export const userNotesRelations = relations(userNotes, ({ one }) => ({
-  user: one(profiles, {
-    fields: [userNotes.user_id],
-    references: [profiles.id],
-  }),
-  curriculum: one(curriculums, {
-    fields: [userNotes.curriculum_id],
-    references: [curriculums.id],
-  }),
-  subject: one(subjects, {
-    fields: [userNotes.subject_id],
-    references: [subjects.id],
-  }),
-  topic: one(topics, {
-    fields: [userNotes.topic_id],
-    references: [topics.id],
-  }),
-}));
-
 export const userCurriculumsRelations = relations(userCurriculums, ({ one }) => ({
   user: one(profiles, {
     fields: [userCurriculums.user_id],
@@ -365,25 +253,6 @@ export const topicProgressRelations = relations(topicProgress, ({ one }) => ({
   topic: one(topics, {
     fields: [topicProgress.topic_id],
     references: [topics.id],
-  }),
-}));
-
-export const resourcesRelations = relations(resources, ({ one }) => ({
-  topic: one(topics, {
-    fields: [resources.topic_id],
-    references: [topics.id],
-  }),
-  subject: one(subjects, {
-    fields: [resources.subject_id],
-    references: [subjects.id],
-  }),
-  curriculum: one(curriculums, {
-    fields: [resources.curriculum_id],
-    references: [curriculums.id],
-  }),
-  author: one(profiles, {
-    fields: [resources.author_id],
-    references: [profiles.id],
   }),
 }));
 
@@ -497,38 +366,5 @@ export const accountRelations = relations(account, ({ one }) => ({
   user: one(user, {
     fields: [account.userId],
     references: [user.id],
-  }),
-}));
-
-// ── Community Relations (Standalone Quizzes & Org Content) ─────────────────
-
-export const standaloneQuizzesRelations = relations(standaloneQuizzes, ({ one, many }) => ({
-  author: one(profiles, {
-    fields: [standaloneQuizzes.created_by],
-    references: [profiles.id],
-  }),
-  sessions: many(quizSessions),
-}));
-
-export const quizSessionsRelations = relations(quizSessions, ({ one, many }) => ({
-  quiz: one(standaloneQuizzes, {
-    fields: [quizSessions.quiz_id],
-    references: [standaloneQuizzes.id],
-  }),
-  host: one(profiles, {
-    fields: [quizSessions.host_id],
-    references: [profiles.id],
-  }),
-  participants: many(quizParticipants),
-}));
-
-export const quizParticipantsRelations = relations(quizParticipants, ({ one }) => ({
-  session: one(quizSessions, {
-    fields: [quizParticipants.session_id],
-    references: [quizSessions.id],
-  }),
-  user: one(profiles, {
-    fields: [quizParticipants.user_id],
-    references: [profiles.id],
   }),
 }));

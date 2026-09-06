@@ -20,9 +20,9 @@ Privacy and access boundaries are strictly enforced. The system supports multi-r
 ### The Six Roles:
 | Role | Who | Capabilities & Tooling Access |
 |---|---|---|
-| **Student** | Default for all users | Full access to Library (Courses, Notes, Flashcards SRS, Exams, Quizzes) and Study Tools (Smart Timetable, Pomodoro, Exam Countdown, Grade Calculator, Workspace), Public Profile. |
+| **Student** | Default for all users | Full access to Library (Courses, Exams) and Study Tools (Smart Timetable, Pomodoro, Exam Countdown, Grade Calculator, Workspace), Public Profile. |
 | **Tutor / Teacher** | Teaching educators | Everything Student gets + Public Tutor Profile with Sunday–Saturday Weekly Teaching Schedule, Telegram direct inquiry modal with mobile QR code, and Tutor Profile Editor tab. |
-| **Contributor** | Verified academic authors | Everything Student gets + Curriculum & Notes Editor, Exam Data Editor, Review Queue proposal submissions, Contributor Profile tab. |
+| **Contributor** | Verified academic authors | Everything Student gets + Curriculum Editor, Exam Data Editor, Review Queue proposal submissions, Contributor Profile tab. |
 | **Main Contributor** | Senior academic reviewers | Everything Contributor gets + full moderation of the review queue (approve/reject submissions) and contributor team management. |
 | **Admin** | Platform managers | Everything Main Contributor gets + User Management & direct role assignment (multi-select badge toggle), Organization mission/team editor. |
 
@@ -40,10 +40,8 @@ The top navigation bar (`apps/web/src/components/layout/NavBar.tsx`) is structur
 
 ### Pillar 1: Library (`/library`)
 - **Courses & Curriculums:** Cambridge IGCSE / A-Level, Edexcel, and Matriculation syllabi.
-- **Notes Library:** Syllabus-mapped study summaries, revision guides, and formula sheets.
-- **Flashcards (SRS):** Spaced repetition flashcard decks with SM-2 recall rating.
 - **Past Exams & Papers:** Exam series papers, grade boundary tables, and specimen questions.
-- **Revision Quizzes:** Self-assessment quizzes with answer explanations.
+- Study notes and flashcards are supplied via an external Notion content pipeline (legacy in-app notes/SRS/quizzes removed).
 
 ### Pillar 2: Tools (`/tools`)
 - **Smart Timetable (`/timetable`):** Weekly schedule planner with class and study session scheduling.

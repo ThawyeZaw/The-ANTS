@@ -13,6 +13,7 @@ import {
   BookOpen,
   Pencil,
   Shield,
+  AlertTriangle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { isValidEmail } from '@/lib/utils';
@@ -162,7 +163,7 @@ export default function InviteForm({ onSubmit, isLoading, error }: InviteFormPro
       {/* Error */}
       {displayError ? (
         <div className="flex items-center gap-2 p-3 rounded-lg bg-error/10 border border-error/20 text-error text-sm animate-fade-in">
-          <span>⚠️</span>
+          <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
           <span>{displayError === '{}' ? 'Failed to send invite. Please try again.' : displayError}</span>
         </div>
       ) : null}

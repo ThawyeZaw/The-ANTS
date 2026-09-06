@@ -199,11 +199,9 @@ export function LessonProvider({ children }: { children: ReactNode }) {
 
   const isLessonPage =
     pathname?.startsWith('/lessons') ||
-    pathname?.startsWith('/flashcards') ||
     pathname?.startsWith('/courses') ||
     pathname?.startsWith('/workspace') ||
-    pathname?.startsWith('/library') ||
-    pathname?.startsWith('/my-notes');
+    pathname?.startsWith('/library');
 
   useEffect(() => {
     if (isLessonPage && userId && !loadedRef.current) {

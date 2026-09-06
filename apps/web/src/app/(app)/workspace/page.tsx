@@ -2,13 +2,13 @@
 
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTs — My Workspace Page
-// Route: /workspace — Personal study hub for saved notes, bookmarks & resources.
+// Route: /workspace — Personal study hub for exams & enrolled courses.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useAuth } from '@/hooks/useAuth';
 import MyWorkspace from '@/components/workspace/MyWorkspace';
 import { WorkspaceToastProvider } from '@/components/workspace/WorkspaceToast';
-import { Wrench, Sparkles } from 'lucide-react';
+import { Wrench } from 'lucide-react';
 
 export default function WorkspacePage() {
   const { user, isLoading } = useAuth();
@@ -37,7 +37,7 @@ export default function WorkspacePage() {
               My Workspace
             </h1>
             <p className="text-xs sm:text-sm text-foreground-muted max-w-2xl">
-              Access your personal study notes, pinned syllabus summaries, bookmarked flashcard decks, and saved exam papers in one place.
+              Access your exam countdowns, enrolled courses, and study tools in one place.
             </p>
           </div>
         </div>

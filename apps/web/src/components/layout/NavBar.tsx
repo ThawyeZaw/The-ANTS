@@ -1,38 +1,36 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Top Navigation Bar (3 Pillars: Library, Tools, Explore & Tutors)
-// Features responsive breakpoints, keyboard accessibility, and role-based portals.
+// The ANTS — App Navigation Shell (renovated)
+// Desktop: md icon rail · lg expanded sidebar · Mobile: bottom bar + slide-up sheets
 // ──────────────────────────────────────────────────────────────────────────────
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import {
   BookOpen,
   UserCircle,
   LogOut,
-  Menu,
-  X,
   ChevronDown,
   CalendarDays,
   Timer,
-  Layers,
   Clock,
   Calculator,
-  NotebookPen,
   Settings,
   GraduationCap,
-  Brain,
   UserPlus,
   ClipboardCheck,
   Building2,
   Wrench,
   Compass,
   Info,
-  FlaskConical,
   Sparkles,
   Pencil,
+  LayoutDashboard,
+  Home,
+  MoreHorizontal,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
@@ -41,676 +39,759 @@ import { cn, getInitials } from '@/lib/utils';
 interface NavItem {
   label: string;
   href: string;
-  icon: any;
-  description: string;
-  badge?: string;
-  accentColor?: string;
+  icon: React.ComponentType<{ className?: string }>;
 }
 
-const LIBRARY_LINKS: NavItem[] = [
-  {
-    label: 'All Resources',
-    href: '/library',
-    icon: BookOpen,
-    description: 'Explore all courses, notes, and study decks',
-    accentColor: 'from-sky-500 to-blue-500',
-  },
-  {
-    label: 'Courses & Curriculums',
-    href: '/library?tab=courses',
-    icon: GraduationCap,
-    description: 'Cambridge, Edexcel & Matriculation syllabi',
-    accentColor: 'from-emerald-500 to-teal-500',
-  },
-  {
-    label: 'Notes Library',
-    href: '/library?tab=notes',
-    icon: NotebookPen,
-    description: 'Verified syllabus summaries and study guides',
-    accentColor: 'from-amber-500 to-orange-500',
-  },
-  {
-    label: 'Flashcards (SRS)',
-    href: '/library?tab=flashcards',
-    icon: Layers,
-    description: 'Spaced repetition decks for active recall',
-    accentColor: 'from-purple-500 to-violet-500',
-  },
-  {
-    label: 'Past Exams & Papers',
-    href: '/library?tab=exams',
-    icon: FlaskConical,
-    description: 'Past exam papers and boundary tables',
-    accentColor: 'from-rose-500 to-pink-500',
-  },
-  {
-    label: 'Revision Quizzes',
-    href: '/library?tab=quizzes',
-    icon: Brain,
-    description: 'Practice questions and diagnostic quizzes',
-    accentColor: 'from-yellow-500 to-amber-500',
-  },
-];
+type PanelKey = 'tools' | 'explore' | 'user' | null;
+type SectionKey = 'tools' | 'explore' | 'role' | null;
 
 const TOOLS_LINKS: NavItem[] = [
-  {
-    label: 'Smart Timetable',
-    href: '/timetable',
-    icon: CalendarDays,
-    description: 'Weekly schedule with conflict detection',
-    accentColor: 'from-blue-500 to-indigo-500',
-  },
-  {
-    label: 'Pomodoro Focus Timer',
-    href: '/pomodoro',
-    icon: Timer,
-    description: 'Customizable work/break study sessions',
-    accentColor: 'from-red-500 to-rose-500',
-  },
-  {
-    label: 'Exam Countdown',
-    href: '/countdown',
-    icon: Clock,
-    description: 'Live countdowns for target exam dates',
-    accentColor: 'from-amber-500 to-yellow-500',
-  },
-  {
-    label: 'Grade Calculator',
-    href: '/calculator',
-    icon: Calculator,
-    description: 'Calculate composite grades and thresholds',
-    accentColor: 'from-teal-500 to-emerald-500',
-  },
-  {
-    label: 'My Workspace',
-    href: '/workspace',
-    icon: Wrench,
-    description: 'Personal saved notes and study materials',
-    accentColor: 'from-violet-500 to-purple-500',
-  },
+  { label: 'Smart Timetable', href: '/timetable', icon: CalendarDays },
+  { label: 'Pomodoro Focus Timer', href: '/pomodoro', icon: Timer },
+  { label: 'Exam Countdown', href: '/countdown', icon: Clock },
+  { label: 'Grade Calculator', href: '/calculator', icon: Calculator },
+  { label: 'My Workspace', href: '/workspace', icon: Wrench },
 ];
 
 const EXPLORE_LINKS: NavItem[] = [
-  {
-    label: 'Explore Directory',
-    href: '/explore',
-    icon: Compass,
-    description: 'Discover verified tutors, contributors & peers',
-    accentColor: 'from-primary to-indigo-500',
-  },
-  {
-    label: 'Tutors & Schedules',
-    href: '/explore?tab=tutors',
-    icon: GraduationCap,
-    description: 'Browse academic tutors offering class slots',
-    accentColor: 'from-emerald-500 to-teal-500',
-  },
-  {
-    label: 'Academic Contributors',
-    href: '/explore?tab=contributors',
-    icon: Pencil,
-    description: 'Curriculum editors and resource creators',
-    accentColor: 'from-violet-500 to-purple-500',
-  },
-  {
-    label: 'About The ANTs',
-    href: '/about',
-    icon: Info,
-    description: 'Platform mission, methodology & team',
-    accentColor: 'from-pink-500 to-rose-500',
-  },
+  { label: 'Explore Directory', href: '/explore', icon: Compass },
+  { label: 'Tutors & Schedules', href: '/explore?tab=tutors', icon: GraduationCap },
+  { label: 'Academic Contributors', href: '/explore?tab=contributors', icon: Pencil },
+  { label: 'About The ANTs', href: '/about', icon: Info },
 ];
+
+function isLibraryActive(pathname: string) {
+  return pathname.startsWith('/library');
+}
+
+function isToolsActive(pathname: string) {
+  return (
+    pathname.startsWith('/timetable') ||
+    pathname.startsWith('/pomodoro') ||
+    pathname.startsWith('/countdown') ||
+    pathname.startsWith('/calculator') ||
+    pathname.startsWith('/workspace')
+  );
+}
+
+function isExploreActive(pathname: string) {
+  return pathname.startsWith('/explore') || pathname.startsWith('/about');
+}
+
+function isHomeActive(pathname: string) {
+  return (
+    pathname === '/' ||
+    pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/student')
+  );
+}
+
+function isHrefActive(href: string, pathname: string, tab: string | null): boolean {
+  const [path, query = ''] = href.split('?');
+  const params = new URLSearchParams(query);
+  const hrefTab = params.get('tab');
+
+  if (path === '/about') return pathname.startsWith('/about');
+
+  if (path === '/explore') {
+    if (!pathname.startsWith('/explore')) return false;
+    if (hrefTab) return tab === hrefTab;
+    return !tab;
+  }
+
+  return pathname === path || pathname.startsWith(`${path}/`);
+}
+
+function defaultSectionForPath(pathname: string): SectionKey {
+  if (isToolsActive(pathname)) return 'tools';
+  if (isExploreActive(pathname)) return 'explore';
+  return null;
+}
+
+function NavItemLink({
+  item,
+  active,
+  onNavigate,
+}: {
+  item: NavItem;
+  active: boolean;
+  onNavigate?: () => void;
+}) {
+  const Icon = item.icon;
+  return (
+    <Link
+      href={item.href}
+      onClick={onNavigate}
+      aria-current={active ? 'page' : undefined}
+      className={cn(
+        'nav-item relative flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium',
+        'transition-colors duration-200 cursor-pointer',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+        active
+          ? 'bg-primary/10 text-primary'
+          : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary'
+      )}
+    >
+      {active && (
+        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full bg-primary nav-active-bar" />
+      )}
+      <Icon className="w-4 h-4 shrink-0" />
+      <span className="truncate">{item.label}</span>
+    </Link>
+  );
+}
+
+function SectionLabel({
+  title,
+  icon: Icon,
+  open,
+  active,
+  onToggle,
+  controlsId,
+}: {
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+  open: boolean;
+  active: boolean;
+  onToggle: () => void;
+  controlsId: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={open}
+      aria-controls={controlsId}
+      className={cn(
+        'w-full inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold',
+        'transition-colors duration-200 cursor-pointer',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+        active || open
+          ? 'bg-primary/10 text-primary'
+          : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary'
+      )}
+    >
+      <Icon className="w-4 h-4 shrink-0" />
+      <span className="flex-1 text-left">{title}</span>
+      <ChevronDown
+        className={cn(
+          'w-3.5 h-3.5 opacity-60 transition-transform duration-200',
+          open && 'rotate-180'
+        )}
+      />
+    </button>
+  );
+}
+
+function RailIconLink({
+  href,
+  label,
+  icon: Icon,
+  active,
+}: {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  active: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      title={label}
+      aria-label={label}
+      aria-current={active ? 'page' : undefined}
+      className={cn(
+        'flex items-center justify-center p-2.5 rounded-xl transition-colors duration-200',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+        active
+          ? 'bg-primary/10 text-primary'
+          : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary'
+      )}
+    >
+      <Icon className="w-4 h-4" />
+    </Link>
+  );
+}
 
 export default function NavBar() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const tab = searchParams.get('tab');
   const { user, isAuthenticated, logout } = useAuth();
   const { isTutor, isContributor, isAdmin } = useRole();
 
   const [mounted, setMounted] = useState(false);
-  const [openDropdown, setOpenDropdown] = useState<'library' | 'tools' | 'explore' | 'role' | 'user' | null>(null);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [openPanel, setOpenPanel] = useState<PanelKey>(null);
+  const [openSection, setOpenSection] = useState<SectionKey>(() => defaultSectionForPath(pathname));
 
-  const navRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLElement>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Close dropdown on outside click
-
-  // Close dropdown on outside click
   useEffect(() => {
-    if (!openDropdown) return;
+    setOpenPanel(null);
+    setOpenSection(defaultSectionForPath(pathname));
+  }, [pathname]);
 
+  useEffect(() => {
+    if (!openPanel) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpenPanel(null);
+    }
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [openPanel]);
+
+  useEffect(() => {
+    if (openPanel !== 'user') return;
     function handleClickOutside(e: MouseEvent) {
-      if (navRef.current && !navRef.current.contains(e.target as Node)) {
-        setOpenDropdown(null);
-      }
+      const target = e.target as Node;
+      if (userMenuRef.current?.contains(target)) return;
+      if (sheetRef.current?.contains(target)) return;
+      setOpenPanel(null);
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [openDropdown]);
+  }, [openPanel]);
 
-  // Close on route change
   useEffect(() => {
-    setOpenDropdown(null);
-    setMobileMenuOpen(false);
-  }, [pathname]);
+    if (!openPanel || !sheetRef.current) return;
+    const focusable = sheetRef.current.querySelector<HTMLElement>(
+      'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    );
+    focusable?.focus();
+  }, [openPanel]);
 
-  const toggleDropdown = useCallback(
-    (name: 'library' | 'tools' | 'explore' | 'role' | 'user') => {
-      setOpenDropdown((curr) => (curr === name ? null : name));
-    },
-    []
-  );
+  const togglePanel = useCallback((name: Exclude<PanelKey, null>) => {
+    setOpenPanel((curr) => (curr === name ? null : name));
+  }, []);
+
+  const toggleSection = useCallback((key: Exclude<SectionKey, null>) => {
+    setOpenSection(key);
+  }, []);
 
   const hasStaffRole = isTutor || isContributor || isAdmin;
+  const homeHref = mounted && isAuthenticated ? '/dashboard' : '/';
+  const closePanel = useCallback(() => setOpenPanel(null), []);
+
+  const userMenuLinks = (
+    <>
+      {mounted && isAuthenticated && user ? (
+        <>
+          <div className="px-3 py-2.5 border-b border-border/60 mb-1">
+            <p className="text-sm font-bold text-foreground truncate">{user.profile.name}</p>
+            <p className="text-xs text-foreground-muted truncate font-mono">@{user.profile.username}</p>
+            <div className="flex flex-wrap gap-1 mt-1.5">
+              {(user.profile.roles || [user.profile.role]).map((r) => (
+                <span
+                  key={r}
+                  className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20"
+                >
+                  {r}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className="space-y-0.5">
+            <Link
+              href={`/profile/${user.profile.username}`}
+              onClick={closePanel}
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-background-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              <UserCircle className="w-4 h-4" />
+              View Public Profile
+            </Link>
+            <Link
+              href="/settings/profile"
+              onClick={closePanel}
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-background-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              <Pencil className="w-4 h-4" />
+              Edit Profile & Schedule
+            </Link>
+            <Link
+              href="/settings"
+              onClick={closePanel}
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-background-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              <Settings className="w-4 h-4" />
+              Settings & Telegram
+            </Link>
+            <button
+              type="button"
+              onClick={() => {
+                closePanel();
+                logout();
+              }}
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold text-destructive hover:bg-destructive/10 transition-colors cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              <LogOut className="w-4 h-4" />
+              Sign Out
+            </button>
+          </div>
+        </>
+      ) : (
+        <div className="space-y-2 p-2">
+          <Link
+            href="/login"
+            onClick={closePanel}
+            className="block w-full text-center px-3.5 py-2.5 rounded-xl text-sm font-semibold text-foreground hover:bg-background-secondary transition-colors"
+          >
+            Sign In
+          </Link>
+          <Link
+            href="/signup"
+            onClick={closePanel}
+            className="block w-full text-center px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-bold shadow-md hover:bg-primary-hover transition-all"
+          >
+            Get Started
+          </Link>
+        </div>
+      )}
+    </>
+  );
+
+  const roleLinkClass =
+    'flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-foreground hover:bg-background-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary';
+
+  const roleLinks = (
+    <div className="space-y-0.5">
+      {isTutor && (
+        <Link href={`/profile/${user?.profile.username}`} onClick={closePanel} className={roleLinkClass}>
+          <GraduationCap className="w-4 h-4 text-primary shrink-0" />
+          <span className="truncate">My Tutor Schedule</span>
+        </Link>
+      )}
+      {(isContributor || isAdmin) && (
+        <>
+          <Link href="/editor" onClick={closePanel} className={roleLinkClass}>
+            <Pencil className="w-4 h-4 text-primary shrink-0" />
+            <span className="truncate">Curriculum Editor</span>
+          </Link>
+          <Link href="/editor/review-queue" onClick={closePanel} className={roleLinkClass}>
+            <ClipboardCheck className="w-4 h-4 text-primary shrink-0" />
+            <span className="truncate">Review Queue</span>
+          </Link>
+        </>
+      )}
+      {isAdmin && (
+        <>
+          <Link href="/main-contributor/add-contributor" onClick={closePanel} className={roleLinkClass}>
+            <UserPlus className="w-4 h-4 text-primary shrink-0" />
+            <span className="truncate">Manage Users</span>
+          </Link>
+          <Link href="/org-activities" onClick={closePanel} className={roleLinkClass}>
+            <Building2 className="w-4 h-4 text-primary shrink-0" />
+            <span className="truncate">Organization Team</span>
+          </Link>
+        </>
+      )}
+    </div>
+  );
+
+  const renderSectionLinks = (items: NavItem[]) =>
+    items.map((item) => (
+      <NavItemLink
+        key={item.href}
+        item={item}
+        active={isHrefActive(item.href, pathname, tab)}
+        onNavigate={closePanel}
+      />
+    ));
 
   return (
-    <header
-      ref={navRef}
-      className="sticky top-0 z-40 w-full bg-background/90 backdrop-blur-md border-b border-border transition-all"
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4">
-        {/* Brand Logo */}
-        <div className="flex items-center gap-3 sm:gap-6 shrink-0">
-          <Link href={mounted && isAuthenticated ? '/dashboard' : '/'} className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center text-white font-bold text-sm shadow-md group-hover:scale-105 transition-transform">
-              🐜
-            </div>
-            <div className="flex flex-col">
-              <span className="font-brand font-black text-lg tracking-tight text-foreground leading-none">
-                The ANTS
-              </span>
-              <span className="text-[9px] font-semibold text-primary uppercase tracking-widest leading-tight">
-                Academic
-              </span>
-            </div>
+    <nav ref={navRef} aria-label="Primary" className="contents">
+      {/* ── Desktop sidebar ───────────────────────────────────────────────── */}
+      <aside
+        className={cn(
+          'hidden md:flex fixed inset-y-0 left-0 z-40 flex-col',
+          'w-[var(--sidebar-width-collapsed)] lg:w-[var(--sidebar-width)]',
+          'bg-background/95 backdrop-blur-md border-r border-border',
+          'transition-[width] duration-200 ease-out motion-reduce:transition-none'
+        )}
+      >
+        <div className="flex items-center justify-center lg:justify-start gap-2.5 px-2 lg:px-4 h-16 shrink-0 border-b border-border/60">
+          <Link
+            href={homeHref}
+            className="flex items-center gap-2.5 group min-w-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            title="The ANTS"
+          >
+            <Image
+              src="/logo.png"
+              alt="The ANTS"
+              width={32}
+              height={32}
+              className="w-8 h-8 rounded-xl object-contain shrink-0 group-hover:scale-105 transition-transform duration-200"
+              priority
+            />
+            <span className="hidden lg:block font-brand font-black text-lg tracking-tight text-foreground leading-none truncate">
+              The ANTS
+            </span>
           </Link>
-
-          {/* Desktop & Tablet 3-Pillar Nav */}
-          <nav className="hidden md:flex items-center gap-1">
-            {/* 1. Library Pillar */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => toggleDropdown('library')}
-                className={cn(
-                  'inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer',
-                  pathname.startsWith('/library')
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary',
-                  openDropdown === 'library' && 'bg-background-secondary text-foreground'
-                )}
-              >
-                <BookOpen className="w-3.5 h-3.5 shrink-0" />
-                <span>Library</span>
-                <ChevronDown
-                  className={cn(
-                    'w-3 h-3 opacity-60 transition-transform duration-200',
-                    openDropdown === 'library' && 'rotate-180'
-                  )}
-                />
-              </button>
-
-              {openDropdown === 'library' && (
-                <div className="absolute left-0 top-full mt-2 w-72 sm:w-80 bg-background-card border border-border rounded-2xl shadow-2xl p-2 z-50 animate-scale-in">
-                  <div className="p-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-foreground-muted">
-                    Curriculum & Learning
-                  </div>
-                  <div className="space-y-1">
-                    {LIBRARY_LINKS.map((item) => {
-                      const Icon = item.icon;
-                      return (
-                        <Link
-                          key={item.label}
-                          href={item.href}
-                          className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-background-secondary text-foreground transition-colors group"
-                        >
-                          <div
-                            className={cn(
-                              'p-2 rounded-lg bg-gradient-to-br text-white shrink-0 mt-0.5 shadow-xs',
-                              item.accentColor
-                            )}
-                          >
-                            <Icon className="w-3.5 h-3.5" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-xs font-semibold group-hover:text-primary transition-colors">
-                              {item.label}
-                            </p>
-                            <p className="text-[11px] text-foreground-muted leading-tight mt-0.5">
-                              {item.description}
-                            </p>
-                          </div>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* 2. Tools Pillar */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => toggleDropdown('tools')}
-                className={cn(
-                  'inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer',
-                  pathname.startsWith('/timetable') ||
-                    pathname.startsWith('/pomodoro') ||
-                    pathname.startsWith('/countdown') ||
-                    pathname.startsWith('/calculator')
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary',
-                  openDropdown === 'tools' && 'bg-background-secondary text-foreground'
-                )}
-              >
-                <Wrench className="w-3.5 h-3.5 shrink-0" />
-                <span>Tools</span>
-                <ChevronDown
-                  className={cn(
-                    'w-3 h-3 opacity-60 transition-transform duration-200',
-                    openDropdown === 'tools' && 'rotate-180'
-                  )}
-                />
-              </button>
-
-              {openDropdown === 'tools' && (
-                <div className="absolute left-0 top-full mt-2 w-72 sm:w-80 bg-background-card border border-border rounded-2xl shadow-2xl p-2 z-50 animate-scale-in">
-                  <div className="p-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-foreground-muted">
-                    Productivity & Study Tools
-                  </div>
-                  <div className="space-y-1">
-                    {TOOLS_LINKS.map((item) => {
-                      const Icon = item.icon;
-                      return (
-                        <Link
-                          key={item.label}
-                          href={item.href}
-                          className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-background-secondary text-foreground transition-colors group"
-                        >
-                          <div
-                            className={cn(
-                              'p-2 rounded-lg bg-gradient-to-br text-white shrink-0 mt-0.5 shadow-xs',
-                              item.accentColor
-                            )}
-                          >
-                            <Icon className="w-3.5 h-3.5" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-xs font-semibold group-hover:text-primary transition-colors">
-                              {item.label}
-                            </p>
-                            <p className="text-[11px] text-foreground-muted leading-tight mt-0.5">
-                              {item.description}
-                            </p>
-                          </div>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* 3. Explore & Tutors Pillar */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => toggleDropdown('explore')}
-                className={cn(
-                  'inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer',
-                  pathname.startsWith('/explore') || pathname.startsWith('/about')
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary',
-                  openDropdown === 'explore' && 'bg-background-secondary text-foreground'
-                )}
-              >
-                <Compass className="w-3.5 h-3.5 shrink-0" />
-                <span className="hidden lg:inline">Explore & Tutors</span>
-                <span className="lg:hidden">Explore</span>
-                <ChevronDown
-                  className={cn(
-                    'w-3 h-3 opacity-60 transition-transform duration-200',
-                    openDropdown === 'explore' && 'rotate-180'
-                  )}
-                />
-              </button>
-
-              {openDropdown === 'explore' && (
-                <div className="absolute left-0 top-full mt-2 w-72 sm:w-80 bg-background-card border border-border rounded-2xl shadow-2xl p-2 z-50 animate-scale-in">
-                  <div className="p-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-foreground-muted">
-                    Community & Guidance
-                  </div>
-                  <div className="space-y-1">
-                    {EXPLORE_LINKS.map((item) => {
-                      const Icon = item.icon;
-                      return (
-                        <Link
-                          key={item.label}
-                          href={item.href}
-                          className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-background-secondary text-foreground transition-colors group"
-                        >
-                          <div
-                            className={cn(
-                              'p-2 rounded-lg bg-gradient-to-br text-white shrink-0 mt-0.5 shadow-xs',
-                              item.accentColor
-                            )}
-                          >
-                            <Icon className="w-3.5 h-3.5" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-xs font-semibold group-hover:text-primary transition-colors">
-                              {item.label}
-                            </p>
-                            <p className="text-[11px] text-foreground-muted leading-tight mt-0.5">
-                              {item.description}
-                            </p>
-                          </div>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Role-Specific Portal Button (if user is Tutor, Contributor, or Admin) */}
-            {mounted && hasStaffRole && (
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => toggleDropdown('role')}
-                  className={cn(
-                    'inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer',
-                    isAdmin
-                      ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
-                      : isContributor
-                      ? 'bg-violet-500/10 text-violet-600 border border-violet-500/20'
-                      : 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20',
-                    openDropdown === 'role' && 'shadow-xs ring-2 ring-primary/20'
-                  )}
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Workspace Tools</span>
-                  <ChevronDown
-                    className={cn(
-                      'w-3 h-3 opacity-60 transition-transform duration-200',
-                      openDropdown === 'role' && 'rotate-180'
-                    )}
-                  />
-                </button>
-
-                {openDropdown === 'role' && (
-                  <div className="absolute left-0 top-full mt-2 w-72 bg-background-card border border-border rounded-2xl shadow-2xl p-2 z-50 animate-scale-in">
-                    <div className="p-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-foreground-muted">
-                      Your Role Privileges
-                    </div>
-                    <div className="space-y-1">
-                      {isTutor && (
-                        <Link
-                          href={`/profile/${user?.profile.username}`}
-                          className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-background-secondary text-xs font-semibold text-foreground transition-colors"
-                        >
-                          <GraduationCap className="w-4 h-4 text-emerald-500" />
-                          View My Tutor Schedule
-                        </Link>
-                      )}
-                      {(isContributor || isAdmin) && (
-                        <>
-                          <Link
-                            href="/editor"
-                            className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-background-secondary text-xs font-semibold text-foreground transition-colors"
-                          >
-                            <Pencil className="w-4 h-4 text-violet-500" />
-                            Curriculum & Notes Editor
-                          </Link>
-                          <Link
-                            href="/editor/review-queue"
-                            className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-background-secondary text-xs font-semibold text-foreground transition-colors"
-                          >
-                            <ClipboardCheck className="w-4 h-4 text-indigo-500" />
-                            Review Queue Proposals
-                          </Link>
-                        </>
-                      )}
-                      {isAdmin && (
-                        <>
-                          <Link
-                            href="/main-contributor/add-contributor"
-                            className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-background-secondary text-xs font-semibold text-foreground transition-colors"
-                          >
-                            <UserPlus className="w-4 h-4 text-amber-500" />
-                            Manage & Promote Users
-                          </Link>
-                          <Link
-                            href="/org-activities"
-                            className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-background-secondary text-xs font-semibold text-foreground transition-colors"
-                          >
-                            <Building2 className="w-4 h-4 text-amber-500" />
-                            Manage Organization Team
-                          </Link>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </nav>
         </div>
 
-        {/* Right Controls & User Account Menu */}
-        <div className="flex items-center gap-2">
+        {/* md: icon rail */}
+        <div className="lg:hidden flex-1 overflow-y-auto px-2 py-3 space-y-1">
+          <RailIconLink
+            href={homeHref}
+            label={mounted && isAuthenticated ? 'Dashboard' : 'Home'}
+            icon={mounted && isAuthenticated ? LayoutDashboard : Home}
+            active={isHomeActive(pathname)}
+          />
+          <RailIconLink href="/library" label="Library" icon={BookOpen} active={isLibraryActive(pathname)} />
+          <RailIconLink href="/timetable" label="Tools" icon={Wrench} active={isToolsActive(pathname)} />
+          <RailIconLink href="/explore" label="Explore" icon={Compass} active={isExploreActive(pathname)} />
+          {mounted && hasStaffRole && (
+            <RailIconLink href="/editor" label="Workspace Tools" icon={Sparkles} active={pathname.startsWith('/editor') || pathname.startsWith('/main-contributor') || pathname.startsWith('/org-activities')} />
+          )}
+        </div>
+
+        {/* lg: expanded exclusive accordion */}
+        <div className="hidden lg:flex flex-1 flex-col overflow-y-auto px-3 py-3 space-y-0.5">
+          <Link
+            href={homeHref}
+            aria-current={isHomeActive(pathname) ? 'page' : undefined}
+            className={cn(
+              'relative flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium mb-1',
+              'transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+              isHomeActive(pathname)
+                ? 'bg-primary/10 text-primary'
+                : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary'
+            )}
+          >
+            {isHomeActive(pathname) && (
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full bg-primary nav-active-bar" />
+            )}
+            {mounted && isAuthenticated ? (
+              <LayoutDashboard className="w-4 h-4 shrink-0" />
+            ) : (
+              <Home className="w-4 h-4 shrink-0" />
+            )}
+            <span className="truncate">{mounted && isAuthenticated ? 'Dashboard' : 'Home'}</span>
+          </Link>
+
+          <Link
+            href="/library"
+            aria-current={isLibraryActive(pathname) ? 'page' : undefined}
+            className={cn(
+              'relative flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold',
+              'transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+              isLibraryActive(pathname)
+                ? 'bg-primary/10 text-primary'
+                : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary'
+            )}
+          >
+            {isLibraryActive(pathname) && (
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full bg-primary nav-active-bar" />
+            )}
+            <BookOpen className="w-4 h-4 shrink-0" />
+            <span className="truncate">Library</span>
+          </Link>
+
+          <div>
+            <SectionLabel
+              title="Tools"
+              icon={Wrench}
+              open={openSection === 'tools'}
+              active={isToolsActive(pathname)}
+              onToggle={() => toggleSection('tools')}
+              controlsId="nav-section-tools"
+            />
+            {openSection === 'tools' && (
+              <div id="nav-section-tools" className="mt-0.5 space-y-0.5 pl-1 nav-section-enter">
+                {renderSectionLinks(TOOLS_LINKS)}
+              </div>
+            )}
+          </div>
+
+          <div>
+            <SectionLabel
+              title="Explore & Tutors"
+              icon={Compass}
+              open={openSection === 'explore'}
+              active={isExploreActive(pathname)}
+              onToggle={() => toggleSection('explore')}
+              controlsId="nav-section-explore"
+            />
+            {openSection === 'explore' && (
+              <div id="nav-section-explore" className="mt-0.5 space-y-0.5 pl-1 nav-section-enter">
+                {renderSectionLinks(EXPLORE_LINKS)}
+              </div>
+            )}
+          </div>
+
+          {mounted && hasStaffRole && (
+            <div className="pt-2 mt-2 border-t border-border/60">
+              <SectionLabel
+                title="Workspace Tools"
+                icon={Sparkles}
+                open={openSection === 'role'}
+                active={openSection === 'role'}
+                onToggle={() => toggleSection('role')}
+                controlsId="nav-section-role"
+              />
+              {openSection === 'role' && (
+                <div id="nav-section-role" className="mt-0.5 pl-1 nav-section-enter">
+                  {roleLinks}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Account footer */}
+        <div className="shrink-0 border-t border-border/60 p-2 lg:p-3 relative" ref={userMenuRef}>
           {mounted && isAuthenticated && user ? (
-            <div className="relative">
+            <>
               <button
                 type="button"
-                onClick={() => toggleDropdown('user')}
-                className="flex items-center gap-2 p-1.5 pr-2.5 rounded-2xl border border-border hover:border-primary/40 bg-background-secondary/50 transition-all cursor-pointer"
+                onClick={() => togglePanel('user')}
+                aria-expanded={openPanel === 'user'}
+                aria-controls="nav-user-menu"
+                title={user.profile.name}
+                className={cn(
+                  'w-full flex items-center gap-2 p-1.5 lg:pr-2.5 rounded-2xl border border-border',
+                  'hover:border-primary/40 bg-background-secondary/50 transition-all cursor-pointer',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+                  'justify-center lg:justify-start'
+                )}
               >
                 {user.profile.avatar ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={user.profile.avatar}
                     alt={user.profile.name}
-                    className="w-7 h-7 rounded-xl object-cover shrink-0 shadow-xs"
+                    className="w-8 h-8 rounded-xl object-cover shrink-0 shadow-xs"
                   />
                 ) : (
-                  <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-primary to-emerald-500 flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-xs">
+                  <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-xs">
                     {getInitials(user.profile.name)}
                   </div>
                 )}
-                <span className="text-xs font-semibold text-foreground max-w-[100px] truncate hidden sm:inline">
-                  {user.profile.name}
-                </span>
+                <div className="hidden lg:block min-w-0 flex-1 text-left">
+                  <p className="text-sm font-semibold text-foreground truncate">{user.profile.name}</p>
+                  <p className="text-xs text-foreground-muted truncate">@{user.profile.username}</p>
+                </div>
                 <ChevronDown
                   className={cn(
-                    'w-3 h-3 opacity-60 transition-transform duration-200',
-                    openDropdown === 'user' && 'rotate-180'
+                    'hidden lg:block w-3.5 h-3.5 opacity-60 transition-transform duration-200 shrink-0',
+                    openPanel === 'user' && 'rotate-180'
                   )}
                 />
               </button>
-
-              {openDropdown === 'user' && (
-                <div className="absolute right-0 top-full mt-2 w-60 bg-background-card border border-border rounded-2xl shadow-2xl p-2 z-50 animate-scale-in">
-                  <div className="px-3 py-2 border-b border-border/60 mb-1">
-                    <p className="text-xs font-bold text-foreground truncate">{user.profile.name}</p>
-                    <p className="text-[11px] text-foreground-muted truncate font-mono">
-                      @{user.profile.username}
-                    </p>
-                    <div className="flex flex-wrap gap-1 mt-1.5">
-                      {(user.profile.roles || [user.profile.role]).map((r) => (
-                        <span
-                          key={r}
-                          className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20"
-                        >
-                          {r}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="space-y-0.5">
-                    <Link
-                      href={`/profile/${user.profile.username}`}
-                      className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-foreground hover:bg-background-secondary transition-colors"
-                    >
-                      <UserCircle className="w-3.5 h-3.5" />
-                      View Public Profile
-                    </Link>
-
-                    <Link
-                      href="/settings/profile"
-                      className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-foreground hover:bg-background-secondary transition-colors"
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                      Edit Profile & Schedule
-                    </Link>
-
-                    <Link
-                      href="/settings"
-                      className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-foreground hover:bg-background-secondary transition-colors"
-                    >
-                      <Settings className="w-3.5 h-3.5" />
-                      Settings & Telegram
-                    </Link>
-
-                    <button
-                      type="button"
-                      onClick={logout}
-                      className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-destructive hover:bg-destructive/10 transition-colors cursor-pointer text-left"
-                    >
-                      <LogOut className="w-3.5 h-3.5" />
-                      Sign Out
-                    </button>
-                  </div>
+              {openPanel === 'user' && (
+                <div
+                  id="nav-user-menu"
+                  role="menu"
+                  className="absolute left-2 right-2 lg:left-3 lg:right-3 bottom-full mb-2 bg-background-card border border-border rounded-2xl shadow-2xl p-2 z-50 nav-popover-enter"
+                >
+                  {userMenuLinks}
                 </div>
               )}
-            </div>
+            </>
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col gap-2">
               <Link
                 href="/login"
-                className="px-3.5 py-2 rounded-xl text-xs font-semibold text-foreground hover:bg-background-secondary transition-colors"
+                title="Sign In"
+                className="px-2 lg:px-3.5 py-2 rounded-xl text-sm font-semibold text-center text-foreground hover:bg-background-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
-                Sign In
+                <UserCircle className="w-5 h-5 mx-auto lg:hidden" />
+                <span className="hidden lg:inline">Sign In</span>
               </Link>
               <Link
                 href="/signup"
-                className="px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold shadow-md hover:bg-primary-hover active:scale-98 transition-all"
+                className="hidden lg:block px-4 py-2 rounded-xl bg-primary text-white text-sm font-bold text-center shadow-md hover:bg-primary-hover transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 Get Started
               </Link>
             </div>
           )}
+        </div>
+      </aside>
 
-          {/* Mobile Menu Hamburger Button */}
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-xl text-foreground-muted hover:text-foreground hover:bg-background-secondary transition-colors cursor-pointer"
-            aria-label="Toggle mobile menu"
+      {/* ── Mobile bottom bar + slide-up sheet ───────────────────────────── */}
+      <div className="md:hidden fixed inset-x-0 bottom-0 z-40">
+        {openPanel && (
+          <div
+            className="fixed inset-0 bg-foreground/25 backdrop-blur-[2px] z-40 nav-backdrop-enter"
+            aria-hidden
+            onClick={closePanel}
+          />
+        )}
+
+        {openPanel && (
+          <div
+            ref={sheetRef}
+            id="nav-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-label={
+              openPanel === 'tools'
+                  ? 'Tools'
+                  : openPanel === 'explore'
+                    ? 'Explore'
+                    : 'Account'
+            }
+            className="relative z-50 rounded-t-2xl border border-border border-b-0 bg-background-card shadow-2xl max-h-[70vh] overflow-y-auto nav-sheet-enter"
           >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
+            <div className="flex justify-center pt-2.5 pb-1 sticky top-0 bg-background-card z-10">
+              <span className="w-10 h-1 rounded-full bg-border" aria-hidden />
+            </div>
+
+            {openPanel === 'tools' && (
+              <div className="px-2 pb-3">
+                <p className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-foreground-muted">
+                  Tools
+                </p>
+                <div className="space-y-0.5">{renderSectionLinks(TOOLS_LINKS)}</div>
+              </div>
+            )}
+            {openPanel === 'explore' && (
+              <div className="px-2 pb-3">
+                <p className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-foreground-muted">
+                  Explore & Tutors
+                </p>
+                <div className="space-y-0.5">{renderSectionLinks(EXPLORE_LINKS)}</div>
+              </div>
+            )}
+            {openPanel === 'user' && (
+              <div className="px-2 pb-3">
+                {mounted && hasStaffRole && (
+                  <div className="mb-2 pb-2 border-b border-border/60">
+                    <p className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-foreground-muted">
+                      Workspace Tools
+                    </p>
+                    {roleLinks}
+                  </div>
+                )}
+                {userMenuLinks}
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="relative z-50 border-t border-border bg-background/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)]">
+          <div className="h-[var(--bottom-nav-height)] flex items-stretch justify-around px-0.5">
+            <MobileTab
+              label="Home"
+              icon={mounted && isAuthenticated ? LayoutDashboard : Home}
+              active={isHomeActive(pathname) && !openPanel}
+              href={homeHref}
+            />
+            <MobileTab
+              label="Library"
+              icon={BookOpen}
+              active={isLibraryActive(pathname) && !openPanel}
+              href="/library"
+            />
+            <MobileTab
+              label="Tools"
+              icon={Wrench}
+              active={isToolsActive(pathname) || openPanel === 'tools'}
+              onClick={() => togglePanel('tools')}
+              expanded={openPanel === 'tools'}
+              controlsId="nav-sheet"
+            />
+            <MobileTab
+              label="Explore"
+              icon={Compass}
+              active={isExploreActive(pathname) || openPanel === 'explore'}
+              onClick={() => togglePanel('explore')}
+              expanded={openPanel === 'explore'}
+              controlsId="nav-sheet"
+            />
+            <MobileTab
+              label={mounted && isAuthenticated ? 'Account' : 'More'}
+              icon={mounted && isAuthenticated ? UserCircle : MoreHorizontal}
+              active={openPanel === 'user'}
+              onClick={() => togglePanel('user')}
+              expanded={openPanel === 'user'}
+              controlsId="nav-sheet"
+              avatar={
+                mounted && isAuthenticated && user ? (
+                  user.profile.avatar ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={user.profile.avatar}
+                      alt=""
+                      className="w-5 h-5 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="w-5 h-5 rounded-full bg-primary flex items-center justify-center text-[9px] font-bold text-white">
+                      {getInitials(user.profile.name)}
+                    </span>
+                  )
+                ) : undefined
+              }
+            />
+          </div>
         </div>
       </div>
+    </nav>
+  );
+}
 
-      {/* Mobile Drawer Menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden border-t border-border bg-background-card p-4 space-y-4 max-h-[85vh] overflow-y-auto animate-fade-in">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-foreground-muted mb-2">
-              Library
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              {LIBRARY_LINKS.map((item) => (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className="p-2.5 rounded-xl bg-background-secondary text-xs font-medium text-foreground flex items-center gap-2 hover:bg-background-secondary/80 transition-colors"
-                >
-                  <item.icon className="w-3.5 h-3.5 text-primary shrink-0" />
-                  <span className="truncate">{item.label}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
+function MobileTab({
+  label,
+  icon: Icon,
+  active,
+  onClick,
+  href,
+  avatar,
+  expanded,
+  controlsId,
+}: {
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  active: boolean;
+  onClick?: () => void;
+  href?: string;
+  avatar?: React.ReactNode;
+  expanded?: boolean;
+  controlsId?: string;
+}) {
+  const className = cn(
+    'relative flex-1 min-w-0 min-h-[44px] flex flex-col items-center justify-center gap-0.5 px-1',
+    'transition-colors duration-200 cursor-pointer',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset',
+    active ? 'text-primary' : 'text-foreground-muted hover:text-foreground'
+  );
 
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-foreground-muted mb-2">
-              Tools
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              {TOOLS_LINKS.map((item) => (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className="p-2.5 rounded-xl bg-background-secondary text-xs font-medium text-foreground flex items-center gap-2 hover:bg-background-secondary/80 transition-colors"
-                >
-                  <item.icon className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                  <span className="truncate">{item.label}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-foreground-muted mb-2">
-              Explore & Tutors
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              {EXPLORE_LINKS.map((item) => (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className="p-2.5 rounded-xl bg-background-secondary text-xs font-medium text-foreground flex items-center gap-2 hover:bg-background-secondary/80 transition-colors"
-                >
-                  <item.icon className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                  <span className="truncate">{item.label}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {mounted && hasStaffRole && (
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-foreground-muted mb-2">
-                Staff Portals
-              </p>
-              <div className="space-y-1.5">
-                {isTutor && (
-                  <Link
-                    href={`/profile/${user?.profile.username}`}
-                    className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-600 text-xs font-semibold flex items-center gap-2"
-                  >
-                    <GraduationCap className="w-4 h-4" /> My Tutor Schedule
-                  </Link>
-                )}
-                {(isContributor || isAdmin) && (
-                  <Link
-                    href="/editor"
-                    className="p-2.5 rounded-xl bg-violet-500/10 text-violet-600 text-xs font-semibold flex items-center gap-2"
-                  >
-                    <Pencil className="w-4 h-4" /> Curriculum & Notes Editor
-                  </Link>
-                )}
-                {isAdmin && (
-                  <Link
-                    href="/main-contributor/add-contributor"
-                    className="p-2.5 rounded-xl bg-amber-500/10 text-amber-600 text-xs font-semibold flex items-center gap-2"
-                  >
-                    <UserPlus className="w-4 h-4" /> Manage & Promote Users
-                  </Link>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
+  const content = (
+    <>
+      {active && (
+        <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-b-full bg-primary nav-tab-indicator" />
       )}
-    </header>
+      {avatar ?? (
+        <Icon className={cn('w-5 h-5 transition-transform duration-200', active && 'scale-105')} />
+      )}
+      <span className="text-xs font-semibold truncate max-w-full">{label}</span>
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link href={href} className={className} aria-current={active ? 'page' : undefined}>
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={className}
+      aria-current={active ? 'page' : undefined}
+      aria-expanded={expanded}
+      aria-controls={expanded ? controlsId : undefined}
+    >
+      {content}
+    </button>
   );
 }

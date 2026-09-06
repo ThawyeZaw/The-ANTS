@@ -74,7 +74,7 @@ function buildDefaultSlides(firstName: string, welcomeSubtitle: string): Carouse
   return [
     {
       greeting: 'Welcome back',
-      nameLine: `${firstName} 👋`,
+      nameLine: firstName,
       subtitle: welcomeSubtitle,
     },
     {
@@ -215,7 +215,7 @@ const DashboardLayout = React.memo(function DashboardLayout({
         <div className="flex items-center gap-6">
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-white/70">Welcome back</p>
-            <h1 className="mt-0.5 text-2xl md:text-3xl font-bold">{firstName} 👋</h1>
+            <h1 className="mt-0.5 text-2xl md:text-3xl font-bold">{firstName}</h1>
             <p className="mt-1 text-sm text-white/70 max-w-md">
               {welcomeSubtitle}
             </p>

@@ -4,7 +4,6 @@
 // The ANTS — useDashboardSync hook (Hono API / Neon Backend)
 // Aggregates real data for dashboard display:
 // - Enrolled courses & synced resources (via useCourseSync)
-// - Saved notes (via useSavedNotes)
 // - User exam countdowns (via useCountdown)
 // - Computed dashboard stats from live data
 // ──────────────────────────────────────────────────────────────────────────────
@@ -12,7 +11,6 @@
 import { useMemo } from 'react';
 import { useAuth } from './useAuth';
 import { useCourseSync } from './useCourseSync';
-import { useSavedNotes } from './useNotes';
 import { useCountdown } from './useCountdown';
 
 export interface DashboardStat {
@@ -27,7 +25,6 @@ export function useDashboardSync() {
   const userId = user?.id;
 
   const { syncedCourses, isLoading: coursesLoading } = useCourseSync();
-  const { savedNotes } = useSavedNotes(userId);
   const { groupedCountdowns, availableExams } = useCountdown(userId);
 
   const hasEnrollments = syncedCourses.length > 0;
@@ -37,30 +34,26 @@ export function useDashboardSync() {
       (acc, c) =>
         acc +
         c.subjects.reduce(
-          (sAcc, s) => sAcc + s.notes.length + s.flashcards.length + s.exams.length,
+          (sAcc, s) => sAcc + s.exams.length + s.countdowns.length,
           0
         ),
       0
     );
   }, [syncedCourses]);
 
-  // ── Flattened countdowns sorted by time left ──────────────────────────────
   const allCountdowns = useMemo(() => {
     return Object.values(groupedCountdowns)
       .flat()
       .sort((a, b) => a.timeLeft.days - b.timeLeft.days);
   }, [groupedCountdowns]);
 
-  // ── Upcoming exams (not past, sorted nearest first, limited to 5) ─────────
   const upcomingExams = useMemo(() => {
     return allCountdowns.filter((c) => !c.timeLeft.isPast).slice(0, 5);
   }, [allCountdowns]);
 
-  // ── Dashboard stats computed from real data ────────────────────────────────
   const stats = useMemo((): DashboardStat[] => {
     const s: DashboardStat[] = [];
 
-    // Enrolled courses
     s.push({
       key: 'enrolled-courses',
       label: 'Enrolled Courses',
@@ -68,7 +61,6 @@ export function useDashboardSync() {
       color: 'emerald',
     });
 
-    // Synced resources total
     s.push({
       key: 'synced-resources',
       label: 'Synced Resources',
@@ -76,15 +68,6 @@ export function useDashboardSync() {
       color: 'amber',
     });
 
-    // Saved notes
-    s.push({
-      key: 'saved-notes',
-      label: 'Saved Notes',
-      value: savedNotes.length,
-      color: 'violet',
-    });
-
-    // Next exam countdown
     const nextExam = allCountdowns.find((c) => !c.timeLeft.isPast);
     s.push({
       key: 'next-exam',
@@ -93,19 +76,6 @@ export function useDashboardSync() {
       color: 'red',
     });
 
-    // Flashcard decks
-    const totalDecks = syncedCourses.reduce(
-      (acc, c) => acc + c.subjects.reduce((sAcc, s) => sAcc + s.flashcards.length, 0),
-      0
-    );
-    s.push({
-      key: 'flashcard-decks',
-      label: 'Decks',
-      value: totalDecks,
-      color: 'teal',
-    });
-
-    // Active countdowns
     s.push({
       key: 'active-countdowns',
       label: 'Active Countdowns',
@@ -114,7 +84,7 @@ export function useDashboardSync() {
     });
 
     return s;
-  }, [syncedCourses, totalResources, savedNotes, allCountdowns]);
+  }, [syncedCourses, totalResources, allCountdowns]);
 
   const isLoading = coursesLoading;
 
@@ -122,7 +92,6 @@ export function useDashboardSync() {
     syncedCourses,
     hasEnrollments,
     totalResources,
-    savedNotes,
     upcomingExams,
     allCountdowns,
     availableExams,

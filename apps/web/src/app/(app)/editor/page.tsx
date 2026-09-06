@@ -16,6 +16,8 @@ import {
   ShieldCheck,
   AlertCircle,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import AppIcon from '@/components/ui/AppIcon';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
 import { cn } from '@/lib/utils';
@@ -25,28 +27,17 @@ interface EditorItem {
   label: string;
   description: string;
   href: string;
-  icon: React.ReactNode;
-  accentColor: string;
+  icon: LucideIcon;
   features: string[];
 }
 
 const EDITOR_ITEMS: EditorItem[] = [
   {
-    id: 'notes',
-    label: 'Notes Editor',
-    description: 'Create, refine, and submit syllabus-aligned study notes to the public library.',
-    href: '/editor/notes',
-    icon: <Pencil className="h-6 w-6" />,
-    accentColor: 'from-amber-500 to-orange-500',
-    features: ['Rich text & LaTeX formula editing', 'Curriculum topic mapping', 'Version history', 'Community publishing'],
-  },
-  {
     id: 'curriculum',
     label: 'Curriculum Editor',
     description: 'Structure academic boards, subjects, and topic hierarchies with prerequisites.',
     href: '/editor/curriculum',
-    icon: <BookOpen className="h-6 w-6" />,
-    accentColor: 'from-emerald-500 to-teal-500',
+    icon: BookOpen,
     features: ['Cambridge & Edexcel syllabi', 'Subject code mapping', 'Topic order indexing', 'Resource attachments'],
   },
   {
@@ -54,17 +45,15 @@ const EDITOR_ITEMS: EditorItem[] = [
     label: 'Exam Data Editor',
     description: 'Maintain official exam timetables, paper schedules, and grade boundaries.',
     href: '/editor/exam',
-    icon: <ClipboardCheck className="h-6 w-6" />,
-    accentColor: 'from-violet-500 to-purple-500',
+    icon: ClipboardCheck,
     features: ['Exam session dates', 'Component weightings', 'Grade boundary tables', 'Specimen paper links'],
   },
   {
     id: 'review-queue',
     label: 'Review Queue Proposals',
-    description: 'Review pending curriculum changes and note proposals before publishing.',
+    description: 'Review pending curriculum and exam proposals before publishing.',
     href: '/editor/review-queue',
-    icon: <ShieldCheck className="h-6 w-6" />,
-    accentColor: 'from-blue-500 to-indigo-500',
+    icon: ShieldCheck,
     features: ['Proposal moderation', 'Feedback & revisions', 'Audit logs', 'Instant approval sync'],
   },
 ];
@@ -74,22 +63,12 @@ function EditorCard({ editor }: { editor: EditorItem }) {
     <div
       className={cn(
         'group relative flex flex-col p-6 rounded-3xl border border-border',
-        'bg-background-card hover:bg-background-secondary',
-        'transition-all duration-300 hover:shadow-xl hover:-translate-y-1'
+        'bg-background-card hover:bg-background-secondary hover:border-border-hover',
+        'transition-colors duration-200'
       )}
     >
-      {/* Icon */}
-      <div
-        className={cn(
-          'inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4',
-          'bg-gradient-to-br text-white shadow-md',
-          editor.accentColor
-        )}
-      >
-        {editor.icon}
-      </div>
+      <AppIcon icon={editor.icon} size="xl" tone="secondary" frame="soft" className="mb-4" />
 
-      {/* Content */}
       <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors">
         {editor.label}
       </h3>
@@ -97,24 +76,22 @@ function EditorCard({ editor }: { editor: EditorItem }) {
         {editor.description}
       </p>
 
-      {/* Features List */}
       <div className="space-y-2 mb-6 flex-1">
         {editor.features.map((feature) => (
           <div key={feature} className="flex items-center gap-2 text-xs text-foreground-secondary">
-            <div className={cn('w-1.5 h-1.5 rounded-full bg-gradient-to-r shrink-0', editor.accentColor)} />
+            <div className="w-1.5 h-1.5 rounded-full bg-primary/60 shrink-0" />
             <span>{feature}</span>
           </div>
         ))}
       </div>
 
-      {/* Action */}
       <Link
         href={editor.href}
         className={cn(
           'flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold mt-auto',
-          'bg-gradient-to-r text-white transition-all duration-200',
-          'hover:opacity-95 hover:shadow-lg shadow-sm',
-          editor.accentColor
+          'bg-primary text-white transition-colors duration-200',
+          'hover:bg-primary-hover',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary'
         )}
       >
         Open {editor.label}
@@ -134,16 +111,14 @@ export default function EditorPortalPage() {
   if (!user || !hasAccess) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4 animate-fade-in text-center p-6">
-        <div className="p-4 rounded-2xl bg-violet-500/10 text-violet-500">
-          <Pencil className="w-10 h-10" />
-        </div>
+        <AppIcon icon={Pencil} size="xl" tone="muted" frame="soft" />
         <h2 className="text-xl font-bold text-foreground">Contributor Access Required</h2>
         <p className="text-xs text-foreground-muted max-w-sm">
           You need verified Contributor or Administrator privileges to access content creation tools.
         </p>
         <Link
           href="/dashboard"
-          className="px-5 py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-hover transition-all"
+          className="px-5 py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-hover transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
           Back to Dashboard
         </Link>
@@ -153,10 +128,9 @@ export default function EditorPortalPage() {
 
   return (
     <div className="space-y-8 animate-fade-in pb-12">
-      {/* Header Banner */}
-      <div className="rounded-3xl bg-gradient-to-br from-violet-500/15 via-background-card to-background-secondary border border-border p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="rounded-3xl bg-background-card border border-border p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-2">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-violet-500/10 text-violet-600 border border-violet-500/20">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
             <Pencil className="w-3.5 h-3.5" />
             Curriculum & Content Editor Portal
           </div>
@@ -164,14 +138,14 @@ export default function EditorPortalPage() {
             Academic Contributor Workspace
           </h1>
           <p className="text-xs sm:text-sm text-foreground-muted max-w-xl">
-            Author comprehensive study summaries, structure curriculum frameworks, and update official exam schedules.
+            Structure curriculum frameworks and update official exam schedules.
           </p>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
           <Link
             href="/editor/review-queue"
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-background-secondary border border-border text-foreground text-xs font-bold hover:bg-background-secondary/80 transition-all shadow-xs"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-background-secondary border border-border text-foreground text-xs font-bold hover:bg-background-secondary/80 transition-all shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
             <ShieldCheck className="w-4 h-4 text-primary" />
             Review Queue
@@ -179,7 +153,7 @@ export default function EditorPortalPage() {
           {isAdmin && (
             <Link
               href="/main-contributor/add-contributor"
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-amber-500 text-white text-xs font-bold hover:bg-amber-600 transition-all shadow-xs"
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-hover transition-all shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
               Manage Users
             </Link>
@@ -187,7 +161,6 @@ export default function EditorPortalPage() {
         </div>
       </div>
 
-      {/* Guidelines Card */}
       <div className="p-5 rounded-2xl bg-primary/5 border border-primary/15 flex items-start gap-3.5">
         <AlertCircle className="h-5 w-5 text-primary shrink-0 mt-0.5" />
         <div className="space-y-1">
@@ -195,34 +168,30 @@ export default function EditorPortalPage() {
             Curriculum Authoring Standard
           </h3>
           <p className="text-xs text-foreground-muted leading-relaxed">
-            All submitted notes and curriculum topics are mapped against official syllabus codes (Cambridge, Edexcel, and Matriculation) and go through the moderation queue before going live.
+            All submitted curriculum topics are mapped against official syllabus codes (Cambridge, Edexcel, and Matriculation) and go through the moderation queue before going live.
           </p>
         </div>
       </div>
 
-      {/* Editors Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {editors.map((editor) => (
           <EditorCard key={editor.id} editor={editor} />
         ))}
       </div>
 
-      {/* Contribution Impact Footer */}
       <div className="p-6 sm:p-8 rounded-3xl bg-background-card border border-border flex flex-col sm:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-emerald-500 flex items-center justify-center text-white shrink-0 shadow-md">
-            <Sparkles className="w-6 h-6" />
-          </div>
+          <AppIcon icon={Sparkles} size="lg" tone="primary" frame="soft" />
           <div>
             <h3 className="text-sm font-bold text-foreground">Open Educational Resources for Myanmar</h3>
             <p className="text-xs text-foreground-muted mt-0.5">
-              Your authored guides and revision formulas are accessed by students and educators nationwide.
+              Your curriculum frameworks and exam schedules are accessed by students and educators nationwide.
             </p>
           </div>
         </div>
         <Link
           href="/library"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-foreground bg-background-secondary border border-border hover:bg-background-secondary/80 transition-colors shrink-0"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-foreground bg-background-secondary border border-border hover:bg-background-secondary/80 transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
           View Public Library
           <ArrowRight className="w-3.5 h-3.5" />

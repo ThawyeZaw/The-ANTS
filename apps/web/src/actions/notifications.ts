@@ -23,9 +23,7 @@ interface QueueItem {
 
 interface NotificationPrefs {
   timetable?:   { enabled?: boolean; reminders?: number[] };
-  assignments?: { enabled?: boolean; reminders?: number[] };
   exams?:       { enabled?: boolean; reminders?: number[] };
-  quizzes?:     { enabled?: boolean; reminders?: number[] };
 }
 
 const OVERDUE_ENQUEUE_GRACE_MS = 5_000;

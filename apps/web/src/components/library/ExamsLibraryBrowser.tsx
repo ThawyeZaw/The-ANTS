@@ -86,13 +86,8 @@ function ExamCard({ exam, isTracking, onAdd }: ExamCardProps) {
             {exam.syllabus_code}
           </span>
         )}
-        <span className={cn(
-          'text-[10px] font-semibold px-2 py-0.5 rounded-full',
-          dateType === 'fixed'
-            ? 'bg-blue-500/10 text-blue-700'
-            : 'bg-amber-500/10 text-amber-700'
-        )}>
-          {dateType === 'fixed' ? '📅 Fixed date' : '📆 Custom date'}
+        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-background-secondary text-foreground-secondary border border-border">
+          {dateType === 'fixed' ? 'Fixed date' : 'Custom date'}
         </span>
       </div>
 
@@ -250,19 +245,18 @@ export default function ExamsLibraryBrowser() {
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
       {/* Hero */}
-      <div className="relative overflow-hidden rounded-3xl border border-[var(--border)] bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-red-500/10 p-6 md:p-8">
-        <div className="relative z-10 space-y-2">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-700">
+      <div className="rounded-3xl border border-border bg-background-card p-6 md:p-8">
+        <div className="space-y-2">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary border border-primary/20">
             <BookMarked size={12} /> Official Exam Dates · Contributor-verified
           </div>
-          <h1 className="text-2xl md:text-3xl font-semibold text-[var(--foreground)] tracking-tight">
-          Exams
+          <h1 className="text-2xl md:text-3xl font-semibold text-foreground tracking-tight">
+            Exams
           </h1>
-          <p className="max-w-xl text-sm md:text-base text-[var(--foreground-secondary)]">
+          <p className="max-w-xl text-sm md:text-base text-foreground-secondary">
             Browse official exam dates and papers by board. Fixed-date exams (IGCSE, A Level) have pre-filled dates — you can still override them. IELTS and OSSD require you to pick your personal date.
           </p>
         </div>
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-56 w-56 rounded-full bg-amber-400/15 blur-3xl pointer-events-none" />
       </div>
 
       {/* Filters */}

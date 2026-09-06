@@ -1,30 +1,24 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTs — CourseSyncPanel
-// Dashboard section showing enrolled courses and their synced resources.
-// Automatically fetches notes, flashcards, exams, and countdowns linked to
-// the user's enrolled curricula and subjects.
+// The ANTS — CourseSyncPanel
+// Dashboard section showing enrolled courses and their synced exams/countdowns.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import Link from 'next/link';
 import {
   GraduationCap,
-  NotebookPen,
-  Layers,
   Clock,
   BookOpen,
   ArrowRight,
   Plus,
   Sparkles,
 } from 'lucide-react';
-import { cn, slugify } from '@/lib/utils';
+import { slugify } from '@/lib/utils';
 import { useCourseSync } from '@/hooks/useCourseSync';
 
 export default function CourseSyncPanel() {
   const { syncedCourses, hasEnrollments, totalResources } = useCourseSync();
-
-  // ── Empty state (no enrollments) ──────────────────────────────────────────
 
   if (!hasEnrollments) {
     return (
@@ -52,8 +46,6 @@ export default function CourseSyncPanel() {
       </div>
     );
   }
-
-  // ── Enrolled courses with synced resources ────────────────────────────────
 
   return (
     <div className="rounded-2xl border border-[var(--border)] bg-[var(--background-card)] p-6">
@@ -84,7 +76,6 @@ export default function CourseSyncPanel() {
             key={course.curriculumId}
             className="rounded-xl border border-border bg-background-card/50 overflow-hidden"
           >
-            {/* Curriculum header */}
             <div className="flex items-center gap-2.5 px-4 py-3 border-b border-border bg-background-secondary/30">
               <GraduationCap className="h-4 w-4 text-emerald-500 shrink-0" />
               <div className="min-w-0 flex-1">
@@ -99,14 +90,9 @@ export default function CourseSyncPanel() {
               )}
             </div>
 
-            {/* Subjects with resource counts */}
             <div className="divide-y divide-border">
               {course.subjects.map((subject) => {
-                const resourceTotal =
-                  subject.notes.length +
-                  subject.flashcards.length +
-                  subject.exams.length +
-                  subject.countdowns.length;
+                const resourceTotal = subject.exams.length + subject.countdowns.length;
 
                 return (
                   <div
@@ -118,7 +104,6 @@ export default function CourseSyncPanel() {
                         {subject.subjectTitle}
                       </p>
                       <div className="flex items-center gap-3 mt-1">
-                        {/* Lesson Tracker */}
                         <Link
                           href={`/lessons/${slugify(course.curriculumTitle)}/${slugify(subject.subjectTitle)}`}
                           className="inline-flex items-center gap-1 text-[11px] text-foreground-muted hover:text-primary transition-colors"
@@ -127,19 +112,6 @@ export default function CourseSyncPanel() {
                           <span>{subject.topicCount} topics</span>
                         </Link>
 
-                        {/* Resource badges */}
-                        {subject.notes.length > 0 && (
-                          <span className="inline-flex items-center gap-1 text-[11px] text-amber-500">
-                            <NotebookPen className="h-3 w-3" />
-                            {subject.notes.length}
-                          </span>
-                        )}
-                        {subject.flashcards.length > 0 && (
-                          <span className="inline-flex items-center gap-1 text-[11px] text-violet-500">
-                            <Layers className="h-3 w-3" />
-                            {subject.flashcards.length}
-                          </span>
-                        )}
                         {subject.exams.length > 0 && (
                           <span className="inline-flex items-center gap-1 text-[11px] text-rose-500">
                             <Clock className="h-3 w-3" />

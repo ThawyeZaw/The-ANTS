@@ -19,7 +19,7 @@ const MISSION_ID = 'org-mission';
 
 const DEFAULT_MISSION: OrgMission = {
   id: 'org-mission-1',
-  content: 'The ANTs is committed to empowering students across Myanmar and worldwide through free, open-access, high-quality curriculum notes, past papers, flashcards, and peer-to-peer learning tools.',
+  content: 'The ANTs is committed to empowering students across Myanmar and worldwide through free, open-access, high-quality curriculum resources, past papers, and peer-to-peer learning tools.',
   updatedAt: new Date().toISOString(),
 };
 

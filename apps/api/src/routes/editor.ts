@@ -55,7 +55,7 @@ export function createEditorRoutes(getDb: () => ReturnType<typeof createDb>) {
 
     const SubmitSchema = z.object({
       contributorId: z.string().uuid(),
-      submissionType: z.enum(['note', 'deck', 'curriculum', 'question']),
+      submissionType: z.enum(['curriculum', 'exam', 'subject', 'topic', 'calculator', 'countdown']),
       entityId: z.string().uuid(),
       submittedData: z.record(z.string(), z.any()),
       isUpdate: z.boolean().optional().default(false),

@@ -8,6 +8,7 @@
 // Dark palette is scoped to the .hp class — does not affect authenticated pages.
 // ──────────────────────────────────────────────────────────────────────────────
 
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, MessageSquare, Users, Home } from 'lucide-react';
@@ -32,8 +33,6 @@ const EXPLORE_CARDS = [
       'Browse academic tutors offering class slots across Cambridge, Edexcel, and Matriculation. View weekly availability and inquire directly.',
     Icon: Users,
     href: '/explore?tab=tutors',
-    iconBg: 'rgba(var(--hp-brand-rgb), 0.12)',
-    iconColor: 'var(--hp-brand)',
     stats: [
       { value: 'Verified', label: 'TUTOR PROFILES' },
       { value: 'Telegram', label: 'DIRECT INQUIRIES' },
@@ -45,8 +44,6 @@ const EXPLORE_CARDS = [
       'Browse student portfolios, projects, CCA activities, and verified curriculum contributors. View study achievements and credentials.',
     Icon: Users,
     href: '/explore',
-    iconBg: 'rgba(var(--hp-violet-rgb), 0.14)',
-    iconColor: 'var(--hp-violet)',
     stats: [
       { value: 'Multi-Role', label: 'ACADEMIC PERSONAS' },
       { value: 'Public', label: 'SHAREABLE LINK' },
@@ -118,6 +115,11 @@ function SectionHead({
 
 export default function HomePage() {
   const { isAuthenticated, user } = useAuth();
+  // Auth seeds from localStorage on the client only — gate until mount to match SSR HTML.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <div className="hp" style={{ minHeight: '100vh', position: 'relative' }}>
@@ -260,7 +262,7 @@ export default function HomePage() {
           </div>
 
 
-          {isAuthenticated && user ? (
+          {mounted && isAuthenticated && user ? (
             <Link href={getRoleLandingPath(user.profile.role)}>
               <button
                 style={{
@@ -673,19 +675,19 @@ export default function HomePage() {
                   >
                     {/* Icon */}
                     <div
-                      className="hp-icon-elevated"
                       style={{
                         width: 46,
                         height: 46,
                         borderRadius: 13,
-                        background: card.iconBg,
+                        background: 'var(--hp-surface-2)',
+                        border: '1px solid var(--hp-border)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         marginBottom: 20,
                       }}
                     >
-                      <card.Icon size={22} style={{ color: card.iconColor }} strokeWidth={1.7} />
+                      <card.Icon size={22} style={{ color: 'var(--hp-ink-muted)' }} strokeWidth={2} />
                     </div>
 
                     <h3

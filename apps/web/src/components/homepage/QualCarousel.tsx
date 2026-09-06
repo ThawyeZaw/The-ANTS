@@ -2,18 +2,32 @@
 
 // ──────────────────────────────────────────────────────────────────────────────
 // QualCarousel — Qualification board auto-advancing showcase
-//
-// Cycles through 3 active exam boards (CAIE, Edexcel, IELTS) with
-// continuous auto-advance. Boards switch instantaneously — no slide
-// animation. Upcoming boards (OSSD, SAT, Duolingo) appear as
-// "Coming Soon" chips below.
+// Lucide outline icons replace structural emojis.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  GraduationCap,
+  BookOpen,
+  Globe,
+  Map,
+  PenLine,
+  MessageCircle,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { QUALIFICATION_BOARDS, UPCOMING_BOARDS } from '@/constants/homepage';
 import RevealSection from './RevealSection';
 
 const AUTO_ADVANCE_MS = 4500;
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  GraduationCap,
+  BookOpen,
+  Globe,
+  Map,
+  PenLine,
+  MessageCircle,
+};
 
 export default function QualCarousel() {
   const [current, setCurrent] = useState(0);
@@ -24,7 +38,6 @@ export default function QualCarousel() {
     setCurrent((prev) => (prev + 1) % total);
   }, [total]);
 
-  // Continuous auto-advance — no pause on hover
   useEffect(() => {
     timerRef.current = setInterval(advance, AUTO_ADVANCE_MS);
     return () => {
@@ -33,6 +46,7 @@ export default function QualCarousel() {
   }, [advance]);
 
   const board = QUALIFICATION_BOARDS[current];
+  const BoardIcon = ICON_MAP[board.icon] || GraduationCap;
 
   return (
     <RevealSection>
@@ -43,7 +57,6 @@ export default function QualCarousel() {
           position: 'relative',
         }}
       >
-        {/* Slide card — content switches instantaneously */}
         <div
           style={{
             background: 'var(--hp-surface)',
@@ -55,8 +68,6 @@ export default function QualCarousel() {
             overflow: 'hidden',
           }}
         >
-
-          {/* Colored accent bar at top */}
           <div
             aria-hidden="true"
             style={{
@@ -70,12 +81,23 @@ export default function QualCarousel() {
             }}
           />
 
-          {/* Emoji */}
-          <div aria-hidden="true" style={{ fontSize: 48, marginBottom: 16 }}>
-            {board.emoji}
+          <div
+            aria-hidden="true"
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: 14,
+              margin: '0 auto 16px',
+              background: 'var(--hp-surface-2)',
+              border: '1px solid var(--hp-border)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <BoardIcon size={28} strokeWidth={2} style={{ color: 'var(--hp-ink-muted)' }} />
           </div>
 
-          {/* Board name */}
           <h3
             style={{
               fontFamily: 'var(--hp-font-display)',
@@ -89,7 +111,6 @@ export default function QualCarousel() {
             {board.name}
           </h3>
 
-          {/* Qualifications */}
           <div
             style={{
               display: 'flex',
@@ -118,7 +139,6 @@ export default function QualCarousel() {
             ))}
           </div>
 
-          {/* Description */}
           <p
             style={{
               fontFamily: 'var(--hp-font-body)',
@@ -133,7 +153,6 @@ export default function QualCarousel() {
           </p>
         </div>
 
-        {/* Decorative dot indicators — purely visual, non-interactive */}
         <div
           aria-hidden="true"
           role="presentation"
@@ -159,7 +178,6 @@ export default function QualCarousel() {
           ))}
         </div>
 
-        {/* Coming Soon boards */}
         <div
           style={{
             display: 'flex',
@@ -169,58 +187,61 @@ export default function QualCarousel() {
             marginTop: 32,
           }}
         >
-          {UPCOMING_BOARDS.map((board) => (
-            <div
-              key={board.name}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                background: 'var(--hp-surface)',
-                border: '1px dashed var(--hp-border-strong)',
-                borderRadius: 999,
-                padding: '8px 18px 8px 14px',
-                opacity: 0.7,
-                transition: 'opacity 0.2s ease, border-color 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                const el = e.currentTarget as HTMLDivElement;
-                el.style.opacity = '1';
-                el.style.borderColor = 'var(--hp-amber)';
-              }}
-              onMouseLeave={(e) => {
-                const el = e.currentTarget as HTMLDivElement;
-                el.style.opacity = '0.7';
-                el.style.borderColor = 'var(--hp-border-strong)';
-              }}
-            >
-              <span style={{ fontSize: 18 }}>{board.emoji}</span>
-              <span
+          {UPCOMING_BOARDS.map((upcoming) => {
+            const UpcomingIcon = ICON_MAP[upcoming.icon] || BookOpen;
+            return (
+              <div
+                key={upcoming.name}
                 style={{
-                  fontFamily: 'var(--hp-font-display)',
-                  fontSize: 14,
-                  fontWeight: 600,
-                  color: 'var(--hp-ink)',
-                }}
-              >
-                {board.name}
-              </span>
-              <span
-                style={{
-                  fontFamily: 'var(--hp-font-mono)',
-                  fontSize: 10.5,
-                  padding: '2px 9px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  background: 'var(--hp-surface)',
+                  border: '1px dashed var(--hp-border-strong)',
                   borderRadius: 999,
-                  background: 'var(--hp-amber)',
-                  color: 'var(--hp-bg)',
-                  fontWeight: 600,
-                  letterSpacing: '0.04em',
+                  padding: '8px 18px 8px 14px',
+                  opacity: 0.7,
+                  transition: 'opacity 0.2s ease, border-color 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  const el = e.currentTarget as HTMLDivElement;
+                  el.style.opacity = '1';
+                  el.style.borderColor = 'var(--hp-amber)';
+                }}
+                onMouseLeave={(e) => {
+                  const el = e.currentTarget as HTMLDivElement;
+                  el.style.opacity = '0.7';
+                  el.style.borderColor = 'var(--hp-border-strong)';
                 }}
               >
-                COMING SOON
-              </span>
-            </div>
-          ))}
+                <UpcomingIcon size={16} strokeWidth={2} style={{ color: 'var(--hp-ink-muted)' }} aria-hidden />
+                <span
+                  style={{
+                    fontFamily: 'var(--hp-font-display)',
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: 'var(--hp-ink)',
+                  }}
+                >
+                  {upcoming.name}
+                </span>
+                <span
+                  style={{
+                    fontFamily: 'var(--hp-font-mono)',
+                    fontSize: 10.5,
+                    padding: '2px 9px',
+                    borderRadius: 999,
+                    background: 'var(--hp-amber)',
+                    color: 'var(--hp-bg)',
+                    fontWeight: 600,
+                    letterSpacing: '0.04em',
+                  }}
+                >
+                  COMING SOON
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
     </RevealSection>

@@ -161,10 +161,9 @@ export async function actionSendWelcomeMessage(telegramChatId: string, userId: s
     const message =
       `👋 <b>Welcome to The ANTs, ${displayName}!</b>\n\n` +
       `You\'re all set to receive Telegram notifications. Here\'s what you can do:\n\n` +
-      `🃏 <b>Flashcards</b> — Create decks, study with spaced repetition (SM-2)\n` +
-      `📝 <b>Notes</b> — Write rich notes with LaTeX, diagrams, and animations\n` +
       `📅 <b>Timetable</b> — Schedule events, set reminders, stay organised\n` +
       `🎯 <b>Exams</b> — Track countdowns, calculate grades, log results\n` +
+      `📚 <b>Lessons</b> — Track your confidence topic by topic across the syllabus\n` +
       `🍅 <b>Pomodoro</b> — Focus timers with custom intervals` +
       deadlinesSection +
       `\n\n` +

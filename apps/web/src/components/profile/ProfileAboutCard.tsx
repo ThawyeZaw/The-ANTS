@@ -77,7 +77,7 @@ export default function ProfileAboutCard({ profile }: ProfileAboutCardProps) {
               icon={<MapPin className="h-4 w-4" />}
               label="Location / Timezone"
               value={timezone.replace('_', ' ').replace('/', ' — ')}
-              iconColor="text-emerald-500"
+              iconColor="text-foreground-muted"
             />
           )}
           {studyYear && (
@@ -85,7 +85,7 @@ export default function ProfileAboutCard({ profile }: ProfileAboutCardProps) {
               icon={<CalendarDays className="h-4 w-4" />}
               label="Study Year"
               value={studyYear}
-              iconColor="text-amber-500"
+              iconColor="text-foreground-muted"
             />
           )}
         </div>

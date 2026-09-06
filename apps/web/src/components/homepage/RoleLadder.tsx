@@ -16,7 +16,7 @@ const ROLES = [
     stepTag: 'Everyone starts here',
     title: 'Student',
     description:
-      'Access all study tools — timetables, flashcards, grade calculators, and more. Join classrooms and clubs.',
+      'Access all study tools — timetables, lesson tracking, exam countdowns and grade calculators.',
   },
   {
     stepTag: 'Upgrade  ·  requires approval',
@@ -28,7 +28,7 @@ const ROLES = [
     stepTag: 'Upgrade  ·  requires approval',
     title: 'Contributor',
     description:
-      'Build curriculum resources, create notes, lead clubs, and get a public contributor profile.',
+      'Build and maintain the curriculum library, submit content for review, and get a public contributor profile.',
   },
   {
     stepTag: 'Gatekeeper  ·  approves every upgrade',
