@@ -20,58 +20,59 @@ import {
   UserCircle,
   Settings,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import AppIcon from '@/components/ui/AppIcon';
 import { cn } from '@/lib/utils';
 
 interface SidebarLink {
   label: string;
   href: string;
-  icon: React.ReactNode;
-  color?: string;
+  icon: LucideIcon;
 }
 
 const CONTEXT_MAP: Record<string, SidebarLink[]> = {
   '/pomodoro': [
-    { label: 'Timetable', href: '/timetable', icon: <CalendarDays className="h-4 w-4" />, color: 'text-blue-500' },
-    { label: 'Countdown', href: '/countdown', icon: <Clock className="h-4 w-4" />, color: 'text-amber-500' },
-    { label: 'Courses', href: '/library?tab=courses', icon: <GraduationCap className="h-4 w-4" />, color: 'text-emerald-500' },
+    { label: 'Timetable', href: '/timetable', icon: CalendarDays },
+    { label: 'Countdown', href: '/countdown', icon: Clock },
+    { label: 'Courses', href: '/library?tab=courses', icon: GraduationCap },
   ],
   '/courses': [
-    { label: 'Library', href: '/library', icon: <BookOpen className="h-4 w-4" />, color: 'text-emerald-500' },
-    { label: 'Exams', href: '/library?tab=exams', icon: <FlaskConical className="h-4 w-4" />, color: 'text-rose-500' },
-    { label: 'Countdown', href: '/countdown', icon: <Clock className="h-4 w-4" />, color: 'text-amber-500' },
+    { label: 'Library', href: '/library', icon: BookOpen },
+    { label: 'Exams', href: '/library?tab=exams', icon: FlaskConical },
+    { label: 'Countdown', href: '/countdown', icon: Clock },
   ],
   '/timetable': [
-    { label: 'Countdown', href: '/countdown', icon: <Clock className="h-4 w-4" />, color: 'text-amber-500' },
-    { label: 'Pomodoro', href: '/pomodoro', icon: <Timer className="h-4 w-4" />, color: 'text-rose-500' },
-    { label: 'Courses', href: '/library?tab=courses', icon: <GraduationCap className="h-4 w-4" />, color: 'text-emerald-500' },
+    { label: 'Countdown', href: '/countdown', icon: Clock },
+    { label: 'Pomodoro', href: '/pomodoro', icon: Timer },
+    { label: 'Courses', href: '/library?tab=courses', icon: GraduationCap },
   ],
   '/countdown': [
-    { label: 'Timetable', href: '/timetable', icon: <CalendarDays className="h-4 w-4" />, color: 'text-blue-500' },
-    { label: 'Calculator', href: '/calculator', icon: <Calculator className="h-4 w-4" />, color: 'text-emerald-500' },
-    { label: 'Past Exams', href: '/library?tab=exams', icon: <FlaskConical className="h-4 w-4" />, color: 'text-rose-500' },
+    { label: 'Timetable', href: '/timetable', icon: CalendarDays },
+    { label: 'Calculator', href: '/calculator', icon: Calculator },
+    { label: 'Past Exams', href: '/library?tab=exams', icon: FlaskConical },
   ],
   '/calculator': [
-    { label: 'Countdown', href: '/countdown', icon: <Clock className="h-4 w-4" />, color: 'text-amber-500' },
-    { label: 'Timetable', href: '/timetable', icon: <CalendarDays className="h-4 w-4" />, color: 'text-blue-500' },
-    { label: 'Past Exams', href: '/library?tab=exams', icon: <FlaskConical className="h-4 w-4" />, color: 'text-rose-500' },
+    { label: 'Countdown', href: '/countdown', icon: Clock },
+    { label: 'Timetable', href: '/timetable', icon: CalendarDays },
+    { label: 'Past Exams', href: '/library?tab=exams', icon: FlaskConical },
   ],
   '/library': [
-    { label: 'Courses', href: '/library?tab=courses', icon: <GraduationCap className="h-4 w-4" />, color: 'text-emerald-500' },
-    { label: 'Exams', href: '/library?tab=exams', icon: <FlaskConical className="h-4 w-4" />, color: 'text-rose-500' },
-    { label: 'Tools', href: '/library?tab=tools', icon: <Timer className="h-4 w-4" />, color: 'text-sky-500' },
+    { label: 'Courses', href: '/library?tab=courses', icon: GraduationCap },
+    { label: 'Exams', href: '/library?tab=exams', icon: FlaskConical },
+    { label: 'Tools', href: '/library?tab=tools', icon: Timer },
   ],
   '/profile': [
-    { label: 'Settings', href: '/settings', icon: <Settings className="h-4 w-4" />, color: 'text-foreground-muted' },
-    { label: 'Explore', href: '/explore', icon: <Compass className="h-4 w-4" />, color: 'text-primary' },
+    { label: 'Settings', href: '/settings', icon: Settings },
+    { label: 'Explore', href: '/explore', icon: Compass },
   ],
   '/settings': [
-    { label: 'My Profile', href: '/profile/me', icon: <UserCircle className="h-4 w-4" />, color: 'text-violet-500' },
-    { label: 'Explore Tutors', href: '/explore?tab=tutors', icon: <GraduationCap className="h-4 w-4" />, color: 'text-emerald-500' },
+    { label: 'My Profile', href: '/profile/me', icon: UserCircle },
+    { label: 'Explore Tutors', href: '/explore?tab=tutors', icon: GraduationCap },
   ],
   '/dashboard': [
-    { label: 'Library', href: '/library', icon: <BookOpen className="h-4 w-4" />, color: 'text-emerald-500' },
-    { label: 'Timetable', href: '/timetable', icon: <CalendarDays className="h-4 w-4" />, color: 'text-blue-500' },
-    { label: 'Explore', href: '/explore', icon: <Compass className="h-4 w-4" />, color: 'text-primary' },
+    { label: 'Library', href: '/library', icon: BookOpen },
+    { label: 'Timetable', href: '/timetable', icon: CalendarDays },
+    { label: 'Explore', href: '/explore', icon: Compass },
   ],
 };
 
@@ -90,20 +91,18 @@ function SidebarIconBtn({ link, isActive }: { link: SidebarLink; isActive: boole
       title={link.label}
       aria-label={link.label}
       className={cn(
-        'relative group flex flex-col items-center gap-1 w-full py-2.5 rounded-xl transition-all duration-200 cursor-pointer',
+        'relative group flex flex-col items-center gap-1 w-full min-h-[44px] py-2.5 rounded-xl transition-colors duration-200 cursor-pointer',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
         isActive
           ? 'bg-primary/10 text-primary'
           : 'text-foreground-muted hover:bg-background-secondary hover:text-foreground'
       )}
     >
-      <span
-        className={cn(
-          'transition-transform duration-200 group-hover:scale-110',
-          isActive ? 'text-primary' : link.color
-        )}
-      >
-        {link.icon}
-      </span>
+      <AppIcon
+        icon={link.icon}
+        size="sm"
+        tone={isActive ? 'primary' : 'muted'}
+      />
 
       <span className="absolute left-full ml-2.5 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded-lg text-xs font-semibold bg-background-card border border-border text-foreground shadow-lg whitespace-nowrap z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150">
         {link.label}
@@ -140,7 +139,7 @@ export default function RelatedPagesSidebar({ className }: { className?: string 
         <SidebarIconBtn
           key={link.href}
           link={link}
-          isActive={pathname.startsWith(link.href) && link.href !== '/'}
+          isActive={pathname.startsWith(link.href.split('?')[0]) && link.href !== '/'}
         />
       ))}
     </aside>

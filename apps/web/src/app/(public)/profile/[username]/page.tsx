@@ -17,6 +17,7 @@ import {
   Layers,
   Lock,
 } from 'lucide-react';
+import AppIcon from '@/components/ui/AppIcon';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import ProfileHero from '@/components/profile/ProfileHero';
@@ -254,18 +255,16 @@ function ProjectsSection({ projects, profile }: { projects: any[]; profile: Prof
   return (
     <section className="rounded-3xl border border-border bg-background-card p-6 sm:p-8 space-y-6">
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
-          <Layers className="h-4 w-4 text-violet-500" />
-        </div>
+        <AppIcon icon={Layers} size="md" tone="secondary" frame="soft" />
         <h2 className="text-lg font-bold text-foreground">Featured Projects</h2>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         {projects.map((project) => (
           <div
             key={project.id}
-            className="group rounded-2xl border border-border/80 bg-background-secondary/40 p-5 space-y-3 hover:border-violet-500/30 transition-all duration-300"
+            className="group rounded-2xl border border-border/80 bg-background-secondary/40 p-5 space-y-3 hover:border-border-hover transition-colors duration-200"
           >
-            <h3 className="font-bold text-foreground text-sm group-hover:text-violet-500 transition-colors">
+            <h3 className="font-bold text-foreground text-sm group-hover:text-primary transition-colors">
               {project.title}
             </h3>
             {project.description && (
@@ -291,19 +290,17 @@ function ActivitiesSection({ activities, profile }: { activities: any[]; profile
   return (
     <section className="rounded-3xl border border-border bg-background-card p-6 sm:p-8 space-y-6">
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-          <Star className="h-4 w-4 text-emerald-500" />
-        </div>
+        <AppIcon icon={Star} size="md" tone="secondary" frame="soft" />
         <h2 className="text-lg font-bold text-foreground">Activities & Leadership</h2>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         {activities.map((activity) => (
           <div
             key={activity.id}
-            className="group rounded-2xl border border-border/80 bg-background-secondary/40 p-5 space-y-2 hover:border-emerald-500/30 transition-all duration-300"
+            className="group rounded-2xl border border-border/80 bg-background-secondary/40 p-5 space-y-2 hover:border-border-hover transition-colors duration-200"
           >
-            <h3 className="font-bold text-foreground text-sm group-hover:text-emerald-500 transition-colors">{activity.name}</h3>
-            <p className="text-xs font-semibold text-emerald-600">
+            <h3 className="font-bold text-foreground text-sm group-hover:text-primary transition-colors">{activity.name}</h3>
+            <p className="text-xs font-semibold text-foreground-secondary">
               {activity.role} at {activity.organization}
             </p>
             {activity.description && (
@@ -320,18 +317,16 @@ function AchievementsSection({ achievements, profile }: { achievements: any[]; p
   return (
     <section className="rounded-3xl border border-border bg-background-card p-6 sm:p-8 space-y-6">
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-          <Award className="h-4 w-4 text-amber-500" />
-        </div>
+        <AppIcon icon={Award} size="md" tone="secondary" frame="soft" />
         <h2 className="text-lg font-bold text-foreground">Achievements & Honors</h2>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         {achievements.map((achievement) => (
           <div
             key={achievement.id}
-            className="group rounded-2xl border border-border/80 bg-background-secondary/40 p-5 space-y-1 hover:border-amber-500/30 transition-all duration-300"
+            className="group rounded-2xl border border-border/80 bg-background-secondary/40 p-5 space-y-1 hover:border-border-hover transition-colors duration-200"
           >
-            <h3 className="font-bold text-foreground text-sm group-hover:text-amber-500 transition-colors">{achievement.title}</h3>
+            <h3 className="font-bold text-foreground text-sm group-hover:text-primary transition-colors">{achievement.title}</h3>
             {achievement.description && (
               <p className="text-sm text-foreground-secondary leading-relaxed">{achievement.description}</p>
             )}
@@ -347,18 +342,16 @@ function GradesSection({ grades }: { grades: any[] }) {
   return (
     <section className="rounded-3xl border border-border bg-background-card p-6 sm:p-8 space-y-6">
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-          <GraduationCap className="h-4 w-4 text-blue-500" />
-        </div>
+        <AppIcon icon={GraduationCap} size="md" tone="secondary" frame="soft" />
         <h2 className="text-lg font-bold text-foreground">Academic Results</h2>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         {grades.map((grade) => (
           <div
             key={grade.id}
-            className="group rounded-2xl border border-border/80 bg-background-secondary/40 p-5 space-y-1 hover:border-blue-500/30 transition-all duration-300"
+            className="group rounded-2xl border border-border/80 bg-background-secondary/40 p-5 space-y-1 hover:border-border-hover transition-colors duration-200"
           >
-            <h3 className="font-bold text-foreground text-sm group-hover:text-blue-500 transition-colors">{grade.title}</h3>
+            <h3 className="font-bold text-foreground text-sm group-hover:text-primary transition-colors">{grade.title}</h3>
             {grade.description && (
               <p className="text-sm text-foreground-secondary">{grade.description}</p>
             )}
@@ -373,9 +366,7 @@ function TestimonialsSection({ testimonials, profile }: { testimonials: any[]; p
   return (
     <section className="rounded-3xl border border-border bg-background-card p-6 sm:p-8 space-y-6">
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center">
-          <Star className="h-4 w-4 text-rose-500" />
-        </div>
+        <AppIcon icon={Star} size="md" tone="secondary" frame="soft" />
         <h2 className="text-lg font-bold text-foreground">Testimonials</h2>
       </div>
       <div className="space-y-4">
@@ -399,18 +390,16 @@ function CertificationsSection({ certifications, profile }: { certifications: an
   return (
     <section className="rounded-3xl border border-border bg-background-card p-6 sm:p-8 space-y-6">
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center">
-          <GraduationCap className="h-4 w-4 text-teal-500" />
-        </div>
+        <AppIcon icon={GraduationCap} size="md" tone="secondary" frame="soft" />
         <h2 className="text-lg font-bold text-foreground">Certifications</h2>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         {certifications.map((cert) => (
           <div
             key={cert.id}
-            className="group rounded-2xl border border-border/80 bg-background-secondary/40 p-5 space-y-1 hover:border-teal-500/30 transition-all duration-300"
+            className="group rounded-2xl border border-border/80 bg-background-secondary/40 p-5 space-y-1 hover:border-border-hover transition-colors duration-200"
           >
-            <h3 className="font-bold text-foreground text-sm group-hover:text-teal-500 transition-colors">{cert.title}</h3>
+            <h3 className="font-bold text-foreground text-sm group-hover:text-primary transition-colors">{cert.title}</h3>
             <p className="text-xs text-foreground-muted">{cert.issuer}{cert.date ? ` · ${cert.date}` : ''}</p>
           </div>
         ))}

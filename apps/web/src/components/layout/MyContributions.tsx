@@ -7,8 +7,8 @@ import { useContributions } from '@/hooks/useContributions';
 import type { ContributionItem } from '@/hooks/useContributions';
 
 const TYPE_BADGE: Record<ContributionItem['type'], { label: string; color: string }> = {
-  curriculum: { label: 'Course',     color: 'bg-violet-500/10 text-violet-400 border-violet-500/20' },
-  exam:       { label: 'Exam',       color: 'bg-rose-500/10 text-rose-400 border-rose-500/20' },
+  curriculum: { label: 'Course', color: 'bg-background-secondary text-foreground-secondary border-border' },
+  exam:       { label: 'Exam',   color: 'bg-background-secondary text-foreground-secondary border-border' },
 };
 
 function formatDate(iso: string): string {

@@ -2,30 +2,25 @@
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Homepage — QualTrail
-// Six qualification cards in a horizontal row with alternating vertical offsets
-// and a faint dashed line running behind them.
-// Collapses to a vertical stack on mobile (≤900px).
+// Qualification cards with Lucide outline icons (no emoji).
 // ──────────────────────────────────────────────────────────────────────────────
 
+import { GraduationCap, BookOpen, Globe } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import RevealSection from './RevealSection';
 
-const QUALIFICATIONS = [
-  { name: 'Cambridge CAIE', sub: 'IGCSE & A Levels',      emoji: '🎓' },
-  { name: 'Pearson Edexcel', sub: 'IGCSE & IAL',          emoji: '📘' },
-  { name: 'IELTS',           sub: 'Academic & General',    emoji: '🌍' },
+const QUALIFICATIONS: { name: string; sub: string; Icon: LucideIcon }[] = [
+  { name: 'Cambridge CAIE', sub: 'IGCSE & A Levels', Icon: GraduationCap },
+  { name: 'Pearson Edexcel', sub: 'IGCSE & IAL', Icon: BookOpen },
+  { name: 'IELTS', sub: 'Academic & General', Icon: Globe },
 ];
 
 export default function QualTrail() {
   return (
     <RevealSection>
-      <div
-        style={{ position: 'relative', padding: '50px 0 10px' }}
-        className="quals-track-wrap"
-      >
-        {/* Dashed horizontal line (desktop only, hidden via CSS media query) */}
+      <div style={{ position: 'relative', padding: '50px 0 10px' }} className="quals-track-wrap">
         <div className="hp-quals-line" />
 
-        {/* Scrollable flex row */}
         <div
           style={{
             display: 'flex',
@@ -56,7 +51,8 @@ export default function QualTrail() {
           `}</style>
 
           {QUALIFICATIONS.map((q, i) => {
-            const isEven = i % 2 === 1; // even index (0-based), offset every other
+            const isEven = i % 2 === 1;
+            const Icon = q.Icon;
             return (
               <div
                 key={q.name}
@@ -84,7 +80,21 @@ export default function QualTrail() {
                   el.style.transform = isEven ? 'translateY(-16px)' : 'translateY(0)';
                 }}
               >
-                <div style={{ fontSize: 26, marginBottom: 10 }}>{q.emoji}</div>
+                <div
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 10,
+                    margin: '0 auto 12px',
+                    background: 'var(--hp-surface-2)',
+                    border: '1px solid var(--hp-border)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Icon size={20} strokeWidth={2} style={{ color: 'var(--hp-ink-muted)' }} aria-hidden />
+                </div>
                 <h4
                   style={{
                     fontFamily: 'var(--hp-font-display)',

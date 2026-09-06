@@ -13,7 +13,7 @@ import {
   ArrowRight, ArrowLeft, Check, SkipForward,
   Globe, User, Search, X, ChevronDown,
   Building2, GraduationCap, BookOpen, Loader2,
-  Send,
+  Send, Hand, School,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
@@ -290,7 +290,9 @@ export default function OnboardingWizard() {
           {step === 1 && (
             <div className="animate-fade-in-up space-y-6">
               <div className="text-center">
-                <div className="text-5xl mb-4">👋</div>
+                <div className="mb-4 inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-background-secondary text-foreground-muted">
+                  <Hand className="h-7 w-7" strokeWidth={2} aria-hidden />
+                </div>
                 <h1 className="text-3xl font-bold text-foreground mb-2">
                   Hi {user?.profile?.name?.split(' ')[0] ?? 'there'}, welcome to <span className="font-brand">The ANTs</span>!
                 </h1>
@@ -379,7 +381,9 @@ export default function OnboardingWizard() {
           {step === 2 && (
             <div className="animate-fade-in-up space-y-6">
               <div className="text-center">
-                <div className="text-5xl mb-4">📚</div>
+                <div className="mb-4 inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-background-secondary text-foreground-muted">
+                  <GraduationCap className="h-7 w-7" strokeWidth={2} aria-hidden />
+                </div>
                 <h1 className="text-2xl font-bold text-foreground mb-2">What are you studying?</h1>
                 <p className="text-foreground-muted text-sm">
                   Select one or more curricula from our database. You can always add more from the Course Manager.
@@ -453,7 +457,9 @@ export default function OnboardingWizard() {
           {step === 3 && (
             <div className="animate-fade-in-up space-y-6">
               <div className="text-center">
-                <div className="text-5xl mb-4">📖</div>
+                <div className="mb-4 inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-background-secondary text-foreground-muted">
+                  <BookOpen className="h-7 w-7" strokeWidth={2} aria-hidden />
+                </div>
                 <h1 className="text-2xl font-bold text-foreground mb-2">Choose your subjects</h1>
                 <p className="text-foreground-muted text-sm">
                   Select the subjects you&apos;re studying. These will sync with your lesson tracker.
@@ -586,7 +592,9 @@ export default function OnboardingWizard() {
           {step === 4 && (
             <div className="animate-fade-in-up space-y-6">
               <div className="text-center">
-                <div className="text-5xl mb-4">🏫</div>
+                <div className="mb-4 inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-background-secondary text-foreground-muted">
+                  <School className="h-7 w-7" strokeWidth={2} aria-hidden />
+                </div>
                 <h1 className="text-2xl font-bold text-foreground mb-2">
                   {user?.profile?.role === 'teacher' ? 'Where do you teach?' : 'Where do you study?'}
                 </h1>

@@ -33,10 +33,10 @@ const ACTIVITY_ICONS: Record<string, React.ReactNode> = {
 };
 
 const ACTIVITY_COLORS: Record<string, string> = {
-  resource_published: 'text-violet-500 bg-violet-500/10',
-  submission_approved: 'text-emerald-500 bg-emerald-500/10',
-  curriculum_created: 'text-sky-500 bg-sky-500/10',
-  pomodoro_completed: 'text-amber-500 bg-amber-500/10',
+  resource_published: 'text-primary bg-primary/10',
+  submission_approved: 'text-success bg-success/10',
+  curriculum_created: 'text-foreground-secondary bg-background-secondary',
+  pomodoro_completed: 'text-warning bg-warning/10',
 };
 
 export default function ProfileActivity({ activities }: ProfileActivityProps) {
@@ -44,7 +44,7 @@ export default function ProfileActivity({ activities }: ProfileActivityProps) {
     <section>
       {/* Header — just text, no card */}
       <div className="flex items-center gap-3 mb-6 pb-2 border-b border-white/5">
-        <div className="w-1 h-6 rounded-full bg-purple-500" />
+          <div className="w-1 h-6 rounded-full bg-primary" />
         <h2 className="text-lg font-bold text-foreground">Recent Activity</h2>
       </div>
 
@@ -64,7 +64,7 @@ export default function ProfileActivity({ activities }: ProfileActivityProps) {
               <div key={activity.id} className="flex gap-4 group">
                 {/* Timeline dot + continuing line */}
                 <div className="flex flex-col items-center shrink-0">
-                  <div className={`p-2 rounded-full ${colorClass} group-hover:scale-110 transition-transform duration-200`}>
+                  <div className={`p-2 rounded-full ${colorClass}`}>
                     {icon}
                   </div>
                   {!isLast && (

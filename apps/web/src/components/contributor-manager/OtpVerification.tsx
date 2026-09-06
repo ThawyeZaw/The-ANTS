@@ -7,7 +7,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { KeyRound, Loader2, ArrowLeft } from 'lucide-react';
+import { KeyRound, Loader2, ArrowLeft, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface OtpVerificationProps {
@@ -133,7 +133,7 @@ export default function OtpVerification({
       {/* Error */}
       {error && (
         <div className="flex items-center gap-2 p-3 rounded-lg bg-error/10 border border-error/20 text-error text-sm animate-fade-in">
-          <span>⚠️</span>
+          <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
           <span>{error}</span>
         </div>
       )}
