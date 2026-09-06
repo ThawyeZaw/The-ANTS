@@ -1,46 +1,100 @@
-# Multi-Agent & UI Developer Guidelines — The ANTS
+# Multi-Agent Guidelines — The ANTS
 
-## 1. Project Overview & Scope
-- **Application**: The ANTS — Curriculum-aware academic productivity platform for Myanmar students.
-- **Current Status**: **Fully Build-Ready & Stabilized**. All monorepo packages (`@the-ants/web`, `@the-ants/api`, `@the-ants/db`, `@the-ants/shared-types`) pass `npm run typecheck` and `npm run build` with **0 errors**.
-- **Current Objective**: **Frontend & UI/UX Design Iterations Only**. The backend database, server actions, and Cloudflare Worker API are stabilized and locked.
-- **Tech Stack (HONC Monorepo)**:
-  - **Frontend UI (`apps/web`)**: Next.js 16 (App Router with Turbopack), React 19, TypeScript 5, Tailwind CSS v4.
-  - **API Backend (`apps/api`)**: Hono on Cloudflare Workers *(LOCKED — Do not modify)*.
-  - **Database & ORM (`packages/db`)**: Neon Serverless Postgres with Drizzle ORM *(LOCKED — Do not modify)*.
-  - **Shared Types (`packages/shared-types`)**: Shared interfaces and Zod schemas *(LOCKED — Do not modify)*.
+> **Active redesign.** Two developers work in parallel on separate long-lived branches and merge via PRs into `main`. Read **your** role file before coding.
+
+| Developer | Role | Agent file |
+|---|---|---|
+| **Thaw Ye Zaw** | Features / dashboard / study tools / backend | [`AGENTS.features.md`](./AGENTS.features.md) |
+| **Zay Lynn Htet** | Landing, auth forms, marketing UI | [`AGENTS.ui.md`](./AGENTS.ui.md) |
 
 ---
 
-## 2. Developer Commands
-- `npm run dev` — Run all monorepo workspace packages via Turborepo.
-- `npm run dev:web` — Run Next.js web application on port `3005`.
-- `npm run dev:api` — Run Hono backend worker on port `8787`.
-- `npm run typecheck` — Verify TypeScript compiler across all packages with zero errors.
-- `npm run build` — Full monorepo production build (Next.js Turbopack + Wrangler dry-run).
+## 1. Project overview
+
+- **Application:** The ANTS — curriculum-aware academic productivity platform for Myanmar students.
+- **Current objective:** Implement the **Stitch IGCSE Study Hub redesign** (light + dark as one token system) while rebuilding study features and upgrading marketing/auth UI.
+- **Tech stack (HONC monorepo):**
+  - **Frontend (`apps/web`):** Next.js 16 (App Router + Turbopack), React 19, TypeScript 5, Tailwind CSS v4
+  - **API (`apps/api`):** Hono on Cloudflare Workers
+  - **Database (`packages/db`):** Neon Serverless Postgres + Drizzle ORM
+  - **Shared types (`packages/shared-types`):** Shared interfaces + Zod schemas
 
 ---
 
-## 3. Strict Rules & Backend Protection (CRITICAL)
-1. **DO NOT modify Backend or Database Code**:
-   - Do NOT edit schema files in `packages/db/src/schema/`.
-   - Do NOT add migrations or alter tables.
-   - Do NOT modify Cloudflare Worker routes in `apps/api/src/routes/`.
-   - Do NOT modify server actions in `apps/web/src/actions/` unless specifically fixing a contract typo.
-2. **No Clubs or Classrooms**:
-   - Clubs and Classrooms have been completely retired from The ANTS. Do not re-import, reference, or create pages for them.
-3. **Role Management Rules**:
-   - Standard signups are assigned only as `student`.
-   - Valid User Roles: `'student' | 'tutor' | 'teacher' | 'contributor' | 'main_contributor' | 'admin'`.
-   - Only `admin` accounts can upgrade or modify user roles (via the Admin Dashboard).
-   - Self-service role upgrade requests in settings have been removed.
+## 2. Design system (shared source of truth)
+
+In-repo specs (no Downloads path required):
+
+| Asset | Purpose |
+|---|---|
+| [`docs/design/the_ants_academic_system.md`](./docs/design/the_ants_academic_system.md) | Light theme tokens & component rules |
+| [`docs/design/amber_academic_studio.md`](./docs/design/amber_academic_studio.md) | Dark theme tokens & component rules |
+| [`docs/design/README.md`](./docs/design/README.md) | Index |
+
+**Rules for both developers:**
+
+1. Treat light + dark as **one design system** with paired semantic tokens — not two unrelated looks.
+2. Prefer semantic Tailwind tokens (`bg-background`, `text-foreground`, `bg-primary`, etc.) once mapped into `apps/web/src/app/globals.css`. Do not hardcode Stitch hex values in feature pages unless extending the token map.
+3. Typography: **Plus Jakarta Sans** (UI copy); **JetBrains Mono** for timers, syllabus codes, and numeric metrics.
+4. Icons: **lucide-react** only.
+5. Interactive components start with `'use client'` as line 1.
+6. Pass `npm run typecheck` before opening a PR.
 
 ---
 
-## 4. UI Architecture & Context Usage
+## 3. Ownership map (merge-conflict prevention)
 
-### Role & Persona Checks
-Always use `useRole()` or `useAuth()` to query the user's role status:
+| Zone | Owner | Paths (primary) |
+|---|---|---|
+| Landing / marketing | **Zay Lynn Htet** | `apps/web/src/app/page.tsx`, `apps/web/src/app/(public)/`, marketing constants |
+| Landing / public NavBar | **Zay Lynn Htet** | Public/marketing navigation used on landing & auth |
+| Auth forms | **Zay Lynn Htet** | `apps/web/src/app/(auth)/`, onboarding visuals |
+| Dashboard shell / app nav | **Thaw Ye Zaw** | `apps/web/src/components/layout/DashboardLayout.tsx`, app sidebar / bottom nav, `(app)` chrome |
+| Study features & dashboard pages | **Thaw Ye Zaw** | `(app)/dashboard`, library, notes, flashcards, quizzes, timetable, pomodoro, profiles, settings, tools |
+| Shared UI primitives | **Either** (coordinate) | `apps/web/src/components/ui/` |
+| Design tokens / `globals.css` | **Coordinate before edit** | `apps/web/src/app/globals.css` |
+| Backend / DB / API / server actions | **Thaw Ye Zaw only** | `packages/db`, `packages/shared-types`, `apps/api`, `apps/web/src/actions/` |
+
+**Shared UI rule:** Either developer may edit `components/ui/`, but announce in the PR, keep changes small, and avoid rewriting primitives the other branch depends on without syncing first.
+
+---
+
+## 4. Git workflow
+
+1. **Long-lived branches** (example names):
+   - `ui/marketing-auth` — Zay Lynn Htet
+   - `feat/dashboard-study` — Thaw Ye Zaw
+2. Open **PRs into `main`** only; do not push unfinished work directly to `main`.
+3. Rebase/merge from `main` often to reduce drift.
+4. Avoid editing the other owner’s primary paths (table above). If blocked, leave a TODO comment and ping the owner — do not “just fix” their files.
+5. Never force-push `main`.
+
+---
+
+## 5. Product rules (both developers)
+
+1. **Clubs and classrooms are retired.** Do not reintroduce routes, nav items, copy, query keys, or schema for clubs/classrooms. Remove leftover references when you touch a file.
+2. **Signup role:** new users are `student` only. Valid roles: `'student' | 'tutor' | 'teacher' | 'contributor' | 'main_contributor' | 'admin'`. Only admins assign non-student roles.
+3. **Notes, flashcards, and quizzes** are being **rebuilt in-app from scratch** (Notion pipeline is not the product direction).
+4. Backend changes: **Thaw Ye Zaw only.** Zay Lynn Htet must not edit `packages/db`, `packages/shared-types`, `apps/api`, or `apps/web/src/actions/`.
+
+---
+
+## 6. Developer commands
+
+```bash
+npm install
+npm run dev          # all workspaces (Turborepo)
+npm run dev:web      # Next.js on port 3005
+npm run dev:api      # Hono worker on port 8787
+npm run typecheck
+npm run build
+```
+
+---
+
+## 7. Role checks (frontend)
+
 ```tsx
 'use client';
 import { useRole } from '@/hooks/useRole';
@@ -51,50 +105,15 @@ export default function MyComponent() {
 }
 ```
 
-### Core Frontend Hooks (`apps/web/src/hooks/`)
-- `useAuth()` — Authentication state, current user, login, register, logout, profile update.
-- `useRole()` — Granular role checks (`isStudent`, `isTutor`, `isContributor`, `isAdmin`).
-- `useTimetable()` — Timetable event CRUD, recurrence expansion, reminders.
-- `useCurriculumDashboard()` — Enrolled subject selector, exam countdowns aggregation.
-- `useCourseManager()` — Curriculums, enrolled subjects, qualifications, syllabus codes.
-- `useCountdown()` — Custom & auto-calculated exam countdowns.
-- `useContributorManager()` — Contributor team management, invites, review queue.
-- `useNotifications()` — In-app and Telegram notification preferences & queue.
-
-### Global Shell & Route Structure
-- **Public Routes (`apps/web/src/app/(public)/`)**:
-  - `/explore` — Explore notes, tutors, and subjects.
-  - `/about` — Platform philosophy and team.
-  - `/profile/[username]` — Unified public profile (Student portfolio, Tutor schedule, or Contributor showcase).
-- **Protected App Routes (`apps/web/src/app/(app)/`)**:
-  - `/student` or `/dashboard` — Main student dashboard.
-  - `/library` & `/courses` — Curriculum library (courses, exams, study tools).
-  - `/timetable` — Integrated calendar (events & exam countdowns).
-  - `/pomodoro` & `/calculator` — Study productivity tools.
-  - `/settings` & `/settings/profile` — Account, Telegram notifications, and profile editor.
-  - `/editor` & `/main-contributor` — Contributor & Admin portals.
-
 ---
 
-## 5. UI/UX Style & Design Tokens
-- **Client Directives**: Every interactive React component MUST start with `'use client'` as line 1.
-- **Design Tokens**: Exclusively use semantic Tailwind CSS variables:
-  - Backgrounds: `bg-background`, `bg-background-secondary`, `bg-background-card`
-  - Foregrounds: `text-foreground`, `text-foreground-secondary`, `text-foreground-muted`
-  - Borders: `border-border`, `border-border-hover`
-  - Accents: `bg-primary`, `text-primary`, `bg-primary/10`, `border-primary/20`
-  - Focus Ring: `focus-ring` / `focus-visible:ring-2 focus-visible:ring-primary`
-- **Icons**: Exclusively use `lucide-react`.
-- **Responsive Layout**: Ensure all toolbar buttons, grids, and header items include `flex-wrap` and mobile drawer navigation breakpoints.
-- **Zero TypeScript Errors**: Every change must pass `npm run typecheck` (`npx tsc --noEmit`) cleanly without new diagnostics before committing.
+## 8. Doc index
 
----
-
-## 6. Profile & Public Identity Architecture
-- **Username & Name Synchronization**:
-  - `updateProfile()` in `AuthContext.tsx` updates `user.profile.username` and `user.profile.name` across local state and storage.
-  - Server actions `actionUpdateUsername` and `actionUpdateDisplayName` enforce uniqueness and persistence in Neon DB.
-- **Profile Privacy**:
-  - `profile.isPublic` (boolean) controls whether the user's public profile is publicly discoverable and viewable at `/profile/[username]`.
-  - When `isPublic: false`, non-owners receive a friendly private profile screen; the profile owner sees a private indicator banner with quick settings access.
-  - Users can toggle profile visibility anytime in `AdvancedProfileEditor.tsx` under the Basic Information sub-tab.
+| File | Purpose |
+|---|---|
+| [`AGENTS.md`](./AGENTS.md) | Shared rules (this file) |
+| [`AGENTS.ui.md`](./AGENTS.ui.md) | Zay Lynn Htet — landing & auth |
+| [`AGENTS.features.md`](./AGENTS.features.md) | Thaw Ye Zaw — features & backend |
+| [`README.md`](./README.md) | Project overview & setup |
+| [`spec.md`](./spec.md) | System specification |
+| [`docs/design/`](./docs/design/README.md) | Stitch light + dark design specs |

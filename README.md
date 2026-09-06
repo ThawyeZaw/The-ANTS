@@ -6,7 +6,7 @@
 
 *Ace with us!*
 
-*Smart Timetables · Flashcards (SRS) · Notes Library · Tutor Schedules · Telegram Booking · Exam Countdowns · Grade Calculators · Portfolio Profiles · Pomodoro*
+*Smart Timetables · Flashcards (SRS) · Notes Library · Quizzes · Tutor Schedules · Telegram Booking · Exam Countdowns · Grade Calculators · Portfolio Profiles · Pomodoro*
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://www.typescriptlang.org/)
@@ -19,15 +19,35 @@
 
 ---
 
-## 🌟 What is The ANTS?
+## What is The ANTS?
 
-**The ANTS** is an academic productivity and tutoring platform tailored for Myanmar students pursuing international qualifications (Cambridge CAIE IGCSE / A-Levels, Pearson Edexcel IGCSE / IAL, IELTS, OSSD, and Grade 12 Matriculation).
+**The ANTS** is an academic productivity and tutoring platform for Myanmar students pursuing international qualifications (Cambridge CAIE IGCSE / A-Levels, Pearson Edexcel IGCSE / IAL, IELTS, OSSD, and Grade 12 Matriculation).
 
-Built on a modern **HONC Monorepo** (Hono, ORM/Drizzle, Next.js, Cloudflare Workers & Neon Postgres), The ANTS equips students with study planning tools, verified syllabus notes, and direct access to academic tutors and weekly class schedules.
+Built on a **HONC monorepo** (Hono, ORM/Drizzle, Next.js, Cloudflare Workers & Neon Postgres), it combines study planning tools, in-app notes / flashcards / quizzes, and tutor discovery.
+
+**Retired:** Clubs and classrooms are fully removed from the product. Do not reintroduce them.
 
 ---
 
-## 🏛️ Core Product Architecture (3 Pillars)
+## Active redesign (dual developers)
+
+We are implementing the **Stitch IGCSE Study Hub** design system as **one light + dark token system**.
+
+| Developer | Focus | Agent guide |
+|---|---|---|
+| **Thaw Ye Zaw** | Dashboard features, study rebuild (notes / flashcards / quizzes), profiles, tools, backend | [`AGENTS.features.md`](./AGENTS.features.md) |
+| **Zay Lynn Htet** | Landing page, sign-in / sign-up, marketing UI | [`AGENTS.ui.md`](./AGENTS.ui.md) |
+
+Shared rules and ownership map: [`AGENTS.md`](./AGENTS.md)  
+System specification: [`spec.md`](./spec.md)
+
+**Git:** separate long-lived branches → PRs into `main` (no direct unfinished pushes to `main`).
+
+**Design specs (in-repo):** [`docs/design/`](./docs/design/README.md) — light [`the_ants_academic_system.md`](./docs/design/the_ants_academic_system.md), dark [`amber_academic_studio.md`](./docs/design/amber_academic_studio.md).
+
+---
+
+## Core product architecture (3 pillars)
 
 ```
                        ┌─────────────────────────────────────┐
@@ -40,75 +60,87 @@ Built on a modern **HONC Monorepo** (Hono, ORM/Drizzle, Next.js, Cloudflare Work
    │                 │           │                 │           │     Tutors      │
    ├─────────────────┤           ├─────────────────┤           ├─────────────────┤
    │ • Courses       │           │ • Smart         │           │ • Tutor         │
-   │ • Notes Library │           │   Timetable     │           │   Directory     │
+   │ • Notes         │           │   Timetable     │           │   Directory     │
    │ • Flashcards    │           │ • Pomodoro      │           │ • Weekly Slot   │
-   │   (SRS)         │           │   Timer         │           │   Schedule      │
-   │ • Past Exams    │           │ • Exam          │           │ • Telegram      │
-   │ • Quizzes       │           │   Countdown     │           │   Inquiry & QR  │
-   │                 │           │ • Calculator    │           │ • Contributors  │
-   │                 │           │ • Workspace     │           │ • Public CV     │
+   │   (SRS)         │           │ • Exam          │           │   Schedule      │
+   │ • Past Exams    │           │   Countdown     │           │ • Telegram      │
+   │ • Quizzes       │           │ • Calculator    │           │   Inquiry & QR  │
+   │   (rebuild)     │           │ • Workspace     │           │ • Contributors  │
+   │                 │           │                 │           │ • Public CV     │
    └─────────────────┘           └─────────────────┘           └─────────────────┘
 ```
 
+Notes, flashcards, and quizzes are being **rebuilt in-app from scratch** (not a Notion-only pipeline).
+
 ---
 
-## 👥 Multi-Role Permission Model
+## Multi-role permission model
 
-Users register as `student` and can be assigned additional roles by platform administrators (`roles: text[]`). Users automatically have access to all tools granted by their roles:
+Users register as `student`. Admins assign additional roles (`roles: text[]`).
 
-| Role | Target | Access & Capabilities |
+| Role | Target | Access & capabilities |
 |---|---|---|
-| **Student** | Primary Learners | Full access to Library (Notes, Flashcards, Past Papers) and Productivity Tools (Timetable, Pomodoro, Exam Countdown, Grade Calculator, Workspace). |
-| **Tutor** | Academic Educators | Public Tutor Profile with Sunday–Saturday Weekly Teaching Timetable, Telegram direct inquiry modal with mobile QR code scanner, and Tutor Profile Editor tab. |
-| **Contributor** | Content Creators | Curriculum & Notes Editor, Exam Data Editor, and Review Queue submission portal. |
-| **Admin** | Platform Managers | User Management & multi-role badge assignment, Organization team management, and content moderation. |
+| **Student** | Primary learners | Library (notes, flashcards, exams, quizzes) and tools (timetable, pomodoro, countdown, calculator, workspace). |
+| **Tutor** | Educators | Student access + public tutor profile, weekly teaching timetable, Telegram inquiry + QR, tutor profile editor. |
+| **Contributor** | Content creators | Curriculum & notes editor, exam data editor, review queue submissions. |
+| **Admin** | Platform managers | User management & role assignment, org/team management, moderation. |
 
 ---
 
-## 🛠️ Monorepo Structure
+## Monorepo structure
 
 ```
 The-ANTS/
 ├── apps/
-│   ├── web/                     # Next.js 16 App Router frontend (Port 3005)
-│   │   ├── src/app/             # App Router pages & API handlers
-│   │   ├── src/components/      # UI components (profile, timetable, notes, pomodoro, etc.)
-│   │   ├── src/hooks/           # React hooks (useAuth, useRole, useProfile, etc.)
-│   │   └── src/actions/         # Direct Neon Drizzle DB Server Actions
-│   └── api/                     # Hono API deployed on Cloudflare Workers
+│   ├── web/                     # Next.js 16 App Router (port 3005)
+│   │   ├── src/app/             # Routes: (public), (auth), (app), (onboarding)
+│   │   ├── src/components/      # UI (layout, profile, timetable, notes, …)
+│   │   ├── src/hooks/           # useAuth, useRole, useTimetable, …
+│   │   └── src/actions/         # Server actions (Features developer)
+│   └── api/                     # Hono on Cloudflare Workers
 ├── packages/
-│   ├── db/                      # Neon PostgreSQL schema definitions & Drizzle ORM
-│   ├── shared-types/            # Shared TypeScript interfaces & Zod validation schemas
-│   └── config/                  # Shared ESLint and TypeScript configs
-├── spec.md                      # System integration specifications
-├── schema.md                    # Database schema reference
-└── AGENTS.md                    # Multi-agent developer ownership guidelines
+│   ├── db/                      # Neon schema + Drizzle (Features developer)
+│   ├── shared-types/            # Shared TS + Zod
+│   └── config/                  # Shared ESLint / TS configs
+├── docs/design/                 # Stitch light + dark design specs
+├── AGENTS.md                    # Shared dual-dev rules
+├── AGENTS.ui.md                 # Zay Lynn Htet
+├── AGENTS.features.md           # Thaw Ye Zaw
+├── spec.md                      # System specification
+└── schema.md                    # Database schema reference
 ```
 
 ---
 
-## 🚀 Getting Started
+## Getting started
 
-### 1. Install Dependencies
+### 1. Install dependencies
 ```bash
 npm install
 ```
 
-### 2. Environment Variables
+### 2. Environment variables
 Create `.env.local` in `apps/web/` and `.dev.vars` in `apps/api/`:
 ```env
 DATABASE_URL=postgresql://user:password@ep-sample.us-east-2.aws.neon.tech/the_ants?sslmode=require
 NEXT_PUBLIC_APP_URL=http://localhost:3005
 ```
 
-### 3. Run Development Servers
+### 3. Run development servers
 ```bash
-# Run web and API together via Turborepo:
-npm run dev
-
-# Or run web individually:
-npm run dev:web
+npm run dev       # web + API via Turborepo
+npm run dev:web   # web only (port 3005)
+npm run typecheck
 ```
+
+---
+
+## Contributing (this redesign phase)
+
+1. Read [`AGENTS.md`](./AGENTS.md) and **your** role file (`AGENTS.ui.md` or `AGENTS.features.md`).
+2. Stay on your ownership paths to avoid merge conflicts.
+3. Backend / DB / actions: **Thaw Ye Zaw only.**
+4. Open PRs into `main` from your long-lived feature branch.
 
 ---
 
