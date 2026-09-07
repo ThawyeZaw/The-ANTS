@@ -125,7 +125,7 @@ export default function SignupForm() {
             <div className="relative">
               <div className="h-20 w-20 rounded-full flex items-center justify-center"
                 style={{ background: 'linear-gradient(135deg, var(--primary), var(--accent))' }}>
-                <MailCheck className="h-9 w-9 text-white" />
+                <MailCheck className="h-9 w-9 text-primary-foreground" />
               </div>
               <div className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-success flex items-center justify-center text-white text-xs font-bold">
                 ✓
@@ -187,14 +187,14 @@ export default function SignupForm() {
           }}
         >
           <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full opacity-10"
-            style={{ background: 'rgba(255,255,255,0.3)' }} />
+            style={{ background: 'color-mix(in srgb, var(--primary-foreground) 30%, transparent)' }} />
           <div className="absolute -bottom-20 -left-10 w-48 h-48 rounded-full opacity-10"
-            style={{ background: 'rgba(255,255,255,0.2)' }} />
+            style={{ background: 'color-mix(in srgb, var(--primary-foreground) 20%, transparent)' }} />
 
           <div className="relative z-10">
             <div className="mb-4"><Image src="/logo.png" alt="The ANTs logo" width={40} height={40} /></div>
-            <h2 className="text-2xl font-bold text-white mb-2">Join <span className="font-brand text-on-dark">The ANTs</span></h2>
-            <p className="text-white/90 text-sm leading-relaxed text-on-accent">
+            <h2 className="text-2xl font-bold text-primary-foreground mb-2">Join <span className="font-brand text-on-dark">The ANTs</span></h2>
+            <p className="text-primary-foreground/90 text-sm leading-relaxed text-on-accent">
               Start your academic journey with tools built specifically for UK curriculum students worldwide.
             </p>
           </div>
@@ -207,8 +207,8 @@ export default function SignupForm() {
               { Icon: Zap, text: 'Free forever for students' },
             ].map(({ Icon, text }) => (
               <div key={text} className="flex items-center gap-3">
-                <Icon className="h-4 w-4 text-white/90 shrink-0" strokeWidth={2} aria-hidden />
-                <p className="text-white/90 text-sm font-medium text-on-accent">{text}</p>
+                <Icon className="h-4 w-4 text-primary-foreground/90 shrink-0" strokeWidth={2} aria-hidden />
+                <p className="text-primary-foreground/90 text-sm font-medium text-on-accent">{text}</p>
               </div>
             ))}
           </div>

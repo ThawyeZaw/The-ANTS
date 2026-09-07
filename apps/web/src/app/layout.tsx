@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Quicksand } from "next/font/google";
+import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { PersonaProvider } from "@/context/PersonaContext";
@@ -55,11 +56,18 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
-        <AuthProvider>
-          <PersonaProvider>
-            <QueryProvider>{children}</QueryProvider>
-          </PersonaProvider>
-        </AuthProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AuthProvider>
+            <PersonaProvider>
+              <QueryProvider>{children}</QueryProvider>
+            </PersonaProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

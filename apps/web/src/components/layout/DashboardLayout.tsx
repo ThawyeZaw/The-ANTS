@@ -143,12 +143,12 @@ const DashboardLayout = React.memo(function DashboardLayout({
           >
             {slides.map((slide, idx) => (
               <div key={idx} className="dash-carousel-slide">
-                <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-primary to-accent p-6 md:p-8 text-white">
+                <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-primary to-accent p-6 md:p-8 text-primary-foreground">
                   <div className="flex items-center gap-6">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white/70">{slide.greeting}</p>
+                      <p className="text-sm font-medium text-primary-foreground/70">{slide.greeting}</p>
                       <h1 className="mt-0.5 text-2xl md:text-3xl font-bold">{slide.nameLine}</h1>
-                      <p className="mt-1 text-sm text-white/70 max-w-md">{slide.subtitle}</p>
+                      <p className="mt-1 text-sm text-primary-foreground/70 max-w-md">{slide.subtitle}</p>
                     </div>
                     <div className="hidden sm:flex items-center justify-center shrink-0">
                       <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white/15 border border-white/20 flex items-center justify-center">
@@ -211,12 +211,12 @@ const DashboardLayout = React.memo(function DashboardLayout({
   return (
     <div className="space-y-6 animate-fade-in" data-scroll-behavior="smooth">
       {/* Welcome Card — clean gradient, no patterns */}
-      <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-primary to-accent p-6 md:p-8 text-white">
+      <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-primary to-accent p-6 md:p-8 text-primary-foreground">
         <div className="flex items-center gap-6">
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white/70">Welcome back</p>
+            <p className="text-sm font-medium text-primary-foreground/70">Welcome back</p>
             <h1 className="mt-0.5 text-2xl md:text-3xl font-bold">{firstName}</h1>
-            <p className="mt-1 text-sm text-white/70 max-w-md">
+            <p className="mt-1 text-sm text-primary-foreground/70 max-w-md">
               {welcomeSubtitle}
             </p>
           </div>

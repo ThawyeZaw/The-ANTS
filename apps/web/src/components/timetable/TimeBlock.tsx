@@ -176,7 +176,7 @@ export default function TimeBlock({
             <span
               className="shrink-0 flex items-center gap-0.5 px-1 py-0.5 rounded text-[8px] font-bold uppercase tracking-wide animate-pulse"
               style={{
-                backgroundColor: '#6366F1',
+                backgroundColor: '#B45309',
                 color: '#FFFFFF',
               }}
             >

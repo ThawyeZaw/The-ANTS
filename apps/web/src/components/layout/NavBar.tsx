@@ -35,6 +35,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
 import { cn, getInitials } from '@/lib/utils';
+import ThemeToggle from '@/components/ui/ThemeToggle';
 
 interface NavItem {
   label: string;
@@ -547,6 +548,9 @@ export default function NavBar() {
         <div className="shrink-0 border-t border-border/60 p-2 lg:p-3 relative" ref={userMenuRef}>
           {mounted && isAuthenticated && user ? (
             <>
+              <div className="flex justify-center lg:justify-start mb-2 px-0.5">
+                <ThemeToggle />
+              </div>
               <button
                 type="button"
                 onClick={() => togglePanel('user')}
@@ -595,6 +599,9 @@ export default function NavBar() {
             </>
           ) : (
             <div className="flex flex-col gap-2">
+              <div className="flex justify-center lg:justify-start px-0.5">
+                <ThemeToggle />
+              </div>
               <Link
                 href="/login"
                 title="Sign In"
@@ -670,6 +677,12 @@ export default function NavBar() {
                   </div>
                 )}
                 {userMenuLinks}
+                <div className="mt-2 pt-1 border-t border-border/60 px-3 py-1.5 flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-foreground-muted">
+                    Theme
+                  </span>
+                  <ThemeToggle />
+                </div>
               </div>
             )}
           </div>

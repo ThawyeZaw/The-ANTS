@@ -23,7 +23,7 @@ const MODES: ModeTab[] = [
     label: 'Focus',
     shortLabel: 'Focus',
     icon: <Brain size={14} />,
-    color: '#6366F1',
+    color: '#F59E0B',
     minutesKey: 'focusMinutes',
   },
   {
@@ -39,7 +39,7 @@ const MODES: ModeTab[] = [
     label: 'Long Break',
     shortLabel: 'Long',
     icon: <BatteryFull size={14} />,
-    color: '#06B6D4',
+    color: '#5B6CBF',
     minutesKey: 'longBreakMinutes',
   },
 ];

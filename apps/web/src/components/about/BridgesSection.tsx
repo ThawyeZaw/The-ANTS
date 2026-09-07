@@ -6,7 +6,7 @@ import type { OrgTeamMember } from '@/types';
 
 // ── Colour palette for avatar gradients (cycles by index) ─────────────────
 const AVATAR_PALETTES = [
-  { from: '#00C6FF', to: '#0072FF' },
+  { from: '#F59E0B', to: '#D97706' },
   { from: '#7F7FD5', to: '#86A8E7' },
   { from: '#11998E', to: '#38EF7D' },
   { from: '#F093FB', to: '#F5576C' },
@@ -98,17 +98,17 @@ function PillSelector({
     <div
       className="flex items-center justify-between px-4 py-2.5 rounded-full text-xs font-semibold cursor-pointer"
       style={{
-        background: hovered ? 'rgba(0,80,150,0.35)' : 'rgba(0,30,70,0.65)',
-        border: `1px solid ${hovered ? 'rgba(0,198,255,0.55)' : 'rgba(0,198,255,0.18)'}`,
-        color: 'rgba(180,210,255,0.9)',
+        background: hovered ? 'rgba(245,158,11,0.18)' : 'rgba(24,25,30,0.65)',
+        border: `1px solid ${hovered ? 'rgba(245,158,11,0.55)' : 'rgba(245,158,11,0.18)'}`,
+        color: 'rgba(227,226,230,0.9)',
         transition: 'background 0.2s ease, border-color 0.2s ease',
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <span className="flex items-center gap-2" style={{ color: '#00C6FF' }}>
+      <span className="flex items-center gap-2" style={{ color: '#F59E0B' }}>
         {icon}
-        <span style={{ color: 'rgba(150,190,240,0.8)' }}>{label}</span>
+        <span style={{ color: 'rgba(168,169,177,0.9)' }}>{label}</span>
       </span>
       <span style={{ color: '#FFFFFF' }}>{value}</span>
     </div>
@@ -132,8 +132,8 @@ function NavArrow({
       className="absolute top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full flex items-center justify-center cursor-pointer"
       style={{
         [isLeft ? 'left' : 'right']: '12px',
-        background: hovered ? 'rgba(0,198,255,0.18)' : 'rgba(0,20,50,0.75)',
-        border: `1px solid ${hovered ? 'rgba(0,198,255,0.65)' : 'rgba(0,198,255,0.22)'}`,
+        background: hovered ? 'rgba(245,158,11,0.18)' : 'rgba(24,25,30,0.75)',
+        border: `1px solid ${hovered ? 'rgba(245,158,11,0.65)' : 'rgba(245,158,11,0.22)'}`,
         backdropFilter: 'blur(8px)',
         transition: 'background 0.2s ease, border-color 0.2s ease',
       }}
@@ -142,9 +142,9 @@ function NavArrow({
       aria-label={isLeft ? 'Previous member' : 'Next member'}
     >
       {isLeft ? (
-        <ChevronLeft className="w-4 h-4" style={{ color: '#00C6FF' }} />
+        <ChevronLeft className="w-4 h-4" style={{ color: '#F59E0B' }} />
       ) : (
-        <ChevronRight className="w-4 h-4" style={{ color: '#00C6FF' }} />
+        <ChevronRight className="w-4 h-4" style={{ color: '#F59E0B' }} />
       )}
     </button>
   );
@@ -184,10 +184,10 @@ function PopOutCard({
         style={{
           borderRadius: '2rem',
           overflow: 'hidden',
-          background: 'linear-gradient(160deg, #0A1628 0%, #061020 60%, #030C1A 100%)',
-          border: '1px solid rgba(0, 198, 255, 0.20)',
+          background: 'linear-gradient(160deg, #1E2026 0%, #18191E 60%, #0B0C0E 100%)',
+          border: '1px solid rgba(245, 158, 11, 0.20)',
           boxShadow:
-            '0 32px 80px rgba(0,0,0,0.85), 0 0 0 1px rgba(0,198,255,0.08), 0 0 60px rgba(0,100,200,0.18)',
+            '0 32px 80px rgba(0,0,0,0.85), 0 0 0 1px rgba(245,158,11,0.08), 0 0 60px rgba(245,158,11,0.18)',
         }}
         onMouseEnter={onKeepOpen}
         onMouseLeave={onClose}
@@ -195,12 +195,12 @@ function PopOutCard({
         {/* ── Portrait area ── */}
         <div
           className="relative w-full flex items-center justify-center"
-          style={{ height: '220px', background: '#040E1E' }}
+          style={{ height: '220px', background: '#121316' }}
         >
           <div
             className="absolute inset-0"
             style={{
-              background: `radial-gradient(ellipse at 50% 35%, ${palette.from}28 0%, #040E1E 72%)`,
+              background: `radial-gradient(ellipse at 50% 35%, ${palette.from}28 0%, #121316 72%)`,
             }}
           />
           <MemberAvatar member={member} index={memberIndex} size="lg" />
@@ -208,7 +208,7 @@ function PopOutCard({
           {/* Bottom gradient fade */}
           <div
             className="absolute inset-x-0 bottom-0 h-16 pointer-events-none"
-            style={{ background: 'linear-gradient(to top, #061020, transparent)' }}
+            style={{ background: 'linear-gradient(to top, #18191E, transparent)' }}
           />
 
           <NavArrow direction="left" onClick={() => onNavigate(prevIndex)} />
@@ -224,7 +224,7 @@ function PopOutCard({
                 style={{
                   width: i === memberIndex ? '18px' : '6px',
                   height: '6px',
-                  background: i === memberIndex ? '#00C6FF' : 'rgba(255,255,255,0.3)',
+                  background: i === memberIndex ? '#F59E0B' : 'rgba(255,255,255,0.3)',
                   transition: 'width 0.3s ease, background 0.3s ease',
                   border: 'none',
                   padding: 0,
@@ -253,12 +253,12 @@ function PopOutCard({
         <div className="px-5 pb-5 pt-4 space-y-4">
           <div>
             <h3 className="text-xl font-black leading-tight text-white">{member.name}</h3>
-            <p className="text-sm font-semibold mt-0.5" style={{ color: '#00C6FF' }}>
+            <p className="text-sm font-semibold mt-0.5" style={{ color: '#F59E0B' }}>
               {member.title}
             </p>
           </div>
 
-          <p className="text-sm leading-relaxed" style={{ color: 'rgba(180,210,255,0.82)' }}>
+          <p className="text-sm leading-relaxed" style={{ color: 'rgba(227,226,230,0.82)' }}>
             {member.bio}
           </p>
 
@@ -284,11 +284,11 @@ function PopOutCard({
             href={member.linkedProfileUsername ? `/profile/${member.linkedProfileUsername}` : '#'}
             className="flex w-full items-center justify-center gap-2 py-3.5 rounded-full text-xs font-black uppercase tracking-widest"
             style={{
-              background: 'linear-gradient(90deg, #00C6FF, #0072FF)',
-              color: '#000D1A',
+              background: 'linear-gradient(90deg, #F59E0B, #D97706)',
+              color: '#0B0C0E',
               boxShadow: ctaHovered
-                ? '0 6px 28px rgba(0,198,255,0.65)'
-                : '0 4px 20px rgba(0,198,255,0.35)',
+                ? '0 6px 28px rgba(245,158,11,0.65)'
+                : '0 4px 20px rgba(245,158,11,0.35)',
               transform: ctaHovered ? 'translateY(-1px)' : 'translateY(0)',
               letterSpacing: '0.12em',
               transition: 'box-shadow 0.25s ease, transform 0.25s ease',
@@ -327,9 +327,9 @@ function GridPreviewCard({
       className="relative flex flex-col items-center gap-3 py-5 px-3 cursor-pointer rounded-2xl"
       style={{
         background: hovered && !isBlurred
-          ? 'rgba(0,40,90,0.75)'
-          : 'rgba(6,18,40,0.7)',
-        border: `1px solid ${hovered && !isBlurred ? 'rgba(0,198,255,0.45)' : 'rgba(0,198,255,0.10)'}`,
+          ? 'rgba(41,42,45,0.75)'
+          : 'rgba(30,32,38,0.7)',
+        border: `1px solid ${hovered && !isBlurred ? 'rgba(245,158,11,0.45)' : 'rgba(245,158,11,0.10)'}`,
         backdropFilter: 'blur(6px)',
         filter: isBlurred ? 'blur(3px) brightness(0.45)' : 'none',
         opacity: isBlurred ? 0.55 : 1,
@@ -338,7 +338,7 @@ function GridPreviewCard({
           : hovered
           ? 'translateY(-4px) scale(1.03)'
           : 'scale(1)',
-        boxShadow: hovered && !isBlurred ? '0 8px 32px rgba(0,100,200,0.3)' : 'none',
+        boxShadow: hovered && !isBlurred ? '0 8px 32px rgba(245,158,11,0.3)' : 'none',
         transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
         userSelect: 'none',
       }}
@@ -362,7 +362,7 @@ function GridPreviewCard({
 
       <p
         className="text-[11px] font-semibold text-center leading-snug"
-        style={{ color: '#00C6FF', opacity: 0.85 }}
+        style={{ color: '#F59E0B', opacity: 0.85 }}
       >
         {member.title}
       </p>
@@ -395,14 +395,14 @@ export default function BridgesSection({ members }: { members: OrgTeamMember[] }
   return (
     <section
       className="relative w-full py-16 px-4 overflow-hidden"
-      style={{ background: '#030B18' }}
+      style={{ background: '#0B0C0E' }}
     >
       {/* Ambient radial glow */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0,100,200,0.14) 0%, transparent 68%)',
+            'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(245,158,11,0.14) 0%, transparent 68%)',
         }}
       />
 
@@ -411,7 +411,7 @@ export default function BridgesSection({ members }: { members: OrgTeamMember[] }
         className="absolute inset-0 pointer-events-none"
         style={{
           backgroundImage:
-            'radial-gradient(circle, rgba(0,198,255,0.3) 1px, transparent 1px)',
+            'radial-gradient(circle, rgba(245,158,11,0.3) 1px, transparent 1px)',
           backgroundSize: '30px 30px',
           opacity: 0.18,
         }}
@@ -422,7 +422,7 @@ export default function BridgesSection({ members }: { members: OrgTeamMember[] }
         <div className="text-center mb-12">
           <p
             className="text-xs font-black uppercase tracking-[0.3em] mb-3"
-            style={{ color: '#00C6FF' }}
+            style={{ color: '#F59E0B' }}
           >
             Our People
           </p>
@@ -434,7 +434,7 @@ export default function BridgesSection({ members }: { members: OrgTeamMember[] }
             Bridges to{' '}
             <span
               style={{
-                background: 'linear-gradient(90deg, #00C6FF 0%, #0072FF 100%)',
+                background: 'linear-gradient(90deg, #F59E0B 0%, #D97706 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
@@ -446,16 +446,16 @@ export default function BridgesSection({ members }: { members: OrgTeamMember[] }
 
           <p
             className="mt-4 text-base max-w-xl mx-auto leading-relaxed"
-            style={{ color: 'rgba(160,200,255,0.65)' }}
+            style={{ color: 'rgba(168,169,177,0.75)' }}
           >
             Meet the educators and mentors building pathways from Myanmar to the world.
             Hover any profile to explore their journey.
           </p>
 
           <div className="flex items-center justify-center gap-3 mt-6">
-            <div className="h-px w-12 rounded" style={{ background: 'rgba(0,198,255,0.28)' }} />
-            <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#00C6FF' }} />
-            <div className="h-px w-12 rounded" style={{ background: 'rgba(0,198,255,0.28)' }} />
+            <div className="h-px w-12 rounded" style={{ background: 'rgba(245,158,11,0.28)' }} />
+            <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#F59E0B' }} />
+            <div className="h-px w-12 rounded" style={{ background: 'rgba(245,158,11,0.28)' }} />
           </div>
         </div>
 
@@ -480,7 +480,7 @@ export default function BridgesSection({ members }: { members: OrgTeamMember[] }
 
         <p
           className="text-center text-xs mt-8"
-          style={{ color: 'rgba(100,150,210,0.45)' }}
+          style={{ color: 'rgba(110,112,120,0.8)' }}
         >
           Hover any card to view full profile ·{' '}
           {sortedMembers.length} team members

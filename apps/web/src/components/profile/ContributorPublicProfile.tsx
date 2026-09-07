@@ -87,18 +87,18 @@ export default function ContributorPublicProfile({
         className
       )}
       style={{
-        background: 'radial-gradient(circle at 50% 30%, #1e1e1e 0%, #0a0a0a 70%)',
+        background: 'radial-gradient(circle at 50% 30%, #1E2026 0%, #0B0C0E 70%)',
       }}
     >
       <div
         aria-hidden="true"
         className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full opacity-[0.04] blur-[120px] pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(212,170,0,0.5) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, rgba(245,158,11,0.5) 0%, transparent 70%)' }}
       />
       <div
         aria-hidden="true"
         className="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full opacity-[0.03] blur-[100px] pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(91,158,255,0.5) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, rgba(253,230,138,0.35) 0%, transparent 70%)' }}
       />
 
       <div className="relative z-10 w-full max-w-5xl">
@@ -109,7 +109,7 @@ export default function ContributorPublicProfile({
             <div className="shrink-0 mb-7 relative">
               <div className="absolute inset-0 rounded-full bg-amber-500/15 blur-2xl scale-125" />
               <div className="relative rounded-full p-[3px] bg-gradient-to-br from-amber-400 via-orange-400 to-rose-500">
-                <div className="rounded-full p-[2px] bg-[#1a1a1a]">
+                <div className="rounded-full p-[2px] bg-[#18191E]">
                   <AvatarImage avatar={profile.avatar} name={profile.name} size="xl" />
                 </div>
               </div>

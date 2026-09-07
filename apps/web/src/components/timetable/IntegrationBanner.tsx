@@ -22,6 +22,7 @@ export default function IntegrationBanner({
   const items = [
     examCount > 0 && { icon: FileText, count: examCount, label: examCount === 1 ? 'exam' : 'exams', color: '#ef4444' },
     assignmentCount > 0 && { icon: Clock, count: assignmentCount, label: assignmentCount === 1 ? 'assignment deadline' : 'assignment deadlines', color: '#f59e0b' },
+    // TODO(thaw-ye-zaw): clubs are retired (AGENTS.md §5) — remove clubEventCount chain from TimetableManager
     clubEventCount > 0 && { icon: Users, count: clubEventCount, label: clubEventCount === 1 ? 'club event' : 'club events', color: '#ec4899' },
     milestoneCount > 0 && { icon: AlertCircle, count: milestoneCount, label: milestoneCount === 1 ? 'milestone' : 'milestones', color: '#f59e0b' },
   ].filter(Boolean) as { icon: React.ComponentType<{ size?: number; className?: string; style?: React.CSSProperties }>, count: number, label: string, color: string }[];

@@ -32,7 +32,7 @@ const DEFAULT_FORM: TimetableEventFormData = {
   start_time: '09:00',
   end_time: '10:00',
   date: formatDateLocal(new Date()),
-  color_code: '#6366f1',
+  color_code: '#f59e0b',
   is_todo: false,
   is_recurring: false,
   recurrence_rule: null,
@@ -462,8 +462,7 @@ export default function EventModal({
                       style={{
                         color: 'var(--foreground)',
                         backgroundColor: 'color-mix(in srgb, var(--border) 50%, transparent)',
-                        borderColor: isTimeInvalid ? '#ef4444' : 'var(--border)',
-                        colorScheme: 'dark',
+                        borderColor: isTimeInvalid ? 'var(--error)' : 'var(--border)',
                       }}
                     />
                   </div>
@@ -478,8 +477,7 @@ export default function EventModal({
                       style={{
                         color: 'var(--foreground)',
                         backgroundColor: 'color-mix(in srgb, var(--border) 50%, transparent)',
-                        borderColor: isTimeInvalid ? '#ef4444' : 'var(--border)',
-                        colorScheme: 'dark',
+                        borderColor: isTimeInvalid ? 'var(--error)' : 'var(--border)',
                       }}
                     />
                     {isTimeInvalid && (

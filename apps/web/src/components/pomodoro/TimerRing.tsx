@@ -94,7 +94,7 @@ export default function TimerRing({ phase, remainingMs, totalMs, isPaused, class
             strokeDashoffset={strokeDashoffset}
             className="transition-[stroke-dashoffset] duration-300 ease-linear motion-reduce:transition-none"
             style={{
-              filter: `drop-shadow(0 0 6px ${strokeColor === 'var(--primary)' ? 'rgba(51,97,160,0.3)' : 'rgba(40,191,127,0.3)'})`,
+              filter: `drop-shadow(0 0 6px ${strokeColor === 'var(--primary)' ? 'rgba(245,158,11,0.35)' : 'rgba(16,185,129,0.3)'})`,
             }}
           />
         </svg>
