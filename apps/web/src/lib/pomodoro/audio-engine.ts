@@ -215,7 +215,7 @@ function startFileLoop(src: string, volume: number, onFail: () => void): void {
   const audio = new Audio();
   audio.preload = 'auto';
   audio.loop = true;
-  audio.playsInline = true;
+  audio.setAttribute('playsinline', 'true');
   audio.volume = clampVolume(volume);
   audio.src = src;
 
