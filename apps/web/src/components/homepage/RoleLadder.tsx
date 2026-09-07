@@ -1,40 +1,50 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Homepage — RoleLadder
-// Four-step ascending ladder: Student → Teacher → Contributor → Main Contributor.
-// All rungs sit at the same baseline. Arrows between rungs show upward flow;
-// a "gatekeeper" visual ties every upgrade back to Main Contributor approval.
-// Collapses to a vertical stack with a rotated connector on mobile (≤900px).
+// Homepage — RoleLadder (Ecosystem Ladder)
+// Four numbered role cards. No clubs/classrooms copy.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { ArrowUp, Lock, ShieldCheck } from 'lucide-react';
+import Link from 'next/link';
+import { Shield } from 'lucide-react';
 import RevealSection from './RevealSection';
 
 const ROLES = [
   {
-    stepTag: 'Everyone starts here',
+    n: '01',
+    tag: 'ENTRY',
     title: 'Student',
     description:
-      'Access all study tools — timetables, lesson tracking, exam countdowns and grade calculators.',
+      'Everyone starts here. Get access to smart timetables, lesson progress trackers, and past paper mark scheme indices.',
+    footer: 'FREE FOREVER',
+    footerAccent: true,
   },
   {
-    stepTag: 'Upgrade  ·  requires approval',
+    n: '02',
+    tag: 'UPGRADE',
     title: 'Teacher',
     description:
-      'Everything students get, plus create classrooms, issue assignments, and track student progress.',
+      'Everything students get, plus guide learners, assign weekly homework mocks, and track progress in real time.',
+    footer: 'Requires Mentor Verification',
+    footerAccent: false,
   },
   {
-    stepTag: 'Upgrade  ·  requires approval',
+    n: '03',
+    tag: 'COMMUNITY',
     title: 'Contributor',
     description:
-      'Build and maintain the curriculum library, submit content for review, and get a public contributor profile.',
+      'Build the national curriculum library. Share study packs, submit syllabus notes, and earn verified public profile credentials.',
+    footer: 'Reviewed by Main Gatekeepers',
+    footerAccent: false,
   },
   {
-    stepTag: 'Gatekeeper  ·  approves every upgrade',
+    n: '04',
+    tag: 'GATEKEEPER',
     title: 'Main Contributor',
     description:
-      'Review and approve submissions before they go live, and approve every role upgrade request.',
+      'The custodians of academic quality. Review curriculum before release and approve community role upgrade petitions.',
+    footer: 'Supreme Editorial Board',
+    footerAccent: true,
     highlight: true,
   },
 ];
@@ -42,197 +52,201 @@ const ROLES = [
 export default function RoleLadder() {
   return (
     <RevealSection>
-      {/* Ladder */}
-      <div className="hp-ladder" style={{ gap: 0 }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: 16,
+        }}
+        className="hp-role-grid"
+      >
         <style>{`
-          @media (max-width: 900px) {
-            .hp-ladder { flex-direction: column; align-items: stretch; }
-            .hp-rung   { margin-bottom: 0 !important; }
-            .hp-connector { width: auto !important; height: 34px; transform: rotate(90deg); margin: 0 auto; }
+          @media (max-width: 960px) {
+            .hp-role-grid { grid-template-columns: 1fr 1fr !important; }
+          }
+          @media (max-width: 640px) {
+            .hp-role-grid { grid-template-columns: 1fr !important; }
           }
         `}</style>
 
-        {ROLES.map((role, i) => (
-          <div key={role.title} style={{ display: 'contents' }}>
-            {/* Rung card — all at the same baseline */}
-            <div
-              className="hp-rung hp-card-elevated"
-              style={{
-                flex: 1,
-                background: role.highlight
-                  ? 'linear-gradient(160deg, var(--hp-surface) 60%, rgba(var(--hp-violet-rgb),0.10))'
-                  : 'var(--hp-surface)',
-                border: role.highlight
-                  ? '1px solid rgba(var(--hp-violet-rgb),0.40)'
-                  : '1px solid var(--hp-border)',
-                borderRadius: 'var(--hp-radius-md)',
-                padding: '26px 22px',
-                marginBottom: 0,
-                transition: 'border-color 0.2s ease, transform 0.2s ease',
-                cursor: 'default',
-              }}
-              onMouseEnter={(e) => {
-                const el = e.currentTarget as HTMLDivElement;
-                el.style.borderColor = role.highlight
-                  ? 'rgba(var(--hp-violet-rgb),0.65)'
-                  : 'var(--hp-border-strong)';
-                el.style.transform = 'translateY(-3px)';
-              }}
-              onMouseLeave={(e) => {
-                const el = e.currentTarget as HTMLDivElement;
-                el.style.borderColor = role.highlight
-                  ? 'rgba(var(--hp-violet-rgb),0.40)'
-                  : 'var(--hp-border)';
-                el.style.transform = 'translateY(0)';
-              }}
-            >
-              <span
+        {ROLES.map((role) => (
+          <div
+            key={role.title}
+            className="hp-card-elevated"
+            style={{
+              background: role.highlight
+                ? 'linear-gradient(160deg, var(--hp-surface) 55%, color-mix(in srgb, var(--hp-violet) 10%, transparent))'
+                : 'var(--hp-surface)',
+              border: role.highlight
+                ? '1px solid color-mix(in srgb, var(--hp-violet) 40%, transparent)'
+                : '1px solid var(--hp-border)',
+              borderRadius: 'var(--hp-radius-lg)',
+              padding: 24,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              minHeight: 240,
+            }}
+          >
+            <div>
+              <div
                 style={{
-                  fontFamily: 'var(--hp-font-mono)',
-                  fontSize: 10.5,
-                  color: role.highlight ? 'var(--hp-amber)' : 'var(--hp-ink-faint)',
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                  marginBottom: 10,
-                  display: 'block',
-                }}
-              >
-                {role.stepTag}
-              </span>
-              <h3
-                style={{
-                  fontFamily: 'var(--hp-font-display)',
-                  fontSize: 20,
-                  fontWeight: 600,
-                  color: 'var(--hp-ink)',
-                  margin: '0 0 8px',
                   display: 'flex',
                   alignItems: 'center',
+                  justifyContent: 'space-between',
                   gap: 8,
                 }}
               >
+                <span
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: '50%',
+                    background: 'var(--hp-bg-soft)',
+                    border: '1px solid var(--hp-border)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontFamily: 'var(--hp-font-mono)',
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: role.highlight ? 'var(--hp-violet)' : 'var(--hp-brand)',
+                  }}
+                >
+                  {role.n}
+                </span>
+                <span
+                  style={{
+                    fontFamily: 'var(--hp-font-mono)',
+                    fontSize: 10.5,
+                    fontWeight: 700,
+                    letterSpacing: '0.06em',
+                    padding: '4px 9px',
+                    borderRadius: 999,
+                    background: role.highlight
+                      ? 'color-mix(in srgb, var(--hp-violet) 14%, transparent)'
+                      : 'var(--hp-bg-soft)',
+                    color: role.highlight ? 'var(--hp-violet)' : 'var(--hp-ink-muted)',
+                    border: '1px solid var(--hp-border)',
+                  }}
+                >
+                  {role.tag}
+                </span>
+              </div>
+
+              <h3
+                style={{
+                  fontFamily: 'var(--hp-font-display)',
+                  fontSize: 18,
+                  fontWeight: 600,
+                  color: 'var(--hp-ink)',
+                  margin: '16px 0 8px',
+                }}
+              >
                 {role.title}
-                {role.highlight && (
-                  <ShieldCheck
-                    size={18}
-                    style={{ color: 'var(--hp-amber)', flexShrink: 0 }}
-                    strokeWidth={1.8}
-                  />
-                )}
               </h3>
               <p
                 style={{
                   fontFamily: 'var(--hp-font-body)',
-                  fontSize: 13,
+                  fontSize: 13.5,
                   color: 'var(--hp-ink-muted)',
-                  margin: 0,
                   lineHeight: 1.55,
+                  margin: 0,
                 }}
               >
                 {role.description}
               </p>
-
-              {/* Colony-size indicator — tiny ant dots growing at each tier */}
-              <div
-                style={{
-                  display: 'flex',
-                  gap: 5,
-                  justifyContent: 'center',
-                  marginTop: 'auto',
-                  paddingTop: 14,
-                }}
-                aria-hidden="true"
-              >
-                {Array.from({ length: i + 1 }).map((_, j) => (
-                  <span
-                    key={j}
-                    style={{
-                      width: j === i && role.highlight ? 5.5 : 4.5,
-                      height: j === i && role.highlight ? 5.5 : 4.5,
-                      borderRadius: '50%',
-                      background: role.highlight ? 'var(--hp-amber)' : 'var(--hp-brand)',
-                      opacity: j === i && role.highlight ? 0.9 : 0.55,
-                      boxShadow: role.highlight ? '0 0 3px var(--hp-amber)' : 'none',
-                      display: 'inline-block',
-                    }}
-                  />
-                ))}
-              </div>
             </div>
 
-            {/* Connector — upward arrow showing approval flow */}
-            {i < ROLES.length - 1 && (
-              <div
-                className="hp-connector"
+            <div style={{ marginTop: 18, paddingTop: 12 }}>
+              <span
                 style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 44,
-                  gap: 4,
-                  flexShrink: 0,
-                  userSelect: 'none',
+                  fontFamily: 'var(--hp-font-mono)',
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: '0.04em',
+                  color: role.footerAccent
+                    ? role.highlight
+                      ? 'var(--hp-violet)'
+                      : 'var(--hp-brand)'
+                    : 'var(--hp-ink-faint)',
                 }}
-                aria-hidden="true"
               >
-                <ArrowUp size={16} strokeWidth={1.5} style={{ color: 'var(--hp-amber)', opacity: 0.7 }} />
-                <Lock size={10} strokeWidth={1.5} style={{ color: 'var(--hp-ink-faint)', opacity: 0.4 }} />
-              </div>
-            )}
+                {role.footer}
+              </span>
+            </div>
           </div>
         ))}
       </div>
 
-      {/* Gatekeeper flow note */}
       <div
         style={{
           marginTop: 24,
           display: 'flex',
-          gap: 12,
+          flexWrap: 'wrap',
+          gap: 14,
           alignItems: 'center',
-          justifyContent: 'center',
-          background: 'var(--hp-bg-soft)',
+          justifyContent: 'space-between',
+          background: 'var(--hp-surface)',
           border: '1px solid var(--hp-border)',
-          borderRadius: 12,
-          padding: '13px 20px',
+          borderRadius: 'var(--hp-radius-lg)',
+          padding: '18px 22px',
         }}
       >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            background: 'rgba(var(--hp-violet-rgb),0.10)',
-            border: '1px solid rgba(var(--hp-violet-rgb),0.25)',
-            borderRadius: 999,
-            padding: '4px 12px',
-          }}
-        >
-          <ShieldCheck size={13} style={{ color: 'var(--hp-amber)' }} strokeWidth={1.8} />
-          <span
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+          <div
             style={{
-              fontFamily: 'var(--hp-font-mono)',
-              fontSize: 10.5,
-              fontWeight: 600,
-              color: 'var(--hp-amber)',
-              letterSpacing: '0.06em',
+              width: 40,
+              height: 40,
+              borderRadius: '50%',
+              background: 'color-mix(in srgb, var(--hp-brand) 16%, transparent)',
+              color: 'var(--hp-brand)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
             }}
           >
-            Main Contributor
-          </span>
+            <Shield size={18} strokeWidth={2} />
+          </div>
+          <div>
+            <p
+              style={{
+                margin: 0,
+                fontFamily: 'var(--hp-font-display)',
+                fontSize: 15,
+                fontWeight: 600,
+                color: 'var(--hp-ink)',
+              }}
+            >
+              Zero Downgrades. Zero Shortcuts.
+            </p>
+            <p
+              style={{
+                margin: '4px 0 0',
+                fontFamily: 'var(--hp-font-body)',
+                fontSize: 13,
+                color: 'var(--hp-ink-muted)',
+                lineHeight: 1.5,
+              }}
+            >
+              Every upgrade is vetted by Myanmar international students with proven A* credentials.
+            </p>
+          </div>
         </div>
-        <span
+        <Link
+          href="/about"
           style={{
             fontFamily: 'var(--hp-font-body)',
-            fontSize: 13,
-            color: 'var(--hp-ink-muted)',
-            lineHeight: 1.5,
+            fontSize: 13.5,
+            fontWeight: 700,
+            color: 'var(--hp-brand)',
+            textDecoration: 'none',
+            whiteSpace: 'nowrap',
           }}
         >
-          Every upgrade must be approved by a Main Contributor.
-          No downgrades. No shortcuts. One ladder, one gatekeeper.
-        </span>
+          Read Role Guidelines
+        </Link>
       </div>
     </RevealSection>
   );

@@ -1,19 +1,11 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// QualCarousel — Qualification board auto-advancing showcase
-// Lucide outline icons replace structural emojis.
+// QualCarousel — kept for optional reuse; QualBoards is the primary landing UI.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import {
-  GraduationCap,
-  BookOpen,
-  Globe,
-  Map,
-  PenLine,
-  MessageCircle,
-} from 'lucide-react';
+import { GraduationCap, BookOpen, Mic } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { QUALIFICATION_BOARDS, UPCOMING_BOARDS } from '@/constants/homepage';
 import RevealSection from './RevealSection';
@@ -23,10 +15,7 @@ const AUTO_ADVANCE_MS = 4500;
 const ICON_MAP: Record<string, LucideIcon> = {
   GraduationCap,
   BookOpen,
-  Globe,
-  Map,
-  PenLine,
-  MessageCircle,
+  Mic,
 };
 
 export default function QualCarousel() {
@@ -50,13 +39,7 @@ export default function QualCarousel() {
 
   return (
     <RevealSection>
-      <div
-        style={{
-          maxWidth: 720,
-          margin: '0 auto',
-          position: 'relative',
-        }}
-      >
+      <div style={{ maxWidth: 720, margin: '0 auto', position: 'relative' }}>
         <div
           style={{
             background: 'var(--hp-surface)',
@@ -69,7 +52,7 @@ export default function QualCarousel() {
           }}
         >
           <div
-            aria-hidden="true"
+            aria-hidden
             style={{
               position: 'absolute',
               top: 0,
@@ -82,7 +65,7 @@ export default function QualCarousel() {
           />
 
           <div
-            aria-hidden="true"
+            aria-hidden
             style={{
               width: 56,
               height: 56,
@@ -105,7 +88,6 @@ export default function QualCarousel() {
               fontWeight: 600,
               color: 'var(--hp-ink)',
               margin: '0 0 8px',
-              letterSpacing: '-0.01em',
             }}
           >
             {board.name}
@@ -131,7 +113,6 @@ export default function QualCarousel() {
                   background: 'var(--hp-surface-2)',
                   border: '1px solid var(--hp-border)',
                   color: 'var(--hp-ink-muted)',
-                  letterSpacing: '0.04em',
                 }}
               >
                 {q}
@@ -154,14 +135,8 @@ export default function QualCarousel() {
         </div>
 
         <div
-          aria-hidden="true"
-          role="presentation"
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: 8,
-            marginTop: 24,
-          }}
+          aria-hidden
+          style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 24 }}
         >
           {QUALIFICATION_BOARDS.map((_, i) => (
             <span
@@ -187,61 +162,45 @@ export default function QualCarousel() {
             marginTop: 32,
           }}
         >
-          {UPCOMING_BOARDS.map((upcoming) => {
-            const UpcomingIcon = ICON_MAP[upcoming.icon] || BookOpen;
-            return (
-              <div
-                key={upcoming.name}
+          {UPCOMING_BOARDS.map((upcoming) => (
+            <div
+              key={upcoming.name}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                background: 'var(--hp-surface)',
+                border: '1px dashed var(--hp-border-strong)',
+                borderRadius: 999,
+                padding: '8px 18px',
+                opacity: 0.85,
+              }}
+            >
+              <span
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  background: 'var(--hp-surface)',
-                  border: '1px dashed var(--hp-border-strong)',
-                  borderRadius: 999,
-                  padding: '8px 18px 8px 14px',
-                  opacity: 0.7,
-                  transition: 'opacity 0.2s ease, border-color 0.2s ease',
-                }}
-                onMouseEnter={(e) => {
-                  const el = e.currentTarget as HTMLDivElement;
-                  el.style.opacity = '1';
-                  el.style.borderColor = 'var(--hp-amber)';
-                }}
-                onMouseLeave={(e) => {
-                  const el = e.currentTarget as HTMLDivElement;
-                  el.style.opacity = '0.7';
-                  el.style.borderColor = 'var(--hp-border-strong)';
+                  fontFamily: 'var(--hp-font-display)',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: 'var(--hp-ink)',
                 }}
               >
-                <UpcomingIcon size={16} strokeWidth={2} style={{ color: 'var(--hp-ink-muted)' }} aria-hidden />
-                <span
-                  style={{
-                    fontFamily: 'var(--hp-font-display)',
-                    fontSize: 14,
-                    fontWeight: 600,
-                    color: 'var(--hp-ink)',
-                  }}
-                >
-                  {upcoming.name}
-                </span>
-                <span
-                  style={{
-                    fontFamily: 'var(--hp-font-mono)',
-                    fontSize: 10.5,
-                    padding: '2px 9px',
-                    borderRadius: 999,
-                    background: 'var(--hp-amber)',
-                    color: 'var(--hp-bg)',
-                    fontWeight: 600,
-                    letterSpacing: '0.04em',
-                  }}
-                >
-                  COMING SOON
-                </span>
-              </div>
-            );
-          })}
+                {upcoming.name}
+              </span>
+              <span
+                style={{
+                  fontFamily: 'var(--hp-font-mono)',
+                  fontSize: 10.5,
+                  padding: '2px 9px',
+                  borderRadius: 999,
+                  background: 'var(--hp-amber)',
+                  color: 'var(--hp-bg)',
+                  fontWeight: 600,
+                }}
+              >
+                {upcoming.status}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
     </RevealSection>

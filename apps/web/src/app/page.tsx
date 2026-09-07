@@ -1,56 +1,26 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTs — Public Home / Landing Page (redesigned)
-// Visual redesign based on the-ants-redesign.html mockup.
-// All original copy is preserved verbatim.
-// New components: HeroVisual, BentoFeatures, QualTrail, RoleLadder.
-// Dark palette is scoped to the .hp class — does not affect authenticated pages.
+// The ANTs — Public Home / Landing Page
+// Layout & copy aligned to the Stitch / Netlify hero-feed redesign.
+// Sections: Hero → Stats → Toolkit → Boards → Mentors → Roles → CTA.
+// Clubs / classrooms omitted (retired). Scoped under .hp tokens.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useEffect, useState } from 'react';
-import Image from 'next/image';
+import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
-import { ArrowRight, MessageSquare, Users, Home } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Eye, Home, Rocket, Zap } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { getRoleLandingPath } from '@/lib/utils';
 import HeroVisual from '@/components/homepage/HeroVisual';
 import BentoFeatures from '@/components/homepage/BentoFeatures';
-import QualTrail from '@/components/homepage/QualTrail';
-import QualCarousel from '@/components/homepage/QualCarousel';
+import QualBoards from '@/components/homepage/QualBoards';
+import MentorPreview from '@/components/homepage/MentorPreview';
 import RoleLadder from '@/components/homepage/RoleLadder';
 import RevealSection from '@/components/homepage/RevealSection';
-import StatsRow from '@/components/homepage/StatsRow';
 import AntHeroAccent from '@/components/homepage/AntHeroAccent';
 import Footer from '@/components/layout/Footer';
 import ThemeToggle from '@/components/ui/ThemeToggle';
-
-// ── Explore card data ─────────────────────────────────────────────────────────
-
-const EXPLORE_CARDS = [
-  {
-    title: 'Verified Tutors',
-    description:
-      'Browse academic tutors offering class slots across Cambridge, Edexcel, and Matriculation. View weekly availability and inquire directly.',
-    Icon: Users,
-    href: '/explore?tab=tutors',
-    stats: [
-      { value: 'Verified', label: 'TUTOR PROFILES' },
-      { value: 'Telegram', label: 'DIRECT INQUIRIES' },
-    ],
-  },
-  {
-    title: 'Academic Portfolios',
-    description:
-      'Browse student portfolios, projects, CCA activities, and verified curriculum contributors. View study achievements and credentials.',
-    Icon: Users,
-    href: '/explore',
-    stats: [
-      { value: 'Multi-Role', label: 'ACADEMIC PERSONAS' },
-      { value: 'Public', label: 'SHAREABLE LINK' },
-    ],
-  },
-];
 
 // ── Shared section heading ────────────────────────────────────────────────────
 
@@ -60,53 +30,86 @@ function SectionHead({
   gradPhrase,
   subtext,
   align = 'center',
+  action,
 }: {
   eyebrow: string;
   heading: string;
-  gradPhrase: string;
+  gradPhrase?: string;
   subtext?: string;
   align?: 'center' | 'left';
+  action?: ReactNode;
 }) {
   const textAlign = align === 'center' ? 'center' : 'left';
   const mx = align === 'center' ? 'auto' : '0';
+  const phrase = gradPhrase ?? '';
+  const rest = phrase ? heading.replace(phrase, '').trim() : heading;
 
   return (
     <RevealSection>
       <div
         style={{
-          maxWidth: 640,
-          margin: `0 ${mx} 56px`,
+          maxWidth: action ? '100%' : 680,
+          margin: `0 ${mx} 48px`,
           textAlign,
+          display: action ? 'flex' : 'block',
+          flexWrap: 'wrap',
+          alignItems: 'flex-end',
+          justifyContent: 'space-between',
+          gap: 20,
         }}
       >
-        <span className="hp-eyebrow">{eyebrow}</span>
-        <h2
-          style={{
-            fontFamily: 'var(--hp-font-display)',
-            fontSize: 'clamp(1.9rem, 3.4vw, 2.7rem)',
-            fontWeight: 560,
-            letterSpacing: '-0.01em',
-            color: 'var(--hp-ink)',
-            margin: '14px 0 0',
-            lineHeight: 1.15,
-          }}
-        >
-          {heading.replace(gradPhrase, '').trim()}{' '}
-          <span className="hp-grad hp-neon-stroke">{gradPhrase}</span>
-        </h2>
-        {subtext && (
-          <p
+        <div style={{ maxWidth: 640, textAlign, margin: align === 'center' && !action ? '0 auto' : 0 }}>
+          <span
             style={{
-              fontFamily: 'var(--hp-font-body)',
-              fontSize: 16,
-              color: 'var(--hp-ink-muted)',
-              marginTop: 14,
-              lineHeight: 1.65,
+              display: 'inline-flex',
+              alignItems: 'center',
+              padding: '5px 12px',
+              borderRadius: 999,
+              background: 'color-mix(in srgb, var(--hp-brand) 12%, transparent)',
+              color: 'var(--hp-brand-deep)',
+              fontFamily: 'var(--hp-font-mono)',
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
             }}
           >
-            {subtext}
-          </p>
-        )}
+            {eyebrow}
+          </span>
+          <h2
+            style={{
+              fontFamily: 'var(--hp-font-display)',
+              fontSize: 'clamp(1.85rem, 3.4vw, 2.55rem)',
+              fontWeight: 560,
+              letterSpacing: '-0.01em',
+              color: 'var(--hp-ink)',
+              margin: '14px 0 0',
+              lineHeight: 1.15,
+            }}
+          >
+            {rest}
+            {phrase ? (
+              <>
+                {' '}
+                <span className="hp-grad hp-neon-stroke">{phrase}</span>
+              </>
+            ) : null}
+          </h2>
+          {subtext && (
+            <p
+              style={{
+                fontFamily: 'var(--hp-font-body)',
+                fontSize: 15.5,
+                color: 'var(--hp-ink-muted)',
+                marginTop: 12,
+                lineHeight: 1.65,
+              }}
+            >
+              {subtext}
+            </p>
+          )}
+        </div>
+        {action}
       </div>
     </RevealSection>
   );
@@ -248,17 +251,17 @@ export default function HomePage() {
                 document.getElementById('qualifications')?.scrollIntoView({ behavior: 'smooth' });
               }}
             >
-              <span className="hp-nav-linktext" data-text="Boards">Boards</span>
+              <span className="hp-nav-linktext" data-text="Boards & Syllabi">Boards & Syllabi</span>
             </a>
             <a
               className="hp-nav-item"
-              href="#roles"
+              href="#features"
               onClick={(e) => {
                 e.preventDefault();
-                document.getElementById('roles')?.scrollIntoView({ behavior: 'smooth' });
+                document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
               }}
             >
-              <span className="hp-nav-linktext" data-text="Roles">Roles</span>
+              <span className="hp-nav-linktext" data-text="Study Tools">Study Tools</span>
             </a>
           </div>
 
@@ -345,7 +348,7 @@ export default function HomePage() {
                     (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
                   }}
                 >
-                  Dashboard <ArrowRight size={14} />
+                  Get Started — It&apos;s Free
                 </button>
               </Link>
             </div>
@@ -357,15 +360,13 @@ export default function HomePage() {
       <section
         className="hp-grid-bg"
         style={{
-          paddingTop: 190,
+          paddingTop: 160,
           paddingBottom: 120,
-          textAlign: 'center',
           position: 'relative',
         }}
       >
         <AntHeroAccent />
 
-        {/* ── Brand accent glows (CSS-rendered, warm gold/amber) ──── */}
         <style>{`
           .neon-accent {
             position: absolute;
@@ -376,7 +377,6 @@ export default function HomePage() {
             opacity: 0.22;
             transition: opacity 0.5s ease, filter 0.5s ease;
           }
-          /* Gold glow — left side: warm gold glow */
           .neon-accent-gold {
             width: clamp(200px, 22vw, 360px);
             height: clamp(200px, 22vw, 360px);
@@ -395,7 +395,6 @@ export default function HomePage() {
               0 0 120px color-mix(in srgb, var(--accent) 10%, transparent);
             animation: neonPulseGold 4s ease-in-out infinite;
           }
-          /* Amber glow — right side: soft amber highlight */
           .neon-accent-amber {
             width: clamp(200px, 22vw, 360px);
             height: clamp(200px, 22vw, 360px);
@@ -414,7 +413,6 @@ export default function HomePage() {
               0 0 120px color-mix(in srgb, var(--primary) 8%, transparent);
             animation: neonPulseAmber 4.5s ease-in-out infinite;
           }
-          /* Keyframes: subtle breathing glow */
           @keyframes neonPulseGold {
             0%, 100% { opacity: 0.20; transform: translateY(-50%) scale(1); }
             50%      { opacity: 0.28; transform: translateY(-50%) scale(1.06); }
@@ -423,8 +421,19 @@ export default function HomePage() {
             0%, 100% { opacity: 0.18; transform: translateY(-50%) scale(1); }
             50%      { opacity: 0.26; transform: translateY(-50%) scale(1.05); }
           }
-          /* Responsive: smaller on tablet, hidden on mobile */
-          @media (max-width: 900px) {
+          .hp-hero-grid {
+            display: grid;
+            grid-template-columns: 1.15fr 0.95fr;
+            gap: clamp(36px, 5vw, 64px);
+            align-items: center;
+          }
+          @media (max-width: 960px) {
+            .hp-hero-grid { grid-template-columns: 1fr; }
+            .hp-hero-copy { text-align: center; align-items: center; }
+            .hp-hero-copy .hp-hero-trust { justify-content: center; }
+            .hp-hero-copy .hp-hero-ctas { justify-content: center; }
+            .hp-hero-copy .hp-hero-pill { margin-left: auto; margin-right: auto; }
+            .hp-hero-copy .hp-hero-sub { margin-left: auto; margin-right: auto; }
             .neon-accent-gold,
             .neon-accent-amber {
               width: clamp(140px, 16vw, 220px);
@@ -441,375 +450,259 @@ export default function HomePage() {
           }
         `}</style>
 
-        {/* Gold glow — left side */}
         <div className="neon-accent neon-accent-gold" aria-hidden="true" />
-
-        {/* Amber glow — right side */}
         <div className="neon-accent neon-accent-amber" aria-hidden="true" />
 
         <div
           style={{
             position: 'relative',
+            zIndex: 1,
             maxWidth: 'var(--hp-maxw)',
             margin: '0 auto',
             padding: '0 28px',
           }}
         >
-          {/* Hero content — all items cascade with Apple-like stagger */}
-          <RevealSection stagger>
-            <div className="hp-reveal">
-              <div
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '7px 16px',
-                  borderRadius: 999,
-                  background: 'rgba(var(--hp-brand-rgb), 0.08)',
-                  border: '1px solid rgba(var(--hp-brand-rgb), 0.25)',
-                  fontFamily: 'var(--hp-font-mono)',
-                  fontSize: 12.5,
-                  color: 'var(--hp-brand)',
-                  marginBottom: 28,
-                }}
-              >
-                <Image src="/logo.png" alt="" width={16} height={16} priority className="inline-block align-middle mr-1" /> Built for Myanmar students
-              </div>
-            </div>
-
-            <h1
-              className="hp-reveal"
-              style={{
-                fontFamily: 'var(--hp-font-display)',
-                fontSize: 'clamp(2.6rem, 5.6vw, 4.4rem)',
-                fontWeight: 560,
-                lineHeight: 1.06,
-                letterSpacing: '-0.01em',
-                maxWidth: 920,
-                margin: '0 auto',
-                color: 'var(--hp-ink)',
-              }}
-            >
-              More than tutors. Your bridge to{' '}
-              <span className="hp-grad hp-neon-stroke">global education.</span>
-            </h1>
-
-            {/* ── "Learn more about The ANTs" text link ────────────── */}
+          <div className="hp-hero-grid">
+            {/* Left — copy */}
             <div
-              className="hp-reveal"
+              className="hp-hero-copy"
               style={{
                 display: 'flex',
-                justifyContent: 'center',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
               }}
             >
-              <Link
-                href="/about"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  marginTop: 32,
-                  fontFamily: 'var(--hp-font-body)',
-                  fontSize: 15,
-                  fontWeight: 600,
-                  color: 'var(--hp-ink)',
-                  textDecoration: 'none',
-                  borderBottom: '1.5px solid var(--hp-border)',
-                  paddingBottom: 4,
-                  transition: 'border-color 0.25s ease, color 0.25s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderBottomColor = 'var(--hp-brand)';
-                  e.currentTarget.style.color = 'var(--hp-brand)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderBottomColor = 'var(--hp-border)';
-                  e.currentTarget.style.color = 'var(--hp-ink)';
-                }}
-              >
-                <span
-                  style={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: '50%',
-                    background: 'var(--hp-brand)',
-                    display: 'inline-block',
-                    boxShadow: '0 0 5px var(--hp-brand)',
-                    flexShrink: 0,
-                  }}
-                />
-                Discover what <span className="font-brand hp-neon-stroke">The ANTs</span> is all about
-                <ArrowRight size={15} style={{ flexShrink: 0, marginLeft: 2 }} />
-              </Link>
-            </div>
-
-            <div
-              className="hp-reveal"
-              style={{
-                display: 'flex',
-                gap: 14,
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginTop: 40,
-                flexWrap: 'wrap',
-              }}
-            >
-              <Link href="/signup">
-                <button
-                  className="hp-btn neon-btn-glow hp-btn-elevated"
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    background: 'var(--hp-brand)',
-                    color: 'var(--hp-btn-text)',
-                    border: 'none',
-                    borderRadius: 999,
-                    padding: '13px 26px',
-                    fontFamily: 'var(--hp-font-body)',
-                    fontWeight: 700,
-                    fontSize: 14.5,
-                    cursor: 'pointer',
-                    whiteSpace: 'nowrap',
-                    transition: 'transform 0.25s ease, box-shadow 0.25s ease',
-                  }}
-                  onMouseEnter={(e) => {
-                    const el = e.currentTarget as HTMLButtonElement;
-                    el.style.transform = 'translateY(-2px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    const el = e.currentTarget as HTMLButtonElement;
-                    el.style.transform = 'translateY(0)';
-                  }}
-                >
-                  Get Started — It's Free →
-                </button>
-              </Link>
-              <Link
-                href="/login"
-                style={{
-                  fontFamily: 'var(--hp-font-body)',
-                  fontSize: 14.5,
-                  fontWeight: 500,
-                  color: 'var(--hp-ink-muted)',
-                  textDecoration: 'none',
-                  transition: 'color 0.2s ease',
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--hp-ink)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--hp-ink-muted)'; }}
-              >
-                Sign In
-              </Link>
-            </div>
-
-            <div
-              className="hp-reveal"
-              style={{
-                marginTop: 22,
-                fontFamily: 'var(--hp-font-mono)',
-                fontSize: 12,
-                color: 'var(--hp-ink-faint)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-              }}
-            >
-              <span
-                style={{
-                  width: 5,
-                  height: 5,
-                  borderRadius: '50%',
-                  background: 'var(--hp-amber)',
-                  display: 'inline-block',
-                }}
-              />
-              No credit card · used by students across Yangon, Mandalay & beyond
-            </div>
-          </RevealSection>
-
-          {/* Hero visual widget */}
-          <HeroVisual />
-        </div>
-      </section>
-
-      {/* ── Explore Section ──────────────────────────────────────────────── */}
-      <section
-        id="explore"
-        className="hp-grid-card"
-        style={{
-          padding: '130px 28px',
-          background: 'var(--hp-bg-soft)',
-          position: 'relative',
-          scrollMarginTop: 90,
-        }}
-      >
-        <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
-          <SectionHead
-            eyebrow="Discover"
-            heading="Explore clubs & profiles"
-            gradPhrase="clubs & profiles"
-          />
-
-          <RevealSection>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: 20,
-              }}
-              className="explore-grid-hp"
-            >
-              <style>{`
-                @media (max-width: 760px) { .explore-grid-hp { grid-template-columns: 1fr !important; } }
-                .explore-card-hp:hover { border-color: var(--hp-border-strong) !important; transform: translateY(-3px) !important; }
-              `}</style>
-
-              {EXPLORE_CARDS.map((card, i) => (
-                <Link key={card.title} href={card.href} style={{ display: 'block' }}>
+              <RevealSection stagger className="w-full">
+                <div className="hp-reveal hp-hero-pill">
                   <div
-                    className="explore-card-hp hp-card-elevated"
                     style={{
-                      padding: 32,
-                      borderRadius: 'var(--hp-radius-lg)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '7px 14px',
+                      borderRadius: 999,
                       background: 'var(--hp-surface)',
                       border: '1px solid var(--hp-border)',
-                      transition: 'border-color .2s ease, transform .2s ease',
-                      height: '100%',
-                    } as React.CSSProperties}
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                      fontFamily: 'var(--hp-font-body)',
+                      fontSize: 13,
+                      flexWrap: 'wrap',
+                      justifyContent: 'center',
+                    }}
                   >
-                    {/* Icon */}
-                    <div
+                    <span
                       style={{
-                        width: 46,
-                        height: 46,
-                        borderRadius: 13,
-                        background: 'var(--hp-surface-2)',
-                        border: '1px solid var(--hp-border)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        marginBottom: 20,
+                        position: 'relative',
+                        width: 8,
+                        height: 8,
+                        flexShrink: 0,
                       }}
+                      aria-hidden
                     >
-                      <card.Icon size={22} style={{ color: 'var(--hp-ink-muted)' }} strokeWidth={2} />
-                    </div>
-
-                    <h3
-                      style={{
-                        fontFamily: 'var(--hp-font-display)',
-                        fontSize: 20,
-                        fontWeight: 600,
-                        color: 'var(--hp-ink)',
-                        margin: '0 0 10px',
-                      }}
-                    >
-                      {card.title}
-                    </h3>
-                    <p
-                      style={{
-                        fontFamily: 'var(--hp-font-body)',
-                        fontSize: 14.5,
-                        color: 'var(--hp-ink-muted)',
-                        margin: 0,
-                        lineHeight: 1.6,
-                      }}
-                    >
-                      {card.description}
-                    </p>
-
-                    {/* Stat chips */}
-                    <div
-                      style={{
-                        display: 'flex',
-                        gap: 22,
-                        marginTop: 22,
-                        paddingTop: 22,
-                        borderTop: '1px solid var(--hp-border)',
-                      }}
-                    >
-                      {card.stats.map((stat) => (
-                        <div key={stat.label}>
-                          <b
-                            style={{
-                              display: 'block',
-                              fontFamily: 'var(--hp-font-mono)',
-                              color: 'var(--hp-ink)',
-                              fontSize: 17,
-                            }}
-                          >
-                            {stat.value}
-                          </b>
-                          <span
-                            style={{
-                              fontSize: 11,
-                              color: 'var(--hp-ink-faint)',
-                              fontFamily: 'var(--hp-font-mono)',
-                              letterSpacing: '0.06em',
-                            }}
-                          >
-                            {stat.label}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
+                      <span
+                        style={{
+                          position: 'absolute',
+                          inset: 0,
+                          borderRadius: '50%',
+                          background: 'var(--hp-brand)',
+                          opacity: 0.45,
+                          animation: 'neonPulseGold 2s ease-in-out infinite',
+                        }}
+                      />
+                      <span
+                        style={{
+                          position: 'absolute',
+                          inset: 1,
+                          borderRadius: '50%',
+                          background: 'var(--hp-brand)',
+                        }}
+                      />
+                    </span>
+                    <span style={{ fontWeight: 700, color: 'var(--hp-ink)' }}>
+                      Built by students, for students
+                    </span>
+                    <span style={{ color: 'var(--hp-ink-faint)' }}>·</span>
+                    <span style={{ fontWeight: 700, color: 'var(--hp-brand)' }}>
+                      Yangon, Mandalay & worldwide
+                    </span>
                   </div>
-                </Link>
-              ))}
+                </div>
+
+                <h1
+                  className="hp-reveal"
+                  style={{
+                    fontFamily: 'var(--hp-font-display)',
+                    fontSize: 'clamp(2.4rem, 5vw, 3.85rem)',
+                    fontWeight: 560,
+                    lineHeight: 1.08,
+                    letterSpacing: '-0.01em',
+                    maxWidth: 640,
+                    margin: '22px 0 0',
+                    color: 'var(--hp-ink)',
+                  }}
+                >
+                  Ace your exams.
+                  <br />
+                  <span className="hp-grad hp-neon-stroke">No stress, just vibes</span>
+                  {' '}& top grades.
+                </h1>
+
+                <p
+                  className="hp-reveal hp-hero-sub"
+                  style={{
+                    margin: '18px 0 0',
+                    maxWidth: 520,
+                    fontFamily: 'var(--hp-font-body)',
+                    fontSize: 'clamp(15px, 1.6vw, 17px)',
+                    lineHeight: 1.65,
+                    color: 'var(--hp-ink-muted)',
+                  }}
+                >
+                  More than just tutors —{' '}
+                  <span className="font-brand" style={{ color: 'var(--hp-ink)', fontWeight: 700 }}>
+                    The ANTs
+                  </span>{' '}
+                  is your all-in-one cheat code to conquer Cambridge CAIE, Pearson Edexcel, and ace
+                  international boards. Free forever, no credit card required.
+                </p>
+
+                <div
+                  className="hp-reveal hp-hero-ctas"
+                  style={{
+                    display: 'flex',
+                    gap: 12,
+                    marginTop: 28,
+                    flexWrap: 'wrap',
+                    width: '100%',
+                  }}
+                >
+                  <Link href="/signup">
+                    <button
+                      className="hp-btn neon-btn-glow hp-btn-elevated"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        background: 'var(--hp-brand)',
+                        color: 'var(--hp-btn-text)',
+                        border: 'none',
+                        borderRadius: 14,
+                        padding: '13px 22px',
+                        fontFamily: 'var(--hp-font-body)',
+                        fontWeight: 700,
+                        fontSize: 14.5,
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                        transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)';
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)';
+                      }}
+                    >
+                      Start Grinding for Free
+                      <Rocket size={16} strokeWidth={2.2} />
+                    </button>
+                  </Link>
+                  <a
+                    href="#features"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '13px 22px',
+                      borderRadius: 14,
+                      background: 'var(--hp-surface)',
+                      border: '1px solid var(--hp-border)',
+                      color: 'var(--hp-ink)',
+                      fontFamily: 'var(--hp-font-body)',
+                      fontWeight: 700,
+                      fontSize: 14.5,
+                      textDecoration: 'none',
+                      whiteSpace: 'nowrap',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                      transition: 'transform 0.25s ease, border-color 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.borderColor = 'var(--hp-border-strong)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.borderColor = 'var(--hp-border)';
+                    }}
+                  >
+                    Peep the Features
+                    <Eye size={16} style={{ color: 'var(--hp-violet)' }} strokeWidth={2.2} />
+                  </a>
+                </div>
+
+                <div
+                  className="hp-reveal hp-hero-trust"
+                  style={{
+                    marginTop: 22,
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '14px 20px',
+                    fontFamily: 'var(--hp-font-body)',
+                    fontSize: 13.5,
+                    color: 'var(--hp-ink-muted)',
+                  }}
+                >
+                  {['Zero Kyats setup', 'Verified exam syllabi', 'No credit card'].map((label) => (
+                    <span
+                      key={label}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                    >
+                      <CheckCircle2
+                        size={16}
+                        style={{ color: 'var(--hp-brand)', flexShrink: 0 }}
+                        fill="color-mix(in srgb, var(--hp-brand) 18%, transparent)"
+                      />
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              </RevealSection>
             </div>
-          </RevealSection>
+
+            {/* Right — study workspace mockup */}
+            <div style={{ paddingBottom: 28 }}>
+              <HeroVisual />
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* ── Stats Row (high-impact metrics divider) ──────────────────────── */}
-      <section style={{ position: 'relative' }}>
-        <StatsRow />
-      </section>
-
-      {/* ── Features Section ─────────────────────────────────────────────── */}
+      {/* ── Interactive Toolkit / Features ───────────────────────────────── */}
       <section
         id="features"
         className="hp-grid-bg-strong"
-        style={{ padding: '130px 28px', position: 'relative', scrollMarginTop: 90 }}
+        style={{ padding: '110px 28px', position: 'relative', scrollMarginTop: 90 }}
       >
-        {/* Ant brand accent — small, subtle floating silhouette */}
-        <svg
-          className="hp-ant-float"
-          width="32"
-          height="26"
-          viewBox="0 0 32 26"
-          style={{ top: '12%', right: '4%', animationDelay: '1.5s' }}
-          aria-hidden="true"
-        >
-          <line x1="20" y1="9" x2="15" y2="15" stroke="currentColor" strokeWidth="0.7" opacity="0.7" />
-          <line x1="20" y1="9" x2="25" y2="15" stroke="currentColor" strokeWidth="0.7" opacity="0.7" />
-          <line x1="15" y1="8" x2="10" y2="14" stroke="currentColor" strokeWidth="0.7" opacity="0.7" />
-          <line x1="15" y1="8" x2="20" y2="14" stroke="currentColor" strokeWidth="0.7" opacity="0.7" />
-          <line x1="10" y1="6" x2="5" y2="12" stroke="currentColor" strokeWidth="0.7" opacity="0.7" />
-          <line x1="10" y1="6" x2="15" y2="12" stroke="currentColor" strokeWidth="0.7" opacity="0.7" />
-          <path d="M3 5 Q1 1 0 0" stroke="currentColor" strokeWidth="0.6" fill="none" opacity="0.6" />
-          <path d="M3 5 Q3 0 4 -2" stroke="currentColor" strokeWidth="0.6" fill="none" opacity="0.6" />
-          <ellipse cx="4" cy="6" rx="2.5" ry="2" fill="currentColor" opacity="0.85" />
-          <ellipse cx="9" cy="7" rx="2.2" ry="1.8" fill="currentColor" opacity="0.75" />
-          <ellipse cx="14" cy="8" rx="3.2" ry="2.3" fill="currentColor" opacity="0.7" />
-          <ellipse cx="18" cy="9" rx="1.5" ry="1.3" fill="currentColor" opacity="0.5" />
-        </svg>
         <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
           <SectionHead
-            eyebrow="F E A T U R E S"
-            heading="Everything you need to ace your exams"
-            gradPhrase="ace your exams"
+            eyebrow="Interactive Toolkit"
+            heading="Everything built to crush syllabus anxiety"
+            gradPhrase="syllabus anxiety"
+            subtext="High-contrast dashboards, verified past paper solutions, and live collaboration suites tailored for Burmese students taking on global qualifications."
           />
           <BentoFeatures />
         </div>
       </section>
 
-      {/* ── Qualifications Section ───────────────────────────────────────── */}
+      {/* ── Qualifications ───────────────────────────────────────────────── */}
       <section
         id="qualifications"
         className="hp-grid-card"
         style={{
-          padding: '130px 28px',
+          padding: '110px 28px',
           background: 'var(--hp-bg-soft)',
           position: 'relative',
           scrollMarginTop: 90,
@@ -817,46 +710,56 @@ export default function HomePage() {
       >
         <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
           <SectionHead
-            eyebrow="Q U A L I F I C A T I O N S"
-            heading="Wired into your exam board"
-            gradPhrase="exam board"
+            align="left"
+            eyebrow="Qualifications"
+            heading="Wired directly to your official board"
+            gradPhrase="official board"
+            subtext="Every revision note, specimen mark scheme, and unit breakdown is mapped 1:1 against current international exam specifications."
           />
-          {/* Interactive carousel replaces the static QualTrail on desktop */}
-          <div className="hp-quals-carousel">
-            <QualCarousel />
-          </div>
-          {/* Keep QualTrail as a static fallback on mobile (hidden when carousel shows) */}
-          <div className="hp-quals-trail-fallback">
-            <QualTrail />
-          </div>
-          <style>{`
-            @media (min-width: 641px) {
-              .hp-quals-trail-fallback { display: none !important; }
-            }
-            @media (max-width: 640px) {
-              .hp-quals-carousel { display: none !important; }
-            }
-          `}</style>
+          <QualBoards />
         </div>
       </section>
 
-      {/* ── Roles Section ────────────────────────────────────────────────── */}
+      {/* ── Verified Mentors / Explore ───────────────────────────────────── */}
       <section
-        id="roles"
-        style={{ padding: '130px 28px', position: 'relative', scrollMarginTop: 90 }}
+        id="explore"
+        style={{ padding: '110px 28px', position: 'relative', scrollMarginTop: 90 }}
       >
         <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
           <SectionHead
-            eyebrow="F O R   E V E R Y O N E"
-            heading="Choose your role"
-            gradPhrase="role"
+            align="left"
+            eyebrow="Verified Mentors"
+            heading="Learn from students who already aced it"
+            gradPhrase="already aced it"
+          />
+          <MentorPreview />
+        </div>
+      </section>
+
+      {/* ── Ecosystem Ladder ─────────────────────────────────────────────── */}
+      <section
+        id="roles"
+        className="hp-grid-card"
+        style={{
+          padding: '110px 28px',
+          background: 'var(--hp-bg-soft)',
+          position: 'relative',
+          scrollMarginTop: 90,
+        }}
+      >
+        <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
+          <SectionHead
+            eyebrow="Ecosystem Ladder"
+            heading="From Study Rookie to Master Contributor"
+            gradPhrase="Master Contributor"
+            subtext="One unified platform, 4 distinct roles. Progress organically as you study, teach, and contribute back to the community."
           />
           <RoleLadder />
         </div>
       </section>
 
-      {/* ── CTA Section ──────────────────────────────────────────────────── */}
-      <section style={{ padding: '40px 28px 130px', position: 'relative' }}>
+      {/* ── CTA ──────────────────────────────────────────────────────────── */}
+      <section style={{ padding: '40px 28px 120px', position: 'relative' }}>
         <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
           <RevealSection>
             <div
@@ -864,31 +767,58 @@ export default function HomePage() {
               style={{
                 borderRadius: 'var(--hp-radius-lg)',
                 background: 'var(--hp-brand-deep)',
-                padding: '70px 40px',
+                padding: '64px 40px',
                 textAlign: 'center',
                 position: 'relative',
                 overflow: 'hidden',
                 border: '1px solid var(--hp-border-strong)',
               }}
             >
-              {/* Glow blobs */}
               <div aria-hidden="true">
                 <div
                   style={{
-                    position: 'absolute', top: 0, right: 0,
-                    width: 180, height: 180,
-                    background: 'rgba(255,255,255,0.10)', borderRadius: '50%', filter: 'blur(40px)',
+                    position: 'absolute',
+                    top: 0,
+                    right: 0,
+                    width: 180,
+                    height: 180,
+                    background: 'rgba(255,255,255,0.10)',
+                    borderRadius: '50%',
+                    filter: 'blur(40px)',
                   }}
                 />
                 <div
                   style={{
-                    position: 'absolute', bottom: 0, left: 0,
-                    width: 140, height: 140,
-                    background: 'rgba(255,255,255,0.08)', borderRadius: '50%', filter: 'blur(40px)',
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    width: 140,
+                    height: 140,
+                    background: 'rgba(255,255,255,0.08)',
+                    borderRadius: '50%',
+                    filter: 'blur(40px)',
                   }}
                 />
               </div>
               <div style={{ position: 'relative', zIndex: 1 }}>
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    marginBottom: 16,
+                    padding: '6px 14px',
+                    borderRadius: 999,
+                    background: 'rgba(255,255,255,0.14)',
+                    color: 'var(--hp-btn-text)',
+                    fontFamily: 'var(--hp-font-mono)',
+                    fontSize: 12,
+                    fontWeight: 700,
+                  }}
+                >
+                  <Zap size={14} />
+                  Myanmar International Student Alliance
+                </div>
                 <h2
                   style={{
                     fontFamily: 'var(--hp-font-display)',
@@ -897,60 +827,77 @@ export default function HomePage() {
                     color: 'var(--hp-btn-text)',
                     margin: 0,
                     letterSpacing: '-0.01em',
+                    maxWidth: 640,
+                    marginInline: 'auto',
                   }}
                 >
-                  Ready to{' '}
-                  <span className="hp-neon-stroke" style={{ color: 'var(--hp-btn-text)' }}>
-                    ace your exams
-                  </span>
-                  ?
+                  Stop cramming the night before. Build your study streak today.
                 </h2>
                 <p
                   style={{
                     fontFamily: 'var(--hp-font-body)',
                     color: 'var(--hp-cta-text-muted)',
-                    maxWidth: 480,
+                    maxWidth: 520,
                     margin: '14px auto 0',
                     fontSize: 16,
                     lineHeight: 1.6,
                   }}
                 >
-                  Join thousands of Myanmar students already using{' '}
-                  <span className="font-brand hp-neon-stroke">
-                    The ANTs
-                  </span>{' '}
-                  to study smarter.
+                  Join thousands of students across Yangon, Mandalay, Taunggyi and diaspora scholars
+                  conquering their international exams without burning out.
                 </p>
-                <Link href="/signup">
-                  <button
-                    className="hp-btn-elevated"
+                <div
+                  style={{
+                    marginTop: 28,
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: 12,
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Link href="/signup">
+                    <button
+                      className="hp-btn-elevated"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        background: 'var(--hp-btn-text)',
+                        color: 'var(--hp-brand-deep)',
+                        border: '1px solid var(--hp-border-strong)',
+                        borderRadius: 14,
+                        padding: '13px 24px',
+                        fontFamily: 'var(--hp-font-body)',
+                        fontWeight: 700,
+                        fontSize: 14.5,
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      Join The ANTs Squad — It&apos;s Free
+                      <Zap size={15} />
+                    </button>
+                  </Link>
+                  <Link
+                    href="/explore?tab=tutors"
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: 8,
-                      marginTop: 30,
-                      background: 'var(--hp-btn-text)',
-                      color: 'var(--hp-brand-deep)',
-                      border: '1px solid var(--hp-border-strong)',
-                      borderRadius: 999,
-                      padding: '13px 26px',
+                      padding: '13px 22px',
+                      borderRadius: 14,
+                      border: '1px solid rgba(255,255,255,0.28)',
+                      color: 'var(--hp-btn-text)',
                       fontFamily: 'var(--hp-font-body)',
-                      fontWeight: 600,
+                      fontWeight: 700,
                       fontSize: 14.5,
-                      cursor: 'pointer',
-                      transition: 'transform .18s ease, box-shadow .18s ease',
+                      textDecoration: 'none',
                       whiteSpace: 'nowrap',
                     }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)';
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)';
-                    }}
                   >
-                    Get Started — It's Free →
-                  </button>
-                </Link>
+                    Talk to Student Leaders
+                  </Link>
+                </div>
               </div>
             </div>
           </RevealSection>
@@ -961,6 +908,6 @@ export default function HomePage() {
       <section style={{ position: 'relative' }}>
         <Footer />
       </section>
-    </div >
+    </div>
   );
 }
