@@ -1,55 +1,51 @@
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTs — Pomodoro Timer Constants & Types
-// PPP-owned: types, defaults, sound presets, encouragement quotes, storage keys
-// Types are co-located here per the build spec; usePomodoro.ts imports from here.
 // ──────────────────────────────────────────────────────────────────────────────
 
-// ── Core Types ─────────────────────────────────────────────────────────────
+import type { VibeId } from '@/constants/pomodoro-vibes';
 
 export type TimerPhase = 'focus' | 'short_break' | 'long_break';
-export type SoundKey = 'rain' | 'brown_noise' | 'cafe' | 'forest' | null;
 
 export interface PomodoroSettings {
-  focusMinutes: number;          // 5–120, default 25
-  shortBreakMinutes: number;     // 1–30, default 5
-  longBreakMinutes: number;      // 5–60, default 15
-  cyclesBeforeLongBreak: number; // default 4
-  soundKey: SoundKey;
-  volume: number;                // 0–1, default 0.4
-  autoStartNext: boolean;        // default false
-  notifyChime: boolean;          // play completion chime, default true
+  focusMinutes: number;
+  shortBreakMinutes: number;
+  longBreakMinutes: number;
+  cyclesBeforeLongBreak: number;
+  vibeId: VibeId | null;
+  volume: number;
+  autoStartNext: boolean;
+  notifyChime: boolean;
 }
 
 export interface ActiveSessionSnapshot {
   phase: TimerPhase;
   isPaused: boolean;
-  endsAt: number | null;             // epoch ms; null when paused
+  endsAt: number | null;
   remainingMsWhenPaused: number | null;
   cyclesCompletedToday: number;
   sessionLabel: string | null;
+  focusStartedAt: number | null;
 }
 
 export interface PomodoroDailyEntry {
-  date: string;           // 'YYYY-MM-DD', local time
+  date: string;
   focusMinutes: number;
   sessionsCompleted: number;
 }
 
 export interface PomodoroStatsLog {
-  entries: PomodoroDailyEntry[]; // keep last 30 days max
+  entries: PomodoroDailyEntry[];
   currentStreak: number;
   longestStreak: number;
   allTimeFocusMinutes: number;
 }
-
-// ── Duration Bounds & Defaults ────────────────────────────────────────────
 
 export const POMODORO_DEFAULTS: PomodoroSettings = {
   focusMinutes: 25,
   shortBreakMinutes: 5,
   longBreakMinutes: 15,
   cyclesBeforeLongBreak: 4,
-  soundKey: null,
+  vibeId: 'rain',
   volume: 0.4,
   autoStartNext: false,
   notifyChime: true,
@@ -60,25 +56,6 @@ export const DURATION_BOUNDS = {
   shortBreak: { min: 1, max: 30 },
   longBreak: { min: 5, max: 60 },
 } as const;
-
-// ── Sound Presets ──────────────────────────────────────────────────────────
-
-export interface SoundPreset {
-  key: SoundKey;
-  label: string;
-  description: string;
-}
-
-export const SOUND_PRESETS: SoundPreset[] = [
-  { key: 'rain', label: 'Rainfall', description: 'Soft, steady rain — like studying by the window during monsoon' },
-  { key: 'brown_noise', label: 'Deep Focus', description: 'Warm, low-frequency rumble that masks distractions' },
-  { key: 'cafe', label: 'Cafe Ambience', description: 'Gentle murmur — the quiet hum of a Yangon teashop' },
-  { key: 'forest', label: 'Forest Calm', description: 'Slow, airy breeze through trees — peaceful and grounding' },
-];
-
-// ── Encouragement Quotes ───────────────────────────────────────────────────
-// Short, real lines tailored for IGCSE / A-Level students in Myanmar.
-// No corporate-sounding generic copy.
 
 export const FOCUS_QUOTES: string[] = [
   'One question at a time. You have got this.',
@@ -95,10 +72,50 @@ export const FOCUS_QUOTES: string[] = [
   'Rest is part of the process. Take your break guilt-free.',
 ];
 
-// ── localStorage Keys (namespaced to avoid collisions) ─────────────────────
-
 export const STORAGE_KEYS = {
   settings: 'ants-pomodoro-settings',
   session: 'ants-pomodoro-session',
   stats: 'ants-pomodoro-stats',
 } as const;
+
+const SOUND_KEY_TO_VIBE: Record<string, VibeId> = {
+  rain: 'rain',
+  brown_noise: 'deep-focus',
+  cafe: 'cafe',
+  forest: 'forest',
+};
+
+/** Migrate legacy settings that used soundKey → vibeId */
+export function normalizeSettings(raw: unknown): PomodoroSettings {
+  if (!raw || typeof raw !== 'object') return { ...POMODORO_DEFAULTS };
+  const r = raw as Record<string, unknown>;
+  let vibeId: VibeId | null = null;
+  if (typeof r.vibeId === 'string' || r.vibeId === null) {
+    vibeId = (r.vibeId as VibeId | null) ?? null;
+  } else if (typeof r.soundKey === 'string') {
+    vibeId = SOUND_KEY_TO_VIBE[r.soundKey] ?? null;
+  }
+
+  return {
+    focusMinutes:
+      typeof r.focusMinutes === 'number' ? r.focusMinutes : POMODORO_DEFAULTS.focusMinutes,
+    shortBreakMinutes:
+      typeof r.shortBreakMinutes === 'number'
+        ? r.shortBreakMinutes
+        : POMODORO_DEFAULTS.shortBreakMinutes,
+    longBreakMinutes:
+      typeof r.longBreakMinutes === 'number'
+        ? r.longBreakMinutes
+        : POMODORO_DEFAULTS.longBreakMinutes,
+    cyclesBeforeLongBreak:
+      typeof r.cyclesBeforeLongBreak === 'number'
+        ? r.cyclesBeforeLongBreak
+        : POMODORO_DEFAULTS.cyclesBeforeLongBreak,
+    vibeId,
+    volume: typeof r.volume === 'number' ? r.volume : POMODORO_DEFAULTS.volume,
+    autoStartNext:
+      typeof r.autoStartNext === 'boolean' ? r.autoStartNext : POMODORO_DEFAULTS.autoStartNext,
+    notifyChime:
+      typeof r.notifyChime === 'boolean' ? r.notifyChime : POMODORO_DEFAULTS.notifyChime,
+  };
+}

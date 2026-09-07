@@ -15,6 +15,7 @@ import {
   Calculator,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import Link from 'next/link';
 import RevealSection from './RevealSection';
 
 interface Feature {
@@ -24,6 +25,7 @@ interface Feature {
   Icon: LucideIcon;
   accent: string;
   preview: 'schedule' | 'streak' | 'bars' | 'avatars' | 'heatmap' | 'grade';
+  href?: string;
 }
 
 const FEATURES: Feature[] = [
@@ -37,13 +39,14 @@ const FEATURES: Feature[] = [
     preview: 'schedule',
   },
   {
-    tag: 'LOCK-IN',
+    tag: 'TRY FREE',
     title: 'Pomodoro & Lo-Fi Beats',
     description:
       'Focus timer dialed into standard 25/5 intervals with integrated background audio. Cut distractions and rack up deep study hours.',
     Icon: Headphones,
     accent: 'var(--hp-amber)',
     preview: 'streak',
+    href: '/pomodoro',
   },
   {
     tag: 'LIVE METRIC',
@@ -315,10 +318,9 @@ function FeaturePreview({ type }: { type: Feature['preview'] }) {
 }
 
 function BentoCard({ feature, index }: { feature: Feature; index: number }) {
-  const { tag, title, description, Icon, accent, preview } = feature;
+  const { tag, title, description, Icon, accent, preview, href } = feature;
 
-  return (
-    <RevealSection delayMs={index * 50}>
+  const card = (
       <div
         className="bento-card hp-card-elevated"
         style={{
@@ -393,6 +395,17 @@ function BentoCard({ feature, index }: { feature: Feature; index: number }) {
 
         <FeaturePreview type={preview} />
       </div>
+  );
+
+  return (
+    <RevealSection delayMs={index * 50}>
+      {href ? (
+        <Link href={href} className="block h-full no-underline focus-ring rounded-[var(--hp-radius-lg)]">
+          {card}
+        </Link>
+      ) : (
+        card
+      )}
     </RevealSection>
   );
 }

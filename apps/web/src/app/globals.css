@@ -88,6 +88,15 @@
   /* Interactive Hover Shadows */
   --shadow-hover-sm: 0 4px 12px rgba(15, 23, 42, 0.08);
   --shadow-hover-md: 0 8px 24px rgba(15, 23, 42, 0.10);
+
+  /* Pomodoro focus stage — light (photo stays visible; UI uses drop-shadow) */
+  --pomo-scrim-top: rgba(0, 0, 0, 0.28);
+  --pomo-scrim-bottom: rgba(0, 0, 0, 0.42);
+  --pomo-vignette: rgba(0, 0, 0, 0.18);
+  --pomo-orb-opacity: 0;
+  --pomo-orb-opacity-active: 0;
+  --pomo-image-opacity: 1;
+  --pomo-grain-opacity: 0;
 }
 
 /* ── Stitch "Amber Academic Studio" — Dark Theme (obsidian + golden amber) ── */
@@ -152,6 +161,15 @@
   /* Interactive Hover Shadows */
   --shadow-hover-sm: 0 4px 12px rgba(0, 0, 0, 0.55);
   --shadow-hover-md: 0 8px 24px rgba(0, 0, 0, 0.60), 0 0 16px rgba(245, 158, 11, 0.12);
+
+  /* Pomodoro focus stage — dark */
+  --pomo-scrim-top: rgba(0, 0, 0, 0.32);
+  --pomo-scrim-bottom: rgba(0, 0, 0, 0.48);
+  --pomo-vignette: rgba(0, 0, 0, 0.22);
+  --pomo-orb-opacity: 0;
+  --pomo-orb-opacity-active: 0;
+  --pomo-image-opacity: 1;
+  --pomo-grain-opacity: 0;
 }
 
 
@@ -2271,6 +2289,152 @@ a {
   .animate-blob,
   .animate-blob-alt,
   .animate-blob-slow {
+    animation: none;
+  }
+}
+
+/* ── Pomodoro focus timer ─────────────────────────────────────────────── */
+
+@keyframes pomo-orb-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(4%, 6%) scale(1.06); }
+  66% { transform: translate(-3%, 2%) scale(0.96); }
+}
+
+@keyframes pomo-clock-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.012); }
+}
+
+@keyframes pomo-colon-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+
+@keyframes pomo-badge-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(0.92); }
+}
+
+@keyframes pomo-btn-glow {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.08); }
+}
+
+.pomo-orb {
+  animation: pomo-orb-drift 18s ease-in-out infinite;
+}
+
+.pomo-orb-2 { animation-delay: -6s; }
+.pomo-orb-3 { animation-delay: -12s; }
+
+.pomo-clock-breathe {
+  animation: pomo-clock-breathe 4s ease-in-out infinite;
+}
+
+.pomo-colon-blink {
+  animation: pomo-colon-blink 1.2s ease-in-out infinite;
+}
+
+.pomo-badge-pulse {
+  animation: pomo-badge-pulse 2s ease-in-out infinite;
+}
+
+.pomo-btn-glow {
+  animation: pomo-btn-glow 2.5s ease-in-out infinite;
+}
+
+.pomo-grain {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Readable type over vibe photos — shadow only, no glass panels */
+.pomo-read {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55), 0 6px 28px rgba(0, 0, 0, 0.4);
+}
+
+.pomo-icon-read {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55)) drop-shadow(0 4px 12px rgba(0, 0, 0, 0.35));
+}
+
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+.pomo-volume-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+}
+
+.pomo-volume-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: none;
+  border-radius: 50%;
+  background: var(--primary);
+  cursor: pointer;
+}
+
+.pomo-volume-slider-stage::-webkit-slider-thumb {
+  background: #fff;
+}
+
+.pomo-volume-slider-stage::-moz-range-thumb {
+  background: #fff;
+}
+
+/* Fill one viewport on laptop/phone; scroll only on very short screens */
+.pomo-fit-viewport {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+.pomo-fit-auth {
+  height: 100dvh;
+}
+.pomo-fit-guest {
+  height: calc(100dvh - 3.5rem);
+}
+@media (max-height: 599px) {
+  .pomo-fit-viewport {
+    height: auto;
+    overflow-y: auto;
+  }
+  .pomo-fit-auth {
+    min-height: 100dvh;
+  }
+  .pomo-fit-guest {
+    min-height: calc(100dvh - 3.5rem);
+  }
+}
+.pomo-fit-scroll {
+  height: auto;
+  overflow-y: auto;
+}
+.pomo-fit-auth.pomo-fit-scroll {
+  min-height: 100dvh;
+}
+.pomo-fit-guest.pomo-fit-scroll {
+  min-height: calc(100dvh - 3.5rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pomo-orb,
+  .pomo-clock-breathe,
+  .pomo-colon-blink,
+  .pomo-badge-pulse,
+  .pomo-btn-glow {
     animation: none;
   }
 }

@@ -9,12 +9,13 @@ import { Settings, X, Volume2 } from 'lucide-react';
 import { useState } from 'react';
 import type { PomodoroSettings } from '@/constants/pomodoro';
 import { DURATION_BOUNDS, POMODORO_DEFAULTS } from '@/constants/pomodoro';
-import Button from '@/components/ui/Button';
 import { playChime } from '@/lib/pomodoro/audio-engine';
+import { cn } from '@/lib/utils';
 
 interface SettingsDrawerProps {
   settings: PomodoroSettings;
   onUpdate: (partial: Partial<PomodoroSettings>) => void;
+  surface?: 'theme' | 'stage';
 }
 
 interface DurationSliderProps {
@@ -62,22 +63,24 @@ function DurationSlider({ label, value, min, max, step = 1, onChange }: Duration
   );
 }
 
-export default function SettingsDrawer({ settings, onUpdate }: SettingsDrawerProps) {
+export default function SettingsDrawer({ settings, onUpdate, surface = 'theme' }: SettingsDrawerProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const onStage = surface === 'stage';
 
   return (
     <>
-      {/* Toggle button */}
-      <Button
-        variant="secondary"
-        size="sm"
-        icon={<Settings className="h-4 w-4" />}
+      <button
+        type="button"
         onClick={() => setIsOpen(true)}
+        className={cn(
+          'flex h-10 w-10 items-center justify-center rounded-full transition focus-ring',
+          onStage ? 'text-white/90 hover:bg-white/10' : 'text-foreground-secondary hover:bg-background-secondary',
+        )}
         aria-label="Open timer settings"
         aria-expanded={isOpen}
       >
-        Settings
-      </Button>
+        <Settings className={cn('h-5 w-5', onStage && 'pomo-icon-read')} />
+      </button>
 
       {/* Backdrop */}
       {isOpen && (
@@ -292,6 +295,7 @@ export default function SettingsDrawer({ settings, onUpdate }: SettingsDrawerPro
                 shortBreakMinutes: POMODORO_DEFAULTS.shortBreakMinutes,
                 longBreakMinutes: POMODORO_DEFAULTS.longBreakMinutes,
                 cyclesBeforeLongBreak: POMODORO_DEFAULTS.cyclesBeforeLongBreak,
+                vibeId: POMODORO_DEFAULTS.vibeId,
                 volume: POMODORO_DEFAULTS.volume,
                 autoStartNext: POMODORO_DEFAULTS.autoStartNext,
                 notifyChime: POMODORO_DEFAULTS.notifyChime,

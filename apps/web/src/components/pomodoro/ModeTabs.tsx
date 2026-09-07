@@ -1,17 +1,12 @@
 'use client';
 
-// ──────────────────────────────────────────────────────────────────────────────
-// The ANTs — Pomodoro ModeTabs
-// Segmented pill buttons to switch between Focus / Short Break / Long Break.
-// ──────────────────────────────────────────────────────────────────────────────
-
 import { Brain, Coffee, BatteryFull } from 'lucide-react';
 import type { TimerPhase, PomodoroSettings } from '@/constants/pomodoro';
+import { cn } from '@/lib/utils';
 
 interface ModeTab {
   phase: TimerPhase;
   label: string;
-  shortLabel: string;
   icon: React.ReactNode;
   color: string;
   minutesKey: keyof Pick<PomodoroSettings, 'focusMinutes' | 'shortBreakMinutes' | 'longBreakMinutes'>;
@@ -21,25 +16,22 @@ const MODES: ModeTab[] = [
   {
     phase: 'focus',
     label: 'Focus',
-    shortLabel: 'Focus',
-    icon: <Brain size={14} />,
-    color: '#F59E0B',
+    icon: <Brain size={14} strokeWidth={2.25} />,
+    color: '#f59e0b',
     minutesKey: 'focusMinutes',
   },
   {
     phase: 'short_break',
-    label: 'Short Break',
-    shortLabel: 'Break',
-    icon: <Coffee size={14} />,
-    color: '#10B981',
+    label: 'Break',
+    icon: <Coffee size={14} strokeWidth={2.25} />,
+    color: '#10b981',
     minutesKey: 'shortBreakMinutes',
   },
   {
     phase: 'long_break',
-    label: 'Long Break',
-    shortLabel: 'Long',
-    icon: <BatteryFull size={14} />,
-    color: '#5B6CBF',
+    label: 'Long',
+    icon: <BatteryFull size={14} strokeWidth={2.25} />,
+    color: '#818cf8',
     minutesKey: 'longBreakMinutes',
   },
 ];
@@ -48,16 +40,22 @@ interface ModeTabsProps {
   phase: TimerPhase;
   settings: PomodoroSettings;
   onSwitch: (phase: TimerPhase) => void;
+  className?: string;
+  surface?: 'theme' | 'stage';
 }
 
-export default function ModeTabs({ phase, settings, onSwitch }: ModeTabsProps) {
+export default function ModeTabs({
+  phase,
+  settings,
+  onSwitch,
+  className,
+  surface = 'theme',
+}: ModeTabsProps) {
+  const onStage = surface === 'stage';
+
   return (
     <div
-      className="flex items-center gap-1 p-1 rounded-2xl border"
-      style={{
-        backgroundColor: 'var(--background-secondary)',
-        borderColor: 'var(--border)',
-      }}
+      className={cn('flex items-center justify-center gap-1 sm:gap-2', className)}
       role="radiogroup"
       aria-label="Timer mode"
     >
@@ -66,23 +64,27 @@ export default function ModeTabs({ phase, settings, onSwitch }: ModeTabsProps) {
         return (
           <button
             key={mode.phase}
+            type="button"
             role="radio"
             aria-checked={isActive}
             onClick={() => !isActive && onSwitch(mode.phase)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 focus-ring"
+            className={cn(
+              'flex min-w-0 items-center justify-center gap-1 rounded-full px-2.5 py-1.5 text-[11px] font-bold transition-colors duration-200 focus-ring sm:gap-1.5 sm:px-4 sm:py-2 sm:text-xs',
+              isActive && !onStage && 'bg-background-secondary',
+              isActive && onStage && 'bg-white/15',
+              onStage && 'pomo-read',
+            )}
             style={{
-              color: isActive ? mode.color : 'var(--foreground-muted)',
-              backgroundColor: isActive ? `${mode.color}18` : 'transparent',
-              boxShadow: isActive ? `0 0 0 1px ${mode.color}40` : 'none',
+              color: isActive
+                ? mode.color
+                : onStage
+                  ? 'rgba(255,255,255,0.72)'
+                  : 'var(--foreground-muted)',
             }}
           >
-            {mode.icon}
-            <span className="hidden sm:inline">{mode.label}</span>
-            <span className="sm:hidden">{mode.shortLabel}</span>
-            <span
-              className="hidden sm:inline text-[10px] opacity-50 ml-0.5 tabular-nums"
-              style={{ color: isActive ? mode.color : 'inherit' }}
-            >
+            <span className="shrink-0">{mode.icon}</span>
+            <span>{mode.label}</span>
+            <span className="hidden tabular-nums opacity-70 sm:inline">
               {settings[mode.minutesKey]}m
             </span>
           </button>
