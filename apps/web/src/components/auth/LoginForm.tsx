@@ -82,16 +82,16 @@ export default function LoginForm() {
         >
           {/* Decorative circles */}
           <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full opacity-10"
-            style={{ background: 'rgba(255,255,255,0.3)' }} />
+            style={{ background: 'color-mix(in srgb, var(--primary-foreground) 30%, transparent)' }} />
           <div className="absolute -bottom-20 -left-10 w-48 h-48 rounded-full opacity-10"
-            style={{ background: 'rgba(255,255,255,0.2)' }} />
+            style={{ background: 'color-mix(in srgb, var(--primary-foreground) 20%, transparent)' }} />
           <div className="absolute top-1/2 right-0 w-32 h-32 rounded-full opacity-5"
-            style={{ background: 'rgba(255,255,255,0.4)' }} />
+            style={{ background: 'color-mix(in srgb, var(--primary-foreground) 40%, transparent)' }} />
 
           <div className="relative z-10">
             <div className="mb-4"><Image src="/logo.png" alt="The ANTs logo" width={40} height={40} priority /></div>
-            <h2 className="text-2xl font-bold text-white mb-2 font-brand text-on-dark">The ANTs</h2>
-            <p className="text-white/90 text-sm leading-relaxed text-on-accent">
+            <h2 className="text-2xl font-bold text-primary-foreground mb-2 font-brand text-on-dark">The ANTs</h2>
+            <p className="text-primary-foreground/90 text-sm leading-relaxed text-on-accent">
               Your all-in-one academic productivity platform for IGCSE, A-Level, and IELTS.
             </p>
           </div>
@@ -100,12 +100,12 @@ export default function LoginForm() {
             {FEATURE_HIGHLIGHTS.map(({ icon: Icon, label, desc }) => (
               <div key={label} className="flex items-start gap-3">
                 <div className="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ background: 'rgba(255,255,255,0.15)' }}>
-                  <Icon className="h-4 w-4 text-white" />
+                  style={{ background: 'color-mix(in srgb, var(--primary-foreground) 15%, transparent)' }}>
+                  <Icon className="h-4 w-4 text-primary-foreground" />
                 </div>
                 <div>
-                  <p className="text-white text-sm font-semibold text-on-accent">{label}</p>
-                  <p className="text-white/75 text-xs">{desc}</p>
+                  <p className="text-primary-foreground text-sm font-semibold text-on-accent">{label}</p>
+                  <p className="text-primary-foreground/75 text-xs">{desc}</p>
                 </div>
               </div>
             ))}

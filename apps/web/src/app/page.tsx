@@ -23,6 +23,7 @@ import RevealSection from '@/components/homepage/RevealSection';
 import StatsRow from '@/components/homepage/StatsRow';
 import AntHeroAccent from '@/components/homepage/AntHeroAccent';
 import Footer from '@/components/layout/Footer';
+import ThemeToggle from '@/components/ui/ThemeToggle';
 
 // ── Explore card data ─────────────────────────────────────────────────────────
 
@@ -263,37 +264,41 @@ export default function HomePage() {
 
 
           {mounted && isAuthenticated && user ? (
-            <Link href={getRoleLandingPath(user.profile.role)}>
-              <button
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  background: 'var(--hp-brand)',
-                  color: 'var(--hp-btn-text)',
-                  border: 'none',
-                  borderRadius: 999,
-                  padding: '9px 18px',
-                  fontFamily: 'var(--hp-font-body)',
-                  fontWeight: 700,
-                  fontSize: 13,
-                  cursor: 'pointer',
-                  transition: 'transform .18s ease, box-shadow .18s ease',
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)';
-                  (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 12px 28px -10px rgba(var(--hp-brand-rgb), 0.45)';
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)';
-                  (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
-                }}
-              >
-                Dashboard <ArrowRight size={14} />
-              </button>
-            </Link>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+              <ThemeToggle onHomepage className="rounded-full" />
+              <Link href={getRoleLandingPath(user.profile.role)}>
+                <button
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    background: 'var(--hp-brand)',
+                    color: 'var(--hp-btn-text)',
+                    border: 'none',
+                    borderRadius: 999,
+                    padding: '9px 18px',
+                    fontFamily: 'var(--hp-font-body)',
+                    fontWeight: 700,
+                    fontSize: 13,
+                    cursor: 'pointer',
+                    transition: 'transform .18s ease, box-shadow .18s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)';
+                    (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 12px 28px -10px rgba(var(--hp-brand-rgb), 0.45)';
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)';
+                    (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
+                  }}
+                >
+                  Dashboard <ArrowRight size={14} />
+                </button>
+              </Link>
+            </div>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+              <ThemeToggle onHomepage className="rounded-full" />
               <Link href="/login">
                 <button
                   style={{
@@ -380,14 +385,14 @@ export default function HomePage() {
             transform: translateY(-50%);
             background: radial-gradient(
               circle at 50% 50%,
-              rgba(197, 148, 25, 0.45) 0%,
-              rgba(212, 168, 75, 0.22) 30%,
-              rgba(197, 148, 25, 0.06) 60%,
+              color-mix(in srgb, var(--primary) 45%, transparent) 0%,
+              color-mix(in srgb, var(--accent) 22%, transparent) 30%,
+              color-mix(in srgb, var(--primary) 6%, transparent) 60%,
               transparent 100%
             );
             box-shadow:
-              0 0 60px rgba(197, 148, 25, 0.20),
-              0 0 120px rgba(212, 168, 75, 0.10);
+              0 0 60px color-mix(in srgb, var(--primary) 20%, transparent),
+              0 0 120px color-mix(in srgb, var(--accent) 10%, transparent);
             animation: neonPulseGold 4s ease-in-out infinite;
           }
           /* Amber glow — right side: soft amber highlight */
@@ -399,14 +404,14 @@ export default function HomePage() {
             transform: translateY(-50%);
             background: radial-gradient(
               circle at 50% 50%,
-              rgba(212, 168, 75, 0.40) 0%,
-              rgba(197, 148, 25, 0.20) 30%,
-              rgba(212, 168, 75, 0.05) 60%,
+              color-mix(in srgb, var(--accent) 40%, transparent) 0%,
+              color-mix(in srgb, var(--primary) 20%, transparent) 30%,
+              color-mix(in srgb, var(--accent) 5%, transparent) 60%,
               transparent 100%
             );
             box-shadow:
-              0 0 60px rgba(212, 168, 75, 0.18),
-              0 0 120px rgba(197, 148, 25, 0.08);
+              0 0 60px color-mix(in srgb, var(--accent) 18%, transparent),
+              0 0 120px color-mix(in srgb, var(--primary) 8%, transparent);
             animation: neonPulseAmber 4.5s ease-in-out infinite;
           }
           /* Keyframes: subtle breathing glow */

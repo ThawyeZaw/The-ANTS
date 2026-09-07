@@ -188,14 +188,14 @@ export default function AboutPage() {
           transform: translateY(-50%);
           background: radial-gradient(
             circle at 50% 50%,
-            rgba(197, 148, 25, 0.45) 0%,
-            rgba(212, 168, 75, 0.22) 30%,
-            rgba(197, 148, 25, 0.06) 60%,
+            color-mix(in srgb, var(--primary) 45%, transparent) 0%,
+            color-mix(in srgb, var(--accent) 22%, transparent) 30%,
+            color-mix(in srgb, var(--primary) 6%, transparent) 60%,
             transparent 100%
           );
           box-shadow:
-            0 0 60px rgba(197, 148, 25, 0.20),
-            0 0 120px rgba(212, 168, 75, 0.10);
+            0 0 60px color-mix(in srgb, var(--primary) 20%, transparent),
+            0 0 120px color-mix(in srgb, var(--accent) 10%, transparent);
           animation: aboutNeonPulseGold 4s ease-in-out infinite;
         }
         /* Amber glow — right side: soft amber highlight */
@@ -207,14 +207,14 @@ export default function AboutPage() {
           transform: translateY(-50%);
           background: radial-gradient(
             circle at 50% 50%,
-            rgba(212, 168, 75, 0.40) 0%,
-            rgba(197, 148, 25, 0.20) 30%,
-            rgba(212, 168, 75, 0.05) 60%,
+            color-mix(in srgb, var(--accent) 40%, transparent) 0%,
+            color-mix(in srgb, var(--primary) 20%, transparent) 30%,
+            color-mix(in srgb, var(--accent) 5%, transparent) 60%,
             transparent 100%
           );
           box-shadow:
-            0 0 60px rgba(212, 168, 75, 0.18),
-            0 0 120px rgba(197, 148, 25, 0.08);
+            0 0 60px color-mix(in srgb, var(--accent) 18%, transparent),
+            0 0 120px color-mix(in srgb, var(--primary) 8%, transparent);
           animation: aboutNeonPulseAmber 4.5s ease-in-out infinite;
         }
         /* Keyframes: subtle breathing glow */

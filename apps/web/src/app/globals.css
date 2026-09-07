@@ -1,7 +1,12 @@
 @import "tailwindcss";
 
+/* Class-based dark mode — toggled by next-themes on <html> */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ──────────────────────────────────────────────────────────────────────────────
    The ANTs — Design System
+   Light: Stitch "Academic System" (slate canvas + amber primary)
+   Dark:  Stitch "Amber Academic Studio" (obsidian + golden amber)
    ────────────────────────────────────────────────────────────────────────────── */
 
 /* ── Brand Font ─────────────────────────────────────────────────────────────
@@ -12,54 +17,59 @@
   letter-spacing: 0.02em;
 }
 
-/* ── Logo-Aligned Brand Theme (Single Warm Cream + Golden Ochre palette) ──── */
+/* ── Stitch "Academic System" — Light Theme (slate canvas + amber primary) ── */
 :root {
-  /* Backgrounds — warm cream derived from logo background */
-  --background: #FDF9F3;
-  --background-secondary: #F5F0E6;
-  --background-card: #FFFCF7;
-  --background-elevated: #FFFCF7;
+  color-scheme: light;
 
-  /* Foregrounds — warm charcoal-brown, calibrated for WCAG 2.1 AA */
-  --foreground: #2A261E;
-  /* warm charcoal-brown, high contrast on cream */
-  --foreground-secondary: #4A453C;
+  /* Backgrounds — slate canvas, white cards */
+  --background: #f8fafc;
+  --background-secondary: #f1f5f9;
+  --background-card: #ffffff;
+  --background-elevated: #ffffff;
+
+  /* Foregrounds — slate ink scale, calibrated for WCAG 2.1 AA */
+  --foreground: #0f172a;
+  /* primary text */
+  --foreground-secondary: #475569;
   /* body / secondary text */
-  --foreground-muted: #7A7468;
+  --foreground-muted: #94a3b8;
   /* placeholders, captions */
 
-  /* Borders — gold-tinted, subtle */
-  --border: rgba(197, 148, 25, 0.14);
-  --border-hover: rgba(197, 148, 25, 0.28);
+  /* Borders — structural slate outlines */
+  --border: #e2e8f0;
+  --border-hover: #cbd5e1;
 
-  /* Primary — Brand Gold (logo ant + pencil silhouette) */
-  --primary: #C59419;
-  --primary-hover: #A67D14;
-  --primary-light: rgba(197, 148, 25, 0.12);
-  --primary-foreground: #FFFFFF;
+  /* Primary — Amber 600 (scholarship & energy) */
+  --primary: #d97706;
+  --primary-hover: #b45309;
+  --primary-light: rgba(217, 119, 6, 0.10);
+  --primary-foreground: #ffffff;
 
-  /* Accent — lighter gold for highlights / gradients */
-  --accent: #D4A84B;
-  --accent-hover: #B8901E;
-  --accent-light: rgba(212, 168, 75, 0.12);
-  --accent-foreground: #FFFFFF;
+  /* Accent — Amber 500 for highlights / gradients */
+  --accent: #f59e0b;
+  --accent-hover: #d97706;
+  --accent-light: rgba(245, 158, 11, 0.12);
+  --accent-foreground: #ffffff;
 
-  /* Semantic — warm-tinted where touching brand surfaces */
-  --success: #2E9E6B;
-  --warning: #C47C1A;
-  --error: #C0392B;
-  --info: #3B6CB5;
+  /* Semantic — emerald verified, rose urgent */
+  --success: #059669;
+  --warning: #d97706;
+  --error: #e11d48;
+  --info: #3b6cb5;
 
   /* Role Colors — kept for role differentiation */
-  --role-student: #5B6CBF;
-  --role-teacher: #E8853B;
-  --role-contributor: #7847C7;
-  --role-main-contributor: #C59419;
+  --role-student: #5b6cbf;
+  --role-teacher: #e8853b;
+  --role-contributor: #7847c7;
+  --role-main-contributor: #d97706;
 
-  /* Glassmorphism — cream-tinted glass */
-  --glass-bg: rgba(253, 249, 243, 0.82);
-  --glass-border: rgba(197, 148, 25, 0.10);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+  /* Glassmorphism — white glass */
+  --glass-bg: rgba(255, 255, 255, 0.82);
+  --glass-border: rgba(226, 232, 240, 0.80);
+  --glass-shadow: 0 8px 32px rgba(15, 23, 42, 0.08);
+
+  /* Auth decorative pattern color (RGB triplet for rgb(var(...))) */
+  --auth-pattern-color: 217 119 6;
 
   /* Navigation shell — desktop sidebar / mobile bottom bar */
   --nav-height: 4rem;
@@ -67,17 +77,81 @@
   --sidebar-width-collapsed: 4.25rem;
   --bottom-nav-height: 4rem;
 
-  /* Shadow Elevation System */
-  --shadow-xs: 0 1px 2px rgba(42, 38, 30, 0.04);
-  --shadow-sm: 0 2px 8px rgba(42, 38, 30, 0.06);
-  --shadow-md: 0 4px 16px rgba(42, 38, 30, 0.08);
-  --shadow-lg: 0 8px 32px rgba(42, 38, 30, 0.10);
-  --shadow-xl: 0 16px 48px rgba(42, 38, 30, 0.14);
-  --shadow-glow: 0 0 24px rgba(197, 148, 25, 0.20);
+  /* Shadow Elevation System — slate-tinted tiers */
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
+  --shadow-md: 0 4px 16px rgba(15, 23, 42, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.05), 0 4px 6px -4px rgba(15, 23, 42, 0.03);
+  --shadow-xl: 0 20px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+  --shadow-glow: 0 0 24px rgba(217, 119, 6, 0.18);
 
   /* Interactive Hover Shadows */
-  --shadow-hover-sm: 0 4px 12px rgba(42, 38, 30, 0.10);
-  --shadow-hover-md: 0 8px 24px rgba(42, 38, 30, 0.14);
+  --shadow-hover-sm: 0 4px 12px rgba(15, 23, 42, 0.08);
+  --shadow-hover-md: 0 8px 24px rgba(15, 23, 42, 0.10);
+}
+
+/* ── Stitch "Amber Academic Studio" — Dark Theme (obsidian + golden amber) ── */
+.dark {
+  color-scheme: dark;
+
+  /* Backgrounds — obsidian sanctuary layers */
+  --background: #0b0c0e;
+  --background-secondary: #18191e;
+  --background-card: #1e2026;
+  --background-elevated: #292a2d;
+
+  /* Foregrounds — warm-gray on obsidian */
+  --foreground: #e3e2e6;
+  --foreground-secondary: #a8a9b1;
+  --foreground-muted: #6e7078;
+
+  /* Borders — low-noise white alpha, amber edge on interaction */
+  --border: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(245, 158, 11, 0.35);
+
+  /* Primary — vibrant amber with dark obsidian text */
+  --primary: #f59e0b;
+  --primary-hover: #fbbf24;
+  --primary-light: rgba(245, 158, 11, 0.10);
+  --primary-foreground: #0b0c0e;
+
+  /* Accent — light amber for text / icon highlights on dark */
+  --accent: #fde68a;
+  --accent-hover: #f59e0b;
+  --accent-light: rgba(253, 230, 138, 0.10);
+  --accent-foreground: #0b0c0e;
+
+  /* Semantic */
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #f43f5e;
+  --info: #60a5fa;
+
+  /* Role Colors — same hues, brightened for dark surfaces */
+  --role-student: #8b9beb;
+  --role-teacher: #f2a56b;
+  --role-contributor: #a87ee8;
+  --role-main-contributor: #f59e0b;
+
+  /* Glassmorphism — translucent obsidian */
+  --glass-bg: rgba(24, 25, 30, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.50);
+
+  /* Auth decorative pattern color (RGB triplet for rgb(var(...))) */
+  --auth-pattern-color: 245 158 11;
+
+  /* Shadow Elevation System — dark ambient + amber glow */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.40);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.45);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.50);
+  --shadow-lg: 0 8px 24px -4px rgba(0, 0, 0, 0.60);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.65);
+  --shadow-glow: 0 0 16px rgba(245, 158, 11, 0.12), 0 0 24px rgba(245, 158, 11, 0.20);
+
+  /* Interactive Hover Shadows */
+  --shadow-hover-sm: 0 4px 12px rgba(0, 0, 0, 0.55);
+  --shadow-hover-md: 0 8px 24px rgba(0, 0, 0, 0.60), 0 0 16px rgba(245, 158, 11, 0.12);
 }
 
 
@@ -345,11 +419,11 @@ h6 {
 
   0%,
   100% {
-    box-shadow: 0 0 20px rgba(77, 166, 255, 0.15);
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.15);
   }
 
   50% {
-    box-shadow: 0 0 30px rgba(77, 166, 255, 0.30);
+    box-shadow: 0 0 30px rgba(245, 158, 11, 0.30);
   }
 }
 
@@ -470,10 +544,9 @@ a {
 }
 
 /* ──────────────────────────────────────────────────────────────────────────────
-   Homepage-scoped design tokens (.hp) — Logo-Aligned Brand Theme
+   Homepage-scoped design tokens (.hp) — Stitch Academic System (light)
    Applied only to app/page.tsx — does NOT affect the authenticated app.
-   Palette: Warm Cream + Golden Ochre derived from the logo.
-   Single-scheme — no theme conditionals.
+   Palette: slate canvas + amber primary; dark overrides via `.dark .hp`.
    ─────────────────────────────────────────────────────────────────────────────── */
 .hp {
   /* Radius */
@@ -489,57 +562,111 @@ a {
   /* Layout */
   --hp-maxw: 1180px;
 
-  /* ── Logo-Aligned Palette (single scheme) ─────────────────────────────── */
-  --hp-bg: #FDF9F3;
-  --hp-bg-soft: #F5F0E6;
-  --hp-surface: #FFFCF7;
-  --hp-surface-2: #FAF6EE;
-  --hp-surface-hover: #F0EAD6;
-  --hp-border: rgba(197, 148, 25, 0.12);
-  --hp-border-strong: rgba(197, 148, 25, 0.24);
-  --hp-ink: #2A261E;
-  --hp-ink-muted: #4A453C;
-  --hp-ink-faint: #7A7468;
-  /* Brand gold — primary identity color from logo */
-  --hp-brand: #C59419;
-  --hp-brand-deep: #A67D14;
-  --hp-brand-rgb: 197, 148, 25;
-  /* Amber/warm accent for gradients and secondary highlights */
-  --hp-amber: #D4A84B;
-  --hp-amber-deep: #B8901E;
-  --hp-amber-rgb: 212, 168, 75;
+  /* ── Stitch Academic System palette (light) ───────────────────────────── */
+  --hp-bg: #f8fafc;
+  --hp-bg-soft: #f1f5f9;
+  --hp-surface: #ffffff;
+  --hp-surface-2: #f8fafc;
+  --hp-surface-hover: #f1f5f9;
+  --hp-border: #e2e8f0;
+  --hp-border-strong: #cbd5e1;
+  --hp-ink: #0f172a;
+  --hp-ink-muted: #475569;
+  --hp-ink-faint: #94a3b8;
+  /* Brand amber — primary identity color */
+  --hp-brand: #d97706;
+  --hp-brand-deep: #b45309;
+  --hp-brand-rgb: 217, 119, 6;
+  /* Amber accent for gradients and secondary highlights */
+  --hp-amber: #f59e0b;
+  --hp-amber-deep: #d97706;
+  --hp-amber-rgb: 245, 158, 11;
   /* Violet kept for tertiary emphasis only */
-  --hp-violet: #7847C7;
+  --hp-violet: #7847c7;
   --hp-violet-rgb: 120, 71, 199;
-  --hp-btn-text: #FFFFFF;
+  /* Gradient end-stop used by .hp-grad */
+  --hp-accent: #fbbf24;
+  --hp-btn-text: #ffffff;
   --hp-cta-text-muted: rgba(255, 255, 255, 0.90);
 
-  /* Gold glow for brand elements */
-  --hp-glow-gold: 0 0 4px #C59419, 0 0 8px rgba(197, 148, 25, 0.4), 0 0 14px rgba(197, 148, 25, 0.20);
+  /* Nav chrome (theme-responsive) */
+  --hp-nav-bg: rgba(248, 250, 252, 0.94);
+  --hp-nav-shadow: 0 4px 24px rgba(15, 23, 42, 0.05), 0 0 0 1px #e2e8f0;
 
-  /* ── Elevation shadows (warm-tinted) ─────────────────────────────────── */
+  /* Amber glow for brand elements */
+  --hp-glow-gold: 0 0 4px #d97706, 0 0 8px rgba(217, 119, 6, 0.40), 0 0 14px rgba(217, 119, 6, 0.20);
+
+  /* ── Elevation shadows (slate-tinted) ────────────────────────────────── */
   --hp-shadow-btn:
-    0 1px 3px rgba(42, 38, 30, 0.08),
-    0 4px 12px rgba(42, 38, 30, 0.10),
-    0 8px 24px rgba(42, 38, 30, 0.06);
+    0 1px 3px rgba(15, 23, 42, 0.08),
+    0 4px 12px rgba(15, 23, 42, 0.10),
+    0 8px 24px rgba(15, 23, 42, 0.06);
   --hp-shadow-btn-hover:
-    0 2px 6px rgba(42, 38, 30, 0.12),
-    0 8px 20px rgba(197, 148, 25, 0.18),
-    0 16px 36px rgba(42, 38, 30, 0.08);
+    0 2px 6px rgba(15, 23, 42, 0.12),
+    0 8px 20px rgba(217, 119, 6, 0.18),
+    0 16px 36px rgba(15, 23, 42, 0.08);
   --hp-shadow-card:
-    0 1px 3px rgba(42, 38, 30, 0.06),
-    0 4px 12px rgba(42, 38, 30, 0.08),
-    0 10px 30px rgba(42, 38, 30, 0.04);
+    0 1px 3px rgba(15, 23, 42, 0.06),
+    0 4px 12px rgba(15, 23, 42, 0.08),
+    0 10px 30px rgba(15, 23, 42, 0.04);
   --hp-shadow-card-hover:
-    0 2px 6px rgba(42, 38, 30, 0.10),
-    0 8px 22px rgba(197, 148, 25, 0.14),
-    0 16px 36px rgba(42, 38, 30, 0.07);
+    0 2px 6px rgba(15, 23, 42, 0.10),
+    0 8px 22px rgba(217, 119, 6, 0.14),
+    0 16px 36px rgba(15, 23, 42, 0.07);
   --hp-shadow-icon:
-    0 1px 3px rgba(42, 38, 30, 0.06),
-    0 3px 8px rgba(42, 38, 30, 0.08);
+    0 1px 3px rgba(15, 23, 42, 0.06),
+    0 3px 8px rgba(15, 23, 42, 0.08);
 
   background: var(--hp-bg);
   color: var(--hp-ink);
+}
+
+/* ── Dark overrides — Amber Academic Studio (obsidian + gold) ────────────── */
+.dark .hp {
+  --hp-bg: #0b0c0e;
+  --hp-bg-soft: #121316;
+  --hp-surface: #1e2026;
+  --hp-surface-2: #18191e;
+  --hp-surface-hover: #292a2d;
+  --hp-border: rgba(255, 255, 255, 0.08);
+  --hp-border-strong: rgba(245, 158, 11, 0.35);
+  --hp-ink: #e3e2e6;
+  --hp-ink-muted: #a8a9b1;
+  --hp-ink-faint: #6e7078;
+  --hp-brand: #f59e0b;
+  --hp-brand-deep: #fbbf24;
+  --hp-brand-rgb: 245, 158, 11;
+  --hp-amber: #fde68a;
+  --hp-amber-deep: #f59e0b;
+  --hp-amber-rgb: 253, 230, 138;
+  --hp-accent: #fbbf24;
+  --hp-btn-text: #0b0c0e;
+  --hp-cta-text-muted: rgba(11, 12, 14, 0.72);
+
+  --hp-nav-bg: rgba(11, 12, 14, 0.85);
+  --hp-nav-shadow: 0 4px 24px rgba(0, 0, 0, 0.40), 0 0 0 1px rgba(255, 255, 255, 0.08);
+
+  --hp-glow-gold: 0 0 4px #f59e0b, 0 0 12px rgba(245, 158, 11, 0.50), 0 0 24px rgba(245, 158, 11, 0.25);
+
+  --hp-shadow-btn:
+    0 1px 3px rgba(0, 0, 0, 0.50),
+    0 4px 12px rgba(0, 0, 0, 0.50),
+    0 8px 24px rgba(0, 0, 0, 0.40);
+  --hp-shadow-btn-hover:
+    0 2px 6px rgba(0, 0, 0, 0.60),
+    0 8px 20px rgba(245, 158, 11, 0.25),
+    0 16px 36px rgba(0, 0, 0, 0.50);
+  --hp-shadow-card:
+    0 1px 3px rgba(0, 0, 0, 0.50),
+    0 4px 12px rgba(0, 0, 0, 0.40),
+    0 10px 30px rgba(0, 0, 0, 0.30);
+  --hp-shadow-card-hover:
+    0 2px 6px rgba(0, 0, 0, 0.60),
+    0 8px 22px rgba(245, 158, 11, 0.18),
+    0 16px 36px rgba(0, 0, 0, 0.50);
+  --hp-shadow-icon:
+    0 1px 3px rgba(0, 0, 0, 0.50),
+    0 3px 8px rgba(0, 0, 0, 0.40);
 }
 
 /* ── Apple-like unified easing curves ──────────────────────────────────────────── */
@@ -720,8 +847,8 @@ a {
 
 /* ── Homepage sticky nav (grid-line glow) ────────────────────────────────── */
 .hp-nav {
-  background: rgba(253, 249, 243, 0.94);
-  box-shadow: 0 4px 24px rgba(42, 38, 30, 0.05), 0 0 0 1px rgba(197, 148, 25, 0.14);
+  background: var(--hp-nav-bg);
+  box-shadow: var(--hp-nav-shadow);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
@@ -744,12 +871,12 @@ a {
 /* ── Glow utility classes ─────────────────────────────────────────────────── */
 .neon-gold {
   color: var(--hp-brand);
-  text-shadow: 0 0 16px rgba(197, 148, 25, 0.25);
+  text-shadow: 0 0 16px rgba(var(--hp-brand-rgb), 0.25);
 }
 
 .neon-amber {
   color: var(--hp-amber);
-  text-shadow: 0 0 16px rgba(212, 168, 75, 0.25);
+  text-shadow: 0 0 16px rgba(var(--hp-amber-rgb), 0.25);
 }
 
 .neon-btn-glow {
@@ -758,7 +885,7 @@ a {
 }
 
 .neon-btn-glow:hover {
-  box-shadow: 0 0 8px var(--hp-brand), 0 0 16px rgba(197, 148, 25, 0.35);
+  box-shadow: 0 0 8px var(--hp-brand), 0 0 16px rgba(var(--hp-brand-rgb), 0.35);
   transform: translateY(-2px);
 }
 
@@ -769,7 +896,7 @@ a {
 
 .neon-card:hover {
   border-color: var(--hp-border-strong);
-  box-shadow: 0 0 16px rgba(197, 148, 25, 0.12);
+  box-shadow: 0 0 16px rgba(var(--hp-brand-rgb), 0.12);
 }
 
 /* ── Gentle floating motion for gradient text ───────────────────────────────── */
@@ -914,8 +1041,8 @@ a {
 /* ── Welcome card enhanced shadow for depth ──────────────────────────────── */
 .dash-welcome-shadow {
   box-shadow:
-    0 4px 24px rgba(42, 38, 30, 0.08),
-    0 12px 48px rgba(42, 38, 30, 0.05),
+    0 4px 24px rgba(15, 23, 42, 0.08),
+    0 12px 48px rgba(15, 23, 42, 0.05),
     0 0 0 1px rgba(255, 255, 255, 0.40) inset;
 }
 
@@ -1110,9 +1237,9 @@ a {
 
 .hp-panel-float:hover {
   box-shadow:
-    0 2px 8px rgba(42, 38, 30, 0.08),
-    0 10px 28px rgba(42, 38, 30, 0.06),
-    0 20px 50px rgba(42, 38, 30, 0.04) !important;
+    0 2px 8px rgba(15, 23, 42, 0.08),
+    0 10px 28px rgba(15, 23, 42, 0.06),
+    0 20px 50px rgba(15, 23, 42, 0.04) !important;
   transform: translateY(-2px);
 }
 
@@ -1123,9 +1250,9 @@ a {
 
 /* ── Bento card hover ──────────────────────────────────────────────────── */
 .hp .bento-features-grid .bento-card:hover {
-  box-shadow: 0 2px 6px rgba(42, 38, 30, 0.04),
-    0 8px 22px rgba(197, 148, 25, 0.10),
-    0 16px 36px rgba(42, 38, 30, 0.04) !important;
+  box-shadow: 0 2px 6px rgba(var(--hp-brand-rgb), 0.04),
+    0 8px 22px rgba(var(--hp-brand-rgb), 0.10),
+    0 16px 36px rgba(var(--hp-brand-rgb), 0.04) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
@@ -1192,14 +1319,14 @@ a {
 
 .hp-neon-stroke {
   text-shadow:
-    0 0 2px rgba(197, 148, 25, 0.30),
-    0 0 8px rgba(197, 148, 25, 0.15);
+    0 0 2px rgba(var(--hp-brand-rgb), 0.30),
+    0 0 8px rgba(var(--hp-brand-rgb), 0.15);
 }
 
 .hp-neon-stroke-amber {
   text-shadow:
-    0 0 2px rgba(212, 168, 75, 0.30),
-    0 0 8px rgba(212, 168, 75, 0.15);
+    0 0 2px rgba(var(--hp-amber-rgb), 0.30),
+    0 0 8px rgba(var(--hp-amber-rgb), 0.15);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
@@ -1637,7 +1764,7 @@ a {
 }
 
 .tl-card-3d__stack:hover .tl-card-3d__dot {
-  box-shadow: 0 0 12px var(--primary), 0 0 24px rgba(91, 158, 255, 0.3);
+  box-shadow: 0 0 12px var(--primary), 0 0 24px rgba(245, 158, 11, 0.30);
   transform: translate(-50%, -50%) scale(1.3);
 }
 

@@ -60,10 +60,10 @@ export default function RoleLadder() {
               style={{
                 flex: 1,
                 background: role.highlight
-                  ? 'linear-gradient(160deg, var(--hp-surface) 60%, rgba(153,41,234,0.10))'
+                  ? 'linear-gradient(160deg, var(--hp-surface) 60%, rgba(var(--hp-violet-rgb),0.10))'
                   : 'var(--hp-surface)',
                 border: role.highlight
-                  ? '1px solid rgba(153,41,234,0.40)'
+                  ? '1px solid rgba(var(--hp-violet-rgb),0.40)'
                   : '1px solid var(--hp-border)',
                 borderRadius: 'var(--hp-radius-md)',
                 padding: '26px 22px',
@@ -74,14 +74,14 @@ export default function RoleLadder() {
               onMouseEnter={(e) => {
                 const el = e.currentTarget as HTMLDivElement;
                 el.style.borderColor = role.highlight
-                  ? 'rgba(153,41,234,0.65)'
+                  ? 'rgba(var(--hp-violet-rgb),0.65)'
                   : 'var(--hp-border-strong)';
                 el.style.transform = 'translateY(-3px)';
               }}
               onMouseLeave={(e) => {
                 const el = e.currentTarget as HTMLDivElement;
                 el.style.borderColor = role.highlight
-                  ? 'rgba(153,41,234,0.40)'
+                  ? 'rgba(var(--hp-violet-rgb),0.40)'
                   : 'var(--hp-border)';
                 el.style.transform = 'translateY(0)';
               }}
@@ -203,8 +203,8 @@ export default function RoleLadder() {
             display: 'flex',
             alignItems: 'center',
             gap: 6,
-            background: 'rgba(153,41,234,0.10)',
-            border: '1px solid rgba(153,41,234,0.25)',
+            background: 'rgba(var(--hp-violet-rgb),0.10)',
+            border: '1px solid rgba(var(--hp-violet-rgb),0.25)',
             borderRadius: 999,
             padding: '4px 12px',
           }}

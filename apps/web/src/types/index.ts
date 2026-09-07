@@ -122,7 +122,7 @@ export interface ThemePreset {
 
 /** Curated theme presets for profile customization */
 export const PROFILE_THEME_PRESETS: ThemePreset[] = [
-  { key: 'default', name: 'Default', colors: { accent: '#6366f1', background: '#0a0a0f', card: '#13131a' } },
+  { key: 'default', name: 'Default', colors: { accent: '#f59e0b', background: '#0b0c0e', card: '#1e2026' } },
   { key: 'ocean', name: 'Ocean', colors: { accent: '#0ea5e9', background: '#0c1222', card: '#141e33' } },
   { key: 'sunset', name: 'Sunset', colors: { accent: '#f97316', background: '#1a0f0a', card: '#2a1a10' } },
   { key: 'forest', name: 'Forest', colors: { accent: '#22c55e', background: '#0a1a0f', card: '#112a18' } },

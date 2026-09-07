@@ -109,7 +109,7 @@ export default function ProfileHero({ profile, isOwnProfile }: ProfileHeroProps)
           style={{
             background: accentHex
               ? `linear-gradient(90deg, transparent, ${accentHex}60, transparent)`
-              : 'linear-gradient(90deg, transparent, rgba(99,102,241,0.4), transparent)',
+              : 'linear-gradient(90deg, transparent, rgba(245,158,11,0.4), transparent)',
           }}
         />
 
