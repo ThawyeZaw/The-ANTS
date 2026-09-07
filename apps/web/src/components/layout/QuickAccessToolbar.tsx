@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Zap, CalendarDays, Calculator, Timer, Library } from 'lucide-react';
+import { Zap, CalendarDays, Calculator, Timer, Library, ChevronRight } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import AppIcon from '@/components/ui/AppIcon';
 import { cn } from '@/lib/utils';
@@ -21,13 +21,8 @@ const ITEMS: ToolbarItem[] = [
 
 export default function QuickAccessToolbar() {
   return (
-    <div
-      className={cn(
-        'rounded-2xl border border-border',
-        'bg-background-card p-4'
-      )}
-    >
-      <div className="flex items-center gap-2 mb-3">
+    <div className="dash-panel p-4 h-full">
+      <div className="flex items-center gap-2 mb-3.5">
         <AppIcon icon={Zap} size="sm" tone="primary" />
         <span className="text-xs font-semibold uppercase tracking-wider text-foreground-muted">
           Quick Access
@@ -35,22 +30,24 @@ export default function QuickAccessToolbar() {
       </div>
 
       <div className="flex flex-wrap gap-2.5">
-        {ITEMS.map((item) => (
+        {ITEMS.map((item, i) => (
           <Link
             key={item.href}
             href={item.href}
             className={cn(
-              'flex items-center gap-3 rounded-xl px-3.5 py-3',
-              'bg-background-secondary/60 hover:bg-background-secondary',
-              'transition-colors duration-200',
-              'group flex-1 min-w-[135px]',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary'
+              'dash-quick-tile focus-ring group',
+              'dash-rise',
+              i === 0 && 'dash-rise-delay-1',
+              i === 1 && 'dash-rise-delay-2',
+              i === 2 && 'dash-rise-delay-3',
+              i === 3 && 'dash-rise-delay-4'
             )}
           >
             <AppIcon icon={item.icon} size="md" tone="secondary" frame="soft" />
             <span className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors whitespace-nowrap">
               {item.label}
             </span>
+            <ChevronRight className="dash-quick-tile__chevron h-4 w-4 shrink-0" />
           </Link>
         ))}
       </div>
