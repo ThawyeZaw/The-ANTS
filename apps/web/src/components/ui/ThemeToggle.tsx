@@ -4,12 +4,78 @@
 // The ANTs — Theme Toggle
 // Pill switch between light (Academic System) and dark (Amber Academic Studio).
 // Uses next-themes; mounted guard prevents hydration mismatch on first paint.
+// Dark→light uses a View Transition veil-lift so the canvas doesn't flash white.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { useTheme } from 'next-themes';
 import { Moon, Sun } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+type ColorTheme = 'light' | 'dark';
+
+function applyThemeToDocument(theme: ColorTheme) {
+  const root = document.documentElement;
+  root.classList.remove('light', 'dark');
+  root.classList.add(theme);
+  root.style.colorScheme = theme;
+}
+
+function liftThemeVeil(next: ColorTheme, apply: () => void) {
+  const veil = document.createElement('div');
+  veil.setAttribute('aria-hidden', 'true');
+  veil.style.cssText =
+    'position:fixed;inset:0;z-index:2147483646;pointer-events:none;';
+  veil.style.backgroundColor = getComputedStyle(document.body).backgroundColor;
+  document.documentElement.appendChild(veil);
+  apply();
+
+  const duration = next === 'light' ? 550 : 320;
+  const easing =
+    next === 'light' ? 'cubic-bezier(0.4, 0, 1, 1)' : 'cubic-bezier(0.22, 1, 0.36, 1)';
+  const animation = veil.animate([{ opacity: 1 }, { opacity: 0 }], {
+    duration,
+    easing,
+    fill: 'forwards',
+  });
+  void animation.finished.then(() => veil.remove()).catch(() => veil.remove());
+}
+
+function switchColorTheme(next: ColorTheme, setTheme: (theme: string) => void) {
+  const apply = () => {
+    applyThemeToDocument(next);
+    flushSync(() => setTheme(next));
+  };
+
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reducedMotion) {
+    apply();
+    return;
+  }
+
+  const root = document.documentElement;
+  const directionClass = next === 'light' ? 'theme-to-light' : 'theme-to-dark';
+  root.classList.remove('theme-to-light', 'theme-to-dark');
+  root.classList.add('theme-switching', directionClass);
+
+  const cleanup = () =>
+    root.classList.remove('theme-switching', 'theme-to-light', 'theme-to-dark');
+
+  if (typeof document.startViewTransition !== 'function') {
+    liftThemeVeil(next, apply);
+    cleanup();
+    return;
+  }
+
+  try {
+    const transition = document.startViewTransition(apply);
+    void transition.finished.finally(cleanup);
+  } catch {
+    liftThemeVeil(next, apply);
+    cleanup();
+  }
+}
 
 interface ThemeToggleProps {
   className?: string;
@@ -25,6 +91,10 @@ export default function ThemeToggle({ className, onHomepage = false }: ThemeTogg
 
   const isDark = mounted && resolvedTheme === 'dark';
 
+  const onToggle = useCallback(() => {
+    switchColorTheme(isDark ? 'light' : 'dark', setTheme);
+  }, [isDark, setTheme]);
+
   return (
     <button
       type="button"
@@ -32,7 +102,7 @@ export default function ThemeToggle({ className, onHomepage = false }: ThemeTogg
       aria-checked={isDark}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-      onClick={() => setTheme(isDark ? 'light' : 'dark')}
+      onClick={onToggle}
       className={cn(
         'relative inline-flex h-8 w-[3.25rem] shrink-0 items-center rounded-full border p-0.5 cursor-pointer',
         'lg:h-9 lg:w-[4.25rem] lg:p-1',

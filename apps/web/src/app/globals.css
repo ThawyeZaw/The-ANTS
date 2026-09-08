@@ -224,9 +224,9 @@ html {
   scroll-behavior: smooth;
   font-size: 110%;
   /* +10% base size for improved readability — scales via rem */
+  /* Paint the canvas so color-scheme flips never flash the UA white page. */
+  background-color: var(--background);
 }
-
-
 
 body {
   background: var(--background);
@@ -237,6 +237,68 @@ body {
   letter-spacing: 0.012em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/*
+  Theme toggle uses the View Transitions API.
+  Default UA styles cross-fade with mix-blend-mode: plus-lighter, which
+  additively composites dark + light frames into a blinding white flash.
+  Keep the outgoing snapshot on top and fade it out (no blend) so dark→light
+  is a veil lift, not a white overlay.
+*/
+/* Doubled class raises specificity above `.hp button { transition: all !important }`. */
+html.theme-switching.theme-switching *,
+html.theme-switching.theme-switching *::before,
+html.theme-switching.theme-switching *::after {
+  -webkit-transition: none !important;
+  transition: none !important;
+}
+
+html.theme-to-light::view-transition-group(root) {
+  animation-duration: 0.55s;
+}
+
+html.theme-to-dark::view-transition-group(root) {
+  animation-duration: 0.32s;
+}
+
+html.theme-to-light::view-transition-old(root),
+html.theme-to-dark::view-transition-old(root),
+html.theme-to-light::view-transition-new(root),
+html.theme-to-dark::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+html.theme-to-light::view-transition-old(root),
+html.theme-to-dark::view-transition-old(root) {
+  z-index: 1;
+}
+
+html.theme-to-light::view-transition-new(root),
+html.theme-to-dark::view-transition-new(root) {
+  z-index: 0;
+}
+
+html.theme-to-light::view-transition-old(root) {
+  animation: theme-veil-lift 0.55s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+html.theme-to-dark::view-transition-old(root) {
+  animation: theme-veil-lift 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes theme-veil-lift {
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.theme-to-light::view-transition-old(root),
+  html.theme-to-dark::view-transition-old(root) {
+    animation: none;
+  }
 }
 
 /* ── Quicksand subheading defaults ───────────────────────────────────────── */
