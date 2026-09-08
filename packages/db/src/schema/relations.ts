@@ -17,6 +17,7 @@ import {
 } from './curriculums';
 import {
   timetableEvents,
+  pomodoroUserSettings,
   pomodoroSessions,
   exams,
   examCountdowns,
@@ -56,6 +57,10 @@ export const profilesRelations = relations(profiles, ({ one, many }) => ({
   roleUpgradeRequests: many(roleUpgradeRequests),
   timetableEvents: many(timetableEvents),
   pomodoroSessions: many(pomodoroSessions),
+  pomodoroUserSettings: one(pomodoroUserSettings, {
+    fields: [profiles.id],
+    references: [pomodoroUserSettings.user_id],
+  }),
   examCountdowns: many(examCountdowns),
   gradeEntries: many(gradeEntries),
   userEnrollments: many(userEnrollments),
@@ -166,6 +171,13 @@ export const examSchedulesRelations = relations(examSchedules, ({ one }) => ({
 export const timetableEventsRelations = relations(timetableEvents, ({ one }) => ({
   user: one(profiles, {
     fields: [timetableEvents.user_id],
+    references: [profiles.id],
+  }),
+}));
+
+export const pomodoroUserSettingsRelations = relations(pomodoroUserSettings, ({ one }) => ({
+  user: one(profiles, {
+    fields: [pomodoroUserSettings.user_id],
     references: [profiles.id],
   }),
 }));

@@ -20,12 +20,20 @@ import {
   normalizeSettings,
 } from '@/constants/pomodoro';
 import {
+  fetchPomodoroDataAction,
+  logPomodoroSessionAction,
+  savePomodoroSettingsAction,
+} from '@/actions/pomodoro';
+import {
   startVibeSound,
   setVolume,
   stopSound,
   disposeAudio,
   playChime,
 } from '@/lib/pomodoro/audio-engine';
+
+const PARTIAL_SESSION_MIN_MS = 15_000;
+const SETTINGS_SAVE_DEBOUNCE_MS = 800;
 
 function safeGetItem<T>(key: string, fallback: T): T {
   try {
@@ -65,6 +73,52 @@ function getPhaseDurationMs(phase: TimerPhase, settings: PomodoroSettings): numb
     case 'long_break':
       return settings.longBreakMinutes * 60 * 1000;
   }
+}
+
+function getElapsedFocusMs(
+  session: ActiveSessionSnapshot,
+  settings: PomodoroSettings,
+): number {
+  if (session.phase !== 'focus') return 0;
+  const total = getPhaseDurationMs('focus', settings);
+  const remaining =
+    !session.isPaused && session.endsAt !== null
+      ? Math.max(0, session.endsAt - Date.now())
+      : (session.remainingMsWhenPaused ?? total);
+  return Math.max(0, total - remaining);
+}
+
+function elapsedFocusMinutes(
+  session: ActiveSessionSnapshot,
+  settings: PomodoroSettings,
+): number {
+  const elapsedMs = getElapsedFocusMs(session, settings);
+  if (elapsedMs < PARTIAL_SESSION_MIN_MS) return 0;
+  return Math.max(1, Math.round(elapsedMs / 60_000));
+}
+
+function applyLocalFocusLog(
+  stats: PomodoroStatsLog,
+  focusMinutes: number,
+): PomodoroStatsLog {
+  const s = { ...stats, entries: [...stats.entries] };
+  const today = todayKey();
+  const existingIdx = s.entries.findIndex((e) => e.date === today);
+  if (existingIdx >= 0) {
+    s.entries[existingIdx] = {
+      ...s.entries[existingIdx],
+      focusMinutes: s.entries[existingIdx].focusMinutes + focusMinutes,
+      sessionsCompleted: s.entries[existingIdx].sessionsCompleted + 1,
+    };
+  } else {
+    s.entries.push({ date: today, focusMinutes, sessionsCompleted: 1 });
+  }
+  if (s.entries.length > 30) s.entries = s.entries.slice(-30);
+  s.allTimeFocusMinutes += focusMinutes;
+  const streaks = computeStreak(s.entries);
+  s.currentStreak = streaks.currentStreak;
+  s.longestStreak = streaks.longestStreak;
+  return s;
 }
 
 function clampDuration(phase: TimerPhase, value: number): number {
@@ -196,7 +250,7 @@ export interface UsePomodoroReturn {
   setSessionLabel: (label: string | null) => void;
 }
 
-export function usePomodoro(): UsePomodoroReturn {
+export function usePomodoro(userId?: string | null): UsePomodoroReturn {
   const [settings, setSettingsState] = useState<PomodoroSettings>(() =>
     normalizeSettings(safeGetItem(STORAGE_KEYS.settings, POMODORO_DEFAULTS)),
   );
@@ -212,7 +266,11 @@ export function usePomodoro(): UsePomodoroReturn {
   const settingsRef = useRef(settings);
   const statsRef = useRef(stats);
   const notificationGrantedRef = useRef(false);
+  const userIdRef = useRef(userId);
+  const settingsSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const remoteLoadedRef = useRef(false);
 
+  userIdRef.current = userId;
   sessionRef.current = session;
   settingsRef.current = settings;
   statsRef.current = stats;
@@ -229,31 +287,49 @@ export function usePomodoro(): UsePomodoroReturn {
     safeSetItem(STORAGE_KEYS.stats, s);
   }, []);
 
-  const logCompletedFocusLocally = useCallback(() => {
-      const focusMinutes = settingsRef.current.focusMinutes;
+  const scheduleSettingsSave = useCallback((next: PomodoroSettings) => {
+    const uid = userIdRef.current;
+    if (!uid) return;
+    if (settingsSaveTimerRef.current) clearTimeout(settingsSaveTimerRef.current);
+    settingsSaveTimerRef.current = setTimeout(() => {
+      void savePomodoroSettingsAction(uid, next);
+    }, SETTINGS_SAVE_DEBOUNCE_MS);
+  }, []);
 
-      const s = { ...statsRef.current, entries: [...statsRef.current.entries] };
-      const today = todayKey();
-      const existingIdx = s.entries.findIndex((e) => e.date === today);
-      if (existingIdx >= 0) {
-        s.entries[existingIdx] = {
-          ...s.entries[existingIdx],
-          focusMinutes: s.entries[existingIdx].focusMinutes + focusMinutes,
-          sessionsCompleted: s.entries[existingIdx].sessionsCompleted + 1,
-        };
-      } else {
-        s.entries.push({ date: today, focusMinutes, sessionsCompleted: 1 });
-      }
-      if (s.entries.length > 30) s.entries = s.entries.slice(-30);
-      s.allTimeFocusMinutes += focusMinutes;
-      const streaks = computeStreak(s.entries);
-      s.currentStreak = streaks.currentStreak;
-      s.longestStreak = streaks.longestStreak;
-      persistStats(s);
-      setStatsState(s);
-      statsRef.current = s;
+  const logFocusSession = useCallback(
+    (focusMinutes: number, sessionSnapshot: ActiveSessionSnapshot) => {
+      if (focusMinutes <= 0) return;
+
+      const elapsedMs = getElapsedFocusMs(sessionSnapshot, settingsRef.current);
+      const startedAt =
+        sessionSnapshot.focusStartedAt ?? Date.now() - Math.max(elapsedMs, focusMinutes * 60_000);
+      const completedAt = Date.now();
+
+      const nextStats = applyLocalFocusLog(statsRef.current, focusMinutes);
+      persistStats(nextStats);
+      setStatsState(nextStats);
+      statsRef.current = nextStats;
+
+      const uid = userIdRef.current;
+      if (!uid) return;
+
+      void logPomodoroSessionAction(uid, {
+        durationMinutes: focusMinutes,
+        sessionType: 'focus',
+        startedAt: new Date(startedAt).toISOString(),
+        completedAt: new Date(completedAt).toISOString(),
+        notes: sessionSnapshot.sessionLabel,
+      });
     },
     [persistStats],
+  );
+
+  const logPartialFocusIfNeeded = useCallback(
+    (sessionSnapshot: ActiveSessionSnapshot) => {
+      const minutes = elapsedFocusMinutes(sessionSnapshot, settingsRef.current);
+      logFocusSession(minutes, sessionSnapshot);
+    },
+    [logFocusSession],
   );
 
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -293,7 +369,7 @@ export function usePomodoro(): UsePomodoroReturn {
     if (settings.notifyChime) playChime();
 
     if (current.phase === 'focus') {
-      logCompletedFocusLocally();
+      logFocusSession(settings.focusMinutes, current);
 
       if (notificationGrantedRef.current) {
         try {
@@ -361,7 +437,7 @@ export function usePomodoro(): UsePomodoroReturn {
       clearTick();
       stopSound();
     }
-  }, [logCompletedFocusLocally, persistSession, clearTick]);
+  }, [logFocusSession, persistSession, clearTick]);
 
   handlePhaseCompleteRef.current = handlePhaseComplete;
 
@@ -425,6 +501,11 @@ export function usePomodoro(): UsePomodoroReturn {
       stopSound();
       const s = sessionRef.current;
       const settings = settingsRef.current;
+
+      if (s.phase === 'focus' && newPhase !== 'focus') {
+        logPartialFocusIfNeeded(s);
+      }
+
       const durationMs = getPhaseDurationMs(newPhase, settings);
       const newSession: ActiveSessionSnapshot = {
         ...s,
@@ -438,7 +519,7 @@ export function usePomodoro(): UsePomodoroReturn {
       sessionRef.current = newSession;
       persistSession(newSession);
     },
-    [clearTick, persistSession],
+    [clearTick, persistSession, logPartialFocusIfNeeded],
   );
 
   const resume = useCallback(() => {
@@ -449,6 +530,11 @@ export function usePomodoro(): UsePomodoroReturn {
     clearTick();
     const s = sessionRef.current;
     const settings = settingsRef.current;
+
+    if (s.phase === 'focus') {
+      logPartialFocusIfNeeded(s);
+    }
+
     const durationMs = getPhaseDurationMs(s.phase, settings);
     const newSession: ActiveSessionSnapshot = {
       ...s,
@@ -461,7 +547,7 @@ export function usePomodoro(): UsePomodoroReturn {
     sessionRef.current = newSession;
     persistSession(newSession);
     stopSound();
-  }, [clearTick, persistSession]);
+  }, [clearTick, persistSession, logPartialFocusIfNeeded]);
 
   const updateSettings = useCallback(
     (partial: Partial<PomodoroSettings>) => {
@@ -494,10 +580,11 @@ export function usePomodoro(): UsePomodoroReturn {
         }
         persistSettings(next);
         settingsRef.current = next;
+        scheduleSettingsSave(next);
         return next;
       });
     },
-    [persistSettings],
+    [persistSettings, scheduleSettingsSave],
   );
 
   const setSessionLabel = useCallback(
@@ -528,9 +615,40 @@ export function usePomodoro(): UsePomodoroReturn {
   }, [session.isPaused, session.endsAt, session.remainingMsWhenPaused, session.phase, settings]);
 
   useEffect(() => {
+    if (!userId) {
+      remoteLoadedRef.current = false;
+      return;
+    }
+
+    let cancelled = false;
+
+    void fetchPomodoroDataAction(userId).then((result) => {
+      if (cancelled || !result.success) return;
+      remoteLoadedRef.current = true;
+
+      if (result.settings) {
+        setSettingsState(result.settings);
+        settingsRef.current = result.settings;
+        persistSettings(result.settings);
+      } else {
+        void savePomodoroSettingsAction(userId, settingsRef.current);
+      }
+
+      setStatsState(result.stats);
+      statsRef.current = result.stats;
+      persistStats(result.stats);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, persistSettings, persistStats]);
+
+  useEffect(() => {
     return () => {
       clearTick();
       disposeAudio();
+      if (settingsSaveTimerRef.current) clearTimeout(settingsSaveTimerRef.current);
     };
   }, [clearTick]);
 

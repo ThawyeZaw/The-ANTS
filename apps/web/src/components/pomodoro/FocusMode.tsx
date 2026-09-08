@@ -8,6 +8,7 @@ import { getVibe } from '@/constants/pomodoro-vibes';
 import type { TimerPhase } from '@/constants/pomodoro';
 import VibeStage from '@/components/pomodoro/VibeStage';
 import VibePicker from '@/components/pomodoro/VibePicker';
+import { cn } from '@/lib/utils';
 
 interface FocusModeProps {
   isActive: boolean;
@@ -17,7 +18,9 @@ interface FocusModeProps {
   taskLabel: string | null;
   phase: TimerPhase;
   isRunning: boolean;
+  isPaused?: boolean;
   children: React.ReactNode;
+  controls: React.ReactNode;
 }
 
 export default function FocusMode({
@@ -28,7 +31,9 @@ export default function FocusMode({
   taskLabel,
   phase,
   isRunning,
+  isPaused = false,
   children,
+  controls,
 }: FocusModeProps) {
   const [quoteIndex, setQuoteIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -105,14 +110,14 @@ export default function FocusMode({
 
   return (
     <div
-      className="pomo-fit-viewport pomo-fit-auth fixed inset-0 z-[100] animate-fade-in motion-reduce:animate-none"
+      className="pomo-focus-mode pomo-fit-viewport pomo-fit-auth fixed inset-0 z-[100] animate-fade-in motion-reduce:animate-none"
       role="dialog"
       aria-modal="true"
       aria-label="Focus Mode"
     >
       <VibeStage vibe={vibe} phase={phase} isRunning={isRunning} cinematic />
 
-      <div className="absolute top-3 left-3 z-20 sm:top-5 sm:left-5">
+      <div className="relative z-10 flex shrink-0 items-start justify-between gap-3 px-4 pt-3 sm:px-5 sm:pt-4">
         <button
           type="button"
           onClick={() => {
@@ -128,9 +133,7 @@ export default function FocusMode({
             Esc
           </kbd>
         </button>
-      </div>
 
-      <div className="absolute top-3 right-3 z-20 sm:top-5 sm:right-5">
         <button
           type="button"
           onClick={() => void toggleFullscreen()}
@@ -145,28 +148,38 @@ export default function FocusMode({
         </button>
       </div>
 
-      <div className="relative z-10 mx-auto flex min-h-0 w-full max-w-lg flex-1 flex-col items-center justify-center px-4 py-3">
+      <div className="pomo-fit-main relative z-10 mx-auto w-full max-w-lg pb-[max(1rem,env(safe-area-inset-bottom))]">
         {taskLabel && (
-          <p className="pomo-read mb-3 max-w-sm truncate text-sm font-medium text-white/90">
-            {taskLabel}
-          </p>
+          <div className="pomo-fit-meta w-full">
+            <p className="pomo-read max-w-sm truncate text-sm font-medium text-white/90">
+              {taskLabel}
+            </p>
+          </div>
         )}
-        {children}
-        <p
-          className="pomo-read mt-4 hidden max-w-sm px-4 text-center text-sm italic text-white/60 [@media(min-height:720px)]:block"
-          key={quoteIndex}
-        >
-          {FOCUS_QUOTES[quoteIndex]}
-        </p>
-      </div>
 
-      <div className="relative z-10 mx-auto w-full max-w-lg shrink-0 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-1">
-        <VibePicker
-          settings={settings}
-          onUpdate={onUpdateSettings}
-          surface="stage"
-          compact
-        />
+        <div className="pomo-fit-clock w-full">
+          {children}
+          <p
+            className="pomo-read mt-3 hidden max-w-sm shrink-0 px-4 text-center text-sm italic text-white/65 [@media(min-height:720px)]:block"
+            key={quoteIndex}
+          >
+            {FOCUS_QUOTES[quoteIndex]}
+          </p>
+        </div>
+
+        <div className="pomo-fit-bottom w-full">
+          <p
+            className={cn(
+              'pomo-read min-h-[1.125rem] shrink-0 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-white/75',
+              !isPaused && 'invisible',
+            )}
+            aria-hidden={!isPaused}
+          >
+            Paused
+          </p>
+          {controls}
+          <VibePicker settings={settings} onUpdate={onUpdateSettings} surface="stage" compact />
+        </div>
       </div>
     </div>
   );

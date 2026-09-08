@@ -7,15 +7,29 @@
 
 import { Settings, X, Volume2 } from 'lucide-react';
 import { useState } from 'react';
-import type { PomodoroSettings } from '@/constants/pomodoro';
+import type { PomodoroSettings, PomodoroStatsLog } from '@/constants/pomodoro';
 import { DURATION_BOUNDS, POMODORO_DEFAULTS } from '@/constants/pomodoro';
+import StatsPanel from '@/components/pomodoro/StatsPanel';
 import { playChime } from '@/lib/pomodoro/audio-engine';
 import { cn } from '@/lib/utils';
 
 interface SettingsDrawerProps {
   settings: PomodoroSettings;
   onUpdate: (partial: Partial<PomodoroSettings>) => void;
+  stats: PomodoroStatsLog;
   surface?: 'theme' | 'stage';
+}
+
+function todayFocusMinutes(stats: PomodoroStatsLog): number {
+  const d = new Date();
+  const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return stats.entries.find((e) => e.date === key)?.focusMinutes ?? 0;
+}
+
+function todaySessions(stats: PomodoroStatsLog): number {
+  const d = new Date();
+  const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return stats.entries.find((e) => e.date === key)?.sessionsCompleted ?? 0;
 }
 
 interface DurationSliderProps {
@@ -63,9 +77,16 @@ function DurationSlider({ label, value, min, max, step = 1, onChange }: Duration
   );
 }
 
-export default function SettingsDrawer({ settings, onUpdate, surface = 'theme' }: SettingsDrawerProps) {
+export default function SettingsDrawer({
+  settings,
+  onUpdate,
+  stats,
+  surface = 'theme',
+}: SettingsDrawerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const onStage = surface === 'stage';
+  const todayMinutes = todayFocusMinutes(stats);
+  const todaySessionCount = todaySessions(stats);
 
   return (
     <>
@@ -74,7 +95,9 @@ export default function SettingsDrawer({ settings, onUpdate, surface = 'theme' }
         onClick={() => setIsOpen(true)}
         className={cn(
           'flex h-10 w-10 items-center justify-center rounded-full transition focus-ring',
-          onStage ? 'text-white/90 hover:bg-white/10' : 'text-foreground-secondary hover:bg-background-secondary',
+          onStage
+            ? 'text-white/90 hover:bg-white/10'
+            : 'text-foreground-secondary hover:bg-background-secondary',
         )}
         aria-label="Open timer settings"
         aria-expanded={isOpen}
@@ -127,6 +150,36 @@ export default function SettingsDrawer({ settings, onUpdate, surface = 'theme' }
 
         {/* Content */}
         <div className="px-6 py-5 space-y-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 80px)' }}>
+          <section
+            className="rounded-xl border p-4"
+            style={{
+              borderColor: 'var(--border)',
+              background: 'var(--background-secondary)',
+            }}
+          >
+            <h3 className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>
+              Your stats
+            </h3>
+            <p
+              className="mt-1 text-xs tabular-nums"
+              style={{ color: 'var(--foreground-muted)' }}
+            >
+              {todayMinutes}m today
+              <span className="mx-2 opacity-40">·</span>
+              {todaySessionCount} sessions
+              <span className="mx-2 opacity-40">·</span>
+              {stats.allTimeFocusMinutes}m all time
+            </p>
+            {stats.currentStreak > 0 && (
+              <p className="mt-1 text-xs font-semibold text-warning">
+                {stats.currentStreak}-day streak
+              </p>
+            )}
+            <div className="mt-4">
+              <StatsPanel stats={stats} surface="theme" />
+            </div>
+          </section>
+
           {/* Focus duration */}
           <DurationSlider
             label="Focus Duration"

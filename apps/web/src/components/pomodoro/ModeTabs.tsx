@@ -55,7 +55,7 @@ export default function ModeTabs({
 
   return (
     <div
-      className={cn('flex items-center justify-center gap-1 sm:gap-2', className)}
+      className={cn('flex flex-wrap items-center justify-center gap-2 overflow-visible sm:gap-3', className)}
       role="radiogroup"
       aria-label="Timer mode"
     >
@@ -69,8 +69,9 @@ export default function ModeTabs({
             aria-checked={isActive}
             onClick={() => !isActive && onSwitch(mode.phase)}
             className={cn(
-              'flex min-w-0 items-center justify-center gap-1 rounded-full px-2.5 py-1.5 text-[11px] font-bold transition-colors duration-200 focus-ring sm:gap-1.5 sm:px-4 sm:py-2 sm:text-xs',
-              isActive && !onStage && 'bg-background-secondary',
+              'flex min-w-0 items-center justify-center gap-1 overflow-visible rounded-full px-2.5 py-1.5 text-[11px] font-bold leading-normal transition-colors duration-200 focus-ring sm:gap-1.5 sm:px-4 sm:py-2 sm:text-xs',
+              !isActive && !onStage && 'text-foreground-muted',
+              isActive && !onStage && 'bg-background-secondary text-foreground',
               isActive && onStage && 'bg-white/15',
               onStage && 'pomo-read',
             )}
@@ -78,8 +79,8 @@ export default function ModeTabs({
               color: isActive
                 ? mode.color
                 : onStage
-                  ? 'rgba(255,255,255,0.72)'
-                  : 'var(--foreground-muted)',
+                  ? 'rgba(255,255,255,0.78)'
+                  : undefined,
             }}
           >
             <span className="shrink-0">{mode.icon}</span>

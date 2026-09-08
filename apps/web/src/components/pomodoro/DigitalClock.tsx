@@ -11,6 +11,7 @@ interface DigitalClockProps {
   isRunning?: boolean;
   accentColor?: string;
   className?: string;
+  showPausedLabel?: boolean;
   /** Overlay sits on a vibe photo (Focus Mode + stage) */
   surface?: 'theme' | 'stage';
 }
@@ -39,6 +40,7 @@ export default function DigitalClock({
   isRunning = false,
   accentColor,
   className,
+  showPausedLabel = true,
   surface = 'theme',
 }: DigitalClockProps) {
   const accent = accentColor ?? PHASE_COLOR[phase];
@@ -49,14 +51,14 @@ export default function DigitalClock({
   const onStage = surface === 'stage';
   const digitColor = onStage ? '#fff' : 'var(--foreground)';
   const trackStroke = onStage
-    ? 'rgba(255,255,255,0.18)'
-    : 'color-mix(in srgb, var(--foreground) 12%, transparent)';
+    ? 'rgba(255,255,255,0.22)'
+    : 'color-mix(in srgb, var(--foreground) 14%, transparent)';
 
   return (
-    <div className={cn('relative flex w-full max-w-[min(100%,18rem,36dvh)] flex-col items-center sm:max-w-[min(100%,19rem,40dvh)]', className)}>
+    <div className={cn('flex min-h-0 w-full flex-col items-center justify-center', className)}>
       <div
         className={cn(
-          'relative flex aspect-square w-full items-center justify-center',
+          'pomo-clock flex items-center justify-center',
           isRunning && !isPaused && 'pomo-clock-breathe',
         )}
       >
@@ -92,7 +94,7 @@ export default function DigitalClock({
 
         <div
           className={cn(
-            'relative z-10 flex min-w-0 items-baseline justify-center gap-0.5 tabular-nums leading-none select-none sm:gap-1',
+            'pomo-clock-digits relative z-10 flex min-w-0 items-baseline justify-center gap-0.5 tabular-nums leading-none select-none sm:gap-1',
             onStage && 'pomo-read',
           )}
           style={{
@@ -102,34 +104,28 @@ export default function DigitalClock({
           aria-live="polite"
           aria-atomic="true"
         >
-          <span
-            className="text-[clamp(2.35rem,11vh,4.75rem)] font-semibold tracking-tight"
-            style={{ color: digitColor }}
-          >
+          <span className="pomo-digit font-semibold tracking-tight" style={{ color: digitColor }}>
             {mm}
           </span>
           <span
             className={cn(
-              'pb-1 text-[clamp(1.5rem,7vh,3rem)] font-light',
+              'pomo-colon pb-1 font-light',
               isRunning && !isPaused && 'pomo-colon-blink',
             )}
             style={{ color: accent }}
           >
             :
           </span>
-          <span
-            className="text-[clamp(2.35rem,11vh,4.75rem)] font-semibold tracking-tight"
-            style={{ color: digitColor }}
-          >
+          <span className="pomo-digit font-semibold tracking-tight" style={{ color: digitColor }}>
             {ss}
           </span>
         </div>
       </div>
 
-      {isPaused && (
+      {showPausedLabel && isPaused && (
         <p
           className={cn(
-            'mt-2 text-[11px] font-semibold uppercase tracking-[0.18em]',
+            'mt-2 shrink-0 text-[11px] font-semibold uppercase tracking-[0.18em]',
             onStage ? 'pomo-read text-white/70' : 'text-foreground-muted',
           )}
         >

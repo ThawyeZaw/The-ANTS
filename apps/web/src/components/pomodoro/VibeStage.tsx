@@ -42,10 +42,8 @@ export default function VibeStage({
       {vibe && (
         <div
           className={cn(
-            'absolute inset-0 bg-gradient-to-b',
-            cinematic
-              ? 'from-black/50 via-black/20 to-black/60'
-              : 'from-black/40 via-black/10 to-black/50',
+            'absolute inset-0',
+            cinematic ? 'pomo-vibe-overlay-cinematic' : 'pomo-vibe-overlay',
           )}
         />
       )}

@@ -22,6 +22,14 @@ export const timetableEvents = pgTable('timetable_events', {
   created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 
+export const pomodoroUserSettings = pgTable('pomodoro_user_settings', {
+  user_id: uuid('user_id')
+    .primaryKey()
+    .references(() => profiles.id, { onDelete: 'cascade' }),
+  settings: jsonb('settings').$type<Record<string, unknown>>().notNull().default({}),
+  updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
 export const pomodoroSessions = pgTable('pomodoro_sessions', {
   id: uuid('id').primaryKey().defaultRandom(),
   user_id: uuid('user_id').references(() => profiles.id, { onDelete: 'cascade' }).notNull(),

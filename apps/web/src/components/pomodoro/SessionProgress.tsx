@@ -20,7 +20,7 @@ export default function SessionProgress({
   const cycleSlot = completed % total;
   const idle =
     surface === 'stage'
-      ? 'rgba(255,255,255,0.32)'
+      ? 'rgba(255,255,255,0.45)'
       : 'color-mix(in srgb, var(--foreground) 18%, transparent)';
 
   return (

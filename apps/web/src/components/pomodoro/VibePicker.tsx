@@ -29,8 +29,8 @@ export default function VibePicker({ settings, onUpdate, surface = 'theme', comp
   }
 
   return (
-    <div className={cn(compact ? 'space-y-2' : 'space-y-2.5')}>
-      <div className="flex items-end justify-center gap-1.5 sm:gap-2.5">
+    <div className={cn('pomo-vibe-picker', compact && 'gap-3 sm:gap-3.5')}>
+      <div className="pomo-vibe-row">
         {POMODORO_VIBES.map((vibe) => {
           const isActive = settings.vibeId === vibe.id;
           return (
@@ -48,11 +48,12 @@ export default function VibePicker({ settings, onUpdate, surface = 'theme', comp
                 });
               }}
               className={cn(
-                'group relative overflow-hidden rounded-xl transition-transform duration-200 focus-ring',
+                'group relative shrink-0 overflow-hidden rounded-xl transition-transform duration-200 focus-ring',
                 compact
-                  ? 'h-11 w-[3.4rem] sm:h-12 sm:w-[4.5rem]'
-                  : 'h-12 w-[3.85rem] sm:h-14 sm:w-[5.25rem]',
-                isActive ? 'scale-105' : 'opacity-80 hover:opacity-100 hover:scale-[1.03]',
+                  ? 'h-11 w-[3.75rem] sm:h-14 sm:w-[5rem]'
+                  : 'h-12 w-[4.25rem] sm:h-16 sm:w-[5.75rem]',
+                onStage ? 'ring-1 ring-white/15' : 'ring-1 ring-border shadow-sm',
+                isActive ? 'scale-105 ring-2' : 'opacity-90 hover:opacity-100 hover:scale-[1.03]',
               )}
               style={{
                 boxShadow: isActive ? `0 0 0 2px ${vibe.accent}` : undefined,
@@ -68,10 +69,12 @@ export default function VibePicker({ settings, onUpdate, surface = 'theme', comp
                 aria-hidden
               />
               <span className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" aria-hidden />
-              <span className={cn(
-                'relative z-10 flex h-full items-end justify-center px-1 pb-1 text-[9px] font-bold text-white sm:text-[11px]',
-                compact && 'pb-1 sm:text-[10px]',
-              )}>
+              <span
+                className={cn(
+                  'relative z-10 flex h-full items-end justify-center px-1 pb-1.5 text-[10px] font-bold text-white sm:text-[11px]',
+                  compact && 'sm:text-[10px]',
+                )}
+              >
                 {vibe.label}
               </span>
             </button>
@@ -79,13 +82,15 @@ export default function VibePicker({ settings, onUpdate, surface = 'theme', comp
         })}
       </div>
 
-      <div className="mx-auto flex max-w-xs items-center gap-2.5 px-1">
+      <div className="pomo-vibe-volume">
         <button
           type="button"
           onClick={toggleMute}
           className={cn(
             'flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition focus-ring',
-            onStage ? 'text-white/85 hover:bg-white/10' : 'text-foreground-muted hover:bg-background-secondary',
+            onStage
+              ? 'text-white/90 hover:bg-white/10'
+              : 'text-foreground-muted hover:bg-background-secondary',
           )}
           aria-label={isMuted ? 'Unmute scene audio' : 'Mute scene audio'}
         >
@@ -103,7 +108,7 @@ export default function VibePicker({ settings, onUpdate, surface = 'theme', comp
           value={settings.volume}
           onChange={(e) => onUpdate({ volume: Number(e.target.value) })}
           className={cn(
-            'pomo-volume-slider h-1.5 w-full cursor-pointer appearance-none rounded-full focus-ring',
+            'pomo-volume-slider h-1.5 min-w-0 flex-1 cursor-pointer appearance-none rounded-full focus-ring',
             onStage && 'pomo-volume-slider-stage',
           )}
           style={{
@@ -113,8 +118,8 @@ export default function VibePicker({ settings, onUpdate, surface = 'theme', comp
         />
         <span
           className={cn(
-            'min-w-[3ch] text-right text-xs font-bold tabular-nums',
-            onStage ? 'pomo-read text-white/80' : 'text-foreground-secondary',
+            'min-w-[3ch] shrink-0 text-right text-xs font-bold tabular-nums',
+            onStage ? 'pomo-read text-white/85' : 'text-foreground-secondary',
           )}
         >
           {Math.round(settings.volume * 100)}

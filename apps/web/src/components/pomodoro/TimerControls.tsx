@@ -86,9 +86,9 @@ export default function TimerControls({
         className={cn(
           'flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-transform duration-200 focus-ring sm:h-12 sm:w-12',
           'hover:scale-105 active:scale-95',
-          onStage
-            ? 'text-white/90 hover:bg-white/10'
-            : 'text-foreground-secondary hover:bg-background-secondary',
+            onStage
+              ? 'text-white/90 hover:bg-white/10'
+              : 'text-foreground-secondary hover:bg-background-secondary',
         )}
       >
         <RotateCcw className={cn('h-5 w-5', onStage && 'pomo-icon-read')} />
