@@ -276,11 +276,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
           if (sessionFields?.role) {
             const sessionRole = normalizeRole(sessionFields.role);
-            if (!profile.roles.includes(sessionRole)) {
+            const profileRoles = profile.roles ?? [profile.role];
+            if (!profileRoles.includes(sessionRole)) {
               profile = {
                 ...profile,
                 role: profile.role === 'student' ? sessionRole : profile.role,
-                roles: Array.from(new Set([...profile.roles, sessionRole])),
+                roles: Array.from(new Set([...profileRoles, sessionRole])),
               };
             }
           }
@@ -392,10 +393,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(authUser);
           const cachedRole =
             typeof window !== 'undefined' ? localStorage.getItem(ACTIVE_ROLE_CACHE_KEY) : null;
+          const authRoles = authUser.profile.roles ?? [authUser.profile.role];
           const nextRole =
-            cachedRole && authUser.profile.roles.includes(normalizeRole(cachedRole))
+            cachedRole && authRoles.includes(normalizeRole(cachedRole))
               ? normalizeRole(cachedRole)
-              : authUser.profile.roles.includes('admin')
+              : authRoles.includes('admin')
                 ? 'admin'
                 : 'student';
           setActiveRole(nextRole);

@@ -167,7 +167,7 @@ export interface Profile {
   username: string;
   avatar: string;
   role: UserRole;
-  roles?: UserRole[];
+  roles: UserRole[];
   activeRole?: UserRole;
   telegramHandle?: string;
   hourlyRate?: string;
