@@ -8,12 +8,14 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "turbo dev",
+    "dev": "turbo dev --filter=@the-ants/web --filter=@the-ants/api",
     "build": "turbo build",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "dev:web": "npm --workspace=@the-ants/web run dev",
     "dev:api": "npm --workspace=@the-ants/api run dev",
+    "dev:api:local": "npm --workspace=@the-ants/api run dev:local",
+    "dev:shared:api": "npm --workspace=@the-ants/api run dev:shared",
     "build:web": "npm --workspace=@the-ants/web run build",
     "cf:preview:web": "npm --workspace=@the-ants/web run cf:preview",
     "cf:deploy:web": "npm --workspace=@the-ants/web run cf:deploy",

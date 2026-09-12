@@ -17,8 +17,49 @@ import {
   verification,
   notificationQueue,
 } from '@/lib/db';
-import { eq, and, desc, gte, or, ilike } from 'drizzle-orm';
+import { eq, and, desc, gte, or, sql, type SQL } from 'drizzle-orm';
+import type { AnyColumn } from 'drizzle-orm';
+import {
+  canHavePublicProfile,
+  canViewPublicProfile,
+  normalizeProfileRoles,
+  type ProfileUnavailableReason,
+} from '@the-ants/shared-types';
 import type { Profile, ProjectEntry, UserRole } from '@/types';
+
+/** Case-insensitive equality for D1/SQLite (Postgres ILIKE is unsupported). */
+function iEqual(column: AnyColumn, value: string): SQL {
+  return sql`lower(${column}) = ${value.toLowerCase()}`;
+}
+
+function mapCertificationRow(row: typeof certifications.$inferSelect) {
+  const metadata = (row.metadata as Record<string, unknown> | null) ?? {};
+  const type = typeof metadata.type === 'string' ? metadata.type : 'other';
+  return {
+    id: row.id,
+    type,
+    subject: typeof metadata.subject === 'string' ? metadata.subject : row.title,
+    exam_board: typeof metadata.exam_board === 'string' ? metadata.exam_board : row.issuer,
+    grade: typeof metadata.grade === 'string' ? metadata.grade : row.credential_id,
+    year:
+      typeof metadata.year === 'number'
+        ? metadata.year
+        : row.issue_date
+          ? new Date(row.issue_date).getFullYear()
+          : null,
+    certificate_url: row.certificate_url,
+    credential_url: row.credential_url,
+    is_verified: metadata.is_verified === true,
+    is_hidden: metadata.is_hidden === true,
+    order_no: typeof metadata.order_no === 'number' ? metadata.order_no : 0,
+    title: row.title,
+    issuer: row.issuer,
+    issueDate:
+      row.issue_date instanceof Date
+        ? row.issue_date.toISOString()
+        : new Date(row.issue_date as any).toISOString(),
+  };
+}
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -67,55 +108,68 @@ export interface FullProfileData {
   stats: ContributorStatsData | null;
   activities: ActivityItem[];
   notFound: boolean;
+  unavailableReason?: ProfileUnavailableReason;
 }
+
+const EMPTY_PROFILE: FullProfileData = {
+  profile: null,
+  certifications: [],
+  tutorProfile: null,
+  contributorProfile: null,
+  stats: null,
+  activities: [],
+  notFound: true,
+};
 
 // ── Server Actions ───────────────────────────────────────────────────────────
 
-export async function actionGetFullProfile(username: string): Promise<FullProfileData> {
+export async function actionGetFullProfile(
+  username: string,
+  viewerUserId?: string | null
+): Promise<FullProfileData> {
   try {
     const db = getDb();
     const cleanParam = (username || '').trim();
 
     if (!cleanParam) {
-      return {
-        profile: null,
-        certifications: [],
-        tutorProfile: null,
-        contributorProfile: null,
-        stats: null,
-        activities: [],
-        notFound: true,
-      };
+      return { ...EMPTY_PROFILE, unavailableReason: 'not_found' };
     }
 
     // Fetch profile by username, case-insensitive, custom slug, or normalized variations
+    const collapsedParam = cleanParam.replace(/[_-]/g, '');
     const profileRow = await db.query.profiles.findFirst({
       where: or(
-        eq(profiles.username, cleanParam),
-        ilike(profiles.username, cleanParam),
-        eq(profiles.custom_url_slug, cleanParam),
-        ilike(profiles.custom_url_slug, cleanParam),
-        ilike(profiles.username, cleanParam.replace(/_/g, '')),
-        ilike(profiles.username, cleanParam.replace(/-/g, ''))
+        iEqual(profiles.username, cleanParam),
+        iEqual(profiles.custom_url_slug, cleanParam),
+        // Match when search omits _ / - but stored username includes them
+        sql`lower(replace(replace(${profiles.username}, '_', ''), '-', '')) = ${collapsedParam.toLowerCase()}`,
+        iEqual(profiles.username, cleanParam.replace(/_/g, '')),
+        iEqual(profiles.username, cleanParam.replace(/-/g, ''))
       ),
     });
 
     if (!profileRow) {
-      return {
-        profile: null,
-        certifications: [],
-        tutorProfile: null,
-        contributorProfile: null,
-        stats: null,
-        activities: [],
-        notFound: true,
-      };
+      return { ...EMPTY_PROFILE, unavailableReason: 'not_found' };
     }
 
-    const userRoles: UserRole[] =
-      (profileRow.roles as UserRole[]) && (profileRow.roles as UserRole[]).length > 0
-        ? (profileRow.roles as UserRole[])
-        : [(profileRow.role ?? 'student') as UserRole];
+    const userRoles = normalizeProfileRoles(
+      profileRow.roles as UserRole[],
+      profileRow.role
+    );
+
+    const visibility = canViewPublicProfile({
+      roles: userRoles,
+      isPublic: profileRow.is_public ?? false,
+      profileUserId: profileRow.id,
+      viewerUserId,
+    });
+
+    if (!visibility.allowed) {
+      return {
+        ...EMPTY_PROFILE,
+        unavailableReason: visibility.reason ?? 'not_found',
+      };
+    }
 
     const isTutor = userRoles.includes('tutor') || userRoles.includes('teacher');
     const isContributor = userRoles.includes('contributor') || userRoles.includes('admin') || userRoles.includes('main_contributor');
@@ -176,10 +230,19 @@ export async function actionGetFullProfile(username: string): Promise<FullProfil
       isPublic: profileRow.is_public ?? true,
       pinnedItemId: profileRow.pinned_item_id ?? undefined,
       sectionVisibility: profileRow.section_visibility as unknown as Profile['sectionVisibility'],
-      sectionOrder: (profileRow.section_visibility as any)?.order ?? undefined,
+      sectionOrder:
+        (profileRow.section_order as string[] | null) ??
+        ((profileRow.section_visibility as any)?.order ?? undefined),
       projects: profileRow.projects as unknown as Profile['projects'],
       activities: profileRow.activities as unknown as Profile['activities'],
       achievements: profileRow.achievements as unknown as Profile['achievements'],
+      academicGrades: profileRow.academic_grades as unknown as Profile['academicGrades'],
+      testimonials: profileRow.testimonials as unknown as Profile['testimonials'],
+      theme: profileRow.theme as unknown as Profile['theme'],
+      spacing: (profileRow.spacing as Profile['spacing']) ?? undefined,
+      width: (profileRow.width as Profile['width']) ?? undefined,
+      sectionLayout: (profileRow.section_layout as Profile['sectionLayout']) ?? undefined,
+      customUrlSlug: profileRow.custom_url_slug ?? undefined,
       timezone: profileRow.timezone ?? undefined,
       certificationIds: (profileRow.certification_ids as string[]) ?? undefined,
       telegramHandle: userTutorProfile?.telegram_handle || undefined,
@@ -219,15 +282,10 @@ export async function actionGetFullProfile(username: string): Promise<FullProfil
 
     return {
       profile,
-      certifications: userCerts.map((c) => ({
-        id: c.id,
-        title: c.title,
-        issuer: c.issuer,
-        issueDate: c.issue_date.toISOString(),
-        expiryDate: c.expiry_date?.toISOString(),
-        credentialUrl: c.credential_url,
-        certificateUrl: c.certificate_url,
-      })),
+      certifications: userCerts
+        .map(mapCertificationRow)
+        .filter((c) => !c.is_hidden)
+        .sort((a, b) => (a.order_no || 0) - (b.order_no || 0)),
       tutorProfile: userTutorProfile
         ? {
             id: userTutorProfile.id,
@@ -250,15 +308,80 @@ export async function actionGetFullProfile(username: string): Promise<FullProfil
     };
   } catch (err) {
     console.error('Error fetching full profile:', err);
-    return {
-      profile: null,
-      certifications: [],
-      tutorProfile: null,
-      contributorProfile: null,
-      stats: null,
-      activities: [],
-      notFound: true,
-    };
+    return { ...EMPTY_PROFILE, unavailableReason: 'not_found' };
+  }
+}
+
+export async function actionSyncCertifications(
+  userId: string,
+  items: Array<{
+    id: string;
+    type: string;
+    subject?: string | null;
+    exam_board?: string | null;
+    grade?: string | null;
+    year?: number | null;
+    certificate_url?: string | null;
+    is_verified?: boolean;
+    is_hidden?: boolean;
+    order_no?: number | null;
+  }>
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const db = getDb();
+    const existing = await db.query.certifications.findMany({
+      where: eq(certifications.user_id, userId as any),
+    });
+    const incomingIds = new Set(items.map((item) => item.id));
+
+    for (const row of existing) {
+      if (!incomingIds.has(row.id)) {
+        await db.delete(certifications).where(eq(certifications.id, row.id));
+      }
+    }
+
+    for (const item of items) {
+      const issueDate = item.year ? new Date(item.year, 0, 1) : new Date();
+      const payload = {
+        id: item.id,
+        user_id: userId as any,
+        title: item.subject?.trim() || item.type,
+        issuer: item.exam_board?.trim() || item.type.toUpperCase(),
+        issue_date: issueDate,
+        credential_id: item.grade || null,
+        certificate_url: item.certificate_url || null,
+        metadata: {
+          type: item.type,
+          subject: item.subject ?? null,
+          exam_board: item.exam_board ?? null,
+          grade: item.grade ?? null,
+          year: item.year ?? null,
+          is_verified: item.is_verified ?? false,
+          is_hidden: item.is_hidden ?? false,
+          order_no: item.order_no ?? 0,
+        },
+      };
+
+      await db
+        .insert(certifications)
+        .values(payload)
+        .onConflictDoUpdate({
+          target: certifications.id,
+          set: {
+            title: payload.title,
+            issuer: payload.issuer,
+            issue_date: payload.issue_date,
+            credential_id: payload.credential_id,
+            certificate_url: payload.certificate_url,
+            metadata: payload.metadata,
+          },
+        });
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    console.error('[actionSyncCertifications]', err);
+    return { success: false, error: err?.message || 'Failed to sync certifications' };
   }
 }
 
@@ -391,6 +514,16 @@ export async function actionUpdateProfile(
       }
     }
 
+    const currentRow = existingProfile ?? (await db.query.profiles.findFirst({
+      where: eq(profiles.id, userId as any),
+    }));
+
+    const currentRoles = normalizeProfileRoles(
+      (currentRow?.roles as UserRole[]) ?? [],
+      currentRow?.role
+    );
+    const staffEligible = canHavePublicProfile(currentRoles);
+
     const setPayload: Record<string, any> = {
       updated_at: new Date(),
     };
@@ -399,11 +532,22 @@ export async function actionUpdateProfile(
     if (data.title !== undefined) setPayload.title = data.title;
     if (data.bio !== undefined) setPayload.bio = data.bio;
     if (data.avatar !== undefined) setPayload.avatar_url = data.avatar;
-    if (data.isPublic !== undefined) setPayload.is_public = data.isPublic;
+    if (data.isPublic !== undefined) {
+      setPayload.is_public = staffEligible ? data.isPublic : false;
+    } else if (!staffEligible && currentRow) {
+      setPayload.is_public = false;
+    }
     if (data.socialLinks !== undefined) setPayload.social_links = data.socialLinks;
     if (data.projects !== undefined) setPayload.projects = data.projects;
     if (data.activities !== undefined) setPayload.activities = data.activities;
     if (data.achievements !== undefined) setPayload.achievements = data.achievements;
+    if (data.academicGrades !== undefined) setPayload.academic_grades = data.academicGrades;
+    if (data.testimonials !== undefined) setPayload.testimonials = data.testimonials;
+    if (data.theme !== undefined) setPayload.theme = data.theme;
+    if (data.spacing !== undefined) setPayload.spacing = data.spacing;
+    if (data.width !== undefined) setPayload.width = data.width;
+    if (data.sectionLayout !== undefined) setPayload.section_layout = data.sectionLayout;
+    if (data.sectionOrder !== undefined) setPayload.section_order = data.sectionOrder;
     if (data.pinnedItemId !== undefined) setPayload.pinned_item_id = data.pinnedItemId;
     if (data.sectionVisibility !== undefined) setPayload.section_visibility = data.sectionVisibility;
     if (data.timezone !== undefined) setPayload.timezone = data.timezone;
@@ -532,8 +676,9 @@ export async function actionGetPublicProfiles(roles?: UserRole[]): Promise<Profi
 
     return data
       .filter((p) => {
+        const pRoles = normalizeProfileRoles(p.roles as UserRole[], p.role);
+        if (!canHavePublicProfile(pRoles)) return false;
         if (!roles) return true;
-        const pRoles: string[] = (p.roles as string[]) || [p.role];
         return roles.some((r) => pRoles.includes(r));
       })
       .map((profileRow) => ({
@@ -594,7 +739,7 @@ export async function actionCheckUsernameAvailable(
     const results = await db
       .select({ id: profiles.id, username: profiles.username })
       .from(profiles)
-      .where(or(eq(profiles.username, username), ilike(profiles.username, username)))
+      .where(iEqual(profiles.username, username))
       .limit(1);
 
     const existing = results[0];

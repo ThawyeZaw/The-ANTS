@@ -1,5 +1,6 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { eq } from 'drizzle-orm';
 import { createDb, type Database } from '@the-ants/db';
 import * as schema from '@the-ants/db';
 
@@ -51,15 +52,25 @@ export function getAuth(
       database: {
         generateId: () => crypto.randomUUID(),
       },
-      // Phase 6: apex + www + api share eTLD+1 `.the-ants.org`.
-      crossSubDomainCookies: {
-        enabled: true,
-        domain: '.the-ants.org',
-      },
-      defaultCookieAttributes: {
-        sameSite: 'lax',
-        secure: true,
-      },
+      // Local HTTP cannot use Secure cookies or Domain=.the-ants.org.
+      // Production: apex + www + api share eTLD+1 `.the-ants.org`.
+      ...(requestOrigin && isLocalDevOrigin(requestOrigin)
+        ? {
+            defaultCookieAttributes: {
+              sameSite: 'lax' as const,
+              secure: false,
+            },
+          }
+        : {
+            crossSubDomainCookies: {
+              enabled: true,
+              domain: '.the-ants.org',
+            },
+            defaultCookieAttributes: {
+              sameSite: 'lax' as const,
+              secure: true,
+            },
+          }),
     },
     database: drizzleAdapter(db, {
       provider: 'sqlite',
@@ -109,15 +120,24 @@ export function getAuth(
             try {
               const baseUsername = (createdUser.name || createdUser.email.split('@')[0])
                 .toLowerCase()
-                .replace(/[^a-z0-9_]/g, '_');
-              const randomSuffix = Math.random().toString(36).substring(2, 6);
+                .replace(/[^a-z0-9_]/g, '_')
+                .replace(/_+/g, '_')
+                .replace(/^_|_$/g, '')
+                .slice(0, 24) || 'user';
+              const taken = await db.query.profiles.findFirst({
+                where: eq(schema.profiles.username, baseUsername),
+                columns: { id: true },
+              });
+              const username = taken
+                ? `${baseUsername}_${Math.random().toString(36).substring(2, 6)}`
+                : baseUsername;
               await db
                 .insert(schema.profiles)
                 .values({
                   id: createdUser.id,
                   email: createdUser.email,
                   name: createdUser.name || createdUser.email.split('@')[0],
-                  username: `${baseUsername}_${randomSuffix}`,
+                  username,
                   avatar_url: createdUser.image,
                   role: 'student',
                   roles: ['student'],

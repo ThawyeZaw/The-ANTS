@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { eq, and } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 import { createDb, profiles, user, roleUpgradeRequests } from '@the-ants/db';
 import type { UserRole } from '@the-ants/shared-types';
 
@@ -186,6 +186,75 @@ export function createRoleUpgradeRoutes(getDb: () => ReturnType<typeof createDb>
       targetUserId,
       newRole,
     });
+  });
+
+  router.get('/users', async (c) => {
+    const db = getDb();
+    try {
+      const rows = await db
+        .select({
+          id: profiles.id,
+          email: profiles.email,
+          name: profiles.name,
+          username: profiles.username,
+          avatar_url: profiles.avatar_url,
+          created_at: profiles.created_at,
+          role: profiles.role,
+          roles: profiles.roles,
+        })
+        .from(profiles)
+        .orderBy(desc(profiles.created_at));
+      return c.json({
+        users: rows.map((row) => ({
+          ...row,
+          roles: row.roles && (row.roles as string[]).length > 0 ? row.roles : [row.role || 'student'],
+          createdAt: row.created_at,
+          isVerified: true,
+        })),
+      });
+    } catch (err: any) {
+      return c.json({ error: err?.message || 'Failed to list users' }, 500);
+    }
+  });
+
+  router.put('/roles', async (c) => {
+    const db = getDb();
+    const body = await c.req.json();
+    const parsed = z
+      .object({
+        userId: z.string().uuid(),
+        roles: z.array(z.string()).min(1),
+      })
+      .safeParse(body);
+    if (!parsed.success) {
+      return c.json({ error: parsed.error.format() }, 400);
+    }
+
+    const { userId, roles } = parsed.data;
+    const primaryRole = roles[0] || 'student';
+
+    try {
+      await db
+        .update(profiles)
+        .set({
+          roles,
+          role: primaryRole,
+          updated_at: new Date(),
+        })
+        .where(eq(profiles.id, userId as any));
+
+      await db
+        .update(user)
+        .set({
+          role: primaryRole,
+          updatedAt: new Date(),
+        })
+        .where(eq(user.id, userId));
+
+      return c.json({ success: true });
+    } catch (err: any) {
+      return c.json({ error: err?.message || 'Failed to update user roles' }, 500);
+    }
   });
 
   return router;

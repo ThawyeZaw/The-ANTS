@@ -78,6 +78,29 @@ export function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+const PRODUCTION_API_ORIGIN = 'https://api.the-ants.org';
+
+/**
+ * Stored R2 file URLs may point at a leftover local Worker origin.
+ * Canonicalize those to the production API so avatars load in local next-dev.
+ */
+export function resolveStoredAssetUrl(url?: string | null): string {
+  if (!url) return '';
+  if (url.startsWith('preset:')) return url;
+  try {
+    const parsed = new URL(url, PRODUCTION_API_ORIGIN);
+    const isLocalApi =
+      (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') &&
+      parsed.port === '8787';
+    if (isLocalApi && parsed.pathname.startsWith('/api/storage/file/')) {
+      return `${PRODUCTION_API_ORIGIN}${parsed.pathname}${parsed.search}`;
+    }
+    return url;
+  } catch {
+    return url;
+  }
+}
+
 /**
  * Validate password strength.
  * Returns an object with a score (0-4) and feedback messages.
@@ -160,8 +183,16 @@ export function humanizeAuthError(error?: string): string {
   if (msg.includes('rate limit') || msg.includes('too many requests')) {
     return 'Too many attempts. Please wait a moment and try again.';
   }
-  if (msg.includes('network') || msg.includes('fetch failed') || msg.includes('timeout')) {
-    return 'A network error occurred. Please check your connection and try again.';
+  if (
+    msg.includes('network') ||
+    msg.includes('fetch failed') ||
+    msg.includes('timeout') ||
+    msg.includes('connection lost') ||
+    msg.includes('drizzlequeryerror') ||
+    msg.includes('failed to parse body as json') ||
+    msg.includes('database connection dropped')
+  ) {
+    return 'The production database connection dropped. Wait a moment and try signing in again.';
   }
 
   // Config / env

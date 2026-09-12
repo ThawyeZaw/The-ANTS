@@ -60,18 +60,16 @@ export async function actionUpdateUserRoles(
   roles: UserRole[]
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const db = getDb();
-    const primaryRole = roles[0] || 'student';
-
-    await db
-      .update(profiles)
-      .set({
-        roles,
-        role: primaryRole,
-        updated_at: new Date(),
-      })
-      .where(eq(profiles.id, userId as any));
-
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8787';
+    const res = await fetch(`${apiBase}/api/role-upgrade/roles`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, roles }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { success: false, error: data.error || 'Failed to update user roles' };
+    }
     return { success: true };
   } catch (err: any) {
     return { success: false, error: err.message || 'Failed to update user roles' };
@@ -88,22 +86,56 @@ export async function changeUserRole(
   return actionUpdateUserRoles(userId, [newRole]);
 }
 
+/** Bootstrap helper: promote a user to admin by email (platform ops). */
+export async function actionPromoteUserToAdminByEmail(
+  email: string
+): Promise<{ success: boolean; userId?: string; error?: string }> {
+  const normalized = email.trim().toLowerCase();
+  if (!normalized) {
+    return { success: false, error: 'Email is required.' };
+  }
+
+  try {
+    const db = getDb();
+    const row = await db.query.profiles.findFirst({
+      where: eq(profiles.email, normalized),
+    });
+
+    if (!row) {
+      return { success: false, error: `No profile found for ${normalized}` };
+    }
+
+    const roles: UserRole[] = ['admin'];
+
+    await db
+      .update(profiles)
+      .set({
+        role: 'admin',
+        roles,
+        is_public: true,
+        updated_at: new Date(),
+      })
+      .where(eq(profiles.id, row.id as any));
+
+    return { success: true, userId: row.id };
+  } catch (err: any) {
+    return { success: false, error: err?.message || 'Failed to promote user.' };
+  }
+}
+
 /**
  * Fetches all user profiles from DB.
  */
 export async function getAllUsers() {
   try {
-    const db = getDb();
-    const rows = await db.query.profiles.findMany({
-      orderBy: [desc(profiles.created_at)],
-    });
-
-    return rows.map((row: any) => ({
-      ...row,
-      roles: row.roles && row.roles.length > 0 ? row.roles : [row.role || 'student'],
-      createdAt: row.created_at,
-      isVerified: true,
-    }));
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8787';
+    const res = await fetch(`${apiBase}/api/role-upgrade/users`, { cache: 'no-store' });
+    if (!res.ok) {
+      console.error('[getAllUsers] API', res.status);
+      return [];
+    }
+    const data = await res.json();
+    return Array.isArray(data.users) ? data.users : [];
   } catch (err) {
     console.error('[getAllUsers]', err);
     return [];

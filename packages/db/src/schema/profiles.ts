@@ -50,6 +50,13 @@ export const profiles = sqliteTable('profiles', {
   telegram_chat_id: text('telegram_chat_id'),
   notification_preferences: jsonText<Record<string, unknown>>('notification_preferences'),
   founder_type: text('founder_type'),
+  academic_grades: jsonText<Record<string, unknown>[]>('academic_grades'),
+  testimonials: jsonText<Record<string, unknown>[]>('testimonials'),
+  theme: jsonText<Record<string, unknown>>('theme'),
+  spacing: text('spacing'),
+  width: text('width'),
+  section_layout: text('section_layout'),
+  section_order: jsonText<string[]>('section_order'),
 });
 
 export const studentProfiles = sqliteTable('student_profiles', {
@@ -103,6 +110,7 @@ export const certifications = sqliteTable('certifications', {
   credential_id: text('credential_id'),
   credential_url: text('credential_url'),
   certificate_url: text('certificate_url'),
+  metadata: jsonText<Record<string, unknown>>('metadata'),
   created_at: tsNow('created_at'),
 });
 

@@ -1,5 +1,7 @@
 export type UserRole = 'student' | 'tutor' | 'contributor' | 'admin' | 'teacher' | 'main_contributor';
 
+export * from './profile-access';
+
 export interface ProfileDTO {
   id: string;
   email: string;

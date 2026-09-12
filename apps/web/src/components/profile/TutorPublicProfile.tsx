@@ -25,9 +25,10 @@ import {
 } from 'lucide-react';
 import AvatarImage from '@/components/ui/AvatarImage';
 import BackButton from '@/components/ui/BackButton';
-import TutorWeeklySchedule, { DayOfWeek, SlotStatus } from './TutorWeeklySchedule';
 import TutorInquiryModal from './TutorInquiryModal';
+import TutorAvailabilityBadge from './TutorAvailabilityBadge';
 import CertificationSection from './CertificationSection';
+import ShareProfileButton from './ShareProfileButton';
 import { cn, formatDate } from '@/lib/utils';
 import type { Profile } from '@/types';
 import type { TutorProfileData } from '@/hooks/useProfile';
@@ -37,19 +38,20 @@ interface TutorPublicProfileProps {
   tutorProfile: TutorProfileData | null;
   certifications?: any[];
   isOwnProfile?: boolean;
+  embedded?: boolean;
 }
 
-type TutorTab = 'schedule' | 'about' | 'credentials' | 'portfolio';
+type TutorTab = 'availability' | 'about' | 'credentials' | 'portfolio';
 
 export default function TutorPublicProfile({
   profile,
   tutorProfile,
   certifications = [],
   isOwnProfile = false,
+  embedded = false,
 }: TutorPublicProfileProps) {
-  const [activeTab, setActiveTab] = useState<TutorTab>('schedule');
+  const [activeTab, setActiveTab] = useState<TutorTab>('availability');
   const [isInquiryOpen, setIsInquiryOpen] = useState(false);
-  const [selectedSlot, setSelectedSlot] = useState<{ day: DayOfWeek; time: string; status: SlotStatus } | null>(null);
 
   const subjects = tutorProfile?.teaching_subjects || profile.teachingSubjects || [];
   const curriculums = tutorProfile?.teaching_curriculums || profile.teachingCurriculums || [];
@@ -58,30 +60,28 @@ export default function TutorPublicProfile({
   const institution = tutorProfile?.institution || profile.institutionName;
   const specialization = tutorProfile?.specialization || profile.title;
 
-  const handleSelectSlot = (slot: { day: DayOfWeek; time: string; status: SlotStatus }) => {
-    setSelectedSlot(slot);
-    setIsInquiryOpen(true);
-  };
-
   const handleOpenGeneralInquiry = () => {
-    setSelectedSlot(null);
     setIsInquiryOpen(true);
   };
 
-  return (
-    <div className="max-w-5xl mx-auto space-y-8 animate-fade-in pb-16">
-      {/* Top Bar */}
-      <div className="flex items-center justify-between">
-        <BackButton href="/team" label="Back to Tutors & Contributors" />
-        {isOwnProfile && (
-          <Link
-            href="/settings/profile?tab=role-profile"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-background-card border border-border hover:border-primary text-foreground transition-all"
-          >
-            Edit Tutor Profile & Schedule
-          </Link>
-        )}
-      </div>
+  const shell = (
+    <div className={cn('space-y-8', embedded ? '' : 'max-w-5xl mx-auto animate-fade-in pb-16')}>
+      {!embedded && (
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <BackButton href="/team" label="Back to Tutors & Contributors" />
+          <div className="flex items-center gap-2">
+            <ShareProfileButton username={profile.username} customSlug={profile.customUrlSlug} />
+            {isOwnProfile && (
+              <Link
+                href="/settings/profile?tab=role-profile"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-background-card border border-border hover:border-primary text-foreground transition-all"
+              >
+                Edit Tutor Profile
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Hero Banner Card */}
       <div className="relative bg-background-card border border-border rounded-3xl overflow-hidden shadow-sm">
@@ -129,7 +129,9 @@ export default function TutorPublicProfile({
             </div>
 
             {/* Action & Rate */}
-            <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex flex-col items-start sm:items-end gap-3">
+              <TutorAvailabilityBadge availabilitySlots={tutorProfile?.availability_slots} />
+              <div className="flex items-center gap-3 flex-wrap">
               {hourlyRate && (
                 <div className="px-4 py-2.5 rounded-2xl bg-background-secondary border border-border">
                   <p className="text-[10px] uppercase font-bold text-foreground-muted tracking-wider">Rate</p>
@@ -144,6 +146,7 @@ export default function TutorPublicProfile({
                 <Send className="w-4 h-4" />
                 Inquire on Telegram
               </button>
+              </div>
             </div>
           </div>
 
@@ -180,16 +183,16 @@ export default function TutorPublicProfile({
       {/* Profile Tabs */}
       <div className="flex items-center gap-2 border-b border-border pb-2 overflow-x-auto">
         <button
-          onClick={() => setActiveTab('schedule')}
+          onClick={() => setActiveTab('availability')}
           className={cn(
             'inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap',
-            activeTab === 'schedule'
+            activeTab === 'availability'
               ? 'bg-primary text-primary-foreground shadow-xs'
               : 'text-foreground-muted hover:text-foreground hover:bg-background-secondary'
           )}
         >
           <Calendar className="w-4 h-4" />
-          Weekly Teaching Schedule
+          Availability
         </button>
 
         <button
@@ -234,30 +237,18 @@ export default function TutorPublicProfile({
         )}
       </div>
 
-      {/* Tab 1: Weekly Teaching Schedule */}
-      {activeTab === 'schedule' && (
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <h2 className="text-lg font-bold text-foreground">Weekly Class Schedule</h2>
-              <p className="text-xs text-foreground-muted">
-                Sunday to Saturday timetable view. Click any open slot to request lessons.
-              </p>
-            </div>
-            <button
-              onClick={handleOpenGeneralInquiry}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline cursor-pointer"
-            >
-              <MessageSquare className="w-3.5 h-3.5" />
-              Need custom timing? Inquire on Telegram
-            </button>
-          </div>
-
-          <TutorWeeklySchedule
-            availability={tutorProfile?.availability_slots}
-            isEditable={false}
-            onSelectSlot={handleSelectSlot}
-          />
+      {/* Tab 1: Availability */}
+      {activeTab === 'availability' && (
+        <div className="bg-background-card border border-border rounded-3xl p-6 sm:p-8 space-y-4">
+          <h2 className="text-lg font-bold text-foreground">Teaching Availability</h2>
+          <TutorAvailabilityBadge availabilitySlots={tutorProfile?.availability_slots} />
+          <button
+            onClick={handleOpenGeneralInquiry}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline cursor-pointer"
+          >
+            <MessageSquare className="w-3.5 h-3.5" />
+            Contact on Telegram for scheduling
+          </button>
         </div>
       )}
 
@@ -327,9 +318,11 @@ export default function TutorPublicProfile({
         tutorName={profile.name}
         telegramHandle={telegramHandle}
         hourlyRate={hourlyRate}
-        selectedSlot={selectedSlot}
+        selectedSlot={null}
         teachingSubjects={subjects}
       />
     </div>
   );
+
+  return shell;
 }

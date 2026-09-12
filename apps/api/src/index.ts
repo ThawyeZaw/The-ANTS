@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { getAuth } from './auth';
-import { createDb } from '@the-ants/db';
+import { createDb, isTransientD1Error } from '@the-ants/db';
 import { processNotificationQueue } from './services/notification-processor';
 
 // Route Handlers
@@ -141,6 +141,12 @@ app.all('/api/auth/*', async (c) => {
     return res;
   } catch (err: any) {
     console.error('[API Auth] Handler error:', err);
+    if (isTransientD1Error(err)) {
+      return c.json(
+        { error: 'Database connection dropped. Please try signing in again.' },
+        503
+      );
+    }
     return c.json({ error: err?.message || 'Auth internal error', stack: err?.stack }, 500);
   }
 });
@@ -158,6 +164,12 @@ app.all('/api/auth', async (c) => {
     return res;
   } catch (err: any) {
     console.error('[API Auth] Handler error:', err);
+    if (isTransientD1Error(err)) {
+      return c.json(
+        { error: 'Database connection dropped. Please try signing in again.' },
+        503
+      );
+    }
     return c.json({ error: err?.message || 'Auth internal error', stack: err?.stack }, 500);
   }
 });
@@ -170,7 +182,7 @@ app.route('/api/curriculum', createCurriculumRoutes(() => getDatabase()));
 app.route('/api/editor', createEditorRoutes(() => getDatabase()));
 app.route('/api/storage', createStorageRoutes());
 app.route('/api/cron', createCronRoutes(() => getDatabase()));
-app.route('/api/profile', createProfileRoutes(() => getDatabase()));
+app.route('/api/profile', createProfileRoutes((c) => getDatabase(c)));
 
 export default {
   fetch: app.fetch,

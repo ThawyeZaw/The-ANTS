@@ -15,13 +15,15 @@
       "binding": "DB",
       "database_name": "the-ants-db",
       "database_id": "d30062da-47f0-448a-b89b-c8c067981b28",
-      "migrations_dir": "../../packages/db/drizzle-d1"
+      "migrations_dir": "../../packages/db/drizzle-d1",
+      "remote": true
     }
   ],
   "r2_buckets": [
     {
       "binding": "ASSETS_BUCKET",
-      "bucket_name": "the-ants-assets"
+      "bucket_name": "the-ants-assets",
+      "remote": true
     }
   ],
   "triggers": {

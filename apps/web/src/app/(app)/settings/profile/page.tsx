@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import AdvancedProfileEditor from '@/components/settings/AdvancedProfileEditor';
+import ProfileEditorGate from '@/components/settings/ProfileEditorGate';
 import BackButton from '@/components/ui/BackButton';
 import { Metadata } from 'next';
 
@@ -24,7 +24,7 @@ export default function ProfileEditorPage() {
       </div>
 
       <Suspense fallback={<div className="text-center py-12 text-xs text-foreground-muted">Loading profile editor...</div>}>
-        <AdvancedProfileEditor />
+        <ProfileEditorGate />
       </Suspense>
     </div>
   );

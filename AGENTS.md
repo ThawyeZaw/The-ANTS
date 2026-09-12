@@ -96,9 +96,10 @@ In-repo specs (no Downloads path required):
 
 ```bash
 npm install
-npm run dev          # all workspaces (Turborepo)
-npm run dev:web      # Next.js on port 3005
-npm run dev:api      # Hono worker on port 8787
+npm run dev          # web (3005) + API with remote D1 the-ants-db (8787)
+npm run dev:web      # Next.js on port 3005 only
+npm run dev:api      # API with remote D1 only (8787)
+npm run dev:api:local # API with isolated local D1 (8787)
 npm run typecheck
 npm run build
 ```
