@@ -1,24 +1,45 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { eq, and, arrayContains } from 'drizzle-orm';
+import { eq, and, arrayContains, or, sql, type SQL } from 'drizzle-orm';
+import type { AnyColumn } from 'drizzle-orm';
 import { createDb, profiles } from '@the-ants/db';
+import {
+  canHavePublicProfile,
+  canViewPublicProfile,
+  normalizeProfileRoles,
+} from '@the-ants/shared-types';
 
-export function createProfileRoutes(getDb: () => ReturnType<typeof createDb>) {
+/** Case-insensitive equality for D1/SQLite (Postgres ILIKE is unsupported). */
+function iEqual(column: AnyColumn, value: string): SQL {
+  return sql`lower(${column}) = ${value.toLowerCase()}`;
+}
+
+export function createProfileRoutes(getDb: (c?: unknown) => ReturnType<typeof createDb>) {
   const router = new Hono();
 
   // 1. Get profile for a user
   router.get('/me', async (c) => {
-    const db = getDb();
+    const db = getDb(c);
     const userId = c.req.query('userId');
+    const email = c.req.query('email');
 
-    if (!userId) {
-      return c.json({ error: 'Missing userId parameter' }, 400);
+    if (!userId && !email) {
+      return c.json({ error: 'Missing userId or email parameter' }, 400);
     }
 
     try {
       const profile = await db.query.profiles.findFirst({
-        where: eq(profiles.id, userId as any),
+        where: userId
+          ? eq(profiles.id, userId as any)
+          : eq(profiles.email, email as string),
       });
+
+      if (!profile && userId && email) {
+        const byEmail = await db.query.profiles.findFirst({
+          where: eq(profiles.email, email),
+        });
+        if (byEmail) return c.json({ profile: byEmail });
+      }
 
       if (!profile) {
         return c.json({ profile: null }, 404);
@@ -32,7 +53,7 @@ export function createProfileRoutes(getDb: () => ReturnType<typeof createDb>) {
 
   // 2. Update profile
   router.put('/me', async (c) => {
-    const db = getDb();
+    const db = getDb(c);
 
     // Permissive schema: preserves the camelCase/snake_case alias contract while
     // validating types and stripping unknown fields (prevents mass-assignment).
@@ -159,7 +180,7 @@ export function createProfileRoutes(getDb: () => ReturnType<typeof createDb>) {
 
   // 3. Get all public profiles (for Explore & Tutor Directory)
   router.get('/public', async (c) => {
-    const db = getDb();
+    const db = getDb(c);
     const roleFilter = c.req.query('role');
 
     try {
@@ -171,7 +192,11 @@ export function createProfileRoutes(getDb: () => ReturnType<typeof createDb>) {
         limit: 100,
       });
 
-      return c.json({ success: true, profiles: publicProfiles });
+      const filtered = publicProfiles.filter((row) =>
+        canHavePublicProfile(normalizeProfileRoles(row.roles as any, row.role))
+      );
+
+      return c.json({ success: true, profiles: filtered });
     } catch (err: any) {
       return c.json({ error: err.message }, 500);
     }
@@ -179,16 +204,30 @@ export function createProfileRoutes(getDb: () => ReturnType<typeof createDb>) {
 
   // 4. Get public profile by username
   router.get('/:username', async (c) => {
-    const db = getDb();
+    const db = getDb(c);
     const username = c.req.param('username');
 
     try {
       const profile = await db.query.profiles.findFirst({
-        where: eq(profiles.username, username),
+        where: or(
+          iEqual(profiles.username, username),
+          iEqual(profiles.custom_url_slug, username)
+        ),
       });
 
       if (!profile) {
         return c.json({ profile: null }, 404);
+      }
+
+      const roles = normalizeProfileRoles(profile.roles as any, profile.role);
+      const visibility = canViewPublicProfile({
+        roles,
+        isPublic: profile.is_public ?? false,
+        profileUserId: profile.id,
+      });
+
+      if (!visibility.allowed) {
+        return c.json({ profile: null, unavailableReason: visibility.reason }, 404);
       }
 
       return c.json({ success: true, profile });

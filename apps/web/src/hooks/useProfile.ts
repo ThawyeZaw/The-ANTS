@@ -30,6 +30,7 @@ interface UseProfileReturn {
   isLoading: boolean;
   isOwnProfile: boolean;
   notFound: boolean;
+  unavailableReason?: string;
   refetch: () => Promise<void>;
 }
 
@@ -43,6 +44,7 @@ export function useProfile(username: string): UseProfileReturn {
   const [stats, setStats] = useState<ContributorStatsData | null>(null);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [notFound, setNotFound] = useState(false);
+  const [unavailableReason, setUnavailableReason] = useState<string | undefined>();
   const [certifications, setCertifications] = useState<any[]>([]);
 
   const isOwnProfile = !!(user && profile && user.id === profile.id);
@@ -61,7 +63,7 @@ export function useProfile(username: string): UseProfileReturn {
       return;
     }
 
-    const data = await actionGetFullProfile(resolvedUsername);
+    const data = await actionGetFullProfile(resolvedUsername, user?.id ?? null);
 
     if (data.notFound || !data.profile) {
       setProfile(null);
@@ -71,10 +73,12 @@ export function useProfile(username: string): UseProfileReturn {
       setActivities([]);
       setCertifications([]);
       setNotFound(true);
+      setUnavailableReason(data.unavailableReason);
       setIsLoading(false);
       return;
     }
 
+    setUnavailableReason(undefined);
     setProfile(data.profile);
     setTutorProfile(data.tutorProfile);
     setContributorProfile(data.contributorProfile);
@@ -102,6 +106,7 @@ export function useProfile(username: string): UseProfileReturn {
     isLoading,
     isOwnProfile,
     notFound,
+    unavailableReason,
     refetch: fetchProfile,
   };
 }

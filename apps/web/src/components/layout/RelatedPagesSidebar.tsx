@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import AppIcon from '@/components/ui/AppIcon';
+import { useStaffProfileEligible } from '@/hooks/useStaffProfileEligible';
 import { cn } from '@/lib/utils';
 
 interface SidebarLink {
@@ -116,7 +117,10 @@ function SidebarIconBtn({ link, isActive }: { link: SidebarLink; isActive: boole
 
 export default function RelatedPagesSidebar({ className }: { className?: string }) {
   const pathname = usePathname();
-  const contextLinks = getContextLinks(pathname);
+  const staffEligible = useStaffProfileEligible();
+  const contextLinks = getContextLinks(pathname).filter(
+    (link) => staffEligible || !link.href.startsWith('/profile/')
+  );
 
   if (contextLinks.length === 0) return null;
 

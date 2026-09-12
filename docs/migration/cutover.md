@@ -54,6 +54,15 @@ Set to: `https://the-ants.org/api/telegram/webhook`
 2. Neon: delete project  
 3. Optional: remove `*.the-ants.org` Vercel A records and `_domainconnect` CNAME
 
+## Routing note (important)
+
+Do **not** add a Worker route pattern `*.the-ants.org/*` on `the-ants-web`. That steals `api.the-ants.org` from `the-ants-api` and breaks login (CORS / 404 HTML from Next). Use **custom domains** only:
+
+- `the-ants.org` + `www.the-ants.org` → `the-ants-web`
+- `api.the-ants.org` → `the-ants-api`
+
+(Fixed 2026-09-12: deleted wildcard route `*.the-ants.org/*`.)
+
 ## Rollback
 
 Cloudflare → Workers → `the-ants-web` → Domains → detach apex/`www`; restore Vercel DNS; reset Telegram webhook. Delete Redirect Rule “www to apex (Phase 6)” if rolling back www.

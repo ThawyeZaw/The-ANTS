@@ -8,14 +8,15 @@
     "enabled": true
   },
   "vars": {
-    "ENVIRONMENT": "production"
+    "ENVIRONMENT": "development"
   },
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "the-ants-db",
-      "database_id": "d30062da-47f0-448a-b89b-c8c067981b28",
-      "migrations_dir": "../../packages/db/drizzle-d1"
+      "database_name": "the-ants-db-dev",
+      "database_id": "694923f0-c484-47db-a36e-548c179a0e06",
+      "migrations_dir": "../../packages/db/drizzle-d1",
+      "remote": true
     }
   ],
   "r2_buckets": [

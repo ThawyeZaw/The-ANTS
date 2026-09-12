@@ -137,8 +137,9 @@ Telegram notification queue is drained by the **API Worker cron** (`apps/api`), 
 
 ### 3. Run development servers
 ```bash
-npm run dev       # web + API via Turborepo
+npm run dev       # web (3005) + API with remote D1 the-ants-db (8787)
 npm run dev:web   # web only (port 3005)
+npm run dev:api:local  # isolated local D1 (solo experiments)
 npm run typecheck
 ```
 

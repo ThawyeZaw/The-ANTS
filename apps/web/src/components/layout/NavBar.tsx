@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
+import { useStaffProfileEligible } from '@/hooks/useStaffProfileEligible';
 import { cn, getInitials } from '@/lib/utils';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 
@@ -211,6 +212,7 @@ export default function NavBar() {
   const tab = searchParams.get('tab');
   const { user, isAuthenticated, logout } = useAuth();
   const { isTutor, isContributor, isAdmin } = useRole();
+  const staffEligible = useStaffProfileEligible();
 
   const [mounted, setMounted] = useState(false);
   const [openPanel, setOpenPanel] = useState<PanelKey>(null);
@@ -289,22 +291,26 @@ export default function NavBar() {
             </div>
           </div>
           <div className="space-y-0.5">
-            <Link
-              href={`/profile/${user.profile.username}`}
-              onClick={closePanel}
-              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-background-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            >
-              <UserCircle className="w-4 h-4" />
-              View Public Profile
-            </Link>
-            <Link
-              href="/settings/profile"
-              onClick={closePanel}
-              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-background-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            >
-              <Pencil className="w-4 h-4" />
-              Edit Profile & Schedule
-            </Link>
+            {staffEligible && (
+              <>
+                <Link
+                  href={`/profile/${user.profile.username}`}
+                  onClick={closePanel}
+                  className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-background-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                >
+                  <UserCircle className="w-4 h-4" />
+                  View Public Profile
+                </Link>
+                <Link
+                  href="/settings/profile"
+                  onClick={closePanel}
+                  className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-background-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                >
+                  <Pencil className="w-4 h-4" />
+                  Edit Profile & Schedule
+                </Link>
+              </>
+            )}
             <Link
               href="/settings"
               onClick={closePanel}

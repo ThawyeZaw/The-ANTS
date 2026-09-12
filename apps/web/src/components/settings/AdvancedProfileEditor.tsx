@@ -52,14 +52,12 @@ import {
 } from '@/types';
 import { cn, getInitials } from '@/lib/utils';
 import CertificationEditor from './CertificationEditor';
-import TutorWeeklySchedule, {
-  DayOfWeek,
-  SlotStatus,
-  WeeklyAvailability,
-  DAYS_OF_WEEK,
-  TIME_SLOTS,
-} from '@/components/profile/TutorWeeklySchedule';
 import { uploadAvatar } from '@/lib/avatar-upload';
+import {
+  canHavePublicProfile,
+  parseTutorAvailability,
+  type TutorAvailabilityStatus,
+} from '@the-ants/shared-types';
 import {
   actionGetFullProfile,
   actionCheckUsernameAvailable,
@@ -67,6 +65,7 @@ import {
   actionUpdateDisplayName,
   actionUpdateTutorProfile,
   actionUpdateContributorProfile,
+  actionSyncCertifications,
 } from '@/actions/profile';
 
 type SubTabId =
@@ -162,7 +161,8 @@ export default function AdvancedProfileEditor() {
   const [specialization, setSpecialization] = useState('');
   const [teachingSubjects, setTeachingSubjects] = useState<string[]>([]);
   const [teachingCurriculums, setTeachingCurriculums] = useState<string[]>([]);
-  const [availability, setAvailability] = useState<WeeklyAvailability>({});
+  const [availabilityStatus, setAvailabilityStatus] = useState<TutorAvailabilityStatus>('available');
+  const [availabilityNote, setAvailabilityNote] = useState('');
   const [newSubjectInput, setNewSubjectInput] = useState('');
 
   // Contributor profile state
@@ -206,7 +206,7 @@ export default function AdvancedProfileEditor() {
     });
 
     // Load full profile details (including tutor & contributor info)
-    actionGetFullProfile(user.profile.username).then((data) => {
+    actionGetFullProfile(user.profile.username, user.id).then((data) => {
       if (data.certifications) {
         setCerts(data.certifications);
       }
@@ -217,7 +217,9 @@ export default function AdvancedProfileEditor() {
         setSpecialization(data.tutorProfile.specialization || '');
         setTeachingSubjects(data.tutorProfile.teaching_subjects || []);
         setTeachingCurriculums(data.tutorProfile.teaching_curriculums || []);
-        setAvailability(data.tutorProfile.availability_slots || {});
+        const availabilityMeta = parseTutorAvailability(data.tutorProfile.availability_slots);
+        setAvailabilityStatus(availabilityMeta.status ?? 'available');
+        setAvailabilityNote(availabilityMeta.note ?? '');
       } else {
         setTelegramHandle(user.profile.telegramHandle || user.profile.username || '');
       }
@@ -305,59 +307,11 @@ export default function AdvancedProfileEditor() {
     if (file) handleAvatarFile(file);
   };
 
-  // Schedule Slot Changer
-  const handleSlotChange = (day: DayOfWeek, time: string, newStatus: SlotStatus) => {
-    setAvailability((prev) => ({
-      ...prev,
-      [day]: {
-        ...(prev[day] || {}),
-        [time]: newStatus,
-      },
-    }));
-  };
-
-  // Schedule Quick Preset Handlers
-  const applyPreset = (preset: 'weekday-evenings' | 'weekend-mornings' | 'all-available' | 'clear') => {
-    const updated: WeeklyAvailability = {};
-
-    if (preset === 'clear') {
-      setAvailability({});
-      return;
-    }
-
-    for (const d of DAYS_OF_WEEK) {
-      updated[d] = { ...(availability[d] || {}) };
-    }
-
-    if (preset === 'weekday-evenings') {
-      const weekdays: DayOfWeek[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-      const eveningHours = ['18:00', '19:00', '20:00', '21:00'];
-      for (const d of weekdays) {
-        if (!updated[d]) updated[d] = {};
-        for (const h of eveningHours) {
-          updated[d][h] = 'available';
-        }
-      }
-    } else if (preset === 'weekend-mornings') {
-      const weekends: DayOfWeek[] = ['Saturday', 'Sunday'];
-      const morningHours = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00'];
-      for (const d of weekends) {
-        if (!updated[d]) updated[d] = {};
-        for (const h of morningHours) {
-          updated[d][h] = 'available';
-        }
-      }
-    } else if (preset === 'all-available') {
-      for (const d of DAYS_OF_WEEK) {
-        if (!updated[d]) updated[d] = {};
-        for (const h of TIME_SLOTS) {
-          updated[d][h] = 'available';
-        }
-      }
-    }
-
-    setAvailability(updated);
-  };
+  const staffEligible = canHavePublicProfile(
+    user?.profile.roles && user.profile.roles.length > 0
+      ? user.profile.roles
+      : [user?.profile.role ?? 'student']
+  );
 
   const handleToggleSubject = (sub: string) => {
     if (teachingSubjects.includes(sub)) {
@@ -542,7 +496,7 @@ export default function AdvancedProfileEditor() {
         activities: formData.activities || [],
         achievements: formData.achievements || [],
         academicGrades: formData.academicGrades || [],
-        isPublic: formData.isPublic ?? true,
+        isPublic: staffEligible ? (formData.isPublic ?? true) : false,
         pinnedItemId: formData.pinnedItemId || undefined,
         sectionVisibility: formData.sectionVisibility,
         theme: formData.theme,
@@ -553,7 +507,14 @@ export default function AdvancedProfileEditor() {
       });
 
       // 4. Save Tutor Profile if user has Tutor/Admin role or filled tutor fields
-      if (isTutor || isAdmin || cleanTelegram || teachingSubjects.length > 0 || Object.keys(availability).length > 0) {
+      const certRes = await actionSyncCertifications(user.id, certs);
+      if (!certRes.success) {
+        setSaveError(certRes.error || 'Failed to save certifications');
+        setIsSaving(false);
+        return;
+      }
+
+      if (isTutor || isAdmin || cleanTelegram || teachingSubjects.length > 0) {
         const tutorRes = await actionUpdateTutorProfile(user.id, {
           telegram_handle: cleanTelegram,
           hourly_rate: hourlyRate.trim(),
@@ -561,8 +522,11 @@ export default function AdvancedProfileEditor() {
           specialization: specialization.trim(),
           teaching_subjects: teachingSubjects,
           teaching_curriculums: teachingCurriculums,
-          availability_slots: availability,
-          is_active: true,
+          availability_slots: {
+            status: availabilityStatus,
+            note: availabilityNote.trim() || undefined,
+          },
+          is_active: availabilityStatus !== 'unavailable',
         });
 
         if (!tutorRes.success) {
@@ -782,7 +746,8 @@ export default function AdvancedProfileEditor() {
                 </div>
               </div>
 
-              {/* Profile Privacy / Visibility Toggle */}
+              {/* Profile Privacy / Visibility Toggle (staff roles only) */}
+              {staffEligible && (
               <div className="p-4 rounded-2xl bg-background-secondary/60 border border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-start sm:items-center gap-3">
                   <div
@@ -838,6 +803,19 @@ export default function AdvancedProfileEditor() {
                   />
                 </button>
               </div>
+              )}
+
+              {!staffEligible && (
+                <div className="p-4 rounded-2xl bg-background-secondary/60 border border-border flex items-start gap-3">
+                  <Lock className="w-5 h-5 text-foreground-muted shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-bold text-foreground">Student accounts are private</p>
+                    <p className="text-[11px] text-foreground-muted mt-0.5">
+                      Public profiles are available for tutors, contributors, and staff. Your portfolio edits are saved for your account only.
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Form Fields */}
               <div className="grid gap-4">
@@ -1087,57 +1065,47 @@ export default function AdvancedProfileEditor() {
                 </div>
               </div>
 
-              {/* Weekly Availability Schedule Grid */}
+              {/* Availability status (replaces weekly schedule grid) */}
               <div className="space-y-3 pt-4 border-t border-border">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div>
-                    <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-emerald-500" />
-                      Weekly Teaching Timetable (Sunday–Saturday)
-                    </h3>
-                    <p className="text-[11px] text-foreground-muted">
-                      Click slots to toggle: Available (Free), Flexible (Contact), or Taken (Busy).
-                    </p>
-                  </div>
-
-                  {/* Schedule Presets */}
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <button
-                      type="button"
-                      onClick={() => applyPreset('weekday-evenings')}
-                      className="px-2.5 py-1 rounded-lg bg-background-secondary border border-border text-[11px] font-semibold text-foreground hover:bg-background-secondary/80 transition-colors cursor-pointer"
-                    >
-                      Weekday Evenings
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => applyPreset('weekend-mornings')}
-                      className="px-2.5 py-1 rounded-lg bg-background-secondary border border-border text-[11px] font-semibold text-foreground hover:bg-background-secondary/80 transition-colors cursor-pointer"
-                    >
-                      Weekend Mornings
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => applyPreset('all-available')}
-                      className="px-2.5 py-1 rounded-lg bg-background-secondary border border-border text-[11px] font-semibold text-foreground hover:bg-background-secondary/80 transition-colors cursor-pointer"
-                    >
-                      All Open
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => applyPreset('clear')}
-                      className="px-2.5 py-1 rounded-lg bg-destructive/10 border border-destructive/20 text-[11px] font-semibold text-destructive hover:bg-destructive/20 transition-colors cursor-pointer"
-                    >
-                      Reset
-                    </button>
-                  </div>
+                <div>
+                  <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-emerald-500" />
+                    Teaching Availability Status
+                  </h3>
+                  <p className="text-[11px] text-foreground-muted">
+                    Shown on your public tutor profile so students know if you are accepting inquiries.
+                  </p>
                 </div>
-
-                <div className="overflow-x-auto p-2 bg-background-secondary/30 border border-border rounded-2xl">
-                  <TutorWeeklySchedule
-                    availability={availability}
-                    onSlotChange={handleSlotChange}
-                    isEditable={true}
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {([
+                    ['available', 'Available', 'Accepting new students'],
+                    ['limited', 'Limited', 'Limited slots — contact first'],
+                    ['unavailable', 'Unavailable', 'Not taking new inquiries'],
+                  ] as const).map(([value, label, hint]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setAvailabilityStatus(value)}
+                      className={cn(
+                        'p-4 rounded-2xl border text-left transition-all cursor-pointer',
+                        availabilityStatus === value
+                          ? 'border-emerald-500 bg-emerald-500/10 ring-2 ring-emerald-500/20'
+                          : 'border-border bg-background-secondary hover:border-primary/30'
+                      )}
+                    >
+                      <p className="text-xs font-bold text-foreground">{label}</p>
+                      <p className="text-[11px] text-foreground-muted mt-1">{hint}</p>
+                    </button>
+                  ))}
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-foreground mb-1.5 block">Optional note</label>
+                  <input
+                    type="text"
+                    value={availabilityNote}
+                    onChange={(e) => setAvailabilityNote(e.target.value)}
+                    placeholder="e.g. Available on weekday evenings only"
+                    className="w-full px-4 py-2.5 rounded-xl bg-background-secondary border border-border text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
               </div>

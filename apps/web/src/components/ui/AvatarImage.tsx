@@ -8,7 +8,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { isPresetAvatar, getPresetAvatar, PRESET_AVATARS } from '@/constants/avatars';
-import { getInitials } from '@/lib/utils';
+import { getInitials, resolveStoredAssetUrl } from '@/lib/utils';
 
 interface AvatarImageProps {
   /** The avatar value from profile (e.g. empty string, a URL, or 'preset:fox') */
@@ -52,13 +52,14 @@ const INITIALS_SIZE_MAP: Record<string, string> = {
 };
 
 export default function AvatarImage({ avatar, name, size = 'md', className = '' }: AvatarImageProps) {
+  const resolvedAvatar = resolveStoredAssetUrl(avatar);
   const sizeClass = SIZE_MAP[size];
   const emojiSizeClass = EMOJI_SIZE_MAP[size];
   const [imageError, setImageError] = useState(false);
 
   // Preset avatar
-  if (avatar && isPresetAvatar(avatar)) {
-    const preset = getPresetAvatar(avatar);
+  if (resolvedAvatar && isPresetAvatar(resolvedAvatar)) {
+    const preset = getPresetAvatar(resolvedAvatar);
     if (preset) {
       return (
         <div
@@ -71,13 +72,14 @@ export default function AvatarImage({ avatar, name, size = 'md', className = '' 
   }
 
   // Uploaded image
-  if (avatar && !imageError) {
+  if (resolvedAvatar && !imageError) {
     return (
       <div className={`shrink-0 rounded-full overflow-hidden relative ${sizeClass} ${className}`}>
         <Image
-          src={avatar}
+          src={resolvedAvatar}
           alt={name}
           fill
+          unoptimized={/^https?:\/\//.test(resolvedAvatar)}
           className="object-cover"
           sizes={IMAGE_PX_SIZES[size]}
           onError={() => setImageError(true)}
@@ -87,7 +89,7 @@ export default function AvatarImage({ avatar, name, size = 'md', className = '' 
   }
 
   // Uploaded image that failed — fallback to initials
-  if (avatar && imageError) {
+  if (resolvedAvatar && imageError) {
     return (
       <div
         className={`shrink-0 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold shadow-lg ring-2 ring-primary/20 ${sizeClass} ${INITIALS_SIZE_MAP[size]} ${className}`}

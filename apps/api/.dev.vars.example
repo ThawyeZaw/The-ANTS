@@ -1,0 +1,17 @@
+# Copy to apps/api/.dev.vars (gitignored)
+CRON_SECRET=
+TELEGRAM_BOT_TOKEN=
+
+# Legacy — not used by Workers runtime (D1 binding `DB` is live DB)
+# DATABASE_URL=
+
+# Required for `npm run dev:shared` (team D1) and `npm run dev:remote` (prod — avoid).
+# Create at https://dash.cloudflare.com/profile/api-tokens
+# Permissions: Account / D1 / Edit, Account / Workers Scripts / Read
+# CLOUDFLARE_API_TOKEN=
+#
+# Team workflow: docs/migration/local-dev.md
+#
+# If remote dev fails with "unable to verify the first certificate" (VPN/corporate proxy),
+# `dev:shared` / `dev:remote` pass `--use-system-ca` to Node. Install your org root CA in
+# Windows Trusted Root store, or run: NODE_OPTIONS=--use-system-ca npm run dev:shared

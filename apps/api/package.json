@@ -3,9 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "wrangler dev src/index.ts",
-    "deploy": "wrangler deploy src/index.ts",
-    "build": "wrangler deploy --dry-run --outdir dist",
+    "dev": "node --use-system-ca ../../node_modules/wrangler/bin/wrangler.js dev src/index.ts -c wrangler.remote.jsonc --port 8787",
+    "dev:local": "node ../../node_modules/wrangler/bin/wrangler.js dev src/index.ts --port 8787",
+    "dev:remote": "npm run dev",
+    "dev:shared": "node --use-system-ca ../../node_modules/wrangler/bin/wrangler.js dev src/index.ts -c wrangler.shared.jsonc --port 8787",
+    "promote-admin:local": "node ../../node_modules/wrangler/bin/wrangler.js d1 execute the-ants-db --local -c wrangler.jsonc --file scripts/promote-local-admin.sql",
+    "migrate:shared": "node --use-system-ca ../../node_modules/wrangler/bin/wrangler.js d1 migrations apply the-ants-db-dev --remote -c wrangler.shared.jsonc",
+    "deploy": "node ../../node_modules/wrangler/bin/wrangler.js deploy src/index.ts",
+    "build": "node ../../node_modules/wrangler/bin/wrangler.js deploy --dry-run --outdir dist",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -19,6 +24,6 @@
     "@cloudflare/workers-types": "^4.20250204.0",
     "@types/node": "^20.19.43",
     "typescript": "^5",
-    "wrangler": "^3.109.2"
+    "wrangler": "^4.131.1"
   }
 }

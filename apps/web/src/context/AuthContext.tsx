@@ -15,6 +15,7 @@ import {
 import { AuthUser, Profile, UserRole, type OnboardingCurriculumSelection } from '@/types';
 import { authClient } from '@/lib/auth-client';
 import { actionUpdateProfile } from '@/actions/profile';
+import { humanizeAuthError, resolveStoredAssetUrl } from '@/lib/utils';
 
 const AUTH_CACHE_KEY = 'the_ants_auth_user';
 const ACTIVE_ROLE_CACHE_KEY = 'the_ants_active_role';
@@ -26,17 +27,31 @@ function normalizeRole(role: string): UserRole {
   return (role as UserRole) || 'student';
 }
 
-function normalizeRoles(roles: any, fallbackRole?: string): UserRole[] {
-  let list: string[] = [];
+function parseRolesField(roles: unknown): string[] | null {
   if (Array.isArray(roles) && roles.length > 0) {
-    list = roles;
-  } else if (fallbackRole) {
-    list = [fallbackRole];
-  } else {
-    list = ['student'];
+    return roles.filter((role): role is string => typeof role === 'string');
   }
-  const normalized = list.map(normalizeRole);
-  return Array.from(new Set(normalized));
+  if (typeof roles === 'string' && roles.trim()) {
+    const trimmed = roles.trim();
+    if (trimmed.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.filter((role): role is string => typeof role === 'string');
+        }
+      } catch {
+        /* keep going */
+      }
+    }
+    return [trimmed];
+  }
+  return null;
+}
+
+function normalizeRoles(roles: unknown, fallbackRole?: string): UserRole[] {
+  const parsed = parseRolesField(roles);
+  const list = parsed && parsed.length > 0 ? parsed : fallbackRole ? [fallbackRole] : ['student'];
+  return Array.from(new Set(list.map(normalizeRole)));
 }
 
 function mapProfile(row: Record<string, unknown>): Profile {
@@ -48,7 +63,9 @@ function mapProfile(row: Record<string, unknown>): Profile {
     email: (row.email as string) ?? '',
     name: (row.name as string) ?? '',
     username: (row.username as string) ?? '',
-    avatar: (row.avatar_url as string) ?? (row.avatar as string) ?? (row.image as string) ?? '',
+    avatar: resolveStoredAssetUrl(
+      (row.avatar_url as string) ?? (row.avatar as string) ?? (row.image as string) ?? ''
+    ),
     role: primaryRole,
     roles,
     activeRole: 'student',
@@ -58,7 +75,9 @@ function mapProfile(row: Record<string, unknown>): Profile {
     isPublic: (row.is_public as boolean) ?? true,
     pinnedItemId: (row.pinned_item_id as string) ?? undefined,
     sectionVisibility: (row.section_visibility as Profile['sectionVisibility']) ?? undefined,
-    sectionOrder: (row.section_order as Profile['sectionOrder']) ?? undefined,
+    sectionOrder:
+      (row.section_order as Profile['sectionOrder']) ??
+      ((row.section_visibility as any)?.order ?? undefined),
     spacing: (row.spacing as Profile['spacing']) ?? undefined,
     width: (row.width as Profile['width']) ?? undefined,
     sectionLayout: (row.section_layout as Profile['sectionLayout']) ?? undefined,
@@ -99,7 +118,7 @@ function createDefaultProfile(userId: string, email: string, name?: string): Pro
     role: 'student',
     roles: ['student'],
     activeRole: 'student',
-    isPublic: true,
+    isPublic: false,
     showClubMemberships: true,
     showClubProjects: true,
     showClubActivity: true,
@@ -229,29 +248,74 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Sync profile helper
   const syncProfile = useCallback(
-    async (userId: string, email: string, name?: string) => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/profile/me?userId=${encodeURIComponent(userId)}`, {
+    async (
+      userId: string,
+      email: string,
+      name?: string,
+      sessionFields?: { role?: string; image?: string | null }
+    ) => {
+      const loadProfile = async () => {
+        const params = new URLSearchParams({ userId, email });
+        const res = await fetch(`${API_BASE_URL}/api/profile/me?${params.toString()}`, {
           credentials: 'include',
         });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.profile) {
-            const profile = mapProfile(data.profile);
-            const authUser: AuthUser = { id: userId, email, profile };
-            setUser(authUser);
-            if (typeof window !== 'undefined') {
-              localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify(authUser));
-            }
-            return authUser;
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data.profile ? mapProfile(data.profile) : null;
+      };
+
+      try {
+        let profile = await loadProfile();
+        if (!profile) {
+          await new Promise((resolve) => setTimeout(resolve, 250));
+          profile = await loadProfile();
+        }
+        if (profile) {
+          if (!profile.avatar && sessionFields?.image) {
+            profile = { ...profile, avatar: resolveStoredAssetUrl(sessionFields.image) };
           }
+          if (sessionFields?.role) {
+            const sessionRole = normalizeRole(sessionFields.role);
+            if (!profile.roles.includes(sessionRole)) {
+              profile = {
+                ...profile,
+                role: profile.role === 'student' ? sessionRole : profile.role,
+                roles: Array.from(new Set([...profile.roles, sessionRole])),
+              };
+            }
+          }
+          const authUser: AuthUser = { id: userId, email, profile };
+          setUser(authUser);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify(authUser));
+          }
+          return authUser;
         }
       } catch {}
 
+      if (typeof window !== 'undefined') {
+        try {
+          const cached = localStorage.getItem(AUTH_CACHE_KEY);
+          if (cached) {
+            const parsed = JSON.parse(cached) as AuthUser;
+            if (parsed?.id === userId && parsed.profile.roles?.includes('admin')) {
+              setUser(parsed);
+              return parsed;
+            }
+          }
+        } catch {}
+      }
+
+      const fallbackRole = sessionFields?.role ? normalizeRole(sessionFields.role) : 'student';
       const defaultUser: AuthUser = {
         id: userId,
         email,
-        profile: createDefaultProfile(userId, email, name),
+        profile: {
+          ...createDefaultProfile(userId, email, name),
+          role: fallbackRole,
+          roles: fallbackRole === 'student' ? ['student'] : [fallbackRole, 'student'],
+          avatar: resolveStoredAssetUrl(sessionFields?.image),
+        },
       };
       setUser(defaultUser);
       if (typeof window !== 'undefined') {
@@ -272,13 +336,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!isMounted) return;
 
         if (sessionRes?.data?.user) {
-          const sessionUser = sessionRes.data.user;
-          await syncProfile(sessionUser.id, sessionUser.email, sessionUser.name);
+          const sessionUser = sessionRes.data.user as typeof sessionRes.data.user & {
+            role?: string;
+          };
+          await syncProfile(sessionUser.id, sessionUser.email, sessionUser.name, {
+            role: sessionUser.role,
+            image: sessionUser.image,
+          });
         } else {
-          const cached = typeof window !== 'undefined' ? localStorage.getItem(AUTH_CACHE_KEY) : null;
-          if (!cached) {
-            setUser(null);
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem(AUTH_CACHE_KEY);
           }
+          setUser(null);
         }
       } catch (err) {
         console.warn('Session verification fallback:', err);
@@ -308,17 +377,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (error) {
           return {
             success: false,
-            error: error.message || 'Invalid email or password. Please check your credentials.',
+            error: humanizeAuthError(
+              error.message || 'Invalid email or password. Please check your credentials.'
+            ),
           };
         }
 
         if (data?.user) {
-          const sessionUser = data.user;
-          const authUser = await syncProfile(sessionUser.id, sessionUser.email, sessionUser.name);
+          const sessionUser = data.user as typeof data.user & { role?: string };
+          const authUser = await syncProfile(sessionUser.id, sessionUser.email, sessionUser.name, {
+            role: sessionUser.role,
+            image: sessionUser.image,
+          });
           setUser(authUser);
-          setActiveRole('student'); // Default landing active role
+          const cachedRole =
+            typeof window !== 'undefined' ? localStorage.getItem(ACTIVE_ROLE_CACHE_KEY) : null;
+          const nextRole =
+            cachedRole && authUser.profile.roles.includes(normalizeRole(cachedRole))
+              ? normalizeRole(cachedRole)
+              : authUser.profile.roles.includes('admin')
+                ? 'admin'
+                : 'student';
+          setActiveRole(nextRole);
           if (typeof window !== 'undefined') {
-            localStorage.setItem(ACTIVE_ROLE_CACHE_KEY, 'student');
+            localStorage.setItem(ACTIVE_ROLE_CACHE_KEY, nextRole);
           }
           return { success: true };
         }

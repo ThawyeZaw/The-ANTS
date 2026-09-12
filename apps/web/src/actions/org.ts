@@ -7,6 +7,8 @@
 
 import { getDb, orgMission, orgTeamMembers, orgTimelineItems, profiles } from '@/lib/db';
 import { asc, eq } from 'drizzle-orm';
+import { canHavePublicProfile, normalizeProfileRoles } from '@the-ants/shared-types';
+import type { UserRole } from '@/types';
 import type {
   OrgMission,
   OrgTeamMember,
@@ -328,6 +330,7 @@ export async function actionGetAllTeamProfiles(): Promise<
   try {
     const db = getDb();
     const rows = await db.query.profiles.findMany({
+      where: eq(profiles.is_public, true),
       columns: {
         id: true,
         name: true,
@@ -340,14 +343,10 @@ export async function actionGetAllTeamProfiles(): Promise<
         founder_type: true,
       },
     });
-    // Filter to non-student-only profiles or those with a founder designation
     return (rows as any[])
       .filter((r: any) => {
-        const rRoles: string[] = r.roles && r.roles.length > 0 ? r.roles : [r.role || 'student'];
-        const hasStaffRole = rRoles.some((role) =>
-          ['tutor', 'teacher', 'contributor', 'main_contributor', 'admin'].includes(role)
-        );
-        return hasStaffRole || r.founder_type != null;
+        const rRoles = normalizeProfileRoles(r.roles as UserRole[], r.role);
+        return canHavePublicProfile(rRoles) || r.founder_type != null;
       })
       .map((r: any) => ({
         ...r,
