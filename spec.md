@@ -2,17 +2,18 @@
 
 ## 1. Project architecture & tech stack (HONC monorepo)
 
-- **Frontend:** Next.js 16 (App Router), React 19, Turbopack (`apps/web`)
+- **Frontend:** Next.js 16.3+ (App Router), React 19 (`apps/web`) — Vercel production; OpenNext → Cloudflare Workers preview (`the-ants-web`)
 - **Styling:** Tailwind CSS v4, semantic design tokens, Lucide React icons
 - **Typography (redesign):** Plus Jakarta Sans (UI); JetBrains Mono (timers, syllabus codes, numeric metrics)
 - **Language:** TypeScript 5 (strict)
 - **API:** Hono on Cloudflare Workers (`apps/api`)
-- **Database & ORM:** Neon Serverless PostgreSQL + Drizzle (`packages/db`)
+- **Database & ORM:** Cloudflare D1 (SQLite) + Drizzle (`packages/db`) — Neon project kept offline until Phase 6 cutover (Phase 5 = optional data export)
 - **Shared contracts:** TypeScript interfaces & Zod schemas (`packages/shared-types`)
-- **Authentication:** Better Auth with session management and multi-role access
-- **Object storage:** Cloudflare R2 (S3-compatible presigned upload/download)
-- **Jobs & notifications:** Cloudflare cron triggers + Telegram Bot API
-- **Hosting:** Vercel (frontend, `https://the-ants.org`), Cloudflare (API & edge)
+- **Authentication:** Better Auth + Drizzle **sqlite** adapter on Workers; canonical `baseURL` / client API = `https://api.the-ants.org`
+- **Object storage:** Cloudflare R2 bucket `the-ants-assets` (private; served via API `/api/storage/file/...`)
+- **Jobs & notifications:** Cloudflare Worker cron + Telegram Bot API (DB queue; no QStash / no GitHub Actions cron)
+- **Hosting (transitional):** Vercel (frontend, `https://the-ants.org`) until OpenNext Workers cutover; Cloudflare Workers for API (`api.the-ants.org`) + web preview + R2 + D1
+- **Migration tracker:** [`docs/migration/cloudflare.md`](./docs/migration/cloudflare.md) — **Phase 4 done (repo)** · ask before Phase 5 · [`docs/migration/d1.md`](./docs/migration/d1.md)
 
 ### Design system (active)
 
@@ -38,7 +39,7 @@ Full path map: [`AGENTS.md`](./AGENTS.md), [`AGENTS.ui.md`](./AGENTS.ui.md), [`A
 
 ## 2. User roles & permissions
 
-Multi-role accounts use PostgreSQL arrays (`roles: text[]`).
+Multi-role accounts use a JSON text array on D1 (`roles` stored as JSON text, e.g. `["student"]`).
 
 ### Roles
 
@@ -46,8 +47,8 @@ Multi-role accounts use PostgreSQL arrays (`roles: text[]`).
 |---|---|---|
 | **Student** | Default | Library (courses, exams, **notes**, **flashcards**, **quizzes**) and tools (timetable, pomodoro, countdown, calculator, workspace); public profile |
 | **Tutor / Teacher** | Educators | Student access + tutor profile, Sun–Sat weekly schedule, Telegram inquiry + QR, tutor profile editor |
-| **Contributor** | Authors | Curriculum / notes / exam editors, review queue submissions, contributor profile |
-| **Main Contributor** | Senior reviewers | Contributor access + review queue moderation and contributor team management |
+| **Contributor** | Authors | Exam data / calculator / countdown editors, contributor profile |
+| **Main Contributor** | Senior reviewers | Contributor access + contributor team management |
 | **Admin** | Platform managers | Main contributor access + user management, direct role assignment, org mission/team editor |
 
 ### Role rules
@@ -81,13 +82,16 @@ Multi-role accounts use PostgreSQL arrays (`roles: text[]`).
 - **Grade Calculator (`/calculator`):** Weighted composite grades.
 - **Workspace (`/workspace`):** Personal study hub (bookmarks / saved items).
 
-### Pillar 3: Explore & tutors (`/explore`)
+### Pillar 3: Tutors & Contributors (`/team`)
 
-- **Tutor directory:** Filter by subjects, rate, qualifications.
+> **Note:** `/explore` permanently redirects to `/team`. Old bookmarks are preserved.
+
+- **Tutor directory:** Filter by Tutors / Contributors / Founders. Profile cards link to public profile pages.
 - **Public profile (`/profile/[username]`):** Portfolio / tutor schedule / contributor showcase; respects `profile.isPublic`.
 - **Tutor schedule states:** Available (emerald), Flexible (amber), Taken/Busy (muted).
 - **Telegram inquiry:** Prefill + mobile QR.
-- **Contributors:** Directory of curriculum editors and authors.
+- **Contributors:** Directory of curriculum editors and authors (role `contributor` | `main_contributor`).
+- **Founders:** Badge driven by `profiles.founder_type` (`'founder'` | `'co_founder'`); assignable via `org-activities/manage` Founders tab.
 
 ### Marketing & auth (UI developer)
 

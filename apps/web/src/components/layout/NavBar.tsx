@@ -21,10 +21,9 @@ import {
   Settings,
   GraduationCap,
   UserPlus,
-  ClipboardCheck,
   Building2,
   Wrench,
-  Compass,
+  Users,
   Info,
   Sparkles,
   Pencil,
@@ -43,8 +42,8 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
 }
 
-type PanelKey = 'tools' | 'explore' | 'user' | null;
-type SectionKey = 'tools' | 'explore' | 'role' | null;
+type PanelKey = 'tools' | 'team' | 'user' | null;
+type SectionKey = 'tools' | 'team' | 'role' | null;
 
 const TOOLS_LINKS: NavItem[] = [
   { label: 'Smart Timetable', href: '/timetable', icon: CalendarDays },
@@ -54,11 +53,9 @@ const TOOLS_LINKS: NavItem[] = [
   { label: 'My Workspace', href: '/workspace', icon: Wrench },
 ];
 
-const EXPLORE_LINKS: NavItem[] = [
-  { label: 'Explore Directory', href: '/explore', icon: Compass },
-  { label: 'Tutors & Schedules', href: '/explore?tab=tutors', icon: GraduationCap },
-  { label: 'Academic Contributors', href: '/explore?tab=contributors', icon: Pencil },
-  { label: 'About The ANTs', href: '/about', icon: Info },
+const TEAM_LINKS: NavItem[] = [
+  { label: 'Tutors & Contributors', href: '/team', icon: Users },
+  { label: 'About The ANTS', href: '/about', icon: Info },
 ];
 
 function isLibraryActive(pathname: string) {
@@ -75,8 +72,8 @@ function isToolsActive(pathname: string) {
   );
 }
 
-function isExploreActive(pathname: string) {
-  return pathname.startsWith('/explore') || pathname.startsWith('/about');
+function isTeamActive(pathname: string) {
+  return pathname.startsWith('/team') || pathname.startsWith('/about');
 }
 
 function isHomeActive(pathname: string) {
@@ -87,25 +84,16 @@ function isHomeActive(pathname: string) {
   );
 }
 
-function isHrefActive(href: string, pathname: string, tab: string | null): boolean {
-  const [path, query = ''] = href.split('?');
-  const params = new URLSearchParams(query);
-  const hrefTab = params.get('tab');
-
+function isHrefActive(href: string, pathname: string, _tab: string | null): boolean {
+  const [path] = href.split('?');
   if (path === '/about') return pathname.startsWith('/about');
-
-  if (path === '/explore') {
-    if (!pathname.startsWith('/explore')) return false;
-    if (hrefTab) return tab === hrefTab;
-    return !tab;
-  }
-
+  if (path === '/team') return pathname.startsWith('/team');
   return pathname === path || pathname.startsWith(`${path}/`);
 }
 
 function defaultSectionForPath(pathname: string): SectionKey {
   if (isToolsActive(pathname)) return 'tools';
-  if (isExploreActive(pathname)) return 'explore';
+  if (isTeamActive(pathname)) return 'team';
   return null;
 }
 
@@ -198,11 +186,10 @@ function RailIconLink({
   return (
     <Link
       href={href}
-      title={label}
       aria-label={label}
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'flex items-center justify-center p-2.5 rounded-xl transition-colors duration-200',
+        'group relative flex items-center justify-center p-2.5 rounded-xl transition-colors duration-200',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
         active
           ? 'bg-primary/10 text-primary'
@@ -210,6 +197,10 @@ function RailIconLink({
       )}
     >
       <Icon className="w-4 h-4" />
+      {/* Tooltip — visible on hover */}
+      <span className="absolute left-full ml-2.5 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded-lg text-xs font-semibold bg-background-card border border-border text-foreground shadow-lg whitespace-nowrap z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+        {label}
+      </span>
     </Link>
   );
 }
@@ -368,16 +359,10 @@ export default function NavBar() {
         </Link>
       )}
       {(isContributor || isAdmin) && (
-        <>
-          <Link href="/editor" onClick={closePanel} className={roleLinkClass}>
-            <Pencil className="w-4 h-4 text-primary shrink-0" />
-            <span className="truncate">Curriculum Editor</span>
-          </Link>
-          <Link href="/editor/review-queue" onClick={closePanel} className={roleLinkClass}>
-            <ClipboardCheck className="w-4 h-4 text-primary shrink-0" />
-            <span className="truncate">Review Queue</span>
-          </Link>
-        </>
+        <Link href="/editor" onClick={closePanel} className={roleLinkClass}>
+          <Pencil className="w-4 h-4 text-primary shrink-0" />
+          <span className="truncate">Exam Editor</span>
+        </Link>
       )}
       {isAdmin && (
         <>
@@ -445,7 +430,7 @@ export default function NavBar() {
           />
           <RailIconLink href="/library" label="Library" icon={BookOpen} active={isLibraryActive(pathname)} />
           <RailIconLink href="/timetable" label="Tools" icon={Wrench} active={isToolsActive(pathname)} />
-          <RailIconLink href="/explore" label="Explore" icon={Compass} active={isExploreActive(pathname)} />
+          <RailIconLink href="/team" label="Tutors & Contributors" icon={Users} active={isTeamActive(pathname)} />
           {mounted && hasStaffRole && (
             <RailIconLink href="/editor" label="Workspace Tools" icon={Sparkles} active={pathname.startsWith('/editor') || pathname.startsWith('/main-contributor') || pathname.startsWith('/org-activities')} />
           )}
@@ -511,16 +496,16 @@ export default function NavBar() {
 
           <div>
             <SectionLabel
-              title="Explore & Tutors"
-              icon={Compass}
-              open={openSection === 'explore'}
-              active={isExploreActive(pathname)}
-              onToggle={() => toggleSection('explore')}
-              controlsId="nav-section-explore"
+              title="Tutors & Contributors"
+              icon={Users}
+              open={openSection === 'team'}
+              active={isTeamActive(pathname)}
+              onToggle={() => toggleSection('team')}
+              controlsId="nav-section-team"
             />
-            {openSection === 'explore' && (
-              <div id="nav-section-explore" className="mt-0.5 space-y-0.5 pl-1 nav-section-enter">
-                {renderSectionLinks(EXPLORE_LINKS)}
+            {openSection === 'team' && (
+              <div id="nav-section-team" className="mt-0.5 space-y-0.5 pl-1 nav-section-enter">
+                {renderSectionLinks(TEAM_LINKS)}
               </div>
             )}
           </div>
@@ -640,8 +625,8 @@ export default function NavBar() {
             aria-label={
               openPanel === 'tools'
                   ? 'Tools'
-                  : openPanel === 'explore'
-                    ? 'Explore'
+                  : openPanel === 'team'
+                    ? 'Tutors & Contributors'
                     : 'Account'
             }
             className="relative z-50 rounded-t-2xl border border-border border-b-0 bg-background-card shadow-2xl max-h-[70vh] overflow-y-auto nav-sheet-enter"
@@ -658,12 +643,12 @@ export default function NavBar() {
                 <div className="space-y-0.5">{renderSectionLinks(TOOLS_LINKS)}</div>
               </div>
             )}
-            {openPanel === 'explore' && (
+            {openPanel === 'team' && (
               <div className="px-2 pb-3">
                 <p className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-foreground-muted">
-                  Explore & Tutors
+                  Tutors &amp; Contributors
                 </p>
-                <div className="space-y-0.5">{renderSectionLinks(EXPLORE_LINKS)}</div>
+                <div className="space-y-0.5">{renderSectionLinks(TEAM_LINKS)}</div>
               </div>
             )}
             {openPanel === 'user' && (
@@ -711,11 +696,11 @@ export default function NavBar() {
               controlsId="nav-sheet"
             />
             <MobileTab
-              label="Explore"
-              icon={Compass}
-              active={isExploreActive(pathname) || openPanel === 'explore'}
-              onClick={() => togglePanel('explore')}
-              expanded={openPanel === 'explore'}
+              label="Team"
+              icon={Users}
+              active={isTeamActive(pathname) || openPanel === 'team'}
+              onClick={() => togglePanel('team')}
+              expanded={openPanel === 'team'}
               controlsId="nav-sheet"
             />
             <MobileTab

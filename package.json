@@ -14,7 +14,10 @@
     "typecheck": "turbo typecheck",
     "dev:web": "npm --workspace=@the-ants/web run dev",
     "dev:api": "npm --workspace=@the-ants/api run dev",
-    "build:web": "npm --workspace=@the-ants/web run build"
+    "build:web": "npm --workspace=@the-ants/web run build",
+    "cf:preview:web": "npm --workspace=@the-ants/web run cf:preview",
+    "cf:deploy:web": "npm --workspace=@the-ants/web run cf:deploy",
+    "cf:deploy:api": "npm --workspace=@the-ants/api run deploy"
   },
   "devDependencies": {
     "turbo": "^2.4.2",

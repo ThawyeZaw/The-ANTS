@@ -11,8 +11,9 @@
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4-38bdf8?logo=tailwindcss)](https://tailwindcss.com/)
-[![Neon Postgres](https://img.shields.io/badge/Neon-PostgreSQL-00e599?logo=postgresql)](https://neon.tech/)
+[![Cloudflare D1](https://img.shields.io/badge/Cloudflare-D1_SQLite-f38020?logo=cloudflare)](https://developers.cloudflare.com/d1/)
 [![Hono](https://img.shields.io/badge/Hono-Cloudflare_Workers-e36002?logo=cloudflare)](https://hono.dev/)
+[![OpenNext](https://img.shields.io/badge/OpenNext-Cloudflare_Workers-f38020?logo=cloudflare)](https://opennext.js.org/cloudflare)
 [![Status](https://img.shields.io/badge/Status-Beta-3ecf8e)](./)
 
 </div>
@@ -23,7 +24,7 @@
 
 **The ANTS** is an academic productivity and tutoring platform for Myanmar students pursuing international qualifications (Cambridge CAIE IGCSE / A-Levels, Pearson Edexcel IGCSE / IAL, IELTS, OSSD, and Grade 12 Matriculation).
 
-Built on a **HONC monorepo** (Hono, ORM/Drizzle, Next.js, Cloudflare Workers & Neon Postgres), it combines study planning tools, in-app notes / flashcards / quizzes, and tutor discovery.
+Built on a **HONC monorepo** (Hono, ORM/Drizzle, Next.js, Cloudflare Workers & D1), it combines study planning tools, in-app notes / flashcards / quizzes, and tutor discovery.
 
 **Retired:** Clubs and classrooms are fully removed from the product. Do not reintroduce them.
 
@@ -39,11 +40,14 @@ We are implementing the **Stitch IGCSE Study Hub** design system as **one light 
 | **Zay Lynn Htet** | Landing page, sign-in / sign-up, marketing UI | [`AGENTS.ui.md`](./AGENTS.ui.md) |
 
 Shared rules and ownership map: [`AGENTS.md`](./AGENTS.md)  
-System specification: [`spec.md`](./spec.md)
+System specification: [`spec.md`](./spec.md)  
+Cloudflare migration (current phase): [`docs/migration/cloudflare.md`](./docs/migration/cloudflare.md)
 
 **Git:** separate long-lived branches → PRs into `main` (no direct unfinished pushes to `main`).
 
 **Design specs (in-repo):** [`docs/design/`](./docs/design/README.md) — light [`the_ants_academic_system.md`](./docs/design/the_ants_academic_system.md), dark [`amber_academic_studio.md`](./docs/design/amber_academic_studio.md).
+
+**Infra note:** Production web remains on Vercel until Phase 6. Preview the OpenNext Worker with `npm run cf:preview:web` / `npm run cf:deploy:web` (root directory **`apps/web`** — never monorepo root). See [`docs/migration/opennext-web.md`](./docs/migration/opennext-web.md). API + R2 + notification cron stay on Cloudflare Workers.
 
 ---
 
@@ -82,7 +86,7 @@ Users register as `student`. Admins assign additional roles (`roles: text[]`).
 |---|---|---|
 | **Student** | Primary learners | Library (notes, flashcards, exams, quizzes) and tools (timetable, pomodoro, countdown, calculator, workspace). |
 | **Tutor** | Educators | Student access + public tutor profile, weekly teaching timetable, Telegram inquiry + QR, tutor profile editor. |
-| **Contributor** | Content creators | Curriculum & notes editor, exam data editor, review queue submissions. |
+| **Contributor** | Content creators | Exam data editor, grade calculator / countdown proposals. |
 | **Admin** | Platform managers | User management & role assignment, org/team management, moderation. |
 
 ---
@@ -99,10 +103,11 @@ The-ANTS/
 │   │   └── src/actions/         # Server actions (Features developer)
 │   └── api/                     # Hono on Cloudflare Workers
 ├── packages/
-│   ├── db/                      # Neon schema + Drizzle (Features developer)
+│   ├── db/                      # D1 (SQLite) schema + Drizzle (Features developer)
 │   ├── shared-types/            # Shared TS + Zod
 │   └── config/                  # Shared ESLint / TS configs
 ├── docs/design/                 # Stitch light + dark design specs
+├── docs/migration/              # Cloudflare migration phase tracker
 ├── AGENTS.md                    # Shared dual-dev rules
 ├── AGENTS.ui.md                 # Zay Lynn Htet
 ├── AGENTS.features.md           # Thaw Ye Zaw
@@ -120,11 +125,15 @@ npm install
 ```
 
 ### 2. Environment variables
-Create `.env.local` in `apps/web/` and `.dev.vars` in `apps/api/`:
+Copy [`.env.example`](./.env.example) to `.env.local`. Create `.dev.vars` in `apps/api/` / `apps/web/` for Worker secrets.
 ```env
-DATABASE_URL=postgresql://user:password@ep-sample.us-east-2.aws.neon.tech/the_ants?sslmode=require
-NEXT_PUBLIC_APP_URL=http://localhost:3005
+NEXT_PUBLIC_API_URL=http://127.0.0.1:8787
+CRON_SECRET=dev-secret
 ```
+
+Workers use **D1** via wrangler binding `DB` (not a Neon `DATABASE_URL`). Production / CF preview clients should use `NEXT_PUBLIC_API_URL=https://api.the-ants.org`.
+
+Telegram notification queue is drained by the **API Worker cron** (`apps/api`), not QStash or GitHub Actions.
 
 ### 3. Run development servers
 ```bash
@@ -133,14 +142,24 @@ npm run dev:web   # web only (port 3005)
 npm run typecheck
 ```
 
+Deploy API from `apps/api`; deploy web Worker preview from `apps/web` (OpenNext):
+
+```bash
+cd apps/api && npx wrangler deploy
+npm run cf:deploy:web   # creates/updates Worker the-ants-web — do NOT point apex DNS yet
+```
+
+Guide: [`docs/migration/opennext-web.md`](./docs/migration/opennext-web.md).
+
 ---
 
 ## Contributing (this redesign phase)
 
 1. Read [`AGENTS.md`](./AGENTS.md) and **your** role file (`AGENTS.ui.md` or `AGENTS.features.md`).
-2. Stay on your ownership paths to avoid merge conflicts.
-3. Backend / DB / actions: **Thaw Ye Zaw only.**
-4. Open PRs into `main` from your long-lived feature branch.
+2. Check migration phase in [`docs/migration/cloudflare.md`](./docs/migration/cloudflare.md).
+3. Stay on your ownership paths to avoid merge conflicts.
+4. Backend / DB / actions: **Thaw Ye Zaw only.**
+5. Open PRs into `main` from your long-lived feature branch.
 
 ---
 

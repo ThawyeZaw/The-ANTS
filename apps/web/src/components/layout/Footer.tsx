@@ -17,7 +17,7 @@ import { Mail, MessageCircle, ArrowUpRight } from 'lucide-react';
 const QUICK_LINKS = [
   { label: 'Library', href: '/library' },
   { label: 'Study Tools', href: '/tools' },
-  { label: 'Explore & Tutors', href: '/explore' },
+  { label: 'Tutors & Contributors', href: '/team' },
   { label: 'Smart Timetable', href: '/timetable' },
 ];
 

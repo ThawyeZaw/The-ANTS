@@ -1,5 +1,5 @@
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Email Confirmation Handler (Neon Drizzle DB)
+// The ANTS — Email Confirmation Handler (D1 / Drizzle)
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { type NextRequest, NextResponse } from 'next/server';

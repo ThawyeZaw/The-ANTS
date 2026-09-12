@@ -2,7 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "the-ants-api",
   "main": "src/index.ts",
-  "compatibility_date": "2025-02-04",
+  "compatibility_date": "2025-09-01",
   "compatibility_flags": ["nodejs_compat"],
   "observability": {
     "enabled": true
@@ -10,6 +10,14 @@
   "vars": {
     "ENVIRONMENT": "production"
   },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "the-ants-db",
+      "database_id": "d30062da-47f0-448a-b89b-c8c067981b28",
+      "migrations_dir": "../../packages/db/drizzle-d1"
+    }
+  ],
   "r2_buckets": [
     {
       "binding": "ASSETS_BUCKET",

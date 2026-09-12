@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — useCountdown Hook (Hono API / Neon Backend)
+// The ANTS — useCountdown Hook (Hono API / D1)
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useCallback } from 'react';

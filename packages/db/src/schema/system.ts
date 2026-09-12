@@ -1,4 +1,5 @@
-import { pgTable, uuid, text, timestamp, boolean, integer, jsonb } from 'drizzle-orm/pg-core';
+import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { idText, textId, ts, tsNow, bool, jsonText } from './columns';
 import { profiles } from './profiles';
 import {
   VersionChangesArraySchema,
@@ -7,74 +8,91 @@ import {
 } from './zod';
 import { z } from 'zod';
 
-export const reviewQueue = pgTable('review_queue', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  contributor_id: uuid('contributor_id').references(() => profiles.id, { onDelete: 'cascade' }).notNull(),
-  submission_type: text('submission_type').notNull(), // curriculum, exam, subject, topic, calculator, countdown
-  entity_id: uuid('entity_id').notNull(),
-  submitted_data: jsonb('submitted_data').$type<z.infer<typeof GenericMetadataSchema>>().notNull(),
-  is_update: boolean('is_update').default(false),
-  published_entity_id: uuid('published_entity_id'),
-  status: text('status').default('pending'), // pending, approved, rejected
-  reviewer_id: uuid('reviewer_id').references(() => profiles.id, { onDelete: 'set null' }),
-  feedback: jsonb('feedback').$type<z.infer<typeof ReviewFeedbackSchema>>(),
-  submitted_at: timestamp('submitted_at', { withTimezone: true }).defaultNow(),
-  reviewed_at: timestamp('reviewed_at', { withTimezone: true }),
+export const reviewQueue = sqliteTable('review_queue', {
+  id: idText('id'),
+  contributor_id: textId('contributor_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  submission_type: text('submission_type').notNull(),
+  entity_id: textId('entity_id').notNull(),
+  submitted_data: jsonText<z.infer<typeof GenericMetadataSchema>>('submitted_data').notNull(),
+  is_update: bool('is_update', false),
+  published_entity_id: textId('published_entity_id'),
+  status: text('status').default('pending'),
+  reviewer_id: textId('reviewer_id').references(() => profiles.id, { onDelete: 'set null' }),
+  feedback: jsonText<z.infer<typeof ReviewFeedbackSchema>>('feedback'),
+  submitted_at: tsNow('submitted_at'),
+  reviewed_at: ts('reviewed_at'),
 });
 
-export const versionHistory = pgTable('version_history', {
-  id: uuid('id').primaryKey().defaultRandom(),
+export const versionHistory = sqliteTable('version_history', {
+  id: idText('id'),
   entity_type: text('entity_type').notNull(),
-  entity_id: uuid('entity_id').notNull(),
+  entity_id: textId('entity_id').notNull(),
   version_number: integer('version_number').notNull(),
-  changes: jsonb('changes').$type<z.infer<typeof VersionChangesArraySchema>>().notNull().default([]),
-  changed_by: uuid('changed_by').references(() => profiles.id, { onDelete: 'cascade' }).notNull(),
-  review_item_id: uuid('review_item_id'),
-  changed_at: timestamp('changed_at', { withTimezone: true }).defaultNow(),
+  changes: jsonText<z.infer<typeof VersionChangesArraySchema>>('changes')
+    .notNull()
+    .$defaultFn(() => []),
+  changed_by: textId('changed_by')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  review_item_id: textId('review_item_id'),
+  changed_at: tsNow('changed_at'),
 });
 
-export const notifications = pgTable('notifications', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  user_id: uuid('user_id').references(() => profiles.id, { onDelete: 'cascade' }).notNull(),
-  type: text('type').notNull(), // announcement, reminder, review, system, social
+export const notifications = sqliteTable('notifications', {
+  id: idText('id'),
+  user_id: textId('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  type: text('type').notNull(),
   title: text('title').notNull(),
   content: text('content'),
   link_url: text('link_url'),
-  is_read: boolean('is_read').default(false),
-  created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  is_read: bool('is_read', false),
+  created_at: tsNow('created_at'),
 });
 
-export const notificationQueue = pgTable('notification_queue', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  user_id: uuid('user_id').references(() => profiles.id, { onDelete: 'cascade' }).notNull(),
-  channel: text('channel').notNull().default('telegram'), // telegram, email, in_app
-  payload: jsonb('payload').$type<z.infer<typeof GenericMetadataSchema>>().notNull().default({}),
-  status: text('status').notNull().default('pending'), // pending, processing, sent, failed
+export const notificationQueue = sqliteTable('notification_queue', {
+  id: idText('id'),
+  user_id: textId('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  channel: text('channel').notNull().default('telegram'),
+  payload: jsonText<z.infer<typeof GenericMetadataSchema>>('payload')
+    .notNull()
+    .$defaultFn(() => ({})),
+  status: text('status').notNull().default('pending'),
   attempts: integer('attempts').notNull().default(0),
   last_error: text('last_error'),
-  scheduled_for: timestamp('scheduled_for', { withTimezone: true }).defaultNow(),
-  sent_at: timestamp('sent_at', { withTimezone: true }),
-  created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+  scheduled_for: tsNow('scheduled_for'),
+  sent_at: ts('sent_at'),
+  created_at: tsNow('created_at'),
+  updated_at: tsNow('updated_at'),
 });
 
-export const notificationPreferences = pgTable('notification_preferences', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  user_id: uuid('user_id').references(() => profiles.id, { onDelete: 'cascade' }).notNull().unique(),
-  email_enabled: boolean('email_enabled').default(true),
-  telegram_enabled: boolean('telegram_enabled').default(false),
-  in_app_enabled: boolean('in_app_enabled').default(true),
-  channels: jsonb('channels').$type<z.infer<typeof GenericMetadataSchema>>().default({}),
-  created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+export const notificationPreferences = sqliteTable('notification_preferences', {
+  id: idText('id'),
+  user_id: textId('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull()
+    .unique(),
+  email_enabled: bool('email_enabled', true),
+  telegram_enabled: bool('telegram_enabled', false),
+  in_app_enabled: bool('in_app_enabled', true),
+  channels: jsonText<z.infer<typeof GenericMetadataSchema>>('channels').$defaultFn(() => ({})),
+  created_at: tsNow('created_at'),
+  updated_at: tsNow('updated_at'),
 });
 
-export const activityFeed = pgTable('activity_feed', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  user_id: uuid('user_id').references(() => profiles.id, { onDelete: 'cascade' }).notNull(),
+export const activityFeed = sqliteTable('activity_feed', {
+  id: idText('id'),
+  user_id: textId('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
   action_type: text('action_type').notNull(),
   entity_type: text('entity_type').notNull(),
-  entity_id: uuid('entity_id').notNull(),
-  metadata: jsonb('metadata').$type<z.infer<typeof GenericMetadataSchema>>().default({}),
-  created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  entity_id: textId('entity_id').notNull(),
+  metadata: jsonText<z.infer<typeof GenericMetadataSchema>>('metadata').$defaultFn(() => ({})),
+  created_at: tsNow('created_at'),
 });

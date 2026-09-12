@@ -9,11 +9,9 @@ import { useMemo } from 'react';
 import Link from 'next/link';
 import {
   Pencil,
-  BookOpen,
   ClipboardCheck,
   ArrowRight,
   Sparkles,
-  ShieldCheck,
   AlertCircle,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -33,14 +31,6 @@ interface EditorItem {
 
 const EDITOR_ITEMS: EditorItem[] = [
   {
-    id: 'curriculum',
-    label: 'Curriculum Editor',
-    description: 'Structure academic boards, subjects, and topic hierarchies with prerequisites.',
-    href: '/editor/curriculum',
-    icon: BookOpen,
-    features: ['Cambridge & Edexcel syllabi', 'Subject code mapping', 'Topic order indexing', 'Resource attachments'],
-  },
-  {
     id: 'exam',
     label: 'Exam Data Editor',
     description: 'Maintain official exam timetables, paper schedules, and grade boundaries.',
@@ -49,12 +39,20 @@ const EDITOR_ITEMS: EditorItem[] = [
     features: ['Exam session dates', 'Component weightings', 'Grade boundary tables', 'Specimen paper links'],
   },
   {
-    id: 'review-queue',
-    label: 'Review Queue Proposals',
-    description: 'Review pending curriculum and exam proposals before publishing.',
-    href: '/editor/review-queue',
-    icon: ShieldCheck,
-    features: ['Proposal moderation', 'Feedback & revisions', 'Audit logs', 'Instant approval sync'],
+    id: 'grade-calculator',
+    label: 'Grade Calculator Presets',
+    description: 'Propose calculator presets and boundaries for student grade tools.',
+    href: '/editor/exam/grade-calculator',
+    icon: Sparkles,
+    features: ['Paper weightings', 'Grade thresholds', 'Series presets', 'Contributor submissions'],
+  },
+  {
+    id: 'countdown',
+    label: 'Exam Countdown Proposals',
+    description: 'Propose official countdown entries for upcoming exam sessions.',
+    href: '/editor/exam/countdown',
+    icon: Pencil,
+    features: ['Session dates', 'Qualification groups', 'Priority levels', 'Contributor submissions'],
   },
 ];
 
@@ -132,24 +130,17 @@ export default function EditorPortalPage() {
         <div className="space-y-2">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
             <Pencil className="w-3.5 h-3.5" />
-            Curriculum & Content Editor Portal
+            Exam & Content Editor Portal
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
             Academic Contributor Workspace
           </h1>
           <p className="text-xs sm:text-sm text-foreground-muted max-w-xl">
-            Structure curriculum frameworks and update official exam schedules.
+            Update official exam schedules, grade calculator presets, and countdown proposals.
           </p>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          <Link
-            href="/editor/review-queue"
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-background-secondary border border-border text-foreground text-xs font-bold hover:bg-background-secondary/80 transition-all shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-          >
-            <ShieldCheck className="w-4 h-4 text-primary" />
-            Review Queue
-          </Link>
           {isAdmin && (
             <Link
               href="/main-contributor/add-contributor"
@@ -165,10 +156,10 @@ export default function EditorPortalPage() {
         <AlertCircle className="h-5 w-5 text-primary shrink-0 mt-0.5" />
         <div className="space-y-1">
           <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">
-            Curriculum Authoring Standard
+            Exam Data Standard
           </h3>
           <p className="text-xs text-foreground-muted leading-relaxed">
-            All submitted curriculum topics are mapped against official syllabus codes (Cambridge, Edexcel, and Matriculation) and go through the moderation queue before going live.
+            Exam schedules and calculator presets should match official board series codes. Submissions are stored for review before publish workflows are rebuilt on Drizzle.
           </p>
         </div>
       </div>

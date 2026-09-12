@@ -29,6 +29,20 @@
       "when": 1787700000000,
       "tag": "0003_drop_legacy_resources",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1787800000000,
+      "tag": "0004_pomodoro_user_settings",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1787900000000,
+      "tag": "0005_founder_type",
+      "breakpoints": true
     }
   ]
 }

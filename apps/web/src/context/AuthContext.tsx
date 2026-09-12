@@ -444,7 +444,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        // Single source of truth: persist via the Neon server action only.
+        // Single source of truth: persist via the server action only.
         await actionUpdateProfile(user.id, data);
       } catch (err) {
         console.warn('[updateProfile] Sync failed:', err);
@@ -492,7 +492,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        // Persist onboarding via the Neon server action (single write path).
+        // Persist onboarding via the server action (single write path).
         await actionUpdateProfile(user.id, {
           timezone: data.timezone,
           preferredName: data.preferredName,

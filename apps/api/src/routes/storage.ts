@@ -16,13 +16,17 @@ type StorageEnv = {
 
 /**
  * Builds the public URL for a stored object.
- * Priority: R2_PUBLIC_BASE_URL env override > request origin (Worker-served route).
- * This keeps URLs correct on workers.dev, custom domains, and CDNs alike —
- * no hardcoded host anywhere.
+ * Priority: R2_PUBLIC_BASE_URL > request origin (local) > https://api.the-ants.org.
+ * Private R2 bucket `the-ants-assets` is not publicly browsable; files are served
+ * by the API Worker at `/api/storage/file/...`. Leave R2_PUBLIC_BASE_URL unset unless
+ * you add a custom public domain/CDN later.
  */
 function buildPublicUrl(c: { req: { url: string } }, env: StorageBindings, bucket: string, fileName: string): string {
-  const base = env.R2_PUBLIC_BASE_URL?.replace(/\/+$/, '');
-  const origin = base || new URL(c.req.url).origin;
+  const override = env.R2_PUBLIC_BASE_URL?.replace(/\/+$/, '');
+  const requestOrigin = new URL(c.req.url).origin;
+  const isLocal =
+    requestOrigin.includes('localhost') || requestOrigin.includes('127.0.0.1');
+  const origin = override || (isLocal ? requestOrigin : 'https://api.the-ants.org');
   return `${origin}/api/storage/file/${bucket}/${fileName}`;
 }
 

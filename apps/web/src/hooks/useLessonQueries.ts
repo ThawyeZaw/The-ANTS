@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — TanStack Query Hooks for Lessons (Hono API / Neon Backend)
+// The ANTS — TanStack Query Hooks for Lessons (Hono API / D1)
 // Query hooks replacing Supabase calls with typed API queries.
 // ──────────────────────────────────────────────────────────────────────────────
 

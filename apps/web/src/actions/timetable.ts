@@ -1,7 +1,7 @@
 'use server';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Timetable Server Actions (Neon Drizzle DB)
+// The ANTS — Timetable Server Actions (D1 / Drizzle)
 // ──────────────────────────────────────────────────────────────────────────────
 
 import type { TimetableEvent, TimetableEventFormData } from '@/types/timetable';

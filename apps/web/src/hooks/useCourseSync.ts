@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — useCourseSync hook (Hono API / Neon Backend)
+// The ANTS — useCourseSync hook (Hono API / D1)
 // Provides synced course-resource data for dashboards (exams & countdowns).
 // ──────────────────────────────────────────────────────────────────────────────
 

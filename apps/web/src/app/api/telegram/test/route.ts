@@ -1,5 +1,5 @@
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTs — Telegram Test Notification (Neon Drizzle DB)
+// The ANTs — Telegram Test Notification (D1 / Drizzle)
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { NextRequest, NextResponse } from 'next/server';

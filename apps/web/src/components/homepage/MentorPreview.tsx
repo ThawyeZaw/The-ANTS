@@ -166,7 +166,7 @@ export default function MentorPreview() {
                 </span>
               </span>
               <Link
-                href="/explore?tab=tutors"
+                href="/team"
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -192,7 +192,7 @@ export default function MentorPreview() {
 
       <div style={{ marginTop: 28, textAlign: 'center' }}>
         <Link
-          href="/explore?tab=tutors"
+          href="/team"
           style={{
             display: 'inline-flex',
             alignItems: 'center',

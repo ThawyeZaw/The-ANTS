@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — useDashboardSync hook (Hono API / Neon Backend)
+// The ANTS — useDashboardSync hook (Hono API / D1)
 // Aggregates real data for dashboard display:
 // - Enrolled courses & synced resources (via useCourseSync)
 // - User exam countdowns (via useCountdown)

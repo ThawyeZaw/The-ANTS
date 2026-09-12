@@ -1,0 +1,39 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "the-ants-web",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-09-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "workers_dev": true,
+  "preview_urls": true,
+  "vars": {
+    "ENVIRONMENT": "production",
+    "NEXT_PUBLIC_API_URL": "https://api.the-ants.org",
+    "NEXT_PUBLIC_TELEGRAM_BOT_USERNAME": "TheANTS_bot"
+  },
+  "routes": [
+    { "pattern": "the-ants.org", "custom_domain": true },
+    { "pattern": "www.the-ants.org", "custom_domain": true }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "the-ants-db",
+      "database_id": "d30062da-47f0-448a-b89b-c8c067981b28",
+      "migrations_dir": "../../packages/db/drizzle-d1"
+    }
+  ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "the-ants-web"
+    }
+  ],
+  "images": {
+    "binding": "IMAGES"
+  }
+}

@@ -41,9 +41,14 @@ yarn-error.log*
 .env*
 .dev.vars*
 !.env.example
+!.dev.vars.example
+!apps/web/.dev.vars.example
 
 # vercel
 .vercel
+
+# OpenNext Cloudflare build output
+.open-next/
 
 # typescript
 *.tsbuildinfo

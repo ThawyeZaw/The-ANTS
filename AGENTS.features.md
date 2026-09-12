@@ -2,6 +2,11 @@
 
 > Read [`AGENTS.md`](./AGENTS.md) first. This file is your ownership scope only.
 
+## Cloudflare migration
+
+You own backend/infra migration work. **Current phase:** [`docs/migration/cloudflare.md`](./docs/migration/cloudflare.md) — **Phase 5 skipped**; **ask before Phase 6**.  
+D1 guide: [`docs/migration/d1.md`](./docs/migration/d1.md).
+
 ## Mission
 
 Rebuild **notes, flashcards, and quizzes from scratch**; upgrade dashboard features (profiles, timetable, pomodoro, library, tools); apply the Stitch design system inside the **app shell**; and own **backend / DB / API / server actions** needed for those features.

@@ -6,7 +6,11 @@ import {
   Calculator, BookOpen, Layers, RotateCcw, TrendingUp,
   ArrowLeft, ArrowRight, GraduationCap, Clock, ChevronRight, Check, Info, BarChart3, FileText,
 } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
+import {
+  listApprovedCalculatorPresets,
+  listCurriculums,
+  listSubjects,
+} from '@/actions/exam-data';
 
 interface PresetBoundary { grade: string; min_mark: number; }
 interface PaperDef { name: string; max_mark: number; weight: number; unit_group?: string; paper_boundaries?: PresetBoundary[]; }
@@ -43,18 +47,16 @@ export default function GradeCalculator() {
 
   useEffect(() => {
     async function fetchData() {
-      const supabase = createClient();
-      if (!supabase) return;
-      const [{ data: cData }, { data: sData }, { data: pData }] = await Promise.all([
-        supabase.from('curriculums').select('*'),
-        supabase.from('subjects').select('*'),
-        (supabase as any).from('grade_calculator_presets').select('*').eq('status', 'approved'),
+      const [cData, sData, pData] = await Promise.all([
+        listCurriculums(),
+        listSubjects(),
+        listApprovedCalculatorPresets(),
       ]);
-      if (cData) setCurriculums(cData);
-      if (sData) setSubjects(sData);
-      if (pData) setPresets(pData as CalcPreset[]);
+      setCurriculums(cData);
+      setSubjects(sData);
+      setPresets(pData as CalcPreset[]);
     }
-    fetchData();
+    fetchData().catch((err) => console.error('[GradeCalculator] load failed:', err));
   }, []);
   const allPresets = presets;
 

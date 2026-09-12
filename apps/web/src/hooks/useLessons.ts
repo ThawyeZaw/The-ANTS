@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — useLessons (Hono API / Neon Backend)
+// The ANTS — useLessons (Hono API / D1)
 // Hook for lesson tracker progress statistics and weekly activity.
 // ──────────────────────────────────────────────────────────────────────────────
 

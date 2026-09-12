@@ -81,11 +81,11 @@ export default function MainContributorDashboard() {
               Manage Users
             </Link>
             <Link
-              href="/main-contributor/review-queue"
+              href="/editor"
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-background-secondary border border-border text-foreground text-xs font-bold hover:bg-background-secondary/80 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
               <ClipboardCheck className="w-3.5 h-3.5" />
-              Review Queue
+              Exam Editor
             </Link>
           </div>
         </div>

@@ -7,7 +7,11 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { submitExamCalculatorPreset } from '@/actions/exam-editor';
-import { createClient } from '@/lib/supabase/client';
+import {
+  listApprovedCalculatorPresets,
+  listCurriculums,
+  listSubjects,
+} from '@/actions/exam-data';
 import { useEffect } from 'react';
 
 interface PaperBoundaryDraft { id: string; grade: string; minMark: number; }
@@ -29,19 +33,17 @@ export default function GradeCalculatorEditor() {
 
   useEffect(() => {
     async function fetchData() {
-      const supabase = createClient();
-      if (!supabase) return;
-      const [{ data: cData }, { data: sData }, { data: pData }] = await Promise.all([
-        supabase.from('curriculums').select('*'),
-        supabase.from('subjects').select('*'),
-        (supabase as any).from('grade_calculator_presets').select('*').eq('status', 'approved'),
+      const [cData, sData, pData] = await Promise.all([
+        listCurriculums(),
+        listSubjects(),
+        listApprovedCalculatorPresets(),
       ]);
-      if (cData) setCurriculums(cData);
-      if (sData) setAllSubjects(sData);
-      if (pData) setAllApprovedPresets(pData as Record<string, unknown>[]);
+      setCurriculums(cData);
+      setAllSubjects(sData);
+      setAllApprovedPresets(pData as Record<string, unknown>[]);
     }
 
-    fetchData();
+    fetchData().catch((err) => console.error('[GradeCalculatorEditor] load failed:', err));
   }, []);
 
   const [currentStep, setCurrentStep] = useState(1);

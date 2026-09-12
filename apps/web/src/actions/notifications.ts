@@ -1,14 +1,13 @@
 'use server';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTs — Notification Enqueue Server Actions (Neon Drizzle DB)
+// The ANTs — Notification Enqueue Server Actions (D1 / Drizzle)
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { getDb, notificationQueue, profiles } from '@/lib/db';
-import { eq, and, inArray, sql } from 'drizzle-orm';
-import { scheduleQStashMessage } from '@/lib/qstash';
+import { eq, and, sql } from 'drizzle-orm';
 import { expandRecurringEvents } from '@/lib/timetable/recurrence';
-import type { TimetableEvent, RecurrenceRule } from '@/types/timetable';
+import type { TimetableEvent } from '@/types/timetable';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -16,7 +15,7 @@ interface QueueItem {
   telegram_chat_id: string;
   message_text: string;
   scheduled_for: string; // ISO timestamp
-  source_type: 'timetable_event' | 'assignment' | 'exam_countdown' | 'club_announcement' | 'quiz' | 'role_upgrade' | 'review_queue' | 'club_milestone';
+  source_type: 'timetable_event' | 'assignment' | 'exam_countdown' | 'quiz' | 'role_upgrade';
   source_id: string;
   user_id: string;
 }
@@ -27,7 +26,6 @@ interface NotificationPrefs {
 }
 
 const OVERDUE_ENQUEUE_GRACE_MS = 5_000;
-const EARLY_FIRE_MS = 5_000;
 
 function formatTime(date: Date, timeZone?: string): { timeStr: string; dateStr: string } {
   const timeOpts: Intl.DateTimeFormatOptions = {
@@ -81,7 +79,7 @@ async function upsertQueueItems(
     .where(
       and(
         eq(notificationQueue.status, 'pending'),
-        sql`${notificationQueue.payload}->>'source_id' = ${sourceId}`
+        sql`json_extract(${notificationQueue.payload}, '$.source_id') = ${sourceId}`
       )
     );
 
@@ -102,67 +100,24 @@ async function upsertQueueItems(
   }
 }
 
-function isLocalDev(): boolean {
-  return !process.env.VERCEL_URL && process.env.NODE_ENV === 'development';
-}
+/** In local dev, nudge the Worker cron HTTP endpoint. Production relies on Worker cron. */
+async function nudgeWorkerQueueProcessor(): Promise<void> {
+  if (process.env.NODE_ENV !== 'development') return;
 
-async function scheduleQStashTriggers(items: QueueItem[]): Promise<void> {
-  if (items.length === 0) return;
-
-  const now = Date.now();
-  const uniqueTimestamps = Array.from(new Set(items.map((i) => i.scheduled_for)));
-  const local = isLocalDev();
-
-  const fireLocal = (delayMs: number) => {
-    setTimeout(() => {
-      triggerLocalProcessing().catch((err) =>
-        console.error('[qstash] Local processing failed:', err)
-      );
-    }, delayMs);
-  };
-
-  const expired = uniqueTimestamps.filter((ts) => new Date(ts).getTime() <= now);
-  const future = uniqueTimestamps
-    .filter((ts) => new Date(ts).getTime() > now)
-    .sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
-
-  if (expired.length > 0) {
-    if (local) {
-      fireLocal(0);
-    } else {
-      await scheduleQStashMessage({ delay: 0 });
-    }
-  }
-
-  for (const scheduledFor of future) {
-    const delayMs = Math.max(0, new Date(scheduledFor).getTime() - now - EARLY_FIRE_MS);
-    if (local) {
-      fireLocal(delayMs);
-    } else {
-      const delaySeconds = Math.max(0, Math.ceil(delayMs / 1000));
-      await scheduleQStashMessage({ delay: delaySeconds });
-    }
-  }
-}
-
-async function triggerLocalProcessing(): Promise<void> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://127.0.0.1:3005';
-  const url = `${baseUrl}/api/qstash/process-notifications`;
-
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:8787';
   try {
-    const res = await fetch(url, {
+    const res = await fetch(`${apiUrl}/api/cron/process-queue`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-cron-secret': process.env.CRON_SECRET ?? '',
       },
-      body: JSON.stringify({ source: 'local-dev-timer' }),
     });
     if (!res.ok) {
-      console.warn(`[qstash] Local trigger returned HTTP ${res.status}`);
+      console.warn(`[notifications] Worker queue nudge returned HTTP ${res.status}`);
     }
   } catch (err) {
-    console.error('[qstash] Local trigger failed to fetch:', err);
+    console.error('[notifications] Worker queue nudge failed:', err);
   }
 }
 
@@ -230,7 +185,7 @@ export async function actionEnqueueTimetableReminders(
   }
 
   await upsertQueueItems('timetable_event', event.id, queueItems);
-  await scheduleQStashTriggers(queueItems);
+  await nudgeWorkerQueueProcessor();
 }
 
 // ── Enqueue: Exam Countdown Reminders ────────────────────────────────────────
@@ -279,7 +234,7 @@ export async function actionEnqueueExamCountdownReminders(
   }
 
   await upsertQueueItems('exam_countdown', examCountdownId, queueItems);
-  await scheduleQStashTriggers(queueItems);
+  await nudgeWorkerQueueProcessor();
 }
 
 export const actionEnqueueExamReminders = actionEnqueueExamCountdownReminders;

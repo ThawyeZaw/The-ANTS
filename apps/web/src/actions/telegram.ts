@@ -1,7 +1,7 @@
 'use server';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Telegram Server Actions (Neon Drizzle DB)
+// The ANTS — Telegram Server Actions (D1 / Drizzle)
 // Real-time Telegram messaging and notifications pipeline.
 // ──────────────────────────────────────────────────────────────────────────────
 

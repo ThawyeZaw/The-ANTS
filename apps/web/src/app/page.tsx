@@ -879,7 +879,7 @@ export default function HomePage() {
                     </button>
                   </Link>
                   <Link
-                    href="/explore?tab=tutors"
+                    href="/team"
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',

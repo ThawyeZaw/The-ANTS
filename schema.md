@@ -1,6 +1,9 @@
 # The ANTs — Database Schema Reference (`schema.md`)
 
-> **Single Source of Truth:** Neon Serverless PostgreSQL with Drizzle ORM (`packages/db/src/schema/*`).
+> **Single Source of Truth:** Cloudflare **D1** (SQLite) + Drizzle ORM (`packages/db/src/schema/*`).  
+> Historical Postgres SQL under `packages/db/drizzle/` is archive-only (Neon offline until Phase 5/6).  
+> New migrations: `packages/db/drizzle-d1/`.  
+> Note: some tables below may still list legacy Postgres type names; the live D1 schema uses text UUIDs, JSON-as-text, integer ms timestamps, and 0/1 booleans — see `docs/migration/d1.md`.
 
 ---
 
@@ -9,25 +12,25 @@
 ### Table `profiles`
 | Column | Type | Constraints / Description |
 |---|---|---|
-| `id` | `uuid` | Primary Key |
+| `id` | `text` (UUID) | Primary Key |
 | `email` | `text` | Unique, Not Null |
 | `name` | `text` | Not Null |
 | `username` | `text` | Unique, Not Null |
-| `avatar_url` | `text` | Nullable (Cloudflare R2 URL) |
+| `avatar_url` | `text` | Nullable (API/R2 public URL) |
 | `role` | `text` | Primary / Active role (Default: `'student'`) |
-| `roles` | `text[]` | Multi-role permissions array (`ARRAY['student']::text[]`) |
-| `is_public` | `boolean` | Default: `true` |
+| `roles` | `text` (JSON) | Multi-role list, e.g. `["student"]` |
+| `is_public` | `integer` 0/1 | Default: `1` |
 | `bio` | `text` | Nullable |
 | `title` | `text` | Nullable (Headline/Specialization) |
-| `social_links` | `jsonb` | Array of `{ id, platform, label, url, visible, order? }` |
-| `projects` | `jsonb` | Array of `{ id, title, description, technologies, links }` |
-| `activities` | `jsonb` | Array of `{ id, name, organization, role, start_date, end_date }` |
-| `achievements` | `jsonb` | Array of `{ id, title, description, date, issuer }` |
-| `section_visibility` | `jsonb` | Section show/hide flags |
+| `social_links` | `text` (JSON) | Array of `{ id, platform, label, url, visible, order? }` |
+| `projects` | `text` (JSON) | Array of `{ id, title, description, technologies, links }` |
+| `activities` | `text` (JSON) | Array of `{ id, name, organization, role, start_date, end_date }` |
+| `achievements` | `text` (JSON) | Array of `{ id, title, description, date, issuer }` |
+| `section_visibility` | `text` (JSON) | Section show/hide flags |
 | `timezone` | `text` | User timezone (Default: `'UTC'`) |
 | `telegram_chat_id` | `text` | Nullable (Linked Telegram Chat ID for bot notifications) |
-| `notification_preferences` | `jsonb` | Notification delivery toggles |
-| `created_at` | `timestamp with time zone` | Default: `now()` |
+| `notification_preferences` | `text` (JSON) | Notification delivery toggles |
+| `created_at` | `integer` (ms) | Default: now |
 | `updated_at` | `timestamp with time zone` | Default: `now()` |
 
 ### Table `tutor_profiles`

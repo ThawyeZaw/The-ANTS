@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Clock3, CheckCircle2, XCircle, Eye } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { createClient } from '@/lib/supabase/client';
+import { listMyExamEditorSubmissions } from '@/actions/exam-data';
 
 export default function MySubmissions() {
   const { user } = useAuth();
@@ -11,13 +11,8 @@ export default function MySubmissions() {
 
   const refresh = useCallback(async () => {
     if (!user) return;
-    const supabase = createClient();
-    if (!supabase) return;
-    const { data } = await (supabase as any)
-      .from('exam_editor_submissions')
-      .select('*')
-      .eq('contributor_id', user.id);
-    if (data) setSubmissions(data);
+    const data = await listMyExamEditorSubmissions(user.id);
+    setSubmissions(data);
   }, [user]);
 
   useEffect(() => {
@@ -82,7 +77,12 @@ export default function MySubmissions() {
               <div>
                 <p className="text-sm font-semibold text-[var(--foreground)]">{submission.title}</p>
                 <p className="mt-1 text-sm text-[var(--foreground-secondary)]">
-                  {submission.type === 'calculator' ? 'Grade calculator preset' : 'Countdown proposal'} — {submission.summary}
+                  {submission.entity_type === 'exam_calculator_preset'
+                    ? 'Grade calculator preset'
+                    : submission.entity_type === 'exam_countdown_proposal'
+                      ? 'Countdown proposal'
+                      : submission.entity_type}{' '}
+                  — {String((submission.data as { summary?: string } | null)?.summary ?? 'Awaiting review')}
                 </p>
               </div>
               <div className={`flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] ${statusColor(submission.status)}`}>

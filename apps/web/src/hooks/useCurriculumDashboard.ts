@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — useCurriculumDashboard Hook (Hono API / Neon Backend)
+// The ANTS — useCurriculumDashboard Hook (Hono API / D1)
 // Aggregates exam countdowns filtered by the user's enrolled subjects.
 // ──────────────────────────────────────────────────────────────────────────────
 
