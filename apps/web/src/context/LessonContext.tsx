@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Lesson Context (Hono API / Neon Backend)
+// The ANTS — Lesson Context (Hono API / D1)
 // Shared context for curriculum, subject, topic, and progress data across tools.
 // ──────────────────────────────────────────────────────────────────────────────
 

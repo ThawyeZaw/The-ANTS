@@ -72,7 +72,7 @@ export default function TutorPublicProfile({
     <div className="max-w-5xl mx-auto space-y-8 animate-fade-in pb-16">
       {/* Top Bar */}
       <div className="flex items-center justify-between">
-        <BackButton href="/explore" label="Back to Explore" />
+        <BackButton href="/team" label="Back to Tutors & Contributors" />
         {isOwnProfile && (
           <Link
             href="/settings/profile?tab=role-profile"

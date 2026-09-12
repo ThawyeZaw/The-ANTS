@@ -15,14 +15,19 @@ import { createCronRoutes } from './routes/cron';
 import { createProfileRoutes } from './routes/profile';
 
 type Bindings = {
-  DATABASE_URL: string;
-  NEON_DATABASE_URL?: string;
+  DB: D1Database;
   GOOGLE_CLIENT_ID?: string;
   GOOGLE_CLIENT_SECRET?: string;
   GITHUB_CLIENT_ID?: string;
   GITHUB_CLIENT_SECRET?: string;
   TELEGRAM_BOT_TOKEN?: string;
   CRON_SECRET?: string;
+  ASSETS_BUCKET?: R2Bucket;
+  /** Optional stable public origin for R2 file URLs (e.g. https://api.the-ants.org). */
+  R2_PUBLIC_BASE_URL?: string;
+  BETTER_AUTH_SECRET?: string;
+  /** Optional override; defaults to https://api.the-ants.org when not local. */
+  BETTER_AUTH_URL?: string;
 };
 
 const app = new Hono<{ Bindings: Bindings }>();
@@ -32,6 +37,7 @@ const ALLOWED_ORIGINS = [
   'https://the-ants.org',
   'https://www.the-ants.org',
   'https://the-ants.vercel.app',
+  'https://the-ants-web.thawyezaw.workers.dev',
   'http://localhost:3000',
   'http://localhost:3005',
   'http://127.0.0.1:3000',
@@ -43,7 +49,12 @@ app.use(
   cors({
     origin: (origin) => {
       if (!origin) return 'https://the-ants.org';
-      if (ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.the-ants.org') || origin.endsWith('.the-ants.vercel.app')) {
+      if (
+        ALLOWED_ORIGINS.includes(origin) ||
+        origin.endsWith('.the-ants.org') ||
+        origin.endsWith('.the-ants.vercel.app') ||
+        origin.endsWith('.thawyezaw.workers.dev')
+      ) {
         return origin;
       }
       return null;
@@ -64,16 +75,13 @@ app.use('*', async (c, next) => {
   await next();
 });
 
-// DB getter helper
-const getDatabase = (c?: any) => {
+// DB getter helper — Cloudflare D1 binding `DB`
+const getDatabase = (c?: { env?: Bindings }) => {
   const env = c?.env || currentEnv;
-  const dbUrl =
-    env?.NEON_DATABASE_URL ||
-    env?.DATABASE_URL ||
-    process.env.NEON_DATABASE_URL ||
-    process.env.DATABASE_URL ||
-    '';
-  return createDb(dbUrl);
+  if (!env?.DB) {
+    throw new Error('[api] Missing D1 binding DB');
+  }
+  return createDb(env.DB);
 };
 
 // In-memory sliding window rate limiter
@@ -121,9 +129,14 @@ app.use('/api/auth/*', rateLimiter(60, 60 * 1000));
 app.use('/api/auth', rateLimiter(60, 60 * 1000));
 app.all('/api/auth/*', async (c) => {
   try {
-    const dbUrl = c.env?.NEON_DATABASE_URL || c.env?.DATABASE_URL || process.env.DATABASE_URL || '';
+    const db = getDatabase(c);
     const origin = new URL(c.req.url).origin;
-    const auth = getAuth(dbUrl, origin, c.env?.CRON_SECRET);
+    const auth = getAuth(
+      db,
+      origin,
+      c.env?.BETTER_AUTH_SECRET || c.env?.CRON_SECRET,
+      c.env?.BETTER_AUTH_URL
+    );
     const res = await auth.handler(c.req.raw);
     return res;
   } catch (err: any) {
@@ -133,9 +146,14 @@ app.all('/api/auth/*', async (c) => {
 });
 app.all('/api/auth', async (c) => {
   try {
-    const dbUrl = c.env?.NEON_DATABASE_URL || c.env?.DATABASE_URL || process.env.DATABASE_URL || '';
+    const db = getDatabase(c);
     const origin = new URL(c.req.url).origin;
-    const auth = getAuth(dbUrl, origin, c.env?.CRON_SECRET);
+    const auth = getAuth(
+      db,
+      origin,
+      c.env?.BETTER_AUTH_SECRET || c.env?.CRON_SECRET,
+      c.env?.BETTER_AUTH_URL
+    );
     const res = await auth.handler(c.req.raw);
     return res;
   } catch (err: any) {
@@ -158,10 +176,9 @@ export default {
   fetch: app.fetch,
   // Cloudflare Cron Trigger Handler
   async scheduled(event: any, env: Bindings, ctx: any) {
-    const dbUrl = env.NEON_DATABASE_URL || env.DATABASE_URL || '';
     const botToken = env.TELEGRAM_BOT_TOKEN || '';
-    if (dbUrl && botToken) {
-      const db = createDb(dbUrl);
+    if (env.DB && botToken) {
+      const db = createDb(env.DB);
       ctx.waitUntil(processNotificationQueue(db, botToken));
     }
   },

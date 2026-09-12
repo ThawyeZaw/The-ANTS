@@ -1,13 +1,39 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { createDb } from '@the-ants/db';
+import { createDb, type Database } from '@the-ants/db';
 import * as schema from '@the-ants/db';
 
-export function getAuth(databaseUrl: string, baseUrl?: string, secret?: string) {
-  const db = createDb(databaseUrl);
+/** Canonical production API host (custom domain on Worker `the-ants-api`). */
+export const CANONICAL_API_URL = 'https://api.the-ants.org';
 
+function isLocalDevOrigin(url: string): boolean {
+  try {
+    const { hostname } = new URL(url);
+    return hostname === 'localhost' || hostname === '127.0.0.1';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Resolve Better Auth baseURL.
+ * - Local wrangler/dev: use the request origin (http://127.0.0.1:8787).
+ * - Deployed: always canonical `https://api.the-ants.org` (ignore workers.dev alias).
+ */
+export function resolveAuthBaseURL(requestOrigin?: string, envBaseUrl?: string): string {
+  if (envBaseUrl) return envBaseUrl.replace(/\/+$/, '');
+  if (requestOrigin && isLocalDevOrigin(requestOrigin)) return requestOrigin.replace(/\/+$/, '');
+  return CANONICAL_API_URL;
+}
+
+export function getAuth(
+  db: Database,
+  requestOrigin?: string,
+  secret?: string,
+  envBaseUrl?: string
+) {
   return betterAuth({
-    baseURL: baseUrl || process.env.BETTER_AUTH_URL || 'https://the-ants-api.thawyezaw.workers.dev',
+    baseURL: resolveAuthBaseURL(requestOrigin, envBaseUrl || process.env.BETTER_AUTH_URL),
     secret: secret || process.env.BETTER_AUTH_SECRET || process.env.CRON_SECRET || 'the-ants-auth-secret-production-2026',
     trustedOrigins: [
       'http://localhost:3000',
@@ -17,19 +43,26 @@ export function getAuth(databaseUrl: string, baseUrl?: string, secret?: string) 
       'https://the-ants.org',
       'https://www.the-ants.org',
       'https://the-ants.vercel.app',
+      'https://the-ants-web.thawyezaw.workers.dev',
+      CANONICAL_API_URL,
       'https://the-ants-api.thawyezaw.workers.dev',
     ],
     advanced: {
       database: {
         generateId: () => crypto.randomUUID(),
       },
+      // Phase 6: apex + www + api share eTLD+1 `.the-ants.org`.
+      crossSubDomainCookies: {
+        enabled: true,
+        domain: '.the-ants.org',
+      },
       defaultCookieAttributes: {
-        sameSite: 'none',
+        sameSite: 'lax',
         secure: true,
       },
     },
     database: drizzleAdapter(db, {
-      provider: 'pg',
+      provider: 'sqlite',
       schema: {
         user: schema.user,
         session: schema.session,
@@ -42,7 +75,7 @@ export function getAuth(databaseUrl: string, baseUrl?: string, secret?: string) 
         role: {
           type: 'string',
           defaultValue: 'student',
-          input: false, // Prevents client from self-assigning role at registration
+          input: false,
         },
       },
     },
@@ -73,7 +106,6 @@ export function getAuth(databaseUrl: string, baseUrl?: string, secret?: string) 
       user: {
         create: {
           after: async (createdUser) => {
-            // Auto-create initial profile if it does not exist
             try {
               const baseUsername = (createdUser.name || createdUser.email.split('@')[0])
                 .toLowerCase()
@@ -82,12 +114,13 @@ export function getAuth(databaseUrl: string, baseUrl?: string, secret?: string) 
               await db
                 .insert(schema.profiles)
                 .values({
-                  id: createdUser.id as any,
+                  id: createdUser.id,
                   email: createdUser.email,
                   name: createdUser.name || createdUser.email.split('@')[0],
                   username: `${baseUsername}_${randomSuffix}`,
                   avatar_url: createdUser.image,
                   role: 'student',
+                  roles: ['student'],
                 })
                 .onConflictDoNothing();
             } catch (err) {

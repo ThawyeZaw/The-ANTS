@@ -1,11 +1,11 @@
 'use server';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Organisation Server Actions (Neon Drizzle DB)
+// The ANTS — Organisation Server Actions (D1 / Drizzle)
 // Persisted in `org_mission` / `org_team_members` / `org_timeline_items`.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { getDb, orgMission, orgTeamMembers, orgTimelineItems } from '@/lib/db';
+import { getDb, orgMission, orgTeamMembers, orgTimelineItems, profiles } from '@/lib/db';
 import { asc, eq } from 'drizzle-orm';
 import type {
   OrgMission,
@@ -280,5 +280,82 @@ export async function deleteOrgTimelineItemAction(id: string): Promise<{ success
     return { success: true };
   } catch (err: any) {
     return { success: false, error: err?.message || 'Failed to delete timeline item' };
+  }
+}
+
+// ── Founder Assignments ───────────────────────────────────────────────────────
+
+/**
+ * Sets the `founder_type` on a profile.
+ * Restricted to main_contributor / admin — enforced by the caller UI via useRole().
+ * Pass `null` to clear the founder designation.
+ */
+export async function actionSetFounderType(
+  userId: string,
+  founderType: 'founder' | 'co_founder' | null
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const db = getDb();
+    await db
+      .update(profiles)
+      .set({ founder_type: founderType } as any)
+      .where(eq(profiles.id, userId as any));
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err?.message || 'Failed to update founder type' };
+  }
+}
+
+/**
+ * Fetches all profiles that are relevant for the Tutors & Contributors directory:
+ * anyone with a tutor, teacher, contributor, main_contributor, or admin role,
+ * plus anyone with a founder_type set. Used by the directory page and admin tab.
+ */
+export async function actionGetAllTeamProfiles(): Promise<
+  {
+    id: string;
+    name: string;
+    username: string;
+    avatar_url: string | null;
+    title: string | null;
+    bio: string | null;
+    role: string;
+    roles: string[];
+    teaching_subjects: string[] | null;
+    founder_type: string | null;
+  }[]
+> {
+  try {
+    const db = getDb();
+    const rows = await db.query.profiles.findMany({
+      columns: {
+        id: true,
+        name: true,
+        username: true,
+        avatar_url: true,
+        title: true,
+        bio: true,
+        role: true,
+        roles: true,
+        founder_type: true,
+      },
+    });
+    // Filter to non-student-only profiles or those with a founder designation
+    return (rows as any[])
+      .filter((r: any) => {
+        const rRoles: string[] = r.roles && r.roles.length > 0 ? r.roles : [r.role || 'student'];
+        const hasStaffRole = rRoles.some((role) =>
+          ['tutor', 'teacher', 'contributor', 'main_contributor', 'admin'].includes(role)
+        );
+        return hasStaffRole || r.founder_type != null;
+      })
+      .map((r: any) => ({
+        ...r,
+        roles: r.roles && r.roles.length > 0 ? r.roles : [r.role || 'student'],
+        teaching_subjects: null, // joined from tutor_profiles on demand via profile page
+      }));
+  } catch (err) {
+    console.error('[actionGetAllTeamProfiles]', err);
+    return [];
   }
 }

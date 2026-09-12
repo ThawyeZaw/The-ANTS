@@ -1,7 +1,7 @@
 'use server';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Role & User Server Actions (Neon Drizzle DB)
+// The ANTS — Role & User Server Actions (D1 / Drizzle)
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { getDb, profiles } from '@/lib/db';

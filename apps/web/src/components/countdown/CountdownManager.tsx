@@ -7,7 +7,10 @@ import { CountdownCard } from './CountdownCard';
 import { Plus, Timer, BookMarked, BookOpen, Calendar } from 'lucide-react';
 import Link from 'next/link';
 import { useLessonContext, type SubjectCountdown } from '@/context/LessonContext';
-import { createClient } from '@/lib/supabase/client';
+import {
+  listUpcomingExamsBySubject,
+  switchExamCountdownSession,
+} from '@/actions/exam-data';
 import { actionEnqueueExamReminders, actionClearSourceQueue } from '@/actions/notifications';
 
 const AddCountdownModal = dynamic(() => import('./AddCountdownModal').then(m => ({ default: m.AddCountdownModal })), {
@@ -49,15 +52,22 @@ function SessionSwitcher({ subjectId, onSwitch }: { subjectId: string; onSwitch:
 
   const fetchSessions = useCallback(async () => {
     setLoading(true);
-    const supabase = createClient();
-    if (!supabase) { setLoading(false); return; }
-    const { data } = await supabase
-      .from('exams')
-      .select('*')
-      .eq('subject_id', subjectId)
-      .gt('date', new Date().toISOString().split('T')[0])
-      .order('date', { ascending: true });
-    setSessions(data ?? []);
+    try {
+      const data = await listUpcomingExamsBySubject(subjectId);
+      setSessions(
+        data.map((exam) => ({
+          id: exam.id,
+          subject: exam.title,
+          series: exam.series ?? exam.season ?? '',
+          date: exam.exam_date
+            ? new Date(exam.exam_date).toISOString().split('T')[0]
+            : '',
+        }))
+      );
+    } catch (err) {
+      console.error('[CountdownManager] Failed to load sessions:', err);
+      setSessions([]);
+    }
     setLoading(false);
   }, [subjectId]);
 
@@ -134,46 +144,30 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
   });
 
   const handleSwitchSession = useCallback(async (subjectId: string, examId: string) => {
-    // Update exam_countdowns for the subject
-    const supabase = createClient()!;
     const exam = autoCountdowns.find(cd => cd.subjectId === subjectId)?.exam;
     if (!exam) return;
 
-    // Remove old countdown for this subject and create new one
-    const { data: oldCd } = await supabase
-      .from('exam_countdowns')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('exam_id', exam.id)
-      .single();
+    const result = await switchExamCountdownSession({
+      userId,
+      subjectId,
+      oldExamId: exam.id,
+      newExamId: examId,
+    });
 
-    if (oldCd) {
-      await supabase.from('exam_countdowns').delete().eq('id', oldCd.id);
-      actionClearSourceQueue('exam_countdown', oldCd.id);
+    if (!result.success || !result.countdown || !result.exam) return;
+
+    if (result.removedCountdownId) {
+      void actionClearSourceQueue('exam_countdown', result.removedCountdownId);
     }
 
-    const newExamData = await supabase.from('exams').select('*').eq('id', examId).single();
-    if (newExamData.data) {
-      const { data: inserted } = await supabase.from('exam_countdowns').insert({
-        user_id: userId,
-        exam_id: examId,
-        custom_title: newExamData.data.subject,
-        target_date: newExamData.data.date,
-        priority_indicator: 'medium',
-        qualification_group: newExamData.data.series ?? 'Custom',
-      }).select().single();
-      // Enqueue exam reminders
-      if (inserted) {
-        actionEnqueueExamReminders(
-          (inserted as any).id,
-          userId,
-          newExamData.data.subject || 'Exam',
-          new Date(newExamData.data.date || Date.now())
-        );
-      }
-      // Refresh the page to reflect changes
-      window.location.reload();
-    }
+    void actionEnqueueExamReminders(
+      result.countdown.id,
+      userId,
+      result.exam.title || 'Exam',
+      new Date(result.exam.exam_date || Date.now())
+    );
+
+    window.location.reload();
   }, [userId, autoCountdowns]);
 
   return (

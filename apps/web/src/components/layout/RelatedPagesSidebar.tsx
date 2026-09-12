@@ -15,7 +15,6 @@ import {
   GraduationCap,
   Clock,
   Calculator,
-  Compass,
   FlaskConical,
   UserCircle,
   Settings,
@@ -63,16 +62,16 @@ const CONTEXT_MAP: Record<string, SidebarLink[]> = {
   ],
   '/profile': [
     { label: 'Settings', href: '/settings', icon: Settings },
-    { label: 'Explore', href: '/explore', icon: Compass },
+    { label: 'Tutors & Contributors', href: '/team', icon: GraduationCap },
   ],
   '/settings': [
     { label: 'My Profile', href: '/profile/me', icon: UserCircle },
-    { label: 'Explore Tutors', href: '/explore?tab=tutors', icon: GraduationCap },
+    { label: 'Tutors & Contributors', href: '/team', icon: GraduationCap },
   ],
   '/dashboard': [
     { label: 'Library', href: '/library', icon: BookOpen },
     { label: 'Timetable', href: '/timetable', icon: CalendarDays },
-    { label: 'Explore', href: '/explore', icon: Compass },
+    { label: 'Tutors & Contributors', href: '/team', icon: GraduationCap },
   ],
 };
 

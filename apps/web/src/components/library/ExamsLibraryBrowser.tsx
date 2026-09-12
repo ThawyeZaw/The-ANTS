@@ -7,7 +7,6 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useMemo, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import dynamic from 'next/dynamic';
 import {
   Search, Filter, Clock, Globe, Sparkles,
@@ -16,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useCountdown } from '@/hooks/useCountdown';
+import { listExamCountdownsForUser, listExams } from '@/actions/exam-data';
 import { QUALIFICATION_REGISTRY } from '@/constants/qualifications';
 import { cn } from '@/lib/utils';
 import type { Exam } from '@/types';
@@ -173,17 +173,15 @@ export default function ExamsLibraryBrowser() {
 
   useEffect(() => {
     async function fetchData() {
-      const supabase = createClient();
-      if (!supabase) return;
-      const [{ data: eData }, { data: cData }] = await Promise.all([
-        supabase.from('exams').select('*').order('exam_date', { ascending: true }),
-        user ? supabase.from('exam_countdowns').select('*').eq('user_id', user.id) : Promise.resolve({ data: [] }),
+      const [eData, cData] = await Promise.all([
+        listExams(),
+        user ? listExamCountdownsForUser(user.id) : Promise.resolve([]),
       ]);
-      if (eData) setAllExams(eData as unknown as Exam[]);
-      if (cData) setUserCountdowns(cData);
+      setAllExams(eData as unknown as Exam[]);
+      setUserCountdowns(cData);
     }
 
-    fetchData();
+    fetchData().catch((err) => console.error('[ExamsLibraryBrowser] load failed:', err));
   }, [user]);
 
   const { createCountdown } = useCountdown(user?.id);

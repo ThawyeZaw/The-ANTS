@@ -1,7 +1,7 @@
 'use server';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Exam Editor Server Actions (Neon Drizzle DB)
+// The ANTS — Exam Editor Server Actions (D1 / Drizzle)
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { getDb, editorSubmissions } from '@/lib/db';

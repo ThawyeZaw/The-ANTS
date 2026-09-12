@@ -1,18 +1,10 @@
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTs — /explore page
-// Unified explore hub: All · Profiles · Clubs with tab navigation.
+// The ANTs — /explore redirect
+// The Explore Directory has moved to /team (Tutors & Contributors).
 // ──────────────────────────────────────────────────────────────────────────────
 
-import type { Metadata } from 'next';
-import ExplorePageContent from '@/components/explore/ExplorePageContent';
+import { permanentRedirect } from 'next/navigation';
 
-export const metadata: Metadata = {
-  title: 'Explore | The ANTs',
-  description: 'Discover students, teachers, contributors, and community clubs in The ANTs community.',
-};
-
-export const revalidate = 60;
-
-export default function ExplorePage() {
-  return <ExplorePageContent />;
+export default function ExploreRedirectPage() {
+  permanentRedirect('/team');
 }

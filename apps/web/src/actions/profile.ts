@@ -1,7 +1,7 @@
 'use server';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Profile & Tutor Server Actions (Neon Drizzle DB)
+// The ANTS — Profile & Tutor Server Actions (D1 / Drizzle)
 // ──────────────────────────────────────────────────────────────────────────────
 
 import {
@@ -346,81 +346,8 @@ export async function actionUpdateTutorProfile(
 
     return { success: true };
   } catch (err: any) {
-    // Attempt automatic schema healing and retry once
-    try {
-      const { neon } = await import('@neondatabase/serverless');
-      const dbUrl = (
-        process.env.NEON_DATABASE_URL ||
-        process.env.DATABASE_URL ||
-        ''
-      ).replace(/[&?]channel_binding=[^&]+/g, '').trim();
-
-      if (dbUrl) {
-        const sql = neon(dbUrl);
-        await sql`
-          CREATE TABLE IF NOT EXISTS "tutor_profiles" (
-            "id" uuid PRIMARY KEY REFERENCES "profiles"("id") ON DELETE CASCADE,
-            "institution" text,
-            "department" text,
-            "specialization" text,
-            "telegram_handle" text,
-            "hourly_rate" text,
-            "teaching_curriculums" text[],
-            "teaching_subjects" text[],
-            "availability_slots" jsonb,
-            "is_active" boolean DEFAULT true,
-            "verified" boolean DEFAULT false
-          );
-        `;
-        await sql`ALTER TABLE "tutor_profiles" ADD COLUMN IF NOT EXISTS "institution" text;`;
-        await sql`ALTER TABLE "tutor_profiles" ADD COLUMN IF NOT EXISTS "department" text;`;
-        await sql`ALTER TABLE "tutor_profiles" ADD COLUMN IF NOT EXISTS "specialization" text;`;
-        await sql`ALTER TABLE "tutor_profiles" ADD COLUMN IF NOT EXISTS "telegram_handle" text;`;
-        await sql`ALTER TABLE "tutor_profiles" ADD COLUMN IF NOT EXISTS "hourly_rate" text;`;
-        await sql`ALTER TABLE "tutor_profiles" ADD COLUMN IF NOT EXISTS "teaching_curriculums" text[];`;
-        await sql`ALTER TABLE "tutor_profiles" ADD COLUMN IF NOT EXISTS "teaching_subjects" text[];`;
-        await sql`ALTER TABLE "tutor_profiles" ADD COLUMN IF NOT EXISTS "availability_slots" jsonb;`;
-        await sql`ALTER TABLE "tutor_profiles" ADD COLUMN IF NOT EXISTS "is_active" boolean DEFAULT true;`;
-        await sql`ALTER TABLE "tutor_profiles" ADD COLUMN IF NOT EXISTS "verified" boolean DEFAULT false;`;
-      }
-
-      const retryDb = getDb();
-      const insertPayload = {
-        id: userId as any,
-        institution: data.institution || null,
-        department: data.department || null,
-        specialization: data.specialization || null,
-        telegram_handle: data.telegram_handle ? data.telegram_handle.replace('@', '').trim() : null,
-        hourly_rate: data.hourly_rate || null,
-        teaching_curriculums: Array.isArray(data.teaching_curriculums) ? data.teaching_curriculums : [],
-        teaching_subjects: Array.isArray(data.teaching_subjects) ? data.teaching_subjects : [],
-        availability_slots: data.availability_slots || {},
-        is_active: data.is_active !== undefined ? data.is_active : true,
-      };
-
-      await retryDb
-        .insert(tutorProfiles)
-        .values(insertPayload)
-        .onConflictDoUpdate({
-          target: tutorProfiles.id,
-          set: {
-            institution: insertPayload.institution,
-            department: insertPayload.department,
-            specialization: insertPayload.specialization,
-            telegram_handle: insertPayload.telegram_handle,
-            hourly_rate: insertPayload.hourly_rate,
-            teaching_curriculums: insertPayload.teaching_curriculums,
-            teaching_subjects: insertPayload.teaching_subjects,
-            availability_slots: insertPayload.availability_slots,
-            is_active: insertPayload.is_active,
-          },
-        });
-
-      return { success: true };
-    } catch (retryErr: any) {
-      console.error('[actionUpdateTutorProfile] Retry failed:', retryErr);
-      return { success: false, error: retryErr.message || 'Failed to update tutor profile' };
-    }
+    console.error('[updateTutorProfile] Failed:', err);
+    return { success: false, error: err?.message || 'Failed to update tutor profile' };
   }
 }
 
@@ -590,59 +517,8 @@ export async function actionUpdateContributorProfile(
 
     return { success: true };
   } catch (err: any) {
-    // Attempt automatic schema healing and retry once
-    try {
-      const { neon } = await import('@neondatabase/serverless');
-      const dbUrl = (
-        process.env.NEON_DATABASE_URL ||
-        process.env.DATABASE_URL ||
-        ''
-      ).replace(/[&?]channel_binding=[^&]+/g, '').trim();
-
-      if (dbUrl) {
-        const sql = neon(dbUrl);
-        await sql`
-          CREATE TABLE IF NOT EXISTS "contributor_profiles" (
-            "id" uuid PRIMARY KEY REFERENCES "profiles"("id") ON DELETE CASCADE,
-            "website_url" text,
-            "linkedin_url" text,
-            "github_url" text,
-            "contributor_level" text DEFAULT 'contributor'
-          );
-        `;
-        await sql`ALTER TABLE "contributor_profiles" ADD COLUMN IF NOT EXISTS "website_url" text;`;
-        await sql`ALTER TABLE "contributor_profiles" ADD COLUMN IF NOT EXISTS "linkedin_url" text;`;
-        await sql`ALTER TABLE "contributor_profiles" ADD COLUMN IF NOT EXISTS "github_url" text;`;
-        await sql`ALTER TABLE "contributor_profiles" ADD COLUMN IF NOT EXISTS "contributor_level" text DEFAULT 'contributor';`;
-      }
-
-      const retryDb = getDb();
-      const insertPayload = {
-        id: userId as any,
-        website_url: data.website_url || null,
-        linkedin_url: data.linkedin_url || null,
-        github_url: data.github_url || null,
-        contributor_level: data.contributor_level || 'contributor',
-      };
-
-      await retryDb
-        .insert(contributorProfiles)
-        .values(insertPayload)
-        .onConflictDoUpdate({
-          target: contributorProfiles.id,
-          set: {
-            website_url: insertPayload.website_url,
-            linkedin_url: insertPayload.linkedin_url,
-            github_url: insertPayload.github_url,
-            contributor_level: insertPayload.contributor_level,
-          },
-        });
-
-      return { success: true };
-    } catch (retryErr: any) {
-      console.error('[actionUpdateContributorProfile] Retry failed:', retryErr);
-      return { success: false, error: retryErr.message || 'Failed to update contributor profile' };
-    }
+    console.error('[updateContributorProfile] Failed:', err);
+    return { success: false, error: err?.message || 'Failed to update contributor profile' };
   }
 }
 
@@ -705,7 +581,7 @@ export async function actionCheckUsernameAvailable(
   }
 
   const reserved = [
-    'admin', 'api', 'auth', 'dashboard', 'settings', 'explore', 'about',
+    'admin', 'api', 'auth', 'dashboard', 'settings', 'explore', 'team', 'about',
     'library', 'tools', 'student', 'tutor', 'contributor', 'login', 'signup',
     'timetable', 'pomodoro', 'calculator', 'flashcards', 'courses', 'notes', 'exams',
   ];

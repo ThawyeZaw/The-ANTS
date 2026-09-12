@@ -1,5 +1,5 @@
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTs — Telegram Webhook Handler (Neon Drizzle DB)
+// The ANTs — Telegram Webhook Handler (D1 / Drizzle)
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -85,7 +85,7 @@ async function unlinkTelegramChat(chatId: number) {
   try {
     const db = getDb();
     const linked = await db.query.notificationPreferences.findFirst({
-      where: sql`${notificationPreferences.channels}->>'telegram_chat_id' = ${String(chatId)}`,
+      where: sql`json_extract(${notificationPreferences.channels}, '$.telegram_chat_id') = ${String(chatId)}`,
     });
 
     if (linked) {

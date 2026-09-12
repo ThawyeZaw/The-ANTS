@@ -7,17 +7,28 @@
 | **Thaw Ye Zaw** | Features / dashboard / study tools / backend | [`AGENTS.features.md`](./AGENTS.features.md) |
 | **Zay Lynn Htet** | Landing, auth forms, marketing UI | [`AGENTS.ui.md`](./AGENTS.ui.md) |
 
+### Cloudflare migration (infra)
+
+> **Active phase: Phase 6 cutover** — apex/`www` on Workers; finish smoke + Telegram + decommission.  
+> Tracker: [`docs/migration/cloudflare.md`](./docs/migration/cloudflare.md) · Runbook: [`docs/migration/cutover.md`](./docs/migration/cutover.md)  
+> Also: [`docs/migration/d1.md`](./docs/migration/d1.md) · [`docs/migration/opennext-web.md`](./docs/migration/opennext-web.md)
+
+Do **not** delete Neon/Vercel or flip production web hosting DNS until Phase 6 is explicitly approved. DNS nameserver move to Cloudflare (while web stays on Vercel) is allowed earlier.
+
 ---
 
 ## 1. Project overview
 
 - **Application:** The ANTS — curriculum-aware academic productivity platform for Myanmar students.
-- **Current objective:** Implement the **Stitch IGCSE Study Hub redesign** (light + dark as one token system) while rebuilding study features and upgrading marketing/auth UI.
-- **Tech stack (HONC monorepo):**
-  - **Frontend (`apps/web`):** Next.js 16 (App Router + Turbopack), React 19, TypeScript 5, Tailwind CSS v4
-  - **API (`apps/api`):** Hono on Cloudflare Workers
-  - **Database (`packages/db`):** Neon Serverless Postgres + Drizzle ORM
+- **Current objective:** Implement the **Stitch IGCSE Study Hub redesign** (light + dark as one token system) while rebuilding study features and upgrading marketing/auth UI; migrate hosting/DB to Cloudflare (Workers + D1 + R2) per [`docs/migration/cloudflare.md`](./docs/migration/cloudflare.md).
+- **Tech stack (HONC monorepo — transitional):**
+  - **Frontend (`apps/web`):** Next.js 16.3+ (App Router), React 19, TypeScript 5, Tailwind CSS v4 — **Vercel production**; OpenNext Worker `the-ants-web` for preview (Phase 2)
+  - **API (`apps/api`):** Hono on Cloudflare Workers (`api.the-ants.org` target)
+  - **Database (`packages/db`):** Cloudflare **D1** (SQLite) + Drizzle — Neon retired from Workers runtime (Phase 3+)
   - **Shared types (`packages/shared-types`):** Shared interfaces + Zod schemas
+  - **Storage / jobs:** Cloudflare R2; Telegram queue via **Worker cron only** (no QStash / no GitHub Actions cron)
+  - **Web preview:** `https://the-ants-web.thawyezaw.workers.dev` (OpenNext); production apex still Vercel until Phase 6
+  - **API:** `https://the-ants-api.thawyezaw.workers.dev` / `https://api.the-ants.org`
 
 ---
 
@@ -51,6 +62,7 @@ In-repo specs (no Downloads path required):
 | Auth forms | **Zay Lynn Htet** | `apps/web/src/app/(auth)/`, onboarding visuals |
 | Dashboard shell / app nav | **Thaw Ye Zaw** | `apps/web/src/components/layout/DashboardLayout.tsx`, app sidebar / bottom nav, `(app)` chrome |
 | Study features & dashboard pages | **Thaw Ye Zaw** | `(app)/dashboard`, library, notes, flashcards, quizzes, timetable, pomodoro, profiles, settings, tools |
+| Tutors & Contributors directory | **Thaw Ye Zaw** | `(public)/team/`, `components/explore/TutorsContributorsCard.tsx`, `TutorsContributorsPageContent.tsx`; `/explore` redirects to `/team` |
 | Shared UI primitives | **Either** (coordinate) | `apps/web/src/components/ui/` |
 | Design tokens / `globals.css` | **Coordinate before edit** | `apps/web/src/app/globals.css` |
 | Backend / DB / API / server actions | **Thaw Ye Zaw only** | `packages/db`, `packages/shared-types`, `apps/api`, `apps/web/src/actions/` |
@@ -114,6 +126,8 @@ export default function MyComponent() {
 | [`AGENTS.md`](./AGENTS.md) | Shared rules (this file) |
 | [`AGENTS.ui.md`](./AGENTS.ui.md) | Zay Lynn Htet — landing & auth |
 | [`AGENTS.features.md`](./AGENTS.features.md) | Thaw Ye Zaw — features & backend |
+| [`docs/migration/cloudflare.md`](./docs/migration/cloudflare.md) | **Cloudflare migration phase tracker** (current phase + decisions) |
+| [`docs/migration/handoff-phase-4.md`](./docs/migration/handoff-phase-4.md) | **Paste this prompt** to continue Phase 4 in a new chat |
 | [`README.md`](./README.md) | Project overview & setup |
 | [`spec.md`](./spec.md) | System specification |
 | [`docs/design/`](./docs/design/README.md) | Stitch light + dark design specs |

@@ -215,6 +215,8 @@ export interface Profile {
   timezone?: string;
   institutionName?: string;
   onboardingData?: OnboardingCurriculumSelection[];
+  /** Founder designation — independent of the role enum. Admin-assignable only. */
+  founderType?: 'founder' | 'co_founder' | null;
 }
 
 /** Authenticated user object returned by auth operations */

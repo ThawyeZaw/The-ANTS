@@ -1,13 +1,12 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
+import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare';
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ['192.168.1.6'],
+  // www → apex is handled by Cloudflare Redirect Rule (OpenNext breaks
+  // next.config host redirects by leaving literal ":path*" in Location).
   images: {
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**.supabase.co',
-      },
       {
         protocol: 'https',
         hostname: 'the-ants-api.thawyezaw.workers.dev',
@@ -47,3 +46,6 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+// Enables Cloudflare bindings during `next dev` (OpenNext).
+initOpenNextCloudflareForDev();

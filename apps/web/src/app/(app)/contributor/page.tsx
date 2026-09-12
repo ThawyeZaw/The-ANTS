@@ -9,7 +9,6 @@ import {
   BookOpen,
   Layers,
   Sparkles,
-  ClipboardCheck,
   ArrowRight,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -73,13 +72,6 @@ export default function ContributorDashboard() {
             >
               <Pencil className="w-3.5 h-3.5" />
               Editor Workspace
-            </Link>
-            <Link
-              href="/editor/review-queue"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-background-secondary border border-border text-foreground text-xs font-bold hover:bg-background-secondary/80 transition-all"
-            >
-              <ClipboardCheck className="w-3.5 h-3.5" />
-              Review Queue
             </Link>
           </div>
         </div>

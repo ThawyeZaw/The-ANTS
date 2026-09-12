@@ -3,7 +3,7 @@
 //
 // Guarantees:
 // 1. Atomic claiming — a single UPDATE ... WHERE id IN (subquery) RETURNING
-//    flips pending → processing, so concurrent triggers (cron + QStash + manual)
+//    flips pending → processing, so concurrent triggers (Worker cron + manual)
 //    can never claim (and double-send) the same row.
 // 2. Rate-safe pacing — sends are spaced ~25 msg/sec, safely under the
 //    Telegram bot limit of 30 msg/second.
@@ -97,7 +97,7 @@ export async function processNotificationQueue(
   }
 
   // 2. Atomically claim due rows (pending → processing) and return them.
-  //    The outer status='pending' guard is re-evaluated by Postgres after any
+  //    The outer status='pending' guard is re-evaluated by SQLite after any
   //    lock wait, so a concurrent processor can never claim the same row.
   const claimCutoff = new Date(Date.now() + EARLY_CLAIM_MS);
   const dueWhere = and(

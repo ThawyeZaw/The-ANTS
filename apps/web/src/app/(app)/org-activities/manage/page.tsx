@@ -15,6 +15,7 @@ import {
   Target,
   Users,
   Clock,
+  Star,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -22,6 +23,8 @@ import {
   addOrgTimelineItemAction,
   updateOrgTimelineItemAction,
   deleteOrgTimelineItemAction,
+  actionGetAllTeamProfiles,
+  actionSetFounderType,
 } from '@/actions/org';
 import type { OrgTimelineItem, OrgTimelineItemFormData } from '@/types';
 import { cn } from '@/lib/utils';
@@ -35,6 +38,7 @@ const TABS = [
   { key: 'mission', label: 'Mission', icon: <Target className="h-4 w-4" /> },
   { key: 'team', label: 'Team', icon: <Users className="h-4 w-4" /> },
   { key: 'timeline', label: 'Timeline', icon: <Clock className="h-4 w-4" /> },
+  { key: 'founders', label: 'Founders', icon: <Star className="h-4 w-4" /> },
 ] as const;
 
 type TabKey = (typeof TABS)[number]['key'];
@@ -275,6 +279,108 @@ function TimelineTab() {
   );
 }
 
+// ── Founders Tab ──────────────────────────────────────────────────────────────────
+
+type FounderType = 'founder' | 'co_founder' | null;
+
+interface TeamProfileRow {
+  id: string;
+  name: string;
+  username: string;
+  role: string;
+  roles: string[];
+  founder_type: string | null;
+}
+
+function FoundersTab() {
+  const [profiles, setProfiles] = useState<TeamProfileRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const load = async () => {
+    setLoading(true);
+    const data = await actionGetAllTeamProfiles();
+    setProfiles(data as TeamProfileRow[]);
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const showFeedback = (type: 'success' | 'error', message: string) => {
+    setFeedback({ type, message });
+    setTimeout(() => setFeedback(null), 3000);
+  };
+
+  const handleChange = async (userId: string, value: FounderType) => {
+    setSaving(userId);
+    const r = await actionSetFounderType(userId, value);
+    if (r.success) {
+      showFeedback('success', 'Founder designation updated.');
+      setProfiles((prev) =>
+        prev.map((p) => (p.id === userId ? { ...p, founder_type: value } : p))
+      );
+    } else {
+      showFeedback('error', r.error || 'Failed to update.');
+    }
+    setSaving(null);
+  };
+
+  return (
+    <div className="animate-fade-in space-y-6">
+      <div>
+        <h2 className="text-xl font-bold text-foreground">Founder &amp; Co-Founder Designations</h2>
+        <p className="text-sm text-foreground-muted mt-1">
+          Assign Founder or Co-Founder badges to team profiles. These appear on the public Tutors &amp; Contributors directory and are independent of a user's role.
+        </p>
+      </div>
+
+      {feedback && (
+        <div className={cn('px-4 py-3 rounded-xl text-sm font-medium animate-fade-in', feedback.type === 'success' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25' : 'bg-red-500/15 text-red-400 border border-red-500/25')}>
+          {feedback.message}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="h-6 w-6 text-primary animate-spin" />
+        </div>
+      ) : profiles.length === 0 ? (
+        <div className="text-center py-16 text-foreground-muted text-sm">
+          No tutor, contributor, or admin profiles found.
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {profiles.map((p) => (
+            <div
+              key={p.id}
+              className="flex items-center justify-between gap-4 p-4 bg-background-card border border-border rounded-xl hover:border-primary/10 transition-colors"
+            >
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground truncate">{p.name}</p>
+                <p className="text-xs text-foreground-muted truncate font-mono">@{p.username}</p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {saving === p.id && <Loader2 className="h-4 w-4 animate-spin text-foreground-muted" />}
+                <select
+                  value={p.founder_type || ''}
+                  onChange={(e) => handleChange(p.id, (e.target.value as FounderType) || null)}
+                  disabled={saving === p.id}
+                  className="px-3 py-2 rounded-xl bg-background-secondary border border-border text-sm text-foreground focus:outline-none focus:border-primary/50 transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  <option value="">Not a Founder</option>
+                  <option value="founder">Founder</option>
+                  <option value="co_founder">Co-Founder</option>
+                </select>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main Page ────────────────────────────────────────────────────────────────
 
 export default function ManageOrgPage() {
@@ -335,6 +441,7 @@ export default function ManageOrgPage() {
         {activeTab === 'mission' && <MissionEditor />}
         {activeTab === 'team' && <TeamManager />}
         {activeTab === 'timeline' && <TimelineTab />}
+        {activeTab === 'founders' && <FoundersTab />}
       </div>
     </div>
   );

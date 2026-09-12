@@ -6,7 +6,8 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "declaration": true
+    "declaration": true,
+    "types": ["@cloudflare/workers-types"]
   },
   "include": ["src/**/*", "drizzle.config.ts"]
 }

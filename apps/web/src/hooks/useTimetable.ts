@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — useTimetable Hook (Server Actions / Neon Backend)
+// The ANTS — useTimetable Hook (Server Actions / D1)
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useCallback, useMemo, useEffect } from 'react';

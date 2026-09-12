@@ -4,10 +4,11 @@
 // HOW TO ADD YOUR OWN IMAGES & AUDIO
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. Drop files into apps/web/public/pomodoro/vibes/{vibe-id}/
-//      background.webp  — stage background (recommended 1920×1080)
-//      ambience.mp3       — seamless loop (keep under ~5 MB)
+//      background.webp  — stage background (recommended 1920×1080, keep under ~1 MB)
+//      ambience.mp3       — seamless loop (keep under ~5 MB; Cloudflare Workers assets max 25 MiB per file)
 // 2. Or change the paths below (backgroundSrc / audioSrc).
 // 3. Files in those folders are used as-is (background.webp + ambience.mp3).
+// 4. Large originals belong on R2 (the-ants-assets), not in Worker static assets.
 //
 // Folders: rain | deep-focus | cafe | forest
 // ──────────────────────────────────────────────────────────────────────────────

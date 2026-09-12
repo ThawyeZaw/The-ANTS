@@ -1,7 +1,7 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — useCourseManager Hook (Hono API / Neon Backend)
+// The ANTS — useCourseManager Hook (Hono API / D1)
 // Shared context for Course Manager, Lesson Tracker, and Exam Countdown.
 // ──────────────────────────────────────────────────────────────────────────────
 

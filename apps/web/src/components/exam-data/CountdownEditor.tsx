@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { submitExamCountdownProposal } from '@/actions/exam-editor';
-import { createClient } from '@/lib/supabase/client';
+import { listCurriculums, listExams, listSubjects } from '@/actions/exam-data';
 import { useEffect } from 'react';
 
 interface CountdownDraft {
@@ -42,19 +42,17 @@ export default function CountdownEditor() {
 
   useEffect(() => {
     async function fetchData() {
-      const supabase = createClient();
-      if (!supabase) return;
-      const [{ data: cData }, { data: sData }, { data: eData }] = await Promise.all([
-        supabase.from('curriculums').select('*'),
-        supabase.from('subjects').select('*'),
-        supabase.from('exams').select('*'),
+      const [cData, sData, eData] = await Promise.all([
+        listCurriculums(),
+        listSubjects(),
+        listExams(),
       ]);
-      if (cData) setCurriculums(cData);
-      if (sData) setAllSubjects(sData);
-      if (eData) setAllExams(eData);
+      setCurriculums(cData);
+      setAllSubjects(sData);
+      setAllExams(eData);
     }
 
-    fetchData();
+    fetchData().catch((err) => console.error('[CountdownEditor] load failed:', err));
   }, []);
 
   const [currentStep, setCurrentStep] = useState(1);

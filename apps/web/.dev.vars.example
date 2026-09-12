@@ -1,0 +1,16 @@
+# Local OpenNext / Wrangler vars for apps/web (copy to .dev.vars — gitignored)
+NEXTJS_ENV=development
+
+# Server-only secrets for local Workers preview (optional)
+CRON_SECRET=
+TELEGRAM_BOT_TOKEN=
+
+# D1 is bound via wrangler.jsonc (`DB`) — do NOT set DATABASE_URL for Workers.
+# Neon DATABASE_URL is offline until Phase 5/6; not used by the web Worker.
+
+# For `next dev` / local API, keep localhost in .env.local instead:
+#   NEXT_PUBLIC_API_URL=http://127.0.0.1:8787
+# Do NOT put 127.0.0.1 in vars that OpenNext injects into production builds.
+# CF builds bake NEXT_PUBLIC_API_URL=https://api.the-ants.org via the cf:build script.
+
+NEXT_PUBLIC_TELEGRAM_BOT_USERNAME=TheANTS_bot

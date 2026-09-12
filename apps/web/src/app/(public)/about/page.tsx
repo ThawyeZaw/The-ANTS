@@ -1,30 +1,27 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import {
+  useEffect, useState,
+} from 'react';
 import Link from 'next/link';
 import BackButton from '@/components/ui/BackButton';
 import {
-  Users,
   Target,
   Clock,
   Loader2,
 } from 'lucide-react';
 import {
   getOrgMissionAction,
-  getOrgTeamMembersAction,
   getOrgTimelineItemsAction,
 } from '@/actions/org';
-import BridgesSection from '@/components/about/BridgesSection';
-import TeamMemberCard from '@/components/about/TeamMemberCard';
 import OrgTimeline from '@/components/about/OrgTimeline';
-import type { OrgTeamMember, OrgTimelineItem } from '@/types';
+import type { OrgTimelineItem } from '@/types';
 import { renderMarkdown } from '@/lib/markdown';
 
 // ── Tabs ─────────────────────────────────────────────────────────────────────
 
 const TABS = [
   { key: 'mission', label: 'Our Mission', icon: <Target className="h-4 w-4" /> },
-  { key: 'team', label: 'Our Team', icon: <Users className="h-4 w-4" /> },
   { key: 'history', label: 'Our Journey', icon: <Clock className="h-4 w-4" /> },
 ] as const;
 
@@ -81,42 +78,6 @@ function MissionSection() {
           Join <span className="font-brand">The ANTs</span> Today
         </Link>
       </div>
-    </div>
-  );
-}
-
-// ── Team Section ─────────────────────────────────────────────────────────────
-
-function TeamSection() {
-  const [members, setMembers] = useState<OrgTeamMember[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let active = true;
-    getOrgTeamMembersAction().then((data) => {
-      if (active) {
-        setMembers(data);
-        setLoading(false);
-      }
-    });
-    return () => { active = false; };
-  }, []);
-
-  return (
-    <div className="animate-fade-in space-y-8">
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-6 w-6 text-primary animate-spin" />
-        </div>
-      ) : members.length > 0 ? (
-        <div className="rounded-3xl overflow-hidden border border-border">
-          <BridgesSection members={members} />
-        </div>
-      ) : (
-        <div className="text-center py-12 text-foreground-muted">
-          No team members listed yet.
-        </div>
-      )}
     </div>
   );
 }
@@ -282,7 +243,6 @@ export default function AboutPage() {
 
         {/* Tab Content */}
         {activeTab === 'mission' && <MissionSection />}
-        {activeTab === 'team' && <TeamSection />}
         {activeTab === 'history' && <HistorySection />}
       </div>
     </div>
