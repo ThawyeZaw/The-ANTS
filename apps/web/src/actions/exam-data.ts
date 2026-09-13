@@ -11,7 +11,8 @@ import {
   subjects,
   exams,
   examCountdowns,
-  editorSubmissions,
+  pastPapers,
+  paperGradeBoundaries,
 } from '@/lib/db';
 import { eq, and, gt, asc, desc } from 'drizzle-orm';
 
@@ -52,45 +53,56 @@ export async function getExamById(examId: string) {
   return row ?? null;
 }
 
-/** Approved calculator presets stored via editor submissions (jsonb payload). */
+/** Structured calculator presets loaded directly from seeded past papers & grade boundaries */
 export async function listApprovedCalculatorPresets() {
   const db = getDb();
-  const rows = await db
-    .select()
-    .from(editorSubmissions)
-    .where(
-      and(
-        eq(editorSubmissions.entity_type, 'exam_calculator_preset'),
-        eq(editorSubmissions.status, 'approved')
-      )
-    )
-    .orderBy(desc(editorSubmissions.created_at));
+  const rows = await db.query.pastPapers.findMany({
+    with: {
+      gradeBoundaries: true,
+    },
+    orderBy: [desc(pastPapers.year), desc(pastPapers.series)],
+  });
 
   return rows.map((r) => {
-    const data = (r.data ?? {}) as Record<string, unknown>;
+    const isModular = r.qualification === 'IAL';
     return {
       id: r.id,
-      title: (data.title as string) || r.title,
-      subject_code: (data.subject_code as string) || '',
-      curriculum_id: (data.curriculum_id as string) || '',
-      subject_id: (data.subject_id as string) || '',
-      series: (data.series as string) || '',
-      papers: (data.papers as unknown[]) || [],
-      grade_boundaries: (data.grade_boundaries as unknown[]) || [],
-      is_modular: Boolean(data.is_modular),
-      status: r.status,
-      ...data,
+      title: r.title || `${r.subject} Paper ${r.paper_number}`,
+      subject_code: r.syllabus_code,
+      curriculum_id: r.curriculum_id || '',
+      subject_id: r.subject_id || '',
+      series: `${r.series} ${r.year}`,
+      year: r.year,
+      exam_board: r.exam_board,
+      qualification: r.qualification,
+      papers: [
+        {
+          name: r.title || `Paper ${r.paper_number}${r.variant ? ` (v${r.variant})` : ''}`,
+          max_mark: r.total_marks || 100,
+          weight: 100,
+          paper_boundaries: r.gradeBoundaries.map((b) => ({
+            grade: b.grade,
+            min_mark: b.min_mark,
+            max_mark: b.max_mark,
+            ums_min: b.ums_min,
+            ums_max: b.ums_max,
+          })),
+        },
+      ],
+      grade_boundaries: r.gradeBoundaries.map((b) => ({
+        grade: b.grade,
+        min_mark: b.min_mark,
+        ums_min: b.ums_min,
+        ums_max: b.ums_max,
+      })),
+      is_modular: isModular,
+      status: 'approved',
     };
   });
 }
 
-export async function listMyExamEditorSubmissions(userId: string) {
-  const db = getDb();
-  return db
-    .select()
-    .from(editorSubmissions)
-    .where(eq(editorSubmissions.submitted_by, userId as any))
-    .orderBy(desc(editorSubmissions.created_at));
+export async function listMyExamEditorSubmissions(_userId: string) {
+  return [];
 }
 
 export async function listExamCountdownsForUser(userId: string) {

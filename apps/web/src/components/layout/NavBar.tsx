@@ -30,6 +30,7 @@ import {
   LayoutDashboard,
   Home,
   MoreHorizontal,
+  Trophy,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
@@ -47,8 +48,10 @@ type PanelKey = 'tools' | 'team' | 'user' | null;
 type SectionKey = 'tools' | 'team' | 'role' | null;
 
 const TOOLS_LINKS: NavItem[] = [
+  { label: 'Past Paper Tracker', href: '/past-papers', icon: BookOpen },
   { label: 'Smart Timetable', href: '/timetable', icon: CalendarDays },
   { label: 'Pomodoro Focus Timer', href: '/pomodoro', icon: Timer },
+  { label: 'Scholar Leaderboard', href: '/leaderboard', icon: Trophy },
   { label: 'Exam Countdown', href: '/countdown', icon: Clock },
   { label: 'Grade Calculator', href: '/calculator', icon: Calculator },
   { label: 'My Workspace', href: '/workspace', icon: Wrench },
@@ -59,14 +62,16 @@ const TEAM_LINKS: NavItem[] = [
   { label: 'About The ANTS', href: '/about', icon: Info },
 ];
 
-function isLibraryActive(pathname: string) {
-  return pathname.startsWith('/library');
+function isCurriculumActive(pathname: string) {
+  return pathname.startsWith('/curriculum');
 }
 
 function isToolsActive(pathname: string) {
   return (
+    pathname.startsWith('/past-papers') ||
     pathname.startsWith('/timetable') ||
     pathname.startsWith('/pomodoro') ||
+    pathname.startsWith('/leaderboard') ||
     pathname.startsWith('/countdown') ||
     pathname.startsWith('/calculator') ||
     pathname.startsWith('/workspace')
@@ -434,7 +439,7 @@ export default function NavBar() {
             icon={mounted && isAuthenticated ? LayoutDashboard : Home}
             active={isHomeActive(pathname)}
           />
-          <RailIconLink href="/library" label="Library" icon={BookOpen} active={isLibraryActive(pathname)} />
+          <RailIconLink href="/curriculum" label="Curriculum" icon={GraduationCap} active={isCurriculumActive(pathname)} />
           <RailIconLink href="/timetable" label="Tools" icon={Wrench} active={isToolsActive(pathname)} />
           <RailIconLink href="/team" label="Tutors & Contributors" icon={Users} active={isTeamActive(pathname)} />
           {mounted && hasStaffRole && (
@@ -467,21 +472,21 @@ export default function NavBar() {
           </Link>
 
           <Link
-            href="/library"
-            aria-current={isLibraryActive(pathname) ? 'page' : undefined}
+            href="/curriculum"
+            aria-current={isCurriculumActive(pathname) ? 'page' : undefined}
             className={cn(
               'relative flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold',
               'transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-              isLibraryActive(pathname)
+              isCurriculumActive(pathname)
                 ? 'bg-primary/10 text-primary'
                 : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary'
             )}
           >
-            {isLibraryActive(pathname) && (
+            {isCurriculumActive(pathname) && (
               <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full bg-primary nav-active-bar" />
             )}
-            <BookOpen className="w-4 h-4 shrink-0" />
-            <span className="truncate">Library</span>
+            <GraduationCap className="w-4 h-4 shrink-0" />
+            <span className="truncate">Curriculum</span>
           </Link>
 
           <div>
@@ -688,10 +693,10 @@ export default function NavBar() {
               href={homeHref}
             />
             <MobileTab
-              label="Library"
-              icon={BookOpen}
-              active={isLibraryActive(pathname) && !openPanel}
-              href="/library"
+              label="Curriculum"
+              icon={GraduationCap}
+              active={isCurriculumActive(pathname) && !openPanel}
+              href="/curriculum"
             />
             <MobileTab
               label="Tools"

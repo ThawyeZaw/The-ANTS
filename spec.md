@@ -66,16 +66,22 @@ Multi-role accounts use a JSON text array on D1 (`roles` stored as JSON text, e.
 
 ## 3. Core product pillars & navigation
 
-### Pillar 1: Library (`/library`)
+### Pillar 1: Curriculum Hub (`/curriculum`) & Resources
 
-- **Courses & curriculums:** Cambridge IGCSE / A-Level, Edexcel, Matriculation, etc.
-- **Past exams & papers:** Series papers, grade boundaries, specimens.
+- **Curriculum Hub (`/curriculum`):** Unified board selector (Cambridge IGCSE, Cambridge A Level, Pearson Edexcel IGCSE, Pearson Edexcel IAL) leading to:
+  - `/curriculum/[curriculumId]`: Subject list with enrollment toggles, syllabus codes, and progress bars.
+  - `/curriculum/[curriculumId]/[subjectId]`: Dual-tab subject workspace:
+    - **Topic Tracker (`?tab=topics`):** Interactive syllabus breakdown, completion tracking, subtopics, and difficulty tags (seeded via D1 SQL).
+    - **Past Papers (`?tab=papers`):** Embedded Excel-style past paper matrix (variants × exam series) with instant score & grade calculation.
+- **Legacy Route Consolidations:** `/courses` and `/lessons` redirect to `/curriculum`; `/library?tab=courses` redirects to `/curriculum`; `/library?tab=exams` redirects to `/past-papers`.
+- **Resource Center (`/library`):** Quick-launch center directing to Curriculum Hub, Past Papers, and study utilities.
 - **Notes (rebuild):** In-app notes library and personal notes (`/my-notes`, library note views). Built from scratch — not a Notion-only product path.
 - **Flashcards / SRS (rebuild):** Decks and review flows (`/flashcards`, `/library/flashcards`).
 - **Quizzes (rebuild):** Create, take, host, join (`/quizzes`, `/library/quizzes`).
 
 ### Pillar 2: Tools (`/tools`)
 
+- **Past Paper Tracker (`/past-papers`):** Cross-subject Excel-style matrix and card view with grade boundary derivation and gamification XP.
 - **Smart Timetable (`/timetable`):** Weekly planner for classes and study sessions.
 - **Pomodoro (`/pomodoro`):** Work/break intervals with session logging.
 - **Exam Countdown (`/countdown`):** Live counters for target exams.

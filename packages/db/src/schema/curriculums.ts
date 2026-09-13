@@ -66,16 +66,3 @@ export const topicProgress = sqliteTable('topic_progress', {
   notes: text('notes'),
 });
 
-export const editorSubmissions = sqliteTable('editor_submissions', {
-  id: idText('id'),
-  title: text('title').notNull(),
-  entity_type: text('entity_type').notNull(),
-  entity_id: textId('entity_id'),
-  submitted_by: textId('submitted_by')
-    .references(() => profiles.id, { onDelete: 'cascade' })
-    .notNull(),
-  data: jsonText<z.infer<typeof GenericMetadataSchema>>('data').notNull(),
-  status: text('status').default('pending'),
-  created_at: tsNow('created_at'),
-  reviewed_at: ts('reviewed_at'),
-});

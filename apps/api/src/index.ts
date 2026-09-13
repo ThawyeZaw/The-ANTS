@@ -182,7 +182,7 @@ app.route('/api/curriculum', createCurriculumRoutes(() => getDatabase()));
 app.route('/api/editor', createEditorRoutes(() => getDatabase()));
 app.route('/api/storage', createStorageRoutes());
 app.route('/api/cron', createCronRoutes(() => getDatabase()));
-app.route('/api/profile', createProfileRoutes((c) => getDatabase(c)));
+app.route('/api/profile', createProfileRoutes((c: any) => getDatabase(c)));
 
 export default {
   fetch: app.fetch,

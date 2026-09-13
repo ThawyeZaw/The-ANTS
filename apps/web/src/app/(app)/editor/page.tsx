@@ -31,28 +31,28 @@ interface EditorItem {
 
 const EDITOR_ITEMS: EditorItem[] = [
   {
-    id: 'exam',
-    label: 'Exam Data Editor',
-    description: 'Maintain official exam timetables, paper schedules, and grade boundaries.',
-    href: '/editor/exam',
+    id: 'past-papers',
+    label: 'Past Paper Catalog',
+    description: 'Explore the verified past paper catalog and mark scheme grade boundaries.',
+    href: '/past-papers',
     icon: ClipboardCheck,
-    features: ['Exam session dates', 'Component weightings', 'Grade boundary tables', 'Specimen paper links'],
+    features: ['Official board papers', 'Multi-variant papers', 'Grade boundaries', 'Student mark trackers'],
   },
   {
-    id: 'grade-calculator',
-    label: 'Grade Calculator Presets',
-    description: 'Propose calculator presets and boundaries for student grade tools.',
-    href: '/editor/exam/grade-calculator',
+    id: 'library-curriculum',
+    label: 'Curriculum & Resources',
+    description: 'Browse curriculum frameworks, notes, and shared syllabus materials.',
+    href: '/library',
     icon: Sparkles,
-    features: ['Paper weightings', 'Grade thresholds', 'Series presets', 'Contributor submissions'],
+    features: ['Syllabus topics', 'Subject references', 'Revision guides', 'Community contributions'],
   },
   {
-    id: 'countdown',
-    label: 'Exam Countdown Proposals',
-    description: 'Propose official countdown entries for upcoming exam sessions.',
-    href: '/editor/exam/countdown',
+    id: 'contributor-profile',
+    label: 'Contributor Profile',
+    description: 'Manage your verified academic credentials, subjects taught, and bio.',
+    href: '/settings/profile?tab=role-profile',
     icon: Pencil,
-    features: ['Session dates', 'Qualification groups', 'Priority levels', 'Contributor submissions'],
+    features: ['Academic badges', 'Subject specializations', 'Public tutor listing', 'Experience highlights'],
   },
 ];
 

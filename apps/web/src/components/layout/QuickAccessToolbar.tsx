@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Zap, CalendarDays, Calculator, Timer, Library, ChevronRight } from 'lucide-react';
+import { Zap, CalendarDays, Calculator, Timer, GraduationCap, ChevronRight, BookOpen, Trophy, Clock } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import AppIcon from '@/components/ui/AppIcon';
 import { cn } from '@/lib/utils';
@@ -13,7 +13,10 @@ interface ToolbarItem {
 }
 
 const ITEMS: ToolbarItem[] = [
-  { label: 'Library', href: '/library', icon: Library },
+  { label: 'Curriculum', href: '/curriculum', icon: GraduationCap },
+  { label: 'Past Papers', href: '/past-papers', icon: BookOpen },
+  { label: 'Countdown', href: '/countdown', icon: Clock },
+  { label: 'Leaderboard', href: '/leaderboard', icon: Trophy },
   { label: 'Timetable', href: '/timetable', icon: CalendarDays },
   { label: 'Calculator', href: '/calculator', icon: Calculator },
   { label: 'Pomodoro', href: '/pomodoro', icon: Timer },
