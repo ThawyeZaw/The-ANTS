@@ -1,9 +1,5 @@
-import LessonTracker from '@/components/Lessons/LessonTracker';
+import { redirect } from 'next/navigation';
 
 export default function LessonsPage() {
-  return (
-    <div className="space-y-6">
-      <LessonTracker />
-    </div>
-  );
+  redirect('/curriculum');
 }

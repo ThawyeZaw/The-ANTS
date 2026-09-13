@@ -1,55 +1,18 @@
 'use server';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — Exam Editor Server Actions (D1 / Drizzle)
+// The ANTS — Exam Editor Server Actions (Deprecated — replaced by SQL seeds)
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { getDb, editorSubmissions } from '@/lib/db';
-
-export async function submitExamData(payload: any, contributorId: string) {
-  try {
-    const db = getDb();
-    await db.insert(editorSubmissions).values({
-      title: payload?.subject || payload?.title || 'Exam Data Submission',
-      entity_type: 'exam_data',
-      submitted_by: contributorId as any,
-      status: 'pending',
-      data: payload ?? {},
-    });
-    return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err.message || 'Failed to submit exam data' };
-  }
+export async function submitExamData(_payload: any, _contributorId: string) {
+  return { success: false, error: 'Exam editor submissions are retired. Exam data is seeded via SQL.' };
 }
 
-export async function submitExamCalculatorPreset(payload: any, contributorId: string) {
-  try {
-    const db = getDb();
-    await db.insert(editorSubmissions).values({
-      title: payload?.title || payload?.qualification || 'Exam Calculator Preset',
-      entity_type: 'exam_calculator_preset',
-      submitted_by: contributorId as any,
-      status: 'pending',
-      data: payload ?? {},
-    });
-    return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err.message || 'Failed to submit exam calculator preset' };
-  }
+export async function submitExamCalculatorPreset(_payload: any, _contributorId: string) {
+  return { success: false, error: 'Calculator presets are retired. Exam data is seeded via SQL.' };
 }
 
-export async function submitExamCountdownProposal(payload: any, contributorId: string) {
-  try {
-    const db = getDb();
-    await db.insert(editorSubmissions).values({
-      title: payload?.title || payload?.subject || 'Exam Countdown Proposal',
-      entity_type: 'exam_countdown_proposal',
-      submitted_by: contributorId as any,
-      status: 'pending',
-      data: payload ?? {},
-    });
-    return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err.message || 'Failed to submit exam countdown proposal' };
-  }
+export async function submitExamCountdownProposal(_payload: any, _contributorId: string) {
+  return { success: false, error: 'Countdown proposals are retired. Exam data is seeded via SQL.' };
 }
+

@@ -30,6 +30,7 @@ import EventModal from './EventModal';
 import InlineCreate from './InlineCreate';
 import TimetableFilters from './TimetableFilters';
 import IntegrationBanner from './IntegrationBanner';
+import { awardXp } from '@/actions/gamification';
 
 // ---------------------------------------------------------------------------
 // Helper: format the header label for the current view & date
@@ -294,7 +295,14 @@ export default function TimetableManager(props: TimetableManagerProps) {
 
   const handleToggleComplete = useCallback(async (id: string) => {
     await toggleComplete(id);
-  }, [toggleComplete]);
+    if (userId) {
+      try {
+        await awardXp(userId, 10, 'timetable', id, 'Completed scheduled study session');
+      } catch (err) {
+        console.error('Failed to award timetable XP:', err);
+      }
+    }
+  }, [toggleComplete, userId]);
 
   const handleDayClick = useCallback((date: Date) => {
     goToDate(date);

@@ -61,7 +61,7 @@ In-repo specs (no Downloads path required):
 | Landing / public NavBar | **Zay Lynn Htet** | Public/marketing navigation used on landing & auth |
 | Auth forms | **Zay Lynn Htet** | `apps/web/src/app/(auth)/`, onboarding visuals |
 | Dashboard shell / app nav | **Thaw Ye Zaw** | `apps/web/src/components/layout/DashboardLayout.tsx`, app sidebar / bottom nav, `(app)` chrome |
-| Study features & dashboard pages | **Thaw Ye Zaw** | `(app)/dashboard`, library, notes, flashcards, quizzes, timetable, pomodoro, profiles, settings, tools |
+| Study features & dashboard pages | **Thaw Ye Zaw** | `(app)/dashboard`, `(app)/curriculum/**`, `(app)/past-papers`, library, notes, flashcards, quizzes, timetable, pomodoro, profiles, settings, tools (legacy `/courses` and `/lessons` retired and redirect to `/curriculum`) |
 | Tutors & Contributors directory | **Thaw Ye Zaw** | `(public)/team/`, `components/explore/TutorsContributorsCard.tsx`, `TutorsContributorsPageContent.tsx`; `/explore` redirects to `/team` |
 | Shared UI primitives | **Either** (coordinate) | `apps/web/src/components/ui/` |
 | Design tokens / `globals.css` | **Coordinate before edit** | `apps/web/src/app/globals.css` |

@@ -62,11 +62,11 @@ export function createExamRoutes(getDb: () => ReturnType<typeof createDb>) {
     const body = await c.req.json();
 
     const CountdownSchema = z.object({
-      userId: z.string().uuid(),
+      userId: z.string().min(1),
       title: z.string().min(1),
       examDate: z.string(),
-      examId: z.string().uuid().optional(),
-      subjectId: z.string().uuid().optional(),
+      examId: z.string().optional(),
+      subjectId: z.string().optional(),
       examBoard: z.string().optional(),
       paperName: z.string().optional(),
       colorCode: z.string().optional(),
@@ -161,9 +161,9 @@ export function createExamRoutes(getDb: () => ReturnType<typeof createDb>) {
     const body = await c.req.json();
 
     const GradeSchema = z.object({
-      userId: z.string().uuid(),
-      subjectId: z.string().uuid(),
-      examId: z.string().uuid().optional(),
+      userId: z.string().min(1),
+      subjectId: z.string().min(1),
+      examId: z.string().optional(),
       score: z.number(),
       maxScore: z.number(),
       grade: z.string().optional(),

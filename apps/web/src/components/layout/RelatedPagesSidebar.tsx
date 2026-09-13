@@ -15,9 +15,10 @@ import {
   GraduationCap,
   Clock,
   Calculator,
-  FlaskConical,
   UserCircle,
   Settings,
+  Users,
+  Trophy,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import AppIcon from '@/components/ui/AppIcon';
@@ -31,35 +32,45 @@ interface SidebarLink {
 }
 
 const CONTEXT_MAP: Record<string, SidebarLink[]> = {
+  '/curriculum': [
+    { label: 'Past Papers', href: '/past-papers', icon: BookOpen },
+    { label: 'Timetable', href: '/timetable', icon: CalendarDays },
+    { label: 'Countdown', href: '/countdown', icon: Clock },
+  ],
   '/pomodoro': [
     { label: 'Timetable', href: '/timetable', icon: CalendarDays },
     { label: 'Countdown', href: '/countdown', icon: Clock },
-    { label: 'Courses', href: '/library?tab=courses', icon: GraduationCap },
-  ],
-  '/courses': [
-    { label: 'Library', href: '/library', icon: BookOpen },
-    { label: 'Exams', href: '/library?tab=exams', icon: FlaskConical },
-    { label: 'Countdown', href: '/countdown', icon: Clock },
+    { label: 'Curriculum', href: '/curriculum', icon: GraduationCap },
   ],
   '/timetable': [
     { label: 'Countdown', href: '/countdown', icon: Clock },
     { label: 'Pomodoro', href: '/pomodoro', icon: Timer },
-    { label: 'Courses', href: '/library?tab=courses', icon: GraduationCap },
+    { label: 'Curriculum', href: '/curriculum', icon: GraduationCap },
+  ],
+  '/past-papers': [
+    { label: 'Calculator', href: '/calculator', icon: Calculator },
+    { label: 'Countdown', href: '/countdown', icon: Clock },
+    { label: 'Curriculum', href: '/curriculum', icon: GraduationCap },
   ],
   '/countdown': [
+    { label: 'Past Papers', href: '/past-papers', icon: BookOpen },
     { label: 'Timetable', href: '/timetable', icon: CalendarDays },
     { label: 'Calculator', href: '/calculator', icon: Calculator },
-    { label: 'Past Exams', href: '/library?tab=exams', icon: FlaskConical },
   ],
   '/calculator': [
+    { label: 'Past Papers', href: '/past-papers', icon: BookOpen },
     { label: 'Countdown', href: '/countdown', icon: Clock },
     { label: 'Timetable', href: '/timetable', icon: CalendarDays },
-    { label: 'Past Exams', href: '/library?tab=exams', icon: FlaskConical },
+  ],
+  '/leaderboard': [
+    { label: 'Past Papers', href: '/past-papers', icon: BookOpen },
+    { label: 'Curriculum', href: '/curriculum', icon: GraduationCap },
+    { label: 'Countdown', href: '/countdown', icon: Clock },
   ],
   '/library': [
-    { label: 'Courses', href: '/library?tab=courses', icon: GraduationCap },
-    { label: 'Exams', href: '/library?tab=exams', icon: FlaskConical },
-    { label: 'Tools', href: '/library?tab=tools', icon: Timer },
+    { label: 'Curriculum', href: '/curriculum', icon: GraduationCap },
+    { label: 'Past Papers', href: '/past-papers', icon: BookOpen },
+    { label: 'Leaderboard', href: '/leaderboard', icon: Trophy },
   ],
   '/profile': [
     { label: 'Settings', href: '/settings', icon: Settings },
@@ -70,9 +81,9 @@ const CONTEXT_MAP: Record<string, SidebarLink[]> = {
     { label: 'Tutors & Contributors', href: '/team', icon: GraduationCap },
   ],
   '/dashboard': [
-    { label: 'Library', href: '/library', icon: BookOpen },
+    { label: 'Curriculum', href: '/curriculum', icon: GraduationCap },
     { label: 'Timetable', href: '/timetable', icon: CalendarDays },
-    { label: 'Tutors & Contributors', href: '/team', icon: GraduationCap },
+    { label: 'Tutors & Contributors', href: '/team', icon: Users },
   ],
 };
 

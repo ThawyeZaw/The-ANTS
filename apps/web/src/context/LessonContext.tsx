@@ -17,6 +17,7 @@ import {
 } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useAuthContext } from './AuthContext';
+import { awardXp } from '@/actions/gamification';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8787';
 
@@ -322,6 +323,13 @@ export function LessonProvider({ children }: { children: ReactNode }) {
             },
           ];
         });
+        if (patch.status === 'completed') {
+          try {
+            await awardXp(userId, 15, 'lesson', topicId, 'Mastered syllabus topic');
+          } catch (e) {
+            console.error('Failed to award lesson XP:', e);
+          }
+        }
       } catch (err) {
         console.error('Error updating progress:', err);
       }

@@ -14,6 +14,8 @@ import {
   ArrowRight,
   Wrench,
   Lock,
+  BookOpen,
+  Trophy,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import AppIcon from '@/components/ui/AppIcon';
@@ -31,6 +33,22 @@ interface ToolItem {
 }
 
 const TOOLS: ToolItem[] = [
+  {
+    id: 'past-papers',
+    label: 'Past Paper Tracker',
+    description: 'Track solved past papers, record component marks, and calculate official grades.',
+    href: '/past-papers',
+    icon: BookOpen,
+    badge: 'New',
+  },
+  {
+    id: 'leaderboard',
+    label: 'Scholar Leaderboard',
+    description: 'Weekly and all-time student rankings by study streaks, XP, and milestone achievements.',
+    href: '/leaderboard',
+    icon: Trophy,
+    badge: 'Rankings',
+  },
   {
     id: 'pomodoro',
     label: 'Pomodoro Timer',
