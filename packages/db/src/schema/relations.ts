@@ -13,7 +13,6 @@ import {
   topics,
   userCurriculums,
   topicProgress,
-  editorSubmissions,
 } from './curriculums';
 import {
   timetableEvents,
@@ -27,6 +26,12 @@ import {
   userExamOverrides,
   userExamHistory,
   examSchedules,
+  pastPapers,
+  paperGradeBoundaries,
+  userPastPaperRecords,
+  userXpLedger,
+  userBadges,
+  userStreaks,
 } from './study_tools';
 import {
   reviewQueue,
@@ -353,9 +358,54 @@ export const versionHistoryRelations = relations(versionHistory, ({ one }) => ({
   }),
 }));
 
-export const editorSubmissionsRelations = relations(editorSubmissions, ({ one }) => ({
-  submittedBy: one(profiles, {
-    fields: [editorSubmissions.submitted_by],
+export const pastPapersRelations = relations(pastPapers, ({ one, many }) => ({
+  subject: one(subjects, {
+    fields: [pastPapers.subject_id],
+    references: [subjects.id],
+  }),
+  curriculum: one(curriculums, {
+    fields: [pastPapers.curriculum_id],
+    references: [curriculums.id],
+  }),
+  gradeBoundaries: many(paperGradeBoundaries),
+  userRecords: many(userPastPaperRecords),
+}));
+
+export const paperGradeBoundariesRelations = relations(paperGradeBoundaries, ({ one }) => ({
+  pastPaper: one(pastPapers, {
+    fields: [paperGradeBoundaries.past_paper_id],
+    references: [pastPapers.id],
+  }),
+}));
+
+export const userPastPaperRecordsRelations = relations(userPastPaperRecords, ({ one }) => ({
+  user: one(profiles, {
+    fields: [userPastPaperRecords.user_id],
+    references: [profiles.id],
+  }),
+  pastPaper: one(pastPapers, {
+    fields: [userPastPaperRecords.past_paper_id],
+    references: [pastPapers.id],
+  }),
+}));
+
+export const userXpLedgerRelations = relations(userXpLedger, ({ one }) => ({
+  user: one(profiles, {
+    fields: [userXpLedger.user_id],
+    references: [profiles.id],
+  }),
+}));
+
+export const userBadgesRelations = relations(userBadges, ({ one }) => ({
+  user: one(profiles, {
+    fields: [userBadges.user_id],
+    references: [profiles.id],
+  }),
+}));
+
+export const userStreaksRelations = relations(userStreaks, ({ one }) => ({
+  user: one(profiles, {
+    fields: [userStreaks.user_id],
     references: [profiles.id],
   }),
 }));
