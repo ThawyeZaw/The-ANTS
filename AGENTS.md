@@ -132,3 +132,5 @@ export default function MyComponent() {
 | [`README.md`](./README.md) | Project overview & setup |
 | [`spec.md`](./spec.md) | System specification |
 | [`docs/design/`](./docs/design/README.md) | Stitch light + dark design specs |
+| [`docs/seeds/README.md`](./docs/seeds/README.md) | Seed apply playbook |
+| [`docs/seeds/target-catalog.md`](./docs/seeds/target-catalog.md) | **Supported syllabi + reserved subject IDs** |

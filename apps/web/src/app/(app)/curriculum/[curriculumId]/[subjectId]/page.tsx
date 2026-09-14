@@ -9,7 +9,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { ChevronLeft, ClipboardCheck, BookOpen, GraduationCap, ArrowLeft } from 'lucide-react';
+import { ChevronLeft, ClipboardCheck, BookOpen, GraduationCap, ArrowLeft, Calculator, Timer } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import {
   getSubjectsByCurriculum,
@@ -148,6 +148,28 @@ export default function SubjectDetailPage() {
               {subject?.name ?? <span className="animate-pulse bg-foreground-muted/15 rounded w-48 h-7 inline-block" />}
             </h1>
             <p className="text-xs text-foreground-muted">{curriculumLabel} &middot; Syllabus Specification</p>
+            {subject && (
+              <div className="flex flex-wrap gap-2 pt-3">
+                <Link
+                  href={`/past-papers?subject=${subject.id}`}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1 text-[11px] font-semibold hover:border-primary/40"
+                >
+                  <BookOpen className="h-3.5 w-3.5" /> Past Papers
+                </Link>
+                <Link
+                  href={`/calculator?curriculum=${curriculumId}&subject=${subject.id}`}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1 text-[11px] font-semibold hover:border-primary/40"
+                >
+                  <Calculator className="h-3.5 w-3.5" /> Grade Calculator
+                </Link>
+                <Link
+                  href={`/countdown?subject=${subject.id}`}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1 text-[11px] font-semibold hover:border-primary/40"
+                >
+                  <Timer className="h-3.5 w-3.5" /> Exam Countdown
+                </Link>
+              </div>
+            )}
           </div>
         </div>
 

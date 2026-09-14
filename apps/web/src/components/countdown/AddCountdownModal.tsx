@@ -1,50 +1,91 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 
 import { Exam } from '@/types';
+import type { CatalogCurriculum } from '@/context/LessonContext';
 import { X } from 'lucide-react';
 
 interface AddCountdownModalProps {
   isOpen: boolean;
   onClose: () => void;
   availableExams: Exam[];
+  catalogCurriculums?: CatalogCurriculum[];
+  initialCurriculumId?: string;
+  initialSubjectId?: string;
   onCreate: (data: {
     exam_id?: string;
     custom_title?: string;
     target_date?: string;
     priority_indicator?: string;
     qualification_group?: string;
+    subject_id?: string;
+    exam_board?: string;
   }) => void;
   /** Pre-fill from a library exam (e.g. opened from Exams Library browser) */
   prefilledExam?: Exam | null;
 }
 
+function examLabel(exam: Exam) {
+  const series = exam.exam_series || (exam as any).season || (exam as any).series;
+  return series ? `${exam.title} (${series})` : exam.title;
+}
 
-export function AddCountdownModal({ isOpen, onClose, availableExams, onCreate, prefilledExam }: AddCountdownModalProps) {
+export function AddCountdownModal({
+  isOpen,
+  onClose,
+  availableExams,
+  catalogCurriculums = [],
+  initialCurriculumId = 'all',
+  initialSubjectId = 'all',
+  onCreate,
+  prefilledExam,
+}: AddCountdownModalProps) {
   const [tab, setTab] = useState<'library' | 'custom'>('library');
   
   // Form states
   const [selectedExamId, setSelectedExamId] = useState('');
+  const [filterCurriculumId, setFilterCurriculumId] = useState(initialCurriculumId);
+  const [filterSubjectId, setFilterSubjectId] = useState(initialSubjectId);
   const [customTitle, setCustomTitle] = useState('');
   const [targetDate, setTargetDate] = useState('');
   const [targetTime, setTargetTime] = useState('09:00');
   const [priority, setPriority] = useState('medium');
   const [group, setGroup] = useState('Custom');
 
+  useEffect(() => {
+    setFilterCurriculumId(initialCurriculumId);
+    setFilterSubjectId(initialSubjectId);
+  }, [initialCurriculumId, initialSubjectId, isOpen]);
+
   // Pre-fill from library exam when provided
   useEffect(() => {
     if (prefilledExam) {
       setTab('library');
       setSelectedExamId(prefilledExam.id);
-      // Pre-fill date if fixed
+      if (prefilledExam.curriculum_id) setFilterCurriculumId(prefilledExam.curriculum_id);
+      if (prefilledExam.subject_id) setFilterSubjectId(prefilledExam.subject_id);
       if (prefilledExam.date_type === 'fixed' && prefilledExam.exam_date) {
         setTargetDate(prefilledExam.exam_date.split('T')[0]);
       }
-      // Auto-set group from board
       if (prefilledExam.exam_board) setGroup(prefilledExam.exam_board);
     }
   }, [prefilledExam]);
+
+  const subjectsForFilter = useMemo(() => {
+    if (filterCurriculumId === 'all') return catalogCurriculums.flatMap((c) => c.subjects);
+    return catalogCurriculums.find((c) => c.id === filterCurriculumId)?.subjects ?? [];
+  }, [catalogCurriculums, filterCurriculumId]);
+
+  const filteredExams = useMemo(() => {
+    return availableExams.filter((exam) => {
+      const curriculumId = exam.curriculum_id || (exam as any).curriculum?.id;
+      const subjectId = exam.subject_id || (exam as any).subject?.id;
+      if (filterSubjectId !== 'all') return subjectId === filterSubjectId;
+      if (filterCurriculumId !== 'all') return curriculumId === filterCurriculumId;
+      return true;
+    });
+  }, [availableExams, filterCurriculumId, filterSubjectId]);
 
   if (!isOpen) return null;
 
@@ -54,13 +95,13 @@ export function AddCountdownModal({ isOpen, onClose, availableExams, onCreate, p
     e.preventDefault();
     if (tab === 'library') {
       if (!selectedExamId) return;
-      // When selected from library, group is typically set to the exam board/qualification, we'll ask user or default to Custom
-      // Let's add a group selector even for library if they want, but default to 'IGCSE' for test.
-      // Actually we'll just use the form's group.
+      const exam = availableExams.find((item) => item.id === selectedExamId);
       onCreate({
         exam_id: selectedExamId,
         priority_indicator: priority,
-        qualification_group: group,
+        qualification_group: group || exam?.exam_board || 'Official',
+        subject_id: exam?.subject_id ?? undefined,
+        exam_board: exam?.exam_board ?? undefined,
       });
     } else {
       if (!customTitle || !targetDate) return;
@@ -119,21 +160,67 @@ export function AddCountdownModal({ isOpen, onClose, availableExams, onCreate, p
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {tab === 'library' ? (
-            <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--foreground-secondary)]">Select Exam</label>
-              <select
-                value={selectedExamId}
-                onChange={(e) => setSelectedExamId(e.target.value)}
-                className="w-full rounded-lg border border-[var(--border)] bg-[var(--background-secondary)] p-3 text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
-                required
-              >
-                <option value="">-- Choose an Exam --</option>
-                {availableExams.map(exam => (
-                  <option key={exam.id} value={exam.id}>
-                    {exam.title} ({exam.exam_series})
-                  </option>
-                ))}
-              </select>
+            <div className="space-y-4">
+              {catalogCurriculums.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-[var(--foreground-secondary)]">Curriculum</label>
+                    <select
+                      value={filterCurriculumId}
+                      onChange={(e) => {
+                        const next = e.target.value;
+                        const keepSubject = subjectsForFilter.some((s) => s.id === filterSubjectId && (next === 'all' || s.curriculum_id === next));
+                        setFilterCurriculumId(next);
+                        if (!keepSubject) {
+                          setFilterSubjectId('all');
+                          setSelectedExamId('');
+                        }
+                      }}
+                      className="w-full rounded-lg border border-[var(--border)] bg-[var(--background-secondary)] p-3 text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
+                    >
+                      <option value="all">All curriculums</option>
+                      {catalogCurriculums.map((curr) => (
+                        <option key={curr.id} value={curr.id}>{curr.title}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-[var(--foreground-secondary)]">Subject</label>
+                    <select
+                      value={filterSubjectId}
+                      onChange={(e) => {
+                        setFilterSubjectId(e.target.value);
+                        setSelectedExamId('');
+                      }}
+                      className="w-full rounded-lg border border-[var(--border)] bg-[var(--background-secondary)] p-3 text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
+                    >
+                      <option value="all">All subjects</option>
+                      {(filterCurriculumId === 'all'
+                        ? catalogCurriculums.flatMap((c) => c.subjects)
+                        : catalogCurriculums.find((c) => c.id === filterCurriculumId)?.subjects ?? []
+                      ).map((subj) => (
+                        <option key={subj.id} value={subj.id}>{subj.title}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[var(--foreground-secondary)]">Select Exam</label>
+                <select
+                  value={selectedExamId}
+                  onChange={(e) => setSelectedExamId(e.target.value)}
+                  className="w-full rounded-lg border border-[var(--border)] bg-[var(--background-secondary)] p-3 text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
+                  required
+                >
+                  <option value="">-- Choose an Exam --</option>
+                  {filteredExams.map((exam) => (
+                    <option key={exam.id} value={exam.id}>
+                      {examLabel(exam)}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           ) : (
             <>

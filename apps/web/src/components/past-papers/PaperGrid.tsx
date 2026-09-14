@@ -11,6 +11,7 @@ import { Check, X, Loader2, ChevronDown, BookOpen } from 'lucide-react';
 import { upsertPastPaperRecord } from '@/actions/past-papers';
 import { type PaperGridData, type PaperGridCell, type PaperGridRow, type PaperGridSession } from '@/actions/curriculum';
 import { cn } from '@/lib/utils';
+import { getPluginForPaper } from '@/lib/grading';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -56,6 +57,8 @@ function CellPopover({
   cell,
   totalMarks,
   userId,
+  qualification,
+  examBoard,
   onSave,
   onClose,
 }: {
@@ -64,6 +67,8 @@ function CellPopover({
   cell: PaperGridCell;
   totalMarks: number | null;
   userId: string;
+  qualification: string;
+  examBoard: string;
   onSave: (updated: Partial<PaperGridCell>) => void;
   onClose: () => void;
 }) {
@@ -83,20 +88,32 @@ function CellPopover({
 
   const save = (status: 'not_done' | 'done' | 'skipped', rawScore?: number) => {
     startTransition(async () => {
-      const pct = rawScore !== undefined && totalMarks ? (rawScore / totalMarks) * 100 : undefined;
-      await upsertPastPaperRecord({
+      const pct = rawScore !== undefined && totalMarks ? Math.round((rawScore / totalMarks) * 1000) / 10 : undefined;
+      let calculatedGrade: string | undefined;
+      let calculatedUms: number | undefined;
+      if (rawScore !== undefined && totalMarks) {
+        const plugin = getPluginForPaper({ examBoard, qualification });
+        const result = plugin.gradeFromRawMark(rawScore, totalMarks, cell.gradeBoundaries ?? []);
+        calculatedGrade = result.grade;
+        calculatedUms = result.ums;
+      }
+      const res = await upsertPastPaperRecord({
         userId,
         pastPaperId: paperId,
         status,
         rawScore,
         maxScore: totalMarks ?? undefined,
         percentage: pct,
+        calculatedGrade,
+        calculatedUms,
       });
       onSave({
         status,
         rawScore: rawScore ?? null,
         maxScore: totalMarks,
         percentage: pct ?? null,
+        calculatedGrade: res.calculatedGrade ?? calculatedGrade ?? null,
+        calculatedUms: res.calculatedUms ?? calculatedUms ?? null,
       });
       onClose();
     });
@@ -189,6 +206,8 @@ function GridCell({
   displayMode,
   isIAL,
   userId,
+  qualification,
+  examBoard,
   onUpdate,
 }: {
   cell: PaperGridCell | undefined;
@@ -198,6 +217,8 @@ function GridCell({
   displayMode: DisplayMode;
   isIAL: boolean;
   userId: string;
+  qualification: string;
+  examBoard: string;
   onUpdate: (sessionKey: string, updated: Partial<PaperGridCell>) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -211,6 +232,7 @@ function GridCell({
     percentage: null,
     calculatedGrade: null,
     calculatedUms: null,
+    gradeBoundaries: [],
   };
 
   const colorClass = getCellColor(effectiveCell);
@@ -236,6 +258,8 @@ function GridCell({
           cell={effectiveCell}
           totalMarks={totalMarks}
           userId={userId}
+          qualification={qualification}
+          examBoard={examBoard}
           onSave={(updated) => onUpdate(sessionKey, updated)}
           onClose={() => setOpen(false)}
         />
@@ -397,6 +421,8 @@ export function PaperGrid({ userId, data, onRecordChange }: PaperGridProps) {
                       displayMode={displayMode}
                       isIAL={gridData.isIAL}
                       userId={userId}
+                      qualification={row.qualification}
+                      examBoard={row.examBoard}
                       onUpdate={(sk, updated) => handleCellUpdate(rowIdx, sk, updated)}
                     />
                   );

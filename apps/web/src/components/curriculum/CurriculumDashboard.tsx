@@ -1,9 +1,9 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTs — CurriculumDashboard
-// Unified curriculum hub: subject selector + exam countdowns.
-// Cross-links between sections for integrated study workflow.
+// The ANTs — CurriculumDashboard (orphaned)
+// Superseded by /curriculum My Subjects hub and /countdown auto-sync.
+// Kept for reference; do not mount on a route.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState } from 'react';

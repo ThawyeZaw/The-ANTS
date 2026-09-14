@@ -19,6 +19,22 @@ export async function processNotificationQueue(
 
   const now = new Date();
 
+  const dueWhere = and(
+    eq(notificationQueue.status, 'pending'),
+    lte(notificationQueue.scheduled_for, now),
+    lte(notificationQueue.attempts, MAX_RETRIES)
+  );
+
+  const [hasDue] = await db
+    .select({ id: notificationQueue.id })
+    .from(notificationQueue)
+    .where(dueWhere)
+    .limit(1);
+
+  if (!hasDue) {
+    return { processed: 0, successCount: 0, failCount: 0, rateLimited: 0 };
+  }
+
   // 1. Recover stale processing rows (> 10 mins old)
   const staleThreshold = new Date(Date.now() - 10 * 60 * 1000);
   await db
@@ -32,14 +48,6 @@ export async function processNotificationQueue(
     );
 
   // 2. Atomically claim due rows (pending → processing) and return them.
-  //    Outer status guard is re-evaluated after lock waits → no double-claims
-  //    between the Worker cron and any concurrent trigger.
-  const dueWhere = and(
-    eq(notificationQueue.status, 'pending'),
-    lte(notificationQueue.scheduled_for, now),
-    lte(notificationQueue.attempts, MAX_RETRIES)
-  );
-
   const claimedItems = await db
     .update(notificationQueue)
     .set({ status: 'processing', updated_at: now })

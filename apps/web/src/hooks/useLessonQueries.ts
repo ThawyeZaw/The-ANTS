@@ -65,7 +65,7 @@ export function useTopics() {
     queryKey: queryKeys.topics.all,
     queryFn: async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/curriculum`);
+        const res = await fetch(`${API_BASE_URL}/api/curriculum?includeTopics=1`);
         if (res.ok) {
           const json = await res.json();
           const list: Topic[] = [];

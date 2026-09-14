@@ -1,9 +1,9 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTs — CourseBrowser
-// Single-page browse + multi-select enrol experience.
-// Replaces the old multi-step CourseManagerWizard wizard flow.
+// The ANTs — CourseBrowser (orphaned)
+// Superseded by /curriculum My Subjects hub + catalog browse.
+// Kept for reference; do not mount on a route.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';

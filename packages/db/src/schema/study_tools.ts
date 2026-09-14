@@ -80,6 +80,8 @@ export const examCountdowns = sqliteTable('exam_countdowns', {
   target_grade: text('target_grade'),
   is_mock: bool('is_mock', false),
   is_pinned: bool('is_pinned', false),
+  /** true = user-created custom date; false = auto-created from enrollment */
+  is_custom: bool('is_custom', false),
   created_at: tsNow('created_at'),
 });
 
@@ -125,6 +127,13 @@ export const userEnrollments = sqliteTable('user_enrollments', {
     .references(() => subjects.id, { onDelete: 'cascade' })
     .notNull(),
   exam_id: textId('exam_id').references(() => exams.id, { onDelete: 'set null' }),
+  /** Canonical session label, e.g. 'May/June 2026' */
+  target_series: text('target_series'),
+  target_grade: text('target_grade'),
+  /** 'core' | 'extended' | null */
+  tier: text('tier'),
+  /** 'per_subject' | 'per_paper' — copied from qualification plugin */
+  countdown_mode: text('countdown_mode'),
   enrolled_at: tsNow('enrolled_at'),
 });
 
@@ -193,6 +202,22 @@ export const pastPapers = sqliteTable('past_papers', {
 });
 
 // ── Structured Grade Boundaries per Past Paper ──────────────────────────────
+
+/** Syllabus-level composite thresholds for a series (not a single paper). */
+export const subjectGradeBoundaries = sqliteTable('subject_grade_boundaries', {
+  id: idText('id'),
+  subject_id: textId('subject_id')
+    .references(() => subjects.id, { onDelete: 'cascade' })
+    .notNull(),
+  year: integer('year').notNull(),
+  series: text('series').notNull(), // 'May/June' | 'Oct/Nov' | 'Feb/March'
+  variant: text('variant'),
+  tier: text('tier'), // 'core' | 'extended' | null
+  grade: text('grade').notNull(),
+  min_mark: integer('min_mark').notNull(),
+  max_mark: integer('max_mark'),
+  created_at: tsNow('created_at'),
+});
 
 export const paperGradeBoundaries = sqliteTable('paper_grade_boundaries', {
   id: idText('id'),

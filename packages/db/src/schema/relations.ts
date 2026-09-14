@@ -28,6 +28,7 @@ import {
   examSchedules,
   pastPapers,
   paperGradeBoundaries,
+  subjectGradeBoundaries,
   userPastPaperRecords,
   userXpLedger,
   userBadges,
@@ -94,9 +95,12 @@ export const subjectsRelations = relations(subjects, ({ one, many }) => ({
   }),
   topics: many(topics),
   exams: many(exams),
+  pastPapers: many(pastPapers),
   gradeBoundaries: many(gradeBoundaries),
   gradeEntries: many(gradeEntries),
   examCountdowns: many(examCountdowns),
+  subjectGradeBoundaries: many(subjectGradeBoundaries),
+  userEnrollments: many(userEnrollments),
 }));
 
 export const topicsRelations = relations(topics, ({ one, many }) => ({
@@ -375,6 +379,13 @@ export const paperGradeBoundariesRelations = relations(paperGradeBoundaries, ({ 
   pastPaper: one(pastPapers, {
     fields: [paperGradeBoundaries.past_paper_id],
     references: [pastPapers.id],
+  }),
+}));
+
+export const subjectGradeBoundariesRelations = relations(subjectGradeBoundaries, ({ one }) => ({
+  subject: one(subjects, {
+    fields: [subjectGradeBoundaries.subject_id],
+    references: [subjects.id],
   }),
 }));
 

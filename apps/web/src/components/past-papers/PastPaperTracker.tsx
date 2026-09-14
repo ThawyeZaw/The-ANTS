@@ -6,6 +6,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   BookOpen,
   Search,
@@ -26,8 +27,6 @@ import {
 import { cn } from '@/lib/utils';
 import {
   getEnrolledSubjects,
-  listPastPapers,
-  getUserPastPaperRecords,
   upsertPastPaperRecord,
   getUserGamificationStats,
 } from '@/actions/past-papers';
@@ -37,13 +36,65 @@ import { PaperCard, type UserPaperRecord } from './PaperCard';
 import { EnrollSubjectModal } from './EnrollSubjectModal';
 import type { PastPaperData } from './InlineGradeCalc';
 
+function flattenGrid(
+  grid: PaperGridData,
+  subjectName: string,
+  syllabusCode: string
+): { papers: PastPaperData[]; records: Record<string, UserPaperRecord> } {
+  const papers: PastPaperData[] = [];
+  const records: Record<string, UserPaperRecord> = {};
+  for (const row of grid.rows) {
+    for (const session of grid.sessions) {
+      const key = `${session.year}-${session.series}`;
+      const cell = row.cells[key];
+      if (!cell) continue;
+      papers.push({
+        id: cell.paperId,
+        exam_board: row.examBoard,
+        qualification: row.qualification,
+        subject: subjectName,
+        syllabus_code: syllabusCode,
+        year: session.year,
+        series: session.series,
+        paper_number: row.paperNumber,
+        variant: row.variant,
+        title: row.title,
+        total_marks: row.totalMarks,
+        gradeBoundaries: cell.gradeBoundaries.map((b, i) => ({
+          id: `${cell.paperId}-${b.grade}-${i}`,
+          grade: b.grade,
+          min_mark: b.min_mark,
+          max_mark: b.max_mark,
+          ums_min: b.ums_min,
+          ums_max: b.ums_max,
+        })),
+      });
+      if (cell.recordId || cell.status !== 'not_done') {
+        records[cell.paperId] = {
+          id: cell.recordId ?? cell.paperId,
+          past_paper_id: cell.paperId,
+          status: cell.status,
+          raw_score: cell.rawScore,
+          max_score: cell.maxScore,
+          percentage: cell.percentage,
+          calculated_grade: cell.calculatedGrade,
+          calculated_ums: cell.calculatedUms,
+        };
+      }
+    }
+  }
+  return { papers, records };
+}
+
 interface PastPaperTrackerProps {
   userId: string;
 }
 
 export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
+  const searchParams = useSearchParams();
+  const subjectFromUrl = searchParams.get('subject') || '';
   const [enrolledSubjects, setEnrolledSubjects] = useState<any[]>([]);
-  const [selectedSubjectId, setSelectedSubjectId] = useState<string>('');
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string>(subjectFromUrl);
   const [papers, setPapers] = useState<PastPaperData[]>([]);
   const [records, setRecords] = useState<Record<string, UserPaperRecord>>({});
   const [gamification, setGamification] = useState({
@@ -58,7 +109,6 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
   const [showEnrollModal, setShowEnrollModal] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'cards'>('grid');
   const [gridData, setGridData] = useState<PaperGridData | null>(null);
-  const [gridLoading, setGridLoading] = useState(false);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -77,7 +127,8 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
       setGamification(stats);
 
       if (subjs.length > 0 && !selectedSubjectId) {
-        setSelectedSubjectId(subjs[0].id);
+        const fromUrl = subjectFromUrl ? subjs.find((s: { id: string }) => s.id === subjectFromUrl) : null;
+        setSelectedSubjectId(fromUrl?.id ?? subjs[0].id);
       }
     } catch (err) {
       console.error('Failed to load user study data:', err);
@@ -96,20 +147,8 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
     }
     setLoading(true);
     try {
-      const [papersData, userRecords, grid] = await Promise.all([
-        listPastPapers({ subjectId: selectedSubjectId }),
-        getUserPastPaperRecords(userId, selectedSubjectId),
-        getPaperGridData(userId, selectedSubjectId),
-      ]);
-
-      setPapers(papersData as PastPaperData[]);
+      const grid = await getPaperGridData(userId, selectedSubjectId);
       setGridData(grid);
-
-      const recMap: Record<string, UserPaperRecord> = {};
-      for (const r of userRecords) {
-        recMap[r.past_paper_id] = r as UserPaperRecord;
-      }
-      setRecords(recMap);
     } catch (err) {
       console.error('Failed to load past papers:', err);
     } finally {
@@ -123,6 +162,21 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
 
   // Active subject object
   const currentSubject = enrolledSubjects.find((s) => s.id === selectedSubjectId);
+
+  useEffect(() => {
+    if (!gridData) {
+      setPapers([]);
+      setRecords({});
+      return;
+    }
+    const flattened = flattenGrid(
+      gridData,
+      currentSubject?.name ?? '',
+      currentSubject?.code ?? ''
+    );
+    setPapers(flattened.papers);
+    setRecords(flattened.records);
+  }, [gridData, currentSubject?.name, currentSubject?.code]);
 
   // Handle status & mark changes
   const handleStatusChange = async (

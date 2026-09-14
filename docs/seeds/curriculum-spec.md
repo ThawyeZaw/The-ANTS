@@ -1,5 +1,7 @@
 # The ANTS — Curriculum & Lesson Tracker SQL Seed Specification
 
+> **Start here for coverage + apply commands:** [`README.md`](./README.md)
+>
 > **Target Database:** Cloudflare D1 (SQLite)
 > **Purpose:** Seed curriculum boards, subjects, and syllabus topics for the Lesson Tracker feature.
 > **Tables involved:** `curriculums`, `subjects`, `topics`
@@ -92,24 +94,11 @@ These four are already seeded in `0001_exam_data_seed.sql`. Use the exact IDs be
 
 ## 4. Seeded Subjects (Fixed — Do Not Change IDs)
 
-These subjects are already seeded in `0001_exam_data_seed.sql`. Reference their IDs when inserting topics:
+Do **not** rename these IDs. Full coverage (topics / papers / exams) lives in [`README.md`](./README.md).
 
-| Subject ID                | Curriculum          | Name                   | Code  | Color     |
-|---------------------------|---------------------|------------------------|-------|-----------|
-| `subj-caie-igcse-maths`   | CAIE IGCSE          | Mathematics            | 0580  | `#3b82f6` |
-| `subj-caie-igcse-phys`    | CAIE IGCSE          | Physics                | 0625  | `#8b5cf6` |
-| `subj-caie-igcse-chem`    | CAIE IGCSE          | Chemistry              | 0620  | `#ec4899` |
-| `subj-caie-igcse-bio`     | CAIE IGCSE          | Biology                | 0610  | `#10b981` |
-| `subj-caie-igcse-cs`      | CAIE IGCSE          | Computer Science       | 0478  | `#f59e0b` |
-| `subj-caie-al-maths`      | CAIE A Level        | Mathematics            | 9709  | `#3b82f6` |
-| `subj-caie-al-phys`       | CAIE A Level        | Physics                | 9702  | `#8b5cf6` |
-| `subj-caie-al-chem`       | CAIE A Level        | Chemistry              | 9701  | `#ec4899` |
-| `subj-edx-igcse-maths-a`  | Edexcel IGCSE       | Mathematics A          | 4MA1  | `#3b82f6` |
-| `subj-edx-igcse-phys`     | Edexcel IGCSE       | Physics                | 4PH1  | `#8b5cf6` |
-| `subj-edx-ial-pure1`      | Edexcel IAL         | Pure Mathematics 1     | WMA11 | `#3b82f6` |
-| `subj-edx-ial-pure2`      | Edexcel IAL         | Pure Mathematics 2     | WMA12 | `#2563eb` |
-| `subj-edx-ial-pure3`      | Edexcel IAL         | Pure Mathematics 3     | WMA13 | `#1d4ed8` |
-| `subj-edx-ial-phys1`      | Edexcel IAL         | Physics Unit 1         | WPH11 | `#8b5cf6` |
+**Topics already exist** for all CAIE IGCSE subjects in `0002_topics_CAIE_IGCSE_subjects.sql` (0580, 0606, 0610, 0417, 0450, 0452, 0625, 0620, 0478, 0500, 0510, 0455).
+
+**Need topic seeds** (subjects already in `0001` / `0005`): every CAIE A Level and every Edexcel IGCSE / IAL row listed in the playbook.
 
 ---
 
@@ -232,41 +221,27 @@ Use the prompt from Section 6 with:
 
 ### Step 3 — Save Output to a Seed File
 
-Save the AI output to `packages/db/seeds/0003_topics_caie_igcse_english.sql` (or next available number).
+Save the AI output to `packages/db/seeds/0007_topics_….sql` (or the next free number — **0001–0006 are taken**). Append the filename to `SEED_ORDER` in `packages/db/seeds/_validate_all_seeds.py`.
 
 ### Step 4 — Execute Against D1
 
-```bash
-# Remote (production D1)
-npx wrangler d1 execute the-ants-db --remote --file=packages/db/seeds/0003_topics_caie_igcse_english.sql
-
-# Local development D1
-npx wrangler d1 execute the-ants-db --local --file=packages/db/seeds/0003_topics_caie_igcse_english.sql
-```
+See [`README.md`](./README.md) (validate locally, then `--local`, then `--remote`).
 
 ---
 
-## 8. Recommended Seed File Naming Convention
+## 8. Seed files on disk (actual)
 
-Keep seed files numbered for ordered execution:
+| File | Contents |
+|---|---|
+| `0001_exam_data_seed.sql` | 4 boards + original subjects |
+| `0002_topics_CAIE_IGCSE_subjects.sql` | All CAIE IGCSE topics (12 subjects) |
+| `0003_cleanup_sample_data.sql` | Removes a few 0001 sample papers |
+| `0004_caie_igcse_grade_thresholds.sql` | CAIE IGCSE papers + per-paper boundaries |
+| `0005_subjects_countdown_boards.sql` | Extra CAIE A Level + Edexcel subjects |
+| `0006_exams_w26_countdown.sql` | Oct/Nov 2026 exam dates |
+| **`0007_…`** | **Next — new topics / subjects** |
 
-| File                                                    | Contents                                                        |
-|---------------------------------------------------------|-----------------------------------------------------------------|
-| `packages/db/seeds/0001_exam_data_seed.sql`             | Curriculums, subjects, past papers, grade boundaries ✅ Done    |
-| `packages/db/seeds/0002_topics_caie_igcse_maths.sql`    | CAIE IGCSE Mathematics (0580) topics                           |
-| `packages/db/seeds/0003_topics_caie_igcse_phys.sql`     | CAIE IGCSE Physics (0625) topics                               |
-| `packages/db/seeds/0004_topics_caie_igcse_chem.sql`     | CAIE IGCSE Chemistry (0620) topics                             |
-| `packages/db/seeds/0005_topics_caie_igcse_bio.sql`      | CAIE IGCSE Biology (0610) topics                               |
-| `packages/db/seeds/0006_topics_caie_igcse_cs.sql`       | CAIE IGCSE Computer Science (0478) topics                      |
-| `packages/db/seeds/0007_topics_caie_al_maths.sql`       | CAIE A Level Mathematics (9709) topics                         |
-| `packages/db/seeds/0008_topics_caie_al_phys.sql`        | CAIE A Level Physics (9702) topics                             |
-| `packages/db/seeds/0009_topics_caie_al_chem.sql`        | CAIE A Level Chemistry (9701) topics                           |
-| `packages/db/seeds/0010_topics_edx_igcse_maths.sql`     | Edexcel IGCSE Mathematics A (4MA1) topics                      |
-| `packages/db/seeds/0011_topics_edx_igcse_phys.sql`      | Edexcel IGCSE Physics (4PH1) topics                            |
-| `packages/db/seeds/0012_topics_edx_ial_pure1.sql`       | Edexcel IAL Pure Mathematics 1 (WMA11) topics                  |
-| `packages/db/seeds/0013_topics_edx_ial_pure2.sql`       | Edexcel IAL Pure Mathematics 2 (WMA12) topics                  |
-| `packages/db/seeds/0014_topics_edx_ial_pure3.sql`       | Edexcel IAL Pure Mathematics 3 (WMA13) topics                  |
-| `packages/db/seeds/0015_topics_edx_ial_phys1.sql`       | Edexcel IAL Physics Unit 1 (WPH11) topics                      |
+Do not invent `0002_topics_caie_igcse_maths.sql`-style files; 0002 already bundles those topics.
 
 ---
 

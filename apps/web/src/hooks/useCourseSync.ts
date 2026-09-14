@@ -9,8 +9,6 @@ import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
 import { useLessonContext } from '@/context/LessonContext';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8787';
-
 export interface SyncedCourse {
   curriculumId: string;
   curriculumTitle: string;
@@ -65,9 +63,6 @@ export function useCourseSync() {
 
     const fetchResources = async () => {
       try {
-        const examsRes = await fetch(`${API_BASE_URL}/api/exams`);
-        const exams = examsRes.ok ? (await examsRes.json()).exams || [] : [];
-
         const countdownsBySubject = new Map<string, any>();
         for (const cd of ctxCountdowns) {
           if (cd.exam) {
@@ -80,20 +75,14 @@ export function useCourseSync() {
           curriculumTitle: curriculum.title,
           examBoard: (curriculum as any).exam_board ?? null,
           subjects: curriculum.subjects.map((subject) => {
-            const subjectExams = exams.filter((e: any) => e.subject_id === subject.id);
-            const subjectCountdowns: any[] = [];
             const cd = countdownsBySubject.get(subject.id);
-            if (cd) {
-              subjectCountdowns.push(cd);
-            }
-
             return {
               subjectId: subject.id,
               subjectTitle: subject.title,
               topicCount: subject.topics.length,
               completedTopics: 0,
-              exams: subjectExams,
-              countdowns: subjectCountdowns,
+              exams: cd ? [cd] : [],
+              countdowns: cd ? [cd] : [],
             };
           }),
         }));

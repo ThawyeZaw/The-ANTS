@@ -7,7 +7,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, BookOpen, Plus, Check, GraduationCap, Sparkles } from 'lucide-react';
-import { getAllCurriculumsWithSubjects, enrollInSubject } from '@/actions/past-papers';
+import { getAllCurriculumsWithSubjects } from '@/actions/past-papers';
+import { enrollInSubject, unenrollFromSubject } from '@/actions/curriculum';
 import { cn } from '@/lib/utils';
 
 interface EnrollSubjectModalProps {
@@ -53,6 +54,16 @@ export function EnrollSubjectModal({
       }
     } catch (err) {
       console.error('Failed to enroll subject:', err);
+    } finally {
+      setEnrollingId(null);
+    }
+  };
+
+  const handleUnenroll = async (subjectId: string) => {
+    setEnrollingId(subjectId);
+    try {
+      const res = await unenrollFromSubject(userId, subjectId);
+      if (res.success) onEnrolled();
     } finally {
       setEnrollingId(null);
     }
@@ -135,20 +146,22 @@ export function EnrollSubjectModal({
 
                   <button
                     type="button"
-                    disabled={isEnrolled || isProcessing}
-                    onClick={() => handleEnroll(subj.id)}
+                    disabled={isProcessing}
+                    onClick={() => (isEnrolled ? handleUnenroll(subj.id) : handleEnroll(subj.id))}
                     className={cn(
                       'inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0',
                       isEnrolled
-                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 cursor-default'
+                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-error/10 hover:text-error hover:border-error/30'
                         : 'bg-primary text-white hover:bg-primary-hover shadow-xs'
                     )}
                   >
                     {isEnrolled ? (
-                      <>
-                        <Check className="w-3.5 h-3.5" />
-                        Enrolled
-                      </>
+                      isProcessing ? 'Removing...' : (
+                        <>
+                          <Check className="w-3.5 h-3.5" />
+                          Enrolled · Remove
+                        </>
+                      )
                     ) : isProcessing ? (
                       'Adding...'
                     ) : (

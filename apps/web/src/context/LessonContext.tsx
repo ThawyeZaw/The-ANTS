@@ -18,6 +18,8 @@ import {
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useAuthContext } from './AuthContext';
 import { awardXp } from '@/actions/gamification';
+import { listUserEnrollments } from '@/actions/curriculum';
+import { listExamCountdownsForUser } from '@/actions/exam-data';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8787';
 
@@ -73,8 +75,22 @@ export interface SubjectCountdown {
   } | null;
 }
 
+export interface CatalogSubject {
+  id: string;
+  curriculum_id: string;
+  title: string;
+}
+
+export interface CatalogCurriculum {
+  id: string;
+  title: string;
+  exam_board: string | null;
+  subjects: CatalogSubject[];
+}
+
 export interface LessonContextValue {
   enrolledCurriculums: CurriculumItem[];
+  catalogCurriculums: CatalogCurriculum[];
   enrolledCurriculumIds: string[];
   enrolledSubjectIds: string[];
   activeCurriculumId: string | null;
@@ -149,9 +165,13 @@ export function LessonProvider({ children }: { children: ReactNode }) {
     loadedRef.current = true;
 
     try {
-      const [cRes, eRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/curriculum`),
-        fetch(`${API_BASE_URL}/api/exams`),
+      const needsTopics =
+        pathname?.startsWith('/lessons') ||
+        pathname?.startsWith('/courses') ||
+        pathname?.startsWith('/workspace');
+
+      const [cRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/api/curriculum${needsTopics ? '?includeTopics=1' : ''}`),
       ]);
 
       if (cRes.ok) {
@@ -166,7 +186,13 @@ export function LessonProvider({ children }: { children: ReactNode }) {
             for (const s of c.subjects) {
               subs.push(s);
               if (s.topics) {
-                tops.push(...s.topics);
+                tops.push(
+                  ...s.topics.map((t: any) => ({
+                    ...t,
+                    title: t.title ?? t.name,
+                    order_no: t.order_no ?? t.order_index ?? null,
+                  }))
+                );
               }
             }
           }
@@ -176,33 +202,69 @@ export function LessonProvider({ children }: { children: ReactNode }) {
       }
 
       if (userId) {
-        const [enrRes, progRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/api/curriculum/user-curriculums?userId=${encodeURIComponent(userId)}`),
-          fetch(`${API_BASE_URL}/api/curriculum/progress?userId=${encodeURIComponent(userId)}`),
+        const [progRes, enrollRows, countdownRows] = await Promise.all([
+          needsTopics
+            ? fetch(`${API_BASE_URL}/api/curriculum/progress?userId=${encodeURIComponent(userId)}`)
+            : Promise.resolve(null),
+          listUserEnrollments(userId).catch(() => []),
+          listExamCountdownsForUser(userId).catch(() => []),
         ]);
 
-        if (enrRes.ok) {
-          const json = await enrRes.json();
-          setEnrollments(json.userCurriculums || []);
+        if (enrollRows.length > 0) {
+          setEnrollments(enrollRows);
+        } else {
+          const enrRes = await fetch(
+            `${API_BASE_URL}/api/curriculum/user-curriculums?userId=${encodeURIComponent(userId)}`
+          );
+          if (enrRes.ok) {
+            const json = await enrRes.json();
+            setEnrollments(json.userCurriculums || []);
+          }
         }
 
-        if (progRes.ok) {
+        if (progRes?.ok) {
           const json = await progRes.json();
           setProgressRecords(json.progress || []);
         }
+
+        setCountdownsLoading(true);
+        const auto: SubjectCountdown[] = enrollRows.map((row) => {
+          const linked = countdownRows.find((c) => c.subject_id === row.subject_id && !c.is_custom);
+          return {
+            subjectId: row.subject_id,
+            exam: linked
+              ? {
+                  id: linked.exam_id || linked.id,
+                  title: linked.title,
+                  subject: row.subject?.name,
+                  date: linked.exam_date ? new Date(linked.exam_date).toISOString() : undefined,
+                  exam_date: linked.exam_date ? new Date(linked.exam_date).toISOString() : undefined,
+                  series: linked.paper_name ?? undefined,
+                  exam_board: linked.exam_board ?? undefined,
+                  target_grade: linked.target_grade,
+                }
+              : null,
+          };
+        });
+        setCountdowns(auto);
+        setCountdownsLoading(false);
       }
     } catch (err) {
       console.error('Error fetching lesson context data:', err);
     } finally {
       setIsLoading(false);
     }
-  }, [userId]);
+  }, [userId, pathname]);
 
   const isLessonPage =
     pathname?.startsWith('/lessons') ||
     pathname?.startsWith('/courses') ||
     pathname?.startsWith('/workspace') ||
-    pathname?.startsWith('/library');
+    pathname?.startsWith('/library') ||
+    pathname?.startsWith('/curriculum') ||
+    pathname?.startsWith('/countdown') ||
+    pathname?.startsWith('/past-papers') ||
+    pathname?.startsWith('/calculator');
 
   useEffect(() => {
     if (isLessonPage && userId && !loadedRef.current) {
@@ -228,9 +290,9 @@ export function LessonProvider({ children }: { children: ReactNode }) {
         list.push({
           id: s.id,
           curriculum_id: s.curriculum_id,
-          title: s.title,
+          title: s.title ?? s.name,
           description: s.description ?? null,
-          order_no: s.order_no ?? null,
+          order_no: s.order_no ?? s.order_index ?? null,
           topics: topicMap.get(s.id) ?? [],
         });
         subjectMap.set(s.curriculum_id, list);
@@ -241,13 +303,26 @@ export function LessonProvider({ children }: { children: ReactNode }) {
       .filter((c) => subjectMap.has(c.id) || enrolledCurIds.has(c.id))
       .map((c) => ({
         id: c.id,
-        title: c.title,
+        title: c.title ?? c.name,
         description: c.description ?? null,
-        qualification: c.qualification ?? null,
-        exam_board: c.exam_board ?? null,
+        qualification: c.qualification ?? c.code ?? null,
+        exam_board: c.exam_board ?? c.code ?? null,
         subjects: subjectMap.get(c.id) ?? [],
       }));
   }, [allCurriculums, allSubjects, allTopics, enrollments]);
+
+  const catalogCurriculums = useMemo<CatalogCurriculum[]>(() => {
+    return allCurriculums.map((c) => ({
+      id: c.id,
+      title: c.title ?? c.name ?? 'Curriculum',
+      exam_board: c.exam_board ?? c.code ?? null,
+      subjects: (c.subjects ?? allSubjects.filter((s) => s.curriculum_id === c.id)).map((s: any) => ({
+        id: s.id,
+        curriculum_id: s.curriculum_id ?? c.id,
+        title: s.title ?? s.name ?? 'Subject',
+      })),
+    }));
+  }, [allCurriculums, allSubjects]);
 
   const enrolledCurriculumIds = useMemo(
     () => [...new Set(enrollments.map((e) => e.curriculum_id))],
@@ -341,6 +416,7 @@ export function LessonProvider({ children }: { children: ReactNode }) {
     <LessonContext.Provider
       value={{
         enrolledCurriculums,
+        catalogCurriculums,
         enrolledCurriculumIds,
         enrolledSubjectIds,
         activeCurriculumId,

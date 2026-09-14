@@ -64,6 +64,8 @@ export const studentProfiles = sqliteTable('student_profiles', {
     .primaryKey()
     .references(() => profiles.id, { onDelete: 'cascade' }),
   target_exam_year: integer('target_exam_year'),
+  /** Default sitting applied to new enrollments, e.g. 'May/June 2026' */
+  default_exam_series: text('default_exam_series'),
   study_goals_metadata: jsonText<z.infer<typeof StudyGoalsMetadataSchema>>('study_goals_metadata'),
 });
 
