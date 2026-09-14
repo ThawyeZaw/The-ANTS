@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { CountdownWithTime } from '@/hooks/useCountdown';
-import { Trash2, Clock, Calendar, AlertCircle, Sparkles, BookOpen } from 'lucide-react';
+import { Trash2, Clock, Calendar, AlertCircle, Sparkles, BookOpen, Calculator } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 interface CountdownCardProps {
   countdown: any;
@@ -80,10 +81,18 @@ export function CountdownCard({ countdown, onDelete, canDelete = true }: Countdo
             </span>
           )}
           {targetGrade && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+            <Link
+              href={
+                countdown.subject_id
+                  ? `/calculator?subject=${countdown.subject_id}`
+                  : '/calculator'
+              }
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20"
+            >
               <Sparkles className="w-3 h-3" />
               Target: {targetGrade}
-            </span>
+              <Calculator className="w-3 h-3" />
+            </Link>
           )}
         </div>
 

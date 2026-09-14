@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, asc } from 'drizzle-orm';
 import {
   createDb,
   curriculums,
@@ -9,28 +9,78 @@ import {
   userCurriculums,
   topicProgress,
 } from '@the-ants/db';
+import { remember } from '../lib/memory-cache';
+
+const CATALOG_TTL_MS = 60_000;
 
 export function createCurriculumRoutes(getDb: () => ReturnType<typeof createDb>) {
   const router = new Hono();
 
-  // 1. Get all curriculums with subjects and topics
-  // RLS replacement: curriculums_public_read
+  // Catalog only (no topics). Pass includeTopics=1 only for lesson trackers.
   router.get('/', async (c) => {
+    const includeTopics = c.req.query('includeTopics') === '1';
     const db = getDb();
-    const allCurriculums = await db.query.curriculums.findMany({
-      with: {
-        subjects: {
-          with: {
-            topics: true,
+    const payload = await remember(`curriculum:${includeTopics ? 'topics' : 'catalog'}`, CATALOG_TTL_MS, async () => {
+      const rows = await db.query.curriculums.findMany({
+        columns: { id: true, name: true, code: true, description: true, icon_url: true },
+        with: {
+          subjects: {
+            columns: {
+              id: true,
+              curriculum_id: true,
+              name: true,
+              code: true,
+              description: true,
+              color_code: true,
+            },
+            ...(includeTopics
+              ? {
+                  with: {
+                    topics: {
+                      columns: {
+                        id: true,
+                        subject_id: true,
+                        name: true,
+                        description: true,
+                        order_index: true,
+                      },
+                    },
+                  },
+                }
+              : {}),
           },
         },
-      },
+      });
+      return { success: true as const, curriculums: rows };
     });
 
-    return c.json({ success: true, curriculums: allCurriculums });
+    c.header('Cache-Control', 'public, max-age=60');
+    return c.json(payload);
   });
 
-  // 2. Get user enrolled curriculums
+  router.get('/topics', async (c) => {
+    const subjectId = c.req.query('subjectId');
+    if (!subjectId) {
+      return c.json({ error: 'subjectId is required' }, 400);
+    }
+
+    const db = getDb();
+    const rows = await db
+      .select({
+        id: topics.id,
+        subject_id: topics.subject_id,
+        name: topics.name,
+        description: topics.description,
+        order_index: topics.order_index,
+      })
+      .from(topics)
+      .where(eq(topics.subject_id, subjectId))
+      .orderBy(asc(topics.order_index));
+
+    return c.json({ success: true, topics: rows });
+  });
+
+  // Enrollment rows only — do not nest every subject in the board
   router.get('/user-curriculums', async (c) => {
     const db = getDb();
     const userId = c.req.query('userId');
@@ -39,16 +89,15 @@ export function createCurriculumRoutes(getDb: () => ReturnType<typeof createDb>)
       return c.json({ error: 'userId is required' }, 400);
     }
 
-    const enrolled = await db.query.userCurriculums.findMany({
-      where: eq(userCurriculums.user_id, userId),
-      with: {
-        curriculum: {
-          with: {
-            subjects: true,
-          },
-        },
-      },
-    });
+    const enrolled = await db
+      .select({
+        id: userCurriculums.id,
+        user_id: userCurriculums.user_id,
+        curriculum_id: userCurriculums.curriculum_id,
+        created_at: userCurriculums.created_at,
+      })
+      .from(userCurriculums)
+      .where(eq(userCurriculums.user_id, userId));
 
     return c.json({ success: true, userCurriculums: enrolled });
   });
@@ -104,6 +153,14 @@ export function createCurriculumRoutes(getDb: () => ReturnType<typeof createDb>)
 
     const progress = await db.query.topicProgress.findMany({
       where: eq(topicProgress.user_id, userId),
+      columns: {
+        id: true,
+        topic_id: true,
+        status: true,
+        last_studied_at: true,
+        completed_at: true,
+        notes: true,
+      },
     });
 
     return c.json({ success: true, progress });

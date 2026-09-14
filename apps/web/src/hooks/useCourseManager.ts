@@ -8,6 +8,7 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import type { Exam, ExamCountdown, UserExamHistory } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
+import { enrollInSubject, unenrollFromSubject, listUserEnrollments } from '@/actions/curriculum';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8787';
 
@@ -121,28 +122,27 @@ export function useCourseManager() {
       }
 
       if (userId) {
-        const [enrRes, cdRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/api/curriculum/user-curriculums?userId=${encodeURIComponent(userId)}`),
-          fetch(`${API_BASE_URL}/api/exams/countdowns?userId=${encodeURIComponent(userId)}`),
+        const [enrRows, cdRes] = await Promise.all([
+          userId ? listUserEnrollments(userId) : Promise.resolve([]),
+          userId
+            ? fetch(`${API_BASE_URL}/api/exams/countdowns?userId=${encodeURIComponent(userId)}`)
+            : Promise.resolve(null),
         ]);
 
-        if (enrRes.ok) {
-          const json = await enrRes.json();
-          if (json.success && json.userCurriculums) {
-            setEnrollments(
-              json.userCurriculums.map((e: any) => ({
-                id: e.id,
-                user_id: e.user_id,
-                curriculum_id: e.curriculum_id,
-                subject_id: e.subject_id || '',
-                exam_id: e.exam_id || null,
-                enrolled_at: e.created_at || new Date().toISOString(),
-              }))
-            );
-          }
+        if (enrRows.length > 0) {
+          setEnrollments(
+            enrRows.map((e) => ({
+              id: e.id,
+              user_id: e.user_id,
+              curriculum_id: e.curriculum_id,
+              subject_id: e.subject_id,
+              exam_id: e.exam_id || null,
+              enrolled_at: e.enrolled_at ? new Date(e.enrolled_at).toISOString() : new Date().toISOString(),
+            }))
+          );
         }
 
-        if (cdRes.ok) {
+        if (cdRes && cdRes.ok) {
           const json = await cdRes.json();
           if (json.success && json.countdowns) {
             setCountdowns(json.countdowns);
@@ -247,35 +247,22 @@ export function useCourseManager() {
   const enroll = useCallback(
     async (curriculumId: string, subjectId: string, examId?: string | null) => {
       if (!userId) return { success: false, error: 'Not authenticated.' };
-
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/curriculum/enroll`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, curriculumId }),
-        });
-
-        if (res.ok) {
-          const json = await res.json();
-          if (json.success && json.enrollment) {
-            setEnrollments((prev) => [
-              ...prev,
-              {
-                id: json.enrollment.id,
-                user_id: userId,
-                curriculum_id: curriculumId,
-                subject_id: subjectId,
-                exam_id: examId ?? null,
-                enrolled_at: new Date().toISOString(),
-              },
-            ]);
-            return { success: true };
-          }
-        }
-        return { success: false, error: 'Failed to enroll in curriculum' };
-      } catch (err: any) {
-        return { success: false, error: err.message || 'Enrollment failed' };
+      const res = await enrollInSubject(userId, curriculumId, subjectId);
+      if (res.success) {
+        setEnrollments((prev) => [
+          ...prev.filter((e) => e.subject_id !== subjectId),
+          {
+            id: `enr_${subjectId}`,
+            user_id: userId,
+            curriculum_id: curriculumId,
+            subject_id: subjectId,
+            exam_id: examId ?? null,
+            enrolled_at: new Date().toISOString(),
+          },
+        ]);
+        return { success: true };
       }
+      return { success: false, error: res.error || 'Enrollment failed' };
     },
     [userId]
   );
@@ -283,10 +270,14 @@ export function useCourseManager() {
   const unenroll = useCallback(
     async (enrollmentId: string) => {
       if (!userId) return { success: false, error: 'Not authenticated.' };
+      const row = enrollments.find((e) => e.id === enrollmentId);
+      if (row?.subject_id) {
+        await unenrollFromSubject(userId, row.subject_id);
+      }
       setEnrollments((prev) => prev.filter((e) => e.id !== enrollmentId));
       return { success: true };
     },
-    [userId]
+    [userId, enrollments]
   );
 
   const updateExamTarget = useCallback(

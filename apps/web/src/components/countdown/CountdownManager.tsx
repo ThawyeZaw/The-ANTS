@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCountdown } from '@/hooks/useCountdown';
 import { CountdownCard } from './CountdownCard';
-import { Plus, Timer, BookMarked, BookOpen, Calendar } from 'lucide-react';
+import { Plus, Timer, BookMarked, BookOpen, Calendar, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import { useLessonContext, type SubjectCountdown } from '@/context/LessonContext';
+import { useLessonContext, type CatalogCurriculum } from '@/context/LessonContext';
 import {
   listUpcomingExamsBySubject,
   switchExamCountdownSession,
@@ -114,14 +115,89 @@ function SessionSwitcher({ subjectId, onSwitch }: { subjectId: string; onSwitch:
 // ── Main Component ─────────────────────────────────────────────────────────
 
 export function CountdownManager({ userId }: CountdownManagerProps) {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const { groupedCountdowns, availableExams, createCountdown, deleteCountdown } = useCountdown(userId);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Auto-generated countdowns from LessonContext
-  const { countdowns: autoCountdowns, countdownsLoading, enrolledCurriculums } = useLessonContext();
+  const { countdowns: autoCountdowns, countdownsLoading, enrolledCurriculums, catalogCurriculums } = useLessonContext();
 
-  // Build subject name lookup
+  const [filterCurriculumId, setFilterCurriculumId] = useState(searchParams.get('curriculum') ?? 'all');
+  const [filterSubjectId, setFilterSubjectId] = useState(searchParams.get('subject') ?? 'all');
+
+  const catalog: CatalogCurriculum[] = useMemo(() => {
+    if (catalogCurriculums.length > 0) return catalogCurriculums;
+
+    const byId = new Map<string, CatalogCurriculum>();
+    for (const exam of availableExams as any[]) {
+      const curriculumId = exam.curriculum_id || exam.curriculum?.id;
+      if (!curriculumId) continue;
+      const existing: CatalogCurriculum = byId.get(curriculumId) ?? {
+        id: curriculumId,
+        title: exam.curriculum_name || exam.curriculum?.name || exam.exam_board || 'Curriculum',
+        exam_board: exam.exam_board ?? null,
+        subjects: [],
+      };
+      const subjectId = exam.subject_id || exam.subject?.id;
+      if (subjectId && !existing.subjects.some((s) => s.id === subjectId)) {
+        existing.subjects.push({
+          id: subjectId,
+          curriculum_id: curriculumId,
+          title: exam.subject_name || exam.subject?.name || exam.title || 'Subject',
+        });
+      }
+      byId.set(curriculumId, existing);
+    }
+    return [...byId.values()];
+  }, [catalogCurriculums, availableExams]);
+
+  const subjectToCurriculum = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const curr of catalog) {
+      for (const subj of curr.subjects) {
+        map.set(subj.id, curr.id);
+      }
+    }
+    for (const curr of enrolledCurriculums) {
+      for (const subj of curr.subjects) {
+        map.set(subj.id, curr.id);
+      }
+    }
+    return map;
+  }, [catalog, enrolledCurriculums]);
+
+  const subjectsForFilter = useMemo(() => {
+    if (filterCurriculumId === 'all') return catalog.flatMap((c) => c.subjects);
+    return catalog.find((c) => c.id === filterCurriculumId)?.subjects ?? [];
+  }, [catalog, filterCurriculumId]);
+
+  const writeFilters = (curriculumId: string, subjectId: string) => {
+    setFilterCurriculumId(curriculumId);
+    setFilterSubjectId(subjectId);
+    const params = new URLSearchParams(searchParams.toString());
+    if (curriculumId === 'all') params.delete('curriculum');
+    else params.set('curriculum', curriculumId);
+    if (subjectId === 'all') params.delete('subject');
+    else params.set('subject', subjectId);
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
+
+  const matchesSubjectFilter = (subjectId?: string | null, examCurriculumId?: string | null) => {
+    if (filterSubjectId !== 'all') return subjectId === filterSubjectId;
+    if (filterCurriculumId === 'all') return true;
+    if (examCurriculumId) return examCurriculumId === filterCurriculumId;
+    if (!subjectId) return false;
+    return subjectToCurriculum.get(subjectId) === filterCurriculumId;
+  };
+
   const subjectNameMap: Record<string, string> = {};
+  for (const curr of catalog) {
+    for (const subj of curr.subjects) {
+      subjectNameMap[subj.id] = subj.title;
+    }
+  }
   for (const curr of enrolledCurriculums) {
     for (const subj of curr.subjects) {
       subjectNameMap[subj.id] = subj.title;
@@ -181,75 +257,138 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
     { id: 'Custom', label: 'Custom' },
   ];
 
+  const filteredOfficialExams = availableExams.filter((exam) => {
+    const curriculumId = (exam as any).curriculum_id || (exam as any).curriculum?.id;
+    if (!matchesSubjectFilter(exam.subject_id, curriculumId)) return false;
+    if (selectedBoardFilter === 'all') return true;
+    if (selectedBoardFilter === 'Custom') return false;
+    return (
+      (exam.exam_board && exam.exam_board.toUpperCase().includes(selectedBoardFilter.toUpperCase())) ||
+      (exam.title && exam.title.toUpperCase().includes(selectedBoardFilter.toUpperCase()))
+    );
+  });
+
+  const filteredAutoCountdowns = autoCountdowns.filter((cd) => matchesSubjectFilter(cd.subjectId));
+
   const handleQuickPinOfficialExam = async (exam: any) => {
+    const examDate = exam.exam_date || exam.date;
     await createCountdown({
       exam_id: exam.id,
-      custom_title: exam.title || exam.subject?.name || 'Official Exam',
-      target_date: exam.exam_date ? new Date(exam.exam_date).toISOString() : new Date().toISOString(),
+      custom_title: exam.title || exam.subject_name || exam.subject?.name || 'Official Exam',
+      target_date: examDate ? new Date(examDate).toISOString() : new Date().toISOString(),
       priority_indicator: 'high',
-      qualification_group: exam.exam_board || exam.qualification_type || 'Official',
+      qualification_group: exam.exam_board || exam.qualification_type || exam.qualification || 'Official',
+      subject_id: exam.subject_id || exam.subject?.id,
+      exam_board: exam.exam_board,
     });
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-8">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[var(--border)] pb-6">
-        <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 mb-2">
-            <Timer className="h-3.5 w-3.5" />
-            Live Exam Tracker
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[var(--foreground)] tracking-tight">
+    <div className="w-full max-w-6xl mx-auto space-y-5">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <Link
+            href="/dashboard"
+            className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-[var(--foreground-muted)] hover:text-[var(--foreground)] transition-colors"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Dashboard
+          </Link>
+          <span className="hidden sm:block h-4 w-px bg-[var(--border)]" aria-hidden />
+          <h1 className="truncate text-lg font-bold text-[var(--foreground)] tracking-tight">
             Exam Countdowns
           </h1>
-          <p className="text-sm text-[var(--foreground-secondary)] mt-1">
-            Track official Cambridge & Edexcel exam sessions, timetable deadlines, and custom targets.
-          </p>
         </div>
 
-        <div className="flex items-center gap-2.5 flex-wrap">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           <Link
             href="/curriculum"
-            className="flex items-center gap-2 rounded-xl bg-[var(--background-secondary)] px-4 py-2 text-xs font-semibold text-[var(--foreground)] border border-[var(--border)] hover:border-[var(--primary)]/50 transition-all"
+            className="hidden sm:inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-[var(--foreground-muted)] hover:text-[var(--foreground)] hover:bg-[var(--background-secondary)] transition-colors"
           >
-            <BookOpen className="h-3.5 w-3.5 text-[var(--primary)]" />
-            Curriculum Hub
+            <BookOpen className="h-3.5 w-3.5" />
+            Subjects
           </Link>
           <Link
             href="/past-papers"
-            className="flex items-center gap-2 rounded-xl bg-amber-500/10 px-4 py-2 text-xs font-semibold text-amber-700 dark:text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-all"
+            className="hidden sm:inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-[var(--foreground-muted)] hover:text-[var(--foreground)] hover:bg-[var(--background-secondary)] transition-colors"
           >
             <BookMarked className="h-3.5 w-3.5" />
-            Past Papers Grid
+            Papers
           </Link>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 rounded-xl bg-[var(--primary)] px-4 py-2 text-xs font-semibold text-white transition-all hover:bg-[var(--primary-hover)] shadow-sm hover:shadow-md focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:outline-none"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--primary)] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[var(--primary-hover)] focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:outline-none"
             aria-label="Add a new custom countdown"
           >
             <Plus className="h-3.5 w-3.5" />
-            Add Countdown
+            Add
           </button>
         </div>
       </div>
 
-      {/* Board Filter Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-        {boards.map((b) => (
-          <button
-            key={b.id}
-            onClick={() => setSelectedBoardFilter(b.id)}
-            className={cn(
-              'px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border',
-              selectedBoardFilter === b.id
-                ? 'bg-[var(--primary)] text-white border-[var(--primary)] shadow-sm'
-                : 'bg-[var(--background-card)] text-[var(--foreground-secondary)] border-[var(--border)] hover:text-[var(--foreground)] hover:border-[var(--primary)]/30'
-            )}
-          >
-            {b.label}
-          </button>
-        ))}
+      {/* Curriculum / subject + board filters */}
+      <div className="flex flex-col gap-2.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <label className="block">
+            <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-[var(--foreground-muted)]">
+              Curriculum
+            </span>
+            <select
+              value={filterCurriculumId}
+              onChange={(e) => {
+                const nextCurriculum = e.target.value;
+                const stillValid =
+                  filterSubjectId !== 'all' &&
+                  catalog
+                    .find((c) => c.id === nextCurriculum)
+                    ?.subjects.some((s) => s.id === filterSubjectId);
+                writeFilters(nextCurriculum, stillValid ? filterSubjectId : 'all');
+              }}
+              className="w-full rounded-xl border border-[var(--border)] bg-[var(--background-card)] px-3 py-2 text-sm text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
+            >
+              <option value="all">All curriculums</option>
+              {catalog.map((curr) => (
+                <option key={curr.id} value={curr.id}>
+                  {curr.title}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block">
+            <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-[var(--foreground-muted)]">
+              Subject
+            </span>
+            <select
+              value={filterSubjectId}
+              onChange={(e) => writeFilters(filterCurriculumId, e.target.value)}
+              className="w-full rounded-xl border border-[var(--border)] bg-[var(--background-card)] px-3 py-2 text-sm text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
+            >
+              <option value="all">All subjects</option>
+              {subjectsForFilter.map((subj) => (
+                <option key={subj.id} value={subj.id}>
+                  {subj.title}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+          {boards.map((b) => (
+            <button
+              key={b.id}
+              onClick={() => setSelectedBoardFilter(b.id)}
+              className={cn(
+                'px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border',
+                selectedBoardFilter === b.id
+                  ? 'bg-[var(--primary)] text-white border-[var(--primary)] shadow-sm'
+                  : 'bg-[var(--background-card)] text-[var(--foreground-secondary)] border-[var(--border)] hover:text-[var(--foreground)] hover:border-[var(--primary)]/30'
+              )}
+            >
+              {b.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* ── Section 1: Enrolled Subjects Countdowns ─────────────────── */}
@@ -270,6 +409,11 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
               <div key={i} className="rounded-2xl border border-[var(--border)] bg-[var(--background-card)] p-6 min-h-[160px] animate-pulse" />
             ))}
           </div>
+        ) : filteredAutoCountdowns.length === 0 && autoCountdowns.length > 0 ? (
+          <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--background-card)]/60 p-8 text-center">
+            <p className="text-sm text-[var(--foreground)] font-semibold">No enrolled subjects match this filter</p>
+            <p className="text-xs text-[var(--foreground-muted)] mt-1">Try another curriculum or subject, or clear the filters.</p>
+          </div>
         ) : autoCountdowns.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--background-card)]/60 p-8 text-center">
             <BookOpen className="mx-auto h-8 w-8 text-[var(--foreground-muted)] mb-3" />
@@ -286,7 +430,8 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {autoCountdowns.map((cd) => {
+            {filteredAutoCountdowns
+              .map((cd) => {
               if (cd.exam) {
                 const examDate = (cd.exam as any).date || (cd.exam as any).exam_date || new Date().toISOString();
                 return (
@@ -296,11 +441,13 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
                       id: cd.exam.id,
                       user_id: userId,
                       exam_id: cd.exam.id,
+                      subject_id: cd.subjectId,
                       custom_title: subjectNameMap[cd.subjectId] ?? (cd.exam as any).subject ?? 'Exam',
                       target_date: examDate,
                       qualification_group: (cd.exam as any).series ?? 'Official',
                       exam_board: (cd.exam as any).exam_board ?? undefined,
                       paper_name: (cd.exam as any).paper_number ? `Paper ${ (cd.exam as any).paper_number}` : undefined,
+                      target_grade: (cd.exam as any).target_grade,
                     }}
                     canDelete={false}
                   />
@@ -344,8 +491,10 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
                 return group.toUpperCase().includes(selectedBoardFilter.toUpperCase());
               })
               .map((group) => {
-                const countdowns = groupedCountdowns[group];
-                if (!countdowns || countdowns.length === 0) return null;
+                const countdowns = (groupedCountdowns[group] ?? []).filter((c) =>
+                  matchesSubjectFilter((c as any).subject_id, (c as any).curriculum_id)
+                );
+                if (countdowns.length === 0) return null;
 
                 return (
                   <div key={group} className="space-y-3">
@@ -357,7 +506,8 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                      {countdowns.map((countdown) => (
+                      {countdowns
+                        .map((countdown) => (
                         <CountdownCard
                           key={countdown.id}
                           countdown={countdown}
@@ -381,21 +531,19 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
               <Calendar className="h-4 w-4 text-amber-500" />
               <h2 className="text-lg font-bold text-[var(--foreground)]">Official Exam Timetable</h2>
               <span className="text-xs font-medium text-[var(--foreground-muted)] bg-[var(--background-secondary)] rounded-full px-2.5 py-0.5 border border-[var(--border)]">
-                {availableExams.length} sessions
+                {filteredOfficialExams.length} sessions
               </span>
             </div>
           </div>
 
+          {filteredOfficialExams.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--background-card)]/60 p-8 text-center">
+              <p className="text-sm text-[var(--foreground)] font-semibold">No official sessions match this filter</p>
+              <p className="text-xs text-[var(--foreground-muted)] mt-1">Choose a different curriculum or subject to see timetable dates.</p>
+            </div>
+          ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {availableExams
-              .filter((exam) => {
-                if (selectedBoardFilter === 'all') return true;
-                if (selectedBoardFilter === 'Custom') return false;
-                return (
-                  (exam.exam_board && exam.exam_board.toUpperCase().includes(selectedBoardFilter.toUpperCase())) ||
-                  (exam.title && exam.title.toUpperCase().includes(selectedBoardFilter.toUpperCase()))
-                );
-              })
+            {filteredOfficialExams
               .map((exam) => {
                 const isAlreadyTracked =
                   groupedCountdowns &&
@@ -458,6 +606,7 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
                 );
               })}
           </div>
+          )}
         </section>
       )}
 
@@ -466,6 +615,9 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           availableExams={availableExams}
+          catalogCurriculums={catalog}
+          initialCurriculumId={filterCurriculumId}
+          initialSubjectId={filterSubjectId}
           onCreate={createCountdown}
         />
       )}

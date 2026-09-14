@@ -6,8 +6,15 @@
 //           enrollInSubject, unenrollFromSubject
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { getDb, curriculums, subjects, topics, topicProgress, userCurriculums, userEnrollments, pastPapers, userPastPaperRecords } from '@/lib/db';
-import { eq, and, asc, count, sql, inArray } from 'drizzle-orm';
+import { getDb, curriculums, subjects, topics, topicProgress, userCurriculums, userEnrollments, pastPapers, userPastPaperRecords, examCountdowns, subjectGradeBoundaries } from '@/lib/db';
+import { eq, and, asc, inArray, count } from 'drizzle-orm';
+import {
+  getDefaultExamSession,
+  removeAutoCountdownsForSubject,
+  syncEnrollmentCountdowns,
+} from '@/actions/enrollment-sync';
+import { getPluginForCurriculumCode, syllabusHasTiers } from '@/lib/grading';
+import type { SubjectTier } from '@/lib/grading/types';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -36,6 +43,9 @@ export interface SubjectWithProgress {
   paperCount: number;
   completedPapers: number;
   isEnrolled: boolean;
+  target_series: string | null;
+  target_grade: string | null;
+  tier: string | null;
 }
 
 export interface TopicWithProgress {
@@ -54,6 +64,15 @@ export interface TopicWithProgress {
 }
 
 // ── getPaperGridData types ─────────────────────────────────────────────────────
+
+export interface HubSubject extends SubjectWithProgress {
+  curriculum_name: string;
+  curriculum_code: string;
+  enrollmentId: string;
+  countdown_mode: string | null;
+  nextExamDate: Date | null;
+  nextExamTitle: string | null;
+}
 
 export interface PaperGridSession {
   year: number;
@@ -83,6 +102,7 @@ export interface PaperGridCell {
   percentage: number | null;
   calculatedGrade: string | null;
   calculatedUms: number | null;
+  gradeBoundaries: { grade: string; min_mark: number; max_mark: number | null; ums_min: number | null; ums_max: number | null }[];
 }
 
 export interface PaperGridData {
@@ -99,15 +119,30 @@ export async function getCurriculums(userId: string): Promise<CurriculumWithStat
   try {
     const db = getDb();
 
-    const [allCurriculums, enrolledCurriculumIds] = await Promise.all([
+    const [allCurriculums, subjectCountRows, enrolledCurriculumIds] = await Promise.all([
       db.query.curriculums.findMany({
-        with: { subjects: { columns: { id: true } } },
+        columns: {
+          id: true,
+          name: true,
+          code: true,
+          description: true,
+          icon_url: true,
+          created_at: true,
+        },
         orderBy: [asc(curriculums.name)],
       }),
+      db
+        .select({ curriculumId: subjects.curriculum_id, n: count() })
+        .from(subjects)
+        .groupBy(subjects.curriculum_id),
       db.query.userCurriculums
         .findMany({ where: eq(userCurriculums.user_id, userId), columns: { curriculum_id: true } })
         .then((rows) => new Set(rows.map((r) => r.curriculum_id))),
     ]);
+
+    const subjectCountMap = new Map(
+      subjectCountRows.map((row) => [row.curriculumId, Number(row.n)])
+    );
 
     return allCurriculums.map((c) => ({
       id: c.id,
@@ -116,13 +151,76 @@ export async function getCurriculums(userId: string): Promise<CurriculumWithStat
       description: c.description,
       icon_url: c.icon_url,
       created_at: c.created_at,
-      subjectCount: c.subjects?.length ?? 0,
+      subjectCount: subjectCountMap.get(c.id) ?? 0,
       isEnrolled: enrolledCurriculumIds.has(c.id),
     }));
   } catch (err) {
     console.error('[curriculum] getCurriculums error:', err);
     return [];
   }
+}
+
+async function subjectStatCounts(userId: string, subjectIds: string[]) {
+  const empty = {
+    topicCount: new Map<string, number>(),
+    topicDone: new Map<string, number>(),
+    paperCount: new Map<string, number>(),
+    paperDone: new Map<string, number>(),
+  };
+  if (subjectIds.length === 0) return empty;
+
+  const db = getDb();
+  const [topicRows, topicDoneRows, paperRows, paperDoneRows] = await Promise.all([
+    db
+      .select({ subjectId: topics.subject_id, n: count() })
+      .from(topics)
+      .where(inArray(topics.subject_id, subjectIds))
+      .groupBy(topics.subject_id),
+    db
+      .select({ subjectId: topics.subject_id, n: count() })
+      .from(topicProgress)
+      .innerJoin(topics, eq(topicProgress.topic_id, topics.id))
+      .where(
+        and(
+          eq(topicProgress.user_id, userId),
+          eq(topicProgress.status, 'completed'),
+          inArray(topics.subject_id, subjectIds)
+        )
+      )
+      .groupBy(topics.subject_id),
+    db
+      .select({ subjectId: pastPapers.subject_id, n: count() })
+      .from(pastPapers)
+      .where(inArray(pastPapers.subject_id, subjectIds))
+      .groupBy(pastPapers.subject_id),
+    db
+      .select({ subjectId: pastPapers.subject_id, n: count() })
+      .from(userPastPaperRecords)
+      .innerJoin(pastPapers, eq(userPastPaperRecords.past_paper_id, pastPapers.id))
+      .where(
+        and(
+          eq(userPastPaperRecords.user_id, userId),
+          eq(userPastPaperRecords.status, 'done'),
+          inArray(pastPapers.subject_id, subjectIds)
+        )
+      )
+      .groupBy(pastPapers.subject_id),
+  ]);
+
+  const toMap = (rows: { subjectId: string | null; n: number }[]) => {
+    const map = new Map<string, number>();
+    for (const row of rows) {
+      if (row.subjectId) map.set(row.subjectId, Number(row.n));
+    }
+    return map;
+  };
+
+  return {
+    topicCount: toMap(topicRows),
+    topicDone: toMap(topicDoneRows),
+    paperCount: toMap(paperRows),
+    paperDone: toMap(paperDoneRows),
+  };
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -136,60 +234,35 @@ export async function getSubjectsByCurriculum(
   try {
     const db = getDb();
 
-    const [allSubjects, userEnrollRows, progressRows, paperRows, paperRecordRows] = await Promise.all([
+    const [allSubjects, userEnrollRows] = await Promise.all([
       db.query.subjects.findMany({
         where: eq(subjects.curriculum_id, curriculumId),
-        with: { topics: { columns: { id: true } } },
+        columns: {
+          id: true,
+          curriculum_id: true,
+          name: true,
+          code: true,
+          description: true,
+          icon_url: true,
+          color_code: true,
+          created_at: true,
+        },
         orderBy: [asc(subjects.name)],
       }),
       db.query.userEnrollments.findMany({
-        where: eq(userEnrollments.user_id, userId),
-        columns: { subject_id: true },
-      }),
-      db.query.topicProgress.findMany({
-        where: eq(topicProgress.user_id, userId),
-        columns: { topic_id: true, status: true },
-        with: { topic: { columns: { subject_id: true } } },
-      }),
-      db.query.pastPapers.findMany({
-        where: eq(pastPapers.curriculum_id, curriculumId),
-        columns: { id: true, subject_id: true },
-      }),
-      db.query.userPastPaperRecords.findMany({
-        where: eq(userPastPaperRecords.user_id, userId),
-        columns: { past_paper_id: true, status: true },
-        with: { pastPaper: { columns: { subject_id: true } } },
+        where: and(eq(userEnrollments.user_id, userId), eq(userEnrollments.curriculum_id, curriculumId)),
+        columns: { subject_id: true, target_series: true, target_grade: true, tier: true },
       }),
     ]);
 
-    const enrolledSubjectIds = new Set(userEnrollRows.map((r) => r.subject_id));
-
-    // Build progress map: subjectId → { completed, total }
-    const topicProgressMap = new Map<string, { completed: number; total: number }>();
-    for (const prog of progressRows) {
-      const subjectId = prog.topic?.subject_id;
-      if (!subjectId) continue;
-      const entry = topicProgressMap.get(subjectId) ?? { completed: 0, total: 0 };
-      entry.total++;
-      if (prog.status === 'completed') entry.completed++;
-      topicProgressMap.set(subjectId, entry);
-    }
-
-    // Build paper progress map: subjectId → { completed, total }
-    const paperCountMap = new Map<string, number>();
-    for (const p of paperRows) {
-      if (!p.subject_id) continue;
-      paperCountMap.set(p.subject_id, (paperCountMap.get(p.subject_id) ?? 0) + 1);
-    }
-    const paperDoneMap = new Map<string, number>();
-    for (const r of paperRecordRows) {
-      const subjectId = r.pastPaper?.subject_id;
-      if (!subjectId || r.status !== 'done') continue;
-      paperDoneMap.set(subjectId, (paperDoneMap.get(subjectId) ?? 0) + 1);
-    }
+    const enrolledBySubject = new Map(userEnrollRows.map((r) => [r.subject_id, r]));
+    const stats = await subjectStatCounts(
+      userId,
+      allSubjects.map((s) => s.id)
+    );
 
     return allSubjects.map((s) => {
-      const prog = topicProgressMap.get(s.id) ?? { completed: 0, total: s.topics?.length ?? 0 };
+      const enroll = enrolledBySubject.get(s.id);
       return {
         id: s.id,
         curriculum_id: s.curriculum_id,
@@ -199,11 +272,14 @@ export async function getSubjectsByCurriculum(
         icon_url: s.icon_url,
         color_code: s.color_code,
         created_at: s.created_at,
-        topicCount: s.topics?.length ?? 0,
-        completedTopics: prog.completed,
-        paperCount: paperCountMap.get(s.id) ?? 0,
-        completedPapers: paperDoneMap.get(s.id) ?? 0,
-        isEnrolled: enrolledSubjectIds.has(s.id),
+        topicCount: stats.topicCount.get(s.id) ?? 0,
+        completedTopics: stats.topicDone.get(s.id) ?? 0,
+        paperCount: stats.paperCount.get(s.id) ?? 0,
+        completedPapers: stats.paperDone.get(s.id) ?? 0,
+        isEnrolled: Boolean(enroll),
+        target_series: enroll?.target_series ?? null,
+        target_grade: enroll?.target_grade ?? null,
+        tier: enroll?.tier ?? null,
       };
     });
   } catch (err) {
@@ -280,6 +356,7 @@ export async function getPaperGridData(
     // Fetch all papers for this subject
     const allPapers = await db.query.pastPapers.findMany({
       where: eq(pastPapers.subject_id, subjectId),
+      with: { gradeBoundaries: true },
       orderBy: [asc(pastPapers.paper_number), asc(pastPapers.variant)],
     });
 
@@ -359,6 +436,13 @@ export async function getPaperGridData(
         percentage: record?.percentage ?? null,
         calculatedGrade: record?.calculated_grade ?? null,
         calculatedUms: record?.calculated_ums ?? null,
+        gradeBoundaries: (p.gradeBoundaries ?? []).map((b) => ({
+          grade: b.grade,
+          min_mark: b.min_mark,
+          max_mark: b.max_mark,
+          ums_min: b.ums_min,
+          ums_max: b.ums_max,
+        })),
       };
     }
 
@@ -377,11 +461,29 @@ export async function getPaperGridData(
 // 5. enrollInSubject / unenrollFromSubject
 // ──────────────────────────────────────────────────────────────────────────────
 
-export async function enrollInSubject(userId: string, curriculumId: string, subjectId: string) {
+export async function enrollInSubject(
+  userId: string,
+  curriculumId: string,
+  subjectId: string,
+  options?: { targetSeries?: string; tier?: SubjectTier | null; targetGrade?: string | null }
+) {
   try {
     const db = getDb();
+    const curriculum = await db.query.curriculums.findFirst({
+      where: eq(curriculums.id, curriculumId),
+    });
+    const subject = await db.query.subjects.findFirst({
+      where: eq(subjects.id, subjectId),
+    });
+    if (!curriculum || !subject) {
+      return { success: false, error: 'Subject not found' };
+    }
 
-    // Ensure curriculum enrollment
+    const plugin = getPluginForCurriculumCode(curriculum.code);
+    const targetSeries = options?.targetSeries || (await getDefaultExamSession(userId));
+    const defaultTier: SubjectTier | null =
+      plugin.hasTiers && syllabusHasTiers(subject.code) ? (options?.tier ?? 'extended') : (options?.tier ?? null);
+
     const existingCurr = await db.query.userCurriculums.findFirst({
       where: and(eq(userCurriculums.user_id, userId), eq(userCurriculums.curriculum_id, curriculumId)),
     });
@@ -389,13 +491,38 @@ export async function enrollInSubject(userId: string, curriculumId: string, subj
       await db.insert(userCurriculums).values({ user_id: userId, curriculum_id: curriculumId });
     }
 
-    // Ensure subject enrollment
     const existingEnroll = await db.query.userEnrollments.findFirst({
       where: and(eq(userEnrollments.user_id, userId), eq(userEnrollments.subject_id, subjectId)),
     });
     if (!existingEnroll) {
-      await db.insert(userEnrollments).values({ user_id: userId, curriculum_id: curriculumId, subject_id: subjectId });
+      await db.insert(userEnrollments).values({
+        user_id: userId,
+        curriculum_id: curriculumId,
+        subject_id: subjectId,
+        target_series: targetSeries,
+        target_grade: options?.targetGrade ?? null,
+        tier: defaultTier,
+        countdown_mode: plugin.countdownMode,
+      });
+    } else {
+      await db
+        .update(userEnrollments)
+        .set({
+          target_series: existingEnroll.target_series ?? targetSeries,
+          tier: existingEnroll.tier ?? defaultTier,
+          countdown_mode: plugin.countdownMode,
+        })
+        .where(eq(userEnrollments.id, existingEnroll.id));
     }
+
+    await syncEnrollmentCountdowns({
+      userId,
+      subjectId,
+      curriculumId,
+      targetSeries: existingEnroll?.target_series || targetSeries,
+      tier: (existingEnroll?.tier as SubjectTier | null) ?? defaultTier,
+      targetGrade: existingEnroll?.target_grade ?? options?.targetGrade ?? null,
+    });
 
     return { success: true };
   } catch (err: any) {
@@ -407,6 +534,7 @@ export async function enrollInSubject(userId: string, curriculumId: string, subj
 export async function unenrollFromSubject(userId: string, subjectId: string) {
   try {
     const db = getDb();
+    await removeAutoCountdownsForSubject(userId, subjectId);
     await db
       .delete(userEnrollments)
       .where(and(eq(userEnrollments.user_id, userId), eq(userEnrollments.subject_id, subjectId)));
@@ -415,6 +543,208 @@ export async function unenrollFromSubject(userId: string, subjectId: string) {
     console.error('[curriculum] unenrollFromSubject error:', err);
     return { success: false, error: err.message };
   }
+}
+
+export async function updateEnrollmentSettings(
+  userId: string,
+  subjectId: string,
+  patch: { targetSeries?: string; tier?: SubjectTier | null; targetGrade?: string | null }
+) {
+  try {
+    const db = getDb();
+    const existing = await db.query.userEnrollments.findFirst({
+      where: and(eq(userEnrollments.user_id, userId), eq(userEnrollments.subject_id, subjectId)),
+    });
+    if (!existing) return { success: false, error: 'Not enrolled' };
+
+    const nextSeries = patch.targetSeries ?? existing.target_series;
+    const nextTier = patch.tier !== undefined ? patch.tier : (existing.tier as SubjectTier | null);
+    const nextGrade = patch.targetGrade !== undefined ? patch.targetGrade : existing.target_grade;
+
+    await db
+      .update(userEnrollments)
+      .set({
+        target_series: nextSeries,
+        tier: nextTier,
+        target_grade: nextGrade,
+      })
+      .where(eq(userEnrollments.id, existing.id));
+
+    if (patch.targetGrade !== undefined) {
+      const autoCds = await db.query.examCountdowns.findMany({
+        where: and(eq(examCountdowns.user_id, userId), eq(examCountdowns.subject_id, subjectId)),
+      });
+      for (const cd of autoCds) {
+        if (cd.is_custom) continue;
+        await db.update(examCountdowns).set({ target_grade: nextGrade }).where(eq(examCountdowns.id, cd.id));
+      }
+    }
+
+    if (patch.targetSeries !== undefined || patch.tier !== undefined) {
+      await syncEnrollmentCountdowns({
+        userId,
+        subjectId,
+        curriculumId: existing.curriculum_id,
+        targetSeries: nextSeries || (await getDefaultExamSession(userId)),
+        tier: nextTier,
+        targetGrade: nextGrade,
+      });
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    console.error('[curriculum] updateEnrollmentSettings error:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+export async function getMySubjectsHub(userId: string): Promise<{
+  subjects: HubSubject[];
+  defaultExamSeries: string;
+}> {
+  try {
+    const db = getDb();
+    const [enrollments, defaultExamSeries] = await Promise.all([
+      db.query.userEnrollments.findMany({
+        where: eq(userEnrollments.user_id, userId),
+        columns: {
+          id: true,
+          subject_id: true,
+          curriculum_id: true,
+          target_series: true,
+          target_grade: true,
+          tier: true,
+          countdown_mode: true,
+        },
+        with: {
+          subject: {
+            columns: {
+              id: true,
+              name: true,
+              code: true,
+              description: true,
+              icon_url: true,
+              color_code: true,
+              created_at: true,
+            },
+          },
+          curriculum: { columns: { id: true, name: true, code: true } },
+        },
+      }),
+      getDefaultExamSession(userId),
+    ]);
+
+    if (enrollments.length === 0) {
+      return { subjects: [], defaultExamSeries };
+    }
+
+    const subjectIds = enrollments.map((e) => e.subject_id);
+
+    const [stats, countdownRows] = await Promise.all([
+      subjectStatCounts(userId, subjectIds),
+      db.query.examCountdowns.findMany({
+        where: eq(examCountdowns.user_id, userId),
+        columns: { subject_id: true, exam_date: true, title: true },
+        orderBy: [asc(examCountdowns.exam_date)],
+      }),
+    ]);
+
+    const nextBySubject = new Map<string, { date: Date; title: string }>();
+    const now = Date.now();
+    for (const cd of countdownRows) {
+      if (!cd.subject_id || !cd.exam_date) continue;
+      const t = new Date(cd.exam_date).getTime();
+      if (t < now) continue;
+      const existing = nextBySubject.get(cd.subject_id);
+      if (!existing || t < existing.date.getTime()) {
+        nextBySubject.set(cd.subject_id, { date: new Date(cd.exam_date), title: cd.title });
+      }
+    }
+
+    const hub: HubSubject[] = enrollments.map((e) => {
+      const subj = e.subject;
+      const curr = e.curriculum;
+      return {
+        id: e.subject_id,
+        curriculum_id: e.curriculum_id,
+        name: subj?.name ?? 'Subject',
+        code: subj?.code ?? '',
+        description: subj?.description ?? null,
+        icon_url: subj?.icon_url ?? null,
+        color_code: subj?.color_code ?? null,
+        created_at: subj?.created_at ?? null,
+        topicCount: stats.topicCount.get(e.subject_id) ?? 0,
+        completedTopics: stats.topicDone.get(e.subject_id) ?? 0,
+        paperCount: stats.paperCount.get(e.subject_id) ?? 0,
+        completedPapers: stats.paperDone.get(e.subject_id) ?? 0,
+        isEnrolled: true,
+        target_series: e.target_series ?? defaultExamSeries,
+        target_grade: e.target_grade ?? null,
+        tier: e.tier ?? null,
+        curriculum_name: curr?.name ?? '',
+        curriculum_code: curr?.code ?? '',
+        enrollmentId: e.id,
+        countdown_mode: e.countdown_mode ?? getPluginForCurriculumCode(curr?.code).countdownMode,
+        nextExamDate: nextBySubject.get(e.subject_id)?.date ?? null,
+        nextExamTitle: nextBySubject.get(e.subject_id)?.title ?? null,
+      };
+    });
+
+    hub.sort((a, b) => a.name.localeCompare(b.name));
+    return { subjects: hub, defaultExamSeries };
+  } catch (err) {
+    console.error('[curriculum] getMySubjectsHub error:', err);
+    return { subjects: [], defaultExamSeries: 'May/June 2026' };
+  }
+}
+
+export async function listSubjectCompositeBoundaries(
+  subjectId: string,
+  year: number,
+  series: string,
+  opts?: { variant?: string | null; tier?: string | null }
+) {
+  try {
+    const db = getDb();
+    const rows = await db.query.subjectGradeBoundaries.findMany({
+      where: and(
+        eq(subjectGradeBoundaries.subject_id, subjectId),
+        eq(subjectGradeBoundaries.year, year),
+        eq(subjectGradeBoundaries.series, series)
+      ),
+    });
+    return rows.filter((r) => {
+      if (opts?.tier && r.tier && r.tier !== opts.tier) return false;
+      if (opts?.variant && r.variant && r.variant !== opts.variant) return false;
+      return true;
+    });
+  } catch (err) {
+    console.error('[curriculum] listSubjectCompositeBoundaries error:', err);
+    return [];
+  }
+}
+
+export async function listUserEnrollments(userId: string) {
+  const db = getDb();
+  return db.query.userEnrollments.findMany({
+    where: eq(userEnrollments.user_id, userId),
+    columns: {
+      id: true,
+      user_id: true,
+      curriculum_id: true,
+      subject_id: true,
+      exam_id: true,
+      target_series: true,
+      target_grade: true,
+      tier: true,
+      countdown_mode: true,
+      enrolled_at: true,
+    },
+    with: {
+      subject: { columns: { id: true, name: true, curriculum_id: true } },
+      curriculum: { columns: { id: true, name: true, code: true } },
+    },
+  });
 }
 
 export async function updateTopicProgress(

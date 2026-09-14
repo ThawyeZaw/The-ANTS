@@ -31,7 +31,17 @@ import {
   listCurriculums,
   listSubjects,
 } from '@/actions/exam-data';
+import { listSubjectCompositeBoundaries } from '@/actions/curriculum';
 import { cn } from '@/lib/utils';
+import {
+  getGradeColor,
+  getPluginForCurriculumCode,
+  getPluginForPaper,
+  syllabusHasTiers,
+  uniqueVariants,
+  type SubjectTier,
+} from '@/lib/grading';
+import type { GradeBoundary, PaperComponent } from '@/lib/grading/types';
 
 interface PresetBoundary {
   grade: string;
@@ -46,7 +56,9 @@ interface PaperDef {
   max_mark: number;
   weight: number;
   unit_group?: string;
-  paper_boundaries?: PresetBoundary[];
+  paper_number?: string;
+  variant?: string | null;
+  paper_boundaries?: GradeBoundary[];
 }
 
 interface CalcPreset {
@@ -62,32 +74,12 @@ interface CalcPreset {
   papers: PaperDef[];
   grade_boundaries: PresetBoundary[];
   is_modular?: boolean;
+  paper_number?: string;
+  variant?: string | null;
+  syllabus_code?: string;
 }
 
-// ── Interpolation helper for UMS (Edexcel IAL) ────────────────────────────────
-function computeUMS(rawScore: number, boundaries: PresetBoundary[]): { ums: number; grade: string } {
-  if (!boundaries || boundaries.length === 0) {
-    return { ums: Math.round(rawScore), grade: '—' };
-  }
-
-  const sorted = [...boundaries].sort((a, b) => b.min_mark - a.min_mark);
-
-  for (let i = 0; i < sorted.length; i++) {
-    const b = sorted[i];
-    if (rawScore >= b.min_mark) {
-      const umsMin = b.ums_min ?? 40;
-      const umsMax = b.ums_max ?? (umsMin + 9);
-      const minM = b.min_mark;
-      const maxM = b.max_mark ?? minM + 10;
-      const span = maxM - minM > 0 ? maxM - minM : 1;
-      const ratio = Math.min(1, Math.max(0, (rawScore - minM) / span));
-      const ums = Math.round(umsMin + ratio * (umsMax - umsMin));
-      return { ums: Math.min(100, Math.max(0, ums)), grade: b.grade };
-    }
-  }
-
-  return { ums: Math.max(0, Math.round(rawScore * 0.5)), grade: 'U' };
-}
+// UMS interpolation lives in lib/grading — GradeCalculator uses qualification plugins.
 
 export default function GradeCalculator() {
   const [curriculums, setCurriculums] = useState<any[]>([]);
@@ -101,28 +93,70 @@ export default function GradeCalculator() {
   const [selectedCurriculum, setSelectedCurriculum] = useState(searchParams.get('curriculum') || '');
   const [selectedSubject, setSelectedSubject] = useState(searchParams.get('subject') || '');
   const [selectedSeries, setSelectedSeries] = useState(searchParams.get('series') || '');
+  const [selectedTier, setSelectedTier] = useState<SubjectTier | ''>(
+    (searchParams.get('tier') as SubjectTier) || ''
+  );
+  const [selectedVariant, setSelectedVariant] = useState(searchParams.get('variant') || '');
   const [rawMarks, setRawMarks] = useState<Record<string, number | string>>({});
+  const [compositeBoundaries, setCompositeBoundaries] = useState<GradeBoundary[]>([]);
 
   useEffect(() => {
-    async function fetchData() {
+    async function fetchCatalog() {
       setLoading(true);
       try {
-        const [cData, sData, pData] = await Promise.all([
-          listCurriculums(),
-          listSubjects(),
-          listApprovedCalculatorPresets(),
-        ]);
+        const [cData, sData] = await Promise.all([listCurriculums(), listSubjects()]);
         setCurriculums(cData);
         setSubjects(sData);
-        setPresets(pData as CalcPreset[]);
       } catch (err) {
-        console.error('[GradeCalculator] load failed:', err);
+        console.error('[GradeCalculator] catalog load failed:', err);
       } finally {
         setLoading(false);
       }
     }
-    fetchData();
+    fetchCatalog();
   }, []);
+
+  useEffect(() => {
+    if (!selectedSubject) {
+      setPresets([]);
+      return;
+    }
+    let cancelled = false;
+    listApprovedCalculatorPresets(selectedSubject)
+      .then((pData) => {
+        if (!cancelled) setPresets(pData as CalcPreset[]);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          console.error('[GradeCalculator] presets load failed:', err);
+          setPresets([]);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedSubject]);
+
+  const selectedCurriculumRow = useMemo(
+    () => curriculums.find((c) => c.id === selectedCurriculum),
+    [curriculums, selectedCurriculum]
+  );
+  const selectedSubjectRow = useMemo(
+    () => subjects.find((s) => s.id === selectedSubject),
+    [subjects, selectedSubject]
+  );
+  const plugin = useMemo(
+    () => getPluginForCurriculumCode(selectedCurriculumRow?.code),
+    [selectedCurriculumRow]
+  );
+  const showTier = plugin.hasTiers && syllabusHasTiers(selectedSubjectRow?.code);
+
+  useEffect(() => {
+    if (selectedSubject && !selectedCurriculum) {
+      const subj = subjects.find((s) => s.id === selectedSubject);
+      if (subj?.curriculum_id) setSelectedCurriculum(subj.curriculum_id);
+    }
+  }, [selectedSubject, selectedCurriculum, subjects]);
 
   const filteredSubjects = useMemo(() => {
     if (!selectedCurriculum) return subjects;
@@ -135,40 +169,80 @@ export default function GradeCalculator() {
     if (selectedSubject) list = list.filter((p) => p.subject_id === selectedSubject);
     if (selectedSeries) list = list.filter((p) => p.series === selectedSeries);
     return list;
-  }, [selectedCurriculum, selectedSubject, selectedSeries, presets]);
+  }, [presets, selectedCurriculum, selectedSubject, selectedSeries]);
+
+  const availableVariants = useMemo(
+    () => uniqueVariants(matchingPresets.map((p) => ({ variant: p.variant ?? p.papers[0]?.variant }))),
+    [matchingPresets]
+  );
+
+  useEffect(() => {
+    if (!selectedVariant && plugin.defaultVariant && availableVariants.includes(plugin.defaultVariant)) {
+      setSelectedVariant(plugin.defaultVariant);
+    } else if (!selectedVariant && availableVariants.length === 1) {
+      setSelectedVariant(availableVariants[0]);
+    }
+  }, [availableVariants, plugin.defaultVariant, selectedVariant]);
+
+  useEffect(() => {
+    if (showTier && !selectedTier) setSelectedTier('extended');
+  }, [showTier, selectedTier]);
 
   const activePreset = useMemo<CalcPreset | null>(() => {
     if (matchingPresets.length === 0) return null;
     const papers: PaperDef[] = [];
-    const paperKeys = new Set<string>();
-    const boundaries: PresetBoundary[] = [];
-    const boundaryKeys = new Set<string>();
     let isModular = false;
     let title = '';
     let subjectCode = '';
     let qualification = '';
     let examBoard = '';
+    let year: number | undefined;
 
     for (const p of matchingPresets) {
       if (p.is_modular || p.qualification === 'IAL') isModular = true;
       title = p.title || title;
-      subjectCode = p.subject_code || subjectCode;
+      subjectCode = p.subject_code || p.syllabus_code || subjectCode;
       qualification = p.qualification || qualification;
       examBoard = p.exam_board || examBoard;
-
+      year = p.year ?? year;
       for (const paper of p.papers) {
-        if (!paperKeys.has(paper.name)) {
-          paperKeys.add(paper.name);
-          papers.push(paper);
-        }
-      }
-      for (const b of p.grade_boundaries) {
-        if (!boundaryKeys.has(b.grade)) {
-          boundaryKeys.add(b.grade);
-          boundaries.push(b);
-        }
+        papers.push({
+          ...paper,
+          paper_number: paper.paper_number || p.paper_number,
+          variant: paper.variant ?? p.variant,
+        });
       }
     }
+
+    const asComponents: PaperComponent[] = papers.map((paper) => ({
+      name: paper.name,
+      paperNumber: paper.paper_number || paper.name,
+      variant: paper.variant,
+      maxMark: paper.max_mark,
+      title: paper.name,
+      boundaries: (paper.paper_boundaries ?? []) as GradeBoundary[],
+    }));
+
+    const filtered = plugin.paperSelectionRules(asComponents, {
+      tier: showTier ? (selectedTier || 'extended') : null,
+      variant: selectedVariant || plugin.defaultVariant,
+      syllabusCode: selectedSubjectRow?.code || subjectCode,
+    });
+
+    const selectedPapers: PaperDef[] = filtered.map((c) => {
+      const orig = papers.find(
+        (p) => (p.paper_number || p.name) === c.paperNumber && (p.variant ?? null) === (c.variant ?? null)
+      ) ?? papers.find((p) => p.name === c.name);
+      if (orig) return orig;
+      return {
+        name: c.name,
+        max_mark: c.maxMark,
+        weight: 100,
+        paper_number: c.paperNumber,
+        variant: c.variant ?? null,
+        paper_boundaries: c.boundaries,
+      };
+    });
 
     return {
       id: selectedSeries,
@@ -177,13 +251,41 @@ export default function GradeCalculator() {
       curriculum_id: selectedCurriculum,
       subject_id: selectedSubject,
       series: selectedSeries,
+      year,
       qualification,
       exam_board: examBoard,
-      papers,
-      grade_boundaries: boundaries,
+      papers: selectedPapers,
+      grade_boundaries: [],
       is_modular: isModular,
+      syllabus_code: subjectCode,
     };
-  }, [matchingPresets, selectedSeries, selectedCurriculum, selectedSubject]);
+  }, [
+    matchingPresets,
+    selectedSeries,
+    selectedCurriculum,
+    selectedSubject,
+    plugin,
+    showTier,
+    selectedTier,
+    selectedVariant,
+    selectedSubjectRow,
+  ]);
+
+  useEffect(() => {
+    if (!selectedSubject || !selectedSeries || !activePreset?.year) {
+      setCompositeBoundaries([]);
+      return;
+    }
+    const seriesName = selectedSeries.replace(/\s+\d{4}$/, '');
+    listSubjectCompositeBoundaries(selectedSubject, activePreset.year, seriesName, {
+      variant: selectedVariant || null,
+      tier: selectedTier || null,
+    }).then((rows) =>
+      setCompositeBoundaries(
+        rows.map((r) => ({ grade: r.grade, min_mark: r.min_mark, max_mark: r.max_mark }))
+      )
+    );
+  }, [selectedSubject, selectedSeries, activePreset?.year, selectedVariant, selectedTier]);
 
   const availableSeries = useMemo(() => {
     const set = new Set<string>();
@@ -197,7 +299,13 @@ export default function GradeCalculator() {
   }, [selectedCurriculum, selectedSubject, presets]);
 
   const isIAL = activePreset?.is_modular || activePreset?.qualification === 'IAL';
-  const canGoStep2 = !!(selectedCurriculum && selectedSubject && selectedSeries && activePreset);
+  const canGoStep2 = !!(
+    selectedCurriculum &&
+    selectedSubject &&
+    selectedSeries &&
+    activePreset &&
+    (!showTier || selectedTier)
+  );
 
   const handleMarkChange = (index: number, value: string) => {
     if (!activePreset) return;
@@ -218,136 +326,76 @@ export default function GradeCalculator() {
     setSelectedSeries('');
     setSelectedSubject('');
     setSelectedCurriculum('');
+    setSelectedTier('');
+    setSelectedVariant('');
     setCurrentStep(1);
   };
 
-  // ── Calculation logic ───────────────────────────────────────────────────────
+  const paperPlugin = useMemo(
+    () =>
+      getPluginForPaper({
+        examBoard: activePreset?.exam_board,
+        qualification: activePreset?.qualification,
+        curriculumCode: selectedCurriculumRow?.code,
+      }),
+    [activePreset, selectedCurriculumRow]
+  );
+
   const paperResults = useMemo(() => {
     if (!activePreset) return [];
     return activePreset.papers.map((p, i) => {
       const val = rawMarks[i];
       const filled = val !== '' && val !== undefined;
       const raw = filled ? Number(val) : 0;
-      const pct = filled && p.max_mark > 0 ? Math.round((raw / p.max_mark) * 100) : 0;
-
-      const perBoundaries = p.paper_boundaries && p.paper_boundaries.length > 0
+      const perBoundaries = (p.paper_boundaries && p.paper_boundaries.length > 0
         ? p.paper_boundaries
-        : activePreset.grade_boundaries;
-
-      let paperGrade = '—';
-      let paperUms: number | undefined = undefined;
-
-      if (filled) {
-        if (isIAL) {
-          const res = computeUMS(raw, perBoundaries);
-          paperUms = res.ums;
-          paperGrade = res.grade;
-        } else {
-          // Standard raw mark boundary check
-          const sorted = [...perBoundaries].sort((a, b) => b.min_mark - a.min_mark);
-          paperGrade = 'U';
-          for (const b of sorted) {
-            if (raw >= b.min_mark) {
-              paperGrade = b.grade;
-              break;
-            }
-          }
-        }
-      }
-
-      return { ...p, index: i, filled, raw, pct, perBoundaries, paperGrade, paperUms };
+        : []) as GradeBoundary[];
+      const result = filled
+        ? paperPlugin.gradeFromRawMark(raw, p.max_mark, perBoundaries)
+        : { grade: '—', percentage: 0, ums: undefined as number | undefined };
+      return {
+        ...p,
+        index: i,
+        filled,
+        raw,
+        pct: result.percentage,
+        perBoundaries,
+        paperGrade: filled ? result.grade : '—',
+        paperUms: result.ums,
+      };
     });
-  }, [activePreset, rawMarks, isIAL]);
+  }, [activePreset, rawMarks, paperPlugin]);
 
   const calc = useMemo(() => {
     if (!activePreset) {
-      return { totalRaw: 0, maxRaw: 0, totalUms: 0, percentage: 0, grade: '—', anyFilled: false };
+      return { totalRaw: 0, maxRaw: 0, totalUms: 0, percentage: 0, grade: '—', anyFilled: false, usedComposite: false };
     }
-
-    let totalRaw = 0;
-    let maxRaw = 0;
-    let totalUms = 0;
-    let anyFilled = false;
-
-    paperResults.forEach((pr) => {
-      maxRaw += pr.max_mark;
-      if (pr.filled) {
-        anyFilled = true;
-        totalRaw += pr.raw;
-        if (pr.paperUms !== undefined) {
-          totalUms += pr.paperUms;
-        }
-      }
-    });
-
-    const percentage = maxRaw > 0 ? Math.round((totalRaw / maxRaw) * 1000) / 10 : 0;
-    let overallGrade = '—';
-
-    if (anyFilled) {
-      if (isIAL) {
-        // IAL overall UMS thresholds
-        const avgUms = paperResults.filter((p) => p.filled).length > 0
-          ? totalUms / paperResults.filter((p) => p.filled).length
-          : 0;
-        if (avgUms >= 80) overallGrade = 'A';
-        else if (avgUms >= 70) overallGrade = 'B';
-        else if (avgUms >= 60) overallGrade = 'C';
-        else if (avgUms >= 50) overallGrade = 'D';
-        else if (avgUms >= 40) overallGrade = 'E';
-        else overallGrade = 'U';
-      } else {
-        // Raw mark boundaries check
-        const boundaries = [...activePreset.grade_boundaries].sort((a, b) => b.min_mark - a.min_mark);
-        if (boundaries.length > 0) {
-          overallGrade = 'U';
-          for (const b of boundaries) {
-            if (totalRaw >= b.min_mark) {
-              overallGrade = b.grade;
-              break;
-            }
-          }
-        } else {
-          if (percentage >= 80) overallGrade = 'A*';
-          else if (percentage >= 70) overallGrade = 'A';
-          else if (percentage >= 60) overallGrade = 'B';
-          else if (percentage >= 50) overallGrade = 'C';
-          else if (percentage >= 40) overallGrade = 'D';
-          else if (percentage >= 30) overallGrade = 'E';
-          else overallGrade = 'U';
-        }
-      }
+    const filled = paperResults.filter((pr) => pr.filled);
+    const anyFilled = filled.length > 0;
+    if (!anyFilled) {
+      return { totalRaw: 0, maxRaw: 0, totalUms: 0, percentage: 0, grade: '—', anyFilled: false, usedComposite: false };
     }
-
+    const composite = paperPlugin.compositeGrade(
+      filled.map((pr) => ({
+        name: pr.name,
+        paperNumber: pr.paper_number || pr.name,
+        variant: pr.variant,
+        maxMark: pr.max_mark,
+        boundaries: pr.perBoundaries,
+        rawMark: pr.raw,
+      })),
+      compositeBoundaries
+    );
     return {
-      totalRaw: Math.round(totalRaw * 10) / 10,
-      maxRaw,
-      totalUms,
-      percentage,
-      grade: overallGrade,
-      anyFilled,
+      totalRaw: Math.round(composite.totalRaw * 10) / 10,
+      maxRaw: composite.maxRaw,
+      totalUms: composite.totalUms ?? 0,
+      percentage: composite.percentage,
+      grade: composite.grade,
+      anyFilled: true,
+      usedComposite: composite.usedCompositeBoundaries,
     };
-  }, [activePreset, paperResults, isIAL]);
-
-  const getGradeColor = (grade: string) => {
-    switch (grade) {
-      case 'A*':
-      case '9':
-      case '8':
-        return 'text-emerald-500 bg-emerald-500/10 border-emerald-500/30';
-      case 'A':
-      case '7':
-        return 'text-sky-500 bg-sky-500/10 border-sky-500/30';
-      case 'B':
-      case '6':
-        return 'text-indigo-500 bg-indigo-500/10 border-indigo-500/30';
-      case 'C':
-      case '5':
-      case '4':
-        return 'text-amber-500 bg-amber-500/10 border-amber-500/30';
-      default:
-        return 'text-rose-500 bg-rose-500/10 border-rose-500/30';
-    }
-  };
+  }, [activePreset, paperResults, paperPlugin, compositeBoundaries]);
 
   return (
     <div className="rounded-3xl border border-border bg-background-card p-6 md:p-8 shadow-xs space-y-8 max-w-5xl mx-auto">
@@ -368,7 +416,7 @@ export default function GradeCalculator() {
 
         <div className="flex items-center gap-3">
           <Link
-            href="/past-papers"
+            href={selectedSubject ? `/past-papers?subject=${selectedSubject}` : '/past-papers'}
             className="flex items-center gap-1.5 rounded-2xl border border-border bg-background-secondary px-4 py-2.5 text-xs font-bold text-foreground hover:text-primary transition-colors"
           >
             <ExternalLink className="w-3.5 h-3.5" />
@@ -499,6 +547,53 @@ export default function GradeCalculator() {
                   No seeded past paper data found for this subject yet.
                 </p>
               )}
+            </div>
+          )}
+
+          {selectedSubject && showTier && (
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-foreground-secondary">
+                Paper Tier
+              </label>
+              <div className="flex gap-2">
+                {(['extended', 'core'] as const).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setSelectedTier(t)}
+                    className={cn(
+                      'px-4 py-2 rounded-xl text-xs font-bold border transition-colors capitalize',
+                      selectedTier === t
+                        ? 'bg-primary text-white border-primary'
+                        : 'bg-background-secondary border-border text-foreground-secondary hover:text-foreground'
+                    )}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[11px] text-foreground-muted">
+                Core uses Papers 1 &amp; 3 (max C). Extended uses Papers 2 &amp; 4 (max A*).
+              </p>
+            </div>
+          )}
+
+          {selectedSubject && availableVariants.length > 1 && (
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-foreground-secondary">
+                Paper Variant
+              </label>
+              <select
+                value={selectedVariant}
+                onChange={(e) => setSelectedVariant(e.target.value)}
+                className="w-full md:w-1/3 bg-background-secondary border border-border rounded-2xl py-3 px-4 text-xs font-bold text-foreground outline-none focus:border-primary transition-colors"
+              >
+                {availableVariants.map((v) => (
+                  <option key={v} value={v}>
+                    Variant {v}
+                  </option>
+                ))}
+              </select>
             </div>
           )}
 
@@ -696,7 +791,11 @@ export default function GradeCalculator() {
                 </div>
                 {calc.anyFilled && (
                   <span className="text-xs font-semibold text-foreground-muted">
-                    {isIAL ? 'Uniform Mark Scale Result' : 'Raw Threshold Result'}
+                    {isIAL
+                      ? 'Uniform Mark Scale Result'
+                      : calc.usedComposite
+                        ? 'Syllabus composite thresholds'
+                        : 'Percentage-band estimate (no composite thresholds seeded)'}
                   </span>
                 )}
               </div>
@@ -713,7 +812,7 @@ export default function GradeCalculator() {
               Back to Setup
             </button>
             <Link
-              href="/past-papers"
+              href={selectedSubject ? `/past-papers?subject=${selectedSubject}` : '/past-papers'}
               className="inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-xs font-bold text-white shadow-xs hover:bg-primary-hover transition-colors"
             >
               Go to Past Paper Tracker

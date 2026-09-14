@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DRIZZLE = ROOT / "drizzle-d1"
 SEEDS = ROOT / "seeds"
 
+# Append new 0007+ files here (see docs/seeds/README.md).
 SEED_ORDER = [
     "0001_exam_data_seed.sql",
     "0002_topics_CAIE_IGCSE_subjects.sql",
@@ -16,7 +17,12 @@ SEED_ORDER = [
     "0005_subjects_countdown_boards.sql",
     "0004_caie_igcse_grade_thresholds.sql",
     "0006_exams_w26_countdown.sql",
+    "0007_subjects_target_gaps.sql",
+    "0008_topics_edexcel_igcse.sql",
+    "0009_topics_edexcel_ial.sql",
 ]
+
+
 
 
 def split_sql(text: str) -> list[str]:

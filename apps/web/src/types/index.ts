@@ -605,19 +605,27 @@ export interface ExamCountdown {
   id: string;
   user_id: string;
   exam_id: string | null;
+  subject_id?: string | null;
+  /** DB column — preferred title */
+  title?: string | null;
+  /** Alias of title (legacy UI) */
   custom_title: string | null;
+  /** DB column — preferred date */
+  exam_date?: string | Date | null;
+  /** Alias of exam_date (legacy UI) */
   target_date: string | null;
+  exam_board?: string | null;
+  paper_name?: string | null;
+  target_grade?: string | null;
+  is_custom?: boolean;
+  is_pinned?: boolean;
+  is_mock?: boolean;
+  color_code?: string | null;
   priority_indicator: 'high' | 'medium' | 'low' | string | null;
   qualification_group?: string;
   created_at: string;
-  // ── Library System additions ──
-  /** User override for the exam date (even for 'fixed' type exams) */
   custom_date_override: string | null;
-  /** Token for link-sharing this countdown */
   share_token: string | null;
-  /** Whether this countdown was created from the library (has linked exam) or is fully custom */
-  is_custom: boolean;
-  /** Visibility control: 'private' (owner only), 'link' (share_token), 'public' (library) */
   visibility: 'private' | 'link' | 'public';
 }
 
@@ -631,8 +639,11 @@ export interface UserEnrollment {
   user_id: string;
   curriculum_id: string;
   subject_id: string;
-  /** FK to exams.id — the exam series the user is targeting */
   exam_id: string | null;
+  target_series?: string | null;
+  target_grade?: string | null;
+  tier?: string | null;
+  countdown_mode?: string | null;
   enrolled_at: string;
 }
 

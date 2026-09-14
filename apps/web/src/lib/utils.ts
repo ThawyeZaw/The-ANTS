@@ -184,6 +184,15 @@ export function humanizeAuthError(error?: string): string {
     return 'Too many attempts. Please wait a moment and try again.';
   }
   if (
+    msg.includes('row read limit') ||
+    msg.includes('free tier') ||
+    msg.includes('d1 quota') ||
+    msg.includes('internal server error') ||
+    msg.includes('failed query')
+  ) {
+    return 'The shared database is temporarily unavailable (Cloudflare D1 daily read limit). Use local API (`npm run dev:api:local`) and create an account on that local database, or wait until midnight UTC.';
+  }
+  if (
     msg.includes('network') ||
     msg.includes('fetch failed') ||
     msg.includes('timeout') ||

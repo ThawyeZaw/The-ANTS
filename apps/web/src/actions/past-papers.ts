@@ -8,18 +8,17 @@
 import {
   getDb,
   pastPapers,
-  paperGradeBoundaries,
   userPastPaperRecords,
   userEnrollments,
-  userCurriculums,
-  subjects,
   curriculums,
+  subjects,
   userXpLedger,
   userBadges,
   userStreaks,
   type ComponentMark,
 } from '@/lib/db';
 import { eq, and, desc, asc, inArray } from 'drizzle-orm';
+import { getPluginForPaper } from '@/lib/grading';
 
 export interface PastPaperFilter {
   subjectId?: string;
@@ -37,9 +36,24 @@ export async function getEnrolledSubjects(userId: string) {
     // 1. Fetch user enrollments
     const enrollments = await db.query.userEnrollments.findMany({
       where: eq(userEnrollments.user_id, userId),
+      columns: {
+        subject_id: true,
+        target_series: true,
+        target_grade: true,
+        tier: true,
+      },
       with: {
-        subject: true,
-        curriculum: true,
+        subject: {
+          columns: {
+            id: true,
+            name: true,
+            code: true,
+            curriculum_id: true,
+            icon_url: true,
+            color_code: true,
+          },
+        },
+        curriculum: { columns: { id: true, name: true, code: true } },
       },
     });
 
@@ -50,44 +64,16 @@ export async function getEnrolledSubjects(userId: string) {
           subjectMap.set(e.subject.id, {
             ...e.subject,
             curriculum: e.curriculum,
+            target_series: e.target_series,
+            target_grade: e.target_grade,
+            tier: e.tier,
           });
         }
       }
       return Array.from(subjectMap.values());
     }
 
-    // Fallback: If no explicit enrollments, check user_curriculums
-    const userCurrs = await db.query.userCurriculums.findMany({
-      where: eq(userCurriculums.user_id, userId),
-      with: {
-        curriculum: {
-          with: {
-            subjects: true,
-          },
-        },
-      },
-    });
-
-    if (userCurrs.length > 0) {
-      const subjs: any[] = [];
-      for (const uc of userCurrs) {
-        if (uc.curriculum?.subjects) {
-          for (const s of uc.curriculum.subjects) {
-            subjs.push({ ...s, curriculum: uc.curriculum });
-          }
-        }
-      }
-      if (subjs.length > 0) return subjs;
-    }
-
-    // Fallback 2: Return all subjects so new students can immediately interact
-    const all = await db.query.subjects.findMany({
-      with: {
-        curriculum: true,
-      },
-      orderBy: [asc(subjects.name)],
-    });
-    return all;
+    return [];
   } catch (error) {
     console.error('[past-papers] getEnrolledSubjects error:', error);
     return [];
@@ -99,8 +85,19 @@ export async function getAllCurriculumsWithSubjects() {
   try {
     const db = getDb();
     return await db.query.curriculums.findMany({
+      columns: { id: true, name: true, code: true, icon_url: true },
       with: {
-        subjects: true,
+        subjects: {
+          columns: {
+            id: true,
+            name: true,
+            code: true,
+            curriculum_id: true,
+            description: true,
+            color_code: true,
+          },
+          orderBy: [asc(subjects.name)],
+        },
       },
       orderBy: [asc(curriculums.name)],
     });
@@ -110,50 +107,31 @@ export async function getAllCurriculumsWithSubjects() {
   }
 }
 
-/** Enroll user in a subject */
-export async function enrollInSubject(userId: string, curriculumId: string, subjectId: string) {
-  try {
-    const db = getDb();
+import { enrollInSubject as enrollInSubjectAction } from '@/actions/curriculum';
 
-    // Ensure userCurriculums record exists
-    const existingCurr = await db.query.userCurriculums.findFirst({
-      where: and(
-        eq(userCurriculums.user_id, userId),
-        eq(userCurriculums.curriculum_id, curriculumId)
-      ),
-    });
-    if (!existingCurr) {
-      await db.insert(userCurriculums).values({
-        user_id: userId,
-        curriculum_id: curriculumId,
-      });
-    }
-
-    // Ensure userEnrollments record exists
-    const existingEnroll = await db.query.userEnrollments.findFirst({
-      where: and(
-        eq(userEnrollments.user_id, userId),
-        eq(userEnrollments.subject_id, subjectId)
-      ),
-    });
-    if (!existingEnroll) {
-      await db.insert(userEnrollments).values({
-        user_id: userId,
-        curriculum_id: curriculumId,
-        subject_id: subjectId,
-      });
-    }
-
-    return { success: true };
-  } catch (error: any) {
-    console.error('[past-papers] enrollInSubject error:', error);
-    return { success: false, error: error.message };
-  }
+/** Enroll user in a subject (shared with curriculum hub — auto-syncs countdown). */
+export async function enrollInSubject(
+  userId: string,
+  curriculumId: string,
+  subjectId: string,
+  options?: Parameters<typeof enrollInSubjectAction>[3]
+) {
+  return enrollInSubjectAction(userId, curriculumId, subjectId, options);
 }
 
-/** List past papers with optional filters */
+/** List past papers. Requires at least one filter so the full table is never scanned. */
 export async function listPastPapers(filters: PastPaperFilter = {}) {
   try {
+    if (
+      !filters.subjectId &&
+      !filters.examBoard &&
+      !filters.qualification &&
+      !filters.year &&
+      !filters.series
+    ) {
+      return [];
+    }
+
     const db = getDb();
     const conditions = [];
 
@@ -196,22 +174,38 @@ export async function listPastPapers(filters: PastPaperFilter = {}) {
 export async function getUserPastPaperRecords(userId: string, subjectId?: string) {
   try {
     const db = getDb();
-    const userRecords = await db.query.userPastPaperRecords.findMany({
-      where: eq(userPastPaperRecords.user_id, userId),
+    const paperIds = subjectId
+      ? (
+          await db
+            .select({ id: pastPapers.id })
+            .from(pastPapers)
+            .where(eq(pastPapers.subject_id, subjectId))
+        ).map((p) => p.id)
+      : null;
+    if (subjectId && paperIds && paperIds.length === 0) return [];
+
+    return await db.query.userPastPaperRecords.findMany({
+      where: and(
+        eq(userPastPaperRecords.user_id, userId),
+        paperIds ? inArray(userPastPaperRecords.past_paper_id, paperIds) : undefined
+      ),
+      columns: {
+        id: true,
+        past_paper_id: true,
+        status: true,
+        component_marks: true,
+        raw_score: true,
+        max_score: true,
+        percentage: true,
+        calculated_grade: true,
+        calculated_ums: true,
+        notes: true,
+      },
       with: {
-        pastPaper: {
-          with: {
-            gradeBoundaries: true,
-          },
-        },
+        pastPaper: { columns: { id: true, subject_id: true } },
       },
       orderBy: [desc(userPastPaperRecords.updated_at)],
     });
-
-    if (subjectId) {
-      return userRecords.filter((r) => r.pastPaper?.subject_id === subjectId);
-    }
-    return userRecords;
   } catch (error) {
     console.error('[past-papers] getUserPastPaperRecords error:', error);
     return [];
@@ -245,6 +239,35 @@ export async function upsertPastPaperRecord(input: UpsertPastPaperRecordInput) {
     });
 
     let isNewlyCompleted = false;
+    let calculatedGrade = input.calculatedGrade;
+    let calculatedUms = input.calculatedUms;
+    let percentage = input.percentage;
+
+    if (input.rawScore !== undefined && input.maxScore !== undefined && input.maxScore > 0) {
+      if (percentage === undefined) {
+        percentage = Math.round((input.rawScore / input.maxScore) * 1000) / 10;
+      }
+      if (calculatedGrade === undefined) {
+        const paper = await db.query.pastPapers.findFirst({
+          where: eq(pastPapers.id, input.pastPaperId),
+          with: { gradeBoundaries: true, curriculum: true },
+        });
+        if (paper) {
+          const plugin = getPluginForPaper({
+            examBoard: paper.exam_board,
+            qualification: paper.qualification,
+            curriculumCode: paper.curriculum?.code,
+          });
+          const result = plugin.gradeFromRawMark(
+            input.rawScore,
+            input.maxScore,
+            paper.gradeBoundaries ?? []
+          );
+          calculatedGrade = result.grade;
+          calculatedUms = result.ums;
+        }
+      }
+    }
     if (input.status === 'done' && (!existing || existing.status !== 'done')) {
       isNewlyCompleted = true;
     }
@@ -257,9 +280,9 @@ export async function upsertPastPaperRecord(input: UpsertPastPaperRecordInput) {
           component_marks: input.componentMarks ?? existing.component_marks,
           raw_score: input.rawScore !== undefined ? input.rawScore : existing.raw_score,
           max_score: input.maxScore !== undefined ? input.maxScore : existing.max_score,
-          percentage: input.percentage !== undefined ? input.percentage : existing.percentage,
-          calculated_grade: input.calculatedGrade ?? existing.calculated_grade,
-          calculated_ums: input.calculatedUms ?? existing.calculated_ums,
+          percentage: percentage !== undefined ? percentage : existing.percentage,
+          calculated_grade: calculatedGrade ?? existing.calculated_grade,
+          calculated_ums: calculatedUms ?? existing.calculated_ums,
           notes: input.notes !== undefined ? input.notes : existing.notes,
           completed_at: input.status === 'done' ? existing.completed_at || now : null,
           updated_at: now,
@@ -273,9 +296,9 @@ export async function upsertPastPaperRecord(input: UpsertPastPaperRecordInput) {
         component_marks: input.componentMarks ?? [],
         raw_score: input.rawScore,
         max_score: input.maxScore,
-        percentage: input.percentage,
-        calculated_grade: input.calculatedGrade,
-        calculated_ums: input.calculatedUms,
+        percentage,
+        calculated_grade: calculatedGrade,
+        calculated_ums: calculatedUms,
         notes: input.notes,
         completed_at: input.status === 'done' ? now : null,
         created_at: now,
@@ -370,7 +393,7 @@ export async function upsertPastPaperRecord(input: UpsertPastPaperRecordInput) {
       }
     }
 
-    return { success: true };
+    return { success: true, calculatedGrade, calculatedUms, percentage };
   } catch (error: any) {
     console.error('[past-papers] upsertPastPaperRecord error:', error);
     return { success: false, error: error.message };

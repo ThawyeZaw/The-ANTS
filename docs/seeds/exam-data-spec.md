@@ -1,5 +1,7 @@
 # The ANTS — Exam Data & Past Paper SQL Seed Specification
 
+> **Start here for coverage + apply commands:** [`README.md`](./README.md)
+>
 > **Target Database:** Cloudflare D1 (SQLite)  
 > **Supported Exam Boards & Curriculums:**
 > 1. **CAIE IGCSE** (Cambridge Assessment International Education)
@@ -101,6 +103,24 @@ CREATE TABLE exams (
 );
 ```
 
+### 1.6 `subject_grade_boundaries` Table (syllabus composite)
+Cambridge publishes **overall** subject thresholds (sum of components) separately from per-paper rows. The grade calculator uses these for predicted overall grade. If no rows exist for a series, the UI falls back to percentage bands and labels the result as an estimate.
+
+```sql
+CREATE TABLE subject_grade_boundaries (
+  id TEXT PRIMARY KEY,
+  subject_id TEXT NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
+  year INTEGER NOT NULL,           -- e.g. 2023
+  series TEXT NOT NULL,            -- 'May/June' | 'Oct/Nov' | 'Feb/March'
+  variant TEXT,                    -- '1' | '2' | '3' or NULL
+  tier TEXT,                       -- 'core' | 'extended' | NULL
+  grade TEXT NOT NULL,             -- 'A*', 'A', …
+  min_mark INTEGER NOT NULL,       -- minimum TOTAL raw mark across components
+  max_mark INTEGER,
+  created_at INTEGER
+);
+```
+
 ---
 
 ## 2. Seed Data Template (Example SQL)
@@ -187,27 +207,64 @@ INSERT OR IGNORE INTO paper_grade_boundaries (id, past_paper_id, grade, min_mark
 
 ## 3. Copy-Paste Prompt Template for External AI Chatbots
 
-Copy and paste the prompt below into Claude / ChatGPT / Gemini to generate full seed files for any syllabus or exam series:
+Upload the official grade-threshold PDF(s) together with this prompt. Do **not** invent composite totals if the PDF only lists per-component thresholds.
 
 ```text
-I need a SQL seed script for Cloudflare D1 (SQLite) for academic exam past papers and grade boundaries.
+I need a SQL seed script for Cloudflare D1 (SQLite) from the attached official grade threshold PDF(s).
 
-Here is the exact schema and conventions:
-- Table past_papers:
-  (id TEXT PRIMARY KEY, exam_board TEXT, qualification TEXT, subject TEXT, syllabus_code TEXT, subject_id TEXT, curriculum_id TEXT, year INTEGER, series TEXT, paper_number TEXT, variant TEXT, title TEXT, total_marks INTEGER, duration_minutes INTEGER, created_at INTEGER)
-- Table paper_grade_boundaries:
-  (id TEXT PRIMARY KEY, past_paper_id TEXT, grade TEXT, min_mark INTEGER, max_mark INTEGER, ums_min INTEGER, ums_max INTEGER, created_at INTEGER)
+Schemas:
+- past_papers (
+    id TEXT PRIMARY KEY, exam_board TEXT, qualification TEXT, subject TEXT,
+    syllabus_code TEXT, subject_id TEXT, curriculum_id TEXT, year INTEGER,
+    series TEXT, paper_number TEXT, variant TEXT, title TEXT,
+    total_marks INTEGER, duration_minutes INTEGER, created_at INTEGER
+  )
+- paper_grade_boundaries (
+    id TEXT PRIMARY KEY, past_paper_id TEXT, grade TEXT, min_mark INTEGER,
+    max_mark INTEGER, ums_min INTEGER, ums_max INTEGER, created_at INTEGER
+  )
+- subject_grade_boundaries (
+    id TEXT PRIMARY KEY, subject_id TEXT, year INTEGER, series TEXT,
+    variant TEXT, tier TEXT, grade TEXT, min_mark INTEGER, max_mark INTEGER,
+    created_at INTEGER
+  )
 
-Requirements:
-1. Target Curriculum: [SPECIFY HERE, e.g., CAIE IGCSE Physics 0625 OR Edexcel IAL Chemistry]
-2. Years to generate: [SPECIFY YEARS, e.g., 2021 to 2024]
-3. Series: [e.g., May/June and Oct/Nov]
-4. For each series, include standard papers (e.g. Paper 2, Paper 4, Paper 6 for CAIE sciences).
-5. For each paper, insert official or accurate grade boundaries for grades:
-   - For IGCSE/CAIE: A*, A, B, C, D, E, U with min_mark and max_mark. (ums_min and ums_max must be NULL).
-   - For Edexcel IAL: A, B, C, D, E, U with raw min_mark and corresponding standard UMS bands (80, 70, 60, 50, 40, 0).
-6. Use deterministic ID formats:
-   - past_paper id: 'pp-[syllabus_code]-[series_code][year]-[paper_number][variant]' (e.g. 'pp-0625-s23-qp-42')
-   - boundary id: 'gb-[syllabus_code]-[series_code][year]-[paper_number][variant]-[grade]' (e.g. 'gb-0625-s23-42-Astar')
-7. Output pure executable SQL INSERT OR IGNORE statements with no markdown explanations.
+Conventions:
+1. Target curriculum: [CAIE IGCSE / CAIE A Level / Edexcel IGCSE / Edexcel IAL]
+2. Map syllabus codes to existing subjects.id, e.g.:
+   0580 → subj-caie-igcse-maths / curr-caie-igcse
+   0620 → subj-caie-igcse-chem / curr-caie-igcse
+   (use the in-repo seed list if unsure)
+3. series values MUST be exactly: 'May/June' | 'Oct/Nov' | 'Feb/March' | 'Jan'
+4. paper_number is the component number only ('1','2','4'), NOT '12'. variant is the zone ('1','2','3').
+5. CAIE / Edexcel IGCSE: ums_min and ums_max NULL. Edexcel IAL: fill UMS columns.
+6. If the PDF has an overall / combination table (e.g. Option BX, Papers 2+4), insert subject_grade_boundaries with tier 'core' or 'extended' and min_mark as the TOTAL raw threshold.
+7. Deterministic IDs:
+   - past paper: pp-{syllabus}-{s|w|m}{yy}-qp-{paper}{variant}  e.g. pp-0580-s23-qp-22
+   - paper boundary: gb-{syllabus}-{s|w|m}{yy}-{paper}{variant}-{grade}  (A* → Astar)
+   - composite: sgb-{syllabus}-{s|w|m}{yy}-{tier}-{variant}-{grade}
+8. INSERT OR IGNORE only. No duplicate (syllabus, year, series, paper, variant) rows.
+9. created_at: strftime('%s', 'now') * 1000
+10. Output executable SQL only — no markdown fences, no commentary.
 ```
+
+### Apply generated SQL
+
+Save as `packages/db/seeds/0007_…sql` or later (**0004 is already used**). Commands: [`README.md`](./README.md).
+
+In-repo CAIE IGCSE PDF parser: `packages/db/seeds/_gen_grade_thresholds.py` (writes `0004_…` today — point `OUT` at a new filename for extra years/codes).
+
+`subject_grade_boundaries` (overall / combination totals) are **not** in 0004 yet. Seed those separately if the PDF has an Option / Papers 2+4 table.
+
+### Other curriculums
+
+Reuse this spec. Differences:
+| Board | Grading plugin | Countdown mode | Notes |
+|---|---|---|---|
+| CAIE IGCSE | raw A*–G, Core/Extended, composite | per subject | Primary; fix calculator logic before expanding codes |
+| CAIE A Level | raw A*–E | per subject | Same tables; AS vs A2 papers |
+| Edexcel IGCSE | 9–1 raw | per subject | No UMS |
+| Edexcel IAL | UMS + cash-in | per paper | Fill ums_min / ums_max |
+
+Do not add new syllabus codes until Core/Extended + variant + composite logic is verified against a known series (e.g. 0580 May/June).
+

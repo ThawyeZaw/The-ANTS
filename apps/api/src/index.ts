@@ -119,6 +119,23 @@ const rateLimiter = (limit: number, windowMs: number) => {
   };
 };
 
+const D1_QUOTA_MESSAGE =
+  'Cloudflare D1 daily read limit reached. Restart the API with `npm run dev:api:local` and create an account on the local database, or wait until midnight UTC.';
+
+function isD1QuotaError(err: unknown): boolean {
+  const text = err instanceof Error ? `${err.message} ${err.cause ?? ''}` : String(err);
+  return /row read limit|free tier daily|D1's free tier/i.test(text);
+}
+
+async function rewriteAuthDbFailure(res: Response): Promise<Response> {
+  if (res.status < 500) return res;
+  const body = await res.clone().text();
+  if (/row read limit|free tier daily|D1's free tier|D1_ERROR/i.test(body)) {
+    return Response.json({ error: D1_QUOTA_MESSAGE }, { status: 503 });
+  }
+  return res;
+}
+
 // Health Check
 app.get('/health', (c) => {
   return c.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -138,9 +155,12 @@ app.all('/api/auth/*', async (c) => {
       c.env?.BETTER_AUTH_URL
     );
     const res = await auth.handler(c.req.raw);
-    return res;
+    return await rewriteAuthDbFailure(res);
   } catch (err: any) {
     console.error('[API Auth] Handler error:', err);
+    if (isD1QuotaError(err)) {
+      return c.json({ error: D1_QUOTA_MESSAGE }, 503);
+    }
     if (isTransientD1Error(err)) {
       return c.json(
         { error: 'Database connection dropped. Please try signing in again.' },
@@ -161,9 +181,12 @@ app.all('/api/auth', async (c) => {
       c.env?.BETTER_AUTH_URL
     );
     const res = await auth.handler(c.req.raw);
-    return res;
+    return await rewriteAuthDbFailure(res);
   } catch (err: any) {
     console.error('[API Auth] Handler error:', err);
+    if (isD1QuotaError(err)) {
+      return c.json({ error: D1_QUOTA_MESSAGE }, 503);
+    }
     if (isTransientD1Error(err)) {
       return c.json(
         { error: 'Database connection dropped. Please try signing in again.' },

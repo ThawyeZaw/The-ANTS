@@ -54,23 +54,32 @@ export function useCountdown(userId: string | undefined) {
       try {
         const [cdRes, exRes] = await Promise.all([
           fetch(`${API_BASE_URL}/api/exams/countdowns?userId=${encodeURIComponent(userId)}`),
-          fetch(`${API_BASE_URL}/api/exams`),
+          fetch(`${API_BASE_URL}/api/exams`), // upcoming catalog (default)
         ]);
 
-        if (cdRes.ok && exRes.ok) {
-          const [cdJson, exJson] = await Promise.all([cdRes.json(), exRes.json()]);
+        if (cdRes.ok) {
+          const cdJson = await cdRes.json();
           if (cdJson.success && cdJson.countdowns) {
             setCountdowns(
               (cdJson.countdowns as any[]).map((c) => ({
                 ...c,
+                custom_title: c.custom_title ?? c.title ?? null,
                 target_date: c.exam_date || c.target_date,
                 timeLeft: calculateTimeLeft(c.exam_date || c.target_date),
               }))
             );
           }
+        } else {
+          console.error('Error loading countdowns:', cdRes.status, await cdRes.text().catch(() => ''));
+        }
+
+        if (exRes.ok) {
+          const exJson = await exRes.json();
           if (exJson.success && exJson.exams) {
             setAvailableExams(exJson.exams as unknown as Exam[]);
           }
+        } else {
+          console.error('Error loading exams:', exRes.status, await exRes.text().catch(() => ''));
         }
       } catch (err) {
         console.error('Error loading countdowns:', err);
@@ -103,18 +112,25 @@ export function useCountdown(userId: string | undefined) {
       target_date?: string;
       priority_indicator?: string;
       qualification_group?: string;
+      subject_id?: string;
+      exam_board?: string;
     }) => {
       if (!userId) return;
 
       let title = data.custom_title;
       let target = data.target_date;
       let group = data.qualification_group;
+      let subjectId = data.subject_id;
+      let examBoard = data.exam_board;
 
       if (data.exam_id) {
         const exam = availableExams.find((e) => e.id === data.exam_id) as any;
         if (exam) {
-          title = title || exam.title || exam.subject || '';
+          title = title || exam.title || exam.subject_name || exam.subject || '';
           target = target || exam.exam_date || exam.date || '';
+          subjectId = subjectId || exam.subject_id || undefined;
+          examBoard = examBoard || exam.exam_board || undefined;
+          group = group || exam.exam_board || exam.qualification || 'Official';
         }
       }
 
@@ -128,6 +144,10 @@ export function useCountdown(userId: string | undefined) {
             title: title || 'Upcoming Exam',
             examDate: target || new Date(Date.now() + 30 * 86400000).toISOString(),
             colorCode: '#EF4444',
+            isCustom: !data.exam_id,
+            isPinned: Boolean(data.exam_id),
+            subjectId,
+            examBoard,
           }),
         });
 

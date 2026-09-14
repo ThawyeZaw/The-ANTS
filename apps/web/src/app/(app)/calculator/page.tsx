@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import GradeCalculator from '@/components/exam-data/GradeCalculator';
 import BackButton from '@/components/ui/BackButton';
 
@@ -21,7 +21,9 @@ export default function CalculatorPage() {
         <div className="mb-6">
           <BackButton href="/dashboard" label="Back to Dashboard" />
         </div>
-        <GradeCalculator />
+        <Suspense fallback={<div className="h-64 animate-pulse rounded-3xl border border-border bg-background-card" />}>
+          <GradeCalculator />
+        </Suspense>
       </div>
     </div>
   );

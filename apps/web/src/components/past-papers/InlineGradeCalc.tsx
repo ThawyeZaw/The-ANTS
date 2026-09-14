@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ComponentMark } from '@/lib/db';
+import { getGradeColor, getPluginForPaper } from '@/lib/grading';
 
 export interface BoundaryItem {
   id: string;
@@ -64,6 +65,10 @@ export function InlineGradeCalc({
   onClose,
   onSave,
 }: InlineGradeCalcProps) {
+  const plugin = getPluginForPaper({
+    examBoard: paper.exam_board,
+    qualification: paper.qualification,
+  });
   const isIAL = paper.qualification === 'IAL';
   const defaultMaxMark = paper.total_marks || 100;
 
@@ -82,61 +87,15 @@ export function InlineGradeCalc({
 
   // Grade calculation
   const calculationResult = useMemo(() => {
-    const boundaries = [...(paper.gradeBoundaries || [])].sort(
-      (a, b) => b.min_mark - a.min_mark
-    );
-
-    if (boundaries.length === 0) {
-      // Fallback standard percentages if boundaries not yet seeded
-      let fallbackGrade = 'U';
-      if (percentage >= 80) fallbackGrade = 'A*';
-      else if (percentage >= 70) fallbackGrade = 'A';
-      else if (percentage >= 60) fallbackGrade = 'B';
-      else if (percentage >= 50) fallbackGrade = 'C';
-      else if (percentage >= 40) fallbackGrade = 'D';
-      else if (percentage >= 30) fallbackGrade = 'E';
-
-      return {
-        grade: fallbackGrade,
-        ums: isIAL ? Math.min(100, Math.round(percentage)) : undefined,
-        boundaryMatched: null,
-      };
-    }
-
-    // Match against official boundaries
-    let matchedGrade = 'U';
-    let matchedBoundary: BoundaryItem | null = null;
-
-    for (const b of boundaries) {
-      if (rawScore >= b.min_mark) {
-        matchedGrade = b.grade;
-        matchedBoundary = b;
-        break;
-      }
-    }
-
-    // UMS interpolation for Edexcel IAL
-    let calculatedUms: number | undefined = undefined;
-    if (isIAL) {
-      if (matchedBoundary && matchedBoundary.ums_min !== null && matchedBoundary.ums_min !== undefined) {
-        const umsMin = matchedBoundary.ums_min;
-        const umsMax = matchedBoundary.ums_max ?? (umsMin + 9);
-        const minM = matchedBoundary.min_mark;
-        const maxM = matchedBoundary.max_mark ?? minM + 10;
-        const span = maxM - minM > 0 ? maxM - minM : 1;
-        const ratio = Math.min(1, Math.max(0, (rawScore - minM) / span));
-        calculatedUms = Math.round(umsMin + ratio * (umsMax - umsMin));
-      } else {
-        calculatedUms = Math.min(100, Math.round(percentage));
-      }
-    }
-
+    const result = plugin.gradeFromRawMark(rawScore, defaultMaxMark, paper.gradeBoundaries || []);
+    const boundaries = [...(paper.gradeBoundaries || [])].sort((a, b) => b.min_mark - a.min_mark);
+    const matched = boundaries.find((b) => b.grade === result.grade) ?? null;
     return {
-      grade: matchedGrade,
-      ums: calculatedUms,
-      boundaryMatched: matchedBoundary,
+      grade: result.grade,
+      ums: result.ums,
+      boundaryMatched: matched,
     };
-  }, [rawScore, defaultMaxMark, paper.gradeBoundaries, isIAL, percentage]);
+  }, [rawScore, defaultMaxMark, paper.gradeBoundaries, plugin]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -164,27 +123,6 @@ export function InlineGradeCalc({
       console.error('Failed to save paper marks:', err);
     } finally {
       setIsSaving(false);
-    }
-  };
-
-  const getGradeColor = (grade: string) => {
-    switch (grade) {
-      case 'A*':
-      case '9':
-      case '8':
-        return 'text-emerald-500 bg-emerald-500/10 border-emerald-500/30';
-      case 'A':
-      case '7':
-        return 'text-sky-500 bg-sky-500/10 border-sky-500/30';
-      case 'B':
-      case '6':
-        return 'text-indigo-500 bg-indigo-500/10 border-indigo-500/30';
-      case 'C':
-      case '5':
-      case '4':
-        return 'text-amber-500 bg-amber-500/10 border-amber-500/30';
-      default:
-        return 'text-rose-500 bg-rose-500/10 border-rose-500/30';
     }
   };
 
