@@ -440,7 +440,7 @@ export default function NavBar() {
             active={isHomeActive(pathname)}
           />
           <RailIconLink href="/curriculum" label="Curriculum" icon={GraduationCap} active={isCurriculumActive(pathname)} />
-          <RailIconLink href="/timetable" label="Tools" icon={Wrench} active={isToolsActive(pathname)} />
+          <RailIconLink href="/timetable" label="Study Tools" icon={Wrench} active={isToolsActive(pathname)} />
           <RailIconLink href="/team" label="Tutors & Contributors" icon={Users} active={isTeamActive(pathname)} />
           {mounted && hasStaffRole && (
             <RailIconLink href="/editor" label="Workspace Tools" icon={Sparkles} active={pathname.startsWith('/editor') || pathname.startsWith('/main-contributor') || pathname.startsWith('/org-activities')} />
@@ -491,7 +491,7 @@ export default function NavBar() {
 
           <div>
             <SectionLabel
-              title="Tools"
+              title="Study Tools"
               icon={Wrench}
               open={openSection === 'tools'}
               active={isToolsActive(pathname)}
@@ -635,7 +635,7 @@ export default function NavBar() {
             aria-modal="true"
             aria-label={
               openPanel === 'tools'
-                  ? 'Tools'
+                  ? 'Study Tools'
                   : openPanel === 'team'
                     ? 'Tutors & Contributors'
                     : 'Account'
@@ -649,7 +649,7 @@ export default function NavBar() {
             {openPanel === 'tools' && (
               <div className="px-2 pb-3">
                 <p className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-foreground-muted">
-                  Tools
+                  Study Tools
                 </p>
                 <div className="space-y-0.5">{renderSectionLinks(TOOLS_LINKS)}</div>
               </div>
@@ -699,7 +699,7 @@ export default function NavBar() {
               href="/curriculum"
             />
             <MobileTab
-              label="Tools"
+              label="Study Tools"
               icon={Wrench}
               active={isToolsActive(pathname) || openPanel === 'tools'}
               onClick={() => togglePanel('tools')}

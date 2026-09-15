@@ -48,6 +48,7 @@ export const profiles = sqliteTable('profiles', {
   preferred_name: text('preferred_name'),
   institution_name: text('institution_name'),
   telegram_chat_id: text('telegram_chat_id'),
+  telegram_handle: text('telegram_handle'),
   notification_preferences: jsonText<Record<string, unknown>>('notification_preferences'),
   founder_type: text('founder_type'),
   academic_grades: jsonText<Record<string, unknown>[]>('academic_grades'),
@@ -69,23 +70,7 @@ export const studentProfiles = sqliteTable('student_profiles', {
   study_goals_metadata: jsonText<z.infer<typeof StudyGoalsMetadataSchema>>('study_goals_metadata'),
 });
 
-export const tutorProfiles = sqliteTable('tutor_profiles', {
-  id: textId('id')
-    .primaryKey()
-    .references(() => profiles.id, { onDelete: 'cascade' }),
-  institution: text('institution'),
-  department: text('department'),
-  specialization: text('specialization'),
-  telegram_handle: text('telegram_handle'),
-  hourly_rate: text('hourly_rate'),
-  teaching_curriculums: jsonText<string[]>('teaching_curriculums'),
-  teaching_subjects: jsonText<string[]>('teaching_subjects'),
-  availability_slots: jsonText<Record<string, unknown>>('availability_slots'),
-  is_active: bool('is_active', true),
-  verified: bool('verified', false),
-});
 
-export const teacherProfiles = tutorProfiles;
 
 export const contributorProfiles = sqliteTable('contributor_profiles', {
   id: textId('id')

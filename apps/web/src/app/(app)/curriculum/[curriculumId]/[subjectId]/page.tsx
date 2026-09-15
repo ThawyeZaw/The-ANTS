@@ -59,12 +59,12 @@ export default function SubjectDetailPage() {
     router.replace(`/curriculum/${curriculumId}/${subjectId}?${p.toString()}`);
   };
 
-  // Load subject metadata & topics
-  const loadSubjectData = useCallback(async () => {
+  // Load subject metadata & topics (initial mount only)
+  const loadSubjectData = useCallback(async (showLoader = true) => {
     if (!user || !curriculumId || !subjectId) return;
 
     try {
-      setLoadingTopics(true);
+      if (showLoader) setLoadingTopics(true);
       const [allSubjects, topicList] = await Promise.all([
         getSubjectsByCurriculum(curriculumId, user.id),
         getSubjectTopicsWithProgress(subjectId, user.id),
@@ -74,29 +74,29 @@ export default function SubjectDetailPage() {
       setSubject(found ?? null);
       setTopics(topicList);
     } finally {
-      setLoadingTopics(false);
+      if (showLoader) setLoadingTopics(false);
     }
   }, [user, curriculumId, subjectId]);
 
   useEffect(() => {
-    loadSubjectData();
+    loadSubjectData(true);
   }, [loadSubjectData]);
 
-  // Load paper grid when tab = papers
-  const loadPapers = useCallback(async () => {
+  // Load paper grid when tab = papers (initial tab switch only)
+  const loadPapers = useCallback(async (showLoader = true) => {
     if (!user || !subjectId) return;
-    setLoadingPapers(true);
+    if (showLoader) setLoadingPapers(true);
     try {
       const data = await getPaperGridData(user.id, subjectId);
       setPaperGridData(data);
     } finally {
-      setLoadingPapers(false);
+      if (showLoader) setLoadingPapers(false);
     }
   }, [user, subjectId]);
 
   useEffect(() => {
-    if (activeTab === 'papers') loadPapers();
-  }, [activeTab, loadPapers]);
+    if (activeTab === 'papers' && !paperGridData) loadPapers(true);
+  }, [activeTab, loadPapers, paperGridData]);
 
   const color = subject?.color_code ?? '#6366f1';
   const curriculumLabel = CURRICULUM_LABELS[curriculumId] ?? 'Curriculum';
@@ -208,7 +208,10 @@ export default function SubjectDetailPage() {
                 subjectId={subjectId}
                 userId={user?.id ?? ''}
                 initialTopics={topics}
-                onTopicChange={loadSubjectData}
+                onTopicChange={() => {
+                  // TopicTracker already manages topic status optimistically.
+                  // Background sync happens silently with zero screen reload.
+                }}
               />
             )}
           </div>
@@ -224,7 +227,10 @@ export default function SubjectDetailPage() {
               <PaperGrid
                 userId={user?.id ?? ''}
                 data={paperGridData}
-                onRecordChange={loadPapers}
+                onRecordChange={() => {
+                  // PaperGrid manages cell score and status optimistically.
+                  // Background sync happens silently with zero screen reload.
+                }}
               />
             ) : null}
           </div>

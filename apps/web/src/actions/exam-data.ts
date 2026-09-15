@@ -20,7 +20,31 @@ function asTitle<T extends { name: string; id: string }>(row: T) {
   return { ...row, title: row.name };
 }
 
+interface CacheEntry<T> {
+  data: T;
+  expiresAt: number;
+}
+const catalogMemoryCache = new Map<string, CacheEntry<any>>();
+
+function getFromCache<T>(key: string): T | null {
+  const entry = catalogMemoryCache.get(key);
+  if (!entry) return null;
+  if (Date.now() > entry.expiresAt) {
+    catalogMemoryCache.delete(key);
+    return null;
+  }
+  return entry.data as T;
+}
+
+function setInCache<T>(key: string, data: T, ttlMs: number = 10 * 60 * 1000): T {
+  catalogMemoryCache.set(key, { data, expiresAt: Date.now() + ttlMs });
+  return data;
+}
+
 export async function listCurriculums() {
+  const cached = getFromCache<ReturnType<typeof asTitle>[]>('curriculums');
+  if (cached) return cached;
+
   const db = getDb();
   const rows = await db
     .select({
@@ -30,10 +54,14 @@ export async function listCurriculums() {
     })
     .from(curriculums)
     .orderBy(asc(curriculums.name));
-  return rows.map(asTitle);
+  const result = rows.map(asTitle);
+  return setInCache('curriculums', result, 15 * 60 * 1000);
 }
 
 export async function listSubjects() {
+  const cached = getFromCache<ReturnType<typeof asTitle>[]>('subjects');
+  if (cached) return cached;
+
   const db = getDb();
   const rows = await db
     .select({
@@ -44,7 +72,8 @@ export async function listSubjects() {
     })
     .from(subjects)
     .orderBy(asc(subjects.name));
-  return rows.map(asTitle);
+  const result = rows.map(asTitle);
+  return setInCache('subjects', result, 15 * 60 * 1000);
 }
 
 /** Upcoming catalog by default. Pass `{ all: true }` only for a full history list. */
@@ -103,6 +132,10 @@ export async function getExamById(examId: string) {
 /** Structured calculator presets for one subject (papers + boundaries). */
 export async function listApprovedCalculatorPresets(subjectId?: string) {
   if (!subjectId) return [];
+  const cacheKey = `presets:${subjectId}`;
+  const cached = getFromCache<any[]>(cacheKey);
+  if (cached) return cached;
+
   const db = getDb();
   const rows = await db.query.pastPapers.findMany({
     where: eq(pastPapers.subject_id, subjectId),
@@ -135,7 +168,7 @@ export async function listApprovedCalculatorPresets(subjectId?: string) {
     orderBy: [desc(pastPapers.year), desc(pastPapers.series)],
   });
 
-  return rows.map((r) => {
+  const result = rows.map((r) => {
     const isModular = r.qualification === 'IAL';
     return {
       id: r.id,
@@ -176,6 +209,8 @@ export async function listApprovedCalculatorPresets(subjectId?: string) {
       status: 'approved',
     };
   });
+
+  return setInCache(cacheKey, result, 10 * 60 * 1000);
 }
 
 export async function listMyExamEditorSubmissions(_userId: string) {

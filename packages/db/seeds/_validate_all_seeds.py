@@ -20,6 +20,7 @@ SEED_ORDER = [
     "0007_subjects_target_gaps.sql",
     "0008_topics_edexcel_igcse.sql",
     "0009_topics_edexcel_ial.sql",
+    "0010_exams_jan27_countdown.sql",
 ]
 
 

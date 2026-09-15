@@ -140,25 +140,35 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
   }, [userId]);
 
   // Load papers & user records when selected subject changes
-  const loadPapersForSubject = React.useCallback(async () => {
+  const loadPapersForSubject = React.useCallback(async (showLoader = true) => {
     if (!selectedSubjectId) {
       setLoading(false);
       return;
     }
-    setLoading(true);
+    if (showLoader) setLoading(true);
     try {
       const grid = await getPaperGridData(userId, selectedSubjectId);
       setGridData(grid);
     } catch (err) {
       console.error('Failed to load past papers:', err);
     } finally {
-      setLoading(false);
+      if (showLoader) setLoading(false);
     }
   }, [selectedSubjectId, userId]);
 
   useEffect(() => {
-    loadPapersForSubject();
+    loadPapersForSubject(true);
   }, [loadPapersForSubject]);
+
+  // Background sync for gamification stats when a cell record is updated in PaperGrid
+  const handleGridRecordChange = React.useCallback(async () => {
+    try {
+      const stats = await getUserGamificationStats(userId);
+      setGamification(stats);
+    } catch (err) {
+      console.error('Failed to refresh gamification stats:', err);
+    }
+  }, [userId]);
 
   // Active subject object
   const currentSubject = enrolledSubjects.find((s) => s.id === selectedSubjectId);
@@ -360,22 +370,21 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
 
         {/* Enrolled Subjects Switcher Bar */}
         <div className="mt-6 pt-6 border-t border-border flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none max-w-full">
-            {enrolledSubjects.map((subj) => (
-              <button
-                key={subj.id}
-                onClick={() => setSelectedSubjectId(subj.id)}
-                className={cn(
-                  'inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all',
-                  selectedSubjectId === subj.id
-                    ? 'bg-primary text-white shadow-xs'
-                    : 'bg-background-secondary text-foreground-secondary hover:text-foreground hover:bg-background-secondary/80'
-                )}
-              >
-                <span className="font-mono opacity-80">{subj.code}</span>
-                <span>{subj.name}</span>
-              </button>
-            ))}
+          <div className="flex-1 max-w-xs min-w-[200px]">
+            <select
+              value={selectedSubjectId}
+              onChange={(e) => setSelectedSubjectId(e.target.value)}
+              className="w-full rounded-xl border border-border bg-background-secondary px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
+            >
+              {enrolledSubjects.length === 0 && (
+                <option value="">No subjects enrolled</option>
+              )}
+              {enrolledSubjects.map((subj) => (
+                <option key={subj.id} value={subj.id}>
+                  {subj.code} — {subj.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
@@ -479,7 +488,7 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
           <PaperGrid
             userId={userId}
             data={gridData}
-            onRecordChange={loadPapersForSubject}
+            onRecordChange={handleGridRecordChange}
           />
         ) : (
           <div className="p-12 text-center rounded-3xl border border-dashed border-border bg-background-card space-y-4">

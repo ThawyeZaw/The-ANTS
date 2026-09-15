@@ -139,7 +139,7 @@ export default function CurriculumPage() {
         <div className="flex gap-2 border-b border-border">
           {([
             { id: 'mine' as const, label: 'My Subjects', count: hubSubjects.length },
-            { id: 'add' as const, label: 'Add Subjects' },
+            { id: 'add' as const, label: 'Explore subjects' },
           ]).map((t) => (
             <button
               key={t.id}

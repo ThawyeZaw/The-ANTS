@@ -32,7 +32,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
 import MyWorkspace from '@/components/workspace/MyWorkspace';
 import { WorkspaceToastProvider } from '@/components/workspace/WorkspaceToast';
-import CourseSyncPanel from '@/components/layout/CourseSyncPanel';
+import { DashboardSubjectsPanel } from '@/components/dashboard/DashboardSubjectsPanel';
 import { useDashboardSync } from '@/hooks/useDashboardSync';
 import { cn } from '@/lib/utils';
 import { getGamificationProfile } from '@/actions/gamification';
@@ -241,6 +241,11 @@ export default function StudentDashboard() {
           </div>
         </header>
 
+        {/* ── Dashboard Subjects Panel ───────────────────────────────────────── */}
+        <section>
+          <DashboardSubjectsPanel />
+        </section>
+
         {/* ── Core Study Tools Launcher Grid ───────────────────────────────── */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
@@ -297,14 +302,7 @@ export default function StudentDashboard() {
         {/* ── Gamification Shelf: Badges & Milestones ──────────────────────── */}
         <section className="p-6 sm:p-8 rounded-3xl border border-border bg-background-card shadow-xs">
           <BadgeShelf badges={gamification.allBadges} />
-        </section>
-
-        {/* ── Course Sync Panel ────────────────────────────────────────────── */}
-        <section>
-          <CourseSyncPanel />
-        </section>
-
-        {/* ── Quick Stats Grid ─────────────────────────────────────────────── */}
+        </section>        {/* ── Quick Stats Grid ─────────────────────────────────────────────── */}
         {stats.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {stats.map((stat, i) => {

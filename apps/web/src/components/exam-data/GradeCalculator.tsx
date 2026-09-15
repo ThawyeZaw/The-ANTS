@@ -6,7 +6,7 @@
 // Reads from seeded past papers and official grade boundaries.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import {
@@ -100,6 +100,10 @@ export default function GradeCalculator() {
   const [rawMarks, setRawMarks] = useState<Record<string, number | string>>({});
   const [compositeBoundaries, setCompositeBoundaries] = useState<GradeBoundary[]>([]);
 
+  // Client-side cache to avoid redundant D1 row queries when toggling subjects
+  const presetCacheRef = useRef<Map<string, CalcPreset[]>>(new Map());
+  const compositeCacheRef = useRef<Map<string, GradeBoundary[]>>(new Map());
+
   useEffect(() => {
     async function fetchCatalog() {
       setLoading(true);
@@ -121,10 +125,20 @@ export default function GradeCalculator() {
       setPresets([]);
       return;
     }
+
+    if (presetCacheRef.current.has(selectedSubject)) {
+      setPresets(presetCacheRef.current.get(selectedSubject)!);
+      return;
+    }
+
     let cancelled = false;
     listApprovedCalculatorPresets(selectedSubject)
       .then((pData) => {
-        if (!cancelled) setPresets(pData as CalcPreset[]);
+        if (!cancelled) {
+          const list = pData as CalcPreset[];
+          presetCacheRef.current.set(selectedSubject, list);
+          setPresets(list);
+        }
       })
       .catch((err) => {
         if (!cancelled) {
@@ -277,14 +291,21 @@ export default function GradeCalculator() {
       return;
     }
     const seriesName = selectedSeries.replace(/\s+\d{4}$/, '');
+    const compKey = `${selectedSubject}:${activePreset.year}:${seriesName}:${selectedVariant || ''}:${selectedTier || ''}`;
+
+    if (compositeCacheRef.current.has(compKey)) {
+      setCompositeBoundaries(compositeCacheRef.current.get(compKey)!);
+      return;
+    }
+
     listSubjectCompositeBoundaries(selectedSubject, activePreset.year, seriesName, {
       variant: selectedVariant || null,
       tier: selectedTier || null,
-    }).then((rows) =>
-      setCompositeBoundaries(
-        rows.map((r) => ({ grade: r.grade, min_mark: r.min_mark, max_mark: r.max_mark }))
-      )
-    );
+    }).then((rows) => {
+      const mapped = rows.map((r) => ({ grade: r.grade, min_mark: r.min_mark, max_mark: r.max_mark }));
+      compositeCacheRef.current.set(compKey, mapped);
+      setCompositeBoundaries(mapped);
+    });
   }, [selectedSubject, selectedSeries, activePreset?.year, selectedVariant, selectedTier]);
 
   const availableSeries = useMemo(() => {

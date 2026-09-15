@@ -63,22 +63,12 @@ import {
   actionCheckUsernameAvailable,
   actionUpdateUsername,
   actionUpdateDisplayName,
-  actionUpdateTutorProfile,
+  
   actionUpdateContributorProfile,
   actionSyncCertifications,
 } from '@/actions/profile';
 
-type SubTabId =
-  | 'basic'
-  | 'tutor'
-  | 'contributor'
-  | 'social'
-  | 'projects'
-  | 'activities'
-  | 'achievements'
-  | 'grades'
-  | 'certifications'
-  | 'appearance';
+type SubTabId = 'profile_info' | 'portfolio' | 'appearance';
 
 interface Certification {
   id: string;
@@ -122,18 +112,7 @@ export default function AdvancedProfileEditor() {
 
   // Initial sub-tab from search params
   const tabParam = searchParams?.get('tab');
-  const initialSubTab: SubTabId =
-    tabParam === 'role-profile' || tabParam === 'tutor' || tabParam === 'schedule'
-      ? 'tutor'
-      : tabParam === 'contributor'
-      ? 'contributor'
-      : tabParam === 'social'
-      ? 'social'
-      : tabParam === 'projects'
-      ? 'projects'
-      : tabParam === 'appearance'
-      ? 'appearance'
-      : 'basic';
+  const initialSubTab: SubTabId = tabParam === 'appearance' ? 'appearance' : (tabParam === 'portfolio' || tabParam === 'projects' || tabParam === 'activities' || tabParam === 'achievements' || tabParam === 'grades' || tabParam === 'certifications') ? 'portfolio' : 'profile_info';
 
   const [activeSubTab, setActiveSubTab] = useState<SubTabId>(initialSubTab);
   const [isSaving, setIsSaving] = useState(false);
@@ -170,13 +149,7 @@ export default function AdvancedProfileEditor() {
   const [githubUrl, setGithubUrl] = useState('');
   const [linkedinUrl, setLinkedinUrl] = useState('');
 
-  useEffect(() => {
-    if (tabParam === 'role-profile' || tabParam === 'tutor' || tabParam === 'schedule') {
-      setActiveSubTab('tutor');
-    } else if (tabParam === 'contributor') {
-      setActiveSubTab('contributor');
-    }
-  }, [tabParam]);
+  useEffect(() => { if (tabParam === 'appearance') setActiveSubTab('appearance'); else if (tabParam === 'portfolio' || tabParam === 'projects' || tabParam === 'activities' || tabParam === 'achievements' || tabParam === 'grades' || tabParam === 'certifications') setActiveSubTab('portfolio'); else setActiveSubTab('profile_info'); }, [tabParam]);
 
   // Load all user profile, tutor, and contributor data on mount
   useEffect(() => {
@@ -212,14 +185,6 @@ export default function AdvancedProfileEditor() {
       }
       if (data.tutorProfile) {
         setTelegramHandle(data.tutorProfile.telegram_handle || '');
-        setHourlyRate(data.tutorProfile.hourly_rate || '');
-        setInstitution(data.tutorProfile.institution || '');
-        setSpecialization(data.tutorProfile.specialization || '');
-        setTeachingSubjects(data.tutorProfile.teaching_subjects || []);
-        setTeachingCurriculums(data.tutorProfile.teaching_curriculums || []);
-        const availabilityMeta = parseTutorAvailability(data.tutorProfile.availability_slots);
-        setAvailabilityStatus(availabilityMeta.status ?? 'available');
-        setAvailabilityNote(availabilityMeta.note ?? '');
       } else {
         setTelegramHandle(user.profile.telegramHandle || user.profile.username || '');
       }
@@ -506,48 +471,15 @@ export default function AdvancedProfileEditor() {
         teachingSubjects: teachingSubjects,
       });
 
-      // 4. Save Tutor Profile if user has Tutor/Admin role or filled tutor fields
+      
       const certRes = await actionSyncCertifications(user.id, certs);
       if (!certRes.success) {
         setSaveError(certRes.error || 'Failed to save certifications');
         setIsSaving(false);
         return;
       }
-
-      if (isTutor || isAdmin || cleanTelegram || teachingSubjects.length > 0) {
-        const tutorRes = await actionUpdateTutorProfile(user.id, {
-          telegram_handle: cleanTelegram,
-          hourly_rate: hourlyRate.trim(),
-          institution: institution.trim(),
-          specialization: specialization.trim(),
-          teaching_subjects: teachingSubjects,
-          teaching_curriculums: teachingCurriculums,
-          availability_slots: {
-            status: availabilityStatus,
-            note: availabilityNote.trim() || undefined,
-          },
-          is_active: availabilityStatus !== 'unavailable',
-        });
-
-        if (!tutorRes.success) {
-          console.warn('[handleSave] Tutor profile update warning:', tutorRes.error);
-        }
-      }
-
-      // 5. Save Contributor Profile if user has Contributor/Admin role or filled contributor fields
-      if (isContributor || isAdmin || websiteUrl || githubUrl || linkedinUrl) {
-        const contribRes = await actionUpdateContributorProfile(user.id, {
-          website_url: websiteUrl.trim(),
-          github_url: githubUrl.trim(),
-          linkedin_url: linkedinUrl.trim(),
-        });
-
-        if (!contribRes.success) {
-          console.warn('[handleSave] Contributor profile update warning:', contribRes.error);
-        }
-      }
-
       setSaveSuccess(true);
+
       setTimeout(() => setSaveSuccess(false), 3500);
     } catch (err: any) {
       console.error('Error saving profile:', err);
@@ -683,7 +615,7 @@ export default function AdvancedProfileEditor() {
         {/* Content Area */}
         <div className="flex-1 bg-background-card border border-border rounded-3xl p-6 sm:p-8 shadow-xs min-h-[500px]">
           {/* 1. Basic Info */}
-          {activeSubTab === 'basic' && (
+          {activeSubTab === 'profile_info' && (
             <div className="space-y-6 animate-fade-in">
               <h2 className="text-lg font-bold text-foreground">Basic Information</h2>
 
@@ -903,7 +835,7 @@ export default function AdvancedProfileEditor() {
           )}
 
           {/* 2. Teaching & Schedule (Tutor Section) */}
-          {activeSubTab === 'tutor' && (
+          {false && (
             <div className="space-y-6 animate-fade-in">
               <div className="flex items-center justify-between">
                 <div>
@@ -1113,7 +1045,7 @@ export default function AdvancedProfileEditor() {
           )}
 
           {/* 3. Contributor Showcase (Creator Section) */}
-          {activeSubTab === 'contributor' && (
+          {false && (
             <div className="space-y-6 animate-fade-in">
               <div>
                 <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
@@ -1183,7 +1115,7 @@ export default function AdvancedProfileEditor() {
           )}
 
           {/* 4. Social Links */}
-          {activeSubTab === 'social' && (
+          {activeSubTab === 'profile_info' && (
             <div className="space-y-5 animate-fade-in">
               <h2 className="text-lg font-bold text-foreground">Social &amp; Contact Links</h2>
               <div className="space-y-3">
@@ -1210,7 +1142,7 @@ export default function AdvancedProfileEditor() {
           )}
 
           {/* 5. Projects */}
-          {activeSubTab === 'projects' && (
+          {activeSubTab === 'portfolio' && (
             <div className="space-y-5 animate-fade-in">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-bold text-foreground">Projects &amp; Portfolio</h2>
@@ -1256,7 +1188,7 @@ export default function AdvancedProfileEditor() {
           )}
 
           {/* 6. Activities */}
-          {activeSubTab === 'activities' && (
+          {activeSubTab === 'portfolio' && (
             <div className="space-y-5 animate-fade-in">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-bold text-foreground">Activities &amp; Leadership</h2>
@@ -1304,7 +1236,7 @@ export default function AdvancedProfileEditor() {
           )}
 
           {/* 7. Achievements */}
-          {activeSubTab === 'achievements' && (
+          {activeSubTab === 'portfolio' && (
             <div className="space-y-5 animate-fade-in">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-bold text-foreground">Achievements &amp; Honors</h2>
@@ -1343,7 +1275,7 @@ export default function AdvancedProfileEditor() {
           )}
 
           {/* 8. Grades */}
-          {activeSubTab === 'grades' && (
+          {activeSubTab === 'portfolio' && (
             <div className="space-y-5 animate-fade-in">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-bold text-foreground">Academic Grades</h2>
@@ -1382,7 +1314,7 @@ export default function AdvancedProfileEditor() {
           )}
 
           {/* 9. Certifications */}
-          {activeSubTab === 'certifications' && (
+          {activeSubTab === 'portfolio' && (
             <div className="space-y-5 animate-fade-in">
               <CertificationEditor
                 certifications={certs}
