@@ -44,7 +44,7 @@ export function AddCountdownModal({
   const [tab, setTab] = useState<'library' | 'custom'>('library');
   
   // Form states
-  const [selectedExamId, setSelectedExamId] = useState('');
+  const [selectedExamIds, setSelectedExamIds] = useState<Set<string>>(new Set());
   const [filterCurriculumId, setFilterCurriculumId] = useState(initialCurriculumId);
   const [filterSubjectId, setFilterSubjectId] = useState(initialSubjectId);
   const [customTitle, setCustomTitle] = useState('');
@@ -62,7 +62,7 @@ export function AddCountdownModal({
   useEffect(() => {
     if (prefilledExam) {
       setTab('library');
-      setSelectedExamId(prefilledExam.id);
+      setSelectedExamIds(new Set([prefilledExam.id]));
       if (prefilledExam.curriculum_id) setFilterCurriculumId(prefilledExam.curriculum_id);
       if (prefilledExam.subject_id) setFilterSubjectId(prefilledExam.subject_id);
       if (prefilledExam.date_type === 'fixed' && prefilledExam.exam_date) {
@@ -87,6 +87,16 @@ export function AddCountdownModal({
     });
   }, [availableExams, filterCurriculumId, filterSubjectId]);
 
+  const groupedFilteredExams = useMemo(() => {
+    const groups: Record<string, Exam[]> = {};
+    filteredExams.forEach(exam => {
+      const series = (exam.exam_series || (exam as any).season || (exam as any).series || 'Other') as string;
+      if (!groups[series]) groups[series] = [];
+      groups[series].push(exam);
+    });
+    return groups;
+  }, [filteredExams]);
+
   if (!isOpen) return null;
 
   const isPastDate = targetDate && targetTime ? new Date(`${targetDate}T${targetTime}`).getTime() < Date.now() : false;
@@ -94,14 +104,18 @@ export function AddCountdownModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (tab === 'library') {
-      if (!selectedExamId) return;
-      const exam = availableExams.find((item) => item.id === selectedExamId);
-      onCreate({
-        exam_id: selectedExamId,
-        priority_indicator: priority,
-        qualification_group: group || exam?.exam_board || 'Official',
-        subject_id: exam?.subject_id ?? undefined,
-        exam_board: exam?.exam_board ?? undefined,
+      if (selectedExamIds.size === 0) return;
+      Array.from(selectedExamIds).forEach(id => {
+        const exam = availableExams.find((item) => item.id === id);
+        if (exam) {
+          onCreate({
+            exam_id: id,
+            priority_indicator: priority,
+            qualification_group: group || exam.exam_board || 'Official',
+            subject_id: exam.subject_id ?? undefined,
+            exam_board: exam.exam_board ?? undefined,
+          });
+        }
       });
     } else {
       if (!customTitle || !targetDate) return;
@@ -114,7 +128,7 @@ export function AddCountdownModal({
     }
     
     // Reset and close
-    setSelectedExamId('');
+    setSelectedExamIds(new Set());
     setCustomTitle('');
     setTargetDate('');
     setTargetTime('09:00');
@@ -173,7 +187,7 @@ export function AddCountdownModal({
                         setFilterCurriculumId(next);
                         if (!keepSubject) {
                           setFilterSubjectId('all');
-                          setSelectedExamId('');
+                          setSelectedExamIds(new Set());
                         }
                       }}
                       className="w-full rounded-lg border border-[var(--border)] bg-[var(--background-secondary)] p-3 text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
@@ -190,7 +204,7 @@ export function AddCountdownModal({
                       value={filterSubjectId}
                       onChange={(e) => {
                         setFilterSubjectId(e.target.value);
-                        setSelectedExamId('');
+                        setSelectedExamIds(new Set());
                       }}
                       className="w-full rounded-lg border border-[var(--border)] bg-[var(--background-secondary)] p-3 text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
                     >
@@ -205,21 +219,63 @@ export function AddCountdownModal({
                   </div>
                 </div>
               )}
-              <div>
-                <label className="mb-1 block text-sm font-medium text-[var(--foreground-secondary)]">Select Exam</label>
-                <select
-                  value={selectedExamId}
-                  onChange={(e) => setSelectedExamId(e.target.value)}
-                  className="w-full rounded-lg border border-[var(--border)] bg-[var(--background-secondary)] p-3 text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
-                  required
-                >
-                  <option value="">-- Choose an Exam --</option>
-                  {filteredExams.map((exam) => (
-                    <option key={exam.id} value={exam.id}>
-                      {examLabel(exam)}
-                    </option>
-                  ))}
-                </select>
+              <div className="flex-1 overflow-y-auto max-h-64 border border-[var(--border)] rounded-lg bg-[var(--background-secondary)] p-1">
+                {Object.keys(groupedFilteredExams).length === 0 ? (
+                  <p className="p-3 text-sm text-[var(--foreground-muted)] text-center">No exams available for this selection.</p>
+                ) : (
+                  Object.entries(groupedFilteredExams).map(([series, exams]) => {
+                    const allSelected = exams.every(e => selectedExamIds.has(e.id));
+                    const toggleSeries = () => {
+                      const next = new Set(selectedExamIds);
+                      if (allSelected) {
+                        exams.forEach(e => next.delete(e.id));
+                      } else {
+                        exams.forEach(e => next.add(e.id));
+                      }
+                      setSelectedExamIds(next);
+                    };
+
+                    return (
+                      <div key={series} className="mb-2 last:mb-0">
+                        <div className="flex items-center justify-between bg-[var(--background-card)] px-3 py-2 rounded-md shadow-sm mb-1">
+                          <span className="text-xs font-bold text-[var(--foreground)]">{series}</span>
+                          <button
+                            type="button"
+                            onClick={toggleSeries}
+                            className="text-[10px] uppercase tracking-wider font-semibold text-[var(--primary)] hover:underline"
+                          >
+                            {allSelected ? 'Deselect All' : 'Select All'}
+                          </button>
+                        </div>
+                        <div className="space-y-1 px-1">
+                          {exams.map(exam => (
+                            <label key={exam.id} className="flex items-start gap-2 p-2 hover:bg-[var(--background-card)] rounded-md cursor-pointer transition-colors">
+                              <input
+                                type="checkbox"
+                                checked={selectedExamIds.has(exam.id)}
+                                onChange={(e) => {
+                                  const next = new Set(selectedExamIds);
+                                  if (e.target.checked) next.add(exam.id);
+                                  else next.delete(exam.id);
+                                  setSelectedExamIds(next);
+                                }}
+                                className="mt-0.5 rounded border-[var(--border)] text-[var(--primary)] focus:ring-[var(--primary)] bg-transparent"
+                              />
+                              <div className="flex flex-col">
+                                <span className="text-sm text-[var(--foreground)] leading-tight">{exam.title}</span>
+                                {(exam as any).exam_date && (
+                                  <span className="text-xs text-[var(--foreground-muted)] mt-0.5">
+                                    {new Date((exam as any).exam_date).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
+                                  </span>
+                                )}
+                              </div>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
           ) : (

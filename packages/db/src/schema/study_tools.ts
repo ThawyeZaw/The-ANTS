@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, index } from 'drizzle-orm/sqlite-core';
 import { idText, textId, ts, tsNow, bool, jsonText } from './columns';
 import { profiles } from './profiles';
 import { curriculums, subjects, topics } from './curriculums';
@@ -46,44 +46,60 @@ export const pomodoroSessions = sqliteTable('pomodoro_sessions', {
   notes: text('notes'),
 });
 
-export const exams = sqliteTable('exams', {
-  id: idText('id'),
-  subject_id: textId('subject_id')
-    .references(() => subjects.id, { onDelete: 'cascade' })
-    .notNull(),
-  curriculum_id: textId('curriculum_id').references(() => curriculums.id, { onDelete: 'cascade' }),
-  title: text('title').notNull(),
-  exam_board: text('exam_board'),
-  qualification_type: text('qualification_type'),
-  syllabus_code: text('syllabus_code'),
-  season: text('season'),
-  series: text('series'),
-  paper_number: text('paper_number'),
-  exam_date: ts('exam_date'),
-  duration_minutes: integer('duration_minutes'),
-  total_marks: integer('total_marks'),
-  created_at: tsNow('created_at'),
-});
+export const exams = sqliteTable(
+  'exams',
+  {
+    id: idText('id'),
+    subject_id: textId('subject_id')
+      .references(() => subjects.id, { onDelete: 'cascade' })
+      .notNull(),
+    curriculum_id: textId('curriculum_id').references(() => curriculums.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    exam_board: text('exam_board'),
+    qualification_type: text('qualification_type'),
+    syllabus_code: text('syllabus_code'),
+    season: text('season'),
+    series: text('series'),
+    paper_number: text('paper_number'),
+    exam_date: ts('exam_date'),
+    duration_minutes: integer('duration_minutes'),
+    total_marks: integer('total_marks'),
+    created_at: tsNow('created_at'),
+  },
+  (table) => [
+    index('idx_exams_subject_id').on(table.subject_id),
+    index('idx_exams_curriculum_id').on(table.curriculum_id),
+    index('idx_exams_exam_date').on(table.exam_date),
+  ]
+);
 
-export const examCountdowns = sqliteTable('exam_countdowns', {
-  id: idText('id'),
-  user_id: textId('user_id')
-    .references(() => profiles.id, { onDelete: 'cascade' })
-    .notNull(),
-  exam_id: textId('exam_id').references(() => exams.id, { onDelete: 'set null' }),
-  subject_id: textId('subject_id').references(() => subjects.id, { onDelete: 'set null' }),
-  title: text('title').notNull(),
-  exam_board: text('exam_board'),
-  paper_name: text('paper_name'),
-  exam_date: ts('exam_date').notNull(),
-  color_code: text('color_code'),
-  target_grade: text('target_grade'),
-  is_mock: bool('is_mock', false),
-  is_pinned: bool('is_pinned', false),
-  /** true = user-created custom date; false = auto-created from enrollment */
-  is_custom: bool('is_custom', false),
-  created_at: tsNow('created_at'),
-});
+export const examCountdowns = sqliteTable(
+  'exam_countdowns',
+  {
+    id: idText('id'),
+    user_id: textId('user_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    exam_id: textId('exam_id').references(() => exams.id, { onDelete: 'set null' }),
+    subject_id: textId('subject_id').references(() => subjects.id, { onDelete: 'set null' }),
+    title: text('title').notNull(),
+    exam_board: text('exam_board'),
+    paper_name: text('paper_name'),
+    exam_date: ts('exam_date').notNull(),
+    color_code: text('color_code'),
+    target_grade: text('target_grade'),
+    is_mock: bool('is_mock', false),
+    is_pinned: bool('is_pinned', false),
+    /** true = user-created custom date; false = auto-created from enrollment */
+    is_custom: bool('is_custom', false),
+    created_at: tsNow('created_at'),
+  },
+  (table) => [
+    index('idx_exam_countdowns_user_id').on(table.user_id),
+    index('idx_exam_countdowns_user_exam').on(table.user_id, table.exam_id),
+    index('idx_exam_countdowns_user_subject').on(table.user_id, table.subject_id),
+  ]
+);
 
 export const gradeBoundaries = sqliteTable('grade_boundaries', {
   id: idText('id'),
@@ -115,27 +131,35 @@ export const gradeEntries = sqliteTable('grade_entries', {
   created_at: tsNow('created_at'),
 });
 
-export const userEnrollments = sqliteTable('user_enrollments', {
-  id: idText('id'),
-  user_id: textId('user_id')
-    .references(() => profiles.id, { onDelete: 'cascade' })
-    .notNull(),
-  curriculum_id: textId('curriculum_id')
-    .references(() => curriculums.id, { onDelete: 'cascade' })
-    .notNull(),
-  subject_id: textId('subject_id')
-    .references(() => subjects.id, { onDelete: 'cascade' })
-    .notNull(),
-  exam_id: textId('exam_id').references(() => exams.id, { onDelete: 'set null' }),
-  /** Canonical session label, e.g. 'May/June 2026' */
-  target_series: text('target_series'),
-  target_grade: text('target_grade'),
-  /** 'core' | 'extended' | null */
-  tier: text('tier'),
-  /** 'per_subject' | 'per_paper' — copied from qualification plugin */
-  countdown_mode: text('countdown_mode'),
-  enrolled_at: tsNow('enrolled_at'),
-});
+export const userEnrollments = sqliteTable(
+  'user_enrollments',
+  {
+    id: idText('id'),
+    user_id: textId('user_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    curriculum_id: textId('curriculum_id')
+      .references(() => curriculums.id, { onDelete: 'cascade' })
+      .notNull(),
+    subject_id: textId('subject_id')
+      .references(() => subjects.id, { onDelete: 'cascade' })
+      .notNull(),
+    exam_id: textId('exam_id').references(() => exams.id, { onDelete: 'set null' }),
+    /** Canonical session label, e.g. 'May/June 2026' */
+    target_series: text('target_series'),
+    target_grade: text('target_grade'),
+    /** 'core' | 'extended' | null */
+    tier: text('tier'),
+    /** 'per_subject' | 'per_paper' — copied from qualification plugin */
+    countdown_mode: text('countdown_mode'),
+    enrolled_at: tsNow('enrolled_at'),
+  },
+  (table) => [
+    index('idx_user_enrollments_user_id').on(table.user_id),
+    index('idx_user_enrollments_user_curriculum').on(table.user_id, table.curriculum_id),
+    index('idx_user_enrollments_user_subject').on(table.user_id, table.subject_id),
+  ]
+);
 
 export const userExamOverrides = sqliteTable('user_exam_overrides', {
   id: idText('id'),
@@ -183,54 +207,74 @@ export const examSchedules = sqliteTable('exam_schedules', {
 
 // ── Past Paper Tracker Catalog ───────────────────────────────────────────────
 
-export const pastPapers = sqliteTable('past_papers', {
-  id: idText('id'),
-  exam_board: text('exam_board').notNull(), // 'CAIE' | 'Edexcel'
-  qualification: text('qualification').notNull(), // 'IGCSE' | 'IAL' | 'A Level'
-  subject: text('subject').notNull(), // 'Mathematics'
-  syllabus_code: text('syllabus_code').notNull(), // '0580'
-  subject_id: textId('subject_id').references(() => subjects.id, { onDelete: 'set null' }),
-  curriculum_id: textId('curriculum_id').references(() => curriculums.id, { onDelete: 'set null' }),
-  year: integer('year').notNull(), // 2023
-  series: text('series').notNull(), // 'May/June' | 'Oct/Nov' | 'Jan'
-  paper_number: text('paper_number').notNull(), // '1', '2', '3'
-  variant: text('variant'), // '1', '2', '3' or null
-  title: text('title'), // e.g. "Paper 2 (Extended)"
-  total_marks: integer('total_marks'),
-  duration_minutes: integer('duration_minutes'),
-  created_at: tsNow('created_at'),
-});
+export const pastPapers = sqliteTable(
+  'past_papers',
+  {
+    id: idText('id'),
+    exam_board: text('exam_board').notNull(), // 'CAIE' | 'Edexcel'
+    qualification: text('qualification').notNull(), // 'IGCSE' | 'IAL' | 'A Level'
+    subject: text('subject').notNull(), // 'Mathematics'
+    syllabus_code: text('syllabus_code').notNull(), // '0580'
+    subject_id: textId('subject_id').references(() => subjects.id, { onDelete: 'set null' }),
+    curriculum_id: textId('curriculum_id').references(() => curriculums.id, { onDelete: 'set null' }),
+    year: integer('year').notNull(), // 2023
+    series: text('series').notNull(), // 'May/June' | 'Oct/Nov' | 'Jan'
+    paper_number: text('paper_number').notNull(), // '1', '2', '3'
+    variant: text('variant'), // '1', '2', '3' or null
+    title: text('title'), // e.g. "Paper 2 (Extended)"
+    total_marks: integer('total_marks'),
+    duration_minutes: integer('duration_minutes'),
+    created_at: tsNow('created_at'),
+  },
+  (table) => [
+    index('idx_past_papers_subject_id').on(table.subject_id),
+    index('idx_past_papers_curriculum_id').on(table.curriculum_id),
+    index('idx_past_papers_lookup').on(table.subject_id, table.year, table.series),
+  ]
+);
 
 // ── Structured Grade Boundaries per Past Paper ──────────────────────────────
 
 /** Syllabus-level composite thresholds for a series (not a single paper). */
-export const subjectGradeBoundaries = sqliteTable('subject_grade_boundaries', {
-  id: idText('id'),
-  subject_id: textId('subject_id')
-    .references(() => subjects.id, { onDelete: 'cascade' })
-    .notNull(),
-  year: integer('year').notNull(),
-  series: text('series').notNull(), // 'May/June' | 'Oct/Nov' | 'Feb/March'
-  variant: text('variant'),
-  tier: text('tier'), // 'core' | 'extended' | null
-  grade: text('grade').notNull(),
-  min_mark: integer('min_mark').notNull(),
-  max_mark: integer('max_mark'),
-  created_at: tsNow('created_at'),
-});
+export const subjectGradeBoundaries = sqliteTable(
+  'subject_grade_boundaries',
+  {
+    id: idText('id'),
+    subject_id: textId('subject_id')
+      .references(() => subjects.id, { onDelete: 'cascade' })
+      .notNull(),
+    year: integer('year').notNull(),
+    series: text('series').notNull(), // 'May/June' | 'Oct/Nov' | 'Feb/March'
+    variant: text('variant'),
+    tier: text('tier'), // 'core' | 'extended' | null
+    grade: text('grade').notNull(),
+    min_mark: integer('min_mark').notNull(),
+    max_mark: integer('max_mark'),
+    created_at: tsNow('created_at'),
+  },
+  (table) => [
+    index('idx_subject_grade_boundaries_lookup').on(table.subject_id, table.year, table.series),
+  ]
+);
 
-export const paperGradeBoundaries = sqliteTable('paper_grade_boundaries', {
-  id: idText('id'),
-  past_paper_id: textId('past_paper_id')
-    .references(() => pastPapers.id, { onDelete: 'cascade' })
-    .notNull(),
-  grade: text('grade').notNull(), // 'A*', 'A', 'B', 'C', 'D', 'E', 'U'
-  min_mark: integer('min_mark').notNull(),
-  max_mark: integer('max_mark'),
-  ums_min: integer('ums_min'), // Edexcel IAL only
-  ums_max: integer('ums_max'), // Edexcel IAL only
-  created_at: tsNow('created_at'),
-});
+export const paperGradeBoundaries = sqliteTable(
+  'paper_grade_boundaries',
+  {
+    id: idText('id'),
+    past_paper_id: textId('past_paper_id')
+      .references(() => pastPapers.id, { onDelete: 'cascade' })
+      .notNull(),
+    grade: text('grade').notNull(), // 'A*', 'A', 'B', 'C', 'D', 'E', 'U'
+    min_mark: integer('min_mark').notNull(),
+    max_mark: integer('max_mark'),
+    ums_min: integer('ums_min'), // Edexcel IAL only
+    ums_max: integer('ums_max'), // Edexcel IAL only
+    created_at: tsNow('created_at'),
+  },
+  (table) => [
+    index('idx_paper_grade_boundaries_paper_id').on(table.past_paper_id),
+  ]
+);
 
 // ── User Past Paper Tracking Records ────────────────────────────────────────
 
@@ -240,49 +284,69 @@ export interface ComponentMark {
   max_mark: number;
 }
 
-export const userPastPaperRecords = sqliteTable('user_past_paper_records', {
-  id: idText('id'),
-  user_id: textId('user_id')
-    .references(() => profiles.id, { onDelete: 'cascade' })
-    .notNull(),
-  past_paper_id: textId('past_paper_id')
-    .references(() => pastPapers.id, { onDelete: 'cascade' })
-    .notNull(),
-  status: text('status').default('not_done').notNull(), // 'not_done' | 'done' | 'skipped'
-  component_marks: jsonText<ComponentMark[]>('component_marks'),
-  raw_score: real('raw_score'),
-  max_score: real('max_score'),
-  percentage: real('percentage'),
-  calculated_grade: text('calculated_grade'),
-  calculated_ums: integer('calculated_ums'),
-  notes: text('notes'),
-  completed_at: ts('completed_at'),
-  created_at: tsNow('created_at'),
-  updated_at: tsNow('updated_at'),
-});
+export const userPastPaperRecords = sqliteTable(
+  'user_past_paper_records',
+  {
+    id: idText('id'),
+    user_id: textId('user_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    past_paper_id: textId('past_paper_id')
+      .references(() => pastPapers.id, { onDelete: 'cascade' })
+      .notNull(),
+    status: text('status').default('not_done').notNull(), // 'not_done' | 'done' | 'skipped'
+    component_marks: jsonText<ComponentMark[]>('component_marks'),
+    raw_score: real('raw_score'),
+    max_score: real('max_score'),
+    percentage: real('percentage'),
+    calculated_grade: text('calculated_grade'),
+    calculated_ums: integer('calculated_ums'),
+    notes: text('notes'),
+    completed_at: ts('completed_at'),
+    created_at: tsNow('created_at'),
+    updated_at: tsNow('updated_at'),
+  },
+  (table) => [
+    index('idx_user_past_paper_records_user_id').on(table.user_id),
+    index('idx_user_past_paper_records_user_paper').on(table.user_id, table.past_paper_id),
+    index('idx_user_past_paper_records_status').on(table.user_id, table.status),
+  ]
+);
 
 // ── Gamification Schema (XP Ledger, Badges, Streaks) ─────────────────────────
 
-export const userXpLedger = sqliteTable('user_xp_ledger', {
-  id: idText('id'),
-  user_id: textId('user_id')
-    .references(() => profiles.id, { onDelete: 'cascade' })
-    .notNull(),
-  xp_amount: integer('xp_amount').notNull(),
-  source: text('source').notNull(), // 'past_paper' | 'pomodoro' | 'lesson' | 'timetable' | 'badge'
-  source_id: text('source_id'),
-  description: text('description'),
-  earned_at: tsNow('earned_at'),
-});
+export const userXpLedger = sqliteTable(
+  'user_xp_ledger',
+  {
+    id: idText('id'),
+    user_id: textId('user_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    xp_amount: integer('xp_amount').notNull(),
+    source: text('source').notNull(), // 'past_paper' | 'pomodoro' | 'lesson' | 'timetable' | 'badge'
+    source_id: text('source_id'),
+    description: text('description'),
+    earned_at: tsNow('earned_at'),
+  },
+  (table) => [
+    index('idx_user_xp_ledger_user_id').on(table.user_id),
+  ]
+);
 
-export const userBadges = sqliteTable('user_badges', {
-  id: idText('id'),
-  user_id: textId('user_id')
-    .references(() => profiles.id, { onDelete: 'cascade' })
-    .notNull(),
-  badge_key: text('badge_key').notNull(), // 'first_paper_done', 'streak_7', etc.
-  earned_at: tsNow('earned_at'),
-});
+export const userBadges = sqliteTable(
+  'user_badges',
+  {
+    id: idText('id'),
+    user_id: textId('user_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    badge_key: text('badge_key').notNull(), // 'first_paper_done', 'streak_7', etc.
+    earned_at: tsNow('earned_at'),
+  },
+  (table) => [
+    index('idx_user_badges_user_id').on(table.user_id),
+  ]
+);
 
 export const userStreaks = sqliteTable('user_streaks', {
   user_id: textId('user_id')

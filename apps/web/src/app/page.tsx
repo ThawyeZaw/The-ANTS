@@ -15,7 +15,7 @@ import { getRoleLandingPath } from '@/lib/utils';
 import HeroVisual from '@/components/homepage/HeroVisual';
 import BentoFeatures from '@/components/homepage/BentoFeatures';
 import QualBoards from '@/components/homepage/QualBoards';
-import MentorPreview from '@/components/homepage/MentorPreview';
+
 import RoleLadder from '@/components/homepage/RoleLadder';
 import RevealSection from '@/components/homepage/RevealSection';
 import AntHeroAccent from '@/components/homepage/AntHeroAccent';
@@ -223,16 +223,7 @@ export default function HomePage() {
                 max-width: 100%;
               }
             `}</style>
-            <a
-              className="hp-nav-item"
-              href="#explore"
-              onClick={(e) => {
-                e.preventDefault();
-                document.getElementById('explore')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-            >
-              <span className="hp-nav-linktext" data-text="Explore">Explore</span>
-            </a>
+
             <a
               className="hp-nav-item"
               href="#features"
@@ -717,22 +708,6 @@ export default function HomePage() {
             subtext="Every revision note, specimen mark scheme, and unit breakdown is mapped 1:1 against current international exam specifications."
           />
           <QualBoards />
-        </div>
-      </section>
-
-      {/* ── Verified Mentors / Explore ───────────────────────────────────── */}
-      <section
-        id="explore"
-        style={{ padding: '110px 28px', position: 'relative', scrollMarginTop: 90 }}
-      >
-        <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
-          <SectionHead
-            align="left"
-            eyebrow="Verified Mentors"
-            heading="Learn from students who already aced it"
-            gradPhrase="already aced it"
-          />
-          <MentorPreview />
         </div>
       </section>
 

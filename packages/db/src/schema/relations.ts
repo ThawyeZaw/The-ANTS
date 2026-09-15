@@ -2,7 +2,6 @@ import { relations } from 'drizzle-orm';
 import {
   profiles,
   studentProfiles,
-  tutorProfiles,
   contributorProfiles,
   certifications,
   roleUpgradeRequests,
@@ -51,10 +50,7 @@ export const profilesRelations = relations(profiles, ({ one, many }) => ({
     fields: [profiles.id],
     references: [studentProfiles.id],
   }),
-  tutorProfile: one(tutorProfiles, {
-    fields: [profiles.id],
-    references: [tutorProfiles.id],
-  }),
+
   contributorProfile: one(contributorProfiles, {
     fields: [profiles.id],
     references: [contributorProfiles.id],
@@ -284,12 +280,7 @@ export const studentProfilesRelations = relations(studentProfiles, ({ one }) => 
   }),
 }));
 
-export const tutorProfilesRelations = relations(tutorProfiles, ({ one }) => ({
-  profile: one(profiles, {
-    fields: [tutorProfiles.id],
-    references: [profiles.id],
-  }),
-}));
+
 
 export const contributorProfilesRelations = relations(contributorProfiles, ({ one }) => ({
   profile: one(profiles, {

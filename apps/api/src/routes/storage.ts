@@ -115,8 +115,7 @@ export function createStorageRoutes() {
     }
   });
 
-  // Public file serving — reads straight from the R2 binding so objects are
-  // reachable on any Worker origin (workers.dev included) with zero DNS setup.
+  // Public file serving — cached at Cloudflare edge to minimize R2 Class B read costs.
   router.get('/file/:bucket/:fileName', async (c) => {
     const bucket = c.req.param('bucket');
     const fileNameParam = c.req.param('fileName');
@@ -126,6 +125,25 @@ export function createStorageRoutes() {
     }
     if (!fileNameParam || !/^[a-zA-Z0-9._-]+$/.test(fileNameParam)) {
       return c.json({ error: 'Invalid file name' }, 400);
+    }
+
+    // 1. Check Cloudflare Edge Cache API first (zero R2 read cost on cache hit)
+    const cache =
+      typeof caches !== 'undefined' && (caches as any).default
+        ? ((caches as any).default as Cache)
+        : null;
+    const cacheKey = new Request(c.req.url, { method: 'GET' });
+
+    if (cache) {
+      const cachedResponse = await cache.match(cacheKey);
+      if (cachedResponse) {
+        const ifNoneMatch = c.req.header('If-None-Match');
+        const etag = cachedResponse.headers.get('ETag');
+        if (ifNoneMatch && etag && ifNoneMatch === etag) {
+          return new Response(null, { status: 304, headers: cachedResponse.headers });
+        }
+        return cachedResponse;
+      }
     }
 
     const bucketBinding = c.env?.ASSETS_BUCKET;
@@ -147,11 +165,26 @@ export function createStorageRoutes() {
         'Content-Type',
         object.httpMetadata?.contentType || 'application/octet-stream'
       );
-      // Object names are timestamped/unique → safe to cache forever.
+      // Object names are timestamped/unique → safe to cache forever at edge and in browser.
       headers.set('Cache-Control', 'public, max-age=31536000, immutable');
-      headers.set('ETag', object.httpEtag);
+      if (object.httpEtag) {
+        headers.set('ETag', object.httpEtag);
+      }
 
-      return new Response(object.body, { headers });
+      // Check conditional ETag match
+      const ifNoneMatch = c.req.header('If-None-Match');
+      if (ifNoneMatch && object.httpEtag && ifNoneMatch === object.httpEtag) {
+        return new Response(null, { status: 304, headers });
+      }
+
+      const response = new Response(object.body, { headers });
+
+      // Asynchronously store in Cloudflare Edge Cache for subsequent requests
+      if (cache && c.executionCtx?.waitUntil) {
+        c.executionCtx.waitUntil(cache.put(cacheKey, response.clone()));
+      }
+
+      return response;
     } catch (err: any) {
       console.error('[storage] Read failed:', err);
       return c.json({ error: err?.message || 'Failed to read object' }, 500);

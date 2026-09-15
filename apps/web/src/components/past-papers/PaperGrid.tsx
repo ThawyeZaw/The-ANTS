@@ -87,35 +87,49 @@ function CellPopover({
   }, [onClose]);
 
   const save = (status: 'not_done' | 'done' | 'skipped', rawScore?: number) => {
+    const pct = rawScore !== undefined && totalMarks ? Math.round((rawScore / totalMarks) * 1000) / 10 : undefined;
+    let calculatedGrade: string | undefined;
+    let calculatedUms: number | undefined;
+    if (rawScore !== undefined && totalMarks) {
+      const plugin = getPluginForPaper({ examBoard, qualification });
+      const result = plugin.gradeFromRawMark(rawScore, totalMarks, cell.gradeBoundaries ?? []);
+      calculatedGrade = result.grade;
+      calculatedUms = result.ums;
+    }
+
+    // 1. Instant optimistic update & close popover immediately
+    onSave({
+      status,
+      rawScore: rawScore ?? null,
+      maxScore: totalMarks,
+      percentage: pct ?? null,
+      calculatedGrade: calculatedGrade ?? null,
+      calculatedUms: calculatedUms ?? null,
+    });
+    onClose();
+
+    // 2. Persist in background
     startTransition(async () => {
-      const pct = rawScore !== undefined && totalMarks ? Math.round((rawScore / totalMarks) * 1000) / 10 : undefined;
-      let calculatedGrade: string | undefined;
-      let calculatedUms: number | undefined;
-      if (rawScore !== undefined && totalMarks) {
-        const plugin = getPluginForPaper({ examBoard, qualification });
-        const result = plugin.gradeFromRawMark(rawScore, totalMarks, cell.gradeBoundaries ?? []);
-        calculatedGrade = result.grade;
-        calculatedUms = result.ums;
+      try {
+        const res = await upsertPastPaperRecord({
+          userId,
+          pastPaperId: paperId,
+          status,
+          rawScore,
+          maxScore: totalMarks ?? undefined,
+          percentage: pct,
+          calculatedGrade,
+          calculatedUms,
+        });
+        if (res.calculatedGrade || res.calculatedUms) {
+          onSave({
+            calculatedGrade: res.calculatedGrade ?? calculatedGrade ?? null,
+            calculatedUms: res.calculatedUms ?? calculatedUms ?? null,
+          });
+        }
+      } catch (err) {
+        console.error('[PaperGrid] Failed to persist paper record in background:', err);
       }
-      const res = await upsertPastPaperRecord({
-        userId,
-        pastPaperId: paperId,
-        status,
-        rawScore,
-        maxScore: totalMarks ?? undefined,
-        percentage: pct,
-        calculatedGrade,
-        calculatedUms,
-      });
-      onSave({
-        status,
-        rawScore: rawScore ?? null,
-        maxScore: totalMarks,
-        percentage: pct ?? null,
-        calculatedGrade: res.calculatedGrade ?? calculatedGrade ?? null,
-        calculatedUms: res.calculatedUms ?? calculatedUms ?? null,
-      });
-      onClose();
     });
   };
 
@@ -276,6 +290,10 @@ export function PaperGrid({ userId, data, onRecordChange }: PaperGridProps) {
   const [yearFrom, setYearFrom] = useState<number | ''>('');
   const [yearTo, setYearTo] = useState<number | ''>('');
 
+  useEffect(() => {
+    setGridData(data);
+  }, [data]);
+
   // Compute available year range
   const allYears = [...new Set(data.rows.flatMap((r) => Object.keys(r.cells).map((k) => parseInt(k.split('-')[0]))))].sort();
   const minYear = allYears[0] ?? new Date().getFullYear() - 5;
@@ -370,8 +388,8 @@ export function PaperGrid({ userId, data, onRecordChange }: PaperGridProps) {
         ))}
       </div>
 
-      {/* Scrollable grid */}
-      <div className="overflow-x-auto rounded-xl border border-border bg-background-card">
+      {/* Scrollable grid (Desktop) */}
+      <div className="overflow-x-auto rounded-xl border border-border bg-background-card hidden sm:block">
         <table className="min-w-full border-collapse text-xs">
           <thead>
             <tr className="bg-background-secondary border-b border-border">
@@ -431,6 +449,46 @@ export function PaperGrid({ userId, data, onRecordChange }: PaperGridProps) {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="sm:hidden space-y-4">
+        {gridData.rows.map((row, rowIdx) => (
+          <div key={`${row.paperNumber}-${row.variant}`} className="rounded-xl border border-border bg-background-card p-4 space-y-3">
+            <div className="flex items-center justify-between border-b border-border/40 pb-2">
+              <div className="font-semibold text-foreground text-sm">
+                {row.title ?? `Paper ${row.paperNumber}${row.variant ? ` Variant ${row.variant}` : ''}`}
+              </div>
+              {row.totalMarks && (
+                <div className="text-xs font-mono text-foreground-muted">{row.totalMarks} marks</div>
+              )}
+            </div>
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+              {filteredSessions.map((s) => {
+                const sessionKey = `${s.year}-${s.series}`;
+                const cell = row.cells[sessionKey];
+                const paperId = cell?.paperId ?? row.paperId;
+                return (
+                  <div key={sessionKey} className="flex flex-col gap-1">
+                    <span className="text-[10px] font-mono text-foreground-muted text-center">{s.label}</span>
+                    <GridCell
+                      cell={cell}
+                      paperId={paperId}
+                      sessionKey={sessionKey}
+                      totalMarks={row.totalMarks}
+                      displayMode={displayMode}
+                      isIAL={gridData.isIAL}
+                      userId={userId}
+                      qualification={row.qualification}
+                      examBoard={row.examBoard}
+                      onUpdate={(sk, updated) => handleCellUpdate(rowIdx, sk, updated)}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

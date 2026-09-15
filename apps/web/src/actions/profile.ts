@@ -8,7 +8,6 @@ import {
   getDb,
   profiles,
   certifications,
-  tutorProfiles,
   contributorProfiles,
   reviewQueue,
   user,
@@ -183,14 +182,7 @@ export async function actionGetFullProfile(
           console.warn('[actionGetFullProfile] certifications query skipped/failed:', err?.message || err);
           return [];
         }),
-      db.query.tutorProfiles
-        .findFirst({
-          where: eq(tutorProfiles.id, profileRow.id as any),
-        })
-        .catch((err) => {
-          console.warn('[actionGetFullProfile] tutorProfiles query skipped/failed:', err?.message || err);
-          return null;
-        }),
+      Promise.resolve(null),
       db.query.contributorProfiles
         .findFirst({
           where: eq(contributorProfiles.id, profileRow.id as any),
@@ -245,11 +237,11 @@ export async function actionGetFullProfile(
       customUrlSlug: profileRow.custom_url_slug ?? undefined,
       timezone: profileRow.timezone ?? undefined,
       certificationIds: (profileRow.certification_ids as string[]) ?? undefined,
-      telegramHandle: userTutorProfile?.telegram_handle || undefined,
-      hourlyRate: userTutorProfile?.hourly_rate || undefined,
-      teachingCurriculums: (userTutorProfile?.teaching_curriculums as string[]) || undefined,
-      teachingSubjects: (userTutorProfile?.teaching_subjects as string[]) || undefined,
-      institutionName: userTutorProfile?.institution || undefined,
+      telegramHandle: (profileRow as any).telegram_handle || undefined,
+      hourlyRate: undefined,
+      teachingCurriculums: undefined,
+      teachingSubjects: undefined,
+      institutionName: undefined,
       createdAt: profileRow.created_at?.toISOString() ?? '',
     };
 
@@ -286,21 +278,7 @@ export async function actionGetFullProfile(
         .map(mapCertificationRow)
         .filter((c) => !c.is_hidden)
         .sort((a, b) => (a.order_no || 0) - (b.order_no || 0)),
-      tutorProfile: userTutorProfile
-        ? {
-            id: userTutorProfile.id,
-            institution: userTutorProfile.institution,
-            department: userTutorProfile.department,
-            specialization: userTutorProfile.specialization,
-            telegram_handle: userTutorProfile.telegram_handle,
-            hourly_rate: userTutorProfile.hourly_rate,
-            teaching_curriculums: userTutorProfile.teaching_curriculums,
-            teaching_subjects: userTutorProfile.teaching_subjects,
-            availability_slots: userTutorProfile.availability_slots,
-            verified: userTutorProfile.verified,
-            is_active: userTutorProfile.is_active,
-          }
-        : null,
+      tutorProfile: null,
       contributorProfile: contributorData,
       stats,
       activities: activityItems,
@@ -385,95 +363,6 @@ export async function actionSyncCertifications(
   }
 }
 
-export async function actionUpdateTutorProfile(
-  userId: string,
-  data: {
-    specialization?: string;
-    institution?: string;
-    department?: string;
-    telegram_handle?: string;
-    hourly_rate?: string;
-    teaching_curriculums?: string[];
-    teaching_subjects?: string[];
-    availability_slots?: any;
-    is_active?: boolean;
-  }
-): Promise<{ success: boolean; error?: string }> {
-  try {
-    const db = getDb();
-
-    // 1. Guarantee parent profiles row exists for foreign key constraint
-    const existingProfile = await db.query.profiles
-      .findFirst({
-        where: eq(profiles.id, userId as any),
-      })
-      .catch(() => null);
-
-    if (!existingProfile) {
-      const authUser = await db.query.user
-        .findFirst({
-          where: eq(user.id, userId),
-        })
-        .catch(() => null);
-
-      if (authUser) {
-        const baseUsername = (authUser.name || authUser.email.split('@')[0])
-          .toLowerCase()
-          .replace(/[^a-z0-9_]/g, '_');
-        await db
-          .insert(profiles)
-          .values({
-            id: authUser.id as any,
-            email: authUser.email,
-            name: authUser.name || 'User',
-            username: `${baseUsername}_${Math.random().toString(36).substring(2, 6)}`,
-            avatar_url: authUser.image,
-            role: 'student',
-            roles: ['student'],
-          })
-          .onConflictDoNothing();
-      }
-    }
-
-    // 2. Perform atomic UPSERT for tutor profile
-    const insertPayload = {
-      id: userId as any,
-      institution: data.institution || null,
-      department: data.department || null,
-      specialization: data.specialization || null,
-      telegram_handle: data.telegram_handle ? data.telegram_handle.replace('@', '').trim() : null,
-      hourly_rate: data.hourly_rate || null,
-      teaching_curriculums: Array.isArray(data.teaching_curriculums) ? data.teaching_curriculums : [],
-      teaching_subjects: Array.isArray(data.teaching_subjects) ? data.teaching_subjects : [],
-      availability_slots: data.availability_slots || {},
-      is_active: data.is_active !== undefined ? data.is_active : true,
-    };
-
-    await db
-      .insert(tutorProfiles)
-      .values(insertPayload)
-      .onConflictDoUpdate({
-        target: tutorProfiles.id,
-        set: {
-          institution: insertPayload.institution,
-          department: insertPayload.department,
-          specialization: insertPayload.specialization,
-          telegram_handle: insertPayload.telegram_handle,
-          hourly_rate: insertPayload.hourly_rate,
-          teaching_curriculums: insertPayload.teaching_curriculums,
-          teaching_subjects: insertPayload.teaching_subjects,
-          availability_slots: insertPayload.availability_slots,
-          is_active: insertPayload.is_active,
-        },
-      });
-
-    return { success: true };
-  } catch (err: any) {
-    console.error('[updateTutorProfile] Failed:', err);
-    return { success: false, error: err?.message || 'Failed to update tutor profile' };
-  }
-}
-
 export async function actionUpdateProfile(
   userId: string,
   data: Partial<Profile>
@@ -555,6 +444,7 @@ export async function actionUpdateProfile(
     if (data.onboardingCompleted !== undefined) setPayload.onboarding_completed = data.onboardingCompleted;
     if (data.preferredName !== undefined) setPayload.preferred_name = data.preferredName;
     if (data.institutionName !== undefined) setPayload.institution_name = data.institutionName;
+    if (data.telegramHandle !== undefined) setPayload.telegram_handle = data.telegramHandle.replace('@', '').trim();
     if (data.notificationPreferences !== undefined) setPayload.notification_preferences = data.notificationPreferences;
 
     await db
@@ -562,28 +452,7 @@ export async function actionUpdateProfile(
       .set(setPayload)
       .where(eq(profiles.id, userId as any));
 
-    // 2. If tutor fields are passed, synchronize tutor_profiles
-    const cleanTelegram = data.telegramHandle
-      ? data.telegramHandle.replace('@', '').trim()
-      : (data as any).telegram_handle
-      ? String((data as any).telegram_handle).replace('@', '').trim()
-      : undefined;
-
-    if (
-      cleanTelegram !== undefined ||
-      data.hourlyRate !== undefined ||
-      data.teachingCurriculums !== undefined ||
-      data.teachingSubjects !== undefined ||
-      data.institutionName !== undefined
-    ) {
-      await actionUpdateTutorProfile(userId, {
-        ...(cleanTelegram !== undefined ? { telegram_handle: cleanTelegram } : {}),
-        ...(data.hourlyRate !== undefined ? { hourly_rate: data.hourlyRate } : {}),
-        ...(data.teachingCurriculums !== undefined ? { teaching_curriculums: data.teachingCurriculums } : {}),
-        ...(data.teachingSubjects !== undefined ? { teaching_subjects: data.teachingSubjects } : {}),
-        ...(data.institutionName !== undefined ? { institution: data.institutionName } : {}),
-      });
-    }
+    // Removed tutor profile upsert
 
     return { success: true };
   } catch (err: any) {

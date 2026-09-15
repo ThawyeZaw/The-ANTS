@@ -698,12 +698,20 @@ export async function getMySubjectsHub(userId: string): Promise<{
   }
 }
 
+const compositeBoundariesCache = new Map<string, { data: any[]; expiresAt: number }>();
+
 export async function listSubjectCompositeBoundaries(
   subjectId: string,
   year: number,
   series: string,
   opts?: { variant?: string | null; tier?: string | null }
 ) {
+  const cacheKey = `${subjectId}:${year}:${series}:${opts?.variant ?? ''}:${opts?.tier ?? ''}`;
+  const hit = compositeBoundariesCache.get(cacheKey);
+  if (hit && Date.now() < hit.expiresAt) {
+    return hit.data;
+  }
+
   try {
     const db = getDb();
     const rows = await db.query.subjectGradeBoundaries.findMany({
@@ -713,11 +721,13 @@ export async function listSubjectCompositeBoundaries(
         eq(subjectGradeBoundaries.series, series)
       ),
     });
-    return rows.filter((r) => {
+    const result = rows.filter((r) => {
       if (opts?.tier && r.tier && r.tier !== opts.tier) return false;
       if (opts?.variant && r.variant && r.variant !== opts.variant) return false;
       return true;
     });
+    compositeBoundariesCache.set(cacheKey, { data: result, expiresAt: Date.now() + 15 * 60 * 1000 });
+    return result;
   } catch (err) {
     console.error('[curriculum] listSubjectCompositeBoundaries error:', err);
     return [];

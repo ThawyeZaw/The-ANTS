@@ -180,12 +180,27 @@ export default function CurriculumSubjectListPage() {
 
   const handleEnrollToggle = async (subject: SubjectWithProgress) => {
     if (!user) return;
-    if (subject.isEnrolled) {
-      await unenrollFromSubject(user.id, subject.id);
-    } else {
-      await enrollInSubject(user.id, curriculumId, subject.id);
+    const nextEnrolled = !subject.isEnrolled;
+
+    // 1. Instant optimistic update — no page reload, no skeletons
+    setSubjects((prev) =>
+      prev.map((s) => (s.id === subject.id ? { ...s, isEnrolled: nextEnrolled } : s))
+    );
+
+    // 2. Persist in background
+    try {
+      if (!nextEnrolled) {
+        await unenrollFromSubject(user.id, subject.id);
+      } else {
+        await enrollInSubject(user.id, curriculumId, subject.id);
+      }
+    } catch (err) {
+      console.error('[curriculum] Failed to toggle enrollment:', err);
+      // Rollback on network failure
+      setSubjects((prev) =>
+        prev.map((s) => (s.id === subject.id ? { ...s, isEnrolled: !nextEnrolled } : s))
+      );
     }
-    load();
   };
 
   const enrolled = subjects.filter((s) => s.isEnrolled);

@@ -157,60 +157,20 @@ export function SubjectHubCard({
           </p>
         )}
 
-        <div className="pt-2 border-t border-border/40 space-y-2">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-foreground-muted">Exam tools</p>
-          <div className="flex flex-wrap gap-1.5">
-            <Link
-              href={`/past-papers?subject=${subject.id}`}
-              className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-[10px] font-semibold hover:border-primary/40"
-            >
-              <BookOpen className="h-3 w-3" /> Papers
-            </Link>
-            <Link
-              href={`/calculator?${calcQs.toString()}`}
-              className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-[10px] font-semibold hover:border-primary/40"
-            >
-              <Calculator className="h-3 w-3" /> Calculator
-            </Link>
-            <Link
-              href={`/countdown?subject=${subject.id}`}
-              className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-[10px] font-semibold hover:border-primary/40"
-            >
-              <Timer className="h-3 w-3" /> Countdown
-            </Link>
-          </div>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-foreground-muted pt-1">Study tools</p>
-          <div className="flex flex-wrap gap-1.5">
-            <Link
-              href={`/curriculum/${subject.curriculum_id}/${subject.id}`}
-              className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-[10px] font-semibold hover:border-primary/40"
-            >
-              <ClipboardCheck className="h-3 w-3" /> Topics
-            </Link>
-            <span className="inline-flex items-center gap-1 rounded-lg border border-dashed border-border px-2 py-1 text-[10px] text-foreground-muted">
-              <StickyNote className="h-3 w-3" /> Notes
-              <span className="text-[9px]">Soon</span>
-            </span>
-            <span className="inline-flex items-center gap-1 rounded-lg border border-dashed border-border px-2 py-1 text-[10px] text-foreground-muted">
-              <Layers className="h-3 w-3" /> Flashcards
-              <span className="text-[9px]">Soon</span>
-            </span>
-            <span className="inline-flex items-center gap-1 rounded-lg border border-dashed border-border px-2 py-1 text-[10px] text-foreground-muted">
-              <HelpCircle className="h-3 w-3" /> Quizzes
-              <span className="text-[9px]">Soon</span>
-            </span>
-          </div>
+        <div className="pt-3 border-t border-border/40 grid grid-cols-2 gap-2 mt-2">
+          <Link
+            href={`/past-papers?subject=${subject.id}`}
+            className="flex items-center justify-center gap-1.5 rounded-xl bg-primary/10 text-primary border border-primary/20 px-3 py-2 text-xs font-bold hover:bg-primary/20 transition-colors"
+          >
+            <BookOpen className="h-4 w-4" /> Past Papers
+          </Link>
+          <Link
+            href={`/curriculum/${subject.curriculum_id}/${subject.id}`}
+            className="flex items-center justify-center gap-1.5 rounded-xl bg-background-secondary text-foreground border border-border px-3 py-2 text-xs font-bold hover:border-border-hover hover:bg-background-secondary/80 transition-colors"
+          >
+            <GraduationCap className="h-4 w-4 text-primary" /> Progress
+          </Link>
         </div>
-
-        <Link
-          href={`/curriculum/${subject.curriculum_id}/${subject.id}`}
-          className="flex items-center justify-between pt-1 text-xs font-medium text-foreground-muted hover:text-foreground"
-        >
-          <span className="inline-flex items-center gap-1">
-            <GraduationCap className="h-3.5 w-3.5" /> Open subject
-          </span>
-          <ChevronRight className="h-3.5 w-3.5" />
-        </Link>
       </div>
     </div>
   );
