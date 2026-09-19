@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCountdown } from '@/hooks/useCountdown';
 import { CountdownCard } from './CountdownCard';
+import { groupEdexcelIalSubjects } from '@/lib/edexcel-ial';
 import { Plus, Timer, BookMarked, BookOpen, Calendar, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useLessonContext, type CatalogCurriculum } from '@/context/LessonContext';
@@ -172,6 +173,8 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
     return catalog.find((c) => c.id === filterCurriculumId)?.subjects ?? [];
   }, [catalog, filterCurriculumId]);
 
+  const groupedSubjectsForFilter = useMemo(() => groupEdexcelIalSubjects(subjectsForFilter), [subjectsForFilter]);
+
   const writeFilters = (curriculumId: string, subjectId: string) => {
     setFilterCurriculumId(curriculumId);
     setFilterSubjectId(subjectId);
@@ -280,6 +283,18 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
 
   const filteredAutoCountdowns = autoCountdowns.filter((cd) => matchesSubjectFilter(cd.subjectId));
 
+  const allPastExams = useMemo(() => {
+    const past: any[] = [];
+    Object.keys(groupedCountdowns).forEach((group) => {
+      groupedCountdowns[group].forEach((c) => {
+        if (c.timeLeft.isPast && matchesSubjectFilter((c as any).subject_id, (c as any).curriculum_id)) {
+          past.push(c);
+        }
+      });
+    });
+    return past;
+  }, [groupedCountdowns, filterSubjectId, filterCurriculumId]);
+
   const handleQuickPinOfficialExam = async (exam: any) => {
     const examDate = exam.exam_date || exam.date;
     await createCountdown({
@@ -374,11 +389,24 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
               className="w-full rounded-xl border border-[var(--border)] bg-[var(--background-card)] px-3 py-2 text-sm text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
             >
               <option value="all">All subjects</option>
-              {subjectsForFilter.map((subj) => (
-                <option key={subj.id} value={subj.id}>
-                  {subj.title}
-                </option>
-              ))}
+              {groupedSubjectsForFilter.map((group) => {
+                if (!group.isVirtual) {
+                  return (
+                    <option key={group.id} value={group.id}>
+                      {group.title}
+                    </option>
+                  );
+                }
+                return (
+                  <optgroup key={group.id} label={`Edexcel IAL ${group.title}`}>
+                    {group.units.map((unit) => (
+                      <option key={unit.id} value={unit.id}>
+                        {unit.title}
+                      </option>
+                    ))}
+                  </optgroup>
+                );
+              })}
             </select>
           </label>
         </div>
@@ -502,7 +530,7 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
               })
               .map((group) => {
                 const countdowns = (groupedCountdowns[group] ?? []).filter((c) =>
-                  matchesSubjectFilter((c as any).subject_id, (c as any).curriculum_id)
+                  !c.timeLeft.isPast && matchesSubjectFilter((c as any).subject_id, (c as any).curriculum_id)
                 );
                 if (countdowns.length === 0) return null;
 
@@ -532,6 +560,26 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
           </div>
         </section>
       ) : null}
+
+      {/* ── Section 2.5: Past Exams ───────────────────────────────────────── */}
+      {allPastExams.length > 0 && (
+        <section className="space-y-6 pt-6 border-t border-[var(--border)] opacity-70">
+          <div className="flex items-center gap-2.5">
+            <Timer className="h-4 w-4 text-[var(--foreground-muted)]" />
+            <h2 className="text-lg font-bold text-[var(--foreground-muted)]">Past Exams (Concluded)</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {allPastExams.map((countdown) => (
+              <CountdownCard
+                key={countdown.id}
+                countdown={countdown}
+                onDelete={deleteCountdown}
+                canDelete={true}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ── Section 3: Official Exam Timetable Catalog ──────────────────────── */}
       {availableExams.length > 0 && (

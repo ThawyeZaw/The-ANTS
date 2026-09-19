@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { BookOpen, GraduationCap, ArrowRight, Plus } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { getMySubjectsHub, type HubSubject } from '@/actions/curriculum';
+import { groupEdexcelIalSubjects } from '@/lib/edexcel-ial';
 
 export function DashboardSubjectsPanel() {
   const { user } = useAuth();
@@ -67,37 +68,77 @@ export function DashboardSubjectsPanel() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {subjects.map((subject) => (
-          <Link
-            key={subject.id}
-            href={`/curriculum/${subject.curriculum_id}/${subject.id}`}
-            className="group rounded-xl border border-border bg-background-card p-4 hover:border-primary/40 hover:bg-background-secondary/60 transition-all"
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span
-                    className="text-[10px] font-bold font-mono px-1.5 py-0.5 rounded"
-                    style={{ backgroundColor: `${subject.color_code ?? '#6366f1'}20`, color: subject.color_code ?? '#6366f1' }}
-                  >
-                    {subject.code}
+        {groupEdexcelIalSubjects(subjects).map((group) => {
+          if (!group.isVirtual) {
+            const subject = group.units[0];
+            return (
+              <Link
+                key={subject.id}
+                href={`/curriculum/${subject.curriculum_id}/${subject.id}`}
+                className="group rounded-xl border border-border bg-background-card p-4 hover:border-primary/40 hover:bg-background-secondary/60 transition-all"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span
+                        className="text-[10px] font-bold font-mono px-1.5 py-0.5 rounded"
+                        style={{ backgroundColor: `${subject.color_code ?? '#6366f1'}20`, color: subject.color_code ?? '#6366f1' }}
+                      >
+                        {subject.code}
+                      </span>
+                    </div>
+                    <h3 className="text-sm font-semibold text-foreground">{subject.name}</h3>
+                  </div>
+                  <div className="shrink-0 p-2 rounded-lg bg-background-secondary group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                    <ArrowRight className="h-4 w-4" />
+                  </div>
+                </div>
+                
+                <div className="mt-4 pt-3 border-t border-border/40 flex items-center gap-3">
+                  <span className="flex items-center gap-1.5 text-[11px] font-medium text-foreground-muted group-hover:text-foreground transition-colors">
+                      <BookOpen className="h-3.5 w-3.5" />
+                      Past Papers & Progress
                   </span>
                 </div>
-                <h3 className="text-sm font-semibold text-foreground">{subject.name}</h3>
+              </Link>
+            );
+          }
+
+          // It's a virtual group
+          return (
+            <div
+              key={group.id}
+              className="group rounded-xl border border-border bg-background-card p-4 hover:border-amber-500/40 transition-all"
+            >
+              <div className="flex items-start justify-between gap-2 mb-3">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[10px] font-bold font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-500">
+                      Edexcel IAL Group
+                    </span>
+                  </div>
+                  <h3 className="text-sm font-semibold text-foreground">{group.title}</h3>
+                </div>
+                <div className="shrink-0 p-2 rounded-lg bg-background-secondary">
+                  <GraduationCap className="h-4 w-4 text-amber-500" />
+                </div>
               </div>
-              <div className="shrink-0 p-2 rounded-lg bg-background-secondary group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                <ArrowRight className="h-4 w-4" />
+              
+              <div className="flex flex-wrap gap-1.5">
+                {group.units.map((unit) => (
+                  <Link
+                    key={unit.id}
+                    href={`/curriculum/${unit.curriculum_id}/${unit.id}`}
+                    className="inline-flex items-center rounded bg-background-secondary px-2 py-1 text-[10px] font-mono font-medium text-foreground hover:bg-primary hover:text-white transition-colors"
+                    title={unit.title}
+                  >
+                    {unit.code}
+                  </Link>
+                ))}
               </div>
             </div>
-            
-            <div className="mt-4 pt-3 border-t border-border/40 flex items-center gap-3">
-               <span className="flex items-center gap-1.5 text-[11px] font-medium text-foreground-muted group-hover:text-foreground transition-colors">
-                  <BookOpen className="h-3.5 w-3.5" />
-                  Past Papers & Progress
-               </span>
-            </div>
-          </Link>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

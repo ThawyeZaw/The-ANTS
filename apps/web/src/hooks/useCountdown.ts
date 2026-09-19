@@ -140,14 +140,14 @@ export function useCountdown(userId: string | undefined) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             userId,
-            examId: data.exam_id || undefined,
+            examId: data.exam_id ?? undefined,
             title: title || 'Upcoming Exam',
             examDate: target || new Date(Date.now() + 30 * 86400000).toISOString(),
             colorCode: '#EF4444',
             isCustom: !data.exam_id,
             isPinned: Boolean(data.exam_id),
-            subjectId,
-            examBoard,
+            subjectId: subjectId ?? undefined,
+            examBoard: examBoard ?? undefined,
           }),
         });
 

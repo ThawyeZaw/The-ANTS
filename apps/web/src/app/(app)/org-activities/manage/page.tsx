@@ -18,6 +18,7 @@ import {
   Star,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useRole } from '@/hooks/useRole';
 import {
   getOrgTimelineItemsAction,
   addOrgTimelineItemAction,
@@ -35,9 +36,8 @@ import ImageUploader from '@/components/about/ImageUploader';
 // ── Tabs ─────────────────────────────────────────────────────────────────────
 
 const TABS = [
-  { key: 'mission', label: 'Mission', icon: <Target className="h-4 w-4" /> },
+  { key: 'about', label: 'About', icon: <Target className="h-4 w-4" /> },
   { key: 'team', label: 'Team', icon: <Users className="h-4 w-4" /> },
-  { key: 'timeline', label: 'Timeline', icon: <Clock className="h-4 w-4" /> },
   { key: 'founders', label: 'Founders', icon: <Star className="h-4 w-4" /> },
 ] as const;
 
@@ -386,15 +386,15 @@ function FoundersTab() {
 export default function ManageOrgPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<TabKey>('mission');
+  const [activeTab, setActiveTab] = useState<TabKey>('about');
 
-  const isMainContributor = user?.profile?.role === 'main_contributor';
+  const { isAdmin } = useRole();
 
   useEffect(() => {
-    if (user && !isMainContributor) router.replace('/dashboard');
-  }, [user, isMainContributor, router]);
+    if (user && !isAdmin) router.replace('/dashboard');
+  }, [user, isAdmin, router]);
 
-  if (!isMainContributor) {
+  if (!isAdmin) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <Loader2 className="h-6 w-6 text-primary animate-spin" />
@@ -438,9 +438,14 @@ export default function ManageOrgPage() {
         </div>
 
         {/* Tab Content */}
-        {activeTab === 'mission' && <MissionEditor />}
+        {activeTab === 'about' && (
+          <div className="space-y-12">
+            <MissionEditor />
+            <div className="border-t border-border/50 max-w-4xl mx-auto" />
+            <TimelineTab />
+          </div>
+        )}
         {activeTab === 'team' && <TeamManager />}
-        {activeTab === 'timeline' && <TimelineTab />}
         {activeTab === 'founders' && <FoundersTab />}
       </div>
     </div>

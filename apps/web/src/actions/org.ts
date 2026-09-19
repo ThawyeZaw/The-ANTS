@@ -6,7 +6,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { getDb, orgMission, orgTeamMembers, orgTimelineItems, profiles } from '@/lib/db';
-import { asc, eq } from 'drizzle-orm';
+import { asc, desc, eq } from 'drizzle-orm';
 import { canHavePublicProfile, normalizeProfileRoles } from '@the-ants/shared-types';
 import type { UserRole } from '@/types';
 import type {
@@ -212,7 +212,7 @@ export async function getOrgTimelineAction(): Promise<OrgTimelineItem[]> {
     const rows = await db
       .select()
       .from(orgTimelineItems)
-      .orderBy(asc(orgTimelineItems.order_index), asc(orgTimelineItems.created_at));
+      .orderBy(desc(orgTimelineItems.created_at));
     return rows.map(shapeTimelineItem);
   } catch {
     return [];

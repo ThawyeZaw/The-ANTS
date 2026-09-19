@@ -31,6 +31,17 @@ function iEqual(column: AnyColumn, value: string): SQL {
   return sql`lower(${column}) = ${value.toLowerCase()}`;
 }
 
+function parseJsonField<T>(val: unknown): T | undefined {
+  if (typeof val === 'string') {
+    try {
+      return JSON.parse(val) as T;
+    } catch {
+      return undefined;
+    }
+  }
+  return val as T | undefined;
+}
+
 function mapCertificationRow(row: typeof certifications.$inferSelect) {
   const metadata = (row.metadata as Record<string, unknown> | null) ?? {};
   const type = typeof metadata.type === 'string' ? metadata.type : 'other';
@@ -218,19 +229,19 @@ export async function actionGetFullProfile(
       roles: userRoles,
       bio: profileRow.bio ?? undefined,
       title: profileRow.title ?? undefined,
-      socialLinks: profileRow.social_links as unknown as Profile['socialLinks'],
+      socialLinks: parseJsonField(profileRow.social_links),
       isPublic: profileRow.is_public ?? true,
       pinnedItemId: profileRow.pinned_item_id ?? undefined,
-      sectionVisibility: profileRow.section_visibility as unknown as Profile['sectionVisibility'],
+      sectionVisibility: parseJsonField(profileRow.section_visibility),
       sectionOrder:
-        (profileRow.section_order as string[] | null) ??
-        ((profileRow.section_visibility as any)?.order ?? undefined),
-      projects: profileRow.projects as unknown as Profile['projects'],
-      activities: profileRow.activities as unknown as Profile['activities'],
-      achievements: profileRow.achievements as unknown as Profile['achievements'],
-      academicGrades: profileRow.academic_grades as unknown as Profile['academicGrades'],
-      testimonials: profileRow.testimonials as unknown as Profile['testimonials'],
-      theme: profileRow.theme as unknown as Profile['theme'],
+        parseJsonField<string[]>(profileRow.section_order) ??
+        (parseJsonField<any>(profileRow.section_visibility)?.order ?? undefined),
+      projects: parseJsonField(profileRow.projects),
+      activities: parseJsonField(profileRow.activities),
+      achievements: parseJsonField(profileRow.achievements),
+      academicGrades: parseJsonField(profileRow.academic_grades),
+      testimonials: parseJsonField(profileRow.testimonials),
+      theme: parseJsonField(profileRow.theme),
       spacing: (profileRow.spacing as Profile['spacing']) ?? undefined,
       width: (profileRow.width as Profile['width']) ?? undefined,
       sectionLayout: (profileRow.section_layout as Profile['sectionLayout']) ?? undefined,

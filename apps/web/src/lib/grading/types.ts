@@ -17,6 +17,7 @@ export interface PaperComponent {
   variant?: string | null;
   maxMark: number;
   title?: string | null;
+  exclusiveGroup?: string;
   boundaries: GradeBoundary[];
 }
 

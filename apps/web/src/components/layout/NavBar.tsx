@@ -381,7 +381,7 @@ export default function NavBar() {
             <UserPlus className="w-4 h-4 text-primary shrink-0" />
             <span className="truncate">Manage Users</span>
           </Link>
-          <Link href="/org-activities" onClick={closePanel} className={roleLinkClass}>
+          <Link href="/about" onClick={closePanel} className={roleLinkClass}>
             <Building2 className="w-4 h-4 text-primary shrink-0" />
             <span className="truncate">Organization Team</span>
           </Link>
@@ -443,7 +443,7 @@ export default function NavBar() {
           <RailIconLink href="/timetable" label="Study Tools" icon={Wrench} active={isToolsActive(pathname)} />
           <RailIconLink href="/team" label="Tutors & Contributors" icon={Users} active={isTeamActive(pathname)} />
           {mounted && hasStaffRole && (
-            <RailIconLink href="/editor" label="Workspace Tools" icon={Sparkles} active={pathname.startsWith('/editor') || pathname.startsWith('/main-contributor') || pathname.startsWith('/org-activities')} />
+            <RailIconLink href="/editor" label="Workspace Tools" icon={Sparkles} active={pathname.startsWith('/editor') || pathname.startsWith('/main-contributor') || pathname.startsWith('/about')} />
           )}
         </div>
 

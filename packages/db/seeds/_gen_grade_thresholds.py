@@ -199,7 +199,17 @@ def extract_component_rows(text: str):
         m = re.match(r"^Component\s+(\d{2})\s*$", lines[i])
         m2 = re.match(r"^Component\s+(\d{2})\s+(.+)$", lines[i])
         if m or m2:
-            code = (m or m2).group(1)
+            comp = m.group(1) if m else m2.group(1)
+            # Some components are 2 digits (e.g., 12 means Paper 1, Variant 2)
+            # For ICT, sometimes papers are just '02' or '03' indicating Paper 2 or Paper 3.
+            if comp.startswith("0"):
+                paper = comp[1]
+                variant = None
+            else:
+                paper = comp[0]
+                variant = comp[1] if len(comp) > 1 else None
+
+            # Look ahead for grades
             nums: list[str] = []
             if m2:
                 nums.extend(m2.group(2).strip().split())

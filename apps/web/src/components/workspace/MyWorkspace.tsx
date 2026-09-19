@@ -79,7 +79,7 @@ function ExamsTab({
 }) {
   const router = useRouter();
   const { showToast } = useWorkspaceToast();
-  const allCountdowns = Object.values(countdowns).flat();
+  const allCountdowns = Object.values(countdowns).flat().filter(c => !c.timeLeft.isPast);
 
   const handleOpenCountdown = useCallback(() => {
     try {

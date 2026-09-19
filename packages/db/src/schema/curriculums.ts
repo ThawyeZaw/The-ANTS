@@ -44,6 +44,7 @@ export const topics = sqliteTable(
     description: text('description'),
     order_index: integer('order_index').default(0),
     subtopics_count: integer('subtopics_count').default(0),
+    subtopics: text('subtopics'), // JSON array of subtopic titles
     difficulty_level: text('difficulty_level'),
     estimated_hours: integer('estimated_hours'),
     created_at: tsNow('created_at'),
@@ -85,6 +86,7 @@ export const topicProgress = sqliteTable(
     status: text('status').default('not_started'),
     last_studied_at: ts('last_studied_at'),
     completed_at: ts('completed_at'),
+    completed_subtopics: text('completed_subtopics'), // JSON array of completed subtopics
     notes: text('notes'),
   },
   (table) => [

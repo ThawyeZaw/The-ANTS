@@ -19,8 +19,9 @@ import {
   Clock,
   Layers,
   Filter,
+  Check,
 } from 'lucide-react';
-import { type TopicWithProgress, updateTopicProgress } from '@/actions/curriculum';
+import { type TopicWithProgress, updateTopicProgress, toggleSubtopicProgress } from '@/actions/curriculum';
 import { cn } from '@/lib/utils';
 
 interface TopicTrackerProps {
@@ -78,6 +79,44 @@ export function TopicTracker({
         ? 'completed'
         : 'not_started';
     handleStatusChange(topicId, nextStatus);
+  };
+
+  const handleSubtopicToggle = (topic: TopicWithProgress, subtopicName: string, isCompleted: boolean) => {
+    let subtopics: string[] = [];
+    try {
+      if (topic.subtopics) subtopics = JSON.parse(topic.subtopics);
+    } catch {}
+
+    let completedSubtopics: string[] = [];
+    try {
+      if (topic.completed_subtopics) completedSubtopics = JSON.parse(topic.completed_subtopics);
+    } catch {}
+
+    if (isCompleted && !completedSubtopics.includes(subtopicName)) {
+      completedSubtopics.push(subtopicName);
+    } else if (!isCompleted) {
+      completedSubtopics = completedSubtopics.filter(s => s !== subtopicName);
+    }
+
+    const newStatus = completedSubtopics.length === subtopics.length && subtopics.length > 0
+      ? 'completed'
+      : (completedSubtopics.length > 0 ? 'in_progress' : 'not_started');
+
+    setTopics(prev => prev.map(t => {
+      if (t.id === topic.id) {
+        return {
+          ...t,
+          completed_subtopics: JSON.stringify(completedSubtopics),
+          status: newStatus
+        };
+      }
+      return t;
+    }));
+
+    startTransition(async () => {
+      const res = await toggleSubtopicProgress(userId, topic.id, subtopicName, isCompleted, subtopics.length);
+      if (res.success && onTopicChange) onTopicChange();
+    });
   };
 
   // Filtering
@@ -333,10 +372,64 @@ export function TopicTracker({
                   </div>
                 </div>
 
-                {/* Expanded Description / Notes */}
-                {isExpanded && topic.description && (
+                {/* Expanded Description / Notes / Subtopics */}
+                {isExpanded && (topic.description || topic.subtopics) && (
                   <div className="px-4 pb-3.5 pt-1 text-xs text-foreground-secondary border-t border-border/40 bg-background-secondary/30 leading-relaxed">
-                    <p>{topic.description}</p>
+                    {topic.description && <p className="mb-3">{topic.description}</p>}
+                    
+                    {/* Subtopics Checklist */}
+                    {(() => {
+                      if (!topic.subtopics) return null;
+                      let subtopicsList: string[] = [];
+                      let completedList: string[] = [];
+                      try {
+                        subtopicsList = JSON.parse(topic.subtopics);
+                        if (topic.completed_subtopics) {
+                          completedList = JSON.parse(topic.completed_subtopics);
+                        }
+                      } catch (e) {
+                        return null;
+                      }
+                      if (subtopicsList.length === 0) return null;
+                      
+                      return (
+                        <div className="space-y-2 mt-2 pt-2 border-t border-border/40">
+                          <h4 className="font-semibold text-foreground flex items-center gap-2">
+                            <Layers className="w-3.5 h-3.5" /> Subtopics Checklist
+                            <span className="text-foreground-muted font-normal">
+                              ({completedList.length}/{subtopicsList.length})
+                            </span>
+                          </h4>
+                          <ul className="space-y-1.5 pl-1">
+                            {subtopicsList.map((sub, i) => {
+                              const isSubCompleted = completedList.includes(sub);
+                              return (
+                                <li key={i} className="flex items-start gap-2 group">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSubtopicToggle(topic, sub, !isSubCompleted)}
+                                    className={cn(
+                                      "mt-0.5 shrink-0 flex items-center justify-center w-4 h-4 rounded border transition-colors",
+                                      isSubCompleted 
+                                        ? "bg-primary border-primary text-primary-foreground" 
+                                        : "border-foreground-muted/40 hover:border-primary bg-background"
+                                    )}
+                                  >
+                                    {isSubCompleted && <Check className="w-3 h-3" />}
+                                  </button>
+                                  <span className={cn(
+                                    "transition-colors",
+                                    isSubCompleted ? "text-foreground-muted line-through" : "text-foreground"
+                                  )}>
+                                    {sub}
+                                  </span>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
               </div>

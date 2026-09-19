@@ -20,6 +20,7 @@ import {
   type SubjectWithProgress,
 } from '@/actions/curriculum';
 import { cn } from '@/lib/utils';
+import { groupEdexcelIalSubjects, type GroupedSubject } from '@/lib/edexcel-ial';
 
 const CURRICULUM_LABELS: Record<string, { label: string; code: string; color: string }> = {
   'curr-caie-igcse':    { label: 'Cambridge IGCSE',               code: 'CAIE',    color: '#8b5cf6' },
@@ -136,6 +137,80 @@ function SubjectCard({
   );
 }
 
+function GroupedSubjectCard({
+  group,
+  onEnrollToggle,
+  curriculumId,
+}: {
+  group: GroupedSubject<SubjectWithProgress>;
+  onEnrollToggle: (s: SubjectWithProgress) => void;
+  curriculumId: string;
+}) {
+  if (!group.isVirtual) {
+    return <SubjectCard subject={group.units[0]} onEnrollToggle={onEnrollToggle} curriculumId={curriculumId} />;
+  }
+
+  const allEnrolled = group.units.every((u) => u.isEnrolled);
+  const anyEnrolled = group.units.some((u) => u.isEnrolled);
+
+  return (
+    <div
+      className={cn(
+        'group relative rounded-2xl border border-border/60 bg-background-card overflow-hidden',
+        'hover:border-border-hover hover:shadow-md transition-all duration-200'
+      )}
+    >
+      <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl bg-amber-500" />
+      <div className="p-4 ml-1 space-y-4">
+        {/* Header row */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[10px] font-bold font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-500">
+                Edexcel IAL Group
+              </span>
+              {anyEnrolled && (
+                <span className="flex items-center gap-1 text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-success/15 text-success">
+                  <CheckCircle2 className="h-2.5 w-2.5" />
+                  {allEnrolled ? 'All Enrolled' : 'Partially Enrolled'}
+                </span>
+              )}
+            </div>
+            <h3 className="text-sm font-semibold text-foreground mt-1 leading-snug">{group.title}</h3>
+          </div>
+        </div>
+
+        {/* Units List */}
+        <div className="space-y-2">
+          <p className="text-[10px] font-semibold text-foreground-muted uppercase tracking-wider">Units / Papers</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {group.units.map((unit) => (
+              <div key={unit.id} className="flex items-center justify-between gap-2 p-2 rounded-lg border border-border/40 bg-background-secondary/50">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-foreground truncate" title={unit.title}>{unit.title}</p>
+                  <p className="text-[10px] text-foreground-muted font-mono">{unit.code}</p>
+                </div>
+                <button
+                  onClick={() => onEnrollToggle(unit)}
+                  className={cn(
+                    'shrink-0 flex items-center justify-center h-7 w-7 rounded-md border transition-colors',
+                    unit.isEnrolled
+                      ? 'border-error/30 text-error hover:bg-error/10'
+                      : 'border-primary/30 text-primary hover:bg-primary/10'
+                  )}
+                  title={unit.isEnrolled ? 'Leave' : 'Enroll'}
+                >
+                  {unit.isEnrolled ? <Minus className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SubjectSkeleton() {
   return (
     <div className="rounded-2xl border border-border/40 bg-background-card p-4 ml-1 animate-pulse space-y-3">
@@ -206,6 +281,9 @@ export default function CurriculumSubjectListPage() {
   const enrolled = subjects.filter((s) => s.isEnrolled);
   const unenrolled = subjects.filter((s) => !s.isEnrolled);
 
+  const groupedEnrolled = groupEdexcelIalSubjects(enrolled);
+  const groupedUnenrolled = groupEdexcelIalSubjects(unenrolled);
+
   return (
     <div className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8 transition-colors">
       <div className="max-w-4xl mx-auto space-y-8">
@@ -245,9 +323,9 @@ export default function CurriculumSubjectListPage() {
                   <CheckCircle2 className="h-3.5 w-3.5 text-success" />
                   My Subjects ({enrolled.length})
                 </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {enrolled.map((s) => (
-                    <SubjectCard key={s.id} subject={s} onEnrollToggle={handleEnrollToggle} curriculumId={curriculumId} />
+                <div className="grid grid-cols-1 gap-4">
+                  {groupedEnrolled.map((g) => (
+                    <GroupedSubjectCard key={g.id} group={g} onEnrollToggle={handleEnrollToggle} curriculumId={curriculumId} />
                   ))}
                 </div>
               </section>
@@ -259,9 +337,9 @@ export default function CurriculumSubjectListPage() {
                   <BarChart3 className="h-3.5 w-3.5" />
                   Available ({unenrolled.length})
                 </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {unenrolled.map((s) => (
-                    <SubjectCard key={s.id} subject={s} onEnrollToggle={handleEnrollToggle} curriculumId={curriculumId} />
+                <div className="grid grid-cols-1 gap-4">
+                  {groupedUnenrolled.map((g) => (
+                    <GroupedSubjectCard key={g.id} group={g} onEnrollToggle={handleEnrollToggle} curriculumId={curriculumId} />
                   ))}
                 </div>
               </section>

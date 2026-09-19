@@ -97,6 +97,7 @@ export default function GradeCalculator() {
     (searchParams.get('tier') as SubjectTier) || ''
   );
   const [selectedVariant, setSelectedVariant] = useState(searchParams.get('variant') || '');
+  const [selectedExclusiveOptions, setSelectedExclusiveOptions] = useState<Record<string, string>>({});
   const [rawMarks, setRawMarks] = useState<Record<string, number | string>>({});
   const [compositeBoundaries, setCompositeBoundaries] = useState<GradeBoundary[]>([]);
 
@@ -254,8 +255,9 @@ export default function GradeCalculator() {
         weight: 100,
         paper_number: c.paperNumber,
         variant: c.variant ?? null,
+        exclusiveGroup: c.exclusiveGroup,
         paper_boundaries: c.boundaries,
-      };
+      } as PaperDef & { exclusiveGroup?: string };
     });
 
     return {
@@ -284,6 +286,41 @@ export default function GradeCalculator() {
     selectedVariant,
     selectedSubjectRow,
   ]);
+
+  const exclusiveGroups = useMemo(() => {
+    if (!activePreset) return null;
+    const groups = new Map<string, (PaperDef & { exclusiveGroup?: string })[]>();
+    for (const p of activePreset.papers as (PaperDef & { exclusiveGroup?: string })[]) {
+      if (p.exclusiveGroup) {
+        if (!groups.has(p.exclusiveGroup)) groups.set(p.exclusiveGroup, []);
+        groups.get(p.exclusiveGroup)!.push(p);
+      }
+    }
+    return groups.size > 0 ? groups : null;
+  }, [activePreset]);
+
+  useEffect(() => {
+    if (!exclusiveGroups) return;
+    const newOpts = { ...selectedExclusiveOptions };
+    let changed = false;
+    for (const [groupName, papers] of exclusiveGroups.entries()) {
+      if (!newOpts[groupName] || !papers.find(p => (p.paper_number || p.name) === newOpts[groupName])) {
+        newOpts[groupName] = papers[0].paper_number || papers[0].name;
+        changed = true;
+      }
+    }
+    if (changed) setSelectedExclusiveOptions(newOpts);
+  }, [exclusiveGroups]);
+
+  const filteredActivePapers = useMemo(() => {
+    if (!activePreset) return [];
+    return (activePreset.papers as (PaperDef & { exclusiveGroup?: string })[]).filter((p) => {
+      if (p.exclusiveGroup) {
+        return (p.paper_number || p.name) === selectedExclusiveOptions[p.exclusiveGroup];
+      }
+      return true;
+    });
+  }, [activePreset, selectedExclusiveOptions]);
 
   useEffect(() => {
     if (!selectedSubject || !selectedSeries || !activePreset?.year) {
@@ -349,6 +386,7 @@ export default function GradeCalculator() {
     setSelectedCurriculum('');
     setSelectedTier('');
     setSelectedVariant('');
+    setSelectedExclusiveOptions({});
     setCurrentStep(1);
   };
 
@@ -363,8 +401,8 @@ export default function GradeCalculator() {
   );
 
   const paperResults = useMemo(() => {
-    if (!activePreset) return [];
-    return activePreset.papers.map((p, i) => {
+    if (!activePreset || filteredActivePapers.length === 0) return [];
+    return filteredActivePapers.map((p, i) => {
       const val = rawMarks[i];
       const filled = val !== '' && val !== undefined;
       const raw = filled ? Number(val) : 0;
@@ -618,6 +656,36 @@ export default function GradeCalculator() {
             </div>
           )}
 
+          {/* Exclusive Group Selectors (e.g., Paper 52 OR 62) */}
+          {exclusiveGroups && canGoStep2 && (
+            <div className="space-y-4 pt-2">
+              {Array.from(exclusiveGroups.entries()).map(([groupName, groupPapers]) => (
+                <div key={groupName} className="space-y-1.5 p-4 bg-primary/5 border border-primary/20 rounded-2xl">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-primary">
+                    Select Option ({groupName.replace('_', ' ')})
+                  </label>
+                  <p className="text-[11px] text-foreground-muted mb-2">
+                    These papers are mutually exclusive. Choose the one you took.
+                  </p>
+                  <select
+                    value={selectedExclusiveOptions[groupName] || ''}
+                    onChange={(e) => setSelectedExclusiveOptions(prev => ({ ...prev, [groupName]: e.target.value }))}
+                    className="w-full bg-background-card border border-primary/30 rounded-xl py-2.5 px-4 text-xs font-bold text-foreground outline-none focus:border-primary transition-colors"
+                  >
+                    {groupPapers.map((p) => {
+                      const val = p.paper_number || p.name;
+                      return (
+                        <option key={val} value={val}>
+                          Paper {val} {p.name !== val ? `(${p.name})` : ''}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Ready notification card */}
           {canGoStep2 && activePreset && (
             <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 flex items-center gap-3">
@@ -628,7 +696,7 @@ export default function GradeCalculator() {
                 </p>
                 <p className="text-xs text-foreground-muted">
                   {activePreset.title} &mdash; {activePreset.series} •{' '}
-                  {activePreset.papers.length} paper(s) •{' '}
+                  {filteredActivePapers.length} paper(s) •{' '}
                   {isIAL ? 'Edexcel Modular UMS' : 'Raw Mark Boundaries'}
                 </p>
               </div>
