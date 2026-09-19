@@ -152,10 +152,14 @@ export const userEnrollments = sqliteTable(
     tier: text('tier'),
     /** 'AS' | 'A Level' | null — CAIE A Level (and IAL cash-in grouping) */
     award_level: text('award_level'),
-    /** Student paper-route prefs, e.g. { mathsRoute: '42' | '52' } */
-    paper_preferences: jsonText<{ mathsRoute?: string; sciencePractical?: string }>(
-      'paper_preferences'
-    ),
+    /** Student paper-route prefs (mathsRoute, appliedUnits, variantPreference, …) */
+    paper_preferences: jsonText<{
+      mathsRoute?: string;
+      sciencePractical?: string;
+      appliedUnits?: string[];
+      variantPreference?: string | null;
+      preferRPaper?: boolean;
+    }>('paper_preferences'),
     /** 'per_subject' | 'per_paper' — copied from qualification plugin */
     countdown_mode: text('countdown_mode'),
     enrolled_at: tsNow('enrolled_at'),
@@ -210,6 +214,81 @@ export const examSchedules = sqliteTable('exam_schedules', {
   venue: text('venue'),
   created_at: tsNow('created_at'),
 });
+
+// ── Component routes (seed catalog) ─────────────────────────────────────────
+
+export interface SubjectComponentRouteOptionalGroup {
+  id: string;
+  label: string;
+  options: string[];
+}
+
+export const subjectComponentRoutes = sqliteTable(
+  'subject_component_routes',
+  {
+    id: idText('id'),
+    subject_id: textId('subject_id').references(() => subjects.id, { onDelete: 'cascade' }),
+    cash_in_code: text('cash_in_code'),
+    award_level: text('award_level'),
+    route_key: text('route_key').notNull(),
+    label: text('label').notNull(),
+    required_paper_ids: jsonText<string[]>('required_paper_ids'),
+    required_unit_codes: jsonText<string[]>('required_unit_codes'),
+    optional_groups: jsonText<SubjectComponentRouteOptionalGroup[]>('optional_groups'),
+    is_myanmar_default: bool('is_myanmar_default', false),
+    created_at: tsNow('created_at'),
+  },
+  (table) => [
+    index('idx_subject_component_routes_subject').on(table.subject_id),
+    index('idx_subject_component_routes_cash_in').on(table.cash_in_code),
+  ]
+);
+
+export const userCashInEnrollments = sqliteTable(
+  'user_cash_in_enrollments',
+  {
+    id: idText('id'),
+    user_id: textId('user_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    cash_in_code: text('cash_in_code').notNull(),
+    award_level: text('award_level').notNull(),
+    selected_units: jsonText<string[]>('selected_units').notNull(),
+    applied_pair: jsonText<[string, string]>('applied_pair'),
+    enrolled_at: tsNow('enrolled_at'),
+  },
+  (table) => [
+    index('idx_user_cash_in_enrollments_user').on(table.user_id),
+    index('idx_user_cash_in_enrollments_user_cash_in').on(table.user_id, table.cash_in_code),
+  ]
+);
+
+export const userComponentSelections = sqliteTable(
+  'user_component_selections',
+  {
+    id: idText('id'),
+    user_id: textId('user_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    subject_id: textId('subject_id')
+      .references(() => subjects.id, { onDelete: 'cascade' })
+      .notNull(),
+    award_level: text('award_level'),
+    route_key: text('route_key').notNull(),
+    paper_preferences: jsonText<{
+      mathsRoute?: string;
+      sciencePractical?: string;
+      appliedUnits?: string[];
+      variantPreference?: string | null;
+      preferRPaper?: boolean;
+    }>('paper_preferences'),
+    updated_at: tsNow('updated_at'),
+  },
+  (table) => [
+    index('idx_user_component_selections_user').on(table.user_id),
+    index('idx_user_component_selections_user_subject').on(table.user_id, table.subject_id),
+  ]
+);
 
 // ── Past Paper Tracker Catalog ───────────────────────────────────────────────
 

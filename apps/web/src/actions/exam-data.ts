@@ -222,7 +222,7 @@ export async function listApprovedCalculatorPresets(subjectId?: string) {
           name: r.title || `Paper ${r.paper_number}${r.variant ? ` (v${r.variant})` : ''}`,
           max_mark: r.total_marks || 100,
           weight: 100,
-          paper_number: r.paper_number,
+          paper_number: isModular ? r.syllabus_code : r.paper_number,
           variant: r.variant,
           paper_boundaries: r.gradeBoundaries.map((b) => ({
             grade: b.grade,

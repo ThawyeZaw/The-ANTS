@@ -6,20 +6,43 @@
 //           enrollInSubject, unenrollFromSubject
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { getDb, curriculums, subjects, topics, topicProgress, userCurriculums, userEnrollments, pastPapers, userPastPaperRecords, examCountdowns, subjectGradeBoundaries } from '@/lib/db';
+import {
+  getDb,
+  curriculums,
+  subjects,
+  topics,
+  topicProgress,
+  userCurriculums,
+  userEnrollments,
+  pastPapers,
+  userPastPaperRecords,
+  examCountdowns,
+  subjectGradeBoundaries,
+  userComponentSelections,
+  userCashInEnrollments,
+} from '@/lib/db';
 import { eq, and, asc, inArray, count } from 'drizzle-orm';
 import {
   getDefaultExamSession,
   removeAutoCountdownsForSubject,
   syncEnrollmentCountdowns,
 } from '@/actions/enrollment-sync';
-import { examPaperMatchesTier, getPluginForCurriculumCode, syllabusHasTiers } from '@/lib/grading';
+import {
+  examPaperMatchesTier,
+  getPluginForCurriculumCode,
+  syllabusHasTiers,
+  computeSubjectGrade,
+  isRequiredPaperRow,
+  paperRowKey,
+} from '@/lib/grading';
 import type { SubjectTier } from '@/lib/grading/types';
 import {
   boardFromCurriculumCode,
   formatPaperRowLabel,
   pastPaperMatchesMyanmarPaper,
+  pastPaperMatchesAllPracticeSet,
   pastPaperMatchesPracticeSet,
+  isEndorsementPaper,
   syllabusHasAwardLevel,
   syllabusNeedsMathsRoute,
   toCambridgePaperId,
@@ -110,6 +133,8 @@ export interface PaperGridRow {
   /** keyed by `${year}-${series}` */
   cells: Record<string, PaperGridCell>;
   isMyanmarDefault?: boolean;
+  isRequired?: boolean;
+  rowKey?: string;
 }
 
 export interface PaperGridCell {
@@ -124,12 +149,25 @@ export interface PaperGridCell {
   gradeBoundaries: { grade: string; min_mark: number; max_mark: number | null; ums_min: number | null; ums_max: number | null }[];
 }
 
+export interface SubjectProgressSummary {
+  requiredTotal: number;
+  requiredDone: number;
+  compositeGrade: string | null;
+  compositeIsOfficial: boolean;
+  compositeMessage?: string;
+  latestSeriesLabel: string | null;
+}
+
 export interface PaperGridData {
   sessions: PaperGridSession[];   // columns, newest first
   rows: PaperGridRow[];           // paper unit rows
   isIAL: boolean;
   subjectCode?: string;
   board?: ExamBoardFilter | null;
+  progress?: SubjectProgressSummary;
+  awardLevel?: AwardLevel | null;
+  paperPreferences?: PaperPreferences | null;
+  tier?: SubjectTier | null;
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -408,10 +446,10 @@ export async function getPaperGridData(
       orderBy: [asc(pastPapers.paper_number), asc(pastPapers.variant)],
     });
 
-    let allPapers = allPapersRaw;
+    let allPapers = allPapersRaw.filter((p) => !isEndorsementPaper(subjectCode, p.paper_number));
     if (board && subjectCode) {
-      allPapers = allPapersRaw.filter((p) =>
-        pastPaperMatchesPracticeSet(p.paper_number, p.variant, subjectCode, board, {
+      allPapers = allPapers.filter((p) =>
+        pastPaperMatchesAllPracticeSet(p.paper_number, p.variant, subjectCode, board, {
           awardLevel,
           routePrefs,
           tier: effectiveTier,
@@ -479,6 +517,22 @@ export async function getPaperGridData(
 
       const rowKey = `${p.paper_number}-${p.variant ?? ''}`;
       if (!rowMap.has(rowKey)) {
+        const isMyanmarDefault =
+          board && subjectCode
+            ? pastPaperMatchesMyanmarPaper(p.paper_number, p.variant, subjectCode, board, {
+                awardLevel,
+                routePrefs,
+                tier: effectiveTier,
+              })
+            : false;
+        const isRequired =
+          board && subjectCode
+            ? isRequiredPaperRow(p.paper_number, p.variant, subjectCode, board, {
+                awardLevel,
+                routePrefs,
+                tier: effectiveTier,
+              })
+            : false;
         rowMap.set(rowKey, {
           paperId: p.id,
           paperNumber: p.paper_number,
@@ -490,13 +544,9 @@ export async function getPaperGridData(
           examBoard: p.exam_board,
           qualification: p.qualification,
           cells: {},
-          isMyanmarDefault:
-            board && subjectCode
-              ? pastPaperMatchesMyanmarPaper(p.paper_number, p.variant, subjectCode, board, {
-                  awardLevel,
-                  routePrefs,
-                })
-              : false,
+          isMyanmarDefault,
+          isRequired,
+          rowKey,
         });
       }
 
@@ -530,7 +580,86 @@ export async function getPaperGridData(
         a.displayLabel.localeCompare(b.displayLabel, undefined, { numeric: true })
       );
 
-    return { sessions, rows, isIAL, subjectCode, board };
+    const requiredRows = rows.filter((r) => r.isRequired);
+    let requiredDone = 0;
+    for (const row of requiredRows) {
+      const anyDone = Object.values(row.cells).some((c) => c.status === 'done');
+      if (anyDone) requiredDone += 1;
+    }
+
+    let progress: SubjectProgressSummary = {
+      requiredTotal: requiredRows.length,
+      requiredDone,
+      compositeGrade: null,
+      compositeIsOfficial: false,
+      latestSeriesLabel: sessions[0]?.label ?? null,
+    };
+
+    if (sessions.length > 0 && board && subjectCode) {
+      const latest = sessions[0];
+      const paperInputs = rows.flatMap((row) => {
+        const key = `${latest.year}-${latest.series}`;
+        const cell = row.cells[key];
+        if (!cell) return [];
+        return [
+          {
+            paperNumber: row.paperNumber,
+            variant: row.variant,
+            rawScore: cell.rawScore,
+            maxScore: cell.maxScore ?? row.totalMarks,
+            year: latest.year,
+            series: latest.series,
+          },
+        ];
+      });
+
+      const compositeRows = await db.query.subjectGradeBoundaries.findMany({
+        where: and(
+          eq(subjectGradeBoundaries.subject_id, subjectId),
+          eq(subjectGradeBoundaries.year, latest.year),
+          eq(subjectGradeBoundaries.series, latest.series)
+        ),
+      });
+
+      const boundaries = compositeRows.map((b) => ({
+        grade: b.grade,
+        min_mark: b.min_mark,
+        max_mark: b.max_mark ?? undefined,
+      }));
+
+      const gradeResult = computeSubjectGrade({
+        subjectCode,
+        board,
+        curriculumCode: subject?.curriculum?.code,
+        awardLevel,
+        routePrefs,
+        tier: effectiveTier,
+        seriesYear: latest.year,
+        seriesName: latest.series,
+        papers: paperInputs,
+        compositeBoundaries: boundaries,
+        hasBoundaryData: boundaries.length > 0,
+      });
+
+      progress = {
+        ...progress,
+        compositeGrade: gradeResult.grade,
+        compositeIsOfficial: gradeResult.isOfficial,
+        compositeMessage: gradeResult.message,
+      };
+    }
+
+    return {
+      sessions,
+      rows,
+      isIAL,
+      subjectCode,
+      board,
+      progress,
+      awardLevel,
+      paperPreferences: routePrefs,
+      tier: effectiveTier,
+    };
   } catch (err) {
     console.error('[curriculum] getPaperGridData error:', err);
     return { sessions: [], rows: [], isIAL: false };
@@ -720,6 +849,129 @@ export async function updateEnrollmentSettings(
   } catch (err: any) {
     console.error('[curriculum] updateEnrollmentSettings error:', err);
     return { success: false, error: err.message };
+  }
+}
+
+export interface SubjectCalculatorContext {
+  subjectId: string;
+  subjectCode: string;
+  curriculumCode: string;
+  awardLevel: AwardLevel | null;
+  tier: SubjectTier | null;
+  paperPreferences: PaperPreferences | null;
+  targetSeries: string | null;
+  routeKey: string | null;
+  hasOfficialBoundaries: boolean;
+}
+
+export async function enrollCashInAward(
+  userId: string,
+  cashInCode: string,
+  awardLevel: AwardLevel,
+  selectedUnits: string[]
+) {
+  try {
+    const db = getDb();
+    const { IAL_CASH_INS } = await import('@/lib/grading/ial-cash-in');
+    const award = IAL_CASH_INS[cashInCode as keyof typeof IAL_CASH_INS];
+    if (!award) return { success: false, error: 'Unknown cash-in code' };
+
+    const allUnits = [...new Set([...award.compulsory, ...selectedUnits])];
+    const unitSubjects = await db.query.subjects.findMany({
+      where: inArray(subjects.code, allUnits),
+      columns: { id: true, code: true, curriculum_id: true },
+    });
+
+    const existing = await db.query.userCashInEnrollments.findFirst({
+      where: and(
+        eq(userCashInEnrollments.user_id, userId),
+        eq(userCashInEnrollments.cash_in_code, cashInCode)
+      ),
+    });
+
+    const appliedPair =
+      selectedUnits.length >= 2 ? ([selectedUnits[0], selectedUnits[1]] as [string, string]) : null;
+
+    if (existing) {
+      await db
+        .update(userCashInEnrollments)
+        .set({ selected_units: allUnits, applied_pair: appliedPair, award_level: awardLevel })
+        .where(eq(userCashInEnrollments.id, existing.id));
+    } else {
+      await db.insert(userCashInEnrollments).values({
+        user_id: userId,
+        cash_in_code: cashInCode,
+        award_level: awardLevel,
+        selected_units: allUnits,
+        applied_pair: appliedPair,
+      });
+    }
+
+    for (const unit of unitSubjects) {
+      await enrollInSubject(userId, unit.curriculum_id!, unit.id, {
+        awardLevel,
+        paperPreferences: { appliedUnits: allUnits },
+      });
+    }
+
+    return { success: true, units: allUnits };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Enrollment failed';
+    console.error('[curriculum] enrollCashInAward error:', err);
+    return { success: false, error: message };
+  }
+}
+
+export async function getSubjectCalculatorContext(
+  userId: string,
+  subjectId: string
+): Promise<SubjectCalculatorContext | null> {
+  try {
+    const db = getDb();
+    const subject = await db.query.subjects.findFirst({
+      where: eq(subjects.id, subjectId),
+      with: { curriculum: true },
+    });
+    if (!subject) return null;
+
+    const [enroll, selection, boundarySample] = await Promise.all([
+      db.query.userEnrollments.findFirst({
+        where: and(eq(userEnrollments.user_id, userId), eq(userEnrollments.subject_id, subjectId)),
+      }),
+      db.query.userComponentSelections.findFirst({
+        where: and(
+          eq(userComponentSelections.user_id, userId),
+          eq(userComponentSelections.subject_id, subjectId)
+        ),
+      }),
+      db.query.pastPapers.findFirst({
+        where: eq(pastPapers.subject_id, subjectId),
+        with: { gradeBoundaries: true },
+      }),
+    ]);
+
+    const curriculumCode = subject.curriculum?.code ?? '';
+    const isCaieAL = curriculumCode === 'CAIE_ALEVEL';
+
+    return {
+      subjectId,
+      subjectCode: subject.code,
+      curriculumCode,
+      awardLevel: (enroll?.award_level as AwardLevel | null) ?? null,
+      tier: (enroll?.tier as SubjectTier | null) ?? null,
+      paperPreferences:
+        (selection?.paper_preferences as PaperPreferences | null) ??
+        (enroll?.paper_preferences as PaperPreferences | null) ??
+        defaultPaperPreferences(subject.code),
+      targetSeries: enroll?.target_series ?? null,
+      routeKey: selection?.route_key ?? null,
+      hasOfficialBoundaries: isCaieAL
+        ? false
+        : Boolean(boundarySample?.gradeBoundaries?.length),
+    };
+  } catch (err) {
+    console.error('[curriculum] getSubjectCalculatorContext error:', err);
+    return null;
   }
 }
 

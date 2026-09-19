@@ -7,10 +7,11 @@ from statistics import mean
 
 import pymupdf as fitz
 
+PDF_DIR = Path(__file__).resolve().parent / "pdfs" / "CIE"
 PDFS = [
-    Path(r"C:\Users\USER\Downloads\GradeBoundaries_IGCSE_2022_March_to_2023_OctNov.pdf"),
-    Path(r"C:\Users\USER\Downloads\GradeBoundaries_IGCSE_2024_March_to_2025_March.pdf"),
-    Path(r"C:\Users\USER\Downloads\GradeBoundaries_IGCSE_2025_June_to_2026_June.pdf"),
+    PDF_DIR / "GradeBoundaries_IGCSE_2022_March_to_2023_OctNov.pdf",
+    PDF_DIR / "GradeBoundaries_IGCSE_2024_March_to_2025_March.pdf",
+    PDF_DIR / "GradeBoundaries_IGCSE_2025_June_to_2026_June.pdf",
 ]
 
 OUT = Path(__file__).with_name("0004_caie_igcse_grade_thresholds.sql")

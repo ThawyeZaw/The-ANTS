@@ -43,7 +43,12 @@ export const edexcelIalPlugin: QualificationPlugin = {
     const maxRaw = filled.reduce((sum, p) => sum + p.maxMark, 0);
     const unitUms: Record<string, number> = {};
     for (const p of filled) {
-      const unit = p.paperNumber.length >= 5 ? p.paperNumber : p.name;
+      const unit =
+        p.paperNumber.length >= 5
+          ? p.paperNumber
+          : /^W[A-Z]{2}\d{2}$/.test(p.name)
+            ? p.name
+            : p.paperNumber;
       unitUms[unit] = computeUms(p.rawMark, p.boundaries).ums;
     }
     return evaluateIalCashIn({

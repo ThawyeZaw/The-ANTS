@@ -332,8 +332,9 @@ export function PaperGrid({ userId, data, onRecordChange }: PaperGridProps) {
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3">
         <span className="inline-flex items-center rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-primary">
-          Myanmar papers
+          All variants
         </span>
+        <span className="text-[10px] text-foreground-muted">MM = Myanmar default</span>
         {/* Year range filter */}
         <div className="flex items-center gap-2 text-xs text-foreground-muted">
           <span className="font-medium">Years:</span>
@@ -413,7 +414,14 @@ export function PaperGrid({ userId, data, onRecordChange }: PaperGridProps) {
           </thead>
           <tbody>
             {gridData.rows.map((row, rowIdx) => (
-              <tr key={`${row.paperNumber}-${row.variant}`} className="border-b border-border/40 last:border-0 hover:bg-background-secondary/40 transition-colors">
+              <tr
+                key={`${row.paperNumber}-${row.variant}`}
+                className={cn(
+                  'border-b border-border/40 last:border-0 hover:bg-background-secondary/40 transition-colors',
+                  row.isRequired && 'bg-primary/[0.03]',
+                  !row.isMyanmarDefault && !row.isRequired && 'opacity-80'
+                )}
+              >
                 {/* Frozen paper label */}
                 <td className="sticky left-0 z-10 bg-background-card px-3 py-1.5 whitespace-nowrap border-r border-border/30">
                   <div className="space-y-0.5">

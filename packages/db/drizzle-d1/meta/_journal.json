@@ -36,6 +36,13 @@
       "when": 1789800000000,
       "tag": "0006_enrollment_award_prefs",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1789900000000,
+      "tag": "0007_component_routes_enrollment",
+      "breakpoints": true
     }
   ]
 }

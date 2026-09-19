@@ -15,7 +15,10 @@ export const caieAlevelPlugin: QualificationPlugin = {
     let list = papers;
     const code = opts.syllabusCode;
     const practiceVariants = code
-      ? getPracticePaperIds(code, 'CAIE_ALEVEL') ?? CAIE_ALEVEL_PRACTICE_VARIANTS[code]
+      ? getPracticePaperIds(code, 'CAIE_ALEVEL', {
+          awardLevel: opts.awardLevel,
+          routePrefs: opts.mathsRoute ? { mathsRoute: opts.mathsRoute } : null,
+        }) ?? CAIE_ALEVEL_PRACTICE_VARIANTS[code]
       : undefined;
 
     if (practiceVariants) {
