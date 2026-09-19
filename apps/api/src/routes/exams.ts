@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { eq, and, desc, gte, type SQL } from 'drizzle-orm';
 import { createDb, exams, examCountdowns, gradeEntries, subjects, curriculums } from '@the-ants/db';
 import { remember } from '../lib/memory-cache';
+import { examRowMatchesMyanmar } from '@the-ants/shared-types';
 
 function toIso(value: Date | number | string | null | undefined): string | null {
   if (value == null || value === '') return null;
@@ -25,6 +26,7 @@ function serializeExam(exam: Record<string, unknown>) {
     exam_date: toIso(exam.exam_date as Date | number | string | null),
     created_at: toIso(exam.created_at as Date | number | string | null),
     exam_series: examSeriesLabel({ season, series }),
+    paper_code: (exam.paper_number as string | null) ?? (exam.paper_code as string | null) ?? null,
     qualification: (exam.qualification_type as string | null) ?? (exam.qualification as string | null) ?? null,
     date_type: exam.exam_date ? 'fixed' : 'custom',
     subject_name: subject?.name ?? null,
@@ -60,6 +62,7 @@ export function createExamRoutes(getDb: () => ReturnType<typeof createDb>) {
       const curriculumId = c.req.query('curriculumId');
       const board = c.req.query('board');
       const includeAll = c.req.query('all') === '1';
+      const myanmarOnly = c.req.query('myanmar') !== '0';
 
       const conditions: SQL[] = [];
       if (!includeAll) {
@@ -69,7 +72,7 @@ export function createExamRoutes(getDb: () => ReturnType<typeof createDb>) {
       if (curriculumId) conditions.push(eq(exams.curriculum_id, curriculumId));
       if (board) conditions.push(eq(exams.exam_board, board));
 
-      const cacheKey = `exams:${includeAll ? 'all' : 'upcoming'}:${subjectId || ''}:${curriculumId || ''}:${board || ''}`;
+      const cacheKey = `exams:${includeAll ? 'all' : 'upcoming'}:${myanmarOnly ? 'mm' : 'allvar'}:${subjectId || ''}:${curriculumId || ''}:${board || ''}`;
       const payload = await remember(cacheKey, 60_000, async () => {
         const rows = await db
           .select({
@@ -96,9 +99,24 @@ export function createExamRoutes(getDb: () => ReturnType<typeof createDb>) {
           .where(conditions.length > 0 ? and(...conditions) : undefined)
           .orderBy(desc(exams.exam_date));
 
+        const myanmarRows = myanmarOnly
+          ? rows.filter((row) =>
+              examRowMatchesMyanmar({
+                paper_number: row.paper_number,
+                syllabus_code: row.syllabus_code ?? row.subject_code,
+                season: row.season,
+                series: row.series,
+                curriculum_code: row.curriculum_code,
+                exam_board: row.exam_board,
+                subject_code: row.subject_code,
+              })
+            )
+          : rows;
+        const examsOut = myanmarRows.map((row) => serializeExam(row as Record<string, unknown>));
+
         return {
           success: true as const,
-          exams: rows.map((row) => serializeExam(row as Record<string, unknown>)),
+          exams: examsOut,
         };
       });
 
@@ -212,6 +230,7 @@ export function createExamRoutes(getDb: () => ReturnType<typeof createDb>) {
       if (data.examId) {
         const official = await db.query.exams.findFirst({
           where: eq(exams.id, data.examId),
+          with: { subject: { with: { curriculum: true } } },
         });
         if (official) {
           subjectId = subjectId || official.subject_id || undefined;
@@ -220,6 +239,24 @@ export function createExamRoutes(getDb: () => ReturnType<typeof createDb>) {
           title = title || official.title;
           if (official.exam_date) {
             examDate = toIso(official.exam_date) ?? examDate;
+          }
+          const isCustom = data.isCustom ?? !data.examId;
+          if (!isCustom) {
+            const curriculumCode = official.subject?.curriculum?.code;
+            const syllabusCode = official.syllabus_code || official.subject?.code;
+            if (
+              !examRowMatchesMyanmar({
+                paper_number: official.paper_number,
+                syllabus_code: syllabusCode,
+                season: official.season,
+                series: official.series,
+                curriculum_code: curriculumCode,
+                exam_board: official.exam_board,
+                subject_code: official.subject?.code,
+              })
+            ) {
+              return c.json({ error: 'That paper is not on the Myanmar timetable' }, 400);
+            }
           }
         }
       }

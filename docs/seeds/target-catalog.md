@@ -188,6 +188,56 @@ INSERT OR IGNORE INTO subjects (id, curriculum_id, name, code, description, colo
 
 ---
 
+## Myanmar paper maps (countdown vs practice)
+
+Source of truth: [`packages/shared-types/src/exam-papers.ts`](../../packages/shared-types/src/exam-papers.ts).
+
+**Countdown** shows only Myanmar Zone 4 / R-papers. **Past papers + calculator** show all practice variants.
+
+### CAIE IGCSE (Extended default; variant 2)
+
+| Code | Countdown (v2) | Practice variants | Notes |
+|---|---|---|---|
+| 0580 | 22, 42 | 21–23, 41–43 | Core 12/32 hidden unless enrollment tier = core |
+| 0606 | 12, 22 | 11–13, 21–23 | |
+| 0625 / 0620 / 0610 | 22, 42, 62 | 21–23, 41–43, 61–63 | Paper 5 vs 6 exclusive in calculator |
+| 0478 | 12, 22 | 11–13, 21–23 | |
+| 0417 | **series-dependent** | 11–13, 21/22/02, 31/32/03 | May/June + Feb/March: 12, 21, 31. Oct/Nov: 12, 02, 03 |
+| 0500 | 12, 22 | 11–13, 21–23, 31–33 | |
+| 0510 | 12, 22 | 11–13, 21–23, 04 | Component 04 is custom countdown only |
+| 0455 / 0450 / 0452 | 12, 22 | 11–13, 21–23 | |
+
+### CAIE A Level (award level at enrollment)
+
+| Code | AS countdown | A Level countdown | Notes |
+|---|---|---|---|
+| 9709 | 12 + (42 or 52) | 12, 32, 42, 52 | Route preference is editable; calculator shows 42 and 52 as exclusive |
+| 9231 | 12, 22 | 12, 22, 32, 42 | |
+| 9702 / 9701 / 9700 | 12, 22, 33/34 | 12, 22, 33/34, 42, 52 | 33 vs 34 exclusive in calculator |
+| 9618 | 12, 22 | 12, 22, 32, 42 | |
+| 9626 | **series-dependent** | series-dependent | Oct/Nov: 12, 02 (AS) + 32, 04 (A2). May/June: 12, 21, 32, 41 |
+| 9708 / 9609 / 9706 / 9093 / 9695 | 12, 22 | 12, 22, 32, 42 | |
+
+### Edexcel IGCSE (R-papers for countdown)
+
+| Code | Countdown | Practice |
+|---|---|---|
+| 4MA1 | 1HR, 2HR | F/H + R |
+| 4MB1 / 4PM1 / 4HB1 | 01R, 02R | 01/02 + R |
+| 4PH1 | 1PR, 2PR | 1P/2P + R |
+| 4CH1 | 1CR, 2CR | 1C/2C + R |
+| 4BI1 | 1BR, 2BR | 1B/2B + R |
+| 4CP0 | 01, 02 | 01, 02 |
+| 4IT1 / 4EC1 / 4BS1 / 4AC1 | 01R, 02R | 01/02 + R |
+| 4EB1 | 01R, 02R | 01/02 + R |
+| 4ES1 | 01R, 02R, 03 | 01/02/03 + R |
+
+### Edexcel IAL
+
+Enroll **units**. Countdown is per-unit. Grade calculator cash-in uses official summed UMS (not average). Accounting cash-in is WAC11 (AS, 300 UMS) / WAC11+WAC12 (A Level, 600 UMS) per Pearson PDFs. Psychology WPS01–04 is in the Myanmar unit set.
+
+---
+
 ## Other-IDE work order (still do not apply in this chat)
 
 1. `0007_subjects_target_gaps.sql` — reserved INSERTs above only.

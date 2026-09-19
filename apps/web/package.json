@@ -8,10 +8,10 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "cf:build": "cross-env NEXT_PUBLIC_API_URL=https://api.the-ants.org NEXT_PUBLIC_TELEGRAM_BOT_USERNAME=TheANTS_bot opennextjs-cloudflare build",
-    "cf:preview": "npm run cf:build && opennextjs-cloudflare preview",
-    "cf:deploy": "npm run cf:build && opennextjs-cloudflare deploy",
-    "cf:upload": "npm run cf:build && opennextjs-cloudflare upload",
+    "cf:build": "cross-env NODE_OPTIONS=--use-system-ca NEXT_PUBLIC_API_URL=https://api.the-ants.org NEXT_PUBLIC_TELEGRAM_BOT_USERNAME=TheANTS_bot opennextjs-cloudflare build",
+    "cf:preview": "cross-env NODE_OPTIONS=--use-system-ca npm run cf:build && cross-env NODE_OPTIONS=--use-system-ca opennextjs-cloudflare preview",
+    "cf:deploy": "cross-env NODE_OPTIONS=--use-system-ca npm run cf:build && cross-env NODE_OPTIONS=--use-system-ca opennextjs-cloudflare deploy",
+    "cf:upload": "cross-env NODE_OPTIONS=--use-system-ca npm run cf:build && cross-env NODE_OPTIONS=--use-system-ca opennextjs-cloudflare upload",
     "cf:typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   },
   "dependencies": {

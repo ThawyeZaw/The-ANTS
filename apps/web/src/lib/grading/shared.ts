@@ -67,21 +67,27 @@ export function computeUms(
     return { ums: Math.min(100, Math.max(0, Math.round(rawScore))), grade: '—' };
   }
 
+  const cap =
+    Math.max(
+      0,
+      ...boundaries.map((b) => b.ums_max ?? b.ums_min ?? 0)
+    ) || 100;
+
   const sorted = [...boundaries].sort((a, b) => b.min_mark - a.min_mark);
   for (const b of sorted) {
     if (rawScore >= b.min_mark) {
-      const umsMin = b.ums_min ?? 40;
-      const umsMax = b.ums_max ?? umsMin + 9;
+      const umsMin = b.ums_min ?? 0;
+      const umsMax = b.ums_max ?? umsMin;
       const minM = b.min_mark;
-      const maxM = b.max_mark ?? minM + 10;
+      const maxM = b.max_mark ?? minM;
       const span = maxM - minM > 0 ? maxM - minM : 1;
       const ratio = Math.min(1, Math.max(0, (rawScore - minM) / span));
       const ums = Math.round(umsMin + ratio * (umsMax - umsMin));
-      return { ums: Math.min(100, Math.max(0, ums)), grade: b.grade };
+      return { ums: Math.min(cap, Math.max(0, ums)), grade: b.grade };
     }
   }
 
-  return { ums: Math.max(0, Math.round(rawScore * 0.5)), grade: 'U' };
+  return { ums: 0, grade: 'U' };
 }
 
 export function getGradeColor(grade: string): string {

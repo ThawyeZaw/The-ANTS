@@ -48,33 +48,28 @@ function filterByTierAndVariant(
 
   const spec = code ? TIERED_SYLLABI[code] : undefined;
   if (spec && opts.tier) {
-    const allowedBase = new Set(opts.tier === 'core' ? [...spec.core, ...spec.shared] : [...spec.extended, ...spec.shared]);
+    const allowedBase = new Set(
+      opts.tier === 'core' ? [...spec.core, ...spec.shared] : [...spec.extended, ...spec.shared]
+    );
     list = list.filter((p) => allowedBase.has(caiePaperBase(p.paperNumber)));
   }
 
-  // Assign exclusiveGroups based on known mutually exclusive options
   const out: PaperComponent[] = [];
   for (const p of list) {
     let exclusiveGroup: string | undefined = undefined;
     const base = caiePaperBase(p.paperNumber);
     if (['0610', '0620', '0625'].includes(code ?? '') && (base === '5' || base === '6')) {
       exclusiveGroup = 'practical';
-    } else if (code === '0417') {
-      if (base === '2') exclusiveGroup = 'practicalA';
-      if (base === '3') exclusiveGroup = 'practicalB';
     }
-
     out.push({ ...p, exclusiveGroup });
   }
 
   if (practiceVariants) {
-    // If strict mapping, don't deduplicate by base because exclusiveGroup will handle the UI choice!
     return out.sort((a, b) =>
       a.paperNumber.localeCompare(b.paperNumber, undefined, { numeric: true })
     );
   }
 
-  // Fallback deduplication for subjects not in our Zone 4 explicit list
   const seen = new Set<string>();
   const unique: PaperComponent[] = [];
   for (const p of out) {
@@ -84,7 +79,9 @@ function filterByTierAndVariant(
     unique.push(p);
   }
   return unique.sort((a, b) =>
-    caiePaperBase(a.paperNumber).localeCompare(caiePaperBase(b.paperNumber), undefined, { numeric: true })
+    caiePaperBase(a.paperNumber).localeCompare(caiePaperBase(b.paperNumber), undefined, {
+      numeric: true,
+    })
   );
 }
 
@@ -137,9 +134,15 @@ export function examPaperMatchesTier(
   tier: 'core' | 'extended' | null | undefined
 ): boolean {
   if (!tier) return true;
+  if (syllabusCode === '4MA1') {
+    const want = tier === 'core' ? 'F' : 'H';
+    return paperNumber.includes(want);
+  }
   const spec = syllabusCode ? TIERED_SYLLABI[syllabusCode] : undefined;
   if (!spec) return true;
   const base = caiePaperBase(paperNumber);
-  const allowed = new Set(tier === 'core' ? [...spec.core, ...spec.shared] : [...spec.extended, ...spec.shared]);
+  const allowed = new Set(
+    tier === 'core' ? [...spec.core, ...spec.shared] : [...spec.extended, ...spec.shared]
+  );
   return allowed.has(base);
 }

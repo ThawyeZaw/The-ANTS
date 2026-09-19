@@ -27,6 +27,10 @@ SEED_ORDER = [
     "0019_backfill_edexcel_ial_subtopics.sql",
     "0020_topics_extras.sql",
     "0022_edexcel_igcse_grade_thresholds.sql",
+    "0023_caie_alevel_grade_thresholds.sql",
+    "0024_edexcel_ial_grade_thresholds.sql",
+    "0025_caie_igcse_subject_composites.sql",
+    "0026_exams_series_paper_validation.sql",
 ]
 
 

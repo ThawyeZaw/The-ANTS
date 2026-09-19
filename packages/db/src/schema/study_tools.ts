@@ -150,6 +150,12 @@ export const userEnrollments = sqliteTable(
     target_grade: text('target_grade'),
     /** 'core' | 'extended' | null */
     tier: text('tier'),
+    /** 'AS' | 'A Level' | null — CAIE A Level (and IAL cash-in grouping) */
+    award_level: text('award_level'),
+    /** Student paper-route prefs, e.g. { mathsRoute: '42' | '52' } */
+    paper_preferences: jsonText<{ mathsRoute?: string; sciencePractical?: string }>(
+      'paper_preferences'
+    ),
     /** 'per_subject' | 'per_paper' — copied from qualification plugin */
     countdown_mode: text('countdown_mode'),
     enrolled_at: tsNow('enrolled_at'),

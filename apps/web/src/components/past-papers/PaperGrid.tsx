@@ -419,6 +419,11 @@ export function PaperGrid({ userId, data, onRecordChange }: PaperGridProps) {
                   <div className="space-y-0.5">
                     <div className="font-mono font-bold text-foreground text-[12px] leading-tight">
                       {row.displayLabel}
+                      {row.isMyanmarDefault && (
+                        <span className="ml-1.5 text-[9px] font-semibold uppercase tracking-wide text-primary">
+                          MM
+                        </span>
+                      )}
                     </div>
                     {row.title && (
                       <div className="text-[10px] text-foreground-secondary line-clamp-2 max-w-[180px]">
@@ -466,6 +471,9 @@ export function PaperGrid({ userId, data, onRecordChange }: PaperGridProps) {
             <div className="flex items-center justify-between border-b border-border/40 pb-2">
               <div className="font-mono font-bold text-foreground text-sm">
                 {row.displayLabel}
+                {row.isMyanmarDefault ? (
+                  <span className="ml-1.5 text-[9px] font-semibold uppercase text-primary">MM</span>
+                ) : null}
               </div>
               {row.totalMarks && (
                 <div className="text-xs font-mono text-foreground-muted">{row.totalMarks} marks</div>

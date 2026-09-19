@@ -119,15 +119,21 @@ function mapProfile(row: Record<string, unknown>): Profile {
   };
 }
 
-function createDefaultProfile(userId: string, email: string, name?: string): Profile {
+function createDefaultProfile(
+  userId: string,
+  email: string,
+  name?: string,
+  extras?: { role?: string; avatar?: string | null }
+): Profile {
+  const role = extras?.role ? normalizeRole(extras.role) : 'student';
   return {
     id: userId,
     email: email,
     name: name || email.split('@')[0],
     username: (name || email.split('@')[0]).toLowerCase().replace(/[^a-z0-9_]/g, '_'),
-    avatar: '',
-    role: 'student',
-    roles: ['student'],
+    avatar: resolveStoredAssetUrl(extras?.avatar) || '',
+    role,
+    roles: role === 'student' ? ['student'] : [role, 'student'],
     activeRole: 'student',
     isPublic: false,
     showClubMemberships: true,
@@ -318,16 +324,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch {}
       }
 
-      const fallbackRole = sessionFields?.role ? normalizeRole(sessionFields.role) : 'student';
       const defaultUser: AuthUser = {
         id: userId,
         email,
-        profile: {
-          ...createDefaultProfile(userId, email, name),
-          role: fallbackRole,
-          roles: fallbackRole === 'student' ? ['student'] : [fallbackRole, 'student'],
-          avatar: resolveStoredAssetUrl(sessionFields?.image),
-        },
+        profile: createDefaultProfile(userId, email, name, {
+          role: sessionFields?.role,
+          avatar: sessionFields?.image,
+        }),
       };
       setUser(defaultUser);
       if (typeof window !== 'undefined') {

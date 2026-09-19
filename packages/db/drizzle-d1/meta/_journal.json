@@ -29,6 +29,13 @@
       "when": 1789450000000,
       "tag": "0003_connected_study_tools",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1789800000000,
+      "tag": "0006_enrollment_award_prefs",
+      "breakpoints": true
     }
   ]
 }
