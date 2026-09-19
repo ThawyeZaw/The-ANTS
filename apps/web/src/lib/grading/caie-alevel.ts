@@ -1,6 +1,10 @@
 import type { QualificationPlugin, PaperComponent } from './types';
-import { CAIE_ALEVEL_PRACTICE_VARIANTS } from '@/lib/exam-papers/myanmar-papers';
-import { fallbackLetterGrade, gradeFromRawMarks, lookupGrade, percentageOf, toCambridgePaperId } from './shared';
+import {
+  CAIE_ALEVEL_PRACTICE_VARIANTS,
+  getPracticePaperIds,
+  toCambridgePaperId as toCombined,
+} from '@/lib/exam-papers/myanmar-papers';
+import { fallbackLetterGrade, gradeFromRawMarks, lookupGrade, percentageOf, toCambridgePaperId, caiePaperBase } from './shared';
 
 export const caieAlevelPlugin: QualificationPlugin = {
   key: 'CAIE_AL',
@@ -10,7 +14,9 @@ export const caieAlevelPlugin: QualificationPlugin = {
   paperSelectionRules: (papers, opts) => {
     let list = papers;
     const code = opts.syllabusCode;
-    const practiceVariants = code ? CAIE_ALEVEL_PRACTICE_VARIANTS[code] : undefined;
+    const practiceVariants = code
+      ? getPracticePaperIds(code, 'CAIE_ALEVEL') ?? CAIE_ALEVEL_PRACTICE_VARIANTS[code]
+      : undefined;
 
     if (practiceVariants) {
       list = list.filter((p) =>
@@ -24,9 +30,13 @@ export const caieAlevelPlugin: QualificationPlugin = {
     const out: PaperComponent[] = [];
     for (const p of list) {
       let exclusiveGroup: string | undefined = undefined;
-      // Paper 33 and 34 are mutually exclusive practicals for AS level Sciences
-      if (['9702', '9701', '9700'].includes(code ?? '') && (p.paperNumber === '33' || p.paperNumber === '34')) {
+      const combined = toCombined(p.paperNumber, p.variant);
+      const base = caiePaperBase(p.paperNumber);
+      if (['9702', '9701', '9700'].includes(code ?? '') && (combined === '33' || combined === '34')) {
         exclusiveGroup = 'practical';
+      }
+      if (code === '9709' && (base === '4' || base === '5')) {
+        exclusiveGroup = 'applied_math';
       }
       out.push({ ...p, exclusiveGroup });
     }
@@ -39,7 +49,6 @@ export const caieAlevelPlugin: QualificationPlugin = {
 
     const seen = new Set<string>();
     return out.filter((p) => {
-      // CAIE base logic: the first digit is usually the paper base
       const base = p.paperNumber.replace(/\D/g, '').charAt(0);
       if (seen.has(base)) return false;
       seen.add(base);

@@ -16,6 +16,8 @@ import { cn } from '@/lib/utils';
 import type { HubSubject } from '@/actions/curriculum';
 import { EXAM_SESSION_OPTIONS, syllabusHasTiers } from '@/lib/grading';
 import { getPluginForCurriculumCode } from '@/lib/grading';
+import { syllabusHasAwardLevel, syllabusNeedsMathsRoute } from '@/lib/exam-papers/myanmar-papers';
+import type { AwardLevel, PaperPreferences } from '@/lib/exam-papers/myanmar-papers';
 
 function ProgressBar({ value, total, color }: { value: number; total: number; color?: string }) {
   const pct = total === 0 ? 0 : Math.round((value / total) * 100);
@@ -41,11 +43,22 @@ export function SubjectHubCard({
 }: {
   subject: HubSubject;
   onUnenroll: (s: HubSubject) => void;
-  onUpdate: (subjectId: string, patch: { targetSeries?: string; tier?: 'core' | 'extended' | null; targetGrade?: string | null }) => void;
+  onUpdate: (
+    subjectId: string,
+    patch: {
+      targetSeries?: string;
+      tier?: 'core' | 'extended' | null;
+      targetGrade?: string | null;
+      awardLevel?: AwardLevel | null;
+      paperPreferences?: PaperPreferences | null;
+    }
+  ) => void;
 }) {
   const color = subject.color_code ?? '#6366f1';
   const plugin = getPluginForCurriculumCode(subject.curriculum_code);
-  const showTier = plugin.hasTiers && syllabusHasTiers(subject.code);
+  const showTier = plugin.hasTiers && (syllabusHasTiers(subject.code) || subject.code === '4MA1');
+  const showAward = syllabusHasAwardLevel(subject.code) || subject.curriculum_code === 'CAIE_ALEVEL';
+  const showMathsRoute = syllabusNeedsMathsRoute(subject.code) && (subject.award_level ?? 'A Level') === 'AS';
   const calcQs = new URLSearchParams({
     curriculum: subject.curriculum_id,
     subject: subject.id,
@@ -128,6 +141,49 @@ export function SubjectHubCard({
             />
           </label>
         </div>
+
+        {showAward && (
+          <div className="flex gap-1.5">
+            {(['AS', 'A Level'] as const).map((level) => (
+              <button
+                key={level}
+                type="button"
+                onClick={() => onUpdate(subject.id, { awardLevel: level })}
+                className={cn(
+                  'flex-1 py-1 rounded-lg text-[10px] font-bold border',
+                  subject.award_level === level
+                    ? 'bg-primary text-white border-primary'
+                    : 'border-border text-foreground-muted'
+                )}
+              >
+                {level}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {showMathsRoute && (
+          <div className="flex gap-1.5">
+            {([
+              { id: '42' as const, label: 'Mechanics P42' },
+              { id: '52' as const, label: 'Statistics P52' },
+            ]).map((route) => (
+              <button
+                key={route.id}
+                type="button"
+                onClick={() => onUpdate(subject.id, { paperPreferences: { mathsRoute: route.id } })}
+                className={cn(
+                  'flex-1 py-1 rounded-lg text-[10px] font-bold border',
+                  subject.paper_preferences?.mathsRoute === route.id
+                    ? 'bg-primary text-white border-primary'
+                    : 'border-border text-foreground-muted'
+                )}
+              >
+                {route.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         {showTier && (
           <div className="flex gap-1.5">

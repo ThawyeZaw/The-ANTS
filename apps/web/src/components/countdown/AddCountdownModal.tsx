@@ -5,6 +5,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Exam } from '@/types';
 import type { CatalogCurriculum } from '@/context/LessonContext';
 import { groupEdexcelIalSubjects } from '@/lib/edexcel-ial';
+import { examRowMatchesMyanmar } from '@/lib/exam-papers/myanmar-papers';
 import { X } from 'lucide-react';
 
 interface AddCountdownModalProps {
@@ -86,9 +87,17 @@ export function AddCountdownModal({
     return availableExams.filter((exam) => {
       const curriculumId = exam.curriculum_id || (exam as any).curriculum?.id;
       const subjectId = exam.subject_id || (exam as any).subject?.id;
-      if (filterSubjectId !== 'all') return subjectId === filterSubjectId;
-      if (filterCurriculumId !== 'all') return curriculumId === filterCurriculumId;
-      return true;
+      if (filterSubjectId !== 'all' && subjectId !== filterSubjectId) return false;
+      if (filterCurriculumId !== 'all' && curriculumId !== filterCurriculumId) return false;
+      return examRowMatchesMyanmar({
+        paper_number: exam.paper_number ?? (exam as any).paper_code,
+        syllabus_code: exam.syllabus_code,
+        season: (exam as any).season,
+        series: (exam as any).series || exam.exam_series,
+        curriculum_code: (exam as any).curriculum_code,
+        exam_board: exam.exam_board,
+        subject_code: (exam as any).subject_code,
+      });
     });
   }, [availableExams, filterCurriculumId, filterSubjectId]);
 

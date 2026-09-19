@@ -288,7 +288,12 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
     const syllabusCode = (exam as any).syllabus_code ?? '';
     const paperNumber = (exam as any).paper_number as string | null | undefined;
     if (board && syllabusCode && paperNumber) {
-      if (!examMatchesMyanmarPaper(paperNumber, syllabusCode, board)) return false;
+      if (
+        !examMatchesMyanmarPaper(paperNumber, syllabusCode, board, {
+          series: (exam as any).season || (exam as any).series || (exam as any).exam_series,
+        })
+      )
+        return false;
     }
 
     if (selectedBoardFilter === 'all') return true;

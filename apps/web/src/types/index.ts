@@ -585,6 +585,8 @@ export interface Exam {
   qualification: string | null;
   /** For IAL: unit code, e.g. "WMA11". For IGCSE: paper number, e.g. "P1" */
   paper_code: string | null;
+  /** Catalog paper/unit code from `exams.paper_number` (same value as paper_code when serialized). */
+  paper_number?: string | null;
   /** Whether the date is globally fixed (board series) or must be set by user */
   date_type: ExamDateType;
   /** Library pipeline status — null means user-created, not in library */

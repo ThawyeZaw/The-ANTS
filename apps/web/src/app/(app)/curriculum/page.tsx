@@ -23,6 +23,7 @@ import { applyExamSessionToAll, getDefaultExamSession } from '@/actions/enrollme
 import { EXAM_SESSION_OPTIONS } from '@/lib/grading';
 import { SubjectHubCard } from '@/components/curriculum/SubjectHubCard';
 import { cn } from '@/lib/utils';
+import type { AwardLevel, PaperPreferences } from '@/lib/exam-papers/myanmar-papers';
 
 const BOARD_COLORS: Record<string, { from: string; to: string; accent: string; badge: string }> = {
   CAIE_IGCSE: { from: 'from-violet-500/20', to: 'to-purple-500/10', accent: 'border-violet-500/30', badge: 'bg-violet-500/15 text-violet-500' },
@@ -77,7 +78,13 @@ export default function CurriculumPage() {
 
   const handleUpdate = async (
     subjectId: string,
-    patch: { targetSeries?: string; tier?: 'core' | 'extended' | null; targetGrade?: string | null }
+    patch: {
+      targetSeries?: string;
+      tier?: 'core' | 'extended' | null;
+      targetGrade?: string | null;
+      awardLevel?: AwardLevel | null;
+      paperPreferences?: PaperPreferences | null;
+    }
   ) => {
     if (!user) return;
     await updateEnrollmentSettings(user.id, subjectId, patch);

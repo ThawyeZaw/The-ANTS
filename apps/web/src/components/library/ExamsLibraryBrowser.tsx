@@ -19,6 +19,7 @@ import { listExamCountdownsForUser, listExams } from '@/actions/exam-data';
 import { QUALIFICATION_REGISTRY } from '@/constants/qualifications';
 import { cn } from '@/lib/utils';
 import type { Exam } from '@/types';
+import { examRowMatchesMyanmar } from '@/lib/exam-papers/myanmar-papers';
 import Button from '@/components/ui/Button';
 
 const ITEMS_PER_PAGE = 12;
@@ -216,6 +217,17 @@ export default function ExamsLibraryBrowser() {
         e.exam_series?.toLowerCase().includes(q)
       );
     }
+    list = list.filter((e) =>
+      examRowMatchesMyanmar({
+        paper_number: e.paper_number ?? e.paper_code,
+        syllabus_code: e.syllabus_code,
+        season: (e as any).season,
+        series: (e as any).series || e.exam_series,
+        curriculum_code: (e as any).curriculum_code,
+        exam_board: e.exam_board,
+        subject_code: (e as any).subject_code,
+      })
+    );
     return list;
   }, [libraryExams, selectedBoard, selectedQual, searchQuery]);
 

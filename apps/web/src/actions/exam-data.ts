@@ -12,9 +12,14 @@ import {
   exams,
   examCountdowns,
   pastPapers,
-  paperGradeBoundaries,
 } from '@/lib/db';
-import { eq, and, gt, gte, asc, desc } from 'drizzle-orm';
+import { eq, and, gt, gte, asc, desc, inArray } from 'drizzle-orm';
+import {
+  boardFromCurriculumCode,
+  examMatchesMyanmarPaper,
+  examRowMatchesMyanmar,
+} from '@/lib/exam-papers/myanmar-papers';
+import { IAL_CASH_INS, type IalCashInCode } from '@/lib/grading/ial-cash-in';
 
 function asTitle<T extends { name: string; id: string }>(row: T) {
   return { ...row, title: row.name };
@@ -77,7 +82,7 @@ export async function listSubjects() {
 }
 
 /** Upcoming catalog by default. Pass `{ all: true }` only for a full history list. */
-export async function listExams(opts?: { all?: boolean }) {
+export async function listExams(opts?: { all?: boolean; myanmarOnly?: boolean }) {
   const db = getDb();
   const cutoff = new Date(Date.now() - 12 * 60 * 60 * 1000);
   const rows = await db
@@ -94,33 +99,65 @@ export async function listExams(opts?: { all?: boolean }) {
       paper_number: exams.paper_number,
       exam_date: exams.exam_date,
       created_at: exams.created_at,
+      curriculum_code: curriculums.code,
+      subject_code: subjects.code,
     })
     .from(exams)
+    .leftJoin(curriculums, eq(exams.curriculum_id, curriculums.id))
+    .leftJoin(subjects, eq(exams.subject_id, subjects.id))
     .where(opts?.all ? undefined : gte(exams.exam_date, cutoff))
     .orderBy(asc(exams.exam_date));
 
-  return rows.map((row) => {
+  const mapped = rows.map((row) => {
     const examSeries = [row.season, row.series].filter(Boolean).join(' ') || null;
     const examDate =
       row.exam_date instanceof Date ? row.exam_date.toISOString() : row.exam_date;
     return {
       ...row,
       qualification: row.qualification_type,
+      paper_code: row.paper_number,
       exam_series: examSeries,
       date_type: row.exam_date ? ('fixed' as const) : ('custom' as const),
       exam_date: examDate,
     };
   });
+
+  if (opts?.myanmarOnly === false) return mapped;
+  return mapped.filter((row) =>
+    examRowMatchesMyanmar({
+      paper_number: row.paper_number,
+      syllabus_code: row.syllabus_code ?? row.subject_code,
+      season: row.season,
+      series: row.series,
+      curriculum_code: row.curriculum_code,
+      exam_board: row.exam_board,
+      subject_code: row.subject_code,
+    })
+  );
 }
 
 export async function listUpcomingExamsBySubject(subjectId: string) {
   const db = getDb();
   const now = new Date();
-  return db
+  const subject = await db.query.subjects.findFirst({
+    where: eq(subjects.id, subjectId),
+    with: { curriculum: true },
+  });
+  const rows = await db
     .select()
     .from(exams)
     .where(and(eq(exams.subject_id, subjectId), gt(exams.exam_date, now)))
     .orderBy(asc(exams.exam_date));
+
+  const board = boardFromCurriculumCode(subject?.curriculum?.code);
+  const subjectCode = subject?.code ?? '';
+  if (!board || !subjectCode) return rows;
+
+  return rows.filter((exam) =>
+    examMatchesMyanmarPaper(exam.paper_number ?? '', subjectCode, board, {
+      series: exam.season || exam.series,
+    })
+  );
 }
 
 export async function getExamById(examId: string) {
@@ -213,6 +250,23 @@ export async function listApprovedCalculatorPresets(subjectId?: string) {
   return setInCache(cacheKey, result, 10 * 60 * 1000);
 }
 
+/** Load past-paper presets for every unit in an IAL cash-in award. */
+export async function listCashInCalculatorPresets(cashInCode: string) {
+  const award = IAL_CASH_INS[cashInCode as IalCashInCode];
+  if (!award) return [];
+  const codes = [...award.compulsory, ...award.optional];
+  const db = getDb();
+  const unitSubjects = await db.query.subjects.findMany({
+    where: inArray(subjects.code, [...codes]),
+    columns: { id: true, code: true, curriculum_id: true },
+  });
+  const ialUnits = unitSubjects.filter(
+    (s) => s.curriculum_id === 'curr-edexcel-ial' || codes.includes(s.code)
+  );
+  const nested = await Promise.all(ialUnits.map((s) => listApprovedCalculatorPresets(s.id)));
+  return nested.flat();
+}
+
 export async function listMyExamEditorSubmissions(_userId: string) {
   return [];
 }
@@ -238,6 +292,21 @@ export async function switchExamCountdownSession(input: {
   });
   if (!newExam || !newExam.exam_date) {
     return { success: false as const, error: 'Exam not found' };
+  }
+
+  const subject = await db.query.subjects.findFirst({
+    where: eq(subjects.id, input.subjectId),
+    with: { curriculum: true },
+  });
+  const board = boardFromCurriculumCode(subject?.curriculum?.code);
+  if (
+    board &&
+    subject?.code &&
+    !examMatchesMyanmarPaper(newExam.paper_number ?? '', subject.code, board, {
+      series: newExam.season || newExam.series,
+    })
+  ) {
+    return { success: false as const, error: 'That paper is not on the Myanmar timetable' };
   }
 
   const existing = await db.query.examCountdowns.findFirst({

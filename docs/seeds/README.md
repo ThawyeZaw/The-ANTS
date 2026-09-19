@@ -83,7 +83,11 @@ Seeds are **not** Drizzle migrations. Do not put catalog INSERTs in `packages/db
 | `0004_caie_igcse_grade_thresholds.sql` | Done | CAIE IGCSE papers + **per-paper** boundaries (12 syllabi) |
 | `0005_subjects_countdown_boards.sql` | Done | Extra CAIE A Level + Edexcel catalog subjects |
 | `0006_exams_w26_countdown.sql` | Done | Oct/Nov 2026 official dates |
-| **`0007_…` and up** | **Next** | New topics / papers / composites / subjects |
+| `0022_edexcel_igcse_grade_thresholds.sql` | Done | Edexcel IGCSE papers + 9–1 boundaries |
+| `0023_caie_alevel_grade_thresholds.sql` | Stub | No A Level GB PDFs in `pdfs/CIE` yet — re-run `_gen_caie_alevel_thresholds.py` |
+| `0024_edexcel_ial_grade_thresholds.sql` | Done | IAL unit papers + UMS (`_gen_edexcel_ial_thresholds.py`) |
+| `0025_caie_igcse_subject_composites.sql` | Done | CAIE IGCSE option/composite tables |
+| `0026_exams_series_paper_validation.sql` | Done | 9626 Zone 4 Nov 2026 papers |
 
 Suggested names (target list: [`target-catalog.md`](./target-catalog.md)):
 
@@ -91,10 +95,10 @@ Suggested names (target list: [`target-catalog.md`](./target-catalog.md)):
 - `0008_topics_caie_alevel.sql`
 - `0009_topics_edexcel_igcse.sql`
 - `0010_topics_edexcel_ial.sql`
-- `0011_edexcel_igcse_grade_thresholds.sql`
-- `0012_caie_alevel_grade_thresholds.sql`
-- `0013_edexcel_ial_grade_thresholds.sql`
-- `0014_caie_igcse_subject_composites.sql`
+- `0023_caie_alevel_grade_thresholds.sql` — A Level GB PDFs when available
+- `0024_edexcel_ial_grade_thresholds.sql` — IAL UMS from Pearson PDFs
+- `0025_caie_igcse_subject_composites.sql` — IGCSE option composites
+- `0026_exams_series_paper_validation.sql` — 0417/9626 series papers
 
 After adding a file, append it to `SEED_ORDER` in `packages/db/seeds/_validate_all_seeds.py`.
 

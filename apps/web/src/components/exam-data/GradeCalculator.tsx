@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import {
   listApprovedCalculatorPresets,
+  listCashInCalculatorPresets,
   listCurriculums,
   listSubjects,
 } from '@/actions/exam-data';
@@ -42,6 +43,7 @@ import {
   type SubjectTier,
 } from '@/lib/grading';
 import type { GradeBoundary, PaperComponent } from '@/lib/grading/types';
+import { IAL_CASH_INS, cashInsForUnit, type IalCashInCode } from '@/lib/grading/ial-cash-in';
 
 interface PresetBoundary {
   grade: string;
@@ -98,6 +100,8 @@ export default function GradeCalculator() {
   );
   const [selectedVariant, setSelectedVariant] = useState(searchParams.get('variant') || '');
   const [selectedExclusiveOptions, setSelectedExclusiveOptions] = useState<Record<string, string>>({});
+  const [selectedCashIn, setSelectedCashIn] = useState('');
+  const [cashInPresets, setCashInPresets] = useState<CalcPreset[]>([]);
   const [rawMarks, setRawMarks] = useState<Record<string, number | string>>({});
   const [compositeBoundaries, setCompositeBoundaries] = useState<GradeBoundary[]>([]);
 
@@ -152,6 +156,24 @@ export default function GradeCalculator() {
     };
   }, [selectedSubject]);
 
+  useEffect(() => {
+    if (!selectedCashIn) {
+      setCashInPresets([]);
+      return;
+    }
+    let cancelled = false;
+    listCashInCalculatorPresets(selectedCashIn)
+      .then((rows) => {
+        if (!cancelled) setCashInPresets(rows as CalcPreset[]);
+      })
+      .catch(() => {
+        if (!cancelled) setCashInPresets([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedCashIn]);
+
   const selectedCurriculumRow = useMemo(
     () => curriculums.find((c) => c.id === selectedCurriculum),
     [curriculums, selectedCurriculum]
@@ -179,12 +201,14 @@ export default function GradeCalculator() {
   }, [selectedCurriculum, subjects]);
 
   const matchingPresets = useMemo(() => {
-    let list = presets;
-    if (selectedCurriculum) list = list.filter((p) => p.curriculum_id === selectedCurriculum);
-    if (selectedSubject) list = list.filter((p) => p.subject_id === selectedSubject);
+    let list = selectedCashIn ? cashInPresets : presets;
+    if (selectedCurriculum && !selectedCashIn) {
+      list = list.filter((p) => p.curriculum_id === selectedCurriculum);
+    }
+    if (selectedSubject && !selectedCashIn) list = list.filter((p) => p.subject_id === selectedSubject);
     if (selectedSeries) list = list.filter((p) => p.series === selectedSeries);
     return list;
-  }, [presets, selectedCurriculum, selectedSubject, selectedSeries]);
+  }, [presets, cashInPresets, selectedCashIn, selectedCurriculum, selectedSubject, selectedSeries]);
 
   const availableVariants = useMemo(
     () => uniqueVariants(matchingPresets.map((p) => ({ variant: p.variant ?? p.papers[0]?.variant }))),
@@ -242,6 +266,7 @@ export default function GradeCalculator() {
       tier: showTier ? (selectedTier || 'extended') : null,
       variant: selectedVariant || plugin.defaultVariant,
       syllabusCode: selectedSubjectRow?.code || subjectCode,
+      cashInCode: selectedCashIn || null,
     });
 
     const selectedPapers: PaperDef[] = filtered.map((c) => {
@@ -285,6 +310,7 @@ export default function GradeCalculator() {
     selectedTier,
     selectedVariant,
     selectedSubjectRow,
+    selectedCashIn,
   ]);
 
   const exclusiveGroups = useMemo(() => {
@@ -346,17 +372,32 @@ export default function GradeCalculator() {
   }, [selectedSubject, selectedSeries, activePreset?.year, selectedVariant, selectedTier]);
 
   const availableSeries = useMemo(() => {
+    const source = selectedCashIn ? cashInPresets : presets;
     const set = new Set<string>();
-    presets
-      .filter((p) => (selectedCurriculum ? p.curriculum_id === selectedCurriculum : true))
-      .filter((p) => (selectedSubject ? p.subject_id === selectedSubject : true))
+    source
+      .filter((p) => (selectedCurriculum && !selectedCashIn ? p.curriculum_id === selectedCurriculum : true))
+      .filter((p) => (selectedSubject && !selectedCashIn ? p.subject_id === selectedSubject : true))
       .forEach((p) => {
         if (p.series) set.add(p.series);
       });
     return Array.from(set).sort().reverse();
-  }, [selectedCurriculum, selectedSubject, presets]);
+  }, [selectedCurriculum, selectedSubject, presets, cashInPresets, selectedCashIn]);
 
-  const isIAL = activePreset?.is_modular || activePreset?.qualification === 'IAL';
+  const isIAL = activePreset?.is_modular || activePreset?.qualification === 'IAL' || selectedCurriculumRow?.code === 'EDEXCEL_IAL';
+  const availableCashIns = useMemo(
+    () => (selectedSubjectRow?.code ? cashInsForUnit(selectedSubjectRow.code) : Object.values(IAL_CASH_INS)),
+    [selectedSubjectRow]
+  );
+
+  useEffect(() => {
+    if (selectedCurriculumRow?.code !== 'EDEXCEL_IAL') {
+      setSelectedCashIn('');
+      return;
+    }
+    if (!selectedCashIn && availableCashIns[0]) {
+      setSelectedCashIn(availableCashIns[0].code);
+    }
+  }, [selectedCurriculumRow?.code, availableCashIns, selectedCashIn]);
   const canGoStep2 = !!(
     selectedCurriculum &&
     selectedSubject &&
@@ -427,12 +468,12 @@ export default function GradeCalculator() {
 
   const calc = useMemo(() => {
     if (!activePreset) {
-      return { totalRaw: 0, maxRaw: 0, totalUms: 0, percentage: 0, grade: '—', anyFilled: false, usedComposite: false };
+      return { totalRaw: 0, maxRaw: 0, totalUms: 0, percentage: 0, grade: '—', anyFilled: false, usedComposite: false, aStarNotes: [] as string[] };
     }
     const filled = paperResults.filter((pr) => pr.filled);
     const anyFilled = filled.length > 0;
     if (!anyFilled) {
-      return { totalRaw: 0, maxRaw: 0, totalUms: 0, percentage: 0, grade: '—', anyFilled: false, usedComposite: false };
+      return { totalRaw: 0, maxRaw: 0, totalUms: 0, percentage: 0, grade: '—', anyFilled: false, usedComposite: false, aStarNotes: [] as string[] };
     }
     const composite = paperPlugin.compositeGrade(
       filled.map((pr) => ({
@@ -443,7 +484,8 @@ export default function GradeCalculator() {
         boundaries: pr.perBoundaries,
         rawMark: pr.raw,
       })),
-      compositeBoundaries
+      compositeBoundaries,
+      selectedCashIn || null
     );
     return {
       totalRaw: Math.round(composite.totalRaw * 10) / 10,
@@ -453,8 +495,10 @@ export default function GradeCalculator() {
       grade: composite.grade,
       anyFilled: true,
       usedComposite: composite.usedCompositeBoundaries,
+      aStarEligible: composite.aStarEligible,
+      aStarNotes: composite.aStarNotes ?? [],
     };
-  }, [activePreset, paperResults, paperPlugin, compositeBoundaries]);
+  }, [activePreset, paperResults, paperPlugin, compositeBoundaries, selectedCashIn]);
 
   return (
     <div className="rounded-3xl border border-border bg-background-card p-6 md:p-8 shadow-xs space-y-8 max-w-5xl mx-auto">
@@ -581,6 +625,34 @@ export default function GradeCalculator() {
               </select>
             </div>
           </div>
+
+          {selectedCurriculumRow?.code === 'EDEXCEL_IAL' && selectedSubject && (
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-foreground-secondary">
+                IAL cash-in award
+              </label>
+              <select
+                value={selectedCashIn}
+                onChange={(e) => {
+                  setSelectedCashIn(e.target.value);
+                  setSelectedSeries('');
+                }}
+                className="w-full md:w-1/2 bg-background-secondary border border-border rounded-2xl py-3 px-4 text-xs font-bold text-foreground outline-none focus:border-primary transition-colors"
+              >
+                <option value="">Unit only (no cash-in)</option>
+                {availableCashIns.map((award) => (
+                  <option key={award.code} value={award.code}>
+                    {award.code} · {award.name} (max {award.maxUms} UMS)
+                  </option>
+                ))}
+              </select>
+              {selectedCashIn && IAL_CASH_INS[selectedCashIn as IalCashInCode]?.aStarNotes && (
+                <p className="text-[11px] text-foreground-muted">
+                  {IAL_CASH_INS[selectedCashIn as IalCashInCode].aStarNotes}
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Series */}
           {selectedSubject && (
@@ -878,14 +950,10 @@ export default function GradeCalculator() {
                 >
                   {calc.grade}
                 </div>
-                {calc.anyFilled && (
-                  <span className="text-xs font-semibold text-foreground-muted">
-                    {isIAL
-                      ? 'Uniform Mark Scale Result'
-                      : calc.usedComposite
-                        ? 'Syllabus composite thresholds'
-                        : 'Percentage-band estimate (no composite thresholds seeded)'}
-                  </span>
+                {calc.anyFilled && calc.aStarNotes && calc.aStarNotes.length > 0 && (
+                  <p className="text-[11px] text-foreground-muted max-w-xs">
+                    {calc.aStarNotes.join(' ')}
+                  </p>
                 )}
               </div>
             </div>

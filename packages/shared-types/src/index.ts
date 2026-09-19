@@ -1,6 +1,7 @@
 export type UserRole = 'student' | 'tutor' | 'contributor' | 'admin' | 'teacher' | 'main_contributor';
 
 export * from './profile-access';
+export * from './exam-papers';
 
 export interface ProfileDTO {
   id: string;

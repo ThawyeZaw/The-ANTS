@@ -34,12 +34,18 @@ export interface CompositeGradeResult {
   totalUms?: number;
   percentage: number;
   usedCompositeBoundaries: boolean;
+  aStarEligible?: boolean;
+  aStarNotes?: string[];
 }
 
 export interface PaperSelectionOptions {
   tier?: SubjectTier | null;
   variant?: string | null;
   syllabusCode?: string;
+  awardLevel?: 'AS' | 'A Level' | null;
+  series?: string | null;
+  cashInCode?: string | null;
+  mathsRoute?: '42' | '52' | null;
 }
 
 export interface QualificationPlugin {
@@ -58,6 +64,7 @@ export interface QualificationPlugin {
   ) => PaperGradeResult;
   compositeGrade: (
     papers: Array<PaperComponent & { rawMark: number }>,
-    compositeBoundaries?: GradeBoundary[]
+    compositeBoundaries?: GradeBoundary[],
+    cashInCode?: string | null
   ) => CompositeGradeResult;
 }

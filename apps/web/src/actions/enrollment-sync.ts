@@ -18,11 +18,12 @@ import {
   examPaperMatchesTier,
   getPluginForCurriculumCode,
   placeholderDateForSession,
-  syllabusHasTiers,
 } from '@/lib/grading';
 import {
   boardFromCurriculumCode,
   examMatchesMyanmarPaper,
+  type AwardLevel,
+  type PaperPreferences,
 } from '@/lib/exam-papers/myanmar-papers';
 import type { SubjectTier } from '@/lib/grading/types';
 
@@ -72,6 +73,8 @@ export async function syncEnrollmentCountdowns(input: {
   targetSeries: string;
   tier?: SubjectTier | null;
   targetGrade?: string | null;
+  awardLevel?: AwardLevel | null;
+  paperPreferences?: PaperPreferences | null;
 }) {
   const db = getDb();
   const [subject, curriculum] = await Promise.all([
@@ -83,6 +86,8 @@ export async function syncEnrollmentCountdowns(input: {
   const plugin = getPluginForCurriculumCode(curriculum.code);
   const tier = input.tier ?? null;
   const session = input.targetSeries || DEFAULT_EXAM_SESSION;
+  const awardLevel = input.awardLevel ?? null;
+  const routePrefs = input.paperPreferences ?? null;
 
   await deleteAutoCountdowns(input.userId, input.subjectId);
 
@@ -91,7 +96,7 @@ export async function syncEnrollmentCountdowns(input: {
   });
 
   let matching = catalog.filter((exam) => examMatchesSession(exam, session));
-  if (plugin.hasTiers && syllabusHasTiers(subject.code) && tier) {
+  if (plugin.hasTiers && tier) {
     matching = matching.filter((exam) =>
       examPaperMatchesTier(exam.paper_number ?? '', subject.code, tier)
     );
@@ -100,7 +105,12 @@ export async function syncEnrollmentCountdowns(input: {
   const board = boardFromCurriculumCode(curriculum.code);
   if (board) {
     matching = matching.filter((exam) =>
-      examMatchesMyanmarPaper(exam.paper_number ?? '', subject.code, board)
+      examMatchesMyanmarPaper(exam.paper_number ?? '', subject.code, board, {
+        series: exam.season || exam.series || session,
+        awardLevel,
+        routePrefs,
+        tier,
+      })
     );
   }
 
@@ -191,6 +201,8 @@ export async function applyExamSessionToAll(userId: string, series: string) {
       targetSeries: series,
       tier: (row.tier as SubjectTier | null) ?? null,
       targetGrade: row.target_grade,
+      awardLevel: (row.award_level as AwardLevel | null) ?? null,
+      paperPreferences: (row.paper_preferences as PaperPreferences | null) ?? null,
     });
   }
 

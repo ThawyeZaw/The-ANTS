@@ -19,8 +19,13 @@ import {
   boardFromCurriculumCode,
   formatPaperRowLabel,
   pastPaperMatchesMyanmarPaper,
+  pastPaperMatchesPracticeSet,
+  syllabusHasAwardLevel,
+  syllabusNeedsMathsRoute,
   toCambridgePaperId,
+  type AwardLevel,
   type ExamBoardFilter,
+  type PaperPreferences,
 } from '@/lib/exam-papers/myanmar-papers';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -54,6 +59,8 @@ export interface SubjectWithProgress {
   target_series: string | null;
   target_grade: string | null;
   tier: string | null;
+  award_level: AwardLevel | null;
+  paper_preferences: PaperPreferences | null;
 }
 
 export interface TopicWithProgress {
@@ -102,6 +109,7 @@ export interface PaperGridRow {
   qualification: string;
   /** keyed by `${year}-${series}` */
   cells: Record<string, PaperGridCell>;
+  isMyanmarDefault?: boolean;
 }
 
 export interface PaperGridCell {
@@ -264,7 +272,14 @@ export async function getSubjectsByCurriculum(
       }),
       db.query.userEnrollments.findMany({
         where: and(eq(userEnrollments.user_id, userId), eq(userEnrollments.curriculum_id, curriculumId)),
-        columns: { subject_id: true, target_series: true, target_grade: true, tier: true },
+        columns: {
+          subject_id: true,
+          target_series: true,
+          target_grade: true,
+          tier: true,
+          award_level: true,
+          paper_preferences: true,
+        },
       }),
     ]);
 
@@ -294,6 +309,8 @@ export async function getSubjectsByCurriculum(
         target_series: enroll?.target_series ?? null,
         target_grade: enroll?.target_grade ?? null,
         tier: enroll?.tier ?? null,
+        award_level: (enroll?.award_level as AwardLevel | null) ?? null,
+        paper_preferences: (enroll?.paper_preferences as PaperPreferences | null) ?? null,
       };
     });
   } catch (err) {
@@ -377,7 +394,14 @@ export async function getPaperGridData(
     const subjectCode = subject?.code ?? '';
     const board = boardFromCurriculumCode(subject?.curriculum?.code);
 
-    // Fetch papers for this subject — Myanmar-relevant only
+    const enroll = await db.query.userEnrollments.findFirst({
+      where: and(eq(userEnrollments.user_id, userId), eq(userEnrollments.subject_id, subjectId)),
+      columns: { tier: true, award_level: true, paper_preferences: true },
+    });
+    const effectiveTier = (tier ?? (enroll?.tier as SubjectTier | null) ?? null) as SubjectTier | null;
+    const awardLevel = (enroll?.award_level as AwardLevel | null) ?? null;
+    const routePrefs = (enroll?.paper_preferences as PaperPreferences | null) ?? null;
+
     const allPapersRaw = await db.query.pastPapers.findMany({
       where: eq(pastPapers.subject_id, subjectId),
       with: { gradeBoundaries: true },
@@ -387,17 +411,21 @@ export async function getPaperGridData(
     let allPapers = allPapersRaw;
     if (board && subjectCode) {
       allPapers = allPapersRaw.filter((p) =>
-        pastPaperMatchesMyanmarPaper(p.paper_number, p.variant, subjectCode, board)
+        pastPaperMatchesPracticeSet(p.paper_number, p.variant, subjectCode, board, {
+          awardLevel,
+          routePrefs,
+          tier: effectiveTier,
+        })
       );
     }
-    if (tier && syllabusHasTiers(subjectCode)) {
+    if (effectiveTier && (syllabusHasTiers(subjectCode) || subjectCode === '4MA1')) {
       allPapers = allPapers.filter((p) =>
         examPaperMatchesTier(
           board === 'CAIE_IGCSE' || board === 'CAIE_ALEVEL'
             ? toCambridgePaperId(p.paper_number, p.variant)
             : p.paper_number,
           subjectCode,
-          tier
+          effectiveTier
         )
       );
     }
@@ -462,6 +490,13 @@ export async function getPaperGridData(
           examBoard: p.exam_board,
           qualification: p.qualification,
           cells: {},
+          isMyanmarDefault:
+            board && subjectCode
+              ? pastPaperMatchesMyanmarPaper(p.paper_number, p.variant, subjectCode, board, {
+                  awardLevel,
+                  routePrefs,
+                })
+              : false,
         });
       }
 
@@ -506,11 +541,29 @@ export async function getPaperGridData(
 // 5. enrollInSubject / unenrollFromSubject
 // ──────────────────────────────────────────────────────────────────────────────
 
+export type EnrollmentSettingsPatch = {
+  targetSeries?: string;
+  tier?: SubjectTier | null;
+  targetGrade?: string | null;
+  awardLevel?: AwardLevel | null;
+  paperPreferences?: PaperPreferences | null;
+};
+
+function defaultAwardLevel(curriculumCode: string, subjectCode: string): AwardLevel | null {
+  if (syllabusHasAwardLevel(subjectCode) || curriculumCode === 'CAIE_ALEVEL') return 'A Level';
+  return null;
+}
+
+function defaultPaperPreferences(subjectCode: string): PaperPreferences | null {
+  if (syllabusNeedsMathsRoute(subjectCode)) return { mathsRoute: '42' };
+  return null;
+}
+
 export async function enrollInSubject(
   userId: string,
   curriculumId: string,
   subjectId: string,
-  options?: { targetSeries?: string; tier?: SubjectTier | null; targetGrade?: string | null }
+  options?: EnrollmentSettingsPatch
 ) {
   try {
     const db = getDb();
@@ -527,7 +580,13 @@ export async function enrollInSubject(
     const plugin = getPluginForCurriculumCode(curriculum.code);
     const targetSeries = options?.targetSeries || (await getDefaultExamSession(userId));
     const defaultTier: SubjectTier | null =
-      plugin.hasTiers && syllabusHasTiers(subject.code) ? (options?.tier ?? 'extended') : (options?.tier ?? null);
+      plugin.hasTiers && (syllabusHasTiers(subject.code) || subject.code === '4MA1')
+        ? (options?.tier ?? 'extended')
+        : (options?.tier ?? null);
+    const awardLevel =
+      options?.awardLevel ?? defaultAwardLevel(curriculum.code, subject.code);
+    const paperPreferences =
+      options?.paperPreferences ?? defaultPaperPreferences(subject.code);
 
     const existingCurr = await db.query.userCurriculums.findFirst({
       where: and(eq(userCurriculums.user_id, userId), eq(userCurriculums.curriculum_id, curriculumId)),
@@ -547,6 +606,8 @@ export async function enrollInSubject(
         target_series: targetSeries,
         target_grade: options?.targetGrade ?? null,
         tier: defaultTier,
+        award_level: awardLevel,
+        paper_preferences: paperPreferences,
         countdown_mode: plugin.countdownMode,
       });
     } else {
@@ -555,6 +616,8 @@ export async function enrollInSubject(
         .set({
           target_series: existingEnroll.target_series ?? targetSeries,
           tier: existingEnroll.tier ?? defaultTier,
+          award_level: existingEnroll.award_level ?? awardLevel,
+          paper_preferences: existingEnroll.paper_preferences ?? paperPreferences,
           countdown_mode: plugin.countdownMode,
         })
         .where(eq(userEnrollments.id, existingEnroll.id));
@@ -567,6 +630,8 @@ export async function enrollInSubject(
       targetSeries: existingEnroll?.target_series || targetSeries,
       tier: (existingEnroll?.tier as SubjectTier | null) ?? defaultTier,
       targetGrade: existingEnroll?.target_grade ?? options?.targetGrade ?? null,
+      awardLevel: (existingEnroll?.award_level as AwardLevel | null) ?? awardLevel,
+      paperPreferences: (existingEnroll?.paper_preferences as PaperPreferences | null) ?? paperPreferences,
     });
 
     return { success: true };
@@ -593,7 +658,7 @@ export async function unenrollFromSubject(userId: string, subjectId: string) {
 export async function updateEnrollmentSettings(
   userId: string,
   subjectId: string,
-  patch: { targetSeries?: string; tier?: SubjectTier | null; targetGrade?: string | null }
+  patch: EnrollmentSettingsPatch
 ) {
   try {
     const db = getDb();
@@ -605,6 +670,12 @@ export async function updateEnrollmentSettings(
     const nextSeries = patch.targetSeries ?? existing.target_series;
     const nextTier = patch.tier !== undefined ? patch.tier : (existing.tier as SubjectTier | null);
     const nextGrade = patch.targetGrade !== undefined ? patch.targetGrade : existing.target_grade;
+    const nextAward =
+      patch.awardLevel !== undefined ? patch.awardLevel : (existing.award_level as AwardLevel | null);
+    const nextPrefs =
+      patch.paperPreferences !== undefined
+        ? { ...(existing.paper_preferences as PaperPreferences | null), ...patch.paperPreferences }
+        : (existing.paper_preferences as PaperPreferences | null);
 
     await db
       .update(userEnrollments)
@@ -612,6 +683,8 @@ export async function updateEnrollmentSettings(
         target_series: nextSeries,
         tier: nextTier,
         target_grade: nextGrade,
+        award_level: nextAward,
+        paper_preferences: nextPrefs,
       })
       .where(eq(userEnrollments.id, existing.id));
 
@@ -625,7 +698,12 @@ export async function updateEnrollmentSettings(
       }
     }
 
-    if (patch.targetSeries !== undefined || patch.tier !== undefined) {
+    if (
+      patch.targetSeries !== undefined ||
+      patch.tier !== undefined ||
+      patch.awardLevel !== undefined ||
+      patch.paperPreferences !== undefined
+    ) {
       await syncEnrollmentCountdowns({
         userId,
         subjectId,
@@ -633,6 +711,8 @@ export async function updateEnrollmentSettings(
         targetSeries: nextSeries || (await getDefaultExamSession(userId)),
         tier: nextTier,
         targetGrade: nextGrade,
+        awardLevel: nextAward,
+        paperPreferences: nextPrefs,
       });
     }
 
@@ -659,6 +739,8 @@ export async function getMySubjectsHub(userId: string): Promise<{
           target_series: true,
           target_grade: true,
           tier: true,
+          award_level: true,
+          paper_preferences: true,
           countdown_mode: true,
         },
         with: {
@@ -727,6 +809,8 @@ export async function getMySubjectsHub(userId: string): Promise<{
         target_series: e.target_series ?? defaultExamSeries,
         target_grade: e.target_grade ?? null,
         tier: e.tier ?? null,
+        award_level: (e.award_level as AwardLevel | null) ?? null,
+        paper_preferences: (e.paper_preferences as PaperPreferences | null) ?? null,
         curriculum_name: curr?.name ?? '',
         curriculum_code: curr?.code ?? '',
         enrollmentId: e.id,
@@ -793,6 +877,8 @@ export async function listUserEnrollments(userId: string) {
       target_series: true,
       target_grade: true,
       tier: true,
+      award_level: true,
+      paper_preferences: true,
       countdown_mode: true,
       enrolled_at: true,
     },
