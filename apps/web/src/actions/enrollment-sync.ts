@@ -20,6 +20,10 @@ import {
   placeholderDateForSession,
   syllabusHasTiers,
 } from '@/lib/grading';
+import {
+  boardFromCurriculumCode,
+  examMatchesMyanmarPaper,
+} from '@/lib/exam-papers/myanmar-papers';
 import type { SubjectTier } from '@/lib/grading/types';
 
 async function deleteAutoCountdowns(userId: string, subjectId: string) {
@@ -90,6 +94,13 @@ export async function syncEnrollmentCountdowns(input: {
   if (plugin.hasTiers && syllabusHasTiers(subject.code) && tier) {
     matching = matching.filter((exam) =>
       examPaperMatchesTier(exam.paper_number ?? '', subject.code, tier)
+    );
+  }
+
+  const board = boardFromCurriculumCode(curriculum.code);
+  if (board) {
+    matching = matching.filter((exam) =>
+      examMatchesMyanmarPaper(exam.paper_number ?? '', subject.code, board)
     );
   }
 

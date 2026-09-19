@@ -13,8 +13,15 @@ import {
   removeAutoCountdownsForSubject,
   syncEnrollmentCountdowns,
 } from '@/actions/enrollment-sync';
-import { getPluginForCurriculumCode, syllabusHasTiers } from '@/lib/grading';
+import { examPaperMatchesTier, getPluginForCurriculumCode, syllabusHasTiers } from '@/lib/grading';
 import type { SubjectTier } from '@/lib/grading/types';
+import {
+  boardFromCurriculumCode,
+  formatPaperRowLabel,
+  pastPaperMatchesMyanmarPaper,
+  toCambridgePaperId,
+  type ExamBoardFilter,
+} from '@/lib/exam-papers/myanmar-papers';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -87,6 +94,7 @@ export interface PaperGridRow {
   paperId: string;
   paperNumber: string;
   variant: string | null;
+  displayLabel: string;
   title: string | null;
   totalMarks: number | null;
   durationMinutes: number | null;
@@ -112,6 +120,8 @@ export interface PaperGridData {
   sessions: PaperGridSession[];   // columns, newest first
   rows: PaperGridRow[];           // paper unit rows
   isIAL: boolean;
+  subjectCode?: string;
+  board?: ExamBoardFilter | null;
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -354,17 +364,43 @@ export async function getPaperGridData(
   userId: string,
   subjectId: string,
   yearFrom?: number,
-  yearTo?: number
+  yearTo?: number,
+  tier?: SubjectTier | null
 ): Promise<PaperGridData> {
   try {
     const db = getDb();
 
-    // Fetch all papers for this subject
-    const allPapers = await db.query.pastPapers.findMany({
+    const subject = await db.query.subjects.findFirst({
+      where: eq(subjects.id, subjectId),
+      with: { curriculum: true },
+    });
+    const subjectCode = subject?.code ?? '';
+    const board = boardFromCurriculumCode(subject?.curriculum?.code);
+
+    // Fetch papers for this subject — Myanmar-relevant only
+    const allPapersRaw = await db.query.pastPapers.findMany({
       where: eq(pastPapers.subject_id, subjectId),
       with: { gradeBoundaries: true },
       orderBy: [asc(pastPapers.paper_number), asc(pastPapers.variant)],
     });
+
+    let allPapers = allPapersRaw;
+    if (board && subjectCode) {
+      allPapers = allPapersRaw.filter((p) =>
+        pastPaperMatchesMyanmarPaper(p.paper_number, p.variant, subjectCode, board)
+      );
+    }
+    if (tier && syllabusHasTiers(subjectCode)) {
+      allPapers = allPapers.filter((p) =>
+        examPaperMatchesTier(
+          board === 'CAIE_IGCSE' || board === 'CAIE_ALEVEL'
+            ? toCambridgePaperId(p.paper_number, p.variant)
+            : p.paper_number,
+          subjectCode,
+          tier
+        )
+      );
+    }
 
     // Fetch user records for those papers
     const paperIds = allPapers.map((p) => p.id);
@@ -419,6 +455,7 @@ export async function getPaperGridData(
           paperId: p.id,
           paperNumber: p.paper_number,
           variant: p.variant,
+          displayLabel: formatPaperRowLabel(p.paper_number, p.variant, board),
           title: p.title,
           totalMarks: p.total_marks,
           durationMinutes: p.duration_minutes,
@@ -452,11 +489,13 @@ export async function getPaperGridData(
       };
     }
 
-    const rows = [...rowMap.values()].sort((a, b) =>
-      a.paperNumber.localeCompare(b.paperNumber, undefined, { numeric: true })
-    );
+    const rows = [...rowMap.values()]
+      .filter((row) => Object.keys(row.cells).length > 0)
+      .sort((a, b) =>
+        a.displayLabel.localeCompare(b.displayLabel, undefined, { numeric: true })
+      );
 
-    return { sessions, rows, isIAL };
+    return { sessions, rows, isIAL, subjectCode, board };
   } catch (err) {
     console.error('[curriculum] getPaperGridData error:', err);
     return { sessions: [], rows: [], isIAL: false };

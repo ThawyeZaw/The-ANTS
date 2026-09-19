@@ -6,12 +6,14 @@ import type {
   PaperSelectionOptions,
   QualificationPlugin,
 } from './types';
+import { CAIE_IGCSE_PRACTICE_VARIANTS } from '@/lib/exam-papers/myanmar-papers';
 import {
   caiePaperBase,
   fallbackLetterGrade,
   gradeFromRawMarks,
   lookupGrade,
   percentageOf,
+  toCambridgePaperId,
 } from './shared';
 
 /**
@@ -26,21 +28,6 @@ const TIERED_SYLLABI: Record<string, { core: string[]; extended: string[]; share
   '0653': { core: ['1', '3'], extended: ['2', '4'], shared: ['5', '6'] },
 };
 
-const ZONE4_ALLOWED: Record<string, string[]> = {
-  '0580': ['21', '22', '23', '41', '42', '43'], // Kept core for completeness, though extended is primary
-  '0606': ['11', '12', '13', '21', '22', '23'],
-  '0625': ['21', '22', '23', '41', '42', '43', '61', '62', '63'],
-  '0620': ['21', '22', '23', '41', '42', '43', '61', '62', '63'],
-  '0610': ['21', '22', '23', '41', '42', '43', '61', '62', '63'],
-  '0478': ['11', '12', '13', '21', '22', '23'],
-  '0417': ['11', '12', '13', '21', '22', '02', '31', '32', '03'],
-  '0500': ['11', '12', '13', '21', '22', '23', '31', '32', '33'],
-  '0510': ['11', '12', '13', '21', '22', '23', '04'],
-  '0455': ['11', '12', '13', '21', '22', '23'],
-  '0450': ['11', '12', '13', '21', '22', '23'],
-  '0452': ['11', '12', '13', '21', '22', '23'],
-};
-
 function filterByTierAndVariant(
   papers: PaperComponent[],
   opts: PaperSelectionOptions
@@ -48,10 +35,12 @@ function filterByTierAndVariant(
   let list = papers;
 
   const code = opts.syllabusCode;
-  const allowedZone4 = code ? ZONE4_ALLOWED[code] : undefined;
+  const practiceVariants = code ? CAIE_IGCSE_PRACTICE_VARIANTS[code] : undefined;
 
-  if (allowedZone4) {
-    list = list.filter((p) => allowedZone4.includes(p.paperNumber));
+  if (practiceVariants) {
+    list = list.filter((p) =>
+      practiceVariants.includes(toCambridgePaperId(p.paperNumber, p.variant))
+    );
   } else if (opts.variant) {
     const withVariant = list.filter((p) => (p.variant ?? '2') === opts.variant);
     if (withVariant.length > 0) list = withVariant;
@@ -78,7 +67,7 @@ function filterByTierAndVariant(
     out.push({ ...p, exclusiveGroup });
   }
 
-  if (allowedZone4) {
+  if (practiceVariants) {
     // If strict mapping, don't deduplicate by base because exclusiveGroup will handle the UI choice!
     return out.sort((a, b) =>
       a.paperNumber.localeCompare(b.paperNumber, undefined, { numeric: true })

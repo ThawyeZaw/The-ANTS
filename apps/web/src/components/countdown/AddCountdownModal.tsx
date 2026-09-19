@@ -22,7 +22,7 @@ interface AddCountdownModalProps {
     qualification_group?: string;
     subject_id?: string;
     exam_board?: string;
-  }) => void;
+  }) => void | Promise<void>;
   /** Pre-fill from a library exam (e.g. opened from Exams Library browser) */
   prefilledExam?: Exam | null;
 }
@@ -53,6 +53,8 @@ export function AddCountdownModal({
   const [targetTime, setTargetTime] = useState('09:00');
   const [priority, setPriority] = useState('medium');
   const [group, setGroup] = useState('Custom');
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     setFilterCurriculumId(initialCurriculumId);
@@ -104,40 +106,47 @@ export function AddCountdownModal({
 
   const isPastDate = targetDate && targetTime ? new Date(`${targetDate}T${targetTime}`).getTime() < Date.now() : false;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (tab === 'library') {
-      if (selectedExamIds.size === 0) return;
-      Array.from(selectedExamIds).forEach(id => {
-        const exam = availableExams.find((item) => item.id === id);
-        if (exam) {
-          onCreate({
-            exam_id: id,
-            priority_indicator: priority,
-            qualification_group: group || exam.exam_board || 'Official',
-            subject_id: exam.subject_id ?? undefined,
-            exam_board: exam.exam_board ?? undefined,
-          });
+    setSubmitError(null);
+    setSubmitting(true);
+    try {
+      if (tab === 'library') {
+        if (selectedExamIds.size === 0) return;
+        for (const id of Array.from(selectedExamIds)) {
+          const exam = availableExams.find((item) => item.id === id);
+          if (exam) {
+            await onCreate({
+              exam_id: id,
+              priority_indicator: priority,
+              qualification_group: group || exam.exam_board || 'Official',
+              subject_id: exam.subject_id ?? undefined,
+              exam_board: exam.exam_board ?? undefined,
+            });
+          }
         }
-      });
-    } else {
-      if (!customTitle || !targetDate) return;
-      onCreate({
-        custom_title: customTitle,
-        target_date: new Date(`${targetDate}T${targetTime}`).toISOString(),
-        priority_indicator: priority,
-        qualification_group: group,
-      });
+      } else {
+        if (!customTitle.trim() || !targetDate) return;
+        await onCreate({
+          custom_title: customTitle.trim(),
+          target_date: new Date(`${targetDate}T${targetTime}`).toISOString(),
+          priority_indicator: priority,
+          qualification_group: group,
+        });
+      }
+
+      setSelectedExamIds(new Set());
+      setCustomTitle('');
+      setTargetDate('');
+      setTargetTime('09:00');
+      setPriority('medium');
+      setGroup('Custom');
+      onClose();
+    } catch (err: any) {
+      setSubmitError(err?.message || 'Failed to add countdown. Please try again.');
+    } finally {
+      setSubmitting(false);
     }
-    
-    // Reset and close
-    setSelectedExamIds(new Set());
-    setCustomTitle('');
-    setTargetDate('');
-    setTargetTime('09:00');
-    setPriority('medium');
-    setGroup('Custom');
-    onClose();
   };
 
   return (
@@ -365,6 +374,12 @@ export function AddCountdownModal({
             </select>
           </div>
 
+          {submitError && (
+            <p className="text-sm text-red-500" role="alert">
+              {submitError}
+            </p>
+          )}
+
           <div className="mt-8 flex justify-end gap-3 pt-4 border-t border-[var(--border)]">
             <button
               type="button"
@@ -376,10 +391,11 @@ export function AddCountdownModal({
             </button>
             <button
               type="submit"
-              className="rounded-lg bg-[var(--primary)] px-6 py-2 text-sm font-medium text-white hover:bg-[var(--primary-hover)] transition-colors focus-visible:ring-2 focus-visible:ring-[var(--primary)]/40 focus-visible:outline-none"
+              disabled={submitting}
+              className="rounded-lg bg-[var(--primary)] px-6 py-2 text-sm font-medium text-white hover:bg-[var(--primary-hover)] transition-colors focus-visible:ring-2 focus-visible:ring-[var(--primary)]/40 focus-visible:outline-none disabled:opacity-60"
               aria-label="Submit and add countdown"
             >
-              Add Countdown
+              {submitting ? 'Adding…' : 'Add Countdown'}
             </button>
           </div>
         </form>

@@ -221,10 +221,10 @@ export function useCurriculumDashboard() {
         body: JSON.stringify({
           userId,
           examId: data.exam_id,
-          customTitle: data.custom_title,
-          targetDate: data.target_date,
-          priorityIndicator: data.priority_indicator,
-          qualificationGroup: data.qualification_group,
+          title: data.custom_title || 'Upcoming Exam',
+          examDate: data.target_date,
+          isCustom: !data.exam_id,
+          isPinned: Boolean(data.exam_id),
         }),
       });
       refresh();

@@ -14,6 +14,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
 import { useContributorManager } from '@/hooks/useContributorManager';
 import UsersTable from '@/components/contributor-manager/UsersTable';
+import { actionUpdateUserRoles } from '@/actions/role-upgrade';
 import type { UserRole } from '@/types';
 
 export default function AddContributorPage() {
@@ -29,28 +30,25 @@ export default function AddContributorPage() {
   } = useContributorManager();
 
   const [users, setUsers] = useState<any[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchAllUsers().then(setUsers);
+    setLoadError(null);
+    fetchAllUsers().then((rows) => {
+      setUsers(rows);
+      if (rows.length === 0) {
+        setLoadError('No users found. If this is unexpected, check database connectivity.');
+      }
+    });
   }, [fetchAllUsers, success]);
 
   const handleRolesChange = useCallback(
     async (userId: string, newRoles: UserRole[]) => {
-      try {
-        const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8787';
-        const res = await fetch(`${apiBase}/api/role-upgrade/roles`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, roles: newRoles }),
-        });
-        if (res.ok) {
-          fetchAllUsers().then(setUsers);
-        } else {
-          const data = await res.json().catch(() => ({}));
-          console.error('Failed to update roles:', data.error || 'API Error');
-        }
-      } catch (err) {
-        console.error('Failed to update roles:', err);
+      const result = await actionUpdateUserRoles(userId, newRoles);
+      if (result.success) {
+        fetchAllUsers().then(setUsers);
+      } else {
+        console.error('Failed to update roles:', result.error);
       }
     },
     [fetchAllUsers]
@@ -100,6 +98,11 @@ export default function AddContributorPage() {
       {/* Users Table */}
       <div className="bg-background-card border border-border rounded-2xl p-6">
         <h2 className="text-lg font-bold text-foreground mb-4">Platform Users & Permissions</h2>
+        {loadError && (
+          <p className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-300">
+            {loadError}
+          </p>
+        )}
         <UsersTable users={users} onRolesChange={handleRolesChange} />
       </div>
     </div>
