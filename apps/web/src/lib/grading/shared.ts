@@ -113,6 +113,15 @@ export function caiePaperBase(paperNumber: string): string {
   return digits || paperNumber;
 }
 
+
+/** Combined CAIE paper id (e.g. paper 2 + variant 2 -> "22"). */
+export function toCambridgePaperId(paperNumber: string, variant?: string | null): string {
+  const digits = paperNumber.replace(/\D/g, '');
+  if (digits.length >= 2 && !variant) return digits;
+  const base = caiePaperBase(paperNumber);
+  return `${base}${variant ?? '2'}`;
+}
+
 export function uniqueVariants(papers: { variant?: string | null }[]): string[] {
   const set = new Set<string>();
   for (const p of papers) {

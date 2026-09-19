@@ -7,7 +7,7 @@ import { edexcelIalPlugin } from './edexcel-ial';
 import { caieIgcsePlugin as _caie } from './caie-igcse';
 
 export type { QualificationPlugin, GradeBoundary, PaperComponent, SubjectTier, CountdownMode } from './types';
-export { getGradeColor, uniqueVariants, caiePaperBase, lookupGrade, computeUms, percentageOf } from './shared';
+export { getGradeColor, uniqueVariants, caiePaperBase, toCambridgePaperId, lookupGrade, computeUms, percentageOf } from './shared';
 export { syllabusHasTiers, examPaperMatchesTier } from './caie-igcse';
 export {
   parseSessionLabel,

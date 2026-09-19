@@ -24,6 +24,33 @@ export interface CountdownWithTime extends ExamCountdown {
 
 export type GroupedCountdowns = Record<string, CountdownWithTime[]>;
 
+function deriveQualificationGroup(countdown: {
+  exam_board?: string | null;
+  is_custom?: boolean;
+  qualification_group?: string | null;
+}): string {
+  if (countdown.qualification_group) return countdown.qualification_group;
+  const board = (countdown.exam_board ?? '').toUpperCase();
+  if (board.includes('CAIE') || board.includes('CAMBRIDGE')) return 'CAIE';
+  if (board.includes('EDEXCEL') || board.includes('PEARSON')) return 'Edexcel';
+  if (countdown.is_custom) return 'Custom';
+  return 'Official';
+}
+
+function sortCountdowns(list: CountdownWithTime[]): CountdownWithTime[] {
+  return [...list].sort((a, b) => {
+    const pinA = (a as any).is_pinned ? 1 : 0;
+    const pinB = (b as any).is_pinned ? 1 : 0;
+    if (pinB !== pinA) return pinB - pinA;
+    const customA = (a as any).is_custom ? 1 : 0;
+    const customB = (b as any).is_custom ? 1 : 0;
+    if (customB !== customA) return customB - customA;
+    const dateA = new Date(a.target_date ?? 0).getTime();
+    const dateB = new Date(b.target_date ?? 0).getTime();
+    return dateA - dateB;
+  });
+}
+
 function calculateTimeLeft(targetDate: string | null): TimeLeft {
   if (!targetDate) return { days: 0, hours: 0, minutes: 0, seconds: 0, isPast: true };
 
@@ -61,12 +88,15 @@ export function useCountdown(userId: string | undefined) {
           const cdJson = await cdRes.json();
           if (cdJson.success && cdJson.countdowns) {
             setCountdowns(
-              (cdJson.countdowns as any[]).map((c) => ({
-                ...c,
-                custom_title: c.custom_title ?? c.title ?? null,
-                target_date: c.exam_date || c.target_date,
-                timeLeft: calculateTimeLeft(c.exam_date || c.target_date),
-              }))
+              sortCountdowns(
+                (cdJson.countdowns as any[]).map((c) => ({
+                  ...c,
+                  custom_title: c.custom_title ?? c.title ?? null,
+                  target_date: c.exam_date || c.target_date,
+                  qualification_group: deriveQualificationGroup(c),
+                  timeLeft: calculateTimeLeft(c.exam_date || c.target_date),
+                }))
+              )
             );
           }
         } else {
@@ -115,9 +145,11 @@ export function useCountdown(userId: string | undefined) {
       subject_id?: string;
       exam_board?: string;
     }) => {
-      if (!userId) return;
+      if (!userId) {
+        throw new Error('You must be signed in to add a countdown.');
+      }
 
-      let title = data.custom_title;
+      let title = data.custom_title?.trim();
       let target = data.target_date;
       let group = data.qualification_group;
       let subjectId = data.subject_id;
@@ -134,6 +166,12 @@ export function useCountdown(userId: string | undefined) {
         }
       }
 
+      const resolvedTitle = (title || 'Upcoming Exam').trim();
+      const resolvedDate =
+        target && !Number.isNaN(new Date(target).getTime())
+          ? new Date(target).toISOString()
+          : new Date(Date.now() + 30 * 86400000).toISOString();
+
       try {
         const res = await fetch(`${API_BASE_URL}/api/exams/countdowns`, {
           method: 'POST',
@@ -141,33 +179,47 @@ export function useCountdown(userId: string | undefined) {
           body: JSON.stringify({
             userId,
             examId: data.exam_id ?? undefined,
-            title: title || 'Upcoming Exam',
-            examDate: target || new Date(Date.now() + 30 * 86400000).toISOString(),
+            title: resolvedTitle,
+            examDate: resolvedDate,
             colorCode: '#EF4444',
             isCustom: !data.exam_id,
-            isPinned: Boolean(data.exam_id),
+            isPinned: true,
             subjectId: subjectId ?? undefined,
             examBoard: examBoard ?? undefined,
           }),
         });
 
-        if (res.ok) {
-          const json = await res.json();
-          if (json.success && json.countdown) {
-            const newCountdown = json.countdown;
-            setCountdowns((prev) => [
+        if (!res.ok) {
+          const errBody = await res.json().catch(() => ({}));
+          console.error('Error creating countdown:', res.status, errBody);
+          throw new Error(
+            typeof errBody.error === 'string'
+              ? errBody.error
+              : 'Failed to create countdown. Please try again.'
+          );
+        }
+
+        const json = await res.json();
+        if (json.success && json.countdown) {
+          const newCountdown = json.countdown;
+          setCountdowns((prev) =>
+            sortCountdowns([
               ...prev,
               {
                 ...newCountdown,
                 target_date: newCountdown.exam_date,
-                qualification_group: group || 'Custom',
+                qualification_group: deriveQualificationGroup({
+                  ...newCountdown,
+                  qualification_group: group,
+                }),
                 timeLeft: calculateTimeLeft(newCountdown.exam_date),
               },
-            ]);
-          }
+            ])
+          );
         }
       } catch (err) {
         console.error('Error creating countdown:', err);
+        throw err;
       }
     },
     [userId, availableExams]
@@ -191,14 +243,17 @@ export function useCountdown(userId: string | undefined) {
     [userId]
   );
 
-  const groupedCountdowns: GroupedCountdowns = countdowns.reduce((acc, current) => {
-    const group = current.qualification_group || 'Custom';
-    if (!acc[group]) {
-      acc[group] = [];
-    }
-    acc[group].push(current);
-    return acc;
-  }, {} as GroupedCountdowns);
+  const groupedCountdowns: GroupedCountdowns = sortCountdowns(countdowns).reduce(
+    (acc, current) => {
+      const group = current.qualification_group || 'Custom';
+      if (!acc[group]) {
+        acc[group] = [];
+      }
+      acc[group].push(current);
+      return acc;
+    },
+    {} as GroupedCountdowns
+  );
 
   return {
     groupedCountdowns,

@@ -165,12 +165,27 @@ export function createExamRoutes(getDb: () => ReturnType<typeof createDb>) {
   router.post('/countdowns', async (c) => {
     try {
       const db = getDb();
-      const body = await c.req.json();
+      const raw = await c.req.json();
+      const body = {
+        ...raw,
+        userId: raw.userId ?? raw.user_id,
+        title: raw.title ?? raw.customTitle ?? raw.custom_title,
+        examDate: raw.examDate ?? raw.targetDate ?? raw.target_date,
+        examId: raw.examId ?? raw.exam_id,
+        subjectId: raw.subjectId ?? raw.subject_id,
+        examBoard: raw.examBoard ?? raw.exam_board,
+        paperName: raw.paperName ?? raw.paper_name,
+        colorCode: raw.colorCode ?? raw.color_code,
+        targetGrade: raw.targetGrade ?? raw.target_grade,
+        isMock: raw.isMock ?? raw.is_mock,
+        isPinned: raw.isPinned ?? raw.is_pinned,
+        isCustom: raw.isCustom ?? raw.is_custom,
+      };
 
       const CountdownSchema = z.object({
         userId: z.string().min(1),
         title: z.string().min(1),
-        examDate: z.string(),
+        examDate: z.string().min(1),
         examId: z.string().nullish(),
         subjectId: z.string().nullish(),
         examBoard: z.string().nullish(),

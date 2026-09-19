@@ -60,16 +60,16 @@ export async function actionUpdateUserRoles(
   roles: UserRole[]
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8787';
-    const res = await fetch(`${apiBase}/api/role-upgrade/roles`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, roles }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      return { success: false, error: data.error || 'Failed to update user roles' };
-    }
+    const db = getDb();
+    const primaryRole = roles[0] ?? 'student';
+    await db
+      .update(profiles)
+      .set({
+        role: primaryRole,
+        roles,
+        updated_at: new Date(),
+      })
+      .where(eq(profiles.id, userId));
     return { success: true };
   } catch (err: any) {
     return { success: false, error: err.message || 'Failed to update user roles' };
@@ -128,14 +128,32 @@ export async function actionPromoteUserToAdminByEmail(
  */
 export async function getAllUsers() {
   try {
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8787';
-    const res = await fetch(`${apiBase}/api/role-upgrade/users`, { cache: 'no-store' });
-    if (!res.ok) {
-      console.error('[getAllUsers] API', res.status);
-      return [];
-    }
-    const data = await res.json();
-    return Array.isArray(data.users) ? data.users : [];
+    const db = getDb();
+    const rows = await db
+      .select({
+        id: profiles.id,
+        email: profiles.email,
+        name: profiles.name,
+        role: profiles.role,
+        roles: profiles.roles,
+        is_public: profiles.is_public,
+        created_at: profiles.created_at,
+      })
+      .from(profiles)
+      .orderBy(desc(profiles.created_at));
+
+    return rows.map((row) => ({
+      id: row.id,
+      email: row.email,
+      name: row.name,
+      username: row.email.split('@')[0] ?? row.name,
+      avatar: '',
+      role: row.role as UserRole,
+      roles: (row.roles ?? [row.role]) as UserRole[],
+      is_public: row.is_public,
+      created_at: row.created_at?.toISOString?.() ?? new Date().toISOString(),
+      createdAt: row.created_at?.toISOString?.() ?? new Date().toISOString(),
+    }));
   } catch (err) {
     console.error('[getAllUsers]', err);
     return [];

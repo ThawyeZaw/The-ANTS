@@ -147,14 +147,21 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
     }
     if (showLoader) setLoading(true);
     try {
-      const grid = await getPaperGridData(userId, selectedSubjectId);
+      const currentSubject = enrolledSubjects.find((s) => s.id === selectedSubjectId);
+      const grid = await getPaperGridData(
+        userId,
+        selectedSubjectId,
+        undefined,
+        undefined,
+        (currentSubject?.tier as 'core' | 'extended' | null) ?? null
+      );
       setGridData(grid);
     } catch (err) {
       console.error('Failed to load past papers:', err);
     } finally {
       if (showLoader) setLoading(false);
     }
-  }, [selectedSubjectId, userId]);
+  }, [selectedSubjectId, userId, enrolledSubjects]);
 
   useEffect(() => {
     loadPapersForSubject(true);

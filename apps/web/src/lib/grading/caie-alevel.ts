@@ -1,20 +1,6 @@
 import type { QualificationPlugin, PaperComponent } from './types';
-import { fallbackLetterGrade, gradeFromRawMarks, lookupGrade, percentageOf } from './shared';
-
-const ZONE4_ALLOWED: Record<string, string[]> = {
-  '9709': ['11', '12', '13', '21', '22', '23', '31', '32', '33', '41', '42', '43', '51', '52', '53', '61', '62', '63'],
-  '9231': ['11', '12', '13', '21', '22', '23', '31', '32', '33', '41', '42', '43', '51', '52', '53', '61', '62', '63'],
-  '9702': ['11', '12', '13', '21', '22', '23', '31', '32', '33', '34', '41', '42', '43', '51', '52', '53', '61', '62', '63'],
-  '9701': ['11', '12', '13', '21', '22', '23', '31', '32', '33', '34', '41', '42', '43', '51', '52', '53', '61', '62', '63'],
-  '9700': ['11', '12', '13', '21', '22', '23', '31', '32', '33', '34', '41', '42', '43', '51', '52', '53', '61', '62', '63'],
-  '9618': ['11', '12', '13', '21', '22', '23', '31', '32', '33', '41', '42', '43', '51', '52', '53', '61', '62', '63'],
-  '9626': ['11', '12', '13', '02', '31', '32', '33', '04'],
-  '9708': ['11', '12', '13', '21', '22', '23', '31', '32', '33', '41', '42', '43', '51', '52', '53', '61', '62', '63'],
-  '9609': ['11', '12', '13', '21', '22', '23', '31', '32', '33', '41', '42', '43', '51', '52', '53', '61', '62', '63'],
-  '9706': ['11', '12', '13', '21', '22', '23', '31', '32', '33', '41', '42', '43', '51', '52', '53', '61', '62', '63'],
-  '9093': ['11', '12', '13', '21', '22', '23', '31', '32', '33', '41', '42', '43', '51', '52', '53', '61', '62', '63'],
-  '9695': ['11', '12', '13', '21', '22', '23', '31', '32', '33', '41', '42', '43', '51', '52', '53', '61', '62', '63'],
-};
+import { CAIE_ALEVEL_PRACTICE_VARIANTS } from '@/lib/exam-papers/myanmar-papers';
+import { fallbackLetterGrade, gradeFromRawMarks, lookupGrade, percentageOf, toCambridgePaperId } from './shared';
 
 export const caieAlevelPlugin: QualificationPlugin = {
   key: 'CAIE_AL',
@@ -24,10 +10,12 @@ export const caieAlevelPlugin: QualificationPlugin = {
   paperSelectionRules: (papers, opts) => {
     let list = papers;
     const code = opts.syllabusCode;
-    const allowedZone4 = code ? ZONE4_ALLOWED[code] : undefined;
+    const practiceVariants = code ? CAIE_ALEVEL_PRACTICE_VARIANTS[code] : undefined;
 
-    if (allowedZone4) {
-      list = list.filter((p) => allowedZone4.includes(p.paperNumber));
+    if (practiceVariants) {
+      list = list.filter((p) =>
+        practiceVariants.includes(toCambridgePaperId(p.paperNumber, p.variant))
+      );
     } else if (opts.variant) {
       const withVariant = list.filter((p) => (p.variant ?? '2') === opts.variant);
       if (withVariant.length > 0) list = withVariant;
@@ -43,7 +31,7 @@ export const caieAlevelPlugin: QualificationPlugin = {
       out.push({ ...p, exclusiveGroup });
     }
 
-    if (allowedZone4) {
+    if (practiceVariants) {
       return out.sort((a, b) =>
         a.paperNumber.localeCompare(b.paperNumber, undefined, { numeric: true })
       );

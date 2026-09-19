@@ -321,7 +321,7 @@ export function PaperGrid({ userId, data, onRecordChange }: PaperGridProps) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center text-foreground-muted gap-3">
         <BookOpen className="h-10 w-10 opacity-30" />
-        <p className="text-sm">No past papers seeded for this subject yet.</p>
+        <p className="text-sm">No Myanmar-relevant past papers for this subject yet.</p>
         <p className="text-xs opacity-60">Seed data can be added via SQL — see <code className="font-mono">docs/seeds/exam-data-spec.md</code>.</p>
       </div>
     );
@@ -331,6 +331,9 @@ export function PaperGrid({ userId, data, onRecordChange }: PaperGridProps) {
     <div className="space-y-4">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3">
+        <span className="inline-flex items-center rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-primary">
+          Myanmar papers
+        </span>
         {/* Year range filter */}
         <div className="flex items-center gap-2 text-xs text-foreground-muted">
           <span className="font-medium">Years:</span>
@@ -414,9 +417,14 @@ export function PaperGrid({ userId, data, onRecordChange }: PaperGridProps) {
                 {/* Frozen paper label */}
                 <td className="sticky left-0 z-10 bg-background-card px-3 py-1.5 whitespace-nowrap border-r border-border/30">
                   <div className="space-y-0.5">
-                    <div className="font-semibold text-foreground text-[11px] leading-tight">
-                      {row.title ?? `Paper ${row.paperNumber}${row.variant ? ` Variant ${row.variant}` : ''}`}
+                    <div className="font-mono font-bold text-foreground text-[12px] leading-tight">
+                      {row.displayLabel}
                     </div>
+                    {row.title && (
+                      <div className="text-[10px] text-foreground-secondary line-clamp-2 max-w-[180px]">
+                        {row.title}
+                      </div>
+                    )}
                     {row.totalMarks && (
                       <div className="text-[10px] font-mono text-foreground-muted">{row.totalMarks} marks</div>
                     )}
@@ -456,8 +464,8 @@ export function PaperGrid({ userId, data, onRecordChange }: PaperGridProps) {
         {gridData.rows.map((row, rowIdx) => (
           <div key={`${row.paperNumber}-${row.variant}`} className="rounded-xl border border-border bg-background-card p-4 space-y-3">
             <div className="flex items-center justify-between border-b border-border/40 pb-2">
-              <div className="font-semibold text-foreground text-sm">
-                {row.title ?? `Paper ${row.paperNumber}${row.variant ? ` Variant ${row.variant}` : ''}`}
+              <div className="font-mono font-bold text-foreground text-sm">
+                {row.displayLabel}
               </div>
               {row.totalMarks && (
                 <div className="text-xs font-mono text-foreground-muted">{row.totalMarks} marks</div>

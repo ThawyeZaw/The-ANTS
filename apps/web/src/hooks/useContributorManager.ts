@@ -6,6 +6,7 @@
 
 import { useState, useCallback } from 'react';
 import type { UserRole } from '@/types';
+import { getAllUsers, actionUpdateUserRoles } from '@/actions/role-upgrade';
 
 export type InviteStep = 1;
 
@@ -83,14 +84,8 @@ export function useContributorManager() {
 
   const fetchAllUsers = useCallback(async () => {
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8787';
-      const res = await fetch(`${apiBase}/api/role-upgrade/users`, { cache: 'no-store' });
-      if (!res.ok) {
-        console.error('[fetchAllUsers] API', res.status);
-        return [];
-      }
-      const data = await res.json();
-      return Array.isArray(data.users) ? data.users : [];
+      const users = await getAllUsers();
+      return Array.isArray(users) ? users : [];
     } catch (err) {
       console.error('[fetchAllUsers]', err);
       return [];
@@ -98,21 +93,7 @@ export function useContributorManager() {
   }, []);
 
   const changeUserRole = useCallback(async (userId: string, newRole: UserRole) => {
-    try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8787';
-      const res = await fetch(`${apiBase}/api/role-upgrade/roles`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, roles: [newRole] }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        return { success: false, error: data.error || 'Failed to update user roles' };
-      }
-      return { success: true };
-    } catch (err: any) {
-      return { success: false, error: err.message || 'Failed to update user roles' };
-    }
+    return actionUpdateUserRoles(userId, [newRole]);
   }, []);
 
   return {
