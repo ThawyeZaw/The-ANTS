@@ -1,6 +1,6 @@
 # Phase 2 — CAIE A Level Grade Boundaries & Reserved Subject Activation
 
-> **Status:** Blocked — requires CAIE A Level grade boundary PDFs  
+> **Status:** In progress — generators + component routes landed; **blocked on CAIE A Level grade boundary PDFs** for full seed data  
 > **Prerequisites:** Phase 1 merged  
 > **Unblocks:** Full A Level calculator composite, reserved CAIE AL subjects
 
@@ -98,7 +98,7 @@ Use `packages/shared-types/src/exam-papers.ts` — extend if missing:
 
 **9626 IT:** series-dependent (02/04 vs 21/41) — reuse `CAIE_SERIES_PAPERS` pattern from Phase 1
 
-Seed `0026`-style routes for each subject in `0028_caie_alevel_component_routes.sql` (or extend `0026`).
+Seed routes in `0028_subject_component_routes.sql` (9709, IAL) + `0029_caie_alevel_component_routes.sql` (sciences, 9618, reserved subjects).
 
 ---
 
@@ -124,7 +124,7 @@ Handle:
 ### New: `_gen_caie_alevel_composites.py`
 
 If Cambridge publishes subject-level threshold tables (similar to IGCSE option tables):
-→ `0029_caie_alevel_subject_composites.sql` → `subject_grade_boundaries`
+→ `0030_caie_alevel_subject_composites.sql` → `subject_grade_boundaries`
 
 **9709 note:** Composite may require route-specific boundaries (Mechanics vs Statistics totals differ). Use `route_key` column or tier field if needed — evaluate PDF structure during implementation.
 

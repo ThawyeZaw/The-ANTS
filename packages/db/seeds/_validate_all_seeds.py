@@ -32,6 +32,8 @@ SEED_ORDER = [
     "0025_caie_igcse_subject_composites.sql",
     "0026_exams_series_paper_validation.sql",
     "0028_subject_component_routes.sql",
+    "0029_caie_alevel_component_routes.sql",
+    "0030_caie_alevel_subject_composites.sql",
 ]
 
 

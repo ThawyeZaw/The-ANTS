@@ -250,7 +250,7 @@ def extract_component_rows(text: str):
                 for g, v in zip(grade_headers, vals[1:expected]):
                     gmap[g] = v
                 if isinstance(total, int):
-                    rows.append((code, total, gmap))
+                    rows.append((comp, total, gmap))
                 i = j
                 continue
         i += 1

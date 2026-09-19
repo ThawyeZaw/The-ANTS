@@ -37,8 +37,8 @@ flowchart LR
 
 | Phase | Doc | Status | Summary |
 |-------|-----|--------|---------|
-| **1** | [`phase-1-smart-grade-tracker.md`](./phase-1-smart-grade-tracker.md) | **Ready to implement** | Subject-first calculator, past paper tracker redesign, IGCSE/Edexcel seed refresh, component routes, chapter-level subtopics |
-| **2** | [`phase-2-caie-alevel-boundaries.md`](./phase-2-caie-alevel-boundaries.md) | **Blocked on PDFs** | CAIE A Level grade boundaries, reserved AL subjects, composite grading for 9709+ |
+| **1** | [`phase-1-smart-grade-tracker.md`](./phase-1-smart-grade-tracker.md) | **Implemented** (`TYZ_feature`) | Subject-first calculator, past paper tracker redesign, IGCSE/Edexcel seed refresh, component routes, chapter-level subtopics |
+| **2** | [`phase-2-caie-alevel-boundaries.md`](./phase-2-caie-alevel-boundaries.md) | **In progress** (infra ready; blocked on GB PDFs) | CAIE A Level grade boundaries, reserved AL subjects, composite grading for 9709+ |
 | **3** | [`phase-3-speaking-endorsements.md`](./phase-3-speaking-endorsements.md) | Planned | 0510 Component 04, 4ES1 Paper 03 — optional endorsement tracking |
 | **4** | [`phase-4-topic-paper-linking.md`](./phase-4-topic-paper-linking.md) | Planned | Tag subtopics to papers; suggest/check topics when marking papers done |
 | **5** | [`phase-5-deep-syllabus-subtopics.md`](./phase-5-deep-syllabus-subtopics.md) | Planned | Full syllabus learning objectives (E1.1-style) from PDFs |

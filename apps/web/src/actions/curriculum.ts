@@ -934,7 +934,7 @@ export async function getSubjectCalculatorContext(
     });
     if (!subject) return null;
 
-    const [enroll, selection, boundarySample] = await Promise.all([
+    const [enroll, selection, boundarySample, compositeSample] = await Promise.all([
       db.query.userEnrollments.findFirst({
         where: and(eq(userEnrollments.user_id, userId), eq(userEnrollments.subject_id, subjectId)),
       }),
@@ -948,10 +948,12 @@ export async function getSubjectCalculatorContext(
         where: eq(pastPapers.subject_id, subjectId),
         with: { gradeBoundaries: true },
       }),
+      db.query.subjectGradeBoundaries.findFirst({
+        where: eq(subjectGradeBoundaries.subject_id, subjectId),
+      }),
     ]);
 
     const curriculumCode = subject.curriculum?.code ?? '';
-    const isCaieAL = curriculumCode === 'CAIE_ALEVEL';
 
     return {
       subjectId,
@@ -965,9 +967,8 @@ export async function getSubjectCalculatorContext(
         defaultPaperPreferences(subject.code),
       targetSeries: enroll?.target_series ?? null,
       routeKey: selection?.route_key ?? null,
-      hasOfficialBoundaries: isCaieAL
-        ? false
-        : Boolean(boundarySample?.gradeBoundaries?.length),
+      hasOfficialBoundaries:
+        Boolean(boundarySample?.gradeBoundaries?.length) || Boolean(compositeSample),
     };
   } catch (err) {
     console.error('[curriculum] getSubjectCalculatorContext error:', err);
