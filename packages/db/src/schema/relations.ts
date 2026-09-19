@@ -32,6 +32,9 @@ import {
   userXpLedger,
   userBadges,
   userStreaks,
+  subjectComponentRoutes,
+  userCashInEnrollments,
+  userComponentSelections,
 } from './study_tools';
 import {
   reviewQueue,
@@ -409,6 +412,31 @@ export const userStreaksRelations = relations(userStreaks, ({ one }) => ({
   user: one(profiles, {
     fields: [userStreaks.user_id],
     references: [profiles.id],
+  }),
+}));
+
+export const subjectComponentRoutesRelations = relations(subjectComponentRoutes, ({ one }) => ({
+  subject: one(subjects, {
+    fields: [subjectComponentRoutes.subject_id],
+    references: [subjects.id],
+  }),
+}));
+
+export const userCashInEnrollmentsRelations = relations(userCashInEnrollments, ({ one }) => ({
+  user: one(profiles, {
+    fields: [userCashInEnrollments.user_id],
+    references: [profiles.id],
+  }),
+}));
+
+export const userComponentSelectionsRelations = relations(userComponentSelections, ({ one }) => ({
+  user: one(profiles, {
+    fields: [userComponentSelections.user_id],
+    references: [profiles.id],
+  }),
+  subject: one(subjects, {
+    fields: [userComponentSelections.subject_id],
+    references: [subjects.id],
   }),
 }));
 

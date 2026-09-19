@@ -22,7 +22,19 @@ export interface PaperPreferences {
   mathsRoute?: MathsRoute;
   /** CAIE sciences practical 33 vs 34. */
   sciencePractical?: '33' | '34';
+  /** Edexcel IAL optional units the student is taking. */
+  appliedUnits?: string[];
+  /** Calculator variant preference; null = Myanmar default (v2 / R). */
+  variantPreference?: '1' | '2' | '3' | null;
+  /** Edexcel IGCSE: prefer R-paper boundaries when equivalent exists. */
+  preferRPaper?: boolean;
 }
+
+/** Speaking / endorsement components excluded from past-paper tracker progress. */
+export const ENDORSEMENT_PAPER_IDS: Record<string, readonly string[]> = {
+  '0510': ['04'],
+  '4ES1': ['03'],
+};
 
 export interface MyanmarMatchOptions {
   series?: string | null;
@@ -446,6 +458,51 @@ export function getMyanmarPaperIds(
   return null;
 }
 
+/** Speaking / endorsement papers — excluded from tracker grid. */
+export function isEndorsementPaper(subjectCode: string, paperNumber: string): boolean {
+  const excluded = ENDORSEMENT_PAPER_IDS[subjectCode];
+  return excluded?.includes(paperNumber) ?? false;
+}
+
+/** All seeded practice variants for tracker display (no route filter on CAIE A Level). */
+export function getAllPracticePaperIds(
+  subjectCode: string,
+  board: ExamBoardFilter,
+  opts?: MyanmarMatchOptions
+): readonly string[] | null {
+  if (board === 'CAIE_IGCSE') {
+    return CAIE_IGCSE_PRACTICE_VARIANTS[subjectCode] ?? null;
+  }
+
+  if (board === 'CAIE_ALEVEL') {
+    return CAIE_ALEVEL_PRACTICE_VARIANTS[subjectCode] ?? null;
+  }
+
+  if (board === 'EDEXCEL_IGCSE') {
+    let list = [...(EDEXCEL_IGCSE_PRACTICE_PAPERS[subjectCode] ?? [])];
+    if (subjectCode === '4MA1' && opts?.tier) {
+      const suffix = opts.tier === 'core' ? 'F' : 'H';
+      list = list.filter((p) => p.includes(suffix));
+    }
+    return list.filter((p) => !isEndorsementPaper(subjectCode, p));
+  }
+
+  if (board === 'EDEXCEL_IAL') {
+    return EDEXCEL_IAL_MYANMAR_UNITS.has(subjectCode) ? [subjectCode] : [];
+  }
+
+  return null;
+}
+
+/** Papers required for the student's selected route (progress denominator). */
+export function getRequiredPaperIds(
+  subjectCode: string,
+  board: ExamBoardFilter,
+  opts?: MyanmarMatchOptions
+): readonly string[] | null {
+  return getMyanmarPaperIds(subjectCode, board, opts);
+}
+
 export function getPracticePaperIds(
   subjectCode: string,
   board: ExamBoardFilter,
@@ -471,7 +528,7 @@ export function getPracticePaperIds(
       const suffix = opts.tier === 'core' ? 'F' : 'H';
       list = list.filter((p) => p.includes(suffix));
     }
-    return list;
+    return list.filter((p) => !isEndorsementPaper(subjectCode, p));
   }
 
   if (board === 'EDEXCEL_IAL') {
@@ -518,6 +575,34 @@ export function pastPaperMatchesMyanmarPaper(
   }
 }
 
+export function pastPaperMatchesAllPracticeSet(
+  paperNumber: string,
+  variant: string | null | undefined,
+  subjectCode: string,
+  board: ExamBoardFilter,
+  opts?: MyanmarMatchOptions
+): boolean {
+  if (isEndorsementPaper(subjectCode, paperNumber)) return false;
+  switch (board) {
+    case 'CAIE_IGCSE':
+    case 'CAIE_ALEVEL': {
+      const combined = toCambridgePaperId(paperNumber, variant);
+      const allowed = getAllPracticePaperIds(subjectCode, board, opts);
+      if (!allowed) return false;
+      return allowed.includes(combined);
+    }
+    case 'EDEXCEL_IGCSE': {
+      const allowed = getAllPracticePaperIds(subjectCode, board, opts);
+      if (!allowed) return false;
+      return allowed.includes(paperNumber);
+    }
+    case 'EDEXCEL_IAL':
+      return EDEXCEL_IAL_MYANMAR_UNITS.has(subjectCode);
+    default:
+      return false;
+  }
+}
+
 export function pastPaperMatchesPracticeSet(
   paperNumber: string,
   variant: string | null | undefined,
@@ -525,6 +610,7 @@ export function pastPaperMatchesPracticeSet(
   board: ExamBoardFilter,
   opts?: MyanmarMatchOptions
 ): boolean {
+  if (isEndorsementPaper(subjectCode, paperNumber)) return false;
   switch (board) {
     case 'CAIE_IGCSE':
     case 'CAIE_ALEVEL': {

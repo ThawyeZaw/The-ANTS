@@ -32,7 +32,9 @@ import {
   listCurriculums,
   listSubjects,
 } from '@/actions/exam-data';
-import { listSubjectCompositeBoundaries } from '@/actions/curriculum';
+import { getSubjectCalculatorContext, listSubjectCompositeBoundaries } from '@/actions/curriculum';
+import { useAuth } from '@/hooks/useAuth';
+import { syllabusHasAwardLevel, syllabusNeedsMathsRoute } from '@/lib/exam-papers/myanmar-papers';
 import { cn } from '@/lib/utils';
 import {
   getGradeColor,
@@ -84,6 +86,7 @@ interface CalcPreset {
 // UMS interpolation lives in lib/grading — GradeCalculator uses qualification plugins.
 
 export default function GradeCalculator() {
+  const { user } = useAuth();
   const [curriculums, setCurriculums] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
   const [presets, setPresets] = useState<CalcPreset[]>([]);
@@ -104,6 +107,9 @@ export default function GradeCalculator() {
   const [cashInPresets, setCashInPresets] = useState<CalcPreset[]>([]);
   const [rawMarks, setRawMarks] = useState<Record<string, number | string>>({});
   const [compositeBoundaries, setCompositeBoundaries] = useState<GradeBoundary[]>([]);
+  const [enrollmentAward, setEnrollmentAward] = useState<'AS' | 'A Level' | ''>('');
+  const [mathsRoute, setMathsRoute] = useState<'42' | '52'>('42');
+  const [boundariesUnavailable, setBoundariesUnavailable] = useState(false);
 
   // Client-side cache to avoid redundant D1 row queries when toggling subjects
   const presetCacheRef = useRef<Map<string, CalcPreset[]>>(new Map());
@@ -155,6 +161,23 @@ export default function GradeCalculator() {
       cancelled = true;
     };
   }, [selectedSubject]);
+
+  useEffect(() => {
+    if (!selectedSubject || !user?.id) return;
+    let cancelled = false;
+    getSubjectCalculatorContext(user.id, selectedSubject).then((ctx) => {
+      if (cancelled || !ctx) return;
+      if (ctx.tier && !selectedTier) setSelectedTier(ctx.tier);
+      if (ctx.awardLevel) setEnrollmentAward(ctx.awardLevel);
+      if (ctx.paperPreferences?.mathsRoute) setMathsRoute(ctx.paperPreferences.mathsRoute);
+      if (ctx.paperPreferences?.variantPreference) setSelectedVariant(ctx.paperPreferences.variantPreference);
+      if (!selectedSeries && ctx.targetSeries) setSelectedSeries(ctx.targetSeries);
+      setBoundariesUnavailable(!ctx.hasOfficialBoundaries);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedSubject, user?.id]);
 
   useEffect(() => {
     if (!selectedCashIn) {
@@ -267,6 +290,8 @@ export default function GradeCalculator() {
       variant: selectedVariant || plugin.defaultVariant,
       syllabusCode: selectedSubjectRow?.code || subjectCode,
       cashInCode: selectedCashIn || null,
+      awardLevel: enrollmentAward || null,
+      mathsRoute,
     });
 
     const selectedPapers: PaperDef[] = filtered.map((c) => {
@@ -311,6 +336,8 @@ export default function GradeCalculator() {
     selectedVariant,
     selectedSubjectRow,
     selectedCashIn,
+    enrollmentAward,
+    mathsRoute,
   ]);
 
   const exclusiveGroups = useMemo(() => {
@@ -468,12 +495,27 @@ export default function GradeCalculator() {
 
   const calc = useMemo(() => {
     if (!activePreset) {
-      return { totalRaw: 0, maxRaw: 0, totalUms: 0, percentage: 0, grade: '—', anyFilled: false, usedComposite: false, aStarNotes: [] as string[] };
+      return { totalRaw: 0, maxRaw: 0, totalUms: 0, percentage: 0, grade: '—', anyFilled: false, usedComposite: false, aStarNotes: [] as string[], boundariesMessage: undefined as string | undefined };
     }
     const filled = paperResults.filter((pr) => pr.filled);
     const anyFilled = filled.length > 0;
     if (!anyFilled) {
-      return { totalRaw: 0, maxRaw: 0, totalUms: 0, percentage: 0, grade: '—', anyFilled: false, usedComposite: false, aStarNotes: [] as string[] };
+      return { totalRaw: 0, maxRaw: 0, totalUms: 0, percentage: 0, grade: '—', anyFilled: false, usedComposite: false, aStarNotes: [] as string[], boundariesMessage: undefined as string | undefined };
+    }
+    if (boundariesUnavailable && compositeBoundaries.length === 0) {
+      const totalRaw = filled.reduce((s, pr) => s + pr.raw, 0);
+      const maxRaw = filled.reduce((s, pr) => s + pr.max_mark, 0);
+      return {
+        totalRaw: Math.round(totalRaw * 10) / 10,
+        maxRaw,
+        totalUms: 0,
+        percentage: maxRaw ? Math.round((totalRaw / maxRaw) * 1000) / 10 : 0,
+        grade: '—',
+        anyFilled: true,
+        usedComposite: false,
+        aStarNotes: [] as string[],
+        boundariesMessage: 'Official subject boundaries not yet seeded for this syllabus.',
+      };
     }
     const composite = paperPlugin.compositeGrade(
       filled.map((pr) => ({
@@ -497,8 +539,9 @@ export default function GradeCalculator() {
       usedComposite: composite.usedCompositeBoundaries,
       aStarEligible: composite.aStarEligible,
       aStarNotes: composite.aStarNotes ?? [],
+      boundariesMessage: undefined as string | undefined,
     };
-  }, [activePreset, paperResults, paperPlugin, compositeBoundaries, selectedCashIn]);
+  }, [activePreset, paperResults, paperPlugin, compositeBoundaries, selectedCashIn, boundariesUnavailable]);
 
   return (
     <div className="rounded-3xl border border-border bg-background-card p-6 md:p-8 shadow-xs space-y-8 max-w-5xl mx-auto">
@@ -569,10 +612,10 @@ export default function GradeCalculator() {
           <div className="space-y-1">
             <h3 className="text-base font-bold text-foreground flex items-center gap-2">
               <GraduationCap className="w-5 h-5 text-primary" />
-              Choose Curriculum & Exam Session
+              Choose subject & your component route
             </h3>
             <p className="text-xs text-foreground-muted">
-              Select the exam board, subject syllabus, and examination series.
+              Subject-first: pick syllabus, award level, and route — then select the exam series.
             </p>
           </div>
 
@@ -625,6 +668,65 @@ export default function GradeCalculator() {
               </select>
             </div>
           </div>
+
+          {selectedSubjectRow?.code && syllabusHasAwardLevel(selectedSubjectRow.code) && (
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-foreground-secondary">
+                Award level
+              </label>
+              <div className="flex gap-2">
+                {(['AS', 'A Level'] as const).map((level) => (
+                  <button
+                    key={level}
+                    type="button"
+                    onClick={() => setEnrollmentAward(level)}
+                    className={cn(
+                      'rounded-xl border px-4 py-2 text-xs font-bold transition-colors',
+                      enrollmentAward === level
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border bg-background-secondary text-foreground-muted'
+                    )}
+                  >
+                    {level}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {selectedSubjectRow?.code && syllabusNeedsMathsRoute(selectedSubjectRow.code) && (
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-foreground-secondary">
+                Applied mathematics route
+              </label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setMathsRoute('42')}
+                  className={cn(
+                    'rounded-xl border px-4 py-2 text-xs font-bold transition-colors',
+                    mathsRoute === '42'
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-border bg-background-secondary text-foreground-muted'
+                  )}
+                >
+                  Mechanics (P42)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMathsRoute('52')}
+                  className={cn(
+                    'rounded-xl border px-4 py-2 text-xs font-bold transition-colors',
+                    mathsRoute === '52'
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-border bg-background-secondary text-foreground-muted'
+                  )}
+                >
+                  Statistics (P52)
+                </button>
+              </div>
+            </div>
+          )}
 
           {selectedCurriculumRow?.code === 'EDEXCEL_IAL' && selectedSubject && (
             <div className="space-y-1.5">
@@ -949,6 +1051,11 @@ export default function GradeCalculator() {
                   )}
                 >
                   {calc.grade}
+                  {'boundariesMessage' in calc && calc.boundariesMessage && (
+                    <p className="mt-2 text-xs font-normal text-foreground-muted max-w-xs">
+                      {calc.boundariesMessage as string}
+                    </p>
+                  )}
                 </div>
                 {calc.anyFilled && calc.aStarNotes && calc.aStarNotes.length > 0 && (
                   <p className="text-[11px] text-foreground-muted max-w-xs">

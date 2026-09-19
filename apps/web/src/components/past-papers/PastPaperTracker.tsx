@@ -32,6 +32,7 @@ import {
 } from '@/actions/past-papers';
 import { getPaperGridData, type PaperGridData } from '@/actions/curriculum';
 import { PaperGrid } from './PaperGrid';
+import { SubjectProgressHeader } from './SubjectProgressHeader';
 import { PaperCard, type UserPaperRecord } from './PaperCard';
 import { EnrollSubjectModal } from './EnrollSubjectModal';
 import type { PastPaperData } from './InlineGradeCalc';
@@ -484,6 +485,20 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
           </p>
         </div>
       </div>
+
+      {/* ── Subject progress header ─────────────────────────────────────────── */}
+      {currentSubject && gridData && !loading && (
+        <SubjectProgressHeader
+          subjectId={currentSubject.id}
+          subjectName={currentSubject.name}
+          syllabusCode={currentSubject.code}
+          curriculumId={currentSubject.curriculum_id}
+          progress={gridData.progress}
+          awardLevel={gridData.awardLevel}
+          paperPreferences={gridData.paperPreferences}
+          tier={gridData.tier ?? currentSubject.tier}
+        />
+      )}
 
       {/* ── Content View: Excel Grid vs Cards ─────────────────────────────── */}
       {viewMode === 'grid' ? (

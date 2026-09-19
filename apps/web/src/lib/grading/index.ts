@@ -18,6 +18,13 @@ export {
   EXAM_SESSION_OPTIONS,
   sessionCodeToLabel,
 } from './series';
+export {
+  computeSubjectGrade,
+  isRequiredPaperRow,
+  paperRowKey,
+  type SubjectGradeResult,
+  type SubjectGradePaperInput,
+} from './subject-grade';
 
 const PLUGINS: Record<QualificationKey, QualificationPlugin> = {
   CAIE_IGCSE: caieIgcsePlugin,
