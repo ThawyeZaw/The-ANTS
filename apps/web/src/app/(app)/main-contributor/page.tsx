@@ -9,6 +9,7 @@ import {
   XCircle,
   UserPlus,
   ClipboardCheck,
+  Building,
 } from 'lucide-react';
 import AppIcon from '@/components/ui/AppIcon';
 import { useAuth } from '@/hooks/useAuth';
@@ -86,6 +87,13 @@ export default function MainContributorDashboard() {
             >
               <ClipboardCheck className="w-3.5 h-3.5" />
               Exam Editor
+            </Link>
+            <Link
+              href="/org-activities/manage"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-background-secondary border border-border text-foreground text-xs font-bold hover:bg-background-secondary/80 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              <Building className="w-3.5 h-3.5" />
+              Manage Organisation
             </Link>
           </div>
         </div>

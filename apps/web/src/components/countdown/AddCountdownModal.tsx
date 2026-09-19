@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 
 import { Exam } from '@/types';
 import type { CatalogCurriculum } from '@/context/LessonContext';
+import { groupEdexcelIalSubjects } from '@/lib/edexcel-ial';
 import { X } from 'lucide-react';
 
 interface AddCountdownModalProps {
@@ -76,6 +77,8 @@ export function AddCountdownModal({
     if (filterCurriculumId === 'all') return catalogCurriculums.flatMap((c) => c.subjects);
     return catalogCurriculums.find((c) => c.id === filterCurriculumId)?.subjects ?? [];
   }, [catalogCurriculums, filterCurriculumId]);
+
+  const groupedSubjects = useMemo(() => groupEdexcelIalSubjects(subjectsForFilter), [subjectsForFilter]);
 
   const filteredExams = useMemo(() => {
     return availableExams.filter((exam) => {
@@ -209,12 +212,24 @@ export function AddCountdownModal({
                       className="w-full rounded-lg border border-[var(--border)] bg-[var(--background-secondary)] p-3 text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
                     >
                       <option value="all">All subjects</option>
-                      {(filterCurriculumId === 'all'
-                        ? catalogCurriculums.flatMap((c) => c.subjects)
-                        : catalogCurriculums.find((c) => c.id === filterCurriculumId)?.subjects ?? []
-                      ).map((subj) => (
-                        <option key={subj.id} value={subj.id}>{subj.title}</option>
-                      ))}
+                      {groupedSubjects.map((group) => {
+                        if (!group.isVirtual) {
+                          return (
+                            <option key={group.id} value={group.id}>
+                              {group.title}
+                            </option>
+                          );
+                        }
+                        return (
+                          <optgroup key={group.id} label={`Edexcel IAL ${group.title}`}>
+                            {group.units.map((unit) => (
+                              <option key={unit.id} value={unit.id}>
+                                {unit.title}
+                              </option>
+                            ))}
+                          </optgroup>
+                        );
+                      })}
                     </select>
                   </div>
                 </div>

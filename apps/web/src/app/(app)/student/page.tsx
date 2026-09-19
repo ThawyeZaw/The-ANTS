@@ -241,6 +241,11 @@ export default function StudentDashboard() {
           </div>
         </header>
 
+        {/* ── My Workspace (Exam Countdowns) ─────────────────────────────── */}
+        <section className="dash-panel p-6 sm:p-8 shadow-xs border border-primary/20">
+          <MyWorkspace />
+        </section>
+
         {/* ── Dashboard Subjects Panel ───────────────────────────────────────── */}
         <section>
           <DashboardSubjectsPanel />
@@ -327,10 +332,7 @@ export default function StudentDashboard() {
           </div>
         )}
 
-        {/* ── My Workspace ─────────────────────────────────────────────────── */}
-        <section className="dash-panel p-6 sm:p-8">
-          <MyWorkspace />
-        </section>
+
       </div>
     </WorkspaceToastProvider>
   );

@@ -33,6 +33,7 @@ export interface SubjectWithProgress {
   id: string;
   curriculum_id: string;
   name: string;
+  title: string;
   code: string;
   description: string | null;
   icon_url: string | null;
@@ -55,11 +56,13 @@ export interface TopicWithProgress {
   description: string | null;
   order_index: number | null;
   subtopics_count: number | null;
+  subtopics: string | null;
   difficulty_level: string | null;
   estimated_hours: number | null;
   status: string;
   last_studied_at: Date | null;
   completed_at: Date | null;
+  completed_subtopics: string | null;
   notes: string | null;
 }
 
@@ -267,6 +270,7 @@ export async function getSubjectsByCurriculum(
         id: s.id,
         curriculum_id: s.curriculum_id,
         name: s.name,
+        title: s.name,
         code: s.code,
         description: s.description,
         icon_url: s.icon_url,
@@ -326,11 +330,13 @@ export async function getSubjectTopicsWithProgress(
         description: t.description,
         order_index: t.order_index,
         subtopics_count: t.subtopics_count,
+        subtopics: t.subtopics,
         difficulty_level: t.difficulty_level,
         estimated_hours: t.estimated_hours,
         status: prog?.status ?? 'not_started',
         last_studied_at: prog?.last_studied_at ?? null,
         completed_at: prog?.completed_at ?? null,
+        completed_subtopics: prog?.completed_subtopics ?? null,
         notes: prog?.notes ?? null,
       };
     });
@@ -668,6 +674,7 @@ export async function getMySubjectsHub(userId: string): Promise<{
         id: e.subject_id,
         curriculum_id: e.curriculum_id,
         name: subj?.name ?? 'Subject',
+        title: subj?.name ?? 'Subject',
         code: subj?.code ?? '',
         description: subj?.description ?? null,
         icon_url: subj?.icon_url ?? null,
@@ -795,6 +802,70 @@ export async function updateTopicProgress(
     return { success: true };
   } catch (err: any) {
     console.error('[curriculum] updateTopicProgress error:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+export async function toggleSubtopicProgress(
+  userId: string,
+  topicId: string,
+  subtopicName: string,
+  isCompleted: boolean,
+  totalSubtopics: number
+) {
+  try {
+    const db = getDb();
+    const now = new Date();
+
+    const existing = await db.query.topicProgress.findFirst({
+      where: and(eq(topicProgress.user_id, userId), eq(topicProgress.topic_id, topicId)),
+    });
+
+    let completed: string[] = [];
+    try {
+      if (existing?.completed_subtopics) {
+        completed = JSON.parse(existing.completed_subtopics);
+      }
+    } catch (e) {
+      completed = [];
+    }
+    
+    if (isCompleted) {
+      if (!completed.includes(subtopicName)) completed.push(subtopicName);
+    } else {
+      completed = completed.filter((s: string) => s !== subtopicName);
+    }
+    
+    const newStatus = completed.length === totalSubtopics && totalSubtopics > 0 
+      ? 'completed' 
+      : (completed.length > 0 ? 'in_progress' : 'not_started');
+      
+    const completedStr = JSON.stringify(completed);
+
+    if (existing) {
+      await db
+        .update(topicProgress)
+        .set({
+          completed_subtopics: completedStr,
+          status: newStatus,
+          last_studied_at: now,
+          completed_at: newStatus === 'completed' ? existing.completed_at || now : null,
+        })
+        .where(eq(topicProgress.id, existing.id));
+    } else {
+      await db.insert(topicProgress).values({
+        user_id: userId,
+        topic_id: topicId,
+        status: newStatus,
+        completed_subtopics: completedStr,
+        last_studied_at: now,
+        completed_at: newStatus === 'completed' ? now : null,
+      });
+    }
+
+    return { success: true, newStatus };
+  } catch (err: any) {
+    console.error('[curriculum] toggleSubtopicProgress error:', err);
     return { success: false, error: err.message };
   }
 }

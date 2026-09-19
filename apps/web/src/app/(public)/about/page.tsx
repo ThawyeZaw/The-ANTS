@@ -18,14 +18,7 @@ import OrgTimeline from '@/components/about/OrgTimeline';
 import type { OrgTimelineItem } from '@/types';
 import { renderMarkdown } from '@/lib/markdown';
 
-// ── Tabs ─────────────────────────────────────────────────────────────────────
 
-const TABS = [
-  { key: 'mission', label: 'Our Mission', icon: <Target className="h-4 w-4" /> },
-  { key: 'history', label: 'Our Journey', icon: <Clock className="h-4 w-4" /> },
-] as const;
-
-type TabKey = (typeof TABS)[number]['key'];
 
 // ── Mission Section ──────────────────────────────────────────────────────────
 
@@ -92,7 +85,10 @@ function HistorySection() {
     let active = true;
     getOrgTimelineItemsAction().then((data) => {
       if (active) {
-        setMilestones(data.filter((item) => item.showOnTimeline));
+        // Filter and sort from latest to oldest (descending order)
+        const visible = data.filter((item) => item.showOnTimeline);
+        visible.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        setMilestones(visible);
         setLoading(false);
       }
     });
@@ -125,7 +121,6 @@ function HistorySection() {
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AboutPage() {
-  const [activeTab, setActiveTab] = useState<TabKey>('mission');
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
@@ -215,35 +210,14 @@ export default function AboutPage() {
         {/* Back button */}
         <BackButton href="/" label="Back to Home" />
 
-        {/* Tab Nav with sliding pill indicator */}
-        <div className="relative flex flex-wrap gap-1 p-1 bg-background-secondary rounded-xl border border-border mb-10 max-w-md mx-auto">
-          {/* Sliding indicator pill */}
-          <div
-            className="absolute top-1 bottom-1 rounded-lg bg-background-card shadow-sm border border-border transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
-            style={{
-              left: `calc(${TABS.findIndex((t) => t.key === activeTab) * (100 / TABS.length)}% + 0.25rem)`,
-              width: `calc(${100 / TABS.length}% - 0.5rem)`,
-            }}
-          />
-          {TABS.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`relative z-10 flex-1 min-w-[100px] flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 cursor-pointer ${
-                activeTab === tab.key
-                  ? 'text-foreground'
-                  : 'text-foreground-muted hover:text-foreground-secondary'
-              }`}
-            >
-              {tab.icon}
-              {tab.label}
-            </button>
-          ))}
+        {/* Content */}
+        <div className="space-y-24">
+          <MissionSection />
+          
+          <div className="border-t border-border/50 max-w-4xl mx-auto" />
+          
+          <HistorySection />
         </div>
-
-        {/* Tab Content */}
-        {activeTab === 'mission' && <MissionSection />}
-        {activeTab === 'history' && <HistorySection />}
       </div>
     </div>
   );

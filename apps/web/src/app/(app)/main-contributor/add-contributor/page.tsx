@@ -9,14 +9,11 @@
 import BackButton from '@/components/ui/BackButton';
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { UserPlus, ShieldAlert, RotateCcw, MailCheck } from 'lucide-react';
+import { UserPlus, ShieldAlert } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
 import { useContributorManager } from '@/hooks/useContributorManager';
-import { cn } from '@/lib/utils';
-import InviteForm from '@/components/contributor-manager/InviteForm';
 import UsersTable from '@/components/contributor-manager/UsersTable';
-import { actionUpdateUserRoles } from '@/actions/role-upgrade';
 import type { UserRole } from '@/types';
 
 export default function AddContributorPage() {
@@ -25,13 +22,9 @@ export default function AddContributorPage() {
   const canAccess = isMainContributor || isAdmin;
 
   const {
-    inviteData,
     isLoading,
     error,
     success,
-    invitedEmail,
-    submitInvite,
-    reset,
     fetchAllUsers,
   } = useContributorManager();
 
@@ -43,11 +36,21 @@ export default function AddContributorPage() {
 
   const handleRolesChange = useCallback(
     async (userId: string, newRoles: UserRole[]) => {
-      const result = await actionUpdateUserRoles(userId, newRoles);
-      if (result.success) {
-        fetchAllUsers().then(setUsers);
-      } else {
-        console.error('Failed to update roles:', result.error);
+      try {
+        const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8787';
+        const res = await fetch(`${apiBase}/api/role-upgrade/roles`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, roles: newRoles }),
+        });
+        if (res.ok) {
+          fetchAllUsers().then(setUsers);
+        } else {
+          const data = await res.json().catch(() => ({}));
+          console.error('Failed to update roles:', data.error || 'API Error');
+        }
+      } catch (err) {
+        console.error('Failed to update roles:', err);
       }
     },
     [fetchAllUsers]

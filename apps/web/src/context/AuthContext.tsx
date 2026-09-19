@@ -54,6 +54,17 @@ function normalizeRoles(roles: unknown, fallbackRole?: string): UserRole[] {
   return Array.from(new Set(list.map(normalizeRole)));
 }
 
+function parseJsonField<T>(val: unknown): T | undefined {
+  if (typeof val === 'string') {
+    try {
+      return JSON.parse(val) as T;
+    } catch {
+      return undefined;
+    }
+  }
+  return val as T | undefined;
+}
+
 function mapProfile(row: Record<string, unknown>): Profile {
   const roles = normalizeRoles(row.roles, row.role as string);
   const primaryRole = normalizeRole((row.role as string) || 'student');
@@ -71,27 +82,27 @@ function mapProfile(row: Record<string, unknown>): Profile {
     activeRole: 'student',
     bio: (row.bio as string) ?? undefined,
     title: (row.title as string) ?? undefined,
-    socialLinks: (row.social_links as Profile['socialLinks']) ?? undefined,
+    socialLinks: parseJsonField(row.social_links),
     isPublic: (row.is_public as boolean) ?? true,
     pinnedItemId: (row.pinned_item_id as string) ?? undefined,
-    sectionVisibility: (row.section_visibility as Profile['sectionVisibility']) ?? undefined,
+    sectionVisibility: parseJsonField(row.section_visibility),
     sectionOrder:
-      (row.section_order as Profile['sectionOrder']) ??
-      ((row.section_visibility as any)?.order ?? undefined),
+      parseJsonField<string[]>(row.section_order) ??
+      (parseJsonField<any>(row.section_visibility)?.order ?? undefined),
     spacing: (row.spacing as Profile['spacing']) ?? undefined,
     width: (row.width as Profile['width']) ?? undefined,
     sectionLayout: (row.section_layout as Profile['sectionLayout']) ?? undefined,
     showClubMemberships: (row.show_club_memberships as boolean) ?? undefined,
     showClubProjects: (row.show_club_projects as boolean) ?? undefined,
     showClubActivity: (row.show_club_activity as boolean) ?? undefined,
-    theme: (row.theme as Profile['theme']) ?? undefined,
-    projects: (row.projects as Profile['projects']) ?? undefined,
-    activities: (row.activities as Profile['activities']) ?? undefined,
-    achievements: (row.achievements as Profile['achievements']) ?? undefined,
-    academicGrades: (row.academic_grades as Profile['academicGrades']) ?? undefined,
-    testimonials: (row.testimonials as Profile['testimonials']) ?? undefined,
-    certifications: (row.certifications as Profile['certifications']) ?? undefined,
-    certificationIds: (row.certification_ids as string[] | null) ?? undefined,
+    theme: parseJsonField(row.theme),
+    projects: parseJsonField(row.projects),
+    activities: parseJsonField(row.activities),
+    achievements: parseJsonField(row.achievements),
+    academicGrades: parseJsonField(row.academic_grades),
+    testimonials: parseJsonField(row.testimonials),
+    certifications: parseJsonField(row.certifications),
+    certificationIds: parseJsonField(row.certification_ids),
     telegramChatId: (row.telegram_chat_id as string) ?? null,
     telegramHandle: (row.telegram_handle as string) ?? undefined,
     hourlyRate: (row.hourly_rate as string) ?? undefined,

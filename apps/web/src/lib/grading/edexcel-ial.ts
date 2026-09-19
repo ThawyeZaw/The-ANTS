@@ -1,4 +1,4 @@
-import type { QualificationPlugin } from './types';
+import type { QualificationPlugin, PaperComponent } from './types';
 import { computeUms, lookupGrade, percentageOf } from './shared';
 
 const DEFAULT_UMS_OVERALL: { grade: string; min_mark: number }[] = [
@@ -15,7 +15,37 @@ export const edexcelIalPlugin: QualificationPlugin = {
   countdownMode: 'per_paper',
   hasTiers: false,
   defaultVariant: null,
-  paperSelectionRules: (papers) => papers,
+  paperSelectionRules: (papers, opts) => {
+    let list = papers;
+    const code = opts.syllabusCode; // This is typically the Cash-in code (e.g. XMA01, YMA01)
+
+    // Filter out old specification units (e.g. WPH01 vs WPH11) - prefer the newer '1' series
+    list = list.filter((p) => {
+      // If a subject has a new spec (like WPH11), filter out WPH01
+      if (p.paperNumber.match(/^[W][A-Z]{2}0/)) {
+        // Only allow 0-series if there's no 1-series equivalent in the list
+        const equivalent1Series = p.paperNumber.replace('0', '1');
+        if (list.some((other) => other.paperNumber === equivalent1Series)) {
+          return false;
+        }
+      }
+      return true;
+    });
+
+    const out: PaperComponent[] = [];
+    for (const p of list) {
+      let exclusiveGroup: string | undefined = undefined;
+      // AS Mathematics (XMA01) Option: S1 (WST01) OR M1 (WME01)
+      if (code === 'XMA01' && (p.paperNumber === 'WST01' || p.paperNumber === 'WME01')) {
+        exclusiveGroup = 'applied_math';
+      }
+      out.push({ ...p, exclusiveGroup });
+    }
+
+    return out.sort((a, b) =>
+      a.paperNumber.localeCompare(b.paperNumber, undefined, { numeric: true })
+    );
+  },
   gradeFromRawMark: (raw, max, boundaries) => {
     const percentage = percentageOf(raw, max);
     const { ums, grade } = computeUms(raw, boundaries);
