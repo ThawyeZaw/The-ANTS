@@ -230,11 +230,18 @@ function GroupedSubjectCard({
               )
             ) : (
               <div className="flex items-center gap-1.5">
+                <Link
+                  href={`/curriculum/${curriculumId}/${group.primarySubjectId}?tab=papers`}
+                  className="cursor-pointer flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-border/80 hover:border-primary/50 text-foreground-muted hover:text-foreground bg-background-secondary/60 hover:bg-background-secondary transition-colors"
+                >
+                  <BookOpen className="h-3 w-3 text-primary" />
+                  Past Papers
+                </Link>
                 {group.hasOptionalUnits && (
                   <button
                     type="button"
                     onClick={() => onOpenModal(group)}
-                    className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-border hover:border-border-hover text-foreground-muted hover:text-foreground bg-background-secondary/50 transition-colors"
+                    className="cursor-pointer flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-border hover:border-border-hover text-foreground-muted hover:text-foreground bg-background-secondary/50 transition-colors"
                     title="Change unit selection"
                   >
                     <Settings2 className="h-3 w-3" />
@@ -244,7 +251,7 @@ function GroupedSubjectCard({
                 <button
                   type="button"
                   onClick={() => onGroupLeave(group)}
-                  className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-error/30 text-error hover:bg-error/10 transition-colors"
+                  className="cursor-pointer flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-error/30 text-error hover:bg-error/10 transition-colors"
                 >
                   <Minus className="h-3 w-3" />
                   Leave

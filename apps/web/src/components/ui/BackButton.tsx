@@ -2,7 +2,9 @@
 
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTs — BackButton
-// Reusable back navigation: tries router.back() first, falls back to href.
+// Reusable back navigation.
+// - With an explicit `href` (default): navigates directly to that destination.
+// - With `useHistory={true}`: uses router.back() with href as fallback.
 // Use this everywhere instead of ad-hoc back buttons.
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -11,27 +13,36 @@ import { ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface BackButtonProps {
-  /** Fallback route when history is unavailable (ignored when noFallback is true) */
+  /** Target route — navigated to directly unless useHistory is true */
   href?: string;
   /** Optional label (default: "Back") */
   label?: string;
   /** Custom class names */
   className?: string;
-  /** When true, only use router.back() — no fallback redirect */
+  /**
+   * When true, attempts router.back() first, using href only as a fallback.
+   * Leave false (default) so the label destination is always honoured.
+   */
+  useHistory?: boolean;
+  /** @deprecated use useHistory instead. When true, only use router.back() — no fallback redirect */
   noFallback?: boolean;
 }
 
-export default function BackButton({ href = '/dashboard', label = 'Back', className, noFallback }: BackButtonProps) {
+export default function BackButton({ href = '/dashboard', label = 'Back', className, useHistory = false, noFallback }: BackButtonProps) {
   const router = useRouter();
 
   const handleClick = () => {
-    // Try browser back first; only fall back to href when noFallback is false
-    if (window.history.length > 1) {
-      router.back();
-    } else if (!noFallback) {
+    if (useHistory || noFallback) {
+      // Legacy / explicit history-back mode
+      if (window.history.length > 1) {
+        router.back();
+      } else if (!noFallback) {
+        router.push(href);
+      }
+    } else {
+      // Default: navigate directly to the declared destination
       router.push(href);
     }
-    // If noFallback and no history, do nothing
   };
 
   return (

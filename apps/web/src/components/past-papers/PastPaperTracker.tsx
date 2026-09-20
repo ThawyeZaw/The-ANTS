@@ -37,6 +37,8 @@ import { PaperCard, type UserPaperRecord } from './PaperCard';
 import type { PastPaperData } from './InlineGradeCalc';
 import { useEdexcelSuiteSelectors } from '@/components/exam-data/useEdexcelSuiteSelectors';
 import { EdexcelSuiteSelectors } from '@/components/exam-data/EdexcelSuiteSelectors';
+import { groupEdexcelIalSubjects } from '@/lib/edexcel-ial';
+import { IalOptionalUnitsModal } from '@/components/curriculum/IalOptionalUnitsModal';
 
 function flattenGrid(
   grid: PaperGridData,
@@ -110,12 +112,28 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'cards'>('grid');
   const [gridData, setGridData] = useState<PaperGridData | null>(null);
+  const [isOptionalModalOpen, setIsOptionalModalOpen] = useState(false);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedYear, setSelectedYear] = useState<number | 'all'>('all');
   const [selectedSeries, setSelectedSeries] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<'all' | 'done' | 'not_done' | 'skipped'>('all');
+
+  // Group enrolled subjects (combines Edexcel IAL units into parent qualifications like Mathematics)
+  const groupedSubjects = useMemo(() => {
+    return groupEdexcelIalSubjects(enrolledSubjects);
+  }, [enrolledSubjects]);
+
+  const activeGroup = useMemo(() => {
+    if (groupedSubjects.length === 0) return null;
+    if (!selectedSubjectId) return groupedSubjects[0];
+    return (
+      groupedSubjects.find(
+        (g) => g.id === selectedSubjectId || g.units.some((u) => u.id === selectedSubjectId)
+      ) ?? groupedSubjects[0]
+    );
+  }, [groupedSubjects, selectedSubjectId]);
 
   // Load enrolled subjects & gamification stats
   const refreshUserData = async () => {
@@ -127,9 +145,20 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
       setEnrolledSubjects(subjs);
       setGamification(stats);
 
-      if (subjs.length > 0 && !selectedSubjectId) {
-        const fromUrl = subjectFromUrl ? subjs.find((s: { id: string }) => s.id === subjectFromUrl) : null;
-        setSelectedSubjectId(fromUrl?.id ?? subjs[0].id);
+      const groups = groupEdexcelIalSubjects(subjs);
+      if (groups.length > 0) {
+        if (!selectedSubjectId) {
+          const fromUrl = subjectFromUrl
+            ? groups.find((g) => g.id === subjectFromUrl || g.units.some((u) => u.id === subjectFromUrl))
+            : null;
+          setSelectedSubjectId(fromUrl?.primarySubjectId ?? groups[0].primarySubjectId);
+        } else {
+          // If selectedSubjectId is one of the individual units, find its parent group and ensure we are using the primarySubjectId
+          const matchingGroup = groups.find((g) => g.units.some((u) => u.id === selectedSubjectId));
+          if (matchingGroup && selectedSubjectId !== matchingGroup.primarySubjectId) {
+            setSelectedSubjectId(matchingGroup.primarySubjectId);
+          }
+        }
       }
     } catch (err) {
       console.error('Failed to load user study data:', err);
@@ -142,19 +171,20 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
 
   // Load papers & user records when selected subject changes
   const loadPapersForSubject = React.useCallback(async (showLoader = true) => {
-    if (!selectedSubjectId) {
+    const subjectIdToLoad = activeGroup?.primarySubjectId ?? selectedSubjectId;
+    if (!subjectIdToLoad) {
       setLoading(false);
       return;
     }
     if (showLoader) setLoading(true);
     try {
-      const currentSubject = enrolledSubjects.find((s) => s.id === selectedSubjectId);
+      const currentSub = activeGroup?.units[0] ?? enrolledSubjects.find((s) => s.id === subjectIdToLoad);
       const grid = await getPaperGridData(
         userId,
-        selectedSubjectId,
+        subjectIdToLoad,
         undefined,
         undefined,
-        (currentSubject?.tier as 'core' | 'extended' | null) ?? null
+        (currentSub?.tier as 'core' | 'extended' | null) ?? null
       );
       setGridData(grid);
     } catch (err) {
@@ -162,7 +192,7 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
     } finally {
       if (showLoader) setLoading(false);
     }
-  }, [selectedSubjectId, userId, enrolledSubjects]);
+  }, [activeGroup, selectedSubjectId, userId, enrolledSubjects]);
 
   useEffect(() => {
     loadPapersForSubject(true);
@@ -179,7 +209,7 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
   }, [userId]);
 
   // Active subject object
-  const currentSubject = enrolledSubjects.find((s) => s.id === selectedSubjectId);
+  const currentSubject = enrolledSubjects.find((s) => s.id === selectedSubjectId) ?? activeGroup?.units[0];
 
   const isSuite = currentSubject?.subject_type === 'modular_maths_suite';
   const suiteSelectors = useEdexcelSuiteSelectors(
@@ -207,12 +237,12 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
     }
     const flattened = flattenGrid(
       filteredGridData,
-      currentSubject?.name ?? '',
-      currentSubject?.code ?? ''
+      activeGroup?.title ?? currentSubject?.name ?? '',
+      activeGroup?.code ?? currentSubject?.code ?? ''
     );
     setPapers(flattened.papers);
     setRecords(flattened.records);
-  }, [filteredGridData, currentSubject?.name, currentSubject?.code]);
+  }, [filteredGridData, activeGroup?.title, activeGroup?.code, currentSubject?.name, currentSubject?.code]);
 
   // Handle status & mark changes
   const handleStatusChange = async (
@@ -340,15 +370,18 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
                 <BookOpen className="w-3.5 h-3.5" />
                 Past Paper Tracker
               </span>
-              {currentSubject?.curriculum && (
-                <span className="text-xs font-semibold text-foreground-muted">
-                  {currentSubject.curriculum.name}
-                </span>
-              )}
+              <span className="text-xs font-semibold text-foreground-muted">
+                {activeGroup?.units?.[0]?.curriculum?.name ??
+                  (activeGroup?.isVirtual ? 'Pearson Edexcel IAL' : currentSubject?.curriculum?.name)}
+              </span>
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
-              {currentSubject ? `${currentSubject.name} (${currentSubject.code})` : 'Select a Subject'}
+              {activeGroup
+                ? `${activeGroup.title} (${activeGroup.code})`
+                : currentSubject
+                ? `${currentSubject.name} (${currentSubject.code})`
+                : 'Select a Subject'}
             </h1>
             <p className="text-xs sm:text-sm text-foreground-muted max-w-xl leading-relaxed">
               Track your solved papers, input raw marks per component, and calculate your exact official grade boundary scores.
@@ -398,16 +431,26 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
         <div className="mt-6 pt-6 border-t border-border flex items-center justify-between gap-3 flex-wrap">
           <div className="flex-1 max-w-xs min-w-[200px]">
             <select
-              value={selectedSubjectId}
-              onChange={(e) => setSelectedSubjectId(e.target.value)}
+              value={activeGroup?.id ?? selectedSubjectId}
+              onChange={(e) => {
+                const grp = groupedSubjects.find((g) => g.id === e.target.value);
+                if (grp) {
+                  setSelectedSubjectId(grp.primarySubjectId);
+                  if (typeof window !== 'undefined') {
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('subject', grp.primarySubjectId);
+                    window.history.replaceState(null, '', url.toString());
+                  }
+                }
+              }}
               className="w-full rounded-xl border border-border bg-background-secondary px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
             >
-              {enrolledSubjects.length === 0 && (
+              {groupedSubjects.length === 0 && (
                 <option value="">No subjects enrolled</option>
               )}
-              {enrolledSubjects.map((subj) => (
-                <option key={subj.id} value={subj.id}>
-                  {subj.code} — {subj.name}
+              {groupedSubjects.map((grp) => (
+                <option key={grp.id} value={grp.id}>
+                  {grp.code ? `${grp.code} — ` : ''}{grp.title}
                 </option>
               ))}
             </select>
@@ -498,14 +541,15 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
       {/* ── Subject progress header ─────────────────────────────────────────── */}
       {currentSubject && gridData && !loading && (
         <SubjectProgressHeader
-          subjectId={currentSubject.id}
-          subjectName={currentSubject.name}
-          syllabusCode={currentSubject.code}
-          curriculumId={currentSubject.curriculum_id}
+          subjectId={activeGroup?.primarySubjectId ?? currentSubject.id}
+          subjectName={activeGroup?.title ?? currentSubject.name}
+          syllabusCode={activeGroup?.code ?? currentSubject.code}
+          curriculumId={activeGroup?.curriculum_id ?? currentSubject.curriculum_id}
           progress={gridData.progress}
           awardLevel={gridData.awardLevel}
           paperPreferences={gridData.paperPreferences}
           tier={gridData.tier ?? currentSubject.tier}
+          onEditRoute={activeGroup?.hasOptionalUnits ? () => setIsOptionalModalOpen(true) : undefined}
         />
       )}
 
@@ -728,6 +772,25 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
         </>
       )}
 
+      {/* ── Edexcel IAL Optional Units Selector Modal ───────────────────────── */}
+      {activeGroup?.hasOptionalUnits && isOptionalModalOpen && (
+        <IalOptionalUnitsModal
+          isOpen={isOptionalModalOpen}
+          onClose={() => setIsOptionalModalOpen(false)}
+          userId={userId}
+          subjectTitle={activeGroup.title}
+          initialAwardCode={gridData?.awardLevel === 'AS' ? 'XMA01' : 'YMA01'}
+          availableUnits={activeGroup.units.map((u) => ({
+            id: u.id,
+            code: u.code || '',
+            title: u.name || '',
+          }))}
+          onSuccess={() => {
+            setIsOptionalModalOpen(false);
+            loadPapersForSubject(true);
+          }}
+        />
+      )}
     </div>
   );
 }

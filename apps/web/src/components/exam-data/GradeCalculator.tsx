@@ -43,9 +43,12 @@ import {
   syllabusHasTiers,
   uniqueVariants,
   type SubjectTier,
+  type GradeBoundary,
+  type PaperComponent,
 } from '@/lib/grading';
-import type { GradeBoundary, PaperComponent } from '@/lib/grading/types';
-import { IAL_CASH_INS, cashInsForUnit, type IalCashInCode } from '@/lib/grading/ial-cash-in';
+import { IAL_CASH_INS, cashInsForUnit, IAL_SUBJECT_GROUPS, type IalCashInCode } from '@/lib/grading/ial-cash-in';
+import { groupEdexcelIalSubjects } from '@/lib/edexcel-ial';
+import { caiePaperBase } from '@/lib/grading/shared';
 import { useEdexcelSuiteSelectors } from './useEdexcelSuiteSelectors';
 import { EdexcelSuiteSelectors } from './EdexcelSuiteSelectors';
 
@@ -104,8 +107,10 @@ export default function GradeCalculator() {
     (searchParams.get('tier') as SubjectTier) || ''
   );
   const [selectedVariant, setSelectedVariant] = useState(searchParams.get('variant') || '');
+  const [paperVariants, setPaperVariants] = useState<Record<string, string>>({});
   const [selectedExclusiveOptions, setSelectedExclusiveOptions] = useState<Record<string, string>>({});
   const [selectedCashInLocal, setSelectedCashInLocal] = useState('');
+  const [selectedUnitId, setSelectedUnitId] = useState('');
   const [cashInPresets, setCashInPresets] = useState<CalcPreset[]>([]);
   const [rawMarks, setRawMarks] = useState<Record<string, number | string>>({});
   const [compositeBoundaries, setCompositeBoundaries] = useState<GradeBoundary[]>([]);
@@ -121,15 +126,37 @@ export default function GradeCalculator() {
     () => curriculums.find((c) => c.id === selectedCurriculum),
     [curriculums, selectedCurriculum]
   );
+
+  const isEdexcelIal =
+    selectedCurriculumRow?.code === 'EDEXCEL_IAL' || selectedCurriculum === 'curr-edexcel-ial';
+
+  const groupedIalSubjects = useMemo(() => {
+    if (!isEdexcelIal) return [];
+    const rawIal = subjects.filter((s) => s.curriculum_id === selectedCurriculum);
+    return groupEdexcelIalSubjects(rawIal);
+  }, [isEdexcelIal, subjects, selectedCurriculum]);
+
+  const activeIalGroup = useMemo(() => {
+    if (!isEdexcelIal || groupedIalSubjects.length === 0) return null;
+    return (
+      groupedIalSubjects.find(
+        (g) => g.id === selectedSubject || g.units.some((u) => u.id === selectedSubject)
+      ) ?? null
+    );
+  }, [isEdexcelIal, groupedIalSubjects, selectedSubject]);
+
   const selectedSubjectRow = useMemo(
-    () => subjects.find((s) => s.id === selectedSubject),
-    [subjects, selectedSubject]
+    () => subjects.find((s) => s.id === selectedSubject) ?? activeIalGroup?.units[0],
+    [subjects, selectedSubject, activeIalGroup]
   );
 
-  const isSuite = selectedSubjectRow?.subject_type === 'modular_maths_suite';
+  const isSuite =
+    selectedSubjectRow?.subject_type === 'modular_maths_suite' ||
+    activeIalGroup?.title === 'Mathematics' ||
+    Boolean(activeIalGroup?.hasOptionalUnits);
   
   const suiteSelectors = useEdexcelSuiteSelectors(
-    isSuite ? selectedSubjectRow?.qualification_data : null,
+    isSuite ? selectedSubjectRow?.qualification_data || activeIalGroup?.qualification_data : null,
     selectedCashInLocal
   );
 
@@ -436,7 +463,7 @@ export default function GradeCalculator() {
   const isIAL = activePreset?.is_modular || activePreset?.qualification === 'IAL' || selectedCurriculumRow?.code === 'EDEXCEL_IAL';
   
   const availableCashIns = useMemo(() => {
-    if (isSuite) {
+    if (isSuite && suiteSelectors.availableCashIns?.length > 0) {
       return suiteSelectors.availableCashIns.map(q => ({
         code: q.cashInCode,
         name: q.qualificationTitle,
@@ -445,8 +472,25 @@ export default function GradeCalculator() {
         optional: q.electiveRules?.allowedUnitPool || []
       }));
     }
+    if (activeIalGroup) {
+      const gMeta = IAL_SUBJECT_GROUPS.find(
+        (g) => g.label.toLowerCase() === activeIalGroup.title.toLowerCase()
+      );
+      if (gMeta) {
+        const awards: any[] = [];
+        if (gMeta.alevelCode && IAL_CASH_INS[gMeta.alevelCode]) {
+          const a = IAL_CASH_INS[gMeta.alevelCode];
+          awards.push({ code: a.code, name: a.name, maxUms: a.maxUms, compulsory: a.compulsory, optional: a.optional });
+        }
+        if (gMeta.asCode && IAL_CASH_INS[gMeta.asCode]) {
+          const a = IAL_CASH_INS[gMeta.asCode];
+          awards.push({ code: a.code, name: a.name, maxUms: a.maxUms, compulsory: a.compulsory, optional: a.optional });
+        }
+        return awards;
+      }
+    }
     return selectedSubjectRow?.code ? cashInsForUnit(selectedSubjectRow.code) : Object.values(IAL_CASH_INS);
-  }, [selectedSubjectRow, isSuite, suiteSelectors.availableCashIns]);
+  }, [selectedSubjectRow, isSuite, suiteSelectors.availableCashIns, activeIalGroup]);
 
   useEffect(() => {
     if (selectedCurriculumRow?.code !== 'EDEXCEL_IAL') {
@@ -457,6 +501,7 @@ export default function GradeCalculator() {
       setSelectedCashIn(availableCashIns[0].code);
     }
   }, [selectedCurriculumRow?.code, availableCashIns, selectedCashIn]);
+
   const canGoStep2 = !!(
     selectedCurriculum &&
     selectedSubject &&
@@ -465,28 +510,104 @@ export default function GradeCalculator() {
     (!showTier || selectedTier)
   );
 
-  const handleMarkChange = (index: number, value: string) => {
+  const isCambridge =
+    selectedCurriculumRow?.code === 'CAIE_IGCSE' || selectedCurriculumRow?.code === 'CAIE_ALEVEL';
+
+  // Group papers by base number (e.g. Paper 1, Paper 2) so only 1 card is displayed per paper
+  const papersByBase = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        baseKey: string;
+        displayName: string;
+        variants: Record<string, PaperDef>;
+        variantList: string[];
+      }
+    >();
+
+    const basePapers = (filteredActivePapers ?? []) as (PaperDef & { exclusiveGroup?: string })[];
+
+    for (const p of basePapers) {
+      const baseKey = isCambridge
+        ? caiePaperBase(p.paper_number || p.name)
+        : (p.paper_number || p.name);
+      const v = p.variant || '2';
+
+      if (!map.has(baseKey)) {
+        const cleanName = p.name
+          .replace(/\s+Variant\s+\d+/i, '')
+          .replace(/\s*\(v\d+\)/i, '')
+          .replace(/\s+v\d+$/i, '');
+
+        map.set(baseKey, {
+          baseKey,
+          displayName: cleanName,
+          variants: {},
+          variantList: [],
+        });
+      }
+
+      const entry = map.get(baseKey)!;
+      entry.variants[v] = p;
+      if (!entry.variantList.includes(v)) {
+        entry.variantList.push(v);
+      }
+    }
+
+    // Also scan matchingPresets for any other variants of this baseKey for Cambridge
+    if (isCambridge) {
+      for (const preset of matchingPresets) {
+        for (const p of preset.papers) {
+          const baseKey = caiePaperBase(p.paper_number || p.name);
+          const v = p.variant;
+          if (v && map.has(baseKey)) {
+            const entry = map.get(baseKey)!;
+            if (!entry.variants[v]) {
+              entry.variants[v] = {
+                ...p,
+                paper_number: p.paper_number || preset.paper_number,
+                variant: v,
+              };
+            }
+            if (!entry.variantList.includes(v)) {
+              entry.variantList.push(v);
+            }
+          }
+        }
+      }
+    }
+
+    for (const entry of map.values()) {
+      entry.variantList.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+    }
+
+    return map;
+  }, [filteredActivePapers, matchingPresets, isCambridge]);
+
+  // Strict integer input handler (increments/decrements by 1)
+  const handleMarkChange = (key: string | number, value: string) => {
     if (!activePreset) return;
-    const paper = activePreset.papers[index];
-    if (!paper) return;
     if (value === '') {
-      setRawMarks((prev) => ({ ...prev, [index]: '' }));
+      setRawMarks((prev) => ({ ...prev, [key]: '' }));
       return;
     }
-    const n = parseFloat(value);
+    const n = Math.round(parseFloat(value));
     if (!isNaN(n) && n >= 0) {
-      setRawMarks((prev) => ({ ...prev, [index]: Math.min(n, paper.max_mark) }));
+      setRawMarks((prev) => ({ ...prev, [key]: n }));
     }
   };
 
   const resetAll = () => {
     setRawMarks({});
+    setPaperVariants({});
     setSelectedSeries('');
     setSelectedSubject('');
     setSelectedCurriculum('');
     setSelectedTier('');
     setSelectedVariant('');
     setSelectedExclusiveOptions({});
+    setSelectedCashInLocal('');
+    setSelectedUnitId('');
     setCurrentStep(1);
   };
 
@@ -501,29 +622,52 @@ export default function GradeCalculator() {
   );
 
   const paperResults = useMemo(() => {
-    if (!activePreset || filteredActivePapers.length === 0) return [];
-    return filteredActivePapers.map((p, i) => {
-      const val = rawMarks[i];
+    if (!activePreset || papersByBase.size === 0) return [];
+
+    return Array.from(papersByBase.values()).map((entry, i) => {
+      const activeVar =
+        paperVariants[entry.baseKey] ||
+        selectedVariant ||
+        plugin.defaultVariant ||
+        entry.variantList[0];
+      const paperDef = entry.variants[activeVar] || Object.values(entry.variants)[0];
+      const val = rawMarks[entry.baseKey] ?? rawMarks[i];
       const filled = val !== '' && val !== undefined;
       const raw = filled ? Number(val) : 0;
-      const perBoundaries = (p.paper_boundaries && p.paper_boundaries.length > 0
-        ? p.paper_boundaries
+      const perBoundaries = (paperDef?.paper_boundaries && paperDef.paper_boundaries.length > 0
+        ? paperDef.paper_boundaries
         : []) as GradeBoundary[];
+
+      const maxMark = paperDef?.max_mark || 100;
       const result = filled
-        ? paperPlugin.gradeFromRawMark(raw, p.max_mark, perBoundaries)
+        ? paperPlugin.gradeFromRawMark(raw, maxMark, perBoundaries)
         : { grade: '—', percentage: 0, ums: undefined as number | undefined };
+
       return {
-        ...p,
+        ...paperDef,
+        baseKey: entry.baseKey,
+        displayName: entry.displayName,
+        activeVariant: activeVar,
+        availableVariants: entry.variantList,
         index: i,
         filled,
         raw,
+        max_mark: maxMark,
         pct: result.percentage,
         perBoundaries,
         paperGrade: filled ? result.grade : '—',
         paperUms: result.ums,
       };
     });
-  }, [activePreset, rawMarks, paperPlugin]);
+  }, [
+    activePreset,
+    papersByBase,
+    paperVariants,
+    selectedVariant,
+    plugin.defaultVariant,
+    rawMarks,
+    paperPlugin,
+  ]);
 
   const calc = useMemo(() => {
     if (!activePreset) {
@@ -688,15 +832,23 @@ export default function GradeCalculator() {
                 onChange={(e) => {
                   setSelectedSubject(e.target.value);
                   setSelectedSeries('');
+                  setSelectedCashInLocal('');
+                  setSelectedUnitId('');
                 }}
                 className="w-full bg-background-secondary border border-border rounded-2xl py-3 px-4 text-xs font-bold text-foreground outline-none focus:border-primary transition-colors disabled:opacity-40"
               >
                 <option value="">-- Select subject --</option>
-                {filteredSubjects.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.title || s.name} ({s.code})
-                  </option>
-                ))}
+                {isEdexcelIal
+                  ? groupedIalSubjects.map((grp) => (
+                      <option key={grp.id} value={grp.id}>
+                        {grp.title} ({grp.code})
+                      </option>
+                    ))
+                  : filteredSubjects.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.title || s.name} ({s.code})
+                      </option>
+                    ))}
               </select>
             </div>
           </div>
@@ -760,7 +912,7 @@ export default function GradeCalculator() {
             </div>
           )}
 
-          {selectedCurriculumRow?.code === 'EDEXCEL_IAL' && selectedSubject && (
+          {isEdexcelIal && selectedSubject && (
             <div className="space-y-1.5">
               <label className="block text-xs font-bold uppercase tracking-wider text-foreground-secondary">
                 IAL cash-in award
@@ -773,18 +925,40 @@ export default function GradeCalculator() {
                 }}
                 className="w-full md:w-1/2 bg-background-secondary border border-border rounded-2xl py-3 px-4 text-xs font-bold text-foreground outline-none focus:border-primary transition-colors"
               >
-                <option value="">Unit only (no cash-in)</option>
                 {availableCashIns.map((award) => (
                   <option key={award.code} value={award.code}>
                     {award.code} · {award.name} (max {award.maxUms} UMS)
                   </option>
                 ))}
+                <option value="">Unit only (no cash-in)</option>
               </select>
               {selectedCashIn && IAL_CASH_INS[selectedCashIn as IalCashInCode]?.aStarNotes && (
                 <p className="text-[11px] text-foreground-muted">
                   {IAL_CASH_INS[selectedCashIn as IalCashInCode].aStarNotes}
                 </p>
               )}
+            </div>
+          )}
+
+          {isEdexcelIal && activeIalGroup && !selectedCashIn && (
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-foreground-secondary">
+                Specific Modular Unit
+              </label>
+              <select
+                value={selectedUnitId || activeIalGroup.units[0]?.id || ''}
+                onChange={(e) => {
+                  setSelectedUnitId(e.target.value);
+                  setSelectedSeries('');
+                }}
+                className="w-full md:w-1/2 bg-background-secondary border border-border rounded-2xl py-3 px-4 text-xs font-bold text-foreground outline-none focus:border-primary transition-colors"
+              >
+                {activeIalGroup.units.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name} ({u.code})
+                  </option>
+                ))}
+              </select>
             </div>
           )}
 
@@ -950,20 +1124,78 @@ export default function GradeCalculator() {
             />
           )}
 
+          {/* Cambridge Global Variant Switcher */}
+          {isCambridge && availableVariants.length > 1 && (
+            <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-background-secondary/60 border border-border">
+              <div className="space-y-0.5">
+                <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                  Exam Administration Variant
+                </span>
+                <p className="text-[11px] text-foreground-muted">
+                  Defaulting to Variant {plugin.defaultVariant || '2'} (standard for Myanmar). Switch here or per paper.
+                </p>
+              </div>
+              <div className="flex items-center gap-1.5 p-1 bg-background-card rounded-xl border border-border">
+                {availableVariants.map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => {
+                      setSelectedVariant(v);
+                      setPaperVariants({});
+                    }}
+                    className={cn(
+                      'px-3 py-1.5 rounded-lg text-xs font-bold font-mono transition-all',
+                      (selectedVariant || plugin.defaultVariant || '2') === v
+                        ? 'bg-primary text-white shadow-xs'
+                        : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary'
+                    )}
+                  >
+                    Variant {v}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Paper Mark Entry Cards */}
           <div className="space-y-4">
             {paperResults.map((pr) => (
               <div
-                key={pr.index}
+                key={pr.baseKey}
                 className="rounded-3xl border border-border bg-background-secondary/50 p-5 sm:p-6 transition-colors hover:border-primary/30 space-y-4"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="space-y-1">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary font-mono">
-                      Component {pr.index + 1}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-primary font-mono">
+                        Component {pr.index + 1}
+                      </span>
+                      {pr.availableVariants.length > 1 && (
+                        <div className="inline-flex items-center gap-1 bg-background-card border border-border rounded-lg p-0.5 ml-1">
+                          {pr.availableVariants.map((v) => (
+                            <button
+                              key={v}
+                              type="button"
+                              onClick={() =>
+                                setPaperVariants((prev) => ({ ...prev, [pr.baseKey]: v }))
+                              }
+                              className={cn(
+                                'px-2 py-0.5 rounded-md text-[10px] font-bold font-mono transition-colors',
+                                pr.activeVariant === v
+                                  ? 'bg-primary text-white shadow-2xs'
+                                  : 'text-foreground-muted hover:text-foreground hover:bg-background-secondary'
+                              )}
+                              title={`Switch to Variant ${v}`}
+                            >
+                              v{v}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                     <h4 className="text-base font-bold text-foreground">
-                      {pr.name}
+                      {pr.displayName || pr.name}
                     </h4>
                     <div className="flex items-center gap-3 text-xs text-foreground-muted">
                       <span>Max: <strong className="text-foreground font-mono">{pr.max_mark}</strong> marks</span>
@@ -983,10 +1215,10 @@ export default function GradeCalculator() {
                         type="number"
                         min="0"
                         max={pr.max_mark}
-                        step="0.5"
-                        value={rawMarks[pr.index] ?? ''}
+                        step="1"
+                        value={rawMarks[pr.baseKey] ?? rawMarks[pr.index] ?? ''}
                         placeholder="0"
-                        onChange={(e) => handleMarkChange(pr.index, e.target.value)}
+                        onChange={(e) => handleMarkChange(pr.baseKey, e.target.value)}
                         className="w-24 rounded-2xl border border-border bg-background-card py-2.5 px-3 text-center font-mono font-bold text-base text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                       />
                       <span className="text-foreground-muted font-mono font-bold">/</span>
