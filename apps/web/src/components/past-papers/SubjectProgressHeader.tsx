@@ -68,13 +68,25 @@ export function SubjectProgressHeader({
             )}
           </div>
         </div>
-        <Link
-          href={calcHref}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
-        >
-          <Calculator className="h-3.5 w-3.5" />
-          Subject calculator
-        </Link>
+        <div className="flex items-center gap-2 flex-wrap">
+          {onEditRoute && (
+            <button
+              type="button"
+              onClick={onEditRoute}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors cursor-pointer"
+            >
+              <Route className="h-3.5 w-3.5" />
+              Customize Units
+            </button>
+          )}
+          <Link
+            href={calcHref}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            <Calculator className="h-3.5 w-3.5" />
+            Subject calculator
+          </Link>
+        </div>
       </div>
 
       {progress && (

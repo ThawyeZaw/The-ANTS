@@ -25,7 +25,8 @@ export const caieAlevelPlugin: QualificationPlugin = {
       list = list.filter((p) =>
         practiceVariants.includes(toCambridgePaperId(p.paperNumber, p.variant))
       );
-    } else if (opts.variant) {
+    }
+    if (opts.variant) {
       const withVariant = list.filter((p) => (p.variant ?? '2') === opts.variant);
       if (withVariant.length > 0) list = withVariant;
     }
@@ -44,15 +45,9 @@ export const caieAlevelPlugin: QualificationPlugin = {
       out.push({ ...p, exclusiveGroup });
     }
 
-    if (practiceVariants) {
-      return out.sort((a, b) =>
-        a.paperNumber.localeCompare(b.paperNumber, undefined, { numeric: true })
-      );
-    }
-
     const seen = new Set<string>();
     return out.filter((p) => {
-      const base = p.paperNumber.replace(/\D/g, '').charAt(0);
+      const base = caiePaperBase(p.paperNumber);
       if (seen.has(base)) return false;
       seen.add(base);
       return true;

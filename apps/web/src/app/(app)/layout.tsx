@@ -2,7 +2,7 @@
 
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTs — Authenticated App Shell Layout
-// Guests may access /pomodoro and /tools (try-before-login tools).
+// Guests may access /pomodoro and /calculator (try-before-login tools).
 // ──────────────────────────────────────────────────────────────────────────────
 
 import Image from 'next/image';
@@ -13,7 +13,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { LessonProvider } from '@/context/LessonContext';
 import NavBar from '@/components/layout/NavBar';
 
-const GUEST_ALLOWLIST = ['/pomodoro', '/tools'] as const;
+const GUEST_ALLOWLIST = ['/pomodoro', '/calculator', '/tools'] as const;
 
 function isGuestAllowed(pathname: string): boolean {
   return GUEST_ALLOWLIST.some(

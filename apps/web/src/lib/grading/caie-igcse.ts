@@ -41,7 +41,8 @@ function filterByTierAndVariant(
     list = list.filter((p) =>
       practiceVariants.includes(toCambridgePaperId(p.paperNumber, p.variant))
     );
-  } else if (opts.variant) {
+  }
+  if (opts.variant) {
     const withVariant = list.filter((p) => (p.variant ?? '2') === opts.variant);
     if (withVariant.length > 0) list = withVariant;
   }
@@ -62,12 +63,6 @@ function filterByTierAndVariant(
       exclusiveGroup = 'practical';
     }
     out.push({ ...p, exclusiveGroup });
-  }
-
-  if (practiceVariants) {
-    return out.sort((a, b) =>
-      a.paperNumber.localeCompare(b.paperNumber, undefined, { numeric: true })
-    );
   }
 
   const seen = new Set<string>();

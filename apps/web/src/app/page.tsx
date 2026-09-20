@@ -254,6 +254,16 @@ export default function HomePage() {
             >
               <span className="hp-nav-linktext" data-text="Study Tools">Study Tools</span>
             </a>
+            <a
+              className="hp-nav-item"
+              href="#about"
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+            >
+              <span className="hp-nav-linktext" data-text="About">About</span>
+            </a>
           </div>
 
 
@@ -708,6 +718,192 @@ export default function HomePage() {
             subtext="Every revision note, specimen mark scheme, and unit breakdown is mapped 1:1 against current international exam specifications."
           />
           <QualBoards />
+        </div>
+      </section>
+
+      {/* ── About The ANTs Mission Spotlight ─────────────────────────────── */}
+      <section
+        id="about"
+        style={{
+          padding: '110px 28px',
+          position: 'relative',
+          scrollMarginTop: 90,
+          overflow: 'hidden',
+        }}
+      >
+        {/* Background accent glow */}
+        <div
+          aria-hidden
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background:
+              'radial-gradient(ellipse 70% 60% at 50% 50%, color-mix(in srgb, var(--hp-brand) 6%, transparent) 0%, transparent 70%)',
+            pointerEvents: 'none',
+          }}
+        />
+        <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto', position: 'relative', zIndex: 1 }}>
+          <RevealSection>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: 56,
+                alignItems: 'center',
+              }}
+              className="about-mission-grid"
+            >
+              <style>{`
+                @media (max-width: 860px) {
+                  .about-mission-grid { grid-template-columns: 1fr !important; gap: 36px !important; }
+                  .about-mission-stats { grid-template-columns: repeat(2, 1fr) !important; }
+                }
+              `}</style>
+
+              {/* Left — copy */}
+              <div>
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    padding: '5px 12px',
+                    borderRadius: 999,
+                    background: 'color-mix(in srgb, var(--hp-brand) 12%, transparent)',
+                    color: 'var(--hp-brand-deep)',
+                    fontFamily: 'var(--hp-font-mono)',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    marginBottom: 20,
+                  }}
+                >
+                  Our Story
+                </span>
+                <h2
+                  style={{
+                    fontFamily: 'var(--hp-font-display)',
+                    fontSize: 'clamp(1.85rem, 3.2vw, 2.5rem)',
+                    fontWeight: 560,
+                    color: 'var(--hp-ink)',
+                    lineHeight: 1.15,
+                    letterSpacing: '-0.01em',
+                    margin: '0 0 18px',
+                  }}
+                >
+                  More than tutors.{' '}
+                  <span className="hp-grad">Your bridge to global education.</span>
+                </h2>
+                <p
+                  style={{
+                    fontFamily: 'var(--hp-font-body)',
+                    fontSize: 15,
+                    color: 'var(--hp-ink-muted)',
+                    lineHeight: 1.7,
+                    margin: '0 0 28px',
+                    maxWidth: 480,
+                  }}
+                >
+                  <span className="font-brand" style={{ color: 'var(--hp-ink)', fontWeight: 700 }}>The ANTs</span>{' '}
+                  started as a small circle of student volunteers helping peers prep for Cambridge and Edexcel exams in Yangon.
+                  Today, it is a growing non-profit movement spanning Myanmar and the diaspora —
+                  built by students who believe world-class education should be free, accessible, and community-powered.
+                </p>
+                <Link href="/about">
+                  <button
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      background: 'var(--hp-brand)',
+                      color: 'var(--hp-btn-text)',
+                      border: 'none',
+                      borderRadius: 12,
+                      padding: '11px 22px',
+                      fontFamily: 'var(--hp-font-body)',
+                      fontWeight: 700,
+                      fontSize: 14,
+                      cursor: 'pointer',
+                      transition: 'transform .18s ease, box-shadow .18s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)';
+                      (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 12px 28px -10px rgba(var(--hp-brand-rgb), 0.45)';
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)';
+                      (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
+                    }}
+                  >
+                    Read Our Story & Journey
+                    <ArrowRight size={15} strokeWidth={2.2} />
+                  </button>
+                </Link>
+              </div>
+
+              {/* Right — stat cards */}
+              <div
+                className="about-mission-stats"
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: 16,
+                }}
+              >
+                {[
+                  { value: '100%', label: 'Free Forever', sub: 'No fees, no credit card' },
+                  { value: '4', label: 'Exam Boards', sub: 'Cambridge · Edexcel · AQA · OCR' },
+                  { value: '7+', label: 'Study Tools', sub: 'Built for Myanmar scholars' },
+                  { value: '🌏', label: 'Worldwide Community', sub: 'Yangon, Mandalay & diaspora' },
+                ].map(({ value, label, sub }) => (
+                  <div
+                    key={label}
+                    style={{
+                      padding: '22px 20px',
+                      borderRadius: 18,
+                      background: 'var(--hp-surface)',
+                      border: '1px solid var(--hp-border)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 6,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: 'var(--hp-font-display)',
+                        fontSize: 'clamp(1.6rem, 2.8vw, 2.2rem)',
+                        fontWeight: 700,
+                        color: 'var(--hp-brand)',
+                        lineHeight: 1,
+                      }}
+                    >
+                      {value}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: 'var(--hp-font-body)',
+                        fontSize: 13.5,
+                        fontWeight: 700,
+                        color: 'var(--hp-ink)',
+                      }}
+                    >
+                      {label}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: 'var(--hp-font-body)',
+                        fontSize: 11.5,
+                        color: 'var(--hp-ink-faint)',
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      {sub}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </RevealSection>
         </div>
       </section>
 

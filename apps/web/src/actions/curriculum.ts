@@ -176,6 +176,7 @@ export interface PaperGridData {
   awardLevel?: AwardLevel | null;
   paperPreferences?: PaperPreferences | null;
   tier?: SubjectTier | null;
+  groupTitle?: string;
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -460,6 +461,123 @@ export async function getPaperGridData(
     const subjectCode = subject?.code ?? '';
     const board = boardFromCurriculumCode(subject?.curriculum?.code);
 
+    const isEdexcelIal =
+      board === 'EDEXCEL_IAL' ||
+      subject?.curriculum?.code === 'curr-edexcel-ial' ||
+      subjectId.startsWith('subj-edx-ial-');
+
+    let ialGroupTitle: string | undefined;
+    let ialUnitSubjectMap = new Map<string, typeof subject>();
+    let sortedSiblings: (typeof subject)[] = [];
+
+    if (isEdexcelIal) {
+      const suffix = subjectId.replace('subj-edx-ial-', '');
+      const prefixMatch = suffix.match(/^[a-z]+/);
+      const prefix = prefixMatch ? prefixMatch[0] : '';
+
+      let isMath = false;
+      let isFurtherMath = false;
+      let defaultCashIn = 'YMA01';
+
+      if (prefix === 'mech' || prefix === 'stat') {
+        const num = suffix.replace(prefix, '');
+        if (num === '1') {
+          isMath = true;
+          ialGroupTitle = 'Mathematics';
+          defaultCashIn = 'YMA01';
+        } else {
+          isFurtherMath = true;
+          ialGroupTitle = 'Further Mathematics';
+          defaultCashIn = 'YFM01';
+        }
+      } else if (prefix === 'pure' || prefix === 'dec' || prefix === 'math') {
+        isMath = true;
+        ialGroupTitle = 'Mathematics';
+        defaultCashIn = 'YMA01';
+      } else if (prefix === 'fmath') {
+        isFurtherMath = true;
+        ialGroupTitle = 'Further Mathematics';
+        defaultCashIn = 'YFM01';
+      } else {
+        const prefixMap: Record<string, { title: string; code: string }> = {
+          phys: { title: 'Physics', code: 'YPH11' },
+          chem: { title: 'Chemistry', code: 'YCH11' },
+          bio: { title: 'Biology', code: 'YBI11' },
+          cs: { title: 'Computer Science', code: 'YCP01' },
+          it: { title: 'Information Technology', code: 'YIT11' },
+          econ: { title: 'Economics', code: 'YEC11' },
+          biz: { title: 'Business', code: 'YBS11' },
+          acc: { title: 'Accounting', code: 'YAC11' },
+          psych: { title: 'Psychology', code: 'YPS01' },
+          eng: { title: 'English Language', code: 'YEN01' },
+          lit: { title: 'English Literature', code: 'YET01' },
+        };
+        const m = prefixMap[prefix];
+        ialGroupTitle = m?.title ?? subject?.name ?? 'IAL Subject';
+        defaultCashIn = m?.code ?? '';
+      }
+
+      const validCashIns = isFurtherMath
+        ? ['YFM01', 'XFM01']
+        : isMath
+        ? ['YMA01', 'XMA01']
+        : defaultCashIn
+        ? [defaultCashIn]
+        : [];
+
+      let targetUnitCodes: string[] = [];
+      if (validCashIns.length > 0) {
+        const userCashIn = await db.query.userCashInEnrollments.findFirst({
+          where: and(
+            eq(userCashInEnrollments.user_id, userId),
+            inArray(userCashInEnrollments.cash_in_code, validCashIns)
+          ),
+        });
+        if (
+          userCashIn?.selected_units &&
+          Array.isArray(userCashIn.selected_units) &&
+          userCashIn.selected_units.length > 0
+        ) {
+          targetUnitCodes = userCashIn.selected_units;
+        }
+      }
+
+      if (targetUnitCodes.length === 0) {
+        if (isMath) {
+          targetUnitCodes = ['WMA11', 'WMA12', 'WMA13', 'WMA14', 'WME01', 'WST01'];
+        } else if (isFurtherMath) {
+          targetUnitCodes = ['WFM01', 'WFM02', 'WFM03', 'WME01', 'WST01', 'WST02'];
+        } else if (defaultCashIn) {
+          const { IAL_CASH_INS } = await import('@/lib/grading/ial-cash-in');
+          const award = IAL_CASH_INS[defaultCashIn as keyof typeof IAL_CASH_INS];
+          if (award) {
+            targetUnitCodes = [...award.compulsory, ...award.optional];
+          }
+        }
+      }
+
+      if (targetUnitCodes.length > 0 && subject?.curriculum_id) {
+        const siblingSubjects = await db.query.subjects.findMany({
+          where: and(
+            eq(subjects.curriculum_id, subject.curriculum_id),
+            inArray(subjects.code, targetUnitCodes)
+          ),
+        });
+
+        sortedSiblings = targetUnitCodes
+          .map((c) => siblingSubjects.find((s) => s.code === c))
+          .filter(Boolean) as (typeof subject)[];
+
+        for (const s of sortedSiblings) {
+          if (s) ialUnitSubjectMap.set(s.id, s);
+        }
+      }
+    }
+
+    const targetSubjectIds = isEdexcelIal && sortedSiblings.length > 0
+      ? sortedSiblings.map((s) => s!.id)
+      : [subjectId];
+
     const enroll = await db.query.userEnrollments.findFirst({
       where: and(eq(userEnrollments.user_id, userId), eq(userEnrollments.subject_id, subjectId)),
       columns: { tier: true, award_level: true, paper_preferences: true },
@@ -469,13 +587,13 @@ export async function getPaperGridData(
     const routePrefs = (enroll?.paper_preferences as PaperPreferences | null) ?? null;
 
     const allPapersRaw = await db.query.pastPapers.findMany({
-      where: eq(pastPapers.subject_id, subjectId),
+      where: inArray(pastPapers.subject_id, targetSubjectIds),
       with: { gradeBoundaries: true },
       orderBy: [asc(pastPapers.paper_number), asc(pastPapers.variant)],
     });
 
     let allPapers = allPapersRaw.filter((p) => !isEndorsementPaper(subjectCode, p.paper_number));
-    if (board && subjectCode) {
+    if (!isEdexcelIal && board && subjectCode) {
       allPapers = allPapers.filter((p) =>
         pastPaperMatchesAllPracticeSet(p.paper_number, p.variant, subjectCode, board, {
           awardLevel,
@@ -484,7 +602,7 @@ export async function getPaperGridData(
         })
       );
     }
-    if (effectiveTier && (syllabusHasTiers(subjectCode) || subjectCode === '4MA1')) {
+    if (!isEdexcelIal && effectiveTier && (syllabusHasTiers(subjectCode) || subjectCode === '4MA1')) {
       allPapers = allPapers.filter((p) =>
         examPaperMatchesTier(
           board === 'CAIE_IGCSE' || board === 'CAIE_ALEVEL'
@@ -495,8 +613,6 @@ export async function getPaperGridData(
         )
       );
     }
-
-
 
     // Fetch user records for those papers
     const paperIds = allPapers.map((p) => p.id);
@@ -513,7 +629,7 @@ export async function getPaperGridData(
     const recordMap = new Map(userRecords.map((r) => [r.past_paper_id, r]));
 
     // Detect IAL (Edexcel modular with UMS)
-    const isIAL = allPapers.some((p) => p.qualification === 'IAL');
+    const isIAL = isEdexcelIal || allPapers.some((p) => p.qualification === 'IAL');
 
     // Collect unique sessions (year × series)
     const sessionSet = new Map<string, PaperGridSession>();
@@ -539,13 +655,56 @@ export async function getPaperGridData(
       return (seriesOrder[a.series] ?? 9) - (seriesOrder[b.series] ?? 9);
     });
 
-    // Group papers into rows (each unique paper_number + variant combination = a row)
+    // Group papers into rows
     const rowMap = new Map<string, PaperGridRow>();
+
+    // Pre-populate rowMap for Edexcel IAL to ensure strict unit ordering and complete unit set
+    if (isEdexcelIal && sortedSiblings.length > 0) {
+      const { IAL_UNIT_LABELS } = await import('@/lib/grading/ial-cash-in');
+      for (const unitSub of sortedSiblings) {
+        if (!unitSub) continue;
+        const unitCode = unitSub.code ?? '';
+        const unitShort =
+          unitCode === 'WMA11' ? 'P1' :
+          unitCode === 'WMA12' ? 'P2' :
+          unitCode === 'WMA13' ? 'P3' :
+          unitCode === 'WMA14' ? 'P4' :
+          unitCode === 'WME01' ? 'M1' :
+          unitCode === 'WME02' ? 'M2' :
+          unitCode === 'WME03' ? 'M3' :
+          unitCode === 'WST01' ? 'S1' :
+          unitCode === 'WST02' ? 'S2' :
+          unitCode === 'WST03' ? 'S3' :
+          unitCode === 'WDM11' ? 'D1' :
+          unitCode === 'WFM01' ? 'FP1' :
+          unitCode === 'WFM02' ? 'FP2' :
+          unitCode === 'WFM03' ? 'FP3' :
+          (IAL_UNIT_LABELS[unitCode] ?? unitCode);
+
+        const rowKey = unitSub.id;
+        rowMap.set(rowKey, {
+          paperId: unitSub.id,
+          paperNumber: unitCode,
+          variant: null,
+          displayLabel: `${unitShort} · ${IAL_UNIT_LABELS[unitCode] ?? unitSub.name ?? unitCode}`,
+          title: unitSub.name,
+          totalMarks: 75,
+          durationMinutes: 90,
+          examBoard: 'Edexcel',
+          qualification: 'IAL',
+          cells: {},
+          isMyanmarDefault: true,
+          isRequired: true,
+          rowKey,
+        });
+      }
+    }
+
     for (const p of allPapers) {
       const yearOk =
         (!yearFrom || p.year >= yearFrom) && (!yearTo || p.year <= yearTo);
 
-      const rowKey = `${p.paper_number}-${p.variant ?? ''}`;
+      const rowKey = (isEdexcelIal && p.subject_id) ? p.subject_id : `${p.paper_number}-${p.variant ?? ''}`;
       if (!rowMap.has(rowKey)) {
         const isMyanmarDefault =
           board && subjectCode
@@ -585,6 +744,8 @@ export async function getPaperGridData(
       const sessionKey = `${p.year}-${p.series}`;
       const record = recordMap.get(p.id);
       const row = rowMap.get(rowKey)!;
+      row.paperId = p.id;
+      if (p.total_marks) row.totalMarks = p.total_marks;
       row.cells[sessionKey] = {
         paperId: p.id,
         recordId: record?.id ?? null,
@@ -612,7 +773,7 @@ export async function getPaperGridData(
         
         // Check global availability rules
         const availability = isPaperAvailable(
-          subjectCode,
+          isEdexcelIal ? row.paperNumber : subjectCode,
           row.paperNumber,
           row.variant,
           session.series
@@ -642,11 +803,13 @@ export async function getPaperGridData(
       }
     }
 
-    const rows = [...rowMap.values()]
-      .filter((row) => Object.keys(row.cells).length > 0)
-      .sort((a, b) =>
-        a.displayLabel.localeCompare(b.displayLabel, undefined, { numeric: true })
-      );
+    const rows = isEdexcelIal
+      ? [...rowMap.values()].filter((row) => Object.keys(row.cells).length > 0)
+      : [...rowMap.values()]
+          .filter((row) => Object.keys(row.cells).length > 0)
+          .sort((a, b) =>
+            a.displayLabel.localeCompare(b.displayLabel, undefined, { numeric: true })
+          );
 
     const requiredRows = rows.filter((r) => r.isRequired);
     let requiredDone = 0;
@@ -663,7 +826,7 @@ export async function getPaperGridData(
       latestSeriesLabel: sessions[0]?.label ?? null,
     };
 
-    if (sessions.length > 0 && board && subjectCode) {
+    if (sessions.length > 0 && board && subjectCode && !isEdexcelIal) {
       const latest = sessions[0];
       const paperInputs = rows.flatMap((row) => {
         const key = `${latest.year}-${latest.series}`;
@@ -727,6 +890,7 @@ export async function getPaperGridData(
       awardLevel,
       paperPreferences: routePrefs,
       tier: effectiveTier,
+      groupTitle: ialGroupTitle,
     };
   } catch (err) {
     console.error('[curriculum] getPaperGridData error:', err);

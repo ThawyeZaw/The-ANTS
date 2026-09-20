@@ -19,6 +19,9 @@ import {
 } from '@/lib/grading/ial-cash-in';
 import { enrollCashInAward } from '@/actions/curriculum';
 
+const MATH_CODES: readonly IalCashInCode[] = ['YMA01', 'XMA01'];
+const FURTHER_MATH_CODES: readonly IalCashInCode[] = ['YFM01', 'XFM01'];
+
 interface AvailableUnit {
   id: string;
   code: string;
@@ -47,18 +50,22 @@ export function IalOptionalUnitsModal({
   onSuccess,
 }: IalOptionalUnitsModalProps) {
   const isFurtherMath = subjectTitle.toLowerCase().includes('further');
-
-  // Available cash-in codes for this subject
-  const availableCodes: IalCashInCode[] = isFurtherMath
-    ? ['YFM01', 'XFM01']
-    : ['YMA01', 'XMA01'];
+  const availableCodes = isFurtherMath ? FURTHER_MATH_CODES : MATH_CODES;
 
   const defaultCode = (initialAwardCode && availableCodes.includes(initialAwardCode as IalCashInCode))
     ? (initialAwardCode as IalCashInCode)
     : availableCodes[0];
 
   const [selectedCode, setSelectedCode] = useState<IalCashInCode>(defaultCode);
-  const [selectedOptional, setSelectedOptional] = useState<string[]>([]);
+  const [selectedOptional, setSelectedOptional] = useState<string[]>(() => {
+    const awardDef = IAL_CASH_INS[defaultCode];
+    const initialOpts = (initialSelectedUnits || []).filter((u) => awardDef.optional.includes(u));
+    if (initialOpts.length === requiredOptionalCount(awardDef)) {
+      return initialOpts;
+    }
+    const defPresets = optionalUnitPresets(awardDef);
+    return defPresets.length > 0 ? [...defPresets[0].units] : [];
+  });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -66,7 +73,9 @@ export function IalOptionalUnitsModal({
   const needOptionalCount = requiredOptionalCount(award);
   const presets = useMemo(() => optionalUnitPresets(award), [award]);
 
-  // Sync initial state when modal opens or award changes
+  const initialUnitsKey = (initialSelectedUnits ?? []).join(',');
+
+  // Sync state only when modal opens or initial props change, NOT on internal state changes or re-renders
   useEffect(() => {
     if (!isOpen) return;
     setError(null);
@@ -76,25 +85,29 @@ export function IalOptionalUnitsModal({
     setSelectedCode(awardToUse);
 
     const awardDef = IAL_CASH_INS[awardToUse];
-    const initialOpts = initialSelectedUnits.filter((u) => awardDef.optional.includes(u));
+    const initialOpts = (initialSelectedUnits ?? []).filter((u) => awardDef.optional.includes(u));
     if (initialOpts.length === requiredOptionalCount(awardDef)) {
       setSelectedOptional(initialOpts);
-    } else if (presets.length > 0) {
-      setSelectedOptional(presets[0].units);
     } else {
-      setSelectedOptional([]);
+      const awardPresets = optionalUnitPresets(awardDef);
+      if (awardPresets.length > 0) {
+        setSelectedOptional([...awardPresets[0].units]);
+      } else {
+        setSelectedOptional([]);
+      }
     }
-  }, [isOpen, initialAwardCode, availableCodes, initialSelectedUnits, presets]);
+  }, [isOpen, subjectTitle, initialAwardCode, initialUnitsKey]);
 
   if (!isOpen) return null;
 
   const handleAwardChange = (newCode: IalCashInCode) => {
+    if (newCode === selectedCode) return;
     setSelectedCode(newCode);
     setError(null);
     const newAward = IAL_CASH_INS[newCode];
     const newPresets = optionalUnitPresets(newAward);
     if (newPresets.length > 0) {
-      setSelectedOptional(newPresets[0].units);
+      setSelectedOptional([...newPresets[0].units]);
     } else {
       setSelectedOptional([]);
     }
@@ -102,34 +115,47 @@ export function IalOptionalUnitsModal({
 
   const handleToggleOptional = (unitCode: string) => {
     setError(null);
+
+    // 1. If currently selected, DESELECT it
     if (selectedOptional.includes(unitCode)) {
       setSelectedOptional((prev) => prev.filter((u) => u !== unitCode));
       return;
     }
 
-    // For YMA01, validate pairs
+    // 2. For YMA01 (A Level Mathematics - requires 2 approved applied units)
     if (selectedCode === 'YMA01') {
       if (selectedOptional.length >= needOptionalCount) {
-        // Replace oldest optional pick
-        const next = [selectedOptional[1], unitCode];
-        // Check if next pair is in valid pairs
-        const valid = YMA01_APPLIED_PAIRS.some(
-          ([a, b]) => (a === next[0] && b === next[1]) || (a === next[1] && b === next[0])
+        // Both units already chosen. Try intelligently swapping with unit 0 or unit 1 to create an approved pair
+        const pairWithFirst = [selectedOptional[0], unitCode];
+        const validWithFirst = YMA01_APPLIED_PAIRS.some(
+          ([a, b]) => (a === pairWithFirst[0] && b === pairWithFirst[1]) || (a === pairWithFirst[1] && b === pairWithFirst[0])
         );
-        if (!valid) {
-          setError(`Pair [${IAL_UNIT_LABELS[next[0]] ?? next[0]} + ${IAL_UNIT_LABELS[unitCode] ?? unitCode}] is not an approved A Level combination.`);
-          return;
+        const pairWithSecond = [selectedOptional[1], unitCode];
+        const validWithSecond = YMA01_APPLIED_PAIRS.some(
+          ([a, b]) => (a === pairWithSecond[0] && b === pairWithSecond[1]) || (a === pairWithSecond[1] && b === pairWithSecond[0])
+        );
+
+        if (validWithSecond) {
+          setSelectedOptional(pairWithSecond);
+        } else if (validWithFirst) {
+          setSelectedOptional(pairWithFirst);
+        } else {
+          setError(
+            `${IAL_UNIT_LABELS[unitCode] ?? unitCode} cannot be combined with your current selections. Choose an approved route above or deselect a unit first.`
+          );
         }
-        setSelectedOptional(next);
         return;
       } else {
+        // 0 or 1 unit currently selected
         const next = [...selectedOptional, unitCode];
         if (next.length === 2) {
           const valid = YMA01_APPLIED_PAIRS.some(
             ([a, b]) => (a === next[0] && b === next[1]) || (a === next[1] && b === next[0])
           );
           if (!valid) {
-            setError(`Combination not allowed. Choose an approved pairing like M1+S1 or M1+M2.`);
+            setError(
+              `Pair [${IAL_UNIT_LABELS[next[0]] ?? next[0]} + ${IAL_UNIT_LABELS[unitCode] ?? unitCode}] is not an approved A Level combination. Approved pairings: M1+S1, M1+M2, S1+S2, M1+D1, S1+D1.`
+            );
             return;
           }
         }
@@ -138,11 +164,10 @@ export function IalOptionalUnitsModal({
       }
     }
 
-    // Standard limit
+    // 3. For other awards (e.g. XMA01 with 1 optional unit, or Further Mathematics)
     if (selectedOptional.length < needOptionalCount) {
       setSelectedOptional((prev) => [...prev, unitCode]);
     } else {
-      // Rotate single pick
       if (needOptionalCount === 1) {
         setSelectedOptional([unitCode]);
       } else {
@@ -153,7 +178,7 @@ export function IalOptionalUnitsModal({
 
   const handleApplyPreset = (units: string[]) => {
     setError(null);
-    setSelectedOptional(units);
+    setSelectedOptional([...units]);
   };
 
   const isValid = selectedOptional.length === needOptionalCount;
@@ -212,7 +237,7 @@ export function IalOptionalUnitsModal({
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-foreground-muted hover:text-foreground hover:bg-background-secondary transition-colors"
+            className="cursor-pointer rounded-lg p-1.5 text-foreground-muted hover:text-foreground hover:bg-background-secondary transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
@@ -235,7 +260,7 @@ export function IalOptionalUnitsModal({
                     type="button"
                     onClick={() => handleAwardChange(code)}
                     className={cn(
-                      'flex flex-col text-left p-3 rounded-xl border transition-all',
+                      'cursor-pointer flex flex-col text-left p-3 rounded-xl border transition-all',
                       isSelected
                         ? 'border-amber-500/60 bg-amber-500/10 shadow-sm'
                         : 'border-border/60 bg-background-card/50 hover:border-border hover:bg-background-secondary/50'
@@ -325,7 +350,7 @@ export function IalOptionalUnitsModal({
                           type="button"
                           onClick={() => handleApplyPreset(preset.units)}
                           className={cn(
-                            'text-xs font-medium px-2.5 py-1.5 rounded-lg border transition-all flex items-center gap-1.5',
+                            'cursor-pointer text-xs font-medium px-2.5 py-1.5 rounded-lg border transition-all flex items-center gap-1.5',
                             isActive
                               ? 'border-amber-500 bg-amber-500/20 text-foreground font-semibold shadow-xs'
                               : 'border-border/60 bg-background-card/50 text-foreground-muted hover:border-border hover:text-foreground'
@@ -354,7 +379,7 @@ export function IalOptionalUnitsModal({
                       type="button"
                       onClick={() => handleToggleOptional(unitCode)}
                       className={cn(
-                        'flex items-center justify-between p-2.5 rounded-xl border text-left transition-all',
+                        'cursor-pointer flex items-center justify-between p-2.5 rounded-xl border text-left transition-all',
                         isSelected
                           ? 'border-amber-500/70 bg-amber-500/10 text-foreground'
                           : 'border-border/60 bg-background-card/40 text-foreground-muted hover:border-border hover:text-foreground'
@@ -406,7 +431,7 @@ export function IalOptionalUnitsModal({
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="px-4 py-2 text-xs font-semibold rounded-lg border border-border hover:bg-background-secondary transition-colors"
+              className="cursor-pointer px-4 py-2 text-xs font-semibold rounded-lg border border-border hover:bg-background-secondary transition-colors"
             >
               Cancel
             </button>
@@ -417,7 +442,7 @@ export function IalOptionalUnitsModal({
               className={cn(
                 'flex items-center gap-2 px-5 py-2 text-xs font-bold rounded-lg transition-all',
                 isValid && !loading
-                  ? 'bg-amber-500 hover:bg-amber-600 text-black shadow-md hover:shadow-lg'
+                  ? 'cursor-pointer bg-amber-500 hover:bg-amber-600 text-black shadow-md hover:shadow-lg'
                   : 'bg-foreground-muted/20 text-foreground-muted cursor-not-allowed'
               )}
             >

@@ -74,7 +74,8 @@ function isToolsActive(pathname: string) {
     pathname.startsWith('/leaderboard') ||
     pathname.startsWith('/countdown') ||
     pathname.startsWith('/calculator') ||
-    pathname.startsWith('/workspace')
+    pathname.startsWith('/workspace') ||
+    pathname.startsWith('/tools')
   );
 }
 
@@ -222,10 +223,12 @@ export default function NavBar() {
   const [mounted, setMounted] = useState(false);
   const [openPanel, setOpenPanel] = useState<PanelKey>(null);
   const [openSection, setOpenSection] = useState<SectionKey>(() => defaultSectionForPath(pathname));
+  const [openRailTools, setOpenRailTools] = useState(false);
 
   const navRef = useRef<HTMLElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const railToolsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -233,17 +236,28 @@ export default function NavBar() {
 
   useEffect(() => {
     setOpenPanel(null);
+    setOpenRailTools(false);
     setOpenSection(defaultSectionForPath(pathname));
   }, [pathname]);
 
   useEffect(() => {
-    if (!openPanel) return;
+    if (!openPanel && !openRailTools) return;
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') setOpenPanel(null);
+      if (e.key === 'Escape') { setOpenPanel(null); setOpenRailTools(false); }
     }
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [openPanel]);
+  }, [openPanel, openRailTools]);
+
+  useEffect(() => {
+    if (!openRailTools) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (railToolsRef.current?.contains(e.target as Node)) return;
+      setOpenRailTools(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [openRailTools]);
 
   useEffect(() => {
     if (openPanel !== 'user') return;
@@ -381,9 +395,9 @@ export default function NavBar() {
             <UserPlus className="w-4 h-4 text-primary shrink-0" />
             <span className="truncate">Manage Users</span>
           </Link>
-          <Link href="/about" onClick={closePanel} className={roleLinkClass}>
+          <Link href="/org-activities/manage" onClick={closePanel} className={roleLinkClass}>
             <Building2 className="w-4 h-4 text-primary shrink-0" />
-            <span className="truncate">Organization Team</span>
+            <span className="truncate">Manage About Page</span>
           </Link>
         </>
       )}
@@ -440,7 +454,55 @@ export default function NavBar() {
             active={isHomeActive(pathname)}
           />
           <RailIconLink href="/curriculum" label="Curriculum" icon={GraduationCap} active={isCurriculumActive(pathname)} />
-          <RailIconLink href="/timetable" label="Study Tools" icon={Wrench} active={isToolsActive(pathname)} />
+
+          {/* Study Tools — opens flyout popover on tablet */}
+          <div ref={railToolsRef} className="relative">
+            <button
+              type="button"
+              onClick={() => setOpenRailTools((v) => !v)}
+              aria-expanded={openRailTools}
+              aria-label="Study Tools"
+              className={cn(
+                'group relative flex items-center justify-center p-2.5 rounded-xl w-full transition-colors duration-200',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+                isToolsActive(pathname) || openRailTools
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary'
+              )}
+            >
+              <Wrench className="w-4 h-4" />
+              {/* Tooltip — only visible when flyout is closed */}
+              {!openRailTools && (
+                <span className="absolute left-full ml-2.5 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded-lg text-xs font-semibold bg-background-card border border-border text-foreground shadow-lg whitespace-nowrap z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                  Study Tools
+                </span>
+              )}
+            </button>
+
+            {/* Flyout popover */}
+            {openRailTools && (
+              <div
+                role="dialog"
+                aria-label="Study Tools"
+                className="absolute left-full top-0 ml-2 w-52 bg-background-card border border-border rounded-2xl shadow-2xl p-2 z-50 nav-popover-enter"
+              >
+                <p className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-foreground-muted">
+                  Study Tools
+                </p>
+                <div className="space-y-0.5">
+                  {TOOLS_LINKS.map((item) => (
+                    <NavItemLink
+                      key={item.href}
+                      item={item}
+                      active={isHrefActive(item.href, pathname, null)}
+                      onNavigate={() => setOpenRailTools(false)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
           <RailIconLink href="/team" label="Tutors & Contributors" icon={Users} active={isTeamActive(pathname)} />
           {mounted && hasStaffRole && (
             <RailIconLink href="/editor" label="Workspace Tools" icon={Sparkles} active={pathname.startsWith('/editor') || pathname.startsWith('/main-contributor') || pathname.startsWith('/about')} />
@@ -635,10 +697,10 @@ export default function NavBar() {
             aria-modal="true"
             aria-label={
               openPanel === 'tools'
-                  ? 'Study Tools'
-                  : openPanel === 'team'
-                    ? 'Tutors & Contributors'
-                    : 'Account'
+                ? 'Study Tools'
+                : openPanel === 'team'
+                  ? 'Tutors & Contributors'
+                  : 'Account'
             }
             className="relative z-50 rounded-t-2xl border border-border border-b-0 bg-background-card shadow-2xl max-h-[70vh] overflow-y-auto nav-sheet-enter"
           >

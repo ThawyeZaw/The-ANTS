@@ -26,19 +26,21 @@ interface PaperGridProps {
 // ── Colour helpers ─────────────────────────────────────────────────────────────
 
 function getCellColor(cell: PaperGridCell): string {
-  if (cell.status === 'not_done') return 'bg-background-secondary border-border/30 text-foreground-muted';
+  if (cell.status === 'not_done') {
+    return 'bg-background-secondary/90 hover:bg-background-secondary border-border/70 hover:border-primary/60 text-foreground-muted/60 hover:text-foreground shadow-2xs hover:shadow-sm';
+  }
   if (cell.status === 'skipped') return 'bg-foreground-muted/10 border-foreground-muted/20 text-foreground-muted';
   // Done — no score
-  if (cell.rawScore === null) return 'bg-blue-500/15 border-blue-500/30 text-blue-500';
+  if (cell.rawScore === null) return 'bg-blue-500/20 border-blue-500/40 text-blue-500 hover:bg-blue-500/30';
   // Done — scored: derive color from percentage
   const pct = cell.percentage ?? (cell.maxScore ? (cell.rawScore / cell.maxScore) * 100 : 0);
-  if (pct >= 70) return 'bg-emerald-500/20 border-emerald-500/30 text-emerald-700 dark:text-emerald-400';
-  if (pct >= 55) return 'bg-amber-400/20 border-amber-400/30 text-amber-700 dark:text-amber-400';
-  return 'bg-red-500/20 border-red-500/30 text-red-700 dark:text-red-400';
+  if (pct >= 70) return 'bg-emerald-500/20 border-emerald-500/40 text-emerald-600 dark:text-emerald-300 hover:bg-emerald-500/30 font-bold';
+  if (pct >= 55) return 'bg-amber-400/20 border-amber-400/40 text-amber-600 dark:text-amber-300 hover:bg-amber-400/30 font-bold';
+  return 'bg-red-500/20 border-red-500/40 text-red-600 dark:text-red-300 hover:bg-red-500/30 font-bold';
 }
 
 function getCellDisplayValue(cell: PaperGridCell, mode: DisplayMode, isIAL: boolean): string {
-  if (cell.status === 'not_done') return '';
+  if (cell.status === 'not_done') return '—';
   if (cell.status === 'skipped') return '—';
   if (cell.rawScore === null) return '✓';
 
@@ -252,7 +254,7 @@ function GridCell({
   };
 
   const colorClass = effectiveCell.isDisabled 
-    ? 'bg-background-secondary/50 border-border/20 text-transparent opacity-40 cursor-not-allowed'
+    ? 'bg-background/40 border-border/15 text-transparent opacity-20 cursor-not-allowed select-none'
     : getCellColor(effectiveCell);
   
   const displayValue = effectiveCell.isDisabled ? '' : getCellDisplayValue(effectiveCell, displayMode, isIAL);
@@ -264,18 +266,18 @@ function GridCell({
         disabled={effectiveCell.isDisabled}
         className={cn(
           'relative w-full h-8 rounded-md border text-[11px] font-mono font-semibold transition-all duration-150',
-          !effectiveCell.isDisabled && 'hover:scale-105 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+          !effectiveCell.isDisabled && 'cursor-pointer hover:scale-[1.04] hover:shadow-md hover:ring-1 hover:ring-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary active:scale-[0.98]',
           colorClass
         )}
         title={
           effectiveCell.isDisabled 
             ? effectiveCell.disabledReason || 'Not available'
             : effectiveCell.status === 'not_done' 
-              ? 'Click to record' 
+              ? 'Click to record past paper score' 
               : `${effectiveCell.rawScore ?? ''}/${totalMarks ?? '?'}`
         }
       >
-        {displayValue}
+        <span>{displayValue}</span>
       </button>
       {open && !effectiveCell.isDisabled && (
         <CellPopover
@@ -391,11 +393,11 @@ export function PaperGrid({ userId, data, onRecordChange }: PaperGridProps) {
       {/* Legend */}
       <div className="flex flex-wrap gap-3 text-[10px] font-medium text-foreground-muted">
         {[
-          { color: 'bg-background-secondary border-border/30', label: 'Not done' },
-          { color: 'bg-blue-500/15 border-blue-500/30', label: 'Done ✓' },
-          { color: 'bg-emerald-500/20 border-emerald-500/30', label: '≥70%' },
-          { color: 'bg-amber-400/20 border-amber-400/30', label: '55–69%' },
-          { color: 'bg-red-500/20 border-red-500/30', label: '<55%' },
+          { color: 'bg-background-secondary/90 border-border/70', label: 'Not done' },
+          { color: 'bg-blue-500/20 border-blue-500/40', label: 'Done ✓' },
+          { color: 'bg-emerald-500/20 border-emerald-500/40', label: '≥70%' },
+          { color: 'bg-amber-400/20 border-amber-400/40', label: '55–69%' },
+          { color: 'bg-red-500/20 border-red-500/40', label: '<55%' },
         ].map(({ color, label }) => (
           <span key={label} className="flex items-center gap-1.5">
             <span className={cn('w-4 h-4 rounded border', color)} />

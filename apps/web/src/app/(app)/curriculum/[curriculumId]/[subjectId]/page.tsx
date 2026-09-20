@@ -280,7 +280,20 @@ export default function SubjectDetailPage() {
         )}
 
         {activeTab === 'papers' && (
-          <div>
+          <div className="space-y-3">
+            {filteredGridData?.groupTitle && (
+              <div className="flex flex-wrap items-center justify-between gap-2 p-3.5 px-4 rounded-xl border border-border bg-background-card/60">
+                <div>
+                  <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <BookOpen className="h-4 w-4 text-primary" />
+                    {filteredGridData.groupTitle} Past Paper Tracker
+                  </h2>
+                  <p className="text-xs text-foreground-muted">
+                    Tracking past papers across all {filteredGridData.rows.length} modular units for this qualification
+                  </p>
+                </div>
+              </div>
+            )}
             {loadingPapers ? (
               <div className="flex items-center justify-center py-16">
                 <div className="h-8 w-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />

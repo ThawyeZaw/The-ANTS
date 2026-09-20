@@ -30,11 +30,12 @@ export function isPaperAvailable(
     }
   }
 
-  // Computer Science 0478 & 0984 rules (and other subjects where only variant 2 exists globally/for our users)
-  // The user explicitly requested to disable non-variant 2 for 0478.
+  // Computer Science 0478 & 0984 rules
+  // In Feb/March (India-only series), only variant 2 exists.
+  // In May/June and Oct/Nov, variants 1, 2, and 3 are all available (papers 11, 12, 13, 21, 22, 23).
   if (syllabusCode === '0478' || syllabusCode === '0984') {
-    if (variant && variant !== '2') {
-      return { available: false, reason: `Only variant 2 is applicable` };
+    if (series === 'Feb/March' && variant && variant !== '2') {
+      return { available: false, reason: 'Not available in Feb/March (variant 2 only)' };
     }
   }
 
