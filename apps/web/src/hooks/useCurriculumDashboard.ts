@@ -9,8 +9,8 @@ import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
 import type { ExamCountdown } from '@/types';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8787';
+import { listUserEnrollments } from '@/actions/curriculum';
+import { listExamCountdownsForUser, listExams, createExamCountdown, deleteExamCountdown } from '@/actions/exam-data';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -91,48 +91,23 @@ export function useCurriculumDashboard() {
       if (!userId) return;
 
       try {
-        const [currRes, cdRes, examsRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/api/curriculum/user-curriculums?userId=${encodeURIComponent(userId)}`),
-          fetch(`${API_BASE_URL}/api/exams/countdowns?userId=${encodeURIComponent(userId)}`),
-          fetch(`${API_BASE_URL}/api/exams`),
+        const [enrollRows, cdRows, examRows] = await Promise.all([
+          listUserEnrollments(userId),
+          listExamCountdownsForUser(userId),
+          listExams(),
         ]);
 
-        if (currRes.ok) {
-          const json = await currRes.json();
-          if (json.success && json.userCurriculums) {
-            const list: EnrolledSubjectInfo[] = [];
-            for (const item of json.userCurriculums) {
-              const c = item.curriculum;
-              if (c && c.subjects) {
-                for (const s of c.subjects) {
-                  list.push({
-                    enrollmentId: item.id,
-                    subjectId: s.id,
-                    subjectTitle: s.title || s.name || '',
-                    curriculumId: c.id,
-                    curriculumTitle: c.title || c.name || '',
-                    examBoard: c.exam_board ?? c.code ?? null,
-                  });
-                }
-              }
-            }
-            setEnrolledSubjects(list);
-          }
-        }
-
-        if (cdRes.ok) {
-          const json = await cdRes.json();
-          if (json.success && json.countdowns) {
-            setRawCountdowns(json.countdowns);
-          }
-        }
-
-        if (examsRes.ok) {
-          const json = await examsRes.json();
-          if (json.success && json.exams) {
-            setAvailableExams(json.exams);
-          }
-        }
+        const list: EnrolledSubjectInfo[] = enrollRows.map((item) => ({
+          enrollmentId: item.id,
+          subjectId: item.subject_id,
+          subjectTitle: item.subject?.name || '',
+          curriculumId: item.curriculum_id,
+          curriculumTitle: item.curriculum?.name || '',
+          examBoard: item.curriculum?.code ?? null,
+        }));
+        setEnrolledSubjects(list);
+        setRawCountdowns(cdRows as unknown as ExamCountdown[]);
+        setAvailableExams(examRows);
       } catch (err) {
         console.error('Error fetching curriculum dashboard data:', err);
       }
@@ -215,17 +190,13 @@ export function useCurriculumDashboard() {
   }) => {
     if (!userId) return;
     try {
-      await fetch(`${API_BASE_URL}/api/exams/countdowns`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId,
-          examId: data.exam_id,
-          title: data.custom_title || 'Upcoming Exam',
-          examDate: data.target_date,
-          isCustom: !data.exam_id,
-          isPinned: Boolean(data.exam_id),
-        }),
+      await createExamCountdown({
+        userId,
+        examId: data.exam_id,
+        title: data.custom_title || 'Upcoming Exam',
+        examDate: data.target_date,
+        isCustom: !data.exam_id,
+        isPinned: Boolean(data.exam_id),
       });
       refresh();
     } catch (err) {
@@ -236,9 +207,7 @@ export function useCurriculumDashboard() {
   const removeCountdown = useCallback(async (countdownId: string) => {
     if (!userId) return;
     try {
-      await fetch(`${API_BASE_URL}/api/exams/countdowns/${countdownId}?userId=${encodeURIComponent(userId)}`, {
-        method: 'DELETE',
-      });
+      await deleteExamCountdown(userId, countdownId);
       refresh();
     } catch (err) {
       console.error('Failed to remove countdown:', err);

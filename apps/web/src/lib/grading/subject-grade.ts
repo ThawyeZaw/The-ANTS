@@ -117,6 +117,7 @@ export function computeSubjectGrade(opts: {
       paperNumber: p.paperNumber,
       variant: p.variant,
       maxMark: p.maxScore ?? 0,
+      syllabusCode: subjectCode,
       rawMark: p.rawScore ?? 0,
       boundaries: [] as GradeBoundary[],
     }));

@@ -48,6 +48,8 @@ export {
   DEFAULT_EXAM_SESSION,
   EXAM_SESSION_OPTIONS,
   sessionCodeToLabel,
+  formatExamSeriesLabel,
+  sessionOptionsForCurriculum,
 } from './series';
 export {
   computeSubjectGrade,

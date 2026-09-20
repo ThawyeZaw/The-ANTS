@@ -88,6 +88,8 @@ Seeds are **not** Drizzle migrations. Do not put catalog INSERTs in `packages/db
 | `0024_edexcel_ial_grade_thresholds.sql` | Done | IAL unit papers + UMS (`_gen_edexcel_ial_thresholds.py`) |
 | `0025_caie_igcse_subject_composites.sql` | Done | CAIE IGCSE option/composite tables |
 | `0026_exams_series_paper_validation.sql` | Done | 9626 Zone 4 Nov 2026 papers |
+| `0036_fix_caie_igcse_component_codes.sql` | Done | Unvarianted CAIE `02`/`03` (not Paper 0) + drop Component 50 |
+| `0037_caie_igcse_astar_overall_only.sql` | Done | Drop invented per-paper A*; overall A* is weighted |
 
 Suggested names (target list: [`target-catalog.md`](./target-catalog.md)):
 
@@ -99,6 +101,8 @@ Suggested names (target list: [`target-catalog.md`](./target-catalog.md)):
 - `0024_edexcel_ial_grade_thresholds.sql` — IAL UMS from Pearson PDFs
 - `0025_caie_igcse_subject_composites.sql` — IGCSE option composites
 - `0026_exams_series_paper_validation.sql` — 0417/9626 series papers
+- `0036_fix_caie_igcse_component_codes.sql` — unvarianted 02/03 + drop Component 50
+- `0037_caie_igcse_astar_overall_only.sql` — CAIE IGCSE A* is overall/weighted only
 
 After adding a file, append it to `SEED_ORDER` in `packages/db/seeds/_validate_all_seeds.py`.
 
@@ -112,7 +116,7 @@ After adding a file, append it to `SEED_ORDER` in `packages/db/seeds/_validate_a
 | `past_papers.exam_board` | `CAIE` · `Edexcel` |
 | `past_papers.qualification` | `IGCSE` · `A Level` · `IAL` |
 | `series` (papers / composites) | `May/June` · `Oct/Nov` · `Feb/March` · `Jan` |
-| `paper_number` | Component only: `'1'`, `'2'`, `'4'` — **not** `'12'` |
+| `paper_number` | CAIE varianted: `'1'`/`'2'`/`'4'` (variant in `variant`). Unvarianted sitting papers (`02`/`03`): store the Cambridge id `'02'` with `variant` NULL. **not** `'Paper 0'` |
 | `variant` | CAIE zone `'1'`/`'2'`/`'3'`; Edexcel usually `NULL` |
 | `tier` (composites / enroll) | `core` · `extended` · `NULL` |
 | `difficulty_level` | `easy` · `medium` · `hard` |

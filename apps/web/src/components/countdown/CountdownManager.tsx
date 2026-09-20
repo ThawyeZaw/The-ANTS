@@ -9,13 +9,10 @@ import { groupEdexcelIalSubjects } from '@/lib/edexcel-ial';
 import { Plus, Timer, BookMarked, BookOpen, Calendar, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useLessonContext, type CatalogCurriculum } from '@/context/LessonContext';
-import {
-  listUpcomingExamsBySubject,
-  switchExamCountdownSession,
-} from '@/actions/exam-data';
-import { actionEnqueueExamReminders, actionClearSourceQueue } from '@/actions/notifications';
 import { cn } from '@/lib/utils';
 import { boardFromCurriculumCode, examMatchesMyanmarPaper } from '@/lib/exam-papers/myanmar-papers';
+import { formatExamDateTime } from '@/lib/exam-datetime';
+import { parseSessionLabel } from '@/lib/grading';
 import type { CountdownWithTime } from '@/hooks/useCountdown';
 
 const AddCountdownModal = dynamic(() => import('./AddCountdownModal').then(m => ({ default: m.AddCountdownModal })), {
@@ -36,7 +33,7 @@ interface CountdownManagerProps {
 
 // ── Pending timetable card for subjects with no exam date ──────────────────
 
-function PendingTimetableCard({ subjectId }: { subjectId: string }) {
+function PendingTimetableCard({ subjectId: _subjectId }: { subjectId: string }) {
   return (
     <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--background-card)]/50 p-5 flex flex-col items-center justify-center text-center gap-3 min-h-[160px]">
       <Calendar className="h-8 w-8 text-[var(--foreground-muted)]" />
@@ -48,83 +45,16 @@ function PendingTimetableCard({ subjectId }: { subjectId: string }) {
   );
 }
 
-// ── Session switcher dropdown ──────────────────────────────────────────────
-
-function SessionSwitcher({ subjectId, onSwitch }: { subjectId: string; onSwitch: (examId: string) => void }) {
-  const [open, setOpen] = useState(false);
-  const [sessions, setSessions] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  const fetchSessions = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await listUpcomingExamsBySubject(subjectId);
-      setSessions(
-        data.map((exam) => ({
-          id: exam.id,
-          subject: exam.title,
-          series: exam.series ?? exam.season ?? '',
-          date: exam.exam_date
-            ? new Date(exam.exam_date).toISOString().split('T')[0]
-            : '',
-        }))
-      );
-    } catch (err) {
-      console.error('[CountdownManager] Failed to load sessions:', err);
-      setSessions([]);
-    }
-    setLoading(false);
-  }, [subjectId]);
-
-  return (
-    <div className="relative">
-      <button
-        onClick={() => { setOpen(!open); if (!open && sessions.length === 0) fetchSessions(); }}
-        className="text-xs text-[var(--primary)] hover:underline underline-offset-2 transition-colors"
-      >
-        Switch session
-      </button>
-      {open && (
-        <div className="absolute top-full right-0 mt-1 z-30 w-56 rounded-xl border border-[var(--border)] bg-[var(--background-card)] shadow-lg overflow-hidden">
-          <div className="p-2 border-b border-[var(--border)]">
-            <p className="text-xs font-medium text-[var(--foreground-muted)]">Upcoming sessions</p>
-          </div>
-          <div className="max-h-48 overflow-y-auto">
-            {loading ? (
-              <div className="flex items-center justify-center py-4">
-                <div className="h-4 w-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-              </div>
-            ) : sessions.length === 0 ? (
-              <p className="text-xs text-[var(--foreground-muted)] p-3 text-center">No upcoming sessions found.</p>
-            ) : (
-              sessions.map((exam: any) => (
-                <button
-                  key={exam.id}
-                  onClick={() => { onSwitch(exam.id); setOpen(false); }}
-                  className="w-full text-left px-3 py-2.5 text-sm hover:bg-[var(--background-secondary)] transition-colors"
-                >
-                  <span className="font-medium text-[var(--foreground)]">{exam.subject}</span>
-                  <span className="block text-xs text-[var(--foreground-muted)]">{exam.series} — {exam.date}</span>
-                </button>
-              ))
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ── Main Component ─────────────────────────────────────────────────────────
 
 export function CountdownManager({ userId }: CountdownManagerProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const { groupedCountdowns, availableExams, createCountdown, deleteCountdown } = useCountdown(userId);
+  const { groupedCountdowns, countdowns, availableExams, createCountdown, deleteCountdown } = useCountdown(userId);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const { countdowns: autoCountdowns, countdownsLoading, enrolledCurriculums, catalogCurriculums } = useLessonContext();
+  const { countdownsLoading, enrolledCurriculums, catalogCurriculums, enrolledSubjectIds: hubEnrolledIds } = useLessonContext();
 
   const [filterCurriculumId, setFilterCurriculumId] = useState(searchParams.get('curriculum') ?? 'all');
   const [filterSubjectId, setFilterSubjectId] = useState(searchParams.get('subject') ?? 'all');
@@ -210,13 +140,11 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
   }
 
   // Stats
-  const autoWithExam = autoCountdowns.filter(cd => cd.exam !== null).length;
-
   const groupOrder = ['CAIE', 'Edexcel', 'IGCSE', 'A LEVEL', 'Official', 'Custom'];
 
   const enrolledSubjectIds = useMemo(
-    () => new Set(autoCountdowns.map((cd) => cd.subjectId)),
-    [autoCountdowns]
+    () => new Set(hubEnrolledIds),
+    [hubEnrolledIds]
   );
 
   const isUserManagedCountdown = useCallback(
@@ -240,33 +168,6 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
     if (indexB !== -1) return 1;
     return a.localeCompare(b);
   });
-
-  const handleSwitchSession = useCallback(async (subjectId: string, examId: string) => {
-    const exam = autoCountdowns.find(cd => cd.subjectId === subjectId)?.exam;
-    if (!exam) return;
-
-    const result = await switchExamCountdownSession({
-      userId,
-      subjectId,
-      oldExamId: exam.id,
-      newExamId: examId,
-    });
-
-    if (!result.success || !result.countdown || !result.exam) return;
-
-    if (result.removedCountdownId) {
-      void actionClearSourceQueue('exam_countdown', result.removedCountdownId);
-    }
-
-    void actionEnqueueExamReminders(
-      result.countdown.id,
-      userId,
-      result.exam.title || 'Exam',
-      new Date(result.exam.exam_date || Date.now())
-    );
-
-    window.location.reload();
-  }, [userId, autoCountdowns]);
 
   // Filter groups
   const [selectedBoardFilter, setSelectedBoardFilter] = useState<string>('all');
@@ -314,7 +215,36 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
     return groups;
   }, [filteredOfficialExams]);
 
-  const filteredAutoCountdowns = autoCountdowns.filter((cd) => matchesSubjectFilter(cd.subjectId));
+  const enrolledPaperCountdowns = countdowns.filter((c) => {
+    if (c.is_custom) return false;
+    if (c.timeLeft?.isPast) return false;
+    return matchesSubjectFilter(c.subject_id, (c as any).curriculum_id);
+  });
+
+  const enrolledPapersBySubject = (() => {
+    const groups = new Map<string, CountdownWithTime[]>();
+    for (const c of enrolledPaperCountdowns) {
+      const sid = c.subject_id || 'unknown';
+      const list = groups.get(sid) ?? [];
+      list.push(c);
+      groups.set(sid, list);
+    }
+    for (const list of groups.values()) {
+      list.sort((a, b) => {
+        const ta = new Date((a as any).exam_date || 0).getTime();
+        const tb = new Date((b as any).exam_date || 0).getTime();
+        return ta - tb;
+      });
+    }
+    return [...groups.entries()].sort((a, b) =>
+      (subjectNameMap[a[0]] ?? a[0]).localeCompare(subjectNameMap[b[0]] ?? b[0])
+    );
+  })();
+
+  const pendingEnrolledSubjects = enrolledCurriculums
+    .flatMap((curr) => curr.subjects)
+    .filter((s) => enrolledSubjectIds.has(s.id) && matchesSubjectFilter(s.id))
+    .filter((s) => !countdowns.some((c) => !c.is_custom && c.subject_id === s.id));
 
   const allPastExams = useMemo(() => {
     const past: any[] = [];
@@ -383,8 +313,9 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
           </button>
         </div>
       </div>
-
-      {/* Curriculum / subject + board filters */}
+      <p className="text-xs text-[var(--foreground-muted)] -mt-2">
+        Official sitting times are shown in Myanmar time (MMT). Morning papers start at 09:00.
+      </p>
       <div className="flex flex-col gap-2.5">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label className="block">
@@ -463,7 +394,7 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
       </div>
 
       {/* ── Section 1: Pinned & Custom Countdowns (top priority) ───── */}
-      {sortedGroups.length === 0 && autoCountdowns.length === 0 ? (
+      {sortedGroups.length === 0 && enrolledPaperCountdowns.length === 0 && hubEnrolledIds.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--border)] bg-[var(--background-secondary)]/50 py-16 text-center">
           <Timer className="h-12 w-12 text-[var(--foreground-muted)] mb-3" />
           <h3 className="text-lg font-bold text-[var(--foreground)] mb-1">No Active Countdowns Yet</h3>
@@ -532,9 +463,9 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <BookOpen className="h-4 w-4 text-[var(--primary)]" />
-            <h2 className="text-lg font-bold text-[var(--foreground)]">Enrolled Subjects</h2>
+            <h2 className="text-lg font-bold text-[var(--foreground)]">Enrolled papers</h2>
             <span className="text-xs font-medium text-[var(--foreground-muted)] bg-[var(--background-secondary)] rounded-full px-2.5 py-0.5 border border-[var(--border)]">
-              {autoWithExam} of {autoCountdowns.length} scheduled
+              {enrolledPaperCountdowns.length} paper{enrolledPaperCountdowns.length === 1 ? '' : 's'}
             </span>
           </div>
         </div>
@@ -545,17 +476,17 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
               <div key={i} className="rounded-2xl border border-[var(--border)] bg-[var(--background-card)] p-6 min-h-[160px] animate-pulse" />
             ))}
           </div>
-        ) : filteredAutoCountdowns.length === 0 && autoCountdowns.length > 0 ? (
+        ) : enrolledPaperCountdowns.length === 0 && pendingEnrolledSubjects.length === 0 && hubEnrolledIds.length > 0 ? (
           <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--background-card)]/60 p-8 text-center">
-            <p className="text-sm text-[var(--foreground)] font-semibold">No enrolled subjects match this filter</p>
+            <p className="text-sm text-[var(--foreground)] font-semibold">No enrolled papers match this filter</p>
             <p className="text-xs text-[var(--foreground-muted)] mt-1">Try another curriculum or subject, or clear the filters.</p>
           </div>
-        ) : autoCountdowns.length === 0 ? (
+        ) : hubEnrolledIds.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--background-card)]/60 p-8 text-center">
             <BookOpen className="mx-auto h-8 w-8 text-[var(--foreground-muted)] mb-3" />
             <p className="text-sm text-[var(--foreground)] font-semibold">No enrolled subjects yet</p>
             <p className="text-xs text-[var(--foreground-muted)] mt-1 max-w-md mx-auto">
-              Enroll in subjects from the Curriculum Hub to automatically track upcoming exam schedules and deadlines.
+              Add a subject in Curriculum and choose its exam series. Every paper (or IAL unit) is then tracked automatically.
             </p>
             <Link
               href="/curriculum"
@@ -565,32 +496,36 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filteredAutoCountdowns
-              .map((cd) => {
-              if (cd.exam) {
-                const examDate = (cd.exam as any).date || (cd.exam as any).exam_date || new Date().toISOString();
-                return (
-                  <CountdownCard
-                    key={cd.subjectId}
-                    countdown={{
-                      id: cd.exam.id,
-                      user_id: userId,
-                      exam_id: cd.exam.id,
-                      subject_id: cd.subjectId,
-                      custom_title: subjectNameMap[cd.subjectId] ?? (cd.exam as any).subject ?? 'Exam',
-                      target_date: examDate,
-                      qualification_group: (cd.exam as any).series ?? 'Official',
-                      exam_board: (cd.exam as any).exam_board ?? undefined,
-                      paper_name: (cd.exam as any).paper_number ? `Paper ${ (cd.exam as any).paper_number}` : undefined,
-                      target_grade: (cd.exam as any).target_grade,
-                    }}
-                    canDelete={false}
-                  />
-                );
-              }
-              return <PendingTimetableCard key={cd.subjectId} subjectId={cd.subjectId} />;
-            })}
+          <div className="space-y-6">
+            {enrolledPapersBySubject.map(([subjectId, papers]) => (
+              <div key={subjectId} className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <h3 className="text-xs font-bold text-[var(--foreground-secondary)] tracking-wider uppercase">
+                    {subjectNameMap[subjectId] ?? 'Subject'}
+                  </h3>
+                  <span className="font-mono text-[10px] text-[var(--foreground-muted)]">
+                    {papers.length} paper{papers.length === 1 ? '' : 's'}
+                  </span>
+                  <div className="h-px flex-1 bg-[var(--border)]" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {papers.map((countdown) => (
+                    <CountdownCard
+                      key={countdown.id}
+                      countdown={countdown}
+                      canDelete={false}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+            {pendingEnrolledSubjects.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {pendingEnrolledSubjects.map((subject) => (
+                  <PendingTimetableCard key={subject.id} subjectId={subject.id} />
+                ))}
+              </div>
+            )}
           </div>
         )}
       </section>
@@ -635,7 +570,19 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
             </div>
           ) : (
             <div className="space-y-8">
-              {Object.entries(groupedOfficialExams).map(([series, exams]) => (
+              {Object.entries(groupedOfficialExams)
+                .sort(([a], [b]) => {
+                  const pa = parseSessionLabel(a);
+                  const pb = parseSessionLabel(b);
+                  if (!pa && !pb) return a.localeCompare(b);
+                  if (!pa) return 1;
+                  if (!pb) return -1;
+                  if (pa.year !== pb.year) return pa.year - pb.year;
+                  const rank = (season: string) =>
+                    season === 'Jan' ? 1 : season === 'Feb/March' ? 2 : season === 'May/June' ? 3 : 4;
+                  return rank(pa.season) - rank(pb.season);
+                })
+                .map(([series, exams]) => (
                 <div key={series} className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -671,15 +618,7 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
                         );
 
                       const examDateStr = (exam as any).exam_date || (exam as any).date;
-                      const formattedDate = examDateStr
-                        ? new Intl.DateTimeFormat('en-GB', {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          }).format(new Date(examDateStr))
-                        : 'Date TBD';
+                      const formattedDate = formatExamDateTime(examDateStr);
 
                       return (
                         <div

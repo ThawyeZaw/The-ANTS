@@ -19,6 +19,8 @@ import {
   examMatchesMyanmarPaper,
   examRowMatchesMyanmar,
 } from '@/lib/exam-papers/myanmar-papers';
+import { formatExamSeriesLabel } from '@/lib/grading';
+import { healEnrollmentCountdowns } from '@/actions/enrollment-sync';
 import { IAL_CASH_INS, type IalCashInCode } from '@/lib/grading/ial-cash-in';
 
 function asTitle<T extends { name: string; id: string }>(row: T) {
@@ -111,7 +113,7 @@ export async function listExams(opts?: { all?: boolean; myanmarOnly?: boolean })
     .orderBy(asc(exams.exam_date));
 
   const mapped = rows.map((row) => {
-    const examSeries = [row.season, row.series].filter(Boolean).join(' ') || null;
+    const examSeries = formatExamSeriesLabel(row.season, row.series);
     const examDate =
       row.exam_date instanceof Date ? row.exam_date.toISOString() : row.exam_date;
     return {
@@ -265,7 +267,7 @@ export async function listApprovedCalculatorPresets(subjectId?: string) {
 export async function listApprovedCalculatorPresetsForSubjects(subjectIds: string[]) {
   const ids = [...new Set(subjectIds.filter(Boolean))].sort();
   if (ids.length === 0) return [];
-  const cacheKey = `presets:v3:${ids.join(',')}`;
+  const cacheKey = `presets:v5:${ids.join(',')}`;
   const cached = getFromCache<ReturnType<typeof mapPastPaperToPreset>[]>(cacheKey);
   if (cached) return cached;
 
@@ -330,13 +332,123 @@ export async function listMyExamEditorSubmissions(_userId: string) {
   return [];
 }
 
+function toIso(value: Date | number | string | null | undefined): string | null {
+  if (value == null || value === '') return null;
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+function serializeCountdown<T extends Record<string, unknown>>(row: T) {
+  const iso = toIso(row.exam_date as Date | number | string | null | undefined);
+  return {
+    ...row,
+    exam_date: iso,
+    target_date: iso,
+    custom_title: (row.title as string | null) ?? (row.custom_title as string | null) ?? null,
+    is_custom: Boolean(row.is_custom),
+    is_pinned: Boolean(row.is_pinned),
+    is_mock: Boolean(row.is_mock),
+    created_at: toIso(row.created_at as Date | number | string | null | undefined) ?? new Date().toISOString(),
+  };
+}
+
 export async function listExamCountdownsForUser(userId: string) {
+  await healEnrollmentCountdowns(userId);
   const db = getDb();
-  return db
+  const rows = await db
     .select()
     .from(examCountdowns)
     .where(eq(examCountdowns.user_id, userId as any))
     .orderBy(asc(examCountdowns.exam_date));
+  return rows.map((row) => serializeCountdown(row as Record<string, unknown>));
+}
+
+export async function createExamCountdown(input: {
+  userId: string;
+  title: string;
+  examDate: string;
+  examId?: string | null;
+  subjectId?: string | null;
+  examBoard?: string | null;
+  paperName?: string | null;
+  colorCode?: string | null;
+  targetGrade?: string | null;
+  isMock?: boolean;
+  isPinned?: boolean;
+  isCustom?: boolean;
+}) {
+  const db = getDb();
+  let subjectId = input.subjectId ?? undefined;
+  let examBoard = input.examBoard ?? undefined;
+  let paperName = input.paperName ?? undefined;
+  let title = input.title;
+  let examDate = input.examDate;
+  const isCustom = input.isCustom ?? !input.examId;
+
+  if (input.examId) {
+    const official = await db.query.exams.findFirst({
+      where: eq(exams.id, input.examId),
+      with: { subject: { with: { curriculum: true } } },
+    });
+    if (official) {
+      subjectId = subjectId || official.subject_id || undefined;
+      examBoard = examBoard || official.exam_board || undefined;
+      paperName = paperName || (official.paper_number ? `Paper ${official.paper_number}` : undefined);
+      title = title || official.title;
+      if (official.exam_date) {
+        examDate = toIso(official.exam_date) ?? examDate;
+      }
+      if (!isCustom) {
+        const curriculumCode = official.subject?.curriculum?.code;
+        const syllabusCode = official.syllabus_code || official.subject?.code;
+        if (
+          !examRowMatchesMyanmar({
+            paper_number: official.paper_number,
+            syllabus_code: syllabusCode,
+            season: official.season,
+            series: official.series,
+            curriculum_code: curriculumCode,
+            exam_board: official.exam_board,
+            subject_code: official.subject?.code,
+          })
+        ) {
+          return { success: false as const, error: 'That paper is not on the Myanmar timetable' };
+        }
+      }
+    }
+  }
+
+  const [inserted] = await db
+    .insert(examCountdowns)
+    .values({
+      user_id: input.userId as any,
+      title,
+      exam_date: new Date(examDate),
+      exam_id: input.examId ?? null,
+      subject_id: subjectId ?? null,
+      exam_board: examBoard ?? null,
+      paper_name: paperName ?? null,
+      color_code: input.colorCode ?? null,
+      target_grade: input.targetGrade ?? null,
+      is_mock: input.isMock ?? false,
+      is_pinned: input.isPinned ?? false,
+      is_custom: isCustom,
+    })
+    .returning();
+
+  return { success: true as const, countdown: serializeCountdown(inserted as Record<string, unknown>) };
+}
+
+export async function deleteExamCountdown(userId: string, countdownId: string) {
+  const db = getDb();
+  const existing = await db.query.examCountdowns.findFirst({
+    where: and(eq(examCountdowns.id, countdownId), eq(examCountdowns.user_id, userId as any)),
+  });
+  if (!existing) {
+    return { success: false as const, error: 'Countdown not found or unauthorized' };
+  }
+  await db.delete(examCountdowns).where(eq(examCountdowns.id, countdownId));
+  return { success: true as const, id: countdownId };
 }
 
 export async function switchExamCountdownSession(input: {

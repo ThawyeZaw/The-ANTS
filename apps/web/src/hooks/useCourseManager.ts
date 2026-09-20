@@ -8,9 +8,8 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import type { Exam, ExamCountdown, UserExamHistory } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
-import { enrollInSubject, unenrollFromSubject, listUserEnrollments } from '@/actions/curriculum';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8787';
+import { enrollInSubject, unenrollFromSubject, listUserEnrollments, listCurriculumCatalog } from '@/actions/curriculum';
+import { listExamCountdownsForUser, listExams } from '@/actions/exam-data';
 
 // ── Local Types ───────────────────────────────────────────────────────────────
 
@@ -73,60 +72,47 @@ export function useCourseManager() {
   const loadCurriculumData = useCallback(async () => {
     setIsLoaded(false);
     try {
-      const [currRes, examsRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/curriculum`),
-        fetch(`${API_BASE_URL}/api/exams`),
+      const [catalog, examRows] = await Promise.all([
+        listCurriculumCatalog(false),
+        listExams(),
       ]);
 
-      if (currRes.ok) {
-        const json = await currRes.json();
-        if (json.success && json.curriculums) {
-          const curriculumsList: CurriculumSummary[] = [];
-          const subjectsList: any[] = [];
+      const curriculumsList: CurriculumSummary[] = [];
+      const subjectsList: any[] = [];
 
-          for (const c of json.curriculums) {
-            curriculumsList.push({
-              id: c.id,
-              title: c.title || c.name || '',
-              description: c.description ?? null,
-              qualification: c.qualification ?? null,
-              exam_board: c.exam_board ?? c.code ?? null,
-              subject_count: c.subjects?.length ?? 0,
+      for (const c of catalog) {
+        curriculumsList.push({
+          id: c.id,
+          title: c.title || c.name || '',
+          description: c.description ?? null,
+          qualification: c.code ?? null,
+          exam_board: c.exam_board ?? c.code ?? null,
+          subject_count: c.subjects?.length ?? 0,
+        });
+
+        if (c.subjects) {
+          for (const s of c.subjects) {
+            subjectsList.push({
+              id: s.id,
+              curriculum_id: c.id,
+              title: s.title || s.name || '',
+              description: s.description ?? null,
+              order_no: null,
+              topics: s.topics || [],
+              exams: [],
             });
-
-            if (c.subjects) {
-              for (const s of c.subjects) {
-                subjectsList.push({
-                  id: s.id,
-                  curriculum_id: c.id,
-                  title: s.title || s.name || '',
-                  description: s.description ?? null,
-                  order_no: s.order_no ?? s.order_index ?? null,
-                  topics: s.topics || [],
-                  exams: [],
-                });
-              }
-            }
           }
-
-          setAllCurriculums(curriculumsList);
-          setAllSubjects(subjectsList);
         }
       }
 
-      if (examsRes.ok) {
-        const json = await examsRes.json();
-        if (json.success && json.exams) {
-          setAllExams(json.exams);
-        }
-      }
+      setAllCurriculums(curriculumsList);
+      setAllSubjects(subjectsList);
+      setAllExams(examRows);
 
       if (userId) {
-        const [enrRows, cdRes] = await Promise.all([
-          userId ? listUserEnrollments(userId) : Promise.resolve([]),
-          userId
-            ? fetch(`${API_BASE_URL}/api/exams/countdowns?userId=${encodeURIComponent(userId)}`)
-            : Promise.resolve(null),
+        const [enrRows, cdRows] = await Promise.all([
+          listUserEnrollments(userId),
+          listExamCountdownsForUser(userId),
         ]);
 
         if (enrRows.length > 0) {
@@ -142,12 +128,7 @@ export function useCourseManager() {
           );
         }
 
-        if (cdRes && cdRes.ok) {
-          const json = await cdRes.json();
-          if (json.success && json.countdowns) {
-            setCountdowns(json.countdowns);
-          }
-        }
+        setCountdowns(cdRows as unknown as ExamCountdown[]);
       }
     } catch (err) {
       console.error('Error loading curriculum manager data:', err);

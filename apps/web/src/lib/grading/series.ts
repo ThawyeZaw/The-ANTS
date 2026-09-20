@@ -1,15 +1,25 @@
 import { EXAM_SERIES_DATES } from '@/constants/qualifications';
 
-export const DEFAULT_EXAM_SESSION = 'May/June 2026';
+export const DEFAULT_EXAM_SESSION = 'Oct/Nov 2026';
 
 export const EXAM_SESSION_OPTIONS = [
-  'Feb/March 2026',
   'May/June 2026',
   'Oct/Nov 2026',
-  'Jan 2026',
+  'Jan 2027',
   'May/June 2027',
   'Oct/Nov 2027',
 ] as const;
+
+const IGCSE_SESSIONS = ['Oct/Nov 2026', 'May/June 2027', 'Oct/Nov 2027'] as const;
+const IAL_SESSIONS = ['Oct/Nov 2026', 'Jan 2027', 'May/June 2027', 'Oct/Nov 2027'] as const;
+
+export function sessionOptionsForCurriculum(code: string | null | undefined): readonly string[] {
+  if (code === 'EDEXCEL_IAL') return IAL_SESSIONS;
+  if (code === 'CAIE_IGCSE' || code === 'CAIE_ALEVEL' || code === 'CAIE_AL' || code === 'EDEXCEL_IGCSE') {
+    return IGCSE_SESSIONS;
+  }
+  return EXAM_SESSION_OPTIONS;
+}
 
 export interface ParsedSession {
   season: string;
@@ -34,6 +44,8 @@ const SEASON_ALIASES: Record<string, string> = {
   jan: 'Jan',
   january: 'Jan',
   j: 'Jan',
+  november: 'Oct/Nov',
+  october: 'Oct/Nov',
 };
 
 /** Parse "May/June 2026" or "s26" / "w26" into a canonical session. */
@@ -68,6 +80,22 @@ export function sessionCodeToLabel(code: string): string {
   return parsed?.label ?? code;
 }
 
+export function formatExamSeriesLabel(
+  season?: string | null,
+  series?: string | null
+): string | null {
+  if (series) {
+    const labeled = sessionCodeToLabel(series);
+    if (labeled !== series) return labeled;
+    if (season && /^\d{4}$/.test(series)) return `${season} ${series}`;
+    if (season && !series.toLowerCase().includes(season.toLowerCase())) {
+      return `${season} ${series}`;
+    }
+    return labeled;
+  }
+  return season ?? null;
+}
+
 export function examMatchesSession(
   exam: { season?: string | null; series?: string | null; exam_date?: Date | string | number | null },
   sessionLabel: string
@@ -97,12 +125,12 @@ export function examMatchesSession(
 
 export function placeholderDateForSession(sessionLabel: string): Date {
   const range = EXAM_SERIES_DATES[sessionLabel];
-  if (range?.start) return new Date(`${range.start}T09:00:00Z`);
+  if (range?.start) return new Date(`${range.start}T02:30:00.000Z`);
   const parsed = parseSessionLabel(sessionLabel);
   if (parsed) {
     const month =
       parsed.season === 'May/June' ? 5 : parsed.season === 'Oct/Nov' ? 10 : parsed.season === 'Jan' ? 0 : 2;
-    return new Date(Date.UTC(parsed.year, month, 4, 9, 0, 0));
+    return new Date(Date.UTC(parsed.year, month, 4, 2, 30, 0));
   }
   return new Date(Date.now() + 90 * 86400000);
 }

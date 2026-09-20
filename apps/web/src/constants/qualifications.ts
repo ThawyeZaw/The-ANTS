@@ -239,6 +239,7 @@ export const EXAM_SERIES_DATES: Record<string, { start: string; end: string }> =
   'May/June 2026': { start: '2026-05-04', end: '2026-06-19' },
   'Oct/Nov 2026': { start: '2026-10-05', end: '2026-11-20' },
   'Jan 2026': { start: '2026-01-05', end: '2026-01-30' },
+  'Jan 2027': { start: '2027-01-08', end: '2027-01-29' },
   'May/June 2027': { start: '2027-05-03', end: '2027-06-18' },
   'Oct/Nov 2027': { start: '2027-10-04', end: '2027-11-19' },
 };

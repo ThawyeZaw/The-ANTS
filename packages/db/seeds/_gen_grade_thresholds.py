@@ -3,8 +3,6 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from statistics import mean
-
 import pymupdf as fitz
 
 PDF_DIR = Path(__file__).resolve().parent / "pdfs" / "CIE"
@@ -32,7 +30,7 @@ SUBJECTS = {
 }
 
 DURATIONS = {
-    "0580": {"1": 60, "2": 90, "3": 120, "4": 150, "5": 90},
+    "0580": {"1": 60, "2": 90, "3": 120, "4": 150},
     "0606": {"1": 120, "2": 120},
     "0610": {"1": 45, "2": 45, "3": 75, "4": 75, "5": 75, "6": 60},
     "0620": {"1": 45, "2": 45, "3": 75, "4": 75, "5": 75, "6": 60},
@@ -94,7 +92,6 @@ PAPER_TITLES = {
     },
     "0452": {"1": "Paper 1", "2": "Paper 2"},
     "0500": {
-        "0": "Component 3 Coursework",
         "1": "Paper 1 Reading",
         "2": "Paper 2 Directed Writing and Composition",
         "3": "Component 3 Coursework",
@@ -201,14 +198,6 @@ def extract_component_rows(text: str):
         m2 = re.match(r"^Component\s+(\d{2})\s+(.+)$", lines[i])
         if m or m2:
             comp = m.group(1) if m else m2.group(1)
-            # Some components are 2 digits (e.g., 12 means Paper 1, Variant 2)
-            # For ICT, sometimes papers are just '02' or '03' indicating Paper 2 or Paper 3.
-            if comp.startswith("0"):
-                paper = comp[1]
-                variant = None
-            else:
-                paper = comp[0]
-                variant = comp[1] if len(comp) > 1 else None
 
             # Look ahead for grades
             nums: list[str] = []
@@ -280,6 +269,9 @@ def detect_opt_grade_headers(text: str) -> list[str]:
     return OPT_GRADES
 
 
+SKIP_OPTION_COMPONENTS = {"10", "20", "50"}
+
+
 def is_option_code(line: str) -> bool:
     if line in COMP_GRADES + OPT_GRADES + ["Option", "available", "mark"]:
         return False
@@ -287,25 +279,92 @@ def is_option_code(line: str) -> bool:
     return bool(re.fullmatch(r"[A-Z]{1,3}\d?(?:\s*\([^)]+\))?", line))
 
 
+def pad_comp(token: str) -> str:
+    return token.zfill(2) if token.isdigit() else token
+
+
+def is_component_list(line: str) -> bool:
+    if not re.fullmatch(r"[\d,/\s]+", line):
+        return False
+    nums = re.findall(r"\d+", line)
+    if not nums:
+        return False
+    # Weighted option maxima are 3-digit (143–300). Component ids are 02/12/42.
+    if len(nums) == 1 and len(nums[0]) >= 3:
+        return False
+    return True
+
+
+def extract_weighting_maxima(text: str) -> tuple[int | None, int | None, int | None]:
+    """Return (single_max, extended_max, core_max) from the PDF prose line."""
+    m = re.search(
+        r"after weighting has been applied, is (\d+)(?: for the Extended option and (\d+) for the Core option)?",
+        text,
+        re.I,
+    )
+    if not m:
+        return None, None, None
+    if m.group(2):
+        return None, int(m.group(1)), int(m.group(2))
+    return int(m.group(1)), None, None
+
+
+def option_weighted_max(
+    code: str,
+    column_max: int | None,
+    single: int | None,
+    extended: int | None,
+    core: int | None,
+) -> int | None:
+    if column_max is not None:
+        return column_max
+    letter = code[:1]
+    if extended is not None and core is not None:
+        # AX/AY Core Maths, FY/GY Core Science; BX/BY Extended.
+        if letter in {"A", "F", "G", "H"}:
+            return core
+        return extended
+    return single
+
+
 def extract_option_rows(text: str):
+    """Parse option tables. Max marks are *weighted* syllabus totals, not raw sums.
+
+    Older PDFs put the max in prose ('after weighting has been applied, is 300')
+    and list Option → components → A*–G. Newer PDFs add a 'Maximum mark after
+    weighting' column between the option code and the component list.
+    """
     lines = tokenize_lines(text)
     grade_headers = detect_opt_grade_headers(text)
     expected = len(grade_headers)
+    single, extended, core = extract_weighting_maxima(text)
     rows = []
     i = 0
     while i < len(lines):
-        if is_option_code(lines[i]) and i + 2 < len(lines):
+        if is_option_code(lines[i]) and i + 1 < len(lines):
             opt = re.split(r"\s*\(", lines[i])[0].strip()
-            maxm = parse_num(lines[i + 1])
-            comps: list[int] = []
-            j = i + 2
-            while j < len(lines) and re.match(r"^[\d,/\s]+$", lines[j]):
-                comps.extend(int(x) for x in re.findall(r"\d+", lines[j]))
+            j = i + 1
+            column_max = None
+            if is_component_list(lines[j]):
+                column_max = None
+            else:
+                column_max = parse_num(lines[j])
+                if column_max is None:
+                    i += 1
+                    continue
+                j += 1
+            comps: list[str] = []
+            while j < len(lines) and is_component_list(lines[j]):
+                comps.extend(pad_comp(x) for x in re.findall(r"\d+", lines[j]))
                 j += 1
                 if j < len(lines) and (parse_num(lines[j]) is not None or DASH.match(lines[j])):
                     break
+            maxm = option_weighted_max(opt, column_max, single, extended, core)
             if maxm is None or not comps:
                 i += 1
+                continue
+            if any(c in SKIP_OPTION_COMPONENTS for c in comps):
+                i = j
                 continue
             vals = []
             while j < len(lines) and len(vals) < expected:
@@ -337,27 +396,8 @@ def extract_option_rows(text: str):
 
 
 def derive_astar(comp_code: str, a_mark: int | None, total: int, options: list) -> int | None:
-    """Cambridge does not publish component A*; derive from overall options when possible."""
-    code_i = int(comp_code)
-    # Sole-component options: use published overall A* directly
-    for opt in options:
-        if opt["components"] == [code_i] and opt["grades"].get("A*") is not None:
-            return opt["grades"]["A*"]
-    if a_mark is None:
-        return None
-    ratios = []
-    for opt in options:
-        if code_i not in opt["components"]:
-            continue
-        astar = opt["grades"].get("A*")
-        a = opt["grades"].get("A")
-        if astar is None or a is None or a == 0:
-            continue
-        ratios.append(astar / a)
-    if not ratios:
-        return None
-    val = int(round(a_mark * mean(ratios)))
-    return min(total, max(a_mark + 1, val))
+    """Cambridge does not publish A* on individual components — overall only."""
+    return None
 
 
 def build_bands(total: int, published: dict, astar: int | None) -> dict[str, tuple[int, int]]:
@@ -415,12 +455,36 @@ def grade_id_suffix(grade: str) -> str:
     return "Astar" if grade == "A*" else grade
 
 
+def parse_caie_component(comp: str) -> tuple[str, str | None] | None:
+    """Split a Cambridge component id into paper_number + variant.
+
+    12 → paper 1 variant 2.  02/03 → unvarianted papers 2/3 (store '02').
+    50/10/20 → not sitting papers (option/parser noise).
+    """
+    if re.fullmatch(r"[1-9]0", comp):
+        return None
+    if re.fullmatch(r"0[1-9]", comp):
+        return comp, None
+    if len(comp) == 2:
+        return comp[0], comp[1]
+    return comp, None
+
+
+def paper_base_key(paper_number: str) -> str:
+    if len(paper_number) == 2 and paper_number.startswith("0"):
+        return paper_number[1]
+    return paper_number
+
+
 def paper_meta(syllabus: str, comp: str):
-    paper_number = comp[0]
-    variant = comp[1]
-    base = PAPER_TITLES.get(syllabus, {}).get(paper_number, f"Paper {paper_number}")
-    title = f"{base} Variant {variant}"
-    duration = DURATIONS.get(syllabus, {}).get(paper_number)
+    parsed = parse_caie_component(comp)
+    if parsed is None:
+        return None
+    paper_number, variant = parsed
+    base_key = paper_base_key(paper_number)
+    base = PAPER_TITLES.get(syllabus, {}).get(base_key, f"Paper {base_key}")
+    title = f"{base} Variant {variant}" if variant else base
+    duration = DURATIONS.get(syllabus, {}).get(base_key)
     return paper_number, variant, title, duration
 
 
@@ -489,9 +553,13 @@ def main():
 
             # Emit published (+ derived A*) bands. Skip unpublished Cambridge cells (–)
             # so Core papers omit A*/A/B and Extended Maths omits F/G.
-            paper_number, variant, title, duration = paper_meta(syllabus, comp)
+            meta = paper_meta(syllabus, comp)
+            if meta is None:
+                continue
+            paper_number, variant, title, duration = meta
             pp_id = f"pp-{syllabus}-{series_code}-qp-{comp}"
             dur_sql = "NULL" if duration is None else str(duration)
+            variant_sql = "NULL" if variant is None else sql_str(variant)
 
             papers_sql.append(
                 "("
@@ -507,7 +575,7 @@ def main():
                         str(year),
                         sql_str(series_name),
                         sql_str(paper_number),
-                        sql_str(variant),
+                        variant_sql,
                         sql_str(title),
                         str(total),
                         dur_sql,

@@ -1,8 +1,27 @@
-// apps/web/src/lib/exam-papers/availability.ts
+import { parseExamSeason, toCambridgePaperId } from '@/lib/exam-papers/myanmar-papers';
 
 /**
- * Checks if a specific paper variant is globally available/valid for a given CAIE exam series.
- * This is used to disable grid cells for papers that do not exist (e.g., 0417 variant 11 in Feb/March).
+ * Series-specific Cambridge components. Keys are combined paper IDs
+ * (11/12/13, or unvarianted 02/03). Used to disable tracker cells for
+ * papers that were not offered in that series.
+ */
+const CAIE_SERIES_COMPONENTS: Record<string, Partial<Record<string, readonly string[]>>> = {
+  // ICT: Oct/Nov practicals are unvarianted 02/03; May/June uses 21/22 and 31/32.
+  '0417': {
+    'Feb/March': ['12', '21', '31'],
+    'May/June': ['11', '12', '13', '21', '22', '31', '32'],
+    'Oct/Nov': ['11', '12', '13', '02', '03'],
+  },
+  '0983': {
+    'Feb/March': ['12', '21', '31'],
+    'May/June': ['11', '12', '13', '21', '22', '31', '32'],
+    'Oct/Nov': ['11', '12', '13', '02', '03'],
+  },
+};
+
+/**
+ * Checks if a specific paper variant is offered for a given CAIE exam series.
+ * Used to disable grid cells for papers that do not exist (e.g. 0417/21 in Oct/Nov).
  */
 export function isPaperAvailable(
   syllabusCode: string,
@@ -10,36 +29,23 @@ export function isPaperAvailable(
   variant: string | null,
   series: string
 ): { available: boolean; reason?: string } {
-  // Combine to something like "11", "21", or "02"
-  const combined = variant ? `${paperNumber}${variant}` : paperNumber;
+  const combined = toCambridgePaperId(paperNumber, variant);
+  const season = parseExamSeason(series) ?? series;
 
-  // ICT 0417 & 0983 rules
-  if (syllabusCode === '0417' || syllabusCode === '0983') {
-    if (series === 'Feb/March') {
-      // In Feb/March, ICT only has variants 12, 21, 31 (and practicals sometimes coded as 02, 03, 2, 3)
-      const allowed = ['12', '21', '31', '02', '03', '2', '3'];
-      if (!allowed.includes(combined)) {
-        return { available: false, reason: `Not available in Feb/March` };
-      }
-    } else if (series === 'Oct/Nov') {
-      // User specified for Oct/Nov: Only allow 11, 12, 13, 02, 03 (which means 21, 31 for practicals)
-      const allowed = ['11', '12', '13', '21', '31', '02', '03', '2', '3'];
-      if (!allowed.includes(combined)) {
-        return { available: false, reason: `Not available in Oct/Nov` };
-      }
+  const explicit = CAIE_SERIES_COMPONENTS[syllabusCode]?.[season];
+  if (explicit) {
+    if (!explicit.includes(combined)) {
+      return { available: false, reason: `Not available in ${season}` };
     }
+    return { available: true };
   }
 
-  // Computer Science 0478 & 0984 rules
-  // In Feb/March (India-only series), only variant 2 exists.
-  // In May/June and Oct/Nov, variants 1, 2, and 3 are all available (papers 11, 12, 13, 21, 22, 23).
+  // Computer Science 0478 & 0984: Feb/March is variant 2 only.
   if (syllabusCode === '0478' || syllabusCode === '0984') {
-    if (series === 'Feb/March' && variant && variant !== '2') {
+    if (season === 'Feb/March' && variant && variant !== '2') {
       return { available: false, reason: 'Not available in Feb/March (variant 2 only)' };
     }
   }
 
-  // By default, if it's not explicitly ruled out, we assume it's available.
-  // The 'unseeded' logic is handled separately in the grid data builder.
   return { available: true };
 }

@@ -17,11 +17,11 @@ import {
   examMatchesSession,
   examPaperMatchesTier,
   getPluginForCurriculumCode,
-  placeholderDateForSession,
 } from '@/lib/grading';
 import {
   boardFromCurriculumCode,
   examMatchesMyanmarPaper,
+  formatPaperRowLabel,
   type AwardLevel,
   type PaperPreferences,
 } from '@/lib/exam-papers/myanmar-papers';
@@ -115,65 +115,31 @@ export async function syncEnrollmentCountdowns(input: {
   }
 
   const color = subject.color_code ?? '#f59e0b';
+  const paperLabel = (examPaper: string | null | undefined) =>
+    board === 'EDEXCEL_IAL'
+      ? subject.code
+      : formatPaperRowLabel(examPaper ?? subject.code, null, board);
 
-  if (plugin.countdownMode === 'per_paper') {
-    const rows = matching.length > 0 ? matching : [];
-    if (rows.length === 0) {
-      await db.insert(examCountdowns).values({
-        user_id: input.userId,
-        subject_id: input.subjectId,
-        exam_id: null,
-        title: `${subject.name} (${session})`,
-        exam_board: curriculum.code,
-        paper_name: subject.code,
-        exam_date: placeholderDateForSession(session),
-        color_code: color,
-        target_grade: input.targetGrade ?? null,
-        is_custom: false,
-        is_pinned: true,
-      });
-    } else {
-      for (const exam of rows) {
-        if (!exam.exam_date) continue;
-        await db.insert(examCountdowns).values({
-          user_id: input.userId,
-          subject_id: input.subjectId,
-          exam_id: exam.id,
-          title: exam.title,
-          exam_board: exam.exam_board ?? curriculum.code,
-          paper_name: exam.paper_number ? `Paper ${exam.paper_number}` : subject.code,
-          exam_date: exam.exam_date,
-          color_code: color,
-          target_grade: input.targetGrade ?? null,
-          is_custom: false,
-          is_pinned: true,
-        });
-      }
-    }
-    return { success: true as const, count: Math.max(rows.length, 1) };
+  let count = 0;
+  for (const exam of matching) {
+    if (!exam.exam_date) continue;
+    await db.insert(examCountdowns).values({
+      user_id: input.userId,
+      subject_id: input.subjectId,
+      exam_id: exam.id,
+      title: exam.title,
+      exam_board: exam.exam_board ?? curriculum.code,
+      paper_name: paperLabel(exam.paper_number),
+      exam_date: exam.exam_date,
+      color_code: color,
+      target_grade: input.targetGrade ?? null,
+      is_custom: false,
+      is_pinned: false,
+    });
+    count += 1;
   }
 
-  // per_subject — one countdown at the earliest matching paper date
-  const dated = matching
-    .filter((e) => e.exam_date)
-    .sort((a, b) => (a.exam_date as Date).getTime() - (b.exam_date as Date).getTime());
-  const primary = dated[0];
-
-  await db.insert(examCountdowns).values({
-    user_id: input.userId,
-    subject_id: input.subjectId,
-    exam_id: primary?.id ?? null,
-    title: `${subject.name} ${session}`,
-    exam_board: primary?.exam_board ?? curriculum.code,
-    paper_name: subject.code,
-    exam_date: primary?.exam_date ?? placeholderDateForSession(session),
-    color_code: color,
-    target_grade: input.targetGrade ?? null,
-    is_custom: false,
-    is_pinned: true,
-  });
-
-  return { success: true as const, count: 1 };
+  return { success: true as const, count };
 }
 
 export async function removeAutoCountdownsForSubject(userId: string, subjectId: string) {
@@ -187,9 +153,12 @@ export async function applyExamSessionToAll(userId: string, series: string) {
 
   const enrollments = await db.query.userEnrollments.findMany({
     where: eq(userEnrollments.user_id, userId),
+    with: { curriculum: { columns: { code: true } } },
   });
 
+  let updated = 0;
   for (const row of enrollments) {
+    if (row.curriculum?.code === 'EDEXCEL_IAL') continue;
     await db
       .update(userEnrollments)
       .set({ target_series: series })
@@ -204,7 +173,57 @@ export async function applyExamSessionToAll(userId: string, series: string) {
       awardLevel: (row.award_level as AwardLevel | null) ?? null,
       paperPreferences: (row.paper_preferences as PaperPreferences | null) ?? null,
     });
+    updated += 1;
   }
 
-  return { success: true as const, updated: enrollments.length };
+  return { success: true as const, updated };
+}
+
+/** Rebuild auto paper rows when enrollment mode is stale (e.g. old per_subject) or missing. */
+export async function healEnrollmentCountdowns(userId: string) {
+  const db = getDb();
+  const enrollments = await db.query.userEnrollments.findMany({
+    where: eq(userEnrollments.user_id, userId),
+    with: { curriculum: { columns: { code: true } } },
+  });
+  if (enrollments.length === 0) return { success: true as const, healed: 0 };
+
+  const autoRows = await db.query.examCountdowns.findMany({
+    where: eq(examCountdowns.user_id, userId),
+    columns: { subject_id: true, is_custom: true, exam_id: true },
+  });
+  const autoCount = new Map<string, number>();
+  for (const row of autoRows) {
+    if (row.is_custom || !row.subject_id) continue;
+    autoCount.set(row.subject_id, (autoCount.get(row.subject_id) ?? 0) + 1);
+  }
+
+  let healed = 0;
+  for (const row of enrollments) {
+    const plugin = getPluginForCurriculumCode(row.curriculum?.code);
+    const staleMode = row.countdown_mode !== plugin.countdownMode;
+    const missing = (autoCount.get(row.subject_id) ?? 0) === 0;
+    if (!staleMode && !missing) continue;
+
+    if (staleMode) {
+      await db
+        .update(userEnrollments)
+        .set({ countdown_mode: plugin.countdownMode })
+        .where(eq(userEnrollments.id, row.id));
+    }
+
+    await syncEnrollmentCountdowns({
+      userId,
+      subjectId: row.subject_id,
+      curriculumId: row.curriculum_id,
+      targetSeries: row.target_series || DEFAULT_EXAM_SESSION,
+      tier: (row.tier as SubjectTier | null) ?? null,
+      targetGrade: row.target_grade,
+      awardLevel: (row.award_level as AwardLevel | null) ?? null,
+      paperPreferences: (row.paper_preferences as PaperPreferences | null) ?? null,
+    });
+    healed += 1;
+  }
+
+  return { success: true as const, healed };
 }
