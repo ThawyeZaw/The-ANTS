@@ -9,7 +9,6 @@ import type {
 import { CAIE_IGCSE_PRACTICE_VARIANTS } from '@/lib/exam-papers/myanmar-papers';
 import {
   caiePaperBase,
-  fallbackLetterGrade,
   gradeFromRawMarks,
   lookupGrade,
   percentageOf,
@@ -100,7 +99,7 @@ function composite(
   }
 
   return {
-    grade: fallbackLetterGrade(percentage),
+    grade: '—',
     totalRaw,
     maxRaw,
     percentage,

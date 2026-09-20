@@ -7,13 +7,25 @@ import { edexcelIalPlugin } from './edexcel-ial';
 import { caieIgcsePlugin as _caie } from './caie-igcse';
 
 export type { QualificationPlugin, GradeBoundary, PaperComponent, SubjectTier, CountdownMode } from './types';
-export { getGradeColor, uniqueVariants, caiePaperBase, toCambridgePaperId, lookupGrade, computeUms, percentageOf } from './shared';
+export { getGradeColor, uniqueVariants, caiePaperBase, toCambridgePaperId, lookupGrade, computeUms, percentageOf, gradeFromUms, umsCapFromBoundaries } from './shared';
 export { syllabusHasTiers, examPaperMatchesTier } from './caie-igcse';
 export {
   IAL_CASH_INS,
   IAL_UNIT_LABELS,
   IAL_SUBJECT_GROUPS,
+  IAL_MATHS_CASH_INS,
+  IAL_FM_CASH_INS,
+  IAL_PURE_CASH_INS,
+  IAL_OCTOBER_UNITS,
   evaluateIalCashIn,
+  ialA2Ums,
+  bestMathsFmSplit,
+  umsUnitGrade,
+  ialUnitMaxUms,
+  IAL_MATHS_SUITE_UNIT_ORDER,
+  IAL_MATHS_ONLY_UNITS,
+  IAL_PURE_MATHS_UNITS,
+  IAL_GROUP_UNITS,
   cashInsForUnit,
   inferCashInFromUnits,
   requiredOptionalCount,
@@ -22,8 +34,13 @@ export {
   formatIalUnitLabel,
   formatIalUnitList,
   YMA01_APPLIED_PAIRS,
+  isIalOctoberSeries,
+  mathsSuiteUnitAvailableInSeries,
+  officialCashInUmsBoundaries,
+  mathsCashInSelectionStatus,
+  IAL_MATHS_A2_UNITS,
 } from './ial-cash-in';
-export type { IalCashInCode, IalCashInAward, IalSubjectGroup } from './ial-cash-in';
+export type { IalCashInCode, IalCashInAward, IalAStarRule, IalSubjectGroup, MathsCashInSelectionStatus, MathsFmSplit, IalAwardResult, MathsSuiteMode } from './ial-cash-in';
 export {
   parseSessionLabel,
   examMatchesSession,

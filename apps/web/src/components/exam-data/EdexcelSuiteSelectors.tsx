@@ -1,6 +1,7 @@
 import React from 'react';
-import { cn } from '@/lib/utils';
 import { Layers } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { formatIalUnitLabel } from '@/lib/grading/ial-cash-in';
 
 interface EdexcelSuiteSelectorsProps {
   activeQualification: any;
@@ -8,6 +9,7 @@ interface EdexcelSuiteSelectorsProps {
   handleElectiveToggle: (unitCode: string) => void;
   selectedPairIndex: number;
   setSelectedPairIndex: (index: number) => void;
+  combinationStatus?: { complete: boolean; message: string | null };
   className?: string;
 }
 
@@ -17,6 +19,7 @@ export function EdexcelSuiteSelectors({
   handleElectiveToggle,
   selectedPairIndex,
   setSelectedPairIndex,
+  combinationStatus,
   className,
 }: EdexcelSuiteSelectorsProps) {
   if (!activeQualification?.electiveRules) return null;
@@ -44,7 +47,7 @@ export function EdexcelSuiteSelectors({
           >
             {rules.validCombinationSets.map((pair: string[], index: number) => (
               <option key={index} value={index}>
-                {pair.join(' & ')}
+                {pair.map((code: string) => formatIalUnitLabel(code)).join(' + ')}
               </option>
             ))}
           </select>
@@ -54,14 +57,15 @@ export function EdexcelSuiteSelectors({
       {(rules.strategy === 'CHOOSE_N_FROM_SET' || rules.strategy === 'AT_LEAST_ONE_OF') && rules.allowedUnitPool && (
         <div className="space-y-2">
           <p className="text-[11px] text-foreground-muted mb-2">
-            {rules.strategy === 'CHOOSE_N_FROM_SET' 
+            {rules.strategy === 'CHOOSE_N_FROM_SET'
               ? `Select exactly ${rules.pickCount} optional unit(s) from the following:`
-              : `Select at least one optional unit from the following:`}
+              : `Select ${rules.pickCount} optional units, including at least one of FP2 or FP3, and at least three A2 units in the full cash-in.`}
           </p>
           <div className="flex flex-wrap gap-2">
             {rules.allowedUnitPool.map((unitCode: string) => {
               const isChecked = selectedElectives.includes(unitCode);
-              const isDisabled = !isChecked && rules.strategy === 'CHOOSE_N_FROM_SET' && selectedElectives.length >= (rules.pickCount || 0);
+              const atCap = selectedElectives.length >= (rules.pickCount || 0);
+              const isDisabled = !isChecked && atCap;
 
               return (
                 <button
@@ -77,12 +81,18 @@ export function EdexcelSuiteSelectors({
                     isDisabled && 'opacity-50 cursor-not-allowed'
                   )}
                 >
-                  {unitCode}
+                  {formatIalUnitLabel(unitCode)}
                 </button>
               );
             })}
           </div>
         </div>
+      )}
+
+      {combinationStatus && !combinationStatus.complete && combinationStatus.message && (
+        <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+          {combinationStatus.message}
+        </p>
       )}
     </div>
   );

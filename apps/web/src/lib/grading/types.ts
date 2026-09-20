@@ -63,7 +63,7 @@ export interface QualificationPlugin {
     boundaries: GradeBoundary[]
   ) => PaperGradeResult;
   compositeGrade: (
-    papers: Array<PaperComponent & { rawMark: number }>,
+    papers: Array<PaperComponent & { rawMark: number; umsInput?: number }>,
     compositeBoundaries?: GradeBoundary[],
     cashInCode?: string | null
   ) => CompositeGradeResult;

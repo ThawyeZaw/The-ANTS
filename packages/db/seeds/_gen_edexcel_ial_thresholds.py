@@ -85,7 +85,10 @@ SERIES_MAP = {
 }
 
 DASH = re.compile(r"^[\-\u2013\u2014\u2212\ufffd\u00ad•·]+$")
-UNIT_RE = re.compile(r"^(W[A-Z]{2}\d{2})$")
+# Older Pearson PDFs put `WCH11 Unit 1: ...` on one line; newer ones split code/title.
+UNIT_RE = re.compile(r"^(W[A-Z]{2}\d{2})(?:\s+(.*))?$")
+# Pearson IAL October sessions assess P1–P4, M1, M2, S1, S2 only.
+OCTOBER_UNAVAILABLE = {"WFM01", "WFM02", "WFM03", "WME03", "WST03", "WDM11"}
 
 
 def parse_num(tok: str) -> int | None:
@@ -95,6 +98,17 @@ def parse_num(tok: str) -> int | None:
     if tok.isdigit():
         return int(tok)
     return None
+
+
+def take_leading_nums(tokens: list[str]) -> list[int]:
+    """Read consecutive integer tokens; stop at headers like 'International A2'."""
+    out: list[int] = []
+    for tok in tokens:
+        n = parse_num(tok)
+        if n is None:
+            break
+        out.append(n)
+    return out
 
 
 def sql_str(s: str) -> str:
@@ -151,52 +165,51 @@ def parse_unit_blocks(text: str) -> list[dict]:
         if code not in UNITS:
             i += 1
             continue
-        title = lines[i + 1] if i + 1 < len(lines) else ""
-        if re.search(r"Unit\s+\d+A\b", title):
+        same_line_title = (m.group(2) or "").strip()
+        if re.search(r"Unit\s+\d+A\b", same_line_title):
             i += 1
             continue
         j = i + 1
-        raw_nums: list[int] = []
-        ums_nums: list[int] = []
-        while j < len(lines) and lines[j] != "Raw":
+        block: list[str] = []
+        if same_line_title:
+            block.append(same_line_title)
+        while j < len(lines):
             if UNIT_RE.match(lines[j]) or lines[j].startswith("Cash-in"):
                 break
+            block.append(lines[j])
             j += 1
-        if j >= len(lines) or lines[j] != "Raw":
-            i += 1
+        glued = re.compile(r"(?<=\S)(Raw|UMS)\b")
+        tokens: list[str] = []
+        for ln in block:
+            ln = glued.sub(r" \1", ln)
+            tokens.extend(ln.replace(",", " ").split())
+        try:
+            raw_at = next(idx for idx, tok in enumerate(tokens) if tok == "Raw")
+            ums_at = next(idx for idx, tok in enumerate(tokens) if tok == "UMS" and idx > raw_at)
+        except StopIteration:
+            i = j if j > i else i + 1
             continue
-        j += 1
-        while j < len(lines):
-            n = parse_num(lines[j])
-            if n is None:
-                break
-            raw_nums.append(n)
-            j += 1
-        if j >= len(lines) or lines[j] != "UMS":
-            i += 1
+        title_tokens = tokens[:raw_at]
+        title = " ".join(title_tokens).strip() or UNITS[code][1]
+        if re.search(r"Unit\s+\d+A\b", title):
+            i = j if j > i else i + 1
             continue
-        j += 1
-        while j < len(lines):
-            n = parse_num(lines[j])
-            if n is None:
-                break
-            ums_nums.append(n)
-            j += 1
+        raw_nums = take_leading_nums(tokens[raw_at + 1 : ums_at])
+        ums_nums = take_leading_nums(tokens[ums_at + 1 :])
         if len(raw_nums) < 6 or len(ums_nums) != len(raw_nums):
-            i += 1
+            i = j if j > i else i + 1
             continue
         raw_max = raw_nums[0]
         ums_max = ums_nums[0]
         raw_bounds = raw_nums[1:]
         ums_bounds = ums_nums[1:]
+        # AS units publish a–e–u (6 cuts). A2 units publish theoretical a* plus a–e–u (7 cuts).
         if len(raw_bounds) == 6:
-            grades = ["A*", "A", "B", "C", "D", "E", "U"]
-            # AS units publish a–e–u only; insert a theoretical A* = A
             grades = ["A", "B", "C", "D", "E", "U"]
         elif len(raw_bounds) == 7:
             grades = ["A*", "A", "B", "C", "D", "E", "U"]
         else:
-            i += 1
+            i = j if j > i else i + 1
             continue
         bands = []
         for idx, g in enumerate(grades):
@@ -222,7 +235,7 @@ def parse_unit_blocks(text: str) -> list[dict]:
                 "bands": bands,
             }
         )
-        i = j
+        i = j if j > i else i + 1
     return out
 
 
@@ -252,6 +265,8 @@ def main():
         series_name, series_letter = SERIES_MAP[season]
         series_code = f"{series_letter}{str(year)[2:]}"
         for unit in parse_unit_blocks(text):
+            if season in ("October", "November") and unit["code"] in OCTOBER_UNAVAILABLE:
+                continue
             key = (unit["code"], series_code)
             if key in seen:
                 continue

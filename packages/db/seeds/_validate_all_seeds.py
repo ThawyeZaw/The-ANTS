@@ -37,6 +37,7 @@ SEED_ORDER = [
     "0031_edexcel_ial_maths_suite.sql",
     "0032_backfill_maths_suite_topic_prefixes.sql",
     "0033_maths_suite_past_papers.sql",
+    "0034_remove_october_unavailable_ial_units.sql",
 ]
 
 

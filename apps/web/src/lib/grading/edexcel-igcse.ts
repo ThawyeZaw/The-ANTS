@@ -1,6 +1,6 @@
 import type { QualificationPlugin, PaperComponent } from './types';
 import { EDEXCEL_IGCSE_PRACTICE_PAPERS } from '@/lib/exam-papers/myanmar-papers';
-import { fallbackNineOneGrade, gradeFromRawMarks, lookupGrade, percentageOf } from './shared';
+import { gradeFromRawMarks, lookupGrade, percentageOf } from './shared';
 
 export const edexcelIgcsePlugin: QualificationPlugin = {
   key: 'Edexcel_IGCSE',
@@ -52,7 +52,7 @@ export const edexcelIgcsePlugin: QualificationPlugin = {
       };
     }
     return {
-      grade: fallbackNineOneGrade(percentage),
+      grade: '—',
       totalRaw,
       maxRaw,
       percentage,

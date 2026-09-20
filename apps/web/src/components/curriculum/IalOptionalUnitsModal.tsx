@@ -21,6 +21,7 @@ import { enrollCashInAward } from '@/actions/curriculum';
 
 const MATH_CODES: readonly IalCashInCode[] = ['YMA01', 'XMA01'];
 const FURTHER_MATH_CODES: readonly IalCashInCode[] = ['YFM01', 'XFM01'];
+const PURE_MATH_CODES: readonly IalCashInCode[] = ['YPM01', 'XPM01'];
 
 interface AvailableUnit {
   id: string;
@@ -50,7 +51,8 @@ export function IalOptionalUnitsModal({
   onSuccess,
 }: IalOptionalUnitsModalProps) {
   const isFurtherMath = subjectTitle.toLowerCase().includes('further');
-  const availableCodes = isFurtherMath ? FURTHER_MATH_CODES : MATH_CODES;
+  const isPureMath = !isFurtherMath && subjectTitle.toLowerCase().includes('pure');
+  const availableCodes = isFurtherMath ? FURTHER_MATH_CODES : isPureMath ? PURE_MATH_CODES : MATH_CODES;
 
   const defaultCode = (initialAwardCode && availableCodes.includes(initialAwardCode as IalCashInCode))
     ? (initialAwardCode as IalCashInCode)

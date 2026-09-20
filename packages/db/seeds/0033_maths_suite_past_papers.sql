@@ -8,8 +8,8 @@
 --   We update by syllabus_code so all current and future rows stay consistent.
 --
 -- Part B: INSERT OR IGNORE missing exam series (Jan / May-June / Oct-Nov)
---   for 2022–2025 across all 14 maths units.  Uses `OR IGNORE` so the file
---   is safe to apply more than once and will not conflict with 0001 / 0024 seeds.
+--   for 2022–2025. October only includes units Pearson actually assesses
+--   that session (P1–P4, M1, M2, S1, S2). Further Maths units are Jan/June.
 --
 -- Series label convention (matches the rest of 0024):
 --   j = January   |  s = May/June   |  w = Oct/Nov
@@ -75,14 +75,8 @@ INSERT OR IGNORE INTO past_papers (id, exam_board, qualification, subject, sylla
 ('pp-wma12-w22-qp-01',    'Edexcel', 'IAL', 'Pure Mathematics 2',      'WMA12', 'subj-edx-ial-pure2',  'curr-edexcel-ial', 2022, 'Oct/Nov', 'WMA12/01', NULL, 'Unit 2: Pure Mathematics 2',      75, 90, strftime('%s','now')*1000),
 ('pp-wma13-w22-qp-01',    'Edexcel', 'IAL', 'Pure Mathematics 3',      'WMA13', 'subj-edx-ial-pure3',  'curr-edexcel-ial', 2022, 'Oct/Nov', 'WMA13/01', NULL, 'Unit 3: Pure Mathematics 3',      75, 90, strftime('%s','now')*1000),
 ('pp-wma14-w22-qp-01',    'Edexcel', 'IAL', 'Pure Mathematics 4',      'WMA14', 'subj-edx-ial-pure4',  'curr-edexcel-ial', 2022, 'Oct/Nov', 'WMA14/01', NULL, 'Unit 4: Pure Mathematics 4',      75, 90, strftime('%s','now')*1000),
-('pp-wfm01-w22-qp-01',    'Edexcel', 'IAL', 'Further Pure F1',         'WFM01', 'subj-edx-ial-fmath1', 'curr-edexcel-ial', 2022, 'Oct/Nov', 'WFM01/01', NULL, 'Unit 1: Further Pure Mathematics 1', 75, 90, strftime('%s','now')*1000),
-('pp-wfm02-w22-qp-01',    'Edexcel', 'IAL', 'Further Pure F2',         'WFM02', 'subj-edx-ial-fmath2', 'curr-edexcel-ial', 2022, 'Oct/Nov', 'WFM02/01', NULL, 'Unit 2: Further Pure Mathematics 2', 75, 90, strftime('%s','now')*1000),
-('pp-wfm03-w22-qp-01',    'Edexcel', 'IAL', 'Further Pure F3',         'WFM03', 'subj-edx-ial-fmath3', 'curr-edexcel-ial', 2022, 'Oct/Nov', 'WFM03/01', NULL, 'Unit 3: Further Pure Mathematics 3', 75, 90, strftime('%s','now')*1000),
 ('pp-wme01-w22-qp-01',    'Edexcel', 'IAL', 'Mechanics M1',            'WME01', 'subj-edx-ial-mech1',  'curr-edexcel-ial', 2022, 'Oct/Nov', 'WME01/01', NULL, 'Unit 1: Mechanics 1',             75, 90, strftime('%s','now')*1000),
-('pp-wme02-w22-qp-01',    'Edexcel', 'IAL', 'Mechanics M2',            'WME02', 'subj-edx-ial-mech2',  'curr-edexcel-ial', 2022, 'Oct/Nov', 'WME02/01', NULL, 'Unit 2: Mechanics 2',             75, 90, strftime('%s','now')*1000),
-('pp-wme03-w22-qp-01',    'Edexcel', 'IAL', 'Mechanics M3',            'WME03', 'subj-edx-ial-mech3',  'curr-edexcel-ial', 2022, 'Oct/Nov', 'WME03/01', NULL, 'Unit 3: Mechanics 3',             75, 90, strftime('%s','now')*1000),
-('pp-wst03-w22-qp-01',    'Edexcel', 'IAL', 'Statistics S3',           'WST03', 'subj-edx-ial-stat3',  'curr-edexcel-ial', 2022, 'Oct/Nov', 'WST03/01', NULL, 'Unit 3: Statistics 3',            75, 90, strftime('%s','now')*1000),
-('pp-wdm11-w22-qp-01',    'Edexcel', 'IAL', 'Decision Mathematics D1', 'WDM11', 'subj-edx-ial-dec1',   'curr-edexcel-ial', 2022, 'Oct/Nov', 'WDM11/01', NULL, 'Unit 1: Decision Mathematics 1',  75, 90, strftime('%s','now')*1000);
+('pp-wme02-w22-qp-01',    'Edexcel', 'IAL', 'Mechanics M2',            'WME02', 'subj-edx-ial-mech2',  'curr-edexcel-ial', 2022, 'Oct/Nov', 'WME02/01', NULL, 'Unit 2: Mechanics 2',             75, 90, strftime('%s','now')*1000);
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- 2023 series
@@ -125,16 +119,10 @@ INSERT OR IGNORE INTO past_papers (id, exam_board, qualification, subject, sylla
 ('pp-wma12-w23-qp-01',    'Edexcel', 'IAL', 'Pure Mathematics 2',      'WMA12', 'subj-edx-ial-pure2',  'curr-edexcel-ial', 2023, 'Oct/Nov', 'WMA12/01', NULL, 'Unit 2: Pure Mathematics 2',      75, 90, strftime('%s','now')*1000),
 ('pp-wma13-w23-qp-01',    'Edexcel', 'IAL', 'Pure Mathematics 3',      'WMA13', 'subj-edx-ial-pure3',  'curr-edexcel-ial', 2023, 'Oct/Nov', 'WMA13/01', NULL, 'Unit 3: Pure Mathematics 3',      75, 90, strftime('%s','now')*1000),
 ('pp-wma14-w23-qp-01',    'Edexcel', 'IAL', 'Pure Mathematics 4',      'WMA14', 'subj-edx-ial-pure4',  'curr-edexcel-ial', 2023, 'Oct/Nov', 'WMA14/01', NULL, 'Unit 4: Pure Mathematics 4',      75, 90, strftime('%s','now')*1000),
-('pp-wfm01-w23-qp-01',    'Edexcel', 'IAL', 'Further Pure F1',         'WFM01', 'subj-edx-ial-fmath1', 'curr-edexcel-ial', 2023, 'Oct/Nov', 'WFM01/01', NULL, 'Unit 1: Further Pure Mathematics 1', 75, 90, strftime('%s','now')*1000),
-('pp-wfm02-w23-qp-01',    'Edexcel', 'IAL', 'Further Pure F2',         'WFM02', 'subj-edx-ial-fmath2', 'curr-edexcel-ial', 2023, 'Oct/Nov', 'WFM02/01', NULL, 'Unit 2: Further Pure Mathematics 2', 75, 90, strftime('%s','now')*1000),
-('pp-wfm03-w23-qp-01',    'Edexcel', 'IAL', 'Further Pure F3',         'WFM03', 'subj-edx-ial-fmath3', 'curr-edexcel-ial', 2023, 'Oct/Nov', 'WFM03/01', NULL, 'Unit 3: Further Pure Mathematics 3', 75, 90, strftime('%s','now')*1000),
 ('pp-wme01-w23-qp-01',    'Edexcel', 'IAL', 'Mechanics M1',            'WME01', 'subj-edx-ial-mech1',  'curr-edexcel-ial', 2023, 'Oct/Nov', 'WME01/01', NULL, 'Unit 1: Mechanics 1',             75, 90, strftime('%s','now')*1000),
 ('pp-wme02-w23-qp-01',    'Edexcel', 'IAL', 'Mechanics M2',            'WME02', 'subj-edx-ial-mech2',  'curr-edexcel-ial', 2023, 'Oct/Nov', 'WME02/01', NULL, 'Unit 2: Mechanics 2',             75, 90, strftime('%s','now')*1000),
-('pp-wme03-w23-qp-01',    'Edexcel', 'IAL', 'Mechanics M3',            'WME03', 'subj-edx-ial-mech3',  'curr-edexcel-ial', 2023, 'Oct/Nov', 'WME03/01', NULL, 'Unit 3: Mechanics 3',             75, 90, strftime('%s','now')*1000),
 ('pp-wst01-w23-qp-01',    'Edexcel', 'IAL', 'Statistics S1',           'WST01', 'subj-edx-ial-stat1',  'curr-edexcel-ial', 2023, 'Oct/Nov', 'WST01/01', NULL, 'Unit 1: Statistics 1',            75, 90, strftime('%s','now')*1000),
-('pp-wst02-w23-qp-01',    'Edexcel', 'IAL', 'Statistics S2',           'WST02', 'subj-edx-ial-stat2',  'curr-edexcel-ial', 2023, 'Oct/Nov', 'WST02/01', NULL, 'Unit 2: Statistics 2',            75, 90, strftime('%s','now')*1000),
-('pp-wst03-w23-qp-01',    'Edexcel', 'IAL', 'Statistics S3',           'WST03', 'subj-edx-ial-stat3',  'curr-edexcel-ial', 2023, 'Oct/Nov', 'WST03/01', NULL, 'Unit 3: Statistics 3',            75, 90, strftime('%s','now')*1000),
-('pp-wdm11-w23-qp-01',    'Edexcel', 'IAL', 'Decision Mathematics D1', 'WDM11', 'subj-edx-ial-dec1',   'curr-edexcel-ial', 2023, 'Oct/Nov', 'WDM11/01', NULL, 'Unit 1: Decision Mathematics 1',  75, 90, strftime('%s','now')*1000);
+('pp-wst02-w23-qp-01',    'Edexcel', 'IAL', 'Statistics S2',           'WST02', 'subj-edx-ial-stat2',  'curr-edexcel-ial', 2023, 'Oct/Nov', 'WST02/01', NULL, 'Unit 2: Statistics 2',            75, 90, strftime('%s','now')*1000);
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- 2024 series
@@ -180,16 +168,10 @@ INSERT OR IGNORE INTO past_papers (id, exam_board, qualification, subject, sylla
 ('pp-wma12-w24-qp-01',    'Edexcel', 'IAL', 'Pure Mathematics 2',      'WMA12', 'subj-edx-ial-pure2',  'curr-edexcel-ial', 2024, 'Oct/Nov', 'WMA12/01', NULL, 'Unit 2: Pure Mathematics 2',      75, 90, strftime('%s','now')*1000),
 ('pp-wma13-w24-qp-01',    'Edexcel', 'IAL', 'Pure Mathematics 3',      'WMA13', 'subj-edx-ial-pure3',  'curr-edexcel-ial', 2024, 'Oct/Nov', 'WMA13/01', NULL, 'Unit 3: Pure Mathematics 3',      75, 90, strftime('%s','now')*1000),
 ('pp-wma14-w24-qp-01',    'Edexcel', 'IAL', 'Pure Mathematics 4',      'WMA14', 'subj-edx-ial-pure4',  'curr-edexcel-ial', 2024, 'Oct/Nov', 'WMA14/01', NULL, 'Unit 4: Pure Mathematics 4',      75, 90, strftime('%s','now')*1000),
-('pp-wfm01-w24-qp-01',    'Edexcel', 'IAL', 'Further Pure F1',         'WFM01', 'subj-edx-ial-fmath1', 'curr-edexcel-ial', 2024, 'Oct/Nov', 'WFM01/01', NULL, 'Unit 1: Further Pure Mathematics 1', 75, 90, strftime('%s','now')*1000),
-('pp-wfm02-w24-qp-01',    'Edexcel', 'IAL', 'Further Pure F2',         'WFM02', 'subj-edx-ial-fmath2', 'curr-edexcel-ial', 2024, 'Oct/Nov', 'WFM02/01', NULL, 'Unit 2: Further Pure Mathematics 2', 75, 90, strftime('%s','now')*1000),
-('pp-wfm03-w24-qp-01',    'Edexcel', 'IAL', 'Further Pure F3',         'WFM03', 'subj-edx-ial-fmath3', 'curr-edexcel-ial', 2024, 'Oct/Nov', 'WFM03/01', NULL, 'Unit 3: Further Pure Mathematics 3', 75, 90, strftime('%s','now')*1000),
 ('pp-wme01-w24-qp-01',    'Edexcel', 'IAL', 'Mechanics M1',            'WME01', 'subj-edx-ial-mech1',  'curr-edexcel-ial', 2024, 'Oct/Nov', 'WME01/01', NULL, 'Unit 1: Mechanics 1',             75, 90, strftime('%s','now')*1000),
 ('pp-wme02-w24-qp-01',    'Edexcel', 'IAL', 'Mechanics M2',            'WME02', 'subj-edx-ial-mech2',  'curr-edexcel-ial', 2024, 'Oct/Nov', 'WME02/01', NULL, 'Unit 2: Mechanics 2',             75, 90, strftime('%s','now')*1000),
-('pp-wme03-w24-qp-01',    'Edexcel', 'IAL', 'Mechanics M3',            'WME03', 'subj-edx-ial-mech3',  'curr-edexcel-ial', 2024, 'Oct/Nov', 'WME03/01', NULL, 'Unit 3: Mechanics 3',             75, 90, strftime('%s','now')*1000),
 ('pp-wst01-w24-qp-01',    'Edexcel', 'IAL', 'Statistics S1',           'WST01', 'subj-edx-ial-stat1',  'curr-edexcel-ial', 2024, 'Oct/Nov', 'WST01/01', NULL, 'Unit 1: Statistics 1',            75, 90, strftime('%s','now')*1000),
-('pp-wst02-w24-qp-01',    'Edexcel', 'IAL', 'Statistics S2',           'WST02', 'subj-edx-ial-stat2',  'curr-edexcel-ial', 2024, 'Oct/Nov', 'WST02/01', NULL, 'Unit 2: Statistics 2',            75, 90, strftime('%s','now')*1000),
-('pp-wst03-w24-qp-01',    'Edexcel', 'IAL', 'Statistics S3',           'WST03', 'subj-edx-ial-stat3',  'curr-edexcel-ial', 2024, 'Oct/Nov', 'WST03/01', NULL, 'Unit 3: Statistics 3',            75, 90, strftime('%s','now')*1000),
-('pp-wdm11-w24-qp-01',    'Edexcel', 'IAL', 'Decision Mathematics D1', 'WDM11', 'subj-edx-ial-dec1',   'curr-edexcel-ial', 2024, 'Oct/Nov', 'WDM11/01', NULL, 'Unit 1: Decision Mathematics 1',  75, 90, strftime('%s','now')*1000);
+('pp-wst02-w24-qp-01',    'Edexcel', 'IAL', 'Statistics S2',           'WST02', 'subj-edx-ial-stat2',  'curr-edexcel-ial', 2024, 'Oct/Nov', 'WST02/01', NULL, 'Unit 2: Statistics 2',            75, 90, strftime('%s','now')*1000);
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- 2025 series (W25 for pure/applied already in 0024, add Jan + June)
@@ -229,12 +211,4 @@ INSERT OR IGNORE INTO past_papers (id, exam_board, qualification, subject, sylla
 ('pp-wst03-s25-qp-01',    'Edexcel', 'IAL', 'Statistics S3',           'WST03', 'subj-edx-ial-stat3',  'curr-edexcel-ial', 2025, 'May/June', 'WST03/01', NULL, 'Unit 3: Statistics 3',            75, 90, strftime('%s','now')*1000),
 ('pp-wdm11-s25-qp-01',    'Edexcel', 'IAL', 'Decision Mathematics D1', 'WDM11', 'subj-edx-ial-dec1',   'curr-edexcel-ial', 2025, 'May/June', 'WDM11/01', NULL, 'Unit 1: Decision Mathematics 1',  75, 90, strftime('%s','now')*1000);
 
--- ─── Oct/Nov 2025 (W25) for WFM01/02/03, WME03, WST03, WDM11 ─────────────
--- (WMA11-14, WME01-02, WST01-02 W25 rows already exist in 0024)
-INSERT OR IGNORE INTO past_papers (id, exam_board, qualification, subject, syllabus_code, subject_id, curriculum_id, year, series, paper_number, variant, title, total_marks, duration_minutes, created_at) VALUES
-('pp-wfm01-w25-qp-01',    'Edexcel', 'IAL', 'Further Pure F1',         'WFM01', 'subj-edx-ial-fmath1', 'curr-edexcel-ial', 2025, 'Oct/Nov', 'WFM01/01', NULL, 'Unit 1: Further Pure Mathematics 1', 75, 90, strftime('%s','now')*1000),
-('pp-wfm02-w25-qp-01',    'Edexcel', 'IAL', 'Further Pure F2',         'WFM02', 'subj-edx-ial-fmath2', 'curr-edexcel-ial', 2025, 'Oct/Nov', 'WFM02/01', NULL, 'Unit 2: Further Pure Mathematics 2', 75, 90, strftime('%s','now')*1000),
-('pp-wfm03-w25-qp-01',    'Edexcel', 'IAL', 'Further Pure F3',         'WFM03', 'subj-edx-ial-fmath3', 'curr-edexcel-ial', 2025, 'Oct/Nov', 'WFM03/01', NULL, 'Unit 3: Further Pure Mathematics 3', 75, 90, strftime('%s','now')*1000),
-('pp-wme03-w25-qp-01',    'Edexcel', 'IAL', 'Mechanics M3',            'WME03', 'subj-edx-ial-mech3',  'curr-edexcel-ial', 2025, 'Oct/Nov', 'WME03/01', NULL, 'Unit 3: Mechanics 3',             75, 90, strftime('%s','now')*1000),
-('pp-wst03-w25-qp-01',    'Edexcel', 'IAL', 'Statistics S3',           'WST03', 'subj-edx-ial-stat3',  'curr-edexcel-ial', 2025, 'Oct/Nov', 'WST03/01', NULL, 'Unit 3: Statistics 3',            75, 90, strftime('%s','now')*1000),
-('pp-wdm11-w25-qp-01',    'Edexcel', 'IAL', 'Decision Mathematics D1', 'WDM11', 'subj-edx-ial-dec1',   'curr-edexcel-ial', 2025, 'Oct/Nov', 'WDM11/01', NULL, 'Unit 1: Decision Mathematics 1',  75, 90, strftime('%s','now')*1000);
+-- October 2025 Further Maths / D1 / M3 / S3 are not assessed — do not insert.
