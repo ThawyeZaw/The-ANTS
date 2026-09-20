@@ -4,7 +4,7 @@ import {
   getPracticePaperIds,
   toCambridgePaperId as toCombined,
 } from '@/lib/exam-papers/myanmar-papers';
-import { fallbackLetterGrade, gradeFromRawMarks, lookupGrade, percentageOf, toCambridgePaperId, caiePaperBase } from './shared';
+import { gradeFromRawMarks, lookupGrade, percentageOf, toCambridgePaperId, caiePaperBase } from './shared';
 
 export const caieAlevelPlugin: QualificationPlugin = {
   key: 'CAIE_AL',
@@ -68,7 +68,7 @@ export const caieAlevelPlugin: QualificationPlugin = {
       };
     }
     return {
-      grade: fallbackLetterGrade(percentage),
+      grade: '—',
       totalRaw,
       maxRaw,
       percentage,

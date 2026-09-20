@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { EdexcelIALQualificationSpecification } from '@/lib/grading/ial-structure';
+import { mathsCashInSelectionStatus } from '@/lib/grading/ial-cash-in';
 
 export function useEdexcelSuiteSelectors(qualificationDataRaw: string | object | null | undefined, initialCashInCode?: string) {
   const [selectedCashIn, setSelectedCashIn] = useState<string>(initialCashInCode || '');
@@ -55,20 +56,28 @@ export function useEdexcelSuiteSelectors(qualificationDataRaw: string | object |
     return units;
   }, [activeQualification, selectedElectives, selectedPairIndex]);
 
+  const combinationStatus = useMemo(() => {
+    if (!activeQualification) return { complete: true, message: null };
+    const pair =
+      activeQualification.electiveRules?.strategy === 'EXACT_COMBINATION_PAIRS'
+        ? activeQualification.electiveRules.validCombinationSets?.[selectedPairIndex] || []
+        : [];
+    return mathsCashInSelectionStatus(activeQualification.cashInCode, selectedElectives, pair);
+  }, [activeQualification, selectedElectives, selectedPairIndex]);
+
   const handleElectiveToggle = (unitCode: string) => {
     if (!activeQualification?.electiveRules) return;
     const rules = activeQualification.electiveRules;
     const pickCount = rules.pickCount || 0;
 
     setSelectedElectives(prev => {
-      if (prev.includes(unitCode)) {
-        return prev.filter(u => u !== unitCode);
-      } else {
-        if (prev.length >= pickCount && rules.strategy === 'CHOOSE_N_FROM_SET') {
-          return prev; // Reached max
+        if (prev.includes(unitCode)) {
+          return prev.filter((u) => u !== unitCode);
+        }
+        if (prev.length >= pickCount) {
+          return prev;
         }
         return [...prev, unitCode];
-      }
     });
   };
 
@@ -83,5 +92,6 @@ export function useEdexcelSuiteSelectors(qualificationDataRaw: string | object |
     selectedPairIndex,
     setSelectedPairIndex,
     activeUnits,
+    combinationStatus,
   };
 }

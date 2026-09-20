@@ -45,8 +45,19 @@ import {
   type SubjectTier,
   type GradeBoundary,
   type PaperComponent,
+  gradeFromUms,
+  umsCapFromBoundaries,
 } from '@/lib/grading';
-import { IAL_CASH_INS, cashInsForUnit, IAL_SUBJECT_GROUPS, type IalCashInCode } from '@/lib/grading/ial-cash-in';
+import {
+  IAL_CASH_INS,
+  cashInsForUnit,
+  IAL_SUBJECT_GROUPS,
+  IAL_MATHS_CASH_INS,
+  IAL_FM_CASH_INS,
+  isIalOctoberSeries,
+  mathsSuiteUnitAvailableInSeries,
+  type IalCashInCode,
+} from '@/lib/grading/ial-cash-in';
 import { groupEdexcelIalSubjects } from '@/lib/edexcel-ial';
 import { caiePaperBase } from '@/lib/grading/shared';
 import { useEdexcelSuiteSelectors } from './useEdexcelSuiteSelectors';
@@ -117,6 +128,7 @@ export default function GradeCalculator() {
   const [enrollmentAward, setEnrollmentAward] = useState<'AS' | 'A Level' | ''>('');
   const [mathsRoute, setMathsRoute] = useState<'42' | '52'>('42');
   const [boundariesUnavailable, setBoundariesUnavailable] = useState(false);
+  const [ialInputMode, setIalInputMode] = useState<'raw' | 'ums'>('raw');
 
   // Client-side cache to avoid redundant D1 row queries when toggling subjects
   const presetCacheRef = useRef<Map<string, CalcPreset[]>>(new Map());
@@ -153,12 +165,38 @@ export default function GradeCalculator() {
   const isSuite =
     selectedSubjectRow?.subject_type === 'modular_maths_suite' ||
     activeIalGroup?.title === 'Mathematics' ||
+    activeIalGroup?.title === 'Further Mathematics' ||
     Boolean(activeIalGroup?.hasOptionalUnits);
-  
-  const suiteSelectors = useEdexcelSuiteSelectors(
-    isSuite ? selectedSubjectRow?.qualification_data || activeIalGroup?.qualification_data : null,
-    selectedCashInLocal
+
+  const mathsSuiteData = useMemo(
+    () => subjects.find((s) => s.id === 'subj-edx-ial-maths-suite')?.qualification_data,
+    [subjects]
   );
+
+  const suiteSpecForGroup = useMemo(() => {
+    const raw =
+      selectedSubjectRow?.qualification_data ||
+      activeIalGroup?.qualification_data ||
+      mathsSuiteData;
+    if (!raw || !isSuite) return null;
+    try {
+      const parsed = typeof raw === 'string' ? JSON.parse(raw) : { ...raw };
+      if (activeIalGroup?.title === 'Mathematics') {
+        parsed.qualifications = (parsed.qualifications || []).filter((q: { cashInCode: string }) =>
+          IAL_MATHS_CASH_INS.has(q.cashInCode as IalCashInCode)
+        );
+      } else if (activeIalGroup?.title === 'Further Mathematics') {
+        parsed.qualifications = (parsed.qualifications || []).filter((q: { cashInCode: string }) =>
+          IAL_FM_CASH_INS.has(q.cashInCode as IalCashInCode)
+        );
+      }
+      return parsed;
+    } catch {
+      return raw;
+    }
+  }, [isSuite, selectedSubjectRow, activeIalGroup, mathsSuiteData]);
+
+  const suiteSelectors = useEdexcelSuiteSelectors(suiteSpecForGroup, selectedCashInLocal);
 
   const selectedCashIn = isSuite ? suiteSelectors.selectedCashIn : selectedCashInLocal;
   const setSelectedCashIn = isSuite ? suiteSelectors.setSelectedCashIn : setSelectedCashInLocal;
@@ -308,11 +346,22 @@ export default function GradeCalculator() {
       examBoard = p.exam_board || examBoard;
       year = p.year ?? year;
       for (const paper of p.papers) {
-        papers.push({
+        const next = {
           ...paper,
           paper_number: paper.paper_number || p.paper_number,
           variant: paper.variant ?? p.variant,
-        });
+        };
+        const key = `${next.paper_number ?? next.name}|${next.variant ?? ''}`;
+        const existingIdx = papers.findIndex(
+          (row) => `${row.paper_number ?? row.name}|${row.variant ?? ''}` === key
+        );
+        if (existingIdx >= 0) {
+          const existingBounds = papers[existingIdx].paper_boundaries?.length ?? 0;
+          const nextBounds = next.paper_boundaries?.length ?? 0;
+          if (nextBounds > existingBounds) papers[existingIdx] = next;
+        } else {
+          papers.push(next);
+        }
       }
     }
 
@@ -332,6 +381,7 @@ export default function GradeCalculator() {
       cashInCode: selectedCashIn || null,
       awardLevel: enrollmentAward || null,
       mathsRoute,
+      series: selectedSeries || null,
     });
 
     const selectedPapers: PaperDef[] = filtered.map((c) => {
@@ -378,6 +428,7 @@ export default function GradeCalculator() {
     selectedCashIn,
     enrollmentAward,
     mathsRoute,
+    selectedSeries,
   ]);
 
   const exclusiveGroups = useMemo(() => {
@@ -412,8 +463,11 @@ export default function GradeCalculator() {
     // If it's a suite, filter down to the active units (mandatory + selected electives)
     if (isSuite && suiteSelectors.activeUnits.size > 0) {
       papers = papers.filter((p) => {
-        const baseCode = (p.paper_number || p.name).split('/')[0];
-        return suiteSelectors.activeUnits.has(baseCode) || suiteSelectors.activeUnits.has(p.paper_number || p.name);
+        const unitCode = (p.paper_number || p.name).split('/')[0];
+        if (!suiteSelectors.activeUnits.has(unitCode) && !suiteSelectors.activeUnits.has(p.paper_number || p.name)) {
+          return false;
+        }
+        return mathsSuiteUnitAvailableInSeries(unitCode, selectedSeries);
       });
     }
 
@@ -423,7 +477,7 @@ export default function GradeCalculator() {
       }
       return true;
     });
-  }, [activePreset, selectedExclusiveOptions, isSuite, suiteSelectors.activeUnits]);
+  }, [activePreset, selectedExclusiveOptions, isSuite, suiteSelectors.activeUnits, selectedSeries]);
 
   useEffect(() => {
     if (!selectedSubject || !selectedSeries || !activePreset?.year) {
@@ -448,36 +502,46 @@ export default function GradeCalculator() {
     });
   }, [selectedSubject, selectedSeries, activePreset?.year, selectedVariant, selectedTier]);
 
+  const isIAL = activePreset?.is_modular || activePreset?.qualification === 'IAL' || selectedCurriculumRow?.code === 'EDEXCEL_IAL';
+
+  const isFmSubject =
+    activeIalGroup?.title === 'Further Mathematics' ||
+    Boolean(selectedCashIn && IAL_FM_CASH_INS.has(selectedCashIn as IalCashInCode));
+
   const availableSeries = useMemo(() => {
     const source = selectedCashIn ? cashInPresets : presets;
     const set = new Set<string>();
     source
       .filter((p) => (selectedCurriculum && !selectedCashIn ? p.curriculum_id === selectedCurriculum : true))
       .filter((p) => (selectedSubject && !selectedCashIn ? p.subject_id === selectedSubject : true))
+      .filter((p) => (p.papers ?? []).some((paper) => (paper.paper_boundaries?.length ?? 0) > 0))
       .forEach((p) => {
         if (p.series) set.add(p.series);
       });
-    return Array.from(set).sort().reverse();
-  }, [selectedCurriculum, selectedSubject, presets, cashInPresets, selectedCashIn]);
+    let list = Array.from(set).sort().reverse();
+    if (isFmSubject) {
+      list = list.filter((s) => !isIalOctoberSeries(s));
+    }
+    return list;
+  }, [selectedCurriculum, selectedSubject, presets, cashInPresets, selectedCashIn, isFmSubject]);
 
-  const isIAL = activePreset?.is_modular || activePreset?.qualification === 'IAL' || selectedCurriculumRow?.code === 'EDEXCEL_IAL';
-  
   const availableCashIns = useMemo(() => {
+    const october = isIalOctoberSeries(selectedSeries);
+    let awards: { code: string; name: string; maxUms: number; compulsory: readonly string[]; optional: readonly string[] }[] = [];
+
     if (isSuite && suiteSelectors.availableCashIns?.length > 0) {
-      return suiteSelectors.availableCashIns.map(q => ({
+      awards = suiteSelectors.availableCashIns.map((q) => ({
         code: q.cashInCode,
         name: q.qualificationTitle,
         maxUms: (q.totalUnitsRequired || 0) * 100,
         compulsory: q.mandatoryUnits,
-        optional: q.electiveRules?.allowedUnitPool || []
+        optional: q.electiveRules?.allowedUnitPool || [],
       }));
-    }
-    if (activeIalGroup) {
+    } else if (activeIalGroup) {
       const gMeta = IAL_SUBJECT_GROUPS.find(
         (g) => g.label.toLowerCase() === activeIalGroup.title.toLowerCase()
       );
       if (gMeta) {
-        const awards: any[] = [];
         if (gMeta.alevelCode && IAL_CASH_INS[gMeta.alevelCode]) {
           const a = IAL_CASH_INS[gMeta.alevelCode];
           awards.push({ code: a.code, name: a.name, maxUms: a.maxUms, compulsory: a.compulsory, optional: a.optional });
@@ -486,21 +550,75 @@ export default function GradeCalculator() {
           const a = IAL_CASH_INS[gMeta.asCode];
           awards.push({ code: a.code, name: a.name, maxUms: a.maxUms, compulsory: a.compulsory, optional: a.optional });
         }
-        return awards;
       }
+    } else {
+      awards = (selectedSubjectRow?.code ? cashInsForUnit(selectedSubjectRow.code) : Object.values(IAL_CASH_INS)).map((a) => ({
+        code: a.code,
+        name: a.name,
+        maxUms: a.maxUms,
+        compulsory: a.compulsory,
+        optional: a.optional,
+      }));
     }
-    return selectedSubjectRow?.code ? cashInsForUnit(selectedSubjectRow.code) : Object.values(IAL_CASH_INS);
-  }, [selectedSubjectRow, isSuite, suiteSelectors.availableCashIns, activeIalGroup]);
+
+    if (activeIalGroup?.title === 'Mathematics') {
+      awards = awards.filter((a) => IAL_MATHS_CASH_INS.has(a.code as IalCashInCode));
+    } else if (activeIalGroup?.title === 'Further Mathematics') {
+      awards = awards.filter((a) => IAL_FM_CASH_INS.has(a.code as IalCashInCode));
+    }
+
+    if (october) {
+      awards = awards.filter((a) => !IAL_FM_CASH_INS.has(a.code as IalCashInCode));
+    }
+
+    return awards;
+  }, [selectedSubjectRow, isSuite, suiteSelectors.availableCashIns, activeIalGroup, selectedSeries]);
+
+  const octoberFilteredQualification = useMemo(() => {
+    const q = suiteSelectors.activeQualification;
+    if (!q) return null;
+    if (!isIalOctoberSeries(selectedSeries) || !q.electiveRules) return q;
+    const rules = q.electiveRules;
+    return {
+      ...q,
+      electiveRules: {
+        ...rules,
+        allowedUnitPool: (rules.allowedUnitPool || []).filter((u: string) =>
+          mathsSuiteUnitAvailableInSeries(u, selectedSeries)
+        ),
+        validCombinationSets: (rules.validCombinationSets || []).filter((pair: string[]) =>
+          pair.every((u) => mathsSuiteUnitAvailableInSeries(u, selectedSeries))
+        ),
+        atLeastOneOf: (rules.atLeastOneOf || []).filter((u: string) =>
+          mathsSuiteUnitAvailableInSeries(u, selectedSeries)
+        ),
+      },
+    };
+  }, [suiteSelectors.activeQualification, selectedSeries]);
 
   useEffect(() => {
     if (selectedCurriculumRow?.code !== 'EDEXCEL_IAL') {
       setSelectedCashIn('');
       return;
     }
+    if (selectedCashIn && !availableCashIns.some((a) => a.code === selectedCashIn)) {
+      setSelectedCashIn(availableCashIns[0]?.code ?? '');
+      return;
+    }
     if (!selectedCashIn && availableCashIns[0]) {
       setSelectedCashIn(availableCashIns[0].code);
     }
   }, [selectedCurriculumRow?.code, availableCashIns, selectedCashIn]);
+
+  useEffect(() => {
+    if (isFmSubject && isIalOctoberSeries(selectedSeries)) {
+      setSelectedSeries('');
+    }
+  }, [isFmSubject, selectedSeries]);
+
+  useEffect(() => {
+    suiteSelectors.setSelectedPairIndex(0);
+  }, [selectedSeries]);
 
   const canGoStep2 = !!(
     selectedCurriculum &&
@@ -585,7 +703,7 @@ export default function GradeCalculator() {
   }, [filteredActivePapers, matchingPresets, isCambridge]);
 
   // Strict integer input handler (increments/decrements by 1)
-  const handleMarkChange = (key: string | number, value: string) => {
+  const handleMarkChange = (key: string | number, value: string, maxAllowed: number) => {
     if (!activePreset) return;
     if (value === '') {
       setRawMarks((prev) => ({ ...prev, [key]: '' }));
@@ -593,7 +711,7 @@ export default function GradeCalculator() {
     }
     const n = Math.round(parseFloat(value));
     if (!isNaN(n) && n >= 0) {
-      setRawMarks((prev) => ({ ...prev, [key]: n }));
+      setRawMarks((prev) => ({ ...prev, [key]: Math.min(n, Math.max(0, maxAllowed)) }));
     }
   };
 
@@ -633,14 +751,20 @@ export default function GradeCalculator() {
       const paperDef = entry.variants[activeVar] || Object.values(entry.variants)[0];
       const val = rawMarks[entry.baseKey] ?? rawMarks[i];
       const filled = val !== '' && val !== undefined;
-      const raw = filled ? Number(val) : 0;
       const perBoundaries = (paperDef?.paper_boundaries && paperDef.paper_boundaries.length > 0
         ? paperDef.paper_boundaries
         : []) as GradeBoundary[];
 
       const maxMark = paperDef?.max_mark || 100;
+      const umsCap = umsCapFromBoundaries(perBoundaries);
+      const maxInput = isIAL && ialInputMode === 'ums' ? umsCap || 100 : maxMark;
+      const raw = filled ? Math.min(Number(val), maxInput) : 0;
       const result = filled
-        ? paperPlugin.gradeFromRawMark(raw, maxMark, perBoundaries)
+        ? isIAL && ialInputMode === 'ums'
+          ? gradeFromUms(raw, perBoundaries)
+          : perBoundaries.length > 0
+            ? paperPlugin.gradeFromRawMark(raw, maxMark, perBoundaries)
+            : { grade: '—', percentage: 0, ums: undefined as number | undefined }
         : { grade: '—', percentage: 0, ums: undefined as number | undefined };
 
       return {
@@ -657,6 +781,9 @@ export default function GradeCalculator() {
         perBoundaries,
         paperGrade: filled ? result.grade : '—',
         paperUms: result.ums,
+        umsCap,
+        maxInput,
+        hasOfficialBoundaries: perBoundaries.length > 0,
       };
     });
   }, [
@@ -667,6 +794,8 @@ export default function GradeCalculator() {
     plugin.defaultVariant,
     rawMarks,
     paperPlugin,
+    isIAL,
+    ialInputMode,
   ]);
 
   const calc = useMemo(() => {
@@ -693,6 +822,22 @@ export default function GradeCalculator() {
         boundariesMessage: 'Official subject boundaries not yet seeded for this syllabus.',
       };
     }
+    if (isSuite && selectedCashIn && !suiteSelectors.combinationStatus.complete) {
+      const totalRaw = filled.reduce((s, pr) => s + pr.raw, 0);
+      const maxRaw = filled.reduce((s, pr) => s + pr.max_mark, 0);
+      const totalUms = filled.reduce((s, pr) => s + (pr.paperUms ?? 0), 0);
+      return {
+        totalRaw: Math.round(totalRaw * 10) / 10,
+        maxRaw,
+        totalUms,
+        percentage: maxRaw ? Math.round((totalRaw / maxRaw) * 1000) / 10 : 0,
+        grade: '—',
+        anyFilled: true,
+        usedComposite: false,
+        aStarNotes: [] as string[],
+        boundariesMessage: suiteSelectors.combinationStatus.message ?? 'Select a valid Pearson cash-in combination for an overall grade.',
+      };
+    }
     const composite = paperPlugin.compositeGrade(
       filled.map((pr) => ({
         name: pr.name,
@@ -700,7 +845,8 @@ export default function GradeCalculator() {
         variant: pr.variant,
         maxMark: pr.max_mark,
         boundaries: pr.perBoundaries,
-        rawMark: pr.raw,
+        rawMark: isIAL && ialInputMode === 'ums' ? 0 : pr.raw,
+        umsInput: isIAL && ialInputMode === 'ums' ? pr.raw : undefined,
       })),
       compositeBoundaries,
       selectedCashIn || null
@@ -717,7 +863,7 @@ export default function GradeCalculator() {
       aStarNotes: composite.aStarNotes ?? [],
       boundariesMessage: undefined as string | undefined,
     };
-  }, [activePreset, paperResults, paperPlugin, compositeBoundaries, selectedCashIn, boundariesUnavailable]);
+  }, [activePreset, paperResults, paperPlugin, compositeBoundaries, selectedCashIn, boundariesUnavailable, isIAL, ialInputMode, isSuite, suiteSelectors.combinationStatus]);
 
   return (
     <div className="rounded-3xl border border-border bg-background-card p-6 md:p-8 shadow-xs space-y-8 max-w-5xl mx-auto">
@@ -937,6 +1083,11 @@ export default function GradeCalculator() {
                   {IAL_CASH_INS[selectedCashIn as IalCashInCode].aStarNotes}
                 </p>
               )}
+              {activeIalGroup?.title === 'Mathematics' || activeIalGroup?.title === 'Further Mathematics' ? (
+                <p className="text-[11px] text-foreground-muted">
+                  Further Mathematics units (FP1–FP3, M3, S3, D1) are January and June only — not offered in Oct/Nov.
+                </p>
+              ) : null}
             </div>
           )}
 
@@ -1108,19 +1259,42 @@ export default function GradeCalculator() {
               </h3>
               <p className="text-xs text-foreground-muted">
                 {isIAL
-                  ? 'Edexcel IAL Modular Scale — Calculates UMS per paper and maps to official UMS grade boundaries.'
-                  : 'Calculates raw component percentages and maps to official syllabus grade boundaries.'}
+                  ? 'Official Pearson UMS conversion from this series. Enter raw marks or UMS — never above the paper maximum.'
+                  : 'Official syllabus grade boundaries only. Marks cannot exceed the paper maximum.'}
               </p>
             </div>
+            {isIAL && (
+              <div className="flex items-center gap-1.5 p-1 bg-background-secondary rounded-xl border border-border">
+                {(['raw', 'ums'] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => {
+                      setIalInputMode(mode);
+                      setRawMarks({});
+                    }}
+                    className={cn(
+                      'px-3 py-1.5 rounded-lg text-xs font-bold transition-all',
+                      ialInputMode === mode
+                        ? 'bg-primary text-white shadow-xs'
+                        : 'text-foreground-secondary hover:text-foreground'
+                    )}
+                  >
+                    {mode === 'raw' ? 'Raw marks' : 'UMS'}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {isSuite && (
             <EdexcelSuiteSelectors
-              activeQualification={suiteSelectors.activeQualification}
+              activeQualification={octoberFilteredQualification ?? suiteSelectors.activeQualification}
               selectedElectives={suiteSelectors.selectedElectives}
               handleElectiveToggle={suiteSelectors.handleElectiveToggle}
               selectedPairIndex={suiteSelectors.selectedPairIndex}
               setSelectedPairIndex={suiteSelectors.setSelectedPairIndex}
+              combinationStatus={suiteSelectors.combinationStatus}
             />
           )}
 
@@ -1198,7 +1372,13 @@ export default function GradeCalculator() {
                       {pr.displayName || pr.name}
                     </h4>
                     <div className="flex items-center gap-3 text-xs text-foreground-muted">
-                      <span>Max: <strong className="text-foreground font-mono">{pr.max_mark}</strong> marks</span>
+                      <span>
+                        Max:{' '}
+                        <strong className="text-foreground font-mono">
+                          {isIAL && ialInputMode === 'ums' ? pr.umsCap || pr.max_mark : pr.max_mark}
+                        </strong>{' '}
+                        {isIAL && ialInputMode === 'ums' ? 'UMS' : 'marks'}
+                      </span>
                       {pr.filled && (
                         <>
                           <span>•</span>
@@ -1206,6 +1386,11 @@ export default function GradeCalculator() {
                         </>
                       )}
                     </div>
+                    {!pr.hasOfficialBoundaries && (
+                      <p className="text-[11px] text-amber-600">
+                        Official boundaries not seeded for this paper — grade cannot be calculated.
+                      </p>
+                    )}
                   </div>
 
                   {/* Inputs and Grade Badge */}
@@ -1214,16 +1399,16 @@ export default function GradeCalculator() {
                       <input
                         type="number"
                         min="0"
-                        max={pr.max_mark}
+                        max={pr.maxInput}
                         step="1"
                         value={rawMarks[pr.baseKey] ?? rawMarks[pr.index] ?? ''}
                         placeholder="0"
-                        onChange={(e) => handleMarkChange(pr.baseKey, e.target.value)}
+                        onChange={(e) => handleMarkChange(pr.baseKey, e.target.value, pr.maxInput)}
                         className="w-24 rounded-2xl border border-border bg-background-card py-2.5 px-3 text-center font-mono font-bold text-base text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                       />
                       <span className="text-foreground-muted font-mono font-bold">/</span>
                       <div className="w-16 rounded-2xl border border-border bg-background-card py-2.5 text-center font-mono font-bold text-xs text-foreground-muted">
-                        {pr.max_mark}
+                        {pr.maxInput}
                       </div>
                     </div>
 
@@ -1268,7 +1453,9 @@ export default function GradeCalculator() {
                               : 'bg-background-card text-foreground-secondary border-border'
                           )}
                         >
-                          {b.grade} ≥ {b.min_mark}
+                          {isIAL && ialInputMode === 'ums' && b.ums_min != null
+                            ? `${b.grade} ≥ ${b.ums_min} UMS`
+                            : `${b.grade} ≥ ${b.min_mark}`}
                         </span>
                       );
                     })}
@@ -1314,7 +1501,7 @@ export default function GradeCalculator() {
               <div className="flex flex-col items-center justify-center p-6 rounded-2xl border border-border bg-background-card text-center space-y-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-foreground-muted flex items-center gap-1.5">
                   <Award className="w-4 h-4 text-primary" />
-                  Estimated Grade
+                  Official Grade
                 </span>
                 <div
                   className={cn(
@@ -1325,12 +1512,12 @@ export default function GradeCalculator() {
                   )}
                 >
                   {calc.grade}
-                  {'boundariesMessage' in calc && calc.boundariesMessage && (
-                    <p className="mt-2 text-xs font-normal text-foreground-muted max-w-xs">
-                      {calc.boundariesMessage as string}
-                    </p>
-                  )}
                 </div>
+                {'boundariesMessage' in calc && calc.boundariesMessage && (
+                  <p className="mt-2 text-xs font-normal text-foreground-muted max-w-xs">
+                    {calc.boundariesMessage as string}
+                  </p>
+                )}
                 {calc.anyFilled && calc.aStarNotes && calc.aStarNotes.length > 0 && (
                   <p className="text-[11px] text-foreground-muted max-w-xs">
                     {calc.aStarNotes.join(' ')}

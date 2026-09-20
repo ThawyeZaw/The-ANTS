@@ -282,6 +282,167 @@ export const IAL_CASH_INS: Record<IalCashInCode, IalCashInAward> = {
 
 const FM_A2_UNITS = new Set(['WFM02', 'WFM03', 'WME02', 'WME03', 'WST02', 'WST03']);
 
+/** IA2 maths-suite units (Pearson spec). D1 / M1 / S1 / FP1 / P1 / P2 are IAS. */
+export const IAL_MATHS_A2_UNITS = new Set([
+  'WMA13',
+  'WMA14',
+  'WFM02',
+  'WFM03',
+  'WME02',
+  'WME03',
+  'WST02',
+  'WST03',
+]);
+
+export interface MathsCashInSelectionStatus {
+  complete: boolean;
+  message: string | null;
+}
+
+/** Official Pearson IAS/IAL Mathematics and Further Mathematics cash-in combinations. */
+export function mathsCashInSelectionStatus(
+  cashInCode: string | null | undefined,
+  selectedElectives: readonly string[],
+  selectedPair: readonly string[] = []
+): MathsCashInSelectionStatus {
+  if (!cashInCode) return { complete: true, message: null };
+  const award = IAL_CASH_INS[cashInCode as IalCashInCode];
+  if (!award) return { complete: true, message: null };
+
+  if (award.code === 'XMA01') {
+    const need = requiredOptionalCount(award);
+    if (selectedElectives.length !== need) {
+      return {
+        complete: false,
+        message: `IAS Mathematics (XMA01) needs P1, P2 and exactly one of M1, S1 or D1.`,
+      };
+    }
+    return { complete: true, message: null };
+  }
+
+  if (award.code === 'YMA01') {
+    if (selectedPair.length !== 2) {
+      return {
+        complete: false,
+        message: 'IAL Mathematics (YMA01) needs P1–P4 plus one official applied pair (M1+S1, M1+M2, S1+S2, M1+D1 or S1+D1).',
+      };
+    }
+    return { complete: true, message: null };
+  }
+
+  if (award.code === 'XFM01') {
+    const need = requiredOptionalCount(award);
+    if (selectedElectives.length !== need) {
+      return {
+        complete: false,
+        message: `IAS Further Mathematics (XFM01) needs FP1 plus exactly two units from FP2, FP3, M1–M3, S1–S3 and D1.`,
+      };
+    }
+    return { complete: true, message: null };
+  }
+
+  if (award.code === 'YFM01') {
+    const need = requiredOptionalCount(award);
+    if (selectedElectives.length !== need) {
+      return {
+        complete: false,
+        message: `IAL Further Mathematics (YFM01) needs FP1 plus five further units (six units in total).`,
+      };
+    }
+    if (!selectedElectives.includes('WFM02') && !selectedElectives.includes('WFM03')) {
+      return {
+        complete: false,
+        message: 'YFM01 must include FP1 and at least one of FP2 or FP3.',
+      };
+    }
+    const allUnits = [...award.compulsory, ...selectedElectives];
+    const a2Count = allUnits.filter((u) => IAL_MATHS_A2_UNITS.has(u)).length;
+    if (a2Count < 3) {
+      return {
+        complete: false,
+        message: `YFM01 needs at least three A2 units (currently ${a2Count}: FP2, FP3, M2, M3, S2, S3).`,
+      };
+    }
+    return { complete: true, message: null };
+  }
+
+  const need = requiredOptionalCount(award);
+  if (need > 0 && selectedElectives.length !== need) {
+    return {
+      complete: false,
+      message: `Select ${need} optional unit${need === 1 ? '' : 's'} for ${award.code}.`,
+    };
+  }
+  return { complete: true, message: null };
+}
+
+/** Units Pearson assesses in the October IAL series (maths suite). */
+export const IAL_OCTOBER_UNITS = new Set([
+  'WMA11',
+  'WMA12',
+  'WMA13',
+  'WMA14',
+  'WME01',
+  'WME02',
+  'WST01',
+  'WST02',
+]);
+
+const MATHS_SUITE_UNITS = new Set([
+  'WMA11',
+  'WMA12',
+  'WMA13',
+  'WMA14',
+  'WFM01',
+  'WFM02',
+  'WFM03',
+  'WME01',
+  'WME02',
+  'WME03',
+  'WST01',
+  'WST02',
+  'WST03',
+  'WDM11',
+]);
+
+export const IAL_MATHS_CASH_INS = new Set<IalCashInCode>(['XMA01', 'YMA01']);
+export const IAL_FM_CASH_INS = new Set<IalCashInCode>(['XFM01', 'YFM01']);
+
+export function isIalOctoberSeries(series: string | null | undefined): boolean {
+  return Boolean(series && /oct/i.test(series));
+}
+
+export function mathsSuiteUnitAvailableInSeries(
+  unitCode: string,
+  series: string | null | undefined
+): boolean {
+  if (!MATHS_SUITE_UNITS.has(unitCode)) return true;
+  if (!isIalOctoberSeries(series)) return true;
+  return IAL_OCTOBER_UNITS.has(unitCode);
+}
+
+/** Official Pearson cash-in UMS cuts from IAL grade-boundary PDFs / maths spec. */
+export function officialCashInUmsBoundaries(maxUms: number): GradeBoundary[] {
+  const table: Record<number, number[]> = {
+    100: [80, 70, 60, 50, 40],
+    200: [160, 140, 120, 100, 80],
+    300: [240, 210, 180, 150, 120],
+    400: [320, 280, 240, 200, 160],
+    600: [480, 420, 360, 300, 240],
+  };
+  const cuts = table[maxUms];
+  if (!cuts) return [];
+  const grades = ['A', 'B', 'C', 'D', 'E'] as const;
+  return [
+    ...grades.map((g, i) => ({
+      grade: g,
+      min_mark: cuts[i],
+      max_mark: i === 0 ? maxUms : cuts[i - 1] - 1,
+    })),
+    { grade: 'U', min_mark: 0, max_mark: cuts[4] - 1 },
+  ];
+}
+
 /** Human-readable unit names for enrollment UI. */
 export const IAL_UNIT_LABELS: Record<string, string> = {
   WMA11: 'Pure 1',
@@ -384,16 +545,7 @@ export function formatIalUnitList(codes: readonly string[]): string {
 }
 
 export function umsGradeBoundaries(maxUms: number): GradeBoundary[] {
-  const a = Math.round(maxUms * 0.8);
-  return [
-    { grade: 'A*', min_mark: a },
-    { grade: 'A', min_mark: a },
-    { grade: 'B', min_mark: Math.round(maxUms * 0.7) },
-    { grade: 'C', min_mark: Math.round(maxUms * 0.6) },
-    { grade: 'D', min_mark: Math.round(maxUms * 0.5) },
-    { grade: 'E', min_mark: Math.round(maxUms * 0.4) },
-    { grade: 'U', min_mark: 0 },
-  ];
+  return officialCashInUmsBoundaries(maxUms);
 }
 
 export function cashInsForUnit(unitCode: string): IalCashInAward[] {
@@ -491,10 +643,10 @@ export function evaluateIalCashIn(input: {
 
   const boundaries =
     input.compositeBoundaries && input.compositeBoundaries.length > 0
-      ? input.compositeBoundaries
-      : umsGradeBoundaries(maxUms);
+      ? input.compositeBoundaries.filter((b) => b.grade !== 'A*')
+      : officialCashInUmsBoundaries(maxUms);
 
-  let grade = lookupGrade(totalUms, boundaries.filter((b) => b.grade !== 'A*'));
+  let grade = boundaries.length ? lookupGrade(totalUms, boundaries) : '—';
 
   if (award?.aStarTotal != null && totalUms >= award.aStarTotal) {
     if (award.code === 'YMA01') {
@@ -528,7 +680,8 @@ export function evaluateIalCashIn(input: {
     maxRaw: input.maxRaw,
     totalUms: Math.round(totalUms),
     percentage,
-    usedCompositeBoundaries: Boolean(input.compositeBoundaries?.length),
+    usedCompositeBoundaries:
+      Boolean(input.compositeBoundaries?.length) || officialCashInUmsBoundaries(maxUms).length > 0,
     aStarEligible,
     aStarNotes: notes,
   };

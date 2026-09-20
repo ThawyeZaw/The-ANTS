@@ -5,12 +5,36 @@ export function lookupGrade(
   rawScore: number,
   boundaries: GradeBoundary[]
 ): string {
-  if (!boundaries.length) return fallbackLetterGrade(percentageOf(rawScore, 100));
+  if (!boundaries.length) return '—';
   const sorted = [...boundaries].sort((a, b) => b.min_mark - a.min_mark);
   for (const b of sorted) {
     if (rawScore >= b.min_mark) return b.grade;
   }
   return 'U';
+}
+
+export function umsCapFromBoundaries(boundaries: GradeBoundary[]): number {
+  const cap = Math.max(0, ...boundaries.map((b) => b.ums_max ?? b.ums_min ?? 0));
+  return cap > 0 ? cap : 0;
+}
+
+/** Lookup a unit grade from official UMS bands. */
+export function gradeFromUms(
+  umsScore: number,
+  boundaries: GradeBoundary[]
+): PaperGradeResult {
+  const cap = umsCapFromBoundaries(boundaries);
+  const percentage = percentageOf(umsScore, cap || 100);
+  if (!boundaries.length) {
+    return { grade: '—', ums: umsScore, percentage };
+  }
+  const sorted = [...boundaries].sort((a, b) => (b.ums_min ?? 0) - (a.ums_min ?? 0));
+  for (const b of sorted) {
+    if (umsScore >= (b.ums_min ?? 0)) {
+      return { grade: b.grade, ums: umsScore, percentage };
+    }
+  }
+  return { grade: 'U', ums: umsScore, percentage };
 }
 
 export function percentageOf(raw: number, max: number): number {
@@ -46,14 +70,11 @@ export function gradeFromRawMarks(
   raw: number,
   max: number,
   boundaries: GradeBoundary[],
-  scale: 'AG' | '91' = 'AG'
+  _scale: 'AG' | '91' = 'AG'
 ): PaperGradeResult {
   const percentage = percentageOf(raw, max);
   if (!boundaries.length) {
-    return {
-      grade: scale === '91' ? fallbackNineOneGrade(percentage) : fallbackLetterGrade(percentage),
-      percentage,
-    };
+    return { grade: '—', percentage };
   }
   return { grade: lookupGrade(raw, boundaries), percentage };
 }
@@ -64,7 +85,7 @@ export function computeUms(
   boundaries: GradeBoundary[]
 ): { ums: number; grade: string } {
   if (!boundaries.length) {
-    return { ums: Math.min(100, Math.max(0, Math.round(rawScore))), grade: '—' };
+    return { ums: 0, grade: '—' };
   }
 
   const cap =

@@ -64,7 +64,7 @@ export async function listCurriculums() {
 }
 
 export async function listSubjects() {
-  const cached = getFromCache<ReturnType<typeof asTitle>[]>('subjects');
+  const cached = getFromCache<ReturnType<typeof asTitle>[]>('subjects:v2');
   if (cached) return cached;
 
   const db = getDb();
@@ -74,11 +74,13 @@ export async function listSubjects() {
       name: subjects.name,
       code: subjects.code,
       curriculum_id: subjects.curriculum_id,
+      subject_type: subjects.subject_type,
+      qualification_data: subjects.qualification_data,
     })
     .from(subjects)
     .orderBy(asc(subjects.name));
   const result = rows.map(asTitle);
-  return setInCache('subjects', result, 15 * 60 * 1000);
+  return setInCache('subjects:v2', result, 15 * 60 * 1000);
 }
 
 /** Upcoming catalog by default. Pass `{ all: true }` only for a full history list. */
