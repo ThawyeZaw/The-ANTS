@@ -251,11 +251,37 @@ export async function listApprovedCalculatorPresets(subjectId?: string) {
 }
 
 /** Load past-paper presets for every unit in an IAL cash-in award. */
-export async function listCashInCalculatorPresets(cashInCode: string) {
-  const award = IAL_CASH_INS[cashInCode as IalCashInCode];
-  if (!award) return [];
-  const codes = [...award.compulsory, ...award.optional];
+export async function listCashInCalculatorPresets(cashInCode: string, subjectId?: string) {
   const db = getDb();
+  let codes: string[] = [];
+
+  const award = IAL_CASH_INS[cashInCode as IalCashInCode];
+  if (award) {
+    codes = [...award.compulsory, ...award.optional];
+  } else if (subjectId) {
+    // Check if the subject has qualification_data containing this cashInCode
+    const subject = await db.query.subjects.findFirst({
+      where: eq(subjects.id, subjectId),
+      columns: { qualification_data: true }
+    });
+    
+    if (subject?.qualification_data) {
+      try {
+        const spec = typeof subject.qualification_data === 'string' 
+          ? JSON.parse(subject.qualification_data) 
+          : subject.qualification_data;
+        const profile = spec?.qualifications?.find((q: any) => q.cashInCode === cashInCode);
+        if (profile) {
+          codes = [...(profile.mandatoryUnits || []), ...(profile.electiveRules?.allowedUnitPool || [])];
+        }
+      } catch (e) {
+        console.error('Failed to parse qualification_data in listCashInCalculatorPresets', e);
+      }
+    }
+  }
+
+  if (codes.length === 0) return [];
+
   const unitSubjects = await db.query.subjects.findMany({
     where: inArray(subjects.code, [...codes]),
     columns: { id: true, code: true, curriculum_id: true },

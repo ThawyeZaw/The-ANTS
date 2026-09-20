@@ -285,8 +285,20 @@ def sql_quote(value: str) -> str:
     return value.replace("'", "''")
 
 
+def parse_subtopic_label(label: str) -> dict[str, str]:
+    match = re.match(r"^([CE]?\d+\.\d+|\d+\.\d+|[A-Z]\d+)\s+(.+)$", label.strip(), re.I)
+    if match:
+        return {"code": match.group(1), "title": match.group(2).strip()}
+    return {"code": "", "title": label.strip()}
+
+
+def sql_json_subtopics(items: list[str]) -> str:
+    objs = [parse_subtopic_label(item) for item in items]
+    return json.dumps(objs, ensure_ascii=False).replace("'", "''")
+
+
 def sql_json_array(items: list[str]) -> str:
-    return json.dumps(items, ensure_ascii=False).replace("'", "''")
+    return sql_json_subtopics(items)
 
 
 def pdf_lines(pdf_path: Path) -> list[str]:
@@ -645,7 +657,7 @@ def write_update_backfill(
     for topic_id, subtopics in updates:
         if not subtopics:
             continue
-        payload = sql_json_array(subtopics)
+        payload = sql_json_subtopics(subtopics)
         lines.append(
             "UPDATE topics SET "
             f"subtopics='{payload}', "
@@ -691,7 +703,7 @@ def write_extras(path: Path, updates: list[tuple[str, list[str]]]) -> int:
         if not subtopics:
             continue
         count += 1
-        payload = sql_json_array(subtopics)
+        payload = sql_json_subtopics(subtopics)
         lines.append(
             "UPDATE topics SET "
             f"subtopics='{payload}', "

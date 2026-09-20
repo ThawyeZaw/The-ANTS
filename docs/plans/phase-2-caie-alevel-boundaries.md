@@ -1,6 +1,6 @@
 # Phase 2 — CAIE A Level Grade Boundaries & Reserved Subject Activation
 
-> **Status:** In progress — generators + component routes landed; **blocked on CAIE A Level grade boundary PDFs** for full seed data  
+> **Status:** **Deferred (user decision)** — skip CAIE A Level for now; focus CAIE IGCSE + Edexcel IGCSE/IAL. Generators + `0029` routes ready when GB PDFs arrive.  
 > **Prerequisites:** Phase 1 merged  
 > **Unblocks:** Full A Level calculator composite, reserved CAIE AL subjects
 

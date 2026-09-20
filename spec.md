@@ -70,9 +70,15 @@ Multi-role accounts use a JSON text array on D1 (`roles` stored as JSON text, e.
 
 - **Curriculum Hub (`/curriculum`):** Unified board selector (Cambridge IGCSE, Cambridge A Level, Pearson Edexcel IGCSE, Pearson Edexcel IAL) leading to:
   - `/curriculum/[curriculumId]`: Subject list with enrollment toggles, syllabus codes, and progress bars.
+    - `subject_type = 'modular_maths_suite'` subjects render as a **Mathematics Suite card** (amber border, qualification chips). Clicking opens the suite selectors.
   - `/curriculum/[curriculumId]/[subjectId]`: Dual-tab subject workspace:
-    - **Topic Tracker (`?tab=topics`):** Interactive syllabus breakdown, completion tracking, subtopics, and difficulty tags (seeded via D1 SQL).
-    - **Past Papers (`?tab=papers`):** Embedded Excel-style past paper matrix (variants × exam series) with instant score & grade calculation.
+    - **Topic Tracker (`?tab=topics`):** Interactive syllabus breakdown, completion tracking, subtopics, and difficulty tags (seeded via D1 SQL). For the maths suite, topics are prefixed with the unit code (`WMA11 - Algebra and functions`) and filtered by the selected active units.
+    - **Past Papers (`?tab=papers`):** Embedded Excel-style past paper matrix (variants × exam series) with instant score & grade calculation. For the maths suite, rows are filtered by `paper_number` prefix matching the active `unitCode` (e.g. `WMA11/01`).
+- **Modular Maths Suite (`subject_type = 'modular_maths_suite'`):**
+  - Parent subject `subj-edx-ial-maths-suite` (`code: 'WMA11-SET'`) holds a `qualification_data` JSON blob:
+    - `availableUnits[]`: 14 units (WMA11–WMA14, WFM01–03, WME01–03, WST01–03, WDM11) each with `unitCode`, `unitTitle`, `stage`, `umsWeight`, `subjectId`, `directPrerequisites`.
+    - `qualifications[]`: 4 cash-in awards — XMA01 (AS Maths), YMA01 (AL Maths), XFM01 (AS Further Maths), YFM01 (AL Further Maths) — each with `mandatoryUnits`, `forbiddenUnits`, and `electiveRules` (strategy: `CHOOSE_N_FROM_SET` | `EXACT_COMBINATION_PAIRS` | `AT_LEAST_ONE_OF`).
+  - UI: `EdexcelSuiteSelectors` + `useEdexcelSuiteSelectors` hook drive unit selection and filter topics/papers.
 - **Legacy Route Consolidations:** `/courses` and `/lessons` redirect to `/curriculum`; `/library?tab=courses` redirects to `/curriculum`; `/library?tab=exams` redirects to `/past-papers`.
 - **Resource Center (`/library`):** Quick-launch center directing to Curriculum Hub, Past Papers, and study utilities.
 - **Notes (rebuild):** In-app notes library and personal notes (`/my-notes`, library note views). Built from scratch — not a Notion-only product path.
@@ -133,6 +139,21 @@ Username / display name: `updateProfile()` in auth context + `actionUpdateUserna
 6. **Client directive:** Interactive UI components start with `'use client';`.
 7. **Secrets:** Never commit `.env.local` / credentials.
 8. **Typecheck:** PRs must keep `npm run typecheck` clean.
+
+### Subject type system
+
+| `subject_type` | Meaning | Example |
+|---|---|---|
+| `fixed_linear` | Standard single-paper subject | Cambridge IGCSE Physics (0625) |
+| `modular_sciences` | Physics/Chem/Bio with AS + A2 unit pairs | Edexcel IAL Biology (WBI11+WBI12) |
+| `modular_maths_suite` | Top-level suite parent with `qualification_data` JSON | `subj-edx-ial-maths-suite` (WMA11-SET) |
+
+For `modular_maths_suite`, `qualification_data` (TEXT column, JSON) carries:
+- `availableUnits[]` — unit descriptors (`unitCode`, `unitTitle`, `stage`, `umsWeight`, `subjectId`, `directPrerequisites`)
+- `qualifications[]` — cash-in awards with `mandatoryUnits`, `forbiddenUnits`, `electiveRules` (strategies: `CHOOSE_N_FROM_SET`, `EXACT_COMBINATION_PAIRS`, `AT_LEAST_ONE_OF`)
+
+Topic names for maths suite units are prefixed with the syllabus code: `"WMA11 - Algebra and functions"`.
+Past paper rows use `paper_number` = `"WMA11/01"` format so `startsWith(unitCode)` filtering works client-side.
 
 ---
 

@@ -46,6 +46,8 @@ import {
 } from '@/lib/grading';
 import type { GradeBoundary, PaperComponent } from '@/lib/grading/types';
 import { IAL_CASH_INS, cashInsForUnit, type IalCashInCode } from '@/lib/grading/ial-cash-in';
+import { useEdexcelSuiteSelectors } from './useEdexcelSuiteSelectors';
+import { EdexcelSuiteSelectors } from './EdexcelSuiteSelectors';
 
 interface PresetBoundary {
   grade: string;
@@ -103,7 +105,7 @@ export default function GradeCalculator() {
   );
   const [selectedVariant, setSelectedVariant] = useState(searchParams.get('variant') || '');
   const [selectedExclusiveOptions, setSelectedExclusiveOptions] = useState<Record<string, string>>({});
-  const [selectedCashIn, setSelectedCashIn] = useState('');
+  const [selectedCashInLocal, setSelectedCashInLocal] = useState('');
   const [cashInPresets, setCashInPresets] = useState<CalcPreset[]>([]);
   const [rawMarks, setRawMarks] = useState<Record<string, number | string>>({});
   const [compositeBoundaries, setCompositeBoundaries] = useState<GradeBoundary[]>([]);
@@ -114,6 +116,25 @@ export default function GradeCalculator() {
   // Client-side cache to avoid redundant D1 row queries when toggling subjects
   const presetCacheRef = useRef<Map<string, CalcPreset[]>>(new Map());
   const compositeCacheRef = useRef<Map<string, GradeBoundary[]>>(new Map());
+
+  const selectedCurriculumRow = useMemo(
+    () => curriculums.find((c) => c.id === selectedCurriculum),
+    [curriculums, selectedCurriculum]
+  );
+  const selectedSubjectRow = useMemo(
+    () => subjects.find((s) => s.id === selectedSubject),
+    [subjects, selectedSubject]
+  );
+
+  const isSuite = selectedSubjectRow?.subject_type === 'modular_maths_suite';
+  
+  const suiteSelectors = useEdexcelSuiteSelectors(
+    isSuite ? selectedSubjectRow?.qualification_data : null,
+    selectedCashInLocal
+  );
+
+  const selectedCashIn = isSuite ? suiteSelectors.selectedCashIn : selectedCashInLocal;
+  const setSelectedCashIn = isSuite ? suiteSelectors.setSelectedCashIn : setSelectedCashInLocal;
 
   useEffect(() => {
     async function fetchCatalog() {
@@ -185,7 +206,7 @@ export default function GradeCalculator() {
       return;
     }
     let cancelled = false;
-    listCashInCalculatorPresets(selectedCashIn)
+    listCashInCalculatorPresets(selectedCashIn, selectedSubject)
       .then((rows) => {
         if (!cancelled) setCashInPresets(rows as CalcPreset[]);
       })
@@ -197,14 +218,6 @@ export default function GradeCalculator() {
     };
   }, [selectedCashIn]);
 
-  const selectedCurriculumRow = useMemo(
-    () => curriculums.find((c) => c.id === selectedCurriculum),
-    [curriculums, selectedCurriculum]
-  );
-  const selectedSubjectRow = useMemo(
-    () => subjects.find((s) => s.id === selectedSubject),
-    [subjects, selectedSubject]
-  );
   const plugin = useMemo(
     () => getPluginForCurriculumCode(selectedCurriculumRow?.code),
     [selectedCurriculumRow]
@@ -367,13 +380,23 @@ export default function GradeCalculator() {
 
   const filteredActivePapers = useMemo(() => {
     if (!activePreset) return [];
-    return (activePreset.papers as (PaperDef & { exclusiveGroup?: string })[]).filter((p) => {
+    let papers = activePreset.papers as (PaperDef & { exclusiveGroup?: string })[];
+
+    // If it's a suite, filter down to the active units (mandatory + selected electives)
+    if (isSuite && suiteSelectors.activeUnits.size > 0) {
+      papers = papers.filter((p) => {
+        const baseCode = (p.paper_number || p.name).split('/')[0];
+        return suiteSelectors.activeUnits.has(baseCode) || suiteSelectors.activeUnits.has(p.paper_number || p.name);
+      });
+    }
+
+    return papers.filter((p) => {
       if (p.exclusiveGroup) {
         return (p.paper_number || p.name) === selectedExclusiveOptions[p.exclusiveGroup];
       }
       return true;
     });
-  }, [activePreset, selectedExclusiveOptions]);
+  }, [activePreset, selectedExclusiveOptions, isSuite, suiteSelectors.activeUnits]);
 
   useEffect(() => {
     if (!selectedSubject || !selectedSeries || !activePreset?.year) {
@@ -411,10 +434,19 @@ export default function GradeCalculator() {
   }, [selectedCurriculum, selectedSubject, presets, cashInPresets, selectedCashIn]);
 
   const isIAL = activePreset?.is_modular || activePreset?.qualification === 'IAL' || selectedCurriculumRow?.code === 'EDEXCEL_IAL';
-  const availableCashIns = useMemo(
-    () => (selectedSubjectRow?.code ? cashInsForUnit(selectedSubjectRow.code) : Object.values(IAL_CASH_INS)),
-    [selectedSubjectRow]
-  );
+  
+  const availableCashIns = useMemo(() => {
+    if (isSuite) {
+      return suiteSelectors.availableCashIns.map(q => ({
+        code: q.cashInCode,
+        name: q.qualificationTitle,
+        maxUms: (q.totalUnitsRequired || 0) * 100,
+        compulsory: q.mandatoryUnits,
+        optional: q.electiveRules?.allowedUnitPool || []
+      }));
+    }
+    return selectedSubjectRow?.code ? cashInsForUnit(selectedSubjectRow.code) : Object.values(IAL_CASH_INS);
+  }, [selectedSubjectRow, isSuite, suiteSelectors.availableCashIns]);
 
   useEffect(() => {
     if (selectedCurriculumRow?.code !== 'EDEXCEL_IAL') {
@@ -907,6 +939,16 @@ export default function GradeCalculator() {
               </p>
             </div>
           </div>
+
+          {isSuite && (
+            <EdexcelSuiteSelectors
+              activeQualification={suiteSelectors.activeQualification}
+              selectedElectives={suiteSelectors.selectedElectives}
+              handleElectiveToggle={suiteSelectors.handleElectiveToggle}
+              selectedPairIndex={suiteSelectors.selectedPairIndex}
+              setSelectedPairIndex={suiteSelectors.setSelectedPairIndex}
+            />
+          )}
 
           {/* Paper Mark Entry Cards */}
           <div className="space-y-4">

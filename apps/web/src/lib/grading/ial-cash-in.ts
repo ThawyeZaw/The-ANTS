@@ -1,3 +1,4 @@
+import type { AwardLevel } from '@/lib/exam-papers/myanmar-papers';
 import { lookupGrade, percentageOf } from './shared';
 import type { CompositeGradeResult, GradeBoundary } from './types';
 
@@ -281,6 +282,107 @@ export const IAL_CASH_INS: Record<IalCashInCode, IalCashInAward> = {
 
 const FM_A2_UNITS = new Set(['WFM02', 'WFM03', 'WME02', 'WME03', 'WST02', 'WST03']);
 
+/** Human-readable unit names for enrollment UI. */
+export const IAL_UNIT_LABELS: Record<string, string> = {
+  WMA11: 'Pure 1',
+  WMA12: 'Pure 2',
+  WMA13: 'Pure 3',
+  WMA14: 'Pure 4',
+  WME01: 'Mechanics M1',
+  WME02: 'Mechanics M2',
+  WME03: 'Mechanics M3',
+  WST01: 'Statistics S1',
+  WST02: 'Statistics S2',
+  WST03: 'Statistics S3',
+  WDM11: 'Decision D1',
+  WFM01: 'Further Pure F1',
+  WFM02: 'Further Pure F2',
+  WFM03: 'Further Pure F3',
+  WPH11: 'Unit 1',
+  WPH12: 'Unit 2',
+  WPH13: 'Unit 3',
+  WPH14: 'Unit 4',
+  WPH15: 'Unit 5',
+  WPH16: 'Unit 6',
+  WCH11: 'Unit 1',
+  WCH12: 'Unit 2',
+  WCH13: 'Unit 3',
+  WCH14: 'Unit 4',
+  WCH15: 'Unit 5',
+  WCH16: 'Unit 6',
+  WBI11: 'Unit 1',
+  WBI12: 'Unit 2',
+  WBI13: 'Unit 3',
+  WBI14: 'Unit 4',
+  WBI15: 'Unit 5',
+  WBI16: 'Unit 6',
+  WIT11: 'Unit 1',
+  WIT12: 'Unit 2',
+  WIT13: 'Unit 3',
+  WIT14: 'Unit 4',
+  WCP01: 'Unit 1',
+  WCP02: 'Unit 2',
+  WCP03: 'Unit 3',
+  WCP04: 'Unit 4',
+  WEC11: 'Unit 1',
+  WEC12: 'Unit 2',
+  WEC13: 'Unit 3',
+  WEC14: 'Unit 4',
+  WBS11: 'Unit 1',
+  WBS12: 'Unit 2',
+  WBS13: 'Unit 3',
+  WBS14: 'Unit 4',
+  WAC11: 'Unit 1',
+  WAC12: 'Unit 2',
+  WEN01: 'Unit 1',
+  WEN02: 'Unit 2',
+  WEN03: 'Unit 3',
+  WEN04: 'Unit 4',
+  WET01: 'Unit 1',
+  WET02: 'Unit 2',
+  WET03: 'Unit 3',
+  WET04: 'Unit 4',
+  WPS01: 'Unit 1',
+  WPS02: 'Unit 2',
+  WPS03: 'Unit 3',
+  WPS04: 'Unit 4',
+};
+
+export interface IalSubjectGroup {
+  key: string;
+  label: string;
+  asCode: IalCashInCode;
+  alevelCode: IalCashInCode;
+  /** Cash-in codes with no past papers seeded yet (new spec). */
+  papersPending?: boolean;
+}
+
+/** IAL subjects grouped for enrollment — AS + A Level per row. */
+export const IAL_SUBJECT_GROUPS: IalSubjectGroup[] = [
+  { key: 'maths', label: 'Mathematics', asCode: 'XMA01', alevelCode: 'YMA01' },
+  { key: 'fmaths', label: 'Further Mathematics', asCode: 'XFM01', alevelCode: 'YFM01' },
+  { key: 'phys', label: 'Physics', asCode: 'XPH11', alevelCode: 'YPH11' },
+  { key: 'chem', label: 'Chemistry', asCode: 'XCH11', alevelCode: 'YCH11' },
+  { key: 'bio', label: 'Biology', asCode: 'XBI11', alevelCode: 'YBI11' },
+  { key: 'it', label: 'Information Technology', asCode: 'XIT11', alevelCode: 'YIT11' },
+  { key: 'cs', label: 'Computer Science', asCode: 'XCP01', alevelCode: 'YCP01', papersPending: true },
+  { key: 'econ', label: 'Economics', asCode: 'XEC11', alevelCode: 'YEC11' },
+  { key: 'biz', label: 'Business', asCode: 'XBS11', alevelCode: 'YBS11' },
+  { key: 'acc', label: 'Accounting', asCode: 'XAC11', alevelCode: 'YAC11' },
+  { key: 'eng', label: 'English Language', asCode: 'XEN01', alevelCode: 'YEN01' },
+  { key: 'lit', label: 'English Literature', asCode: 'XET01', alevelCode: 'YET01' },
+  { key: 'psych', label: 'Psychology', asCode: 'XPS01', alevelCode: 'YPS01' },
+];
+
+export function formatIalUnitLabel(unitCode: string, includeCode = true): string {
+  const label = IAL_UNIT_LABELS[unitCode] ?? unitCode;
+  return includeCode ? `${label} (${unitCode})` : label;
+}
+
+export function formatIalUnitList(codes: readonly string[]): string {
+  return codes.map((c) => formatIalUnitLabel(c)).join(', ');
+}
+
 export function umsGradeBoundaries(maxUms: number): GradeBoundary[] {
   const a = Math.round(maxUms * 0.8);
   return [
@@ -298,6 +400,59 @@ export function cashInsForUnit(unitCode: string): IalCashInAward[] {
   return Object.values(IAL_CASH_INS).filter(
     (award) => award.compulsory.includes(unitCode) || award.optional.includes(unitCode)
   );
+}
+
+/** How many optional units the student must pick for this cash-in award. */
+export function requiredOptionalCount(award: IalCashInAward): number {
+  return Math.max(0, award.unitCount - award.compulsory.length);
+}
+
+export function awardLevelFromCashInCode(code: IalCashInCode): AwardLevel {
+  return code.startsWith('Y') ? 'A Level' : 'AS';
+}
+
+/** Preset optional-unit picks for awards with structured routes. */
+export function optionalUnitPresets(award: IalCashInAward): { label: string; units: string[] }[] {
+  const need = requiredOptionalCount(award);
+  if (need === 0) return [{ label: 'Standard route', units: [] }];
+
+  if (award.code === 'XMA01') {
+    return [
+      { label: 'Mechanics M1', units: ['WME01'] },
+      { label: 'Statistics S1', units: ['WST01'] },
+      { label: 'Decision D1', units: ['WDM11'] },
+    ];
+  }
+
+  if (award.code === 'YMA01') {
+    return YMA01_APPLIED_PAIRS.map(([a, b]) => ({
+      label: `${IAL_UNIT_LABELS[a] ?? a} + ${IAL_UNIT_LABELS[b] ?? b}`,
+      units: [a, b],
+    }));
+  }
+
+  if (award.code === 'XFM01') {
+    return [
+      { label: 'M1 + S1', units: ['WME01', 'WST01'] },
+      { label: 'M1 + M2', units: ['WME01', 'WME02'] },
+      { label: 'S1 + S2', units: ['WST01', 'WST02'] },
+      { label: 'F2 + M1', units: ['WFM02', 'WME01'] },
+    ];
+  }
+
+  if (award.code === 'YFM01') {
+    return [
+      { label: 'F1–F3 + M1 + S1', units: ['WFM02', 'WFM03', 'WME01', 'WST01', 'WST02'] },
+      { label: 'F1–F3 + M1 + S2', units: ['WFM02', 'WFM03', 'WME01', 'WME02', 'WST01'] },
+      { label: 'F1–F3 + S1 + S2', units: ['WFM02', 'WFM03', 'WST01', 'WST02', 'WME01'] },
+    ];
+  }
+
+  if (need === 1) {
+    return award.optional.map((u) => ({ label: formatIalUnitLabel(u, false), units: [u] }));
+  }
+
+  return [];
 }
 
 export function inferCashInFromUnits(unitCodes: string[]): IalCashInCode | null {
