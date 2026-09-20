@@ -1,8 +1,8 @@
 # Phase 4 — Topic ↔ Past Paper Linking
 
-> **Status:** Planned  
-> **Prerequisites:** Phase 1 merged; Phase 2 recommended for A Level paper catalog completeness  
-> **User decision (Phase 1):** Shared enrollment prefs only — this phase adds the integration layer
+> **Status:** **Cancelled (user decision, 2026-09-19)**  
+> Topic tracker and past paper tracker remain **fully independent**. Completing a past paper must **not** imply or auto-update topic mastery.  
+> Do not implement `topic_paper_tags` or suggestion flows from this doc unless the user explicitly reopens the phase.
 
 ---
 

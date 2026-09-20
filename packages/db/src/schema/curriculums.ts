@@ -25,6 +25,8 @@ export const subjects = sqliteTable(
     description: text('description'),
     icon_url: text('icon_url'),
     color_code: text('color_code'),
+    subject_type: text('subject_type').default('fixed_linear'), // 'fixed_linear' | 'modular_sciences' | 'modular_maths_suite'
+    qualification_data: jsonText('qualification_data'), // stores availableUnits and qualifications array
     created_at: tsNow('created_at'),
   },
   (table) => [

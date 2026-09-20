@@ -34,8 +34,9 @@ import { getPaperGridData, type PaperGridData } from '@/actions/curriculum';
 import { PaperGrid } from './PaperGrid';
 import { SubjectProgressHeader } from './SubjectProgressHeader';
 import { PaperCard, type UserPaperRecord } from './PaperCard';
-import { EnrollSubjectModal } from './EnrollSubjectModal';
 import type { PastPaperData } from './InlineGradeCalc';
+import { useEdexcelSuiteSelectors } from '@/components/exam-data/useEdexcelSuiteSelectors';
+import { EdexcelSuiteSelectors } from '@/components/exam-data/EdexcelSuiteSelectors';
 
 function flattenGrid(
   grid: PaperGridData,
@@ -107,7 +108,6 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
   });
 
   const [loading, setLoading] = useState(true);
-  const [showEnrollModal, setShowEnrollModal] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'cards'>('grid');
   const [gridData, setGridData] = useState<PaperGridData | null>(null);
 
@@ -181,20 +181,38 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
   // Active subject object
   const currentSubject = enrolledSubjects.find((s) => s.id === selectedSubjectId);
 
+  const isSuite = currentSubject?.subject_type === 'modular_maths_suite';
+  const suiteSelectors = useEdexcelSuiteSelectors(
+    isSuite ? currentSubject?.qualification_data : null
+  );
+
+  const filteredGridData = useMemo(() => {
+    if (!gridData) return null;
+    if (!isSuite || suiteSelectors.activeUnits.size === 0) return gridData;
+
+    return {
+      ...gridData,
+      rows: gridData.rows.filter(row => {
+         const baseCode = row.paperNumber.split('/')[0];
+         return suiteSelectors.activeUnits.has(baseCode) || suiteSelectors.activeUnits.has(row.paperNumber);
+      })
+    };
+  }, [gridData, isSuite, suiteSelectors.activeUnits]);
+
   useEffect(() => {
-    if (!gridData) {
+    if (!filteredGridData) {
       setPapers([]);
       setRecords({});
       return;
     }
     const flattened = flattenGrid(
-      gridData,
+      filteredGridData,
       currentSubject?.name ?? '',
       currentSubject?.code ?? ''
     );
     setPapers(flattened.papers);
     setRecords(flattened.records);
-  }, [gridData, currentSubject?.name, currentSubject?.code]);
+  }, [filteredGridData, currentSubject?.name, currentSubject?.code]);
 
   // Handle status & mark changes
   const handleStatusChange = async (
@@ -425,15 +443,6 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
                 Cards
               </button>
             </div>
-
-            <button
-              type="button"
-              onClick={() => setShowEnrollModal(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-background-secondary border border-border text-foreground hover:text-primary hover:border-primary/30 text-xs font-bold transition-all shrink-0 cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Add Subject
-            </button>
           </div>
         </div>
       </div>
@@ -500,16 +509,45 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
         />
       )}
 
+      {isSuite && (
+        <div className="p-4 sm:p-5 rounded-3xl border border-border bg-background-card shadow-xs space-y-4 animate-fade-in">
+           <div className="space-y-1.5">
+             <label className="block text-xs font-bold uppercase tracking-wider text-foreground-secondary">
+               Target Cash-In / Award
+             </label>
+             <select
+               value={suiteSelectors.selectedCashIn}
+               onChange={(e) => suiteSelectors.setSelectedCashIn(e.target.value)}
+               className="w-full md:w-1/2 bg-background-secondary border border-border rounded-2xl py-3 px-4 text-xs font-bold text-foreground outline-none focus:border-primary transition-colors"
+             >
+               {suiteSelectors.availableCashIns.map((q: any) => (
+                 <option key={q.cashInCode} value={q.cashInCode}>
+                   {q.cashInCode} &middot; {q.qualificationTitle}
+                 </option>
+               ))}
+             </select>
+           </div>
+           
+           <EdexcelSuiteSelectors
+              activeQualification={suiteSelectors.activeQualification}
+              selectedElectives={suiteSelectors.selectedElectives}
+              handleElectiveToggle={suiteSelectors.handleElectiveToggle}
+              selectedPairIndex={suiteSelectors.selectedPairIndex}
+              setSelectedPairIndex={suiteSelectors.setSelectedPairIndex}
+           />
+        </div>
+      )}
+
       {/* ── Content View: Excel Grid vs Cards ─────────────────────────────── */}
       {viewMode === 'grid' ? (
         loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="h-8 w-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
           </div>
-        ) : gridData ? (
+        ) : filteredGridData ? (
           <PaperGrid
             userId={userId}
-            data={gridData}
+            data={filteredGridData}
             onRecordChange={handleGridRecordChange}
           />
         ) : (
@@ -690,18 +728,6 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
         </>
       )}
 
-      {/* Enrollment Modal */}
-      {showEnrollModal && (
-        <EnrollSubjectModal
-          userId={userId}
-          enrolledSubjectIds={enrolledSubjects.map((s) => s.id)}
-          onClose={() => setShowEnrollModal(false)}
-          onEnrolled={async () => {
-            await refreshUserData();
-            setShowEnrollModal(false);
-          }}
-        />
-      )}
     </div>
   );
 }

@@ -34,6 +34,9 @@ SEED_ORDER = [
     "0028_subject_component_routes.sql",
     "0029_caie_alevel_component_routes.sql",
     "0030_caie_alevel_subject_composites.sql",
+    "0031_edexcel_ial_maths_suite.sql",
+    "0032_backfill_maths_suite_topic_prefixes.sql",
+    "0033_maths_suite_past_papers.sql",
 ]
 
 

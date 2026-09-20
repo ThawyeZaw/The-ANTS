@@ -6,7 +6,7 @@
 
 *Ace with us!*
 
-*Smart Timetables · Flashcards (SRS) · Notes Library · Quizzes · Tutor Schedules · Telegram Booking · Exam Countdowns · Grade Calculators · Portfolio Profiles · Pomodoro*
+*Smart Timetables · Flashcards (SRS) · Notes Library · Quizzes · Tutor Schedules · Telegram Booking · Exam Countdowns · Grade Calculators · Portfolio Profiles · Pomodoro · **Modular Unit Selector (Edexcel IAL Maths Suite)***
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://www.typescriptlang.org/)
@@ -100,14 +100,18 @@ The-ANTS/
 │   │   ├── src/app/             # Routes: (public), (auth), (app), (onboarding)
 │   │   ├── src/components/      # UI (layout, profile, timetable, notes, …)
 │   │   ├── src/hooks/           # useAuth, useRole, useTimetable, …
+│   │   ├── src/lib/             # edexcel-ial.ts, grading, utils
 │   │   └── src/actions/         # Server actions (Features developer)
 │   └── api/                     # Hono on Cloudflare Workers
 ├── packages/
 │   ├── db/                      # D1 (SQLite) schema + Drizzle (Features developer)
+│   │   ├── drizzle-d1/          # Generated migrations (apply with wrangler d1 execute)
+│   │   └── seeds/               # Numbered SQL seed files (0001–0033)
 │   ├── shared-types/            # Shared TS + Zod
 │   └── config/                  # Shared ESLint / TS configs
 ├── docs/design/                 # Stitch light + dark design specs
 ├── docs/migration/              # Cloudflare migration phase tracker
+├── docs/records/                # data_entry_record.md — DB audit & seed inventory
 ├── AGENTS.md                    # Shared dual-dev rules
 ├── AGENTS.ui.md                 # Zay Lynn Htet
 ├── AGENTS.features.md           # Thaw Ye Zaw
@@ -151,6 +155,25 @@ npm run cf:deploy:web   # creates/updates Worker the-ants-web — do NOT point a
 ```
 
 Guide: [`docs/migration/opennext-web.md`](./docs/migration/opennext-web.md).
+
+---
+
+## Data & seeds
+
+All exam catalog data lives in D1 (`the-ants-db`). Key seed files under `packages/db/seeds/`:
+
+| File | Contents |
+|---|---|
+| `0001_exam_data_seed.sql` | Base boards + initial subjects |
+| `0004_caie_igcse_grade_thresholds.sql` | 1,325 CAIE IGCSE past papers + 10,575 grade boundaries |
+| `0009_topics_edexcel_ial.sql` | 172 IAL unit topics |
+| `0031_edexcel_ial_maths_suite.sql` | Maths Suite parent subject (`WMA11-SET`, `subject_type='modular_maths_suite'`) with full `qualification_data` JSON (4 qualifications × 14 units) |
+| `0032_backfill_maths_suite_topic_prefixes.sql` | Prefixes 80 maths topics with unit code (`WMA11 - Algebra and functions`) |
+| `0033_maths_suite_past_papers.sql` | ~140 past papers (Jan/Jun/Oct 2022–2025) for all 14 IAL maths units; fixes `paper_number` to `WMA11/01` format |
+
+Schema migration for new `subjects` columns: `packages/db/drizzle-d1/0008_maths_suite_subject_columns.sql`.
+
+Full audit: [`docs/records/data_entry_record.md`](./docs/records/data_entry_record.md).
 
 ---
 

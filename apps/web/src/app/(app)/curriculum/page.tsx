@@ -19,8 +19,6 @@ import {
   type CurriculumWithStats,
   type HubSubject,
 } from '@/actions/curriculum';
-import { applyExamSessionToAll, getDefaultExamSession } from '@/actions/enrollment-sync';
-import { EXAM_SESSION_OPTIONS } from '@/lib/grading';
 import { SubjectHubCard } from '@/components/curriculum/SubjectHubCard';
 import { cn } from '@/lib/utils';
 import type { AwardLevel, PaperPreferences } from '@/lib/exam-papers/myanmar-papers';
@@ -39,22 +37,17 @@ export default function CurriculumPage() {
   const [tab, setTab] = useState<HubTab>('mine');
   const [hubSubjects, setHubSubjects] = useState<HubSubject[]>([]);
   const [curriculums, setCurriculums] = useState<CurriculumWithStats[]>([]);
-  const [session, setSession] = useState<string>(EXAM_SESSION_OPTIONS[1]);
   const [loading, setLoading] = useState(true);
-  const [applying, setApplying] = useState(false);
 
   const reload = async () => {
-    if (!user) return;
     setLoading(true);
     try {
-      const [hub, boards, defaultSeries] = await Promise.all([
-        getMySubjectsHub(user.id),
-        getCurriculums(user.id),
-        getDefaultExamSession(user.id),
+      const [hub, boards] = await Promise.all([
+        user ? getMySubjectsHub(user.id) : Promise.resolve({ subjects: [], defaultExamSeries: 'May/June 2026' }),
+        getCurriculums(user?.id),
       ]);
       setHubSubjects(hub.subjects);
       setCurriculums(boards);
-      setSession(hub.defaultExamSeries || defaultSeries);
     } finally {
       setLoading(false);
     }
@@ -62,12 +55,8 @@ export default function CurriculumPage() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user) {
-      setLoading(false);
-      return;
-    }
     void reload();
-  }, [user, authLoading]);
+  }, [user?.id, authLoading]);
 
   const handleUnenroll = async (s: HubSubject) => {
     if (!user) return;
@@ -91,16 +80,7 @@ export default function CurriculumPage() {
     await reload();
   };
 
-  const handleApplySession = async () => {
-    if (!user) return;
-    setApplying(true);
-    try {
-      await applyExamSessionToAll(user.id, session);
-      await reload();
-    } finally {
-      setApplying(false);
-    }
-  };
+
 
   return (
     <div className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8 transition-colors">
@@ -116,32 +96,7 @@ export default function CurriculumPage() {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-border bg-background-card p-4 flex flex-col sm:flex-row sm:items-end gap-3">
-          <label className="flex-1 space-y-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-foreground-muted flex items-center gap-1.5">
-              <Calendar className="h-3.5 w-3.5" /> My exam session
-            </span>
-            <select
-              value={session}
-              onChange={(e) => setSession(e.target.value)}
-              className="w-full rounded-xl border border-border bg-background-secondary px-3 py-2.5 text-sm font-semibold"
-            >
-              {EXAM_SESSION_OPTIONS.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button
-            type="button"
-            onClick={handleApplySession}
-            disabled={applying || !user}
-            className="rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-white hover:bg-primary-hover disabled:opacity-50"
-          >
-            {applying ? 'Applying…' : 'Apply to all subjects'}
-          </button>
-        </div>
+
 
         <div className="flex gap-2 border-b border-border">
           {([

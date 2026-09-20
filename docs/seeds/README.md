@@ -143,10 +143,10 @@ Quick coverage:
 
 | Board | Subjects | Topics | Calculator papers |
 |---|---|---|---|
-| CAIE IGCSE (12 target) | all in-db | yes (`0002`) | yes (`0004`) |
-| Edexcel IGCSE (14 target) | 9 in-db, 5 reserved | none | none |
-| CAIE A Level (12 target) | 6 in-db, 6 reserved | none | leftover 9709 samples only |
-| Edexcel IAL (units) | most science/math/econ/biz/acc in-db; FM extras + IT/CS/English reserved | none | none |
+| CAIE IGCSE (12 target) | all in-db | yes (`0002`, `0017`) | yes (`0004`, `0025` composites) |
+| Edexcel IGCSE (14 target) | all in-db (`0007`) | yes (`0008`, `0018`) | yes (`0022`; 4MA1/4AC1 composites) |
+| CAIE A Level (12 target) | **deferred** — skip for now | yes (`0011`) | stub (`0023`) |
+| Edexcel IAL (units) | all Myanmar units in-db (`0007`) | yes (`0009`, `0019`) | yes (`0024` UMS); WCP01–04 pending GB PDF |
 
 Core/Extended plugin codes: **0580, 0610, 0620, 0625**. Edexcel IGCSE is 9–1. IAL fills UMS.
 

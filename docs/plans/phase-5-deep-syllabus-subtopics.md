@@ -1,8 +1,8 @@
 # Phase 5 — Deep Syllabus Subtopics (Learning Objectives)
 
-> **Status:** Planned  
-> **Prerequisites:** Phase 1 merged; Phase 2 recommended for A Level syllabi  
-> **Replaces:** Chapter-level bullets (3–8 per topic) from Phase 1 with full objective codes
+> **Status:** **In progress** (UI + structured JSON; subject/calculator structure deferred by user)  
+> **Prerequisites:** Phase 1 merged  
+> **Replaces:** Chapter-level bullets with full syllabus learning objectives (`{ code, title }`)
 
 ---
 

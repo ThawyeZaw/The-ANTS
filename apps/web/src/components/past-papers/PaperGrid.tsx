@@ -247,25 +247,37 @@ function GridCell({
     calculatedGrade: null,
     calculatedUms: null,
     gradeBoundaries: [],
+    isDisabled: true,
+    disabledReason: 'Paper not seeded in database',
   };
 
-  const colorClass = getCellColor(effectiveCell);
-  const displayValue = getCellDisplayValue(effectiveCell, displayMode, isIAL);
+  const colorClass = effectiveCell.isDisabled 
+    ? 'bg-background-secondary/50 border-border/20 text-transparent opacity-40 cursor-not-allowed'
+    : getCellColor(effectiveCell);
+  
+  const displayValue = effectiveCell.isDisabled ? '' : getCellDisplayValue(effectiveCell, displayMode, isIAL);
 
   return (
     <td className="relative p-0.5">
       <button
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => !effectiveCell.isDisabled && setOpen((o) => !o)}
+        disabled={effectiveCell.isDisabled}
         className={cn(
           'relative w-full h-8 rounded-md border text-[11px] font-mono font-semibold transition-all duration-150',
-          'hover:scale-105 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+          !effectiveCell.isDisabled && 'hover:scale-105 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
           colorClass
         )}
-        title={effectiveCell.status === 'not_done' ? 'Click to record' : `${effectiveCell.rawScore ?? ''}/${totalMarks ?? '?'}`}
+        title={
+          effectiveCell.isDisabled 
+            ? effectiveCell.disabledReason || 'Not available'
+            : effectiveCell.status === 'not_done' 
+              ? 'Click to record' 
+              : `${effectiveCell.rawScore ?? ''}/${totalMarks ?? '?'}`
+        }
       >
         {displayValue}
       </button>
-      {open && (
+      {open && !effectiveCell.isDisabled && (
         <CellPopover
           paperId={effectiveCell.paperId || paperId}
           sessionKey={sessionKey}

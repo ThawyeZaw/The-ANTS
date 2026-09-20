@@ -189,7 +189,8 @@ export const EDEXCEL_IGCSE_MYANMAR_PAPERS: Record<string, readonly string[]> = {
   '4HB1': ['01R', '02R'],
   '4CP0': ['01', '02'],
   '4IT1': ['01R', '02R'],
-  '4EB1': ['01R', '02R'],
+  // Pearson publishes 4EB1 as a single-paper (100-mark) subject grade — no Paper 02 boundaries.
+  '4EB1': ['01R'],
   '4ES1': ['01R', '02R', '03'],
   '4EC1': ['01R', '02R'],
   '4BS1': ['01R', '02R'],

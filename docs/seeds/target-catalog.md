@@ -43,16 +43,16 @@ Grades **9–1**. `ums_*` = NULL.
 | Status | id | code | name |
 |---|---|---|---|
 | in-db | `subj-edx-igcse-maths-a` | 4MA1 | Mathematics A |
-| reserved | `subj-edx-igcse-maths-b` | 4MB1 | Mathematics B |
+| in-db | `subj-edx-igcse-maths-b` | 4MB1 | Mathematics B |
 | in-db | `subj-edx-igcse-fmaths` | 4PM1 | Further Pure Mathematics |
 | in-db | `subj-edx-igcse-phys` | 4PH1 | Physics |
 | in-db | `subj-edx-igcse-chem` | 4CH1 | Chemistry |
 | in-db | `subj-edx-igcse-bio` | 4BI1 | Biology |
-| reserved | `subj-edx-igcse-human-bio` | 4HB1 | Human Biology |
-| reserved | `subj-edx-igcse-cs` | 4CP0 | Computer Science |
+| in-db | `subj-edx-igcse-human-bio` | 4HB1 | Human Biology |
+| in-db | `subj-edx-igcse-cs` | 4CP0 | Computer Science |
 | in-db | `subj-edx-igcse-ict` | 4IT1 | Information and Communication Technology |
-| reserved | `subj-edx-igcse-eng-b` | 4EB1 | English Language B |
-| reserved | `subj-edx-igcse-esl` | 4ES1 | English as a Second Language |
+| in-db | `subj-edx-igcse-eng-b` | 4EB1 | English Language B (single-paper subject grade in Pearson PDFs) |
+| in-db | `subj-edx-igcse-esl` | 4ES1 | English as a Second Language |
 | in-db | `subj-edx-igcse-econ` | 4EC1 | Economics |
 | in-db | `subj-edx-igcse-biz` | 4BS1 | Business |
 | in-db | `subj-edx-igcse-acc` | 4AC1 | Accounting |
@@ -77,7 +77,7 @@ Grades **9–1**. `ums_*` = NULL.
 | reserved | `subj-caie-al-eng-lang` | 9093 | English Language |
 | reserved | `subj-caie-al-lit` | 9695 | Literature in English |
 
-None of these have topic or calculator seeds yet (except leftover sample 9709 papers from `0001`).
+**Deferred:** CAIE A Level calculator/past-paper seeds (`0023`, `0029`, `0030`) — skip until GB PDFs arrive. Topics exist in `0011` for all 12 codes; in-db subjects have placeholder rows only.
 
 ---
 
@@ -90,17 +90,17 @@ Enroll **units**. Countdown mode is per-paper. Fill UMS on boundaries.
 | Award | AS cash-in | A Level cash-in | Units (enroll these) |
 |---|---|---|---|
 | Mathematics | XMA01 | YMA01 | WMA11 P1, WMA12 P2, WMA13 P3, WMA14 P4, WME01 M1, WST01 S1 — **all in-db** |
-| Further Mathematics | XFM01 | YFM01 | WFM01–WFM03 **reserved**; WME02 + WST02 **in-db**; WDM11 D1 **reserved** |
+| Further Mathematics | XFM01 | YFM01 | WFM01–WFM03 **in-db**; WME02 + WST02 **in-db**; WDM11 D1 **in-db** |
 | Physics | XPH11 | YPH11 | WPH11–WPH16 — **in-db** |
 | Chemistry | XCH11 | YCH11 | WCH11–WCH16 — **in-db** |
 | Biology | XBI11 | YBI11 | WBI11–WBI16 — **in-db** |
-| Information Technology | XIT11 | YIT11 | WIT11–WIT14 — **reserved** |
-| Computer Science | XCP01 | YCP01 | WCP01–WCP04 — **reserved** |
+| Information Technology | XIT11 | YIT11 | WIT11–WIT14 — **in-db** (papers in `0024`) |
+| Computer Science | XCP01 | YCP01 | WCP01–WCP04 — **in-db**; **new 2025 spec** (no past papers / boundaries yet) |
 | Economics | XEC11 | YEC11 | WEC11–WEC14 — **in-db** |
 | Business | XBS11 | YBS11 | WBS11–WBS14 — **in-db** |
 | Accounting | XAC11 | YAC11 | WAC11–WAC12 — **in-db** |
-| English Language | XEN01 | YEN01 | WEN01–WEN04 — **reserved** |
-| English Literature | XET01 | YET01 | WET01–WET04 — **reserved** |
+| English Language | XEN01 | YEN01 | WEN01–WEN04 — **in-db** (papers in `0024`) |
+| English Literature | XET01 | YET01 | WET01–WET04 — **in-db** (papers in `0024`) |
 
 ### IAL unit ids
 
@@ -112,22 +112,24 @@ Enroll **units**. Countdown mode is per-paper. Fill UMS on boundaries.
 | in-db | `subj-edx-ial-pure4` | WMA14 | Pure Mathematics 4 | YMA01 |
 | in-db | `subj-edx-ial-mech1` | WME01 | Mechanics M1 | XMA01 / YMA01 |
 | in-db | `subj-edx-ial-stat1` | WST01 | Statistics S1 | XMA01 / YMA01 |
-| reserved | `subj-edx-ial-fmath1` | WFM01 | Further Pure F1 | XFM01 / YFM01 |
-| reserved | `subj-edx-ial-fmath2` | WFM02 | Further Pure F2 | YFM01 |
-| reserved | `subj-edx-ial-fmath3` | WFM03 | Further Pure F3 | YFM01 |
+| in-db | `subj-edx-ial-fmath1` | WFM01 | Further Pure F1 | XFM01 / YFM01 |
+| in-db | `subj-edx-ial-fmath2` | WFM02 | Further Pure F2 | YFM01 |
+| in-db | `subj-edx-ial-fmath3` | WFM03 | Further Pure F3 | YFM01 |
 | in-db | `subj-edx-ial-mech2` | WME02 | Mechanics M2 | YFM01 (also further maths) |
 | in-db | `subj-edx-ial-stat2` | WST02 | Statistics S2 | YFM01 (also further maths) |
-| reserved | `subj-edx-ial-dec1` | WDM11 | Decision Mathematics D1 | YFM01 |
+| in-db | `subj-edx-ial-dec1` | WDM11 | Decision Mathematics D1 | YFM01 |
+| in-db | `subj-edx-ial-mech3` | WME03 | Mechanics M3 | YFM01 |
+| in-db | `subj-edx-ial-stat3` | WST03 | Statistics S3 | YFM01 |
 | in-db | `subj-edx-ial-phys1` … `phys6` | WPH11–16 | Physics U1–U6 | XPH11 / YPH11 |
 | in-db | `subj-edx-ial-chem1` … `chem6` | WCH11–16 | Chemistry U1–U6 | XCH11 / YCH11 |
 | in-db | `subj-edx-ial-bio1` … `bio6` | WBI11–16 | Biology U1–U6 | XBI11 / YBI11 |
-| reserved | `subj-edx-ial-it1` … `it4` | WIT11–14 | IT U1–U4 | XIT11 / YIT11 |
-| reserved | `subj-edx-ial-cs1` … `cs4` | WCP01–04 | Computer Science U1–U4 | XCP01 / YCP01 |
+| in-db | `subj-edx-ial-it1` … `it4` | WIT11–14 | IT U1–U4 | XIT11 / YIT11 |
+| in-db | `subj-edx-ial-cs1` … `cs4` | WCP01–04 | CS U1–U4 (new spec 2025 — enroll via cash-in; papers TBD) | XCP01 / YCP01 |
 | in-db | `subj-edx-ial-econ1` … `econ4` | WEC11–14 | Economics U1–U4 | XEC11 / YEC11 |
 | in-db | `subj-edx-ial-biz1` … `biz4` | WBS11–14 | Business U1–U4 | XBS11 / YBS11 |
 | in-db | `subj-edx-ial-acc1` `acc2` | WAC11–12 | Accounting U1–U2 | XAC11 / YAC11 |
-| reserved | `subj-edx-ial-eng1` … `eng4` | WEN01–04 | English Language U1–U4 | XEN01 / YEN01 |
-| reserved | `subj-edx-ial-lit1` … `lit4` | WET01–04 | English Literature U1–U4 | XET01 / YET01 |
+| in-db | `subj-edx-ial-eng1` … `eng4` | WEN01–04 | English Language U1–U4 | XEN01 / YEN01 |
+| in-db | `subj-edx-ial-lit1` … `lit4` | WET01–04 | English Literature U1–U4 | XET01 / YET01 |
 
 Exact reserved unit ids:
 
