@@ -27,8 +27,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import {
-  listApprovedCalculatorPresets,
-  listCashInCalculatorPresets,
+  listApprovedCalculatorPresetsForSubjects,
   listCurriculums,
   listSubjects,
 } from '@/actions/exam-data';
@@ -42,26 +41,33 @@ import {
   getPluginForPaper,
   syllabusHasTiers,
   uniqueVariants,
+  caiePaperBase,
   type SubjectTier,
   type GradeBoundary,
   type PaperComponent,
   gradeFromUms,
   umsCapFromBoundaries,
 } from '@/lib/grading';
+import { groupEdexcelIalSubjects } from '@/lib/edexcel-ial';
+import { useEdexcelSuiteSelectors } from './useEdexcelSuiteSelectors';
+import { EdexcelSuiteSelectors } from './EdexcelSuiteSelectors';
+import { IalUmsCalculator } from './IalUmsCalculator';
 import {
   IAL_CASH_INS,
   cashInsForUnit,
   IAL_SUBJECT_GROUPS,
   IAL_MATHS_CASH_INS,
   IAL_FM_CASH_INS,
+  IAL_GROUP_UNITS,
+  IAL_MATHS_SUITE_UNIT_ORDER,
+  IAL_MATHS_ONLY_UNITS,
+  IAL_PURE_MATHS_UNITS,
   isIalOctoberSeries,
   mathsSuiteUnitAvailableInSeries,
   type IalCashInCode,
+  type MathsSuiteMode,
 } from '@/lib/grading/ial-cash-in';
-import { groupEdexcelIalSubjects } from '@/lib/edexcel-ial';
-import { caiePaperBase } from '@/lib/grading/shared';
-import { useEdexcelSuiteSelectors } from './useEdexcelSuiteSelectors';
-import { EdexcelSuiteSelectors } from './EdexcelSuiteSelectors';
+import { SearchableSelect } from './SearchableSelect';
 
 interface PresetBoundary {
   grade: string;
@@ -122,7 +128,6 @@ export default function GradeCalculator() {
   const [selectedExclusiveOptions, setSelectedExclusiveOptions] = useState<Record<string, string>>({});
   const [selectedCashInLocal, setSelectedCashInLocal] = useState('');
   const [selectedUnitId, setSelectedUnitId] = useState('');
-  const [cashInPresets, setCashInPresets] = useState<CalcPreset[]>([]);
   const [rawMarks, setRawMarks] = useState<Record<string, number | string>>({});
   const [compositeBoundaries, setCompositeBoundaries] = useState<GradeBoundary[]>([]);
   const [enrollmentAward, setEnrollmentAward] = useState<'AS' | 'A Level' | ''>('');
@@ -162,11 +167,42 @@ export default function GradeCalculator() {
     [subjects, selectedSubject, activeIalGroup]
   );
 
+  const presetSubjectIds = useMemo(() => {
+    if (activeIalGroup?.units.length) return activeIalGroup.units.map((u) => u.id);
+    return selectedSubject ? [selectedSubject] : [];
+  }, [activeIalGroup, selectedSubject]);
+
+  const isMathsFmSuite =
+    selectedSubject === 'subj-edx-ial-math-fm-group' ||
+    selectedSubject === 'subj-edx-ial-pure-group' ||
+    activeIalGroup?.title === 'Mathematics' ||
+    activeIalGroup?.title === 'Further Mathematics';
+
+  const ialCalcMode: MathsSuiteMode | null =
+    selectedSubject === 'subj-edx-ial-pure-group'
+      ? 'pure'
+      : selectedSubject === 'subj-edx-ial-math-fm-group'
+        ? 'all'
+        : activeIalGroup?.title === 'Mathematics'
+          ? 'maths'
+          : activeIalGroup?.title === 'Further Mathematics'
+            ? 'further'
+            : null;
+
   const isSuite =
     selectedSubjectRow?.subject_type === 'modular_maths_suite' ||
-    activeIalGroup?.title === 'Mathematics' ||
-    activeIalGroup?.title === 'Further Mathematics' ||
+    isMathsFmSuite ||
     Boolean(activeIalGroup?.hasOptionalUnits);
+
+  const ialUnitCodes = useMemo(() => {
+    if (ialCalcMode === 'all') return [...IAL_MATHS_SUITE_UNIT_ORDER];
+    if (ialCalcMode === 'maths') return [...IAL_MATHS_ONLY_UNITS];
+    if (ialCalcMode === 'pure') return [...IAL_PURE_MATHS_UNITS];
+    if (ialCalcMode === 'further') return [...IAL_GROUP_UNITS['Further Mathematics']];
+    const title = activeIalGroup?.title;
+    if (title && IAL_GROUP_UNITS[title]) return [...IAL_GROUP_UNITS[title]];
+    return [];
+  }, [ialCalcMode, activeIalGroup]);
 
   const mathsSuiteData = useMemo(
     () => subjects.find((s) => s.id === 'subj-edx-ial-maths-suite')?.qualification_data,
@@ -218,22 +254,23 @@ export default function GradeCalculator() {
   }, []);
 
   useEffect(() => {
-    if (!selectedSubject) {
+    if (presetSubjectIds.length === 0) {
       setPresets([]);
       return;
     }
 
-    if (presetCacheRef.current.has(selectedSubject)) {
-      setPresets(presetCacheRef.current.get(selectedSubject)!);
+    const cacheKey = presetSubjectIds.slice().sort().join(',');
+    if (presetCacheRef.current.has(cacheKey)) {
+      setPresets(presetCacheRef.current.get(cacheKey)!);
       return;
     }
 
     let cancelled = false;
-    listApprovedCalculatorPresets(selectedSubject)
+    listApprovedCalculatorPresetsForSubjects(presetSubjectIds)
       .then((pData) => {
         if (!cancelled) {
           const list = pData as CalcPreset[];
-          presetCacheRef.current.set(selectedSubject, list);
+          presetCacheRef.current.set(cacheKey, list);
           setPresets(list);
         }
       })
@@ -246,7 +283,7 @@ export default function GradeCalculator() {
     return () => {
       cancelled = true;
     };
-  }, [selectedSubject]);
+  }, [presetSubjectIds]);
 
   useEffect(() => {
     if (!selectedSubject || !user?.id) return;
@@ -265,23 +302,24 @@ export default function GradeCalculator() {
     };
   }, [selectedSubject, user?.id]);
 
-  useEffect(() => {
-    if (!selectedCashIn) {
-      setCashInPresets([]);
-      return;
-    }
-    let cancelled = false;
-    listCashInCalculatorPresets(selectedCashIn, selectedSubject)
-      .then((rows) => {
-        if (!cancelled) setCashInPresets(rows as CalcPreset[]);
-      })
-      .catch(() => {
-        if (!cancelled) setCashInPresets([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedCashIn]);
+  const cashInUnitCodes = useMemo(() => {
+    if (!selectedCashIn) return null;
+    const award = IAL_CASH_INS[selectedCashIn as IalCashInCode];
+    if (award) return new Set([...award.compulsory, ...award.optional]);
+    const q = suiteSelectors.activeQualification;
+    if (!q) return null;
+    return new Set([...(q.mandatoryUnits || []), ...(q.electiveRules?.allowedUnitPool || [])]);
+  }, [selectedCashIn, suiteSelectors.activeQualification]);
+
+  const cashInPresets = useMemo(() => {
+    if (!cashInUnitCodes) return [];
+    return presets.filter(
+      (p) =>
+        cashInUnitCodes.has(p.syllabus_code || '') ||
+        cashInUnitCodes.has(p.subject_code || '') ||
+        cashInUnitCodes.has(p.paper_number || '')
+    );
+  }, [presets, cashInUnitCodes]);
 
   const plugin = useMemo(
     () => getPluginForCurriculumCode(selectedCurriculumRow?.code),
@@ -301,15 +339,61 @@ export default function GradeCalculator() {
     return subjects.filter((s) => s.curriculum_id === selectedCurriculum);
   }, [selectedCurriculum, subjects]);
 
+  const curriculumOptions = useMemo(
+    () =>
+      curriculums.map((c) => ({
+        value: c.id as string,
+        label: (c.title || c.name) as string,
+        hint: (c.code || c.exam_board || '') as string,
+      })),
+    [curriculums]
+  );
+
+  const subjectOptions = useMemo(() => {
+    if (isEdexcelIal) {
+      const rest = groupedIalSubjects.filter(
+        (g) => g.title !== 'Mathematics' && g.title !== 'Further Mathematics'
+      );
+      return [
+        { value: 'subj-edx-ial-math-group', label: 'Mathematics', hint: 'XMA01 / YMA01', group: 'Mathematics suite' },
+        { value: 'subj-edx-ial-pure-group', label: 'Pure Mathematics', hint: 'XPM01 / YPM01', group: 'Mathematics suite' },
+        {
+          value: 'subj-edx-ial-math-fm-group',
+          label: 'Mathematics & Further Mathematics',
+          hint: '12 different units',
+          group: 'Mathematics suite',
+        },
+        { value: 'subj-edx-ial-fmath-group', label: 'Further Mathematics', hint: 'XFM01 / YFM01', group: 'Mathematics suite' },
+        ...rest.map((g) => ({
+          value: g.id,
+          label: g.title,
+          hint: g.code,
+          group: 'Other IAL',
+        })),
+      ];
+    }
+    return filteredSubjects.map((s) => ({
+      value: s.id as string,
+      label: (s.title || s.name) as string,
+      hint: (s.code || '') as string,
+    }));
+  }, [isEdexcelIal, groupedIalSubjects, filteredSubjects]);
+
   const matchingPresets = useMemo(() => {
     let list = selectedCashIn ? cashInPresets : presets;
     if (selectedCurriculum && !selectedCashIn) {
       list = list.filter((p) => p.curriculum_id === selectedCurriculum);
     }
-    if (selectedSubject && !selectedCashIn) list = list.filter((p) => p.subject_id === selectedSubject);
+    if (!selectedCashIn) {
+      if (selectedUnitId) {
+        list = list.filter((p) => p.subject_id === selectedUnitId);
+      } else if (selectedSubject && !activeIalGroup) {
+        list = list.filter((p) => p.subject_id === selectedSubject);
+      }
+    }
     if (selectedSeries) list = list.filter((p) => p.series === selectedSeries);
     return list;
-  }, [presets, cashInPresets, selectedCashIn, selectedCurriculum, selectedSubject, selectedSeries]);
+  }, [presets, cashInPresets, selectedCashIn, selectedCurriculum, selectedSubject, selectedSeries, selectedUnitId, activeIalGroup]);
 
   const availableVariants = useMemo(
     () => uniqueVariants(matchingPresets.map((p) => ({ variant: p.variant ?? p.papers[0]?.variant }))),
@@ -513,7 +597,12 @@ export default function GradeCalculator() {
     const set = new Set<string>();
     source
       .filter((p) => (selectedCurriculum && !selectedCashIn ? p.curriculum_id === selectedCurriculum : true))
-      .filter((p) => (selectedSubject && !selectedCashIn ? p.subject_id === selectedSubject : true))
+      .filter((p) => {
+        if (selectedCashIn) return true;
+        if (selectedUnitId) return p.subject_id === selectedUnitId;
+        if (selectedSubject && !activeIalGroup) return p.subject_id === selectedSubject;
+        return true;
+      })
       .filter((p) => (p.papers ?? []).some((paper) => (paper.paper_boundaries?.length ?? 0) > 0))
       .forEach((p) => {
         if (p.series) set.add(p.series);
@@ -523,7 +612,7 @@ export default function GradeCalculator() {
       list = list.filter((s) => !isIalOctoberSeries(s));
     }
     return list;
-  }, [selectedCurriculum, selectedSubject, presets, cashInPresets, selectedCashIn, isFmSubject]);
+  }, [selectedCurriculum, selectedSubject, presets, cashInPresets, selectedCashIn, selectedUnitId, activeIalGroup, isFmSubject]);
 
   const availableCashIns = useMemo(() => {
     const october = isIalOctoberSeries(selectedSeries);
@@ -620,13 +709,15 @@ export default function GradeCalculator() {
     suiteSelectors.setSelectedPairIndex(0);
   }, [selectedSeries]);
 
-  const canGoStep2 = !!(
-    selectedCurriculum &&
-    selectedSubject &&
-    selectedSeries &&
-    activePreset &&
-    (!showTier || selectedTier)
-  );
+  const canGoStep2 = isEdexcelIal
+    ? !!(selectedCurriculum && selectedSubject && ialUnitCodes.length > 0)
+    : !!(
+        selectedCurriculum &&
+        selectedSubject &&
+        selectedSeries &&
+        activePreset &&
+        (!showTier || selectedTier)
+      );
 
   const isCambridge =
     selectedCurriculumRow?.code === 'CAIE_IGCSE' || selectedCurriculumRow?.code === 'CAIE_ALEVEL';
@@ -903,8 +994,8 @@ export default function GradeCalculator() {
       {/* Stepper Buttons */}
       <div className="grid grid-cols-2 gap-3">
         {[
-          { n: 1, label: 'Select Syllabus & Series', enabled: true },
-          { n: 2, label: 'Input Marks & Calculate', enabled: canGoStep2 },
+          { n: 1, label: isEdexcelIal ? 'Select Syllabus' : 'Select Syllabus & Series', enabled: true },
+          { n: 2, label: isEdexcelIal ? 'Enter UMS & Calculate' : 'Input Marks & Calculate', enabled: canGoStep2 },
         ].map((s) => (
           <button
             key={s.n}
@@ -937,65 +1028,47 @@ export default function GradeCalculator() {
               Choose subject & your component route
             </h3>
             <p className="text-xs text-foreground-muted">
-              Subject-first: pick syllabus, award level, and route — then select the exam series.
+              {isEdexcelIal
+                ? 'Pick your IAL subject, then enter uniform marks. Grades are awarded from UMS and do not depend on exam series.'
+                : 'Subject-first: pick syllabus, award level, and route — then select the exam series.'}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Curriculum */}
             <div className="space-y-1.5">
               <label className="block text-xs font-bold uppercase tracking-wider text-foreground-secondary">
                 <BookOpen className="w-3.5 h-3.5 inline mr-1.5 text-primary" />
                 Exam Board & Curriculum
               </label>
-              <select
+              <SearchableSelect
                 value={selectedCurriculum}
-                onChange={(e) => {
-                  setSelectedCurriculum(e.target.value);
+                placeholder="Select curriculum"
+                options={curriculumOptions}
+                onChange={(id) => {
+                  setSelectedCurriculum(id);
                   setSelectedSubject('');
                   setSelectedSeries('');
                 }}
-                className="w-full bg-background-secondary border border-border rounded-2xl py-3 px-4 text-xs font-bold text-foreground outline-none focus:border-primary transition-colors"
-              >
-                <option value="">-- Select curriculum --</option>
-                {curriculums.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.title || c.name}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
 
-            {/* Subject */}
             <div className="space-y-1.5">
               <label className="block text-xs font-bold uppercase tracking-wider text-foreground-secondary">
                 <Layers className="w-3.5 h-3.5 inline mr-1.5 text-primary" />
                 Subject Syllabus
               </label>
-              <select
+              <SearchableSelect
                 value={selectedSubject}
+                placeholder="Search or select subject"
                 disabled={!selectedCurriculum}
-                onChange={(e) => {
-                  setSelectedSubject(e.target.value);
+                options={subjectOptions}
+                onChange={(id) => {
+                  setSelectedSubject(id);
                   setSelectedSeries('');
                   setSelectedCashInLocal('');
                   setSelectedUnitId('');
                 }}
-                className="w-full bg-background-secondary border border-border rounded-2xl py-3 px-4 text-xs font-bold text-foreground outline-none focus:border-primary transition-colors disabled:opacity-40"
-              >
-                <option value="">-- Select subject --</option>
-                {isEdexcelIal
-                  ? groupedIalSubjects.map((grp) => (
-                      <option key={grp.id} value={grp.id}>
-                        {grp.title} ({grp.code})
-                      </option>
-                    ))
-                  : filteredSubjects.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.title || s.name} ({s.code})
-                      </option>
-                    ))}
-              </select>
+              />
             </div>
           </div>
 
@@ -1058,83 +1131,70 @@ export default function GradeCalculator() {
             </div>
           )}
 
-          {isEdexcelIal && selectedSubject && (
+          {isEdexcelIal && selectedSubject && isMathsFmSuite && (
+            <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 space-y-1.5">
+              <p className="text-xs font-bold text-primary">
+                {ialCalcMode === 'pure'
+                  ? 'Pure Mathematics (XPM01 / YPM01)'
+                  : ialCalcMode === 'maths'
+                    ? 'Mathematics only (XMA01 / YMA01)'
+                    : ialCalcMode === 'further'
+                      ? 'Further Mathematics (XFM01 / YFM01)'
+                      : 'Mathematics + Further Mathematics (12 units)'}
+              </p>
+              <p className="text-[11px] text-foreground-muted">
+                {ialCalcMode === 'pure'
+                  ? 'IAS Pure Mathematics is P1, P2 and FP1. IAL Pure Mathematics is P1–P4, FP1 and FP2 or FP3 (600 UMS). A* needs ≥480 overall and ≥270 on the IA2 units.'
+                  : ialCalcMode === 'maths'
+                    ? 'Enter the Mathematics units you sat. IAS is P1, P2 plus M1, S1 or D1. IAL is P1–P4 plus one official applied pair.'
+                    : ialCalcMode === 'further'
+                      ? 'Enter Further Mathematics units. IAS needs FP1 plus two other units. IAL needs FP1, FP2 or FP3, six units and at least three IA2 units.'
+                      : 'Enter UMS for every unit you sat (up to all 14). Pearson does not cash the same unit into two qualifications. We pick the official combination with the highest possible grades, including Pure Mathematics when that is better.'}
+              </p>
+            </div>
+          )}
+
+          {isEdexcelIal && selectedSubject && !isMathsFmSuite && (
             <div className="space-y-1.5">
               <label className="block text-xs font-bold uppercase tracking-wider text-foreground-secondary">
                 IAL cash-in award
               </label>
-              <select
+              <SearchableSelect
                 value={selectedCashIn}
-                onChange={(e) => {
-                  setSelectedCashIn(e.target.value);
-                  setSelectedSeries('');
-                }}
-                className="w-full md:w-1/2 bg-background-secondary border border-border rounded-2xl py-3 px-4 text-xs font-bold text-foreground outline-none focus:border-primary transition-colors"
-              >
-                {availableCashIns.map((award) => (
-                  <option key={award.code} value={award.code}>
-                    {award.code} · {award.name} (max {award.maxUms} UMS)
-                  </option>
-                ))}
-                <option value="">Unit only (no cash-in)</option>
-              </select>
+                placeholder="Select cash-in"
+                className="md:w-1/2"
+                options={availableCashIns.map((award) => ({
+                  value: award.code,
+                  label: award.name,
+                  hint: `${award.code} · max ${award.maxUms} UMS`,
+                }))}
+                onChange={(code) => setSelectedCashIn(code)}
+              />
               {selectedCashIn && IAL_CASH_INS[selectedCashIn as IalCashInCode]?.aStarNotes && (
                 <p className="text-[11px] text-foreground-muted">
                   {IAL_CASH_INS[selectedCashIn as IalCashInCode].aStarNotes}
                 </p>
               )}
-              {activeIalGroup?.title === 'Mathematics' || activeIalGroup?.title === 'Further Mathematics' ? (
-                <p className="text-[11px] text-foreground-muted">
-                  Further Mathematics units (FP1–FP3, M3, S3, D1) are January and June only — not offered in Oct/Nov.
-                </p>
-              ) : null}
             </div>
           )}
 
-          {isEdexcelIal && activeIalGroup && !selectedCashIn && (
-            <div className="space-y-1.5">
-              <label className="block text-xs font-bold uppercase tracking-wider text-foreground-secondary">
-                Specific Modular Unit
-              </label>
-              <select
-                value={selectedUnitId || activeIalGroup.units[0]?.id || ''}
-                onChange={(e) => {
-                  setSelectedUnitId(e.target.value);
-                  setSelectedSeries('');
-                }}
-                className="w-full md:w-1/2 bg-background-secondary border border-border rounded-2xl py-3 px-4 text-xs font-bold text-foreground outline-none focus:border-primary transition-colors"
-              >
-                {activeIalGroup.units.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} ({u.code})
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {/* Series */}
-          {selectedSubject && (
+          {/* Series — not used for Edexcel IAL (UMS grades are series-independent) */}
+          {selectedSubject && !isEdexcelIal && (
             <div className="space-y-1.5">
               <label className="block text-xs font-bold uppercase tracking-wider text-foreground-secondary">
                 <Clock className="w-3.5 h-3.5 inline mr-1.5 text-primary" />
                 Exam Series / Year
               </label>
-              <select
+              <SearchableSelect
                 value={selectedSeries}
-                onChange={(e) => setSelectedSeries(e.target.value)}
-                className="w-full md:w-1/2 bg-background-secondary border border-border rounded-2xl py-3 px-4 text-xs font-bold text-foreground outline-none focus:border-primary transition-colors"
-              >
-                <option value="">-- Select series --</option>
-                {availableSeries.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
+                placeholder="Select exam series"
+                className="md:w-1/2"
+                options={availableSeries.map((s) => ({ value: s, label: s }))}
+                onChange={setSelectedSeries}
+              />
               {availableSeries.length === 0 && (
                 <p className="text-xs text-foreground-muted mt-1">
-                  No seeded past paper data found for this subject yet.
+                  No official grade-boundary papers are in the database for this subject yet.
                 </p>
               )}
             </div>
@@ -1188,7 +1248,7 @@ export default function GradeCalculator() {
           )}
 
           {/* Exclusive Group Selectors (e.g., Paper 52 OR 62) */}
-          {exclusiveGroups && canGoStep2 && (
+          {exclusiveGroups && canGoStep2 && !isEdexcelIal && (
             <div className="space-y-4 pt-2">
               {Array.from(exclusiveGroups.entries()).map(([groupName, groupPapers]) => (
                 <div key={groupName} className="space-y-1.5 p-4 bg-primary/5 border border-primary/20 rounded-2xl">
@@ -1218,17 +1278,21 @@ export default function GradeCalculator() {
           )}
 
           {/* Ready notification card */}
-          {canGoStep2 && activePreset && (
+          {canGoStep2 && (isEdexcelIal || activePreset) && (
             <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 flex items-center gap-3">
               <Check className="w-5 h-5 text-primary shrink-0" />
               <div className="space-y-0.5">
                 <p className="text-xs font-bold text-primary">
-                  Official Grade Data Loaded
+                  {isEdexcelIal ? 'Ready to enter UMS' : 'Official Grade Data Loaded'}
                 </p>
                 <p className="text-xs text-foreground-muted">
-                  {activePreset.title} &mdash; {activePreset.series} •{' '}
-                  {filteredActivePapers.length} paper(s) •{' '}
-                  {isIAL ? 'Edexcel Modular UMS' : 'Raw Mark Boundaries'}
+                  {isEdexcelIal
+                    ? isMathsFmSuite
+                    ? ialCalcMode === 'all'
+                      ? 'Enter unit UMS for Mathematics and Further Mathematics. Cash-in grades are assigned automatically.'
+                      : 'Cash-in grades are assigned automatically from the units you enter.'
+                      : `${selectedCashIn || 'IAL'} · uniform mark scale (series-independent)`
+                    : `${activePreset?.title} — ${activePreset?.series} • ${filteredActivePapers.length} paper(s) • Raw Mark Boundaries`}
                 </p>
               </div>
             </div>
@@ -1241,7 +1305,7 @@ export default function GradeCalculator() {
               disabled={!canGoStep2}
               className="inline-flex items-center gap-2 rounded-2xl bg-primary px-6 py-3 text-xs font-bold text-white shadow-xs disabled:opacity-40 disabled:cursor-not-allowed hover:bg-primary-hover transition-all"
             >
-              Next: Enter Marks
+              Next: {isEdexcelIal ? 'Enter UMS' : 'Enter Marks'}
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -1249,44 +1313,35 @@ export default function GradeCalculator() {
       )}
 
       {/* ═══ STEP 2: Mark Input & Calculation ═══ */}
-      {currentStep === 2 && activePreset && (
+      {currentStep === 2 && (isEdexcelIal ? selectedSubject : activePreset) && (
         <div className="space-y-6 animate-fade-in">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
                 <Calculator className="w-5 h-5 text-primary" />
-                Component Marks & Predicted Grade
+                {isEdexcelIal ? 'Unit UMS & cash-in grade' : 'Component Marks & Predicted Grade'}
               </h3>
               <p className="text-xs text-foreground-muted">
-                {isIAL
-                  ? 'Official Pearson UMS conversion from this series. Enter raw marks or UMS — never above the paper maximum.'
+                {isEdexcelIal
+                  ? 'IAL grades use the uniform mark scale only. Exam series and raw paper marks are not required.'
                   : 'Official syllabus grade boundaries only. Marks cannot exceed the paper maximum.'}
               </p>
             </div>
-            {isIAL && (
-              <div className="flex items-center gap-1.5 p-1 bg-background-secondary rounded-xl border border-border">
-                {(['raw', 'ums'] as const).map((mode) => (
-                  <button
-                    key={mode}
-                    type="button"
-                    onClick={() => {
-                      setIalInputMode(mode);
-                      setRawMarks({});
-                    }}
-                    className={cn(
-                      'px-3 py-1.5 rounded-lg text-xs font-bold transition-all',
-                      ialInputMode === mode
-                        ? 'bg-primary text-white shadow-xs'
-                        : 'text-foreground-secondary hover:text-foreground'
-                    )}
-                  >
-                    {mode === 'raw' ? 'Raw marks' : 'UMS'}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
 
+          {isEdexcelIal ? (
+            <IalUmsCalculator
+              unitCodes={ialUnitCodes}
+              ums={rawMarks}
+              onUmsChange={(code, value) =>
+                setRawMarks((prev) => ({ ...prev, [code]: value }))
+              }
+              isMathsSuite={Boolean(ialCalcMode)}
+              mathsSuiteMode={ialCalcMode ?? 'all'}
+              cashInCode={ialCalcMode ? null : selectedCashIn || null}
+            />
+          ) : (
+            <>
           {isSuite && (
             <EdexcelSuiteSelectors
               activeQualification={octoberFilteredQualification ?? suiteSelectors.activeQualification}
@@ -1332,200 +1387,100 @@ export default function GradeCalculator() {
             </div>
           )}
 
-          {/* Paper Mark Entry Cards */}
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {paperResults.map((pr) => (
-              <div
+              <label
                 key={pr.baseKey}
-                className="rounded-3xl border border-border bg-background-secondary/50 p-5 sm:p-6 transition-colors hover:border-primary/30 space-y-4"
+                className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-background-secondary px-4 py-3"
               >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-primary font-mono">
-                        Component {pr.index + 1}
-                      </span>
-                      {pr.availableVariants.length > 1 && (
-                        <div className="inline-flex items-center gap-1 bg-background-card border border-border rounded-lg p-0.5 ml-1">
-                          {pr.availableVariants.map((v) => (
-                            <button
-                              key={v}
-                              type="button"
-                              onClick={() =>
-                                setPaperVariants((prev) => ({ ...prev, [pr.baseKey]: v }))
-                              }
-                              className={cn(
-                                'px-2 py-0.5 rounded-md text-[10px] font-bold font-mono transition-colors',
-                                pr.activeVariant === v
-                                  ? 'bg-primary text-white shadow-2xs'
-                                  : 'text-foreground-muted hover:text-foreground hover:bg-background-secondary'
-                              )}
-                              title={`Switch to Variant ${v}`}
-                            >
-                              v{v}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <h4 className="text-base font-bold text-foreground">
+                <span className="min-w-0">
+                  <span className="flex items-center gap-1.5">
+                    <span className="block text-xs font-bold text-foreground truncate">
                       {pr.displayName || pr.name}
-                    </h4>
-                    <div className="flex items-center gap-3 text-xs text-foreground-muted">
-                      <span>
-                        Max:{' '}
-                        <strong className="text-foreground font-mono">
-                          {isIAL && ialInputMode === 'ums' ? pr.umsCap || pr.max_mark : pr.max_mark}
-                        </strong>{' '}
-                        {isIAL && ialInputMode === 'ums' ? 'UMS' : 'marks'}
-                      </span>
-                      {pr.filled && (
-                        <>
-                          <span>•</span>
-                          <span>Score: <strong className="text-primary font-mono">{pr.pct}%</strong></span>
-                        </>
-                      )}
-                    </div>
-                    {!pr.hasOfficialBoundaries && (
-                      <p className="text-[11px] text-amber-600">
-                        Official boundaries not seeded for this paper — grade cannot be calculated.
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Inputs and Grade Badge */}
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        min="0"
-                        max={pr.maxInput}
-                        step="1"
-                        value={rawMarks[pr.baseKey] ?? rawMarks[pr.index] ?? ''}
-                        placeholder="0"
-                        onChange={(e) => handleMarkChange(pr.baseKey, e.target.value, pr.maxInput)}
-                        className="w-24 rounded-2xl border border-border bg-background-card py-2.5 px-3 text-center font-mono font-bold text-base text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                      />
-                      <span className="text-foreground-muted font-mono font-bold">/</span>
-                      <div className="w-16 rounded-2xl border border-border bg-background-card py-2.5 text-center font-mono font-bold text-xs text-foreground-muted">
-                        {pr.maxInput}
-                      </div>
-                    </div>
-
-                    {pr.filled && (
-                      <div className="pl-4 border-l border-border flex flex-col items-center">
-                        <span className="text-[10px] text-foreground-muted uppercase font-bold mb-1">
-                          Grade
-                        </span>
-                        <div
-                          className={cn(
-                            'px-3 py-1 rounded-xl text-sm font-extrabold border shadow-2xs',
-                            getGradeColor(pr.paperGrade)
-                          )}
-                        >
-                          {pr.paperGrade}
-                        </div>
-                        {isIAL && pr.paperUms !== undefined && (
-                          <span className="text-[10px] font-mono text-primary mt-1 font-bold">
-                            {pr.paperUms} UMS
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Boundaries pill list */}
-                {pr.perBoundaries && pr.perBoundaries.length > 0 && (
-                  <div className="pt-3 border-t border-border flex flex-wrap items-center gap-1.5">
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-foreground-muted mr-1">
-                      Boundaries:
                     </span>
-                    {pr.perBoundaries.map((b) => {
-                      const hit = pr.filled && pr.paperGrade === b.grade;
-                      return (
-                        <span
-                          key={b.grade}
-                          className={cn(
-                            'px-2 py-0.5 rounded-lg text-[10px] font-mono border transition-all',
-                            hit
-                              ? 'bg-primary text-white border-primary font-bold shadow-2xs'
-                              : 'bg-background-card text-foreground-secondary border-border'
-                          )}
-                        >
-                          {isIAL && ialInputMode === 'ums' && b.ums_min != null
-                            ? `${b.grade} ≥ ${b.ums_min} UMS`
-                            : `${b.grade} ≥ ${b.min_mark}`}
-                        </span>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+                    {pr.availableVariants.length > 1 && (
+                      <span className="inline-flex items-center gap-0.5 bg-background-card border border-border rounded-md p-0.5">
+                        {pr.availableVariants.map((v) => (
+                          <button
+                            key={v}
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setPaperVariants((prev) => ({ ...prev, [pr.baseKey]: v }));
+                            }}
+                            className={cn(
+                              'px-1.5 py-0.5 rounded text-[10px] font-bold font-mono',
+                              pr.activeVariant === v
+                                ? 'bg-primary text-white'
+                                : 'text-foreground-muted hover:text-foreground'
+                            )}
+                          >
+                            v{v}
+                          </button>
+                        ))}
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-[11px] text-foreground-muted font-mono">
+                    max {pr.maxInput} {isIAL && ialInputMode === 'ums' ? 'UMS' : 'marks'}
+                    {pr.filled ? ` · ${pr.pct}%` : ''}
+                  </span>
+                </span>
+                <span className="flex items-center gap-2 shrink-0">
+                  <input
+                    type="number"
+                    min={0}
+                    max={pr.maxInput}
+                    step="1"
+                    value={rawMarks[pr.baseKey] ?? rawMarks[pr.index] ?? ''}
+                    placeholder="0"
+                    onChange={(e) => handleMarkChange(pr.baseKey, e.target.value, pr.maxInput)}
+                    className="w-20 rounded-xl border border-border bg-background-card px-2 py-2 text-right font-mono text-sm font-bold outline-none focus:border-primary"
+                  />
+                  <span
+                    className={cn(
+                      'w-9 h-9 rounded-lg flex items-center justify-center text-xs font-extrabold border',
+                      pr.filled
+                        ? getGradeColor(pr.paperGrade)
+                        : 'bg-background-secondary text-foreground-muted border-border'
+                    )}
+                  >
+                    {pr.filled ? pr.paperGrade : '—'}
+                  </span>
+                </span>
+              </label>
             ))}
           </div>
 
-          {/* ── Overall Results Card ─────────────────────────────────────────── */}
-          <div className="rounded-3xl border border-border bg-background-secondary p-6 sm:p-8 space-y-6 shadow-xs">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-              <div className="space-y-3">
-                <span className="text-xs font-bold uppercase tracking-wider text-foreground-muted">
-                  Overall Performance
-                </span>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-2xl border border-border bg-background-card p-4 space-y-1">
-                    <span className="text-[11px] text-foreground-muted uppercase font-bold block">
-                      Total Raw Score
-                    </span>
-                    <span className="text-xl font-bold font-mono text-foreground">
-                      {calc.anyFilled ? `${calc.totalRaw} / ${calc.maxRaw}` : '—'}
-                    </span>
-                  </div>
-
-                  <div className="rounded-2xl border border-border bg-background-card p-4 space-y-1">
-                    <span className="text-[11px] text-foreground-muted uppercase font-bold block">
-                      {isIAL ? 'Total UMS Score' : 'Overall Percentage'}
-                    </span>
-                    <span className="text-xl font-bold font-mono text-primary">
-                      {calc.anyFilled
-                        ? isIAL
-                          ? `${calc.totalUms} UMS`
-                          : `${calc.percentage}%`
-                        : '—'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Big Grade Badge */}
-              <div className="flex flex-col items-center justify-center p-6 rounded-2xl border border-border bg-background-card text-center space-y-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-foreground-muted flex items-center gap-1.5">
-                  <Award className="w-4 h-4 text-primary" />
-                  Official Grade
-                </span>
-                <div
-                  className={cn(
-                    'w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-extrabold border shadow-md transition-all',
-                    calc.anyFilled
-                      ? getGradeColor(calc.grade)
-                      : 'bg-background-secondary text-foreground-muted border-border'
-                  )}
-                >
-                  {calc.grade}
-                </div>
-                {'boundariesMessage' in calc && calc.boundariesMessage && (
-                  <p className="mt-2 text-xs font-normal text-foreground-muted max-w-xs">
-                    {calc.boundariesMessage as string}
-                  </p>
-                )}
-                {calc.anyFilled && calc.aStarNotes && calc.aStarNotes.length > 0 && (
-                  <p className="text-[11px] text-foreground-muted max-w-xs">
-                    {calc.aStarNotes.join(' ')}
-                  </p>
-                )}
-              </div>
+          <div className="rounded-2xl border border-border bg-background-card p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-foreground-muted">Predicted grade</p>
+              <p className="font-mono text-sm text-primary font-bold mt-1">
+                {calc.anyFilled
+                  ? isIAL
+                    ? `${calc.totalUms} UMS · ${calc.totalRaw} / ${calc.maxRaw} raw`
+                    : `${calc.totalRaw} / ${calc.maxRaw} · ${calc.percentage}%`
+                  : 'Enter marks to see a grade'}
+              </p>
+              {calc.anyFilled && calc.aStarNotes && calc.aStarNotes.length > 0 && (
+                <p className="text-[11px] text-foreground-muted mt-1">{calc.aStarNotes.join(' ')}</p>
+              )}
+              {'boundariesMessage' in calc && calc.boundariesMessage && (
+                <p className="text-[11px] text-foreground-muted mt-1">{calc.boundariesMessage as string}</p>
+              )}
+            </div>
+            <div
+              className={cn(
+                'w-14 h-14 rounded-xl flex items-center justify-center text-2xl font-extrabold border shrink-0',
+                calc.anyFilled ? getGradeColor(calc.grade) : 'bg-background-secondary text-foreground-muted border-border'
+              )}
+            >
+              {calc.grade}
             </div>
           </div>
+
+            </>
+          )}
 
           <div className="flex justify-between items-center pt-4">
             <button

@@ -168,88 +168,120 @@ export async function getExamById(examId: string) {
   return row ?? null;
 }
 
+function mapPastPaperToPreset(r: {
+  id: string;
+  title: string | null;
+  subject: string;
+  syllabus_code: string;
+  curriculum_id: string | null;
+  subject_id: string | null;
+  series: string;
+  year: number;
+  exam_board: string;
+  qualification: string;
+  paper_number: string;
+  variant: string | null;
+  total_marks: number | null;
+  gradeBoundaries: {
+    grade: string;
+    min_mark: number;
+    max_mark: number | null;
+    ums_min: number | null;
+    ums_max: number | null;
+  }[];
+}) {
+  const isModular = r.qualification === 'IAL';
+  return {
+    id: r.id,
+    title: r.title || `${r.subject} Paper ${r.paper_number}`,
+    subject_code: r.syllabus_code,
+    curriculum_id: r.curriculum_id || '',
+    subject_id: r.subject_id || '',
+    series: `${r.series} ${r.year}`,
+    year: r.year,
+    exam_board: r.exam_board,
+    qualification: r.qualification,
+    papers: [
+      {
+        name: r.title || `Paper ${r.paper_number}${r.variant ? ` (v${r.variant})` : ''}`,
+        max_mark: r.total_marks || 100,
+        weight: 100,
+        paper_number: isModular ? r.syllabus_code : r.paper_number,
+        variant: r.variant,
+        paper_boundaries: r.gradeBoundaries.map((b) => ({
+          grade: b.grade,
+          min_mark: b.min_mark,
+          max_mark: b.max_mark,
+          ums_min: b.ums_min,
+          ums_max: b.ums_max,
+        })),
+      },
+    ],
+    grade_boundaries: r.gradeBoundaries.map((b) => ({
+      grade: b.grade,
+      min_mark: b.min_mark,
+      ums_min: b.ums_min,
+      ums_max: b.ums_max,
+    })),
+    is_modular: isModular,
+    paper_number: r.paper_number,
+    variant: r.variant,
+    syllabus_code: r.syllabus_code,
+    status: 'approved',
+  };
+}
+
+const PRESET_COLUMNS = {
+  id: true,
+  title: true,
+  subject: true,
+  syllabus_code: true,
+  curriculum_id: true,
+  subject_id: true,
+  series: true,
+  year: true,
+  exam_board: true,
+  qualification: true,
+  paper_number: true,
+  variant: true,
+  total_marks: true,
+} as const;
+
+const PRESET_BOUNDARY_COLUMNS = {
+  grade: true,
+  min_mark: true,
+  max_mark: true,
+  ums_min: true,
+  ums_max: true,
+} as const;
+
 /** Structured calculator presets for one subject (papers + boundaries). */
 export async function listApprovedCalculatorPresets(subjectId?: string) {
   if (!subjectId) return [];
-  const cacheKey = `presets:${subjectId}`;
-  const cached = getFromCache<any[]>(cacheKey);
+  return listApprovedCalculatorPresetsForSubjects([subjectId]);
+}
+
+/** Load calculator presets for one or more catalog subject IDs (IAL units). */
+export async function listApprovedCalculatorPresetsForSubjects(subjectIds: string[]) {
+  const ids = [...new Set(subjectIds.filter(Boolean))].sort();
+  if (ids.length === 0) return [];
+  const cacheKey = `presets:v3:${ids.join(',')}`;
+  const cached = getFromCache<ReturnType<typeof mapPastPaperToPreset>[]>(cacheKey);
   if (cached) return cached;
 
   const db = getDb();
   const rows = await db.query.pastPapers.findMany({
-    where: eq(pastPapers.subject_id, subjectId),
-    columns: {
-      id: true,
-      title: true,
-      subject: true,
-      syllabus_code: true,
-      curriculum_id: true,
-      subject_id: true,
-      series: true,
-      year: true,
-      exam_board: true,
-      qualification: true,
-      paper_number: true,
-      variant: true,
-      total_marks: true,
-    },
+    where: inArray(pastPapers.subject_id, ids),
+    columns: PRESET_COLUMNS,
     with: {
       gradeBoundaries: {
-        columns: {
-          grade: true,
-          min_mark: true,
-          max_mark: true,
-          ums_min: true,
-          ums_max: true,
-        },
+        columns: PRESET_BOUNDARY_COLUMNS,
       },
     },
     orderBy: [desc(pastPapers.year), desc(pastPapers.series)],
   });
 
-  const result = rows.map((r) => {
-    const isModular = r.qualification === 'IAL';
-    return {
-      id: r.id,
-      title: r.title || `${r.subject} Paper ${r.paper_number}`,
-      subject_code: r.syllabus_code,
-      curriculum_id: r.curriculum_id || '',
-      subject_id: r.subject_id || '',
-      series: `${r.series} ${r.year}`,
-      year: r.year,
-      exam_board: r.exam_board,
-      qualification: r.qualification,
-      papers: [
-        {
-          name: r.title || `Paper ${r.paper_number}${r.variant ? ` (v${r.variant})` : ''}`,
-          max_mark: r.total_marks || 100,
-          weight: 100,
-          paper_number: isModular ? r.syllabus_code : r.paper_number,
-          variant: r.variant,
-          paper_boundaries: r.gradeBoundaries.map((b) => ({
-            grade: b.grade,
-            min_mark: b.min_mark,
-            max_mark: b.max_mark,
-            ums_min: b.ums_min,
-            ums_max: b.ums_max,
-          })),
-        },
-      ],
-      grade_boundaries: r.gradeBoundaries.map((b) => ({
-        grade: b.grade,
-        min_mark: b.min_mark,
-        ums_min: b.ums_min,
-        ums_max: b.ums_max,
-      })),
-      is_modular: isModular,
-      paper_number: r.paper_number,
-      variant: r.variant,
-      syllabus_code: r.syllabus_code,
-      status: 'approved',
-    };
-  });
-
-  return setInCache(cacheKey, result, 10 * 60 * 1000);
+  return setInCache(cacheKey, rows.map(mapPastPaperToPreset), 10 * 60 * 1000);
 }
 
 /** Load past-paper presets for every unit in an IAL cash-in award. */
@@ -291,8 +323,7 @@ export async function listCashInCalculatorPresets(cashInCode: string, subjectId?
   const ialUnits = unitSubjects.filter(
     (s) => s.curriculum_id === 'curr-edexcel-ial' || codes.includes(s.code)
   );
-  const nested = await Promise.all(ialUnits.map((s) => listApprovedCalculatorPresets(s.id)));
-  return nested.flat();
+  return listApprovedCalculatorPresetsForSubjects(ialUnits.map((s) => s.id));
 }
 
 export async function listMyExamEditorSubmissions(_userId: string) {
