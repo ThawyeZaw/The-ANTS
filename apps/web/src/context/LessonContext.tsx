@@ -18,10 +18,13 @@ import {
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useAuthContext } from './AuthContext';
 import { awardXp } from '@/actions/gamification';
-import { listUserEnrollments } from '@/actions/curriculum';
+import {
+  listCurriculumCatalog,
+  listTopicProgressForUser,
+  listUserEnrollments,
+  updateTopicProgress,
+} from '@/actions/curriculum';
 import { listExamCountdownsForUser } from '@/actions/exam-data';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8787';
 
 // ── Local Types ───────────────────────────────────────────────────────────────
 
@@ -170,80 +173,63 @@ export function LessonProvider({ children }: { children: ReactNode }) {
         pathname?.startsWith('/courses') ||
         pathname?.startsWith('/workspace');
 
-      const [cRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/curriculum${needsTopics ? '?includeTopics=1' : ''}`),
-      ]);
+      const curriculums = await listCurriculumCatalog(needsTopics);
+      setAllCurriculums(curriculums);
 
-      if (cRes.ok) {
-        const json = await cRes.json();
-        const curriculums = json.curriculums || [];
-        setAllCurriculums(curriculums);
-
-        const subs: any[] = [];
-        const tops: any[] = [];
-        for (const c of curriculums) {
-          if (c.subjects) {
-            for (const s of c.subjects) {
-              subs.push(s);
-              if (s.topics) {
-                tops.push(
-                  ...s.topics.map((t: any) => ({
-                    ...t,
-                    title: t.title ?? t.name,
-                    order_no: t.order_no ?? t.order_index ?? null,
-                  }))
-                );
-              }
+      const subs: any[] = [];
+      const tops: any[] = [];
+      for (const c of curriculums) {
+        if (c.subjects) {
+          for (const s of c.subjects) {
+            subs.push(s);
+            if (s.topics) {
+              tops.push(
+                ...s.topics.map((t) => ({
+                  ...t,
+                  title: t.title ?? t.name,
+                  order_no: t.order_no ?? t.order_index ?? null,
+                }))
+              );
             }
           }
         }
-        setAllSubjects(subs);
-        setAllTopics(tops);
       }
+      setAllSubjects(subs);
+      setAllTopics(tops);
 
       if (userId) {
-        const [progRes, enrollRows, countdownRows] = await Promise.all([
-          needsTopics
-            ? fetch(`${API_BASE_URL}/api/curriculum/progress?userId=${encodeURIComponent(userId)}`)
-            : Promise.resolve(null),
+        const [progressRows, enrollRows, countdownRows] = await Promise.all([
+          needsTopics ? listTopicProgressForUser(userId).catch(() => []) : Promise.resolve([]),
           listUserEnrollments(userId).catch(() => []),
           listExamCountdownsForUser(userId).catch(() => []),
         ]);
 
         if (enrollRows.length > 0) {
           setEnrollments(enrollRows);
-        } else {
-          const enrRes = await fetch(
-            `${API_BASE_URL}/api/curriculum/user-curriculums?userId=${encodeURIComponent(userId)}`
-          );
-          if (enrRes.ok) {
-            const json = await enrRes.json();
-            setEnrollments(json.userCurriculums || []);
-          }
         }
 
-        if (progRes?.ok) {
-          const json = await progRes.json();
-          setProgressRecords(json.progress || []);
+        if (progressRows.length > 0) {
+          setProgressRecords(progressRows as TopicProgressRecord[]);
         }
 
         setCountdownsLoading(true);
         const auto: SubjectCountdown[] = enrollRows.map((row) => {
           const linked = countdownRows.find((c) => c.subject_id === row.subject_id && !c.is_custom);
+          const examId = linked?.exam_id ?? linked?.id;
           return {
             subjectId: row.subject_id,
-            exam: linked
-              ? {
-                  id: linked.exam_id || linked.id,
-                  title: linked.title,
-                  subject: row.subject?.name,
-                  date: linked.exam_date ? new Date(linked.exam_date).toISOString() : undefined,
-                  exam_date: linked.exam_date ? new Date(linked.exam_date).toISOString() : undefined,
-                  series: linked.paper_name ?? undefined,
-                  exam_board: linked.exam_board ?? undefined,
-                  target_grade: linked.target_grade,
-                }
-              : null,
+            exam:
+              linked && typeof examId === 'string'
+                ? {
+                    id: examId,
+                    title: typeof linked.title === 'string' ? linked.title : undefined,
+                    subject: row.subject?.name,
+                    date: linked.exam_date ? new Date(linked.exam_date).toISOString() : undefined,
+                    exam_date: linked.exam_date ? new Date(linked.exam_date).toISOString() : undefined,
+                    series: typeof linked.paper_name === 'string' ? linked.paper_name : undefined,
+                    exam_board: typeof linked.exam_board === 'string' ? linked.exam_board : undefined,
+                  }
+                : null,
           };
         });
         setCountdowns(auto);
@@ -263,8 +249,7 @@ export function LessonProvider({ children }: { children: ReactNode }) {
     pathname?.startsWith('/library') ||
     pathname?.startsWith('/curriculum') ||
     pathname?.startsWith('/countdown') ||
-    pathname?.startsWith('/past-papers') ||
-    pathname?.startsWith('/calculator');
+    pathname?.startsWith('/past-papers');
 
   useEffect(() => {
     if (isLessonPage && userId && !loadedRef.current) {
@@ -367,15 +352,7 @@ export function LessonProvider({ children }: { children: ReactNode }) {
     ) => {
       if (!userId) return;
       try {
-        await fetch(`${API_BASE_URL}/api/curriculum/progress`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId,
-            topicId,
-            status: patch.status || 'in_progress',
-          }),
-        });
+        await updateTopicProgress(userId, topicId, patch.status || 'in_progress');
 
         setProgressRecords((prev) => {
           const existing = prev.find((r) => r.topic_id === topicId);

@@ -34,6 +34,7 @@ import {
   computeSubjectGrade,
   isRequiredPaperRow,
   paperRowKey,
+  DEFAULT_EXAM_SESSION,
 } from '@/lib/grading';
 import { isPaperAvailable } from '@/lib/exam-papers/availability';
 import type { SubjectTier } from '@/lib/grading/types';
@@ -856,6 +857,7 @@ export async function getPaperGridData(
         grade: b.grade,
         min_mark: b.min_mark,
         max_mark: b.max_mark ?? undefined,
+        sourceId: b.id,
       }));
 
       const gradeResult = computeSubjectGrade({
@@ -1449,7 +1451,7 @@ export async function getMySubjectsHub(userId: string): Promise<{
     return { subjects: hub, defaultExamSeries };
   } catch (err) {
     console.error('[curriculum] getMySubjectsHub error:', err);
-    return { subjects: [], defaultExamSeries: 'May/June 2026' };
+    return { subjects: [], defaultExamSeries: DEFAULT_EXAM_SESSION };
   }
 }
 
@@ -1487,6 +1489,110 @@ export async function listSubjectCompositeBoundaries(
     console.error('[curriculum] listSubjectCompositeBoundaries error:', err);
     return [];
   }
+}
+
+const CATALOG_CURRICULUM_COLUMNS = {
+  id: true,
+  name: true,
+  code: true,
+  description: true,
+  icon_url: true,
+} as const;
+
+const CATALOG_SUBJECT_COLUMNS = {
+  id: true,
+  curriculum_id: true,
+  name: true,
+  code: true,
+  description: true,
+  color_code: true,
+} as const;
+
+export async function listCurriculumCatalog(includeTopics = false) {
+  const db = getDb();
+
+  if (includeTopics) {
+    const rows = await db.query.curriculums.findMany({
+      columns: CATALOG_CURRICULUM_COLUMNS,
+      with: {
+        subjects: {
+          columns: CATALOG_SUBJECT_COLUMNS,
+          with: {
+            topics: {
+              columns: {
+                id: true,
+                subject_id: true,
+                name: true,
+                description: true,
+                order_index: true,
+              },
+              orderBy: [asc(topics.order_index)],
+            },
+          },
+        },
+      },
+      orderBy: [asc(curriculums.name)],
+    });
+
+    return rows.map((c) => ({
+      ...c,
+      title: c.name,
+      exam_board: c.code,
+      subjects: c.subjects.map((s) => ({
+        ...s,
+        title: s.name,
+        topics: s.topics.map((t) => ({
+          ...t,
+          title: t.name,
+          order_no: t.order_index ?? null,
+        })),
+      })),
+    }));
+  }
+
+  const rows = await db.query.curriculums.findMany({
+    columns: CATALOG_CURRICULUM_COLUMNS,
+    with: {
+      subjects: {
+        columns: CATALOG_SUBJECT_COLUMNS,
+      },
+    },
+    orderBy: [asc(curriculums.name)],
+  });
+
+  return rows.map((c) => ({
+    ...c,
+    title: c.name,
+    exam_board: c.code,
+    subjects: c.subjects.map((s) => ({
+      ...s,
+      title: s.name,
+      topics: undefined,
+    })),
+  }));
+}
+
+export async function listTopicProgressForUser(userId: string) {
+  const db = getDb();
+  const rows = await db.query.topicProgress.findMany({
+    where: eq(topicProgress.user_id, userId),
+    columns: {
+      id: true,
+      user_id: true,
+      topic_id: true,
+      status: true,
+      last_studied_at: true,
+      completed_at: true,
+      notes: true,
+    },
+  });
+  return rows.map((row) => ({
+    ...row,
+    confidence_level: 0,
+    updated_at: row.last_studied_at
+      ? new Date(row.last_studied_at).toISOString()
+      : new Date().toISOString(),
+  }));
 }
 
 export async function listUserEnrollments(userId: string) {

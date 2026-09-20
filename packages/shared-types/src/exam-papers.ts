@@ -92,7 +92,7 @@ export const CAIE_IGCSE_PRACTICE_VARIANTS: Record<string, readonly string[]> = {
   '0610': ['21', '22', '23', '41', '42', '43', '61', '62', '63'],
   '0478': ['11', '12', '13', '21', '22', '23'],
   '0417': ['11', '12', '13', '21', '22', '02', '31', '32', '03'],
-  '0500': ['11', '12', '13', '21', '22', '23', '31', '32', '33'],
+  '0500': ['11', '12', '13', '21', '22', '23', '03'],
   '0510': ['11', '12', '13', '21', '22', '23', '04'],
   '0455': ['11', '12', '13', '21', '22', '23'],
   '0450': ['11', '12', '13', '21', '22', '23'],
@@ -178,7 +178,12 @@ export const CAIE_ALEVEL_PRACTICE_VARIANTS: Record<string, readonly string[]> = 
 
 const CAIE_SCIENCE_AL = new Set(['9702', '9701', '9700']);
 
-/** Regional (R) papers for Myanmar Oct/Nov sittings. */
+function stripEdexcelRPaper(paper: string): string {
+  if (paper === '03' || !paper.endsWith('R')) return paper;
+  return paper.slice(0, -1);
+}
+
+/** Regional (R) papers for Myanmar May/June sittings. Nov/Jan use the non-R equivalent. */
 export const EDEXCEL_IGCSE_MYANMAR_PAPERS: Record<string, readonly string[]> = {
   '4MA1': ['1HR', '2HR'],
   '4MB1': ['01R', '02R'],
@@ -293,6 +298,8 @@ export function syllabusNeedsMathsRoute(syllabusCode: string | null | undefined)
   return syllabusCode === '9709';
 }
 
+export const CAIE_ZONE_VARIANTS = ['1', '2', '3'] as const;
+
 /** Combine split past_papers.paper_number + variant into a Cambridge combined ID. */
 export function toCambridgePaperId(
   paperNumber: string,
@@ -308,6 +315,16 @@ export function toCambridgePaperId(
   const base = digits || trimmed;
   const v = (variant ?? '2').trim();
   return `${base}${v}`;
+}
+
+/** Unvarianted Cambridge components (02/03) — not "Paper 0 Variant 2". */
+export function isCaieUnvariantedComponent(
+  paperNumber: string,
+  variant?: string | null
+): boolean {
+  const combined = toCambridgePaperId(paperNumber, variant);
+  const digits = combined.replace(/\D/g, '');
+  return digits.length >= 2 && digits.startsWith('0');
 }
 
 /** First component digit(s) from a combined Cambridge paper ID. */
@@ -449,7 +466,11 @@ export function getMyanmarPaperIds(
   }
 
   if (board === 'EDEXCEL_IGCSE') {
-    return EDEXCEL_IGCSE_MYANMAR_PAPERS[subjectCode] ?? null;
+    const rPapers = EDEXCEL_IGCSE_MYANMAR_PAPERS[subjectCode];
+    if (!rPapers) return null;
+    const season = parseExamSeason(opts?.series ?? null);
+    if (!season || season === 'May/June') return rPapers;
+    return rPapers.map(stripEdexcelRPaper);
   }
 
   if (board === 'EDEXCEL_IAL') {
@@ -639,7 +660,11 @@ export function formatPaperRowLabel(
 ): string {
   if (board === 'CAIE_IGCSE' || board === 'CAIE_ALEVEL') {
     const combined = toCambridgePaperId(paperNumber, variant);
-    return `Paper ${combined}`;
+    const base = caiePaperBaseFromNumber(combined);
+    if (isCaieUnvariantedComponent(paperNumber, variant) || !variant) {
+      return `Paper ${base}`;
+    }
+    return `Paper ${base} (v${variant})`;
   }
   if (board === 'EDEXCEL_IGCSE') {
     return `Paper ${paperNumber}`;

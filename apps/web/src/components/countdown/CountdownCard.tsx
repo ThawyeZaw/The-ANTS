@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { CountdownWithTime } from '@/hooks/useCountdown';
-import { Trash2, Clock, Calendar, AlertCircle, Sparkles, BookOpen, Calculator } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { Trash2, Clock, Calendar, Sparkles, Calculator } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { formatExamDateTime } from '@/lib/exam-datetime';
 
 interface CountdownCardProps {
   countdown: any;
@@ -43,16 +43,7 @@ export function CountdownCard({ countdown, onDelete, canDelete = true }: Countdo
   const paperName = countdown.paper_name || null;
   const targetGrade = countdown.target_grade || null;
 
-  const formattedDate = targetDate
-    ? new Intl.DateTimeFormat('en-GB', {
-        weekday: 'short',
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      }).format(new Date(targetDate))
-    : 'Date TBD';
+  const formattedDate = formatExamDateTime(targetDate);
 
   // Urgency indicator
   const isUrgent = !time.isPast && time.days < 7;

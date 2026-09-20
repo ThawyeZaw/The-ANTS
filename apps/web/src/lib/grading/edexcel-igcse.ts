@@ -4,7 +4,7 @@ import { gradeFromRawMarks, lookupGrade, percentageOf } from './shared';
 
 export const edexcelIgcsePlugin: QualificationPlugin = {
   key: 'Edexcel_IGCSE',
-  countdownMode: 'per_subject',
+  countdownMode: 'per_paper',
   hasTiers: true,
   defaultVariant: null,
   paperSelectionRules: (papers, opts) => {

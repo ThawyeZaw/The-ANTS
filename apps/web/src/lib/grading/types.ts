@@ -9,6 +9,8 @@ export interface GradeBoundary {
   max_mark?: number | null;
   ums_min?: number | null;
   ums_max?: number | null;
+  /** Seed row id; used to pick the matching Cambridge option table. */
+  sourceId?: string;
 }
 
 export interface PaperComponent {
@@ -18,6 +20,7 @@ export interface PaperComponent {
   maxMark: number;
   title?: string | null;
   exclusiveGroup?: string;
+  syllabusCode?: string;
   boundaries: GradeBoundary[];
 }
 

@@ -38,6 +38,9 @@ SEED_ORDER = [
     "0032_backfill_maths_suite_topic_prefixes.sql",
     "0033_maths_suite_past_papers.sql",
     "0034_remove_october_unavailable_ial_units.sql",
+    "0035_exams_countdown_official.sql",
+    "0036_fix_caie_igcse_component_codes.sql",
+    "0037_caie_igcse_astar_overall_only.sql",
 ]
 
 
@@ -143,6 +146,22 @@ def main():
         """
     ).fetchone()[0]
     assert orphan_pp == 0, f"orphan past_paper subject_ids: {orphan_pp}"
+
+    paper0 = con.execute(
+        """
+        SELECT syllabus_code, series, paper_number, variant, title
+        FROM past_papers
+        WHERE exam_board = 'CAIE'
+          AND qualification = 'IGCSE'
+          AND (
+            paper_number = '0'
+            OR (paper_number = '5' AND variant = '0')
+            OR title LIKE 'Paper 0%'
+          )
+        LIMIT 20
+        """
+    ).fetchall()
+    assert not paper0, f"CAIE IGCSE still has Paper 0 / Component 50 rows: {paper0}"
 
     codes = [r[0] for r in con.execute("SELECT DISTINCT syllabus_code FROM past_papers ORDER BY 1").fetchall()]
     print("past_paper codes:", codes)

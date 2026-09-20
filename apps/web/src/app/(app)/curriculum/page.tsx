@@ -21,6 +21,7 @@ import {
 } from '@/actions/curriculum';
 import { SubjectHubCard } from '@/components/curriculum/SubjectHubCard';
 import { cn } from '@/lib/utils';
+import { DEFAULT_EXAM_SESSION } from '@/lib/grading';
 import type { AwardLevel, PaperPreferences } from '@/lib/exam-papers/myanmar-papers';
 
 const BOARD_COLORS: Record<string, { from: string; to: string; accent: string; badge: string }> = {
@@ -43,7 +44,7 @@ export default function CurriculumPage() {
     setLoading(true);
     try {
       const [hub, boards] = await Promise.all([
-        user ? getMySubjectsHub(user.id) : Promise.resolve({ subjects: [], defaultExamSeries: 'May/June 2026' }),
+        user ? getMySubjectsHub(user.id) : Promise.resolve({ subjects: [], defaultExamSeries: DEFAULT_EXAM_SESSION }),
         getCurriculums(user?.id),
       ]);
       setHubSubjects(hub.subjects);

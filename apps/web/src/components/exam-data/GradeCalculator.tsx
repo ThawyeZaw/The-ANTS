@@ -33,7 +33,7 @@ import {
 } from '@/actions/exam-data';
 import { getSubjectCalculatorContext, listSubjectCompositeBoundaries } from '@/actions/curriculum';
 import { useAuth } from '@/hooks/useAuth';
-import { syllabusHasAwardLevel, syllabusNeedsMathsRoute } from '@/lib/exam-papers/myanmar-papers';
+import { syllabusHasAwardLevel, syllabusNeedsMathsRoute, formatPaperRowLabel, isCaieUnvariantedComponent } from '@/lib/exam-papers/myanmar-papers';
 import { cn } from '@/lib/utils';
 import {
   getGradeColor,
@@ -42,6 +42,7 @@ import {
   syllabusHasTiers,
   uniqueVariants,
   caiePaperBase,
+  toCambridgePaperId,
   type SubjectTier,
   type GradeBoundary,
   type PaperComponent,
@@ -580,7 +581,12 @@ export default function GradeCalculator() {
       variant: selectedVariant || null,
       tier: selectedTier || null,
     }).then((rows) => {
-      const mapped = rows.map((r) => ({ grade: r.grade, min_mark: r.min_mark, max_mark: r.max_mark }));
+      const mapped = rows.map((r) => ({
+        grade: r.grade,
+        min_mark: r.min_mark,
+        max_mark: r.max_mark,
+        sourceId: r.id,
+      }));
       compositeCacheRef.current.set(compKey, mapped);
       setCompositeBoundaries(mapped);
     });
@@ -722,7 +728,8 @@ export default function GradeCalculator() {
   const isCambridge =
     selectedCurriculumRow?.code === 'CAIE_IGCSE' || selectedCurriculumRow?.code === 'CAIE_ALEVEL';
 
-  // Group papers by base number (e.g. Paper 1, Paper 2) so only 1 card is displayed per paper
+  // Group papers by base number (e.g. Paper 1, Paper 2) so only 1 card is displayed per paper.
+  // Variants are per paper — ICT Oct/Nov Paper 1 has 11/12/13 while Papers 2 and 3 are unvarianted 02/03.
   const papersByBase = useMemo(() => {
     const map = new Map<
       string,
@@ -733,24 +740,28 @@ export default function GradeCalculator() {
         variantList: string[];
       }
     >();
+    const UNVARIANTED = '';
+    const board = selectedCurriculumRow?.code === 'CAIE_ALEVEL' ? 'CAIE_ALEVEL' as const : 'CAIE_IGCSE' as const;
 
-    const basePapers = (filteredActivePapers ?? []) as (PaperDef & { exclusiveGroup?: string })[];
-
-    for (const p of basePapers) {
-      const baseKey = isCambridge
-        ? caiePaperBase(p.paper_number || p.name)
-        : (p.paper_number || p.name);
-      const v = p.variant || '2';
+    const addPaper = (p: PaperDef) => {
+      const paperNumber = p.paper_number || p.name;
+      const combined = isCambridge ? toCambridgePaperId(paperNumber, p.variant) : paperNumber;
+      const baseKey = isCambridge ? caiePaperBase(combined) : paperNumber;
+      const unvarianted = isCambridge && isCaieUnvariantedComponent(paperNumber, p.variant);
+      const v = unvarianted || !p.variant ? UNVARIANTED : p.variant;
+      if (v && !['1', '2', '3'].includes(v)) return;
 
       if (!map.has(baseKey)) {
-        const cleanName = p.name
+        const cleanName = (p.name || '')
           .replace(/\s+Variant\s+\d+/i, '')
           .replace(/\s*\(v\d+\)/i, '')
           .replace(/\s+v\d+$/i, '');
-
+        const fallback = isCambridge
+          ? formatPaperRowLabel(paperNumber, unvarianted ? null : p.variant, board)
+          : paperNumber;
         map.set(baseKey, {
           baseKey,
-          displayName: cleanName,
+          displayName: !cleanName || /paper\s*0\b/i.test(cleanName) ? fallback : cleanName,
           variants: {},
           variantList: [],
         });
@@ -758,30 +769,26 @@ export default function GradeCalculator() {
 
       const entry = map.get(baseKey)!;
       entry.variants[v] = p;
-      if (!entry.variantList.includes(v)) {
+      if (v && !entry.variantList.includes(v)) {
         entry.variantList.push(v);
       }
-    }
+    };
 
-    // Also scan matchingPresets for any other variants of this baseKey for Cambridge
+    const basePapers = (filteredActivePapers ?? []) as (PaperDef & { exclusiveGroup?: string })[];
+    for (const p of basePapers) addPaper(p);
+
     if (isCambridge) {
       for (const preset of matchingPresets) {
         for (const p of preset.papers) {
-          const baseKey = caiePaperBase(p.paper_number || p.name);
-          const v = p.variant;
-          if (v && map.has(baseKey)) {
-            const entry = map.get(baseKey)!;
-            if (!entry.variants[v]) {
-              entry.variants[v] = {
-                ...p,
-                paper_number: p.paper_number || preset.paper_number,
-                variant: v,
-              };
-            }
-            if (!entry.variantList.includes(v)) {
-              entry.variantList.push(v);
-            }
-          }
+          const paperNumber = p.paper_number || preset.paper_number || p.name;
+          const combined = toCambridgePaperId(paperNumber, p.variant ?? preset.variant);
+          const baseKey = caiePaperBase(combined);
+          if (!map.has(baseKey)) continue;
+          addPaper({
+            ...p,
+            paper_number: paperNumber,
+            variant: p.variant ?? preset.variant,
+          });
         }
       }
     }
@@ -791,7 +798,7 @@ export default function GradeCalculator() {
     }
 
     return map;
-  }, [filteredActivePapers, matchingPresets, isCambridge]);
+  }, [filteredActivePapers, matchingPresets, isCambridge, selectedCurriculumRow?.code]);
 
   // Strict integer input handler (increments/decrements by 1)
   const handleMarkChange = (key: string | number, value: string, maxAllowed: number) => {
@@ -833,13 +840,19 @@ export default function GradeCalculator() {
   const paperResults = useMemo(() => {
     if (!activePreset || papersByBase.size === 0) return [];
 
-    return Array.from(papersByBase.values()).map((entry, i) => {
+    return Array.from(papersByBase.values()).flatMap((entry, i) => {
+      const preferred = [
+        paperVariants[entry.baseKey],
+        selectedVariant,
+        plugin.defaultVariant,
+      ].filter((v): v is string => Boolean(v));
       const activeVar =
-        paperVariants[entry.baseKey] ||
-        selectedVariant ||
-        plugin.defaultVariant ||
-        entry.variantList[0];
-      const paperDef = entry.variants[activeVar] || Object.values(entry.variants)[0];
+        preferred.find((v) => entry.variantList.includes(v)) ||
+        entry.variantList[0] ||
+        '';
+      const paperDef =
+        entry.variants[activeVar] || entry.variants[''] || Object.values(entry.variants)[0];
+      if (!paperDef) return [];
       const val = rawMarks[entry.baseKey] ?? rawMarks[i];
       const filled = val !== '' && val !== undefined;
       const perBoundaries = (paperDef?.paper_boundaries && paperDef.paper_boundaries.length > 0
@@ -858,7 +871,8 @@ export default function GradeCalculator() {
             : { grade: '—', percentage: 0, ums: undefined as number | undefined }
         : { grade: '—', percentage: 0, ums: undefined as number | undefined };
 
-      return {
+      return [
+        {
         ...paperDef,
         baseKey: entry.baseKey,
         displayName: entry.displayName,
@@ -875,7 +889,8 @@ export default function GradeCalculator() {
         umsCap,
         maxInput,
         hasOfficialBoundaries: perBoundaries.length > 0,
-      };
+        },
+      ];
     });
   }, [
     activePreset,
@@ -929,14 +944,16 @@ export default function GradeCalculator() {
         boundariesMessage: suiteSelectors.combinationStatus.message ?? 'Select a valid Pearson cash-in combination for an overall grade.',
       };
     }
+    const sittingForComposite = paperPlugin.key === 'CAIE_IGCSE' ? paperResults : filled;
     const composite = paperPlugin.compositeGrade(
-      filled.map((pr) => ({
+      sittingForComposite.map((pr) => ({
         name: pr.name,
         paperNumber: pr.paper_number || pr.name,
         variant: pr.variant,
         maxMark: pr.max_mark,
+        syllabusCode: activePreset.subject_code || activePreset.syllabus_code,
         boundaries: pr.perBoundaries,
-        rawMark: isIAL && ialInputMode === 'ums' ? 0 : pr.raw,
+        rawMark: isIAL && ialInputMode === 'ums' ? 0 : pr.filled ? pr.raw : 0,
         umsInput: isIAL && ialInputMode === 'ums' ? pr.raw : undefined,
       })),
       compositeBoundaries,
@@ -1265,9 +1282,12 @@ export default function GradeCalculator() {
                   >
                     {groupPapers.map((p) => {
                       const val = p.paper_number || p.name;
+                      const label = (p.name || val)
+                        .replace(/\s+Variant\s+\d+/i, '')
+                        .replace(/\s*\(v\d+\)/i, '');
                       return (
                         <option key={val} value={val}>
-                          Paper {val} {p.name !== val ? `(${p.name})` : ''}
+                          {label}
                         </option>
                       );
                     })}
@@ -1361,7 +1381,8 @@ export default function GradeCalculator() {
                   Exam Administration Variant
                 </span>
                 <p className="text-[11px] text-foreground-muted">
-                  Defaulting to Variant {plugin.defaultVariant || '2'} (standard for Myanmar). Switch here or per paper.
+                  Defaults to variant {plugin.defaultVariant || '2'} where that paper exists.
+                  Papers without zone variants (for example ICT 02/03 in Oct/Nov) stay as they are.
                 </p>
               </div>
               <div className="flex items-center gap-1.5 p-1 bg-background-card rounded-xl border border-border">
@@ -1459,7 +1480,9 @@ export default function GradeCalculator() {
                 {calc.anyFilled
                   ? isIAL
                     ? `${calc.totalUms} UMS · ${calc.totalRaw} / ${calc.maxRaw} raw`
-                    : `${calc.totalRaw} / ${calc.maxRaw} · ${calc.percentage}%`
+                    : paperPlugin.key === 'CAIE_IGCSE'
+                      ? `${calc.totalRaw} / ${calc.maxRaw} weighted · ${calc.percentage}%`
+                      : `${calc.totalRaw} / ${calc.maxRaw} · ${calc.percentage}%`
                   : 'Enter marks to see a grade'}
               </p>
               {calc.anyFilled && calc.aStarNotes && calc.aStarNotes.length > 0 && (

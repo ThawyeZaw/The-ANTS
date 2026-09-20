@@ -6,6 +6,7 @@ import { Exam } from '@/types';
 import type { CatalogCurriculum } from '@/context/LessonContext';
 import { groupEdexcelIalSubjects } from '@/lib/edexcel-ial';
 import { examRowMatchesMyanmar } from '@/lib/exam-papers/myanmar-papers';
+import { myanmarDateTimeIso } from '@/lib/exam-datetime';
 import { X } from 'lucide-react';
 
 interface AddCountdownModalProps {
@@ -113,7 +114,7 @@ export function AddCountdownModal({
 
   if (!isOpen) return null;
 
-  const isPastDate = targetDate && targetTime ? new Date(`${targetDate}T${targetTime}`).getTime() < Date.now() : false;
+  const isPastDate = targetDate && targetTime ? new Date(myanmarDateTimeIso(targetDate, targetTime)).getTime() < Date.now() : false;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -138,7 +139,7 @@ export function AddCountdownModal({
         if (!customTitle.trim() || !targetDate) return;
         await onCreate({
           custom_title: customTitle.trim(),
-          target_date: new Date(`${targetDate}T${targetTime}`).toISOString(),
+          target_date: myanmarDateTimeIso(targetDate, targetTime),
           priority_indicator: priority,
           qualification_group: group,
         });
@@ -345,6 +346,7 @@ export function AddCountdownModal({
                     className={`w-full rounded-lg border bg-[var(--background-secondary)] p-3 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] ${isPastDate ? 'border-red-500/50 focus:border-red-500' : 'border-[var(--border)] focus:border-[var(--primary)]'}`}
                     required
                   />
+                  <p className="mt-1 text-[11px] text-[var(--foreground-muted)]">Myanmar time (MMT). Official papers use 09:00 AM earliest.</p>
                 </div>
               </div>
               {isPastDate && (

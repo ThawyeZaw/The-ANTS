@@ -8,7 +8,7 @@ import { gradeFromRawMarks, lookupGrade, percentageOf, toCambridgePaperId, caieP
 
 export const caieAlevelPlugin: QualificationPlugin = {
   key: 'CAIE_AL',
-  countdownMode: 'per_subject',
+  countdownMode: 'per_paper',
   hasTiers: false,
   defaultVariant: '2',
   paperSelectionRules: (papers, opts) => {
@@ -25,10 +25,6 @@ export const caieAlevelPlugin: QualificationPlugin = {
       list = list.filter((p) =>
         practiceVariants.includes(toCambridgePaperId(p.paperNumber, p.variant))
       );
-    }
-    if (opts.variant) {
-      const withVariant = list.filter((p) => (p.variant ?? '2') === opts.variant);
-      if (withVariant.length > 0) list = withVariant;
     }
 
     const out: PaperComponent[] = [];
@@ -47,7 +43,7 @@ export const caieAlevelPlugin: QualificationPlugin = {
 
     const seen = new Set<string>();
     return out.filter((p) => {
-      const base = caiePaperBase(p.paperNumber);
+      const base = caiePaperBase(toCambridgePaperId(p.paperNumber, p.variant));
       if (seen.has(base)) return false;
       seen.add(base);
       return true;

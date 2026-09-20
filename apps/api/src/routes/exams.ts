@@ -12,6 +12,16 @@ function toIso(value: Date | number | string | null | undefined): string | null 
 }
 
 function examSeriesLabel(exam: { season?: string | null; series?: string | null }) {
+  const series = exam.series?.trim() ?? '';
+  const compact = series.match(/^([swmj])(\d{2})$/i);
+  if (compact) {
+    const letter = compact[1]!.toLowerCase();
+    const yy = Number(compact[2]);
+    const year = yy >= 50 ? 1900 + yy : 2000 + yy;
+    const season =
+      letter === 's' ? 'May/June' : letter === 'w' ? 'Oct/Nov' : letter === 'm' ? 'Feb/March' : 'Jan';
+    return `${season} ${year}`;
+  }
   const parts = [exam.season, exam.series].filter((part): part is string => Boolean(part && part.trim()));
   return parts.length > 0 ? parts.join(' ') : null;
 }

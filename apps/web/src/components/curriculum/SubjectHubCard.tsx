@@ -13,8 +13,9 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatExamDateTime } from '@/lib/exam-datetime';
 import type { HubSubject } from '@/actions/curriculum';
-import { EXAM_SESSION_OPTIONS, syllabusHasTiers } from '@/lib/grading';
+import { sessionOptionsForCurriculum, syllabusHasTiers } from '@/lib/grading';
 import { getPluginForCurriculumCode } from '@/lib/grading';
 import { syllabusHasAwardLevel, syllabusNeedsMathsRoute } from '@/lib/exam-papers/myanmar-papers';
 import type { AwardLevel, PaperPreferences } from '@/lib/exam-papers/myanmar-papers';
@@ -56,6 +57,13 @@ export function SubjectHubCard({
 }) {
   const color = subject.color_code ?? '#6366f1';
   const plugin = getPluginForCurriculumCode(subject.curriculum_code);
+  const seriesOptions = (() => {
+    const options = [...sessionOptionsForCurriculum(subject.curriculum_code)];
+    if (subject.target_series && !options.includes(subject.target_series)) {
+      options.unshift(subject.target_series);
+    }
+    return options;
+  })();
   const showTier = plugin.hasTiers && (syllabusHasTiers(subject.code) || subject.code === '4MA1');
   const showAward = syllabusHasAwardLevel(subject.code) || subject.curriculum_code === 'CAIE_ALEVEL';
   const showMathsRoute = syllabusNeedsMathsRoute(subject.code) && (subject.award_level ?? 'A Level') === 'AS';
@@ -66,11 +74,7 @@ export function SubjectHubCard({
   if (subject.target_series) calcQs.set('series', subject.target_series);
   if (subject.tier) calcQs.set('tier', subject.tier);
 
-  const nextDate = subject.nextExamDate
-    ? new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(
-        new Date(subject.nextExamDate)
-      )
-    : null;
+  const nextDate = subject.nextExamDate ? formatExamDateTime(subject.nextExamDate) : null;
 
   return (
     <div className="group relative rounded-2xl border border-border/60 bg-background-card overflow-hidden hover:border-border-hover hover:shadow-md transition-all">
@@ -124,7 +128,7 @@ export function SubjectHubCard({
               onChange={(e) => onUpdate(subject.id, { targetSeries: e.target.value })}
               className="w-full rounded-lg border border-border bg-background-secondary px-2 py-1.5 text-[11px] font-medium"
             >
-              {EXAM_SESSION_OPTIONS.map((s) => (
+              {seriesOptions.map((s) => (
                 <option key={s} value={s}>
                   {s}
                 </option>
@@ -206,11 +210,14 @@ export function SubjectHubCard({
         )}
 
         {nextDate && (
-          <p className="text-[11px] text-foreground-muted flex items-center gap-1.5">
+          <Link
+            href={`/countdown?curriculum=${subject.curriculum_id}&subject=${subject.id}`}
+            className="text-[11px] text-foreground-muted flex items-center gap-1.5 hover:text-primary"
+          >
             <Timer className="h-3 w-3 text-primary" />
             Next exam {nextDate}
             {subject.nextExamTitle ? ` · ${subject.nextExamTitle}` : ''}
-          </p>
+          </Link>
         )}
 
         <div className="pt-3 border-t border-border/40 grid grid-cols-2 gap-2 mt-2">

@@ -66,16 +66,22 @@ def main():
             astar = published.get("A*")
             bands = mod.build_bands(total, {g: published.get(g) for g in mod.COMP_GRADES}, astar)
             opt_slug = "".join(ch for ch in str(opt["code"]) if ch.isalnum())
-            comps = "-".join(str(c) for c in opt["components"][:6])
+            comps = "-".join(
+                (str(c).zfill(2) if str(c).isdigit() else str(c)) for c in opt["components"][:6]
+            )
             variant = None
             for c in opt["components"]:
-                s = str(c)
+                s = str(c).zfill(2) if str(c).isdigit() else str(c)
                 if len(s) >= 2 and s[0] != "0":
                     variant = s[-1]
                     break
             tier = None
             if syllabus in ("0580", "0610", "0620", "0625"):
-                bases = {str(c)[0] for c in opt["components"] if str(c)[0] in "1234"}
+                bases = {
+                    (str(c).zfill(2) if str(c).isdigit() else str(c))[:1]
+                    for c in opt["components"]
+                    if (str(c).zfill(2) if str(c).isdigit() else str(c))[:1] in "1234"
+                }
                 if bases & {"1", "3"}:
                     tier = "core"
                 elif bases & {"2", "4"}:
@@ -103,6 +109,9 @@ def main():
 
     parts = [
         "-- CAIE IGCSE syllabus-level composite thresholds (option tables from official PDFs).\n"
+        "-- Overall A*–G are weighted syllabus marks, not raw paper totals.\n"
+        "-- Re-run: python packages/db/seeds/_gen_caie_igcse_composites.py\n"
+        "DELETE FROM subject_grade_boundaries WHERE subject_id LIKE 'subj-caie-igcse-%';\n"
     ]
     for i in range(0, len(rows), 60):
         chunk = rows[i : i + 60]

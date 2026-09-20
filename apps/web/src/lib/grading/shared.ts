@@ -143,16 +143,21 @@ export function caiePaperBase(paperNumber: string): string {
 
 /** Combined CAIE paper id (e.g. paper 2 + variant 2 -> "22"). */
 export function toCambridgePaperId(paperNumber: string, variant?: string | null): string {
-  const digits = paperNumber.replace(/\D/g, '');
-  if (digits.length >= 2 && !variant) return digits;
-  const base = caiePaperBase(paperNumber);
-  return `${base}${variant ?? '2'}`;
+  const trimmed = paperNumber.trim();
+  const digits = trimmed.replace(/\D/g, '');
+  // Already a Cambridge component ("12", unvarianted "02"/"03").
+  if (digits.length >= 2) return trimmed;
+  const base = digits || trimmed;
+  const v = (variant ?? '2').trim();
+  return `${base}${v}`;
 }
+
+const CAIE_ZONE_VARIANTS = new Set(['1', '2', '3']);
 
 export function uniqueVariants(papers: { variant?: string | null }[]): string[] {
   const set = new Set<string>();
   for (const p of papers) {
-    if (p.variant) set.add(p.variant);
+    if (p.variant && CAIE_ZONE_VARIANTS.has(p.variant)) set.add(p.variant);
   }
   return [...set].sort();
 }

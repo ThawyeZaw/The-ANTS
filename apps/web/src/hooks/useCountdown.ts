@@ -7,8 +7,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { ExamCountdown, Exam } from '@/types';
 import { actionClearSourceQueue } from '@/actions/notifications';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8787';
+import {
+  createExamCountdown,
+  deleteExamCountdown,
+  listExamCountdownsForUser,
+  listExams,
+} from '@/actions/exam-data';
 
 export interface TimeLeft {
   days: number;
@@ -79,38 +83,23 @@ export function useCountdown(userId: string | undefined) {
 
     const loadData = async () => {
       try {
-        const [cdRes, exRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/api/exams/countdowns?userId=${encodeURIComponent(userId)}`),
-          fetch(`${API_BASE_URL}/api/exams`), // upcoming catalog (default)
+        const [cdRows, examRows] = await Promise.all([
+          listExamCountdownsForUser(userId),
+          listExams(),
         ]);
 
-        if (cdRes.ok) {
-          const cdJson = await cdRes.json();
-          if (cdJson.success && cdJson.countdowns) {
-            setCountdowns(
-              sortCountdowns(
-                (cdJson.countdowns as any[]).map((c) => ({
-                  ...c,
-                  custom_title: c.custom_title ?? c.title ?? null,
-                  target_date: c.exam_date || c.target_date,
-                  qualification_group: deriveQualificationGroup(c),
-                  timeLeft: calculateTimeLeft(c.exam_date || c.target_date),
-                }))
-              )
-            );
-          }
-        } else {
-          console.error('Error loading countdowns:', cdRes.status, await cdRes.text().catch(() => ''));
-        }
-
-        if (exRes.ok) {
-          const exJson = await exRes.json();
-          if (exJson.success && exJson.exams) {
-            setAvailableExams(exJson.exams as unknown as Exam[]);
-          }
-        } else {
-          console.error('Error loading exams:', exRes.status, await exRes.text().catch(() => ''));
-        }
+        setCountdowns(
+          sortCountdowns(
+            cdRows.map((c) => ({
+              ...c,
+              custom_title: c.custom_title ?? (c.title as string | null) ?? null,
+              target_date: (c.exam_date || c.target_date) as string | null,
+              qualification_group: deriveQualificationGroup(c),
+              timeLeft: calculateTimeLeft((c.exam_date || c.target_date) as string | null),
+            })) as CountdownWithTime[]
+          )
+        );
+        setAvailableExams(examRows as unknown as Exam[]);
       } catch (err) {
         console.error('Error loading countdowns:', err);
       }
@@ -173,50 +162,37 @@ export function useCountdown(userId: string | undefined) {
           : new Date(Date.now() + 30 * 86400000).toISOString();
 
       try {
-        const res = await fetch(`${API_BASE_URL}/api/exams/countdowns`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId,
-            examId: data.exam_id ?? undefined,
-            title: resolvedTitle,
-            examDate: resolvedDate,
-            colorCode: '#EF4444',
-            isCustom: !data.exam_id,
-            isPinned: true,
-            subjectId: subjectId ?? undefined,
-            examBoard: examBoard ?? undefined,
-          }),
+        const json = await createExamCountdown({
+          userId,
+          examId: data.exam_id ?? undefined,
+          title: resolvedTitle,
+          examDate: resolvedDate,
+          colorCode: '#EF4444',
+          isCustom: !data.exam_id,
+          isPinned: true,
+          subjectId: subjectId ?? undefined,
+          examBoard: examBoard ?? undefined,
         });
 
-        if (!res.ok) {
-          const errBody = await res.json().catch(() => ({}));
-          console.error('Error creating countdown:', res.status, errBody);
-          throw new Error(
-            typeof errBody.error === 'string'
-              ? errBody.error
-              : 'Failed to create countdown. Please try again.'
-          );
+        if (!json.success) {
+          throw new Error(json.error || 'Failed to create countdown. Please try again.');
         }
 
-        const json = await res.json();
-        if (json.success && json.countdown) {
-          const newCountdown = json.countdown;
-          setCountdowns((prev) =>
-            sortCountdowns([
-              ...prev,
-              {
+        const newCountdown = json.countdown;
+        setCountdowns((prev) =>
+          sortCountdowns([
+            ...prev,
+            {
+              ...newCountdown,
+              target_date: newCountdown.exam_date,
+              qualification_group: deriveQualificationGroup({
                 ...newCountdown,
-                target_date: newCountdown.exam_date,
-                qualification_group: deriveQualificationGroup({
-                  ...newCountdown,
-                  qualification_group: group,
-                }),
-                timeLeft: calculateTimeLeft(newCountdown.exam_date),
-              },
-            ])
-          );
-        }
+                qualification_group: group,
+              }),
+              timeLeft: calculateTimeLeft(newCountdown.exam_date as string | null),
+            } as CountdownWithTime,
+          ])
+        );
       } catch (err) {
         console.error('Error creating countdown:', err);
         throw err;
@@ -229,10 +205,8 @@ export function useCountdown(userId: string | undefined) {
     async (id: string) => {
       if (!userId) return;
       try {
-        const res = await fetch(`${API_BASE_URL}/api/exams/countdowns/${id}?userId=${encodeURIComponent(userId)}`, {
-          method: 'DELETE',
-        });
-        if (res.ok) {
+        const res = await deleteExamCountdown(userId, id);
+        if (res.success) {
           actionClearSourceQueue('exam_countdown', id);
           setCountdowns((prev) => prev.filter((c) => c.id !== id));
         }
@@ -257,6 +231,7 @@ export function useCountdown(userId: string | undefined) {
 
   return {
     groupedCountdowns,
+    countdowns,
     availableExams,
     createCountdown: handleCreateCountdown,
     deleteCountdown: handleDeleteCountdown,
