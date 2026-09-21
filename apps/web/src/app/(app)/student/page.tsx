@@ -24,19 +24,19 @@ import {
   Calculator,
   ArrowRight,
   Sparkles,
-  Award,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import AppIcon from '@/components/ui/AppIcon';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
 import MyWorkspace from '@/components/workspace/MyWorkspace';
-import { WorkspaceToastProvider } from '@/components/workspace/WorkspaceToast';
 import { DashboardSubjectsPanel } from '@/components/dashboard/DashboardSubjectsPanel';
 import { useDashboardSync } from '@/hooks/useDashboardSync';
 import { cn } from '@/lib/utils';
 import { getGamificationProfile } from '@/actions/gamification';
 import { BadgeShelf } from '@/components/gamification/BadgeShelf';
+import { GamificationHeroStrip } from '@/components/gamification/GamificationHeroStrip';
+import { RecentActivityFeed } from '@/components/gamification/RecentActivityFeed';
 
 const iconMap: Record<string, LucideIcon> = {
   'study-streak': Flame,
@@ -68,7 +68,7 @@ const STUDY_TOOLS: StudyToolCard[] = [
     icon: BookOpen,
     badge: 'Core Tool',
     badgeTone: 'emerald',
-    highlight: '+35 XP per solved paper',
+    highlight: '+30 XP per solved paper (with marks)',
   },
   {
     id: 'timetable',
@@ -87,7 +87,7 @@ const STUDY_TOOLS: StudyToolCard[] = [
     href: '/pomodoro',
     icon: Timer,
     badgeTone: 'accent',
-    highlight: '+10 XP per focus block',
+    highlight: '+20 XP per 25-min focus block',
   },
   {
     id: 'countdown',
@@ -113,7 +113,7 @@ const STUDY_TOOLS: StudyToolCard[] = [
     description: 'Curriculum frameworks, topic-by-topic mastery tracking, and revision notes.',
     href: '/lessons',
     icon: GraduationCap,
-    highlight: '+15 XP per topic mastered',
+    highlight: '+10 XP per topic mastered',
   },
 ];
 
@@ -129,6 +129,7 @@ export default function StudentDashboard() {
     currentStreak: 0,
     longestStreak: 0,
     allBadges: [] as any[],
+    recentActivity: [] as any[],
   });
 
   useEffect(() => {
@@ -143,13 +144,7 @@ export default function StudentDashboard() {
 
   const firstName = user.profile.name.split(' ')[0];
   const hasRoleActions = isTutor || isContributor || isAdmin;
-  const currentLevelBase = (gamification.level - 1) * 100;
-  const currentLevelProgress = Math.max(0, gamification.totalXp - currentLevelBase);
-  const xpNeeded = 100 - currentLevelProgress;
-  const levelPercentage = Math.min(100, Math.max(0, currentLevelProgress));
-
   return (
-    <WorkspaceToastProvider>
       <div className="space-y-8 pb-16 max-w-7xl mx-auto animate-fade-in">
         {/* ── Welcome & Gamification Hero ─────────────────────────────────── */}
         <header className="rounded-3xl border border-border bg-background-card p-6 sm:p-8 shadow-xs relative overflow-hidden">
@@ -180,11 +175,11 @@ export default function StudentDashboard() {
                   )}
                   {(isContributor || isAdmin) && (
                     <Link
-                      href="/editor"
+                      href="/past-papers"
                       className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-background-secondary border border-border text-foreground hover:text-primary transition-colors flex items-center gap-1.5"
                     >
                       <Pencil className="w-3.5 h-3.5" />
-                      Contributor Hub
+                      Past Papers
                     </Link>
                   )}
                   {isAdmin && (
@@ -200,44 +195,13 @@ export default function StudentDashboard() {
               )}
             </div>
 
-            {/* Gamification Strip (Level, Rank, Streak, XP) */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 p-5 rounded-2xl bg-background-secondary border border-border shrink-0">
-              {/* Streak Counter */}
-              <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                <Flame className="w-6 h-6 fill-amber-500 text-amber-500 shrink-0 animate-pulse" />
-                <div>
-                  <span className="text-lg font-mono font-bold leading-none block">
-                    {gamification.currentStreak}d
-                  </span>
-                  <span className="text-[10px] uppercase font-bold tracking-wider opacity-80">
-                    Streak
-                  </span>
-                </div>
-              </div>
-
-              {/* Scholar Level & XP Bar */}
-              <div className="space-y-1.5 min-w-[170px]">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="font-bold text-foreground flex items-center gap-1">
-                    <Award className="w-3.5 h-3.5 text-primary" />
-                    Level {gamification.level}
-                  </span>
-                  <span className="text-[11px] font-mono text-primary font-bold">
-                    {gamification.totalXp} XP
-                  </span>
-                </div>
-                <div className="h-2 w-full rounded-full bg-border overflow-hidden">
-                  <div
-                    className="h-full bg-primary rounded-full transition-all duration-500"
-                    style={{ width: `${levelPercentage}%` }}
-                  />
-                </div>
-                <div className="flex justify-between items-center text-[10px] text-foreground-muted">
-                  <span>{gamification.rankTitle}</span>
-                  <span className="font-mono">{xpNeeded} XP to next level</span>
-                </div>
-              </div>
-            </div>
+            <GamificationHeroStrip
+              level={gamification.level}
+              totalXp={gamification.totalXp}
+              rankTitle={gamification.rankTitle}
+              currentStreak={gamification.currentStreak}
+              longestStreak={gamification.longestStreak}
+            />
           </div>
         </header>
 
@@ -305,9 +269,12 @@ export default function StudentDashboard() {
         </section>
 
         {/* ── Gamification Shelf: Badges & Milestones ──────────────────────── */}
-        <section className="p-6 sm:p-8 rounded-3xl border border-border bg-background-card shadow-xs">
+        <section className="p-6 sm:p-8 rounded-3xl border border-border bg-background-card shadow-xs space-y-6">
           <BadgeShelf badges={gamification.allBadges} />
-        </section>        {/* ── Quick Stats Grid ─────────────────────────────────────────────── */}
+          <RecentActivityFeed items={gamification.recentActivity} />
+        </section>
+
+        {/* ── Quick Stats Grid ─────────────────────────────────────────────── */}
         {stats.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {stats.map((stat, i) => {
@@ -334,6 +301,5 @@ export default function StudentDashboard() {
 
 
       </div>
-    </WorkspaceToastProvider>
   );
 }

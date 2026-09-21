@@ -7,6 +7,7 @@
 import React from 'react';
 import { Award, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { levelProgress } from '@/lib/gamification/levels';
 
 interface UserLevelCardProps {
   level: number;
@@ -21,10 +22,8 @@ export function UserLevelCard({
   rankTitle,
   className,
 }: UserLevelCardProps) {
-  const currentLevelBase = (level - 1) * 100;
-  const currentLevelProgress = Math.max(0, totalXp - currentLevelBase);
-  const xpNeeded = 100 - currentLevelProgress;
-  const percentage = Math.min(100, Math.max(0, currentLevelProgress));
+  const progress = levelProgress(totalXp);
+  const percentage = progress.percentage;
 
   return (
     <div
@@ -73,7 +72,7 @@ export function UserLevelCard({
             Level Progress
           </span>
           <span className="font-mono text-foreground font-semibold">
-            {currentLevelProgress} / 100 XP
+            {progress.progressInLevel} / {progress.xpAtNextLevel - progress.xpAtLevelStart} XP
           </span>
         </div>
         <div className="h-2.5 w-full rounded-full bg-background-secondary overflow-hidden border border-border">
@@ -84,7 +83,7 @@ export function UserLevelCard({
         </div>
         <div className="flex justify-between items-center text-[11px] text-foreground-muted">
           <span>Level {level}</span>
-          <span className="font-mono">{xpNeeded} XP to Level {level + 1}</span>
+          <span className="font-mono">{progress.xpToNextLevel} XP to Level {level + 1}</span>
         </div>
       </div>
     </div>

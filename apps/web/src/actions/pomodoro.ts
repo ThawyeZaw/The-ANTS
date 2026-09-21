@@ -1,7 +1,7 @@
 'use server';
 
-import { getDb, pomodoroSessions, pomodoroUserSettings } from '@/lib/db';
-import { and, desc, eq } from 'drizzle-orm';
+import { getDb, pomodoroSessions, pomodoroUserSettings, userXpLedger } from '@/lib/db';
+import { and, desc, eq, gt } from 'drizzle-orm';
 import type {
   PomodoroDailyEntry,
   PomodoroSettings,
@@ -9,6 +9,8 @@ import type {
   TimerPhase,
 } from '@/constants/pomodoro';
 import { normalizeSettings } from '@/constants/pomodoro';
+import { awardXp, XP_AMOUNTS, type AwardXpResult } from '@/lib/gamification/award';
+import { requireSessionUser } from '@/lib/auth-session';
 
 export interface PomodoroSessionInput {
   durationMinutes: number;
@@ -16,7 +18,15 @@ export interface PomodoroSessionInput {
   startedAt: string;
   completedAt: string;
   notes?: string | null;
+  /** Server-issued focus token from beginPomodoroFocusAction (required for XP). */
+  focusToken?: string;
 }
+
+const POMODORO_XP_MIN_MINUTES = 25;
+const POMODORO_XP_AMOUNT = XP_AMOUNTS.pomodoro;
+const POMODORO_XP_COOLDOWN_MS = 20 * 60 * 1000;
+const POMODORO_MIN_ELAPSED_MS = (POMODORO_XP_MIN_MINUTES - 1) * 60 * 1000;
+const POMODORO_MAX_ELAPSED_MS = 3 * 60 * 60 * 1000;
 
 function dateKeyFromIso(iso: string): string {
   const d = new Date(iso);
@@ -113,6 +123,32 @@ function aggregateStatsFromSessions(
   };
 }
 
+/** Start a server-tracked focus block. XP is only granted when completing with this token. */
+export async function beginPomodoroFocusAction(
+  userId: string
+): Promise<{ success: true; focusToken: string } | { success: false; error: string }> {
+  try {
+    const guard = await requireSessionUser(userId);
+    if (!guard.ok) return { success: false, error: guard.error };
+
+    const db = getDb();
+    const focusToken = crypto.randomUUID();
+    await db.insert(pomodoroSessions).values({
+      id: focusToken,
+      user_id: userId,
+      duration_minutes: 0,
+      session_type: 'focus',
+      started_at: new Date(),
+      completed_at: null,
+      notes: null,
+    });
+
+    return { success: true, focusToken };
+  } catch (err) {
+    return { success: false, error: `Failed to start focus session: ${String(err)}` };
+  }
+}
+
 export async function fetchPomodoroDataAction(userId: string): Promise<
   | {
       success: true;
@@ -175,21 +211,85 @@ export async function savePomodoroSettingsAction(
 export async function logPomodoroSessionAction(
   userId: string,
   input: PomodoroSessionInput,
-): Promise<{ success: true } | { success: false; error: string }> {
+): Promise<
+  | { success: true; gamification?: AwardXpResult }
+  | { success: false; error: string }
+> {
   if (input.durationMinutes <= 0) return { success: true };
 
   try {
-    const db = getDb();
-    await db.insert(pomodoroSessions).values({
-      user_id: userId,
-      duration_minutes: input.durationMinutes,
-      session_type: input.sessionType,
-      started_at: new Date(input.startedAt),
-      completed_at: new Date(input.completedAt),
-      notes: input.notes ?? null,
-    });
+    const guard = await requireSessionUser(userId);
+    if (!guard.ok) return { success: false, error: guard.error };
 
-    return { success: true };
+    const db = getDb();
+    const now = new Date();
+    let sessionId = crypto.randomUUID();
+    let gamification: AwardXpResult | undefined;
+
+    if (input.focusToken && input.sessionType === 'focus') {
+      const pending = await db.query.pomodoroSessions.findFirst({
+        where: and(
+          eq(pomodoroSessions.id, input.focusToken),
+          eq(pomodoroSessions.user_id, userId),
+          eq(pomodoroSessions.session_type, 'focus')
+        ),
+      });
+
+      if (pending && !pending.completed_at && pending.started_at) {
+        const started =
+          pending.started_at instanceof Date
+            ? pending.started_at
+            : new Date(pending.started_at);
+        const elapsedMs = now.getTime() - started.getTime();
+
+        await db
+          .update(pomodoroSessions)
+          .set({
+            duration_minutes: input.durationMinutes,
+            completed_at: now,
+            notes: input.notes ?? null,
+          })
+          .where(eq(pomodoroSessions.id, input.focusToken));
+
+        sessionId = input.focusToken;
+
+        if (
+          elapsedMs >= POMODORO_MIN_ELAPSED_MS &&
+          elapsedMs <= POMODORO_MAX_ELAPSED_MS &&
+          input.durationMinutes >= POMODORO_XP_MIN_MINUTES
+        ) {
+          const cooldownSince = new Date(Date.now() - POMODORO_XP_COOLDOWN_MS);
+          const recent = await db.query.userXpLedger.findFirst({
+            where: and(
+              eq(userXpLedger.user_id, userId),
+              eq(userXpLedger.source, 'pomodoro'),
+              gt(userXpLedger.earned_at, cooldownSince)
+            ),
+          });
+          if (!recent) {
+            gamification = await awardXp(
+              userId,
+              POMODORO_XP_AMOUNT,
+              'pomodoro',
+              sessionId,
+              'Completed 25-minute focus block'
+            );
+          }
+        }
+      }
+    } else {
+      await db.insert(pomodoroSessions).values({
+        id: sessionId,
+        user_id: userId,
+        duration_minutes: input.durationMinutes,
+        session_type: input.sessionType,
+        started_at: new Date(input.startedAt),
+        completed_at: new Date(input.completedAt),
+        notes: input.notes ?? null,
+      });
+    }
+
+    return { success: true, gamification };
   } catch (err) {
     return { success: false, error: `Failed to log pomodoro session: ${String(err)}` };
   }

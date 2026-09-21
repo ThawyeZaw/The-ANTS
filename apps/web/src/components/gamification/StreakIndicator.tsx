@@ -29,7 +29,12 @@ export function StreakIndicator({
           className
         )}
       >
-        <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500 animate-pulse" />
+        <Flame
+          className={cn(
+            'w-3.5 h-3.5 fill-amber-500 text-amber-500',
+            currentStreak > 0 && 'animate-pulse'
+          )}
+        />
         <span>{currentStreak}d</span>
       </div>
     );
@@ -43,7 +48,12 @@ export function StreakIndicator({
       )}
     >
       <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0">
-        <Flame className="w-6 h-6 fill-amber-500 text-amber-500 animate-pulse" />
+        <Flame
+          className={cn(
+            'w-6 h-6 fill-amber-500 text-amber-500',
+            currentStreak > 0 && 'animate-pulse'
+          )}
+        />
       </div>
       <div>
         <div className="flex items-center gap-2">

@@ -25,11 +25,10 @@ import {
   LayoutGrid,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import {
-  getEnrolledSubjects,
-  upsertPastPaperRecord,
-  getUserGamificationStats,
-} from '@/actions/past-papers';
+import { getEnrolledSubjects, upsertPastPaperRecord } from '@/actions/past-papers';
+import { getGamificationProfile } from '@/actions/gamification';
+import { GamificationHeroStrip } from '@/components/gamification/GamificationHeroStrip';
+import { useGamificationFeedback } from '@/components/gamification/GamificationFeedbackProvider';
 import { getPaperGridData, type PaperGridData } from '@/actions/curriculum';
 import { PaperGrid } from './PaperGrid';
 import { SubjectProgressHeader } from './SubjectProgressHeader';
@@ -101,12 +100,13 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>(subjectFromUrl);
   const [papers, setPapers] = useState<PastPaperData[]>([]);
   const [records, setRecords] = useState<Record<string, UserPaperRecord>>({});
+  const { handleAwardResult } = useGamificationFeedback();
   const [gamification, setGamification] = useState({
     totalXp: 0,
     level: 1,
+    rankTitle: 'Novice Scholar',
     currentStreak: 0,
     longestStreak: 0,
-    badges: [] as string[],
   });
 
   const [loading, setLoading] = useState(true);
@@ -140,10 +140,16 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
     try {
       const [subjs, stats] = await Promise.all([
         getEnrolledSubjects(userId),
-        getUserGamificationStats(userId),
+        getGamificationProfile(userId),
       ]);
       setEnrolledSubjects(subjs);
-      setGamification(stats);
+      setGamification({
+        totalXp: stats.totalXp,
+        level: stats.level,
+        rankTitle: stats.rankTitle,
+        currentStreak: stats.currentStreak,
+        longestStreak: stats.longestStreak,
+      });
 
       const groups = groupEdexcelIalSubjects(subjs);
       if (groups.length > 0) {
@@ -201,8 +207,14 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
   // Background sync for gamification stats when a cell record is updated in PaperGrid
   const handleGridRecordChange = React.useCallback(async () => {
     try {
-      const stats = await getUserGamificationStats(userId);
-      setGamification(stats);
+      const stats = await getGamificationProfile(userId);
+      setGamification({
+        totalXp: stats.totalXp,
+        level: stats.level,
+        rankTitle: stats.rankTitle,
+        currentStreak: stats.currentStreak,
+        longestStreak: stats.longestStreak,
+      });
     } catch (err) {
       console.error('Failed to refresh gamification stats:', err);
     }
@@ -261,7 +273,7 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
     }));
 
     try {
-      await upsertPastPaperRecord({
+      const res = await upsertPastPaperRecord({
         userId,
         pastPaperId: paperId,
         status,
@@ -273,10 +285,16 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
         calculatedUms: data?.calculated_ums || undefined,
         notes: data?.notes || undefined,
       });
+      if (res.gamification) handleAwardResult(res.gamification);
 
-      // Refresh stats in background
-      const stats = await getUserGamificationStats(userId);
-      setGamification(stats);
+      const stats = await getGamificationProfile(userId);
+      setGamification({
+        totalXp: stats.totalXp,
+        level: stats.level,
+        rankTitle: stats.rankTitle,
+        currentStreak: stats.currentStreak,
+        longestStreak: stats.longestStreak,
+      });
     } catch (err) {
       console.error('Failed to update past paper record:', err);
     }
@@ -356,8 +374,6 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
     return { total, done, skipped, percentDone, avgScore };
   }, [papers, records]);
 
-  const xpProgress = gamification.totalXp % 100;
-
   return (
     <div className="space-y-8 animate-fade-in pb-16 max-w-7xl mx-auto">
       {/* ── Top Hero & Gamification Ribbon ─────────────────────────────────── */}
@@ -388,43 +404,13 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
             </p>
           </div>
 
-          {/* Gamification Bar (Level, Streak, XP) */}
-          <div className="flex items-center gap-3 sm:gap-4 p-4 rounded-2xl bg-background-secondary border border-border shrink-0">
-            {/* Streak */}
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-              <Flame className="w-5 h-5 fill-amber-500 text-amber-500" />
-              <div>
-                <span className="text-xs font-mono font-bold block leading-none">
-                  {gamification.currentStreak}
-                </span>
-                <span className="text-[10px] uppercase font-bold tracking-wider opacity-80">
-                  Day Streak
-                </span>
-              </div>
-            </div>
-
-            {/* Level & XP */}
-            <div className="space-y-1.5 min-w-[140px]">
-              <div className="flex justify-between items-center text-xs">
-                <span className="font-bold text-foreground flex items-center gap-1">
-                  <Award className="w-3.5 h-3.5 text-primary" />
-                  Level {gamification.level}
-                </span>
-                <span className="text-[11px] font-mono text-primary font-bold">
-                  {gamification.totalXp} XP
-                </span>
-              </div>
-              <div className="h-2 w-full rounded-full bg-border overflow-hidden">
-                <div
-                  className="h-full bg-primary rounded-full transition-all duration-300"
-                  style={{ width: `${xpProgress}%` }}
-                />
-              </div>
-              <span className="text-[10px] text-foreground-muted block text-right font-mono">
-                {100 - xpProgress} XP to Level {gamification.level + 1}
-              </span>
-            </div>
-          </div>
+          <GamificationHeroStrip
+            level={gamification.level}
+            totalXp={gamification.totalXp}
+            rankTitle={gamification.rankTitle}
+            currentStreak={gamification.currentStreak}
+            longestStreak={gamification.longestStreak}
+          />
         </div>
 
         {/* Enrolled Subjects Switcher Bar */}

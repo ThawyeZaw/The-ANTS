@@ -27,6 +27,7 @@ import {
   type SubtopicEntry,
 } from '@/lib/curriculum/subtopics';
 import { cn } from '@/lib/utils';
+import { useGamificationFeedback } from '@/components/gamification/GamificationFeedbackProvider';
 
 interface TopicTrackerProps {
   curriculumId: string;
@@ -86,6 +87,8 @@ export function TopicTracker({
       ? Math.round((objectiveStats.done / objectiveStats.total) * 100)
       : 0;
 
+  const { handleAwardResult } = useGamificationFeedback();
+
   const handleStatusChange = (
     topicId: string,
     newStatus: 'not_started' | 'in_progress' | 'completed'
@@ -95,7 +98,8 @@ export function TopicTracker({
     );
 
     startTransition(async () => {
-      await updateTopicProgress(userId, topicId, newStatus);
+      const res = await updateTopicProgress(userId, topicId, newStatus);
+      if (res.gamification) handleAwardResult(res.gamification);
       onTopicChange?.();
     });
   };
@@ -155,6 +159,7 @@ export function TopicTracker({
         isCompleted,
         entries.length
       );
+      if (res.gamification) handleAwardResult(res.gamification);
       if (res.success) onTopicChange?.();
     });
   };

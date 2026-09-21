@@ -20,10 +20,12 @@ import {
   normalizeSettings,
 } from '@/constants/pomodoro';
 import {
+  beginPomodoroFocusAction,
   fetchPomodoroDataAction,
   logPomodoroSessionAction,
   savePomodoroSettingsAction,
 } from '@/actions/pomodoro';
+import { useGamificationFeedback } from '@/components/gamification/GamificationFeedbackProvider';
 import {
   startVibeSound,
   setVolume,
@@ -188,6 +190,7 @@ function defaultSession(settings: PomodoroSettings): ActiveSessionSnapshot {
     cyclesCompletedToday: 0,
     sessionLabel: null,
     focusStartedAt: null,
+    focusToken: null,
   };
 }
 
@@ -211,6 +214,7 @@ function normalizeSession(
         cyclesCompletedToday: newCycle,
         sessionLabel: stored.sessionLabel,
         focusStartedAt: null,
+        focusToken: null,
       };
     }
     return {
@@ -221,12 +225,14 @@ function normalizeSession(
       cyclesCompletedToday: stored.cyclesCompletedToday,
       sessionLabel: stored.sessionLabel,
       focusStartedAt: null,
+      focusToken: null,
     };
   }
 
   return {
     ...stored,
     focusStartedAt: stored.focusStartedAt ?? null,
+    focusToken: stored.focusToken ?? null,
     sessionLabel: stored.sessionLabel ?? null,
   };
 }
@@ -251,6 +257,7 @@ export interface UsePomodoroReturn {
 }
 
 export function usePomodoro(userId?: string | null): UsePomodoroReturn {
+  const { handleAwardResult } = useGamificationFeedback();
   const [settings, setSettingsState] = useState<PomodoroSettings>(() =>
     normalizeSettings(safeGetItem(STORAGE_KEYS.settings, POMODORO_DEFAULTS)),
   );
@@ -319,9 +326,12 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
         startedAt: new Date(startedAt).toISOString(),
         completedAt: new Date(completedAt).toISOString(),
         notes: sessionSnapshot.sessionLabel,
+        focusToken: sessionSnapshot.focusToken ?? undefined,
+      }).then((res) => {
+        if (res.success) handleAwardResult(res.gamification);
       });
     },
-    [persistStats],
+    [persistStats, handleAwardResult],
   );
 
   const logPartialFocusIfNeeded = useCallback(
@@ -395,6 +405,7 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
         cyclesCompletedToday: newCycle,
         sessionLabel: current.sessionLabel,
         focusStartedAt: null,
+        focusToken: null,
       };
       setSessionState(newSession);
       sessionRef.current = newSession;
@@ -428,12 +439,27 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
       cyclesCompletedToday: current.cyclesCompletedToday,
       sessionLabel: current.sessionLabel,
       focusStartedAt: settings.autoStartNext ? Date.now() : null,
+      focusToken: null,
     };
     setSessionState(newSession);
     sessionRef.current = newSession;
     persistSession(newSession);
-    if (settings.autoStartNext) startTickRef.current();
-    else {
+    if (settings.autoStartNext) {
+      const uid = userIdRef.current;
+      if (uid) {
+        void beginPomodoroFocusAction(uid).then((res) => {
+          if (!res.success) return;
+          const withToken: ActiveSessionSnapshot = {
+            ...sessionRef.current,
+            focusToken: res.focusToken,
+          };
+          setSessionState(withToken);
+          sessionRef.current = withToken;
+          persistSession(withToken);
+        });
+      }
+      startTickRef.current();
+    } else {
       clearTick();
       stopSound();
     }
@@ -449,19 +475,35 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
         ? s.remainingMsWhenPaused
         : getPhaseDurationMs(s.phase, settings);
 
+    const enteringFocus = s.phase === 'focus';
     const newSession: ActiveSessionSnapshot = {
       ...s,
       isPaused: false,
       endsAt: Date.now() + remaining,
       remainingMsWhenPaused: null,
-      focusStartedAt:
-        s.phase === 'focus' ? s.focusStartedAt ?? Date.now() : s.focusStartedAt,
+      focusStartedAt: enteringFocus ? s.focusStartedAt ?? Date.now() : s.focusStartedAt,
     };
 
     setSessionState(newSession);
     sessionRef.current = newSession;
     persistSession(newSession);
     startTick();
+
+    if (enteringFocus && !newSession.focusToken) {
+      const uid = userIdRef.current;
+      if (uid) {
+        void beginPomodoroFocusAction(uid).then((res) => {
+          if (!res.success) return;
+          const withToken: ActiveSessionSnapshot = {
+            ...sessionRef.current,
+            focusToken: res.focusToken,
+          };
+          setSessionState(withToken);
+          sessionRef.current = withToken;
+          persistSession(withToken);
+        });
+      }
+    }
 
     if (
       !notificationGrantedRef.current &&
@@ -514,6 +556,7 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
         endsAt: null,
         remainingMsWhenPaused: durationMs,
         focusStartedAt: null,
+        focusToken: null,
       };
       setSessionState(newSession);
       sessionRef.current = newSession;
@@ -542,6 +585,7 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
       endsAt: null,
       remainingMsWhenPaused: durationMs,
       focusStartedAt: null,
+      focusToken: null,
     };
     setSessionState(newSession);
     sessionRef.current = newSession;

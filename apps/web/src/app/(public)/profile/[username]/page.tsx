@@ -13,6 +13,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import StaffPublicProfile from '@/components/profile/StaffPublicProfile';
 import PortfolioSections from '@/components/profile/PortfolioSections';
+import { ScholarStatsStrip } from '@/components/gamification/ScholarStatsStrip';
 import { canHavePublicProfile } from '@the-ants/shared-types';
 
 export default function ProfilePage() {
@@ -112,6 +113,9 @@ export default function ProfilePage() {
             Edit Profile
           </Link>
         </div>
+        {profile.leaderboardVisible !== false && (
+          <ScholarStatsStrip userId={profile.id} />
+        )}
         <PortfolioSections profile={profile} certifications={profileCerts} activities={timelineActivities} />
       </div>
     );

@@ -217,6 +217,8 @@ export interface Profile {
   onboardingData?: OnboardingCurriculumSelection[];
   /** Founder designation — independent of the role enum. Admin-assignable only. */
   founderType?: 'founder' | 'co_founder' | null;
+  /** When false, user is hidden from leaderboard and public scholar stats. */
+  leaderboardVisible?: boolean;
 }
 
 /** Authenticated user object returned by auth operations */

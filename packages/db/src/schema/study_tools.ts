@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real, index } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, index, uniqueIndex } from 'drizzle-orm/sqlite-core';
 import { idText, textId, ts, tsNow, bool, jsonText } from './columns';
 import { profiles } from './profiles';
 import { curriculums, subjects, topics } from './curriculums';
@@ -415,6 +415,11 @@ export const userXpLedger = sqliteTable(
   },
   (table) => [
     index('idx_user_xp_ledger_user_id').on(table.user_id),
+    uniqueIndex('idx_user_xp_ledger_user_source').on(
+      table.user_id,
+      table.source,
+      table.source_id
+    ),
   ]
 );
 
@@ -430,6 +435,7 @@ export const userBadges = sqliteTable(
   },
   (table) => [
     index('idx_user_badges_user_id').on(table.user_id),
+    uniqueIndex('idx_user_badges_user_key').on(table.user_id, table.badge_key),
   ]
 );
 
@@ -440,6 +446,8 @@ export const userStreaks = sqliteTable('user_streaks', {
   current_streak: integer('current_streak').default(0).notNull(),
   longest_streak: integer('longest_streak').default(0).notNull(),
   last_activity_date: ts('last_activity_date'),
+  /** Browser-local YYYY-MM-DD of last qualifying study activity */
+  last_activity_date_key: text('last_activity_date_key'),
   total_xp: integer('total_xp').default(0).notNull(),
   level: integer('level').default(1).notNull(),
   updated_at: tsNow('updated_at'),

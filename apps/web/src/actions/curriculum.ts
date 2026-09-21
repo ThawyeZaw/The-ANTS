@@ -25,6 +25,7 @@ import { eq, and, asc, inArray, count } from 'drizzle-orm';
 import {
   getDefaultExamSession,
   removeAutoCountdownsForSubject,
+  setDefaultExamSession,
   syncEnrollmentCountdowns,
 } from '@/actions/enrollment-sync';
 import {
@@ -36,6 +37,9 @@ import {
   paperRowKey,
   DEFAULT_EXAM_SESSION,
 } from '@/lib/grading';
+import { awardXp, XP_AMOUNTS, type AwardXpResult } from '@/lib/gamification/award';
+import { requireSessionUser } from '@/lib/auth-session';
+import { parseSubtopicsJson } from '@/lib/curriculum/subtopics';
 import { isPaperAvailable } from '@/lib/exam-papers/availability';
 import type { SubjectTier } from '@/lib/grading/types';
 import type { EdexcelIALQualificationSpecification } from '@/lib/grading/ial-structure';
@@ -1018,6 +1022,53 @@ export async function unenrollFromSubject(userId: string, subjectId: string) {
   }
 }
 
+/** Batch enroll from onboarding with default session + per-subject overrides. */
+export async function completeOnboardingEnrollment(input: {
+  defaultSeries: string;
+  subjects: Array<{
+    curriculumId: string;
+    subjectId: string;
+    targetSeries?: string | null;
+    tier?: SubjectTier | null;
+    targetGrade?: string | null;
+  }>;
+}) {
+  try {
+    const guard = await requireSessionUser();
+    if (!guard.ok) {
+      return { success: false as const, enrolled: 0, error: guard.error };
+    }
+    const userId = guard.userId;
+
+    await setDefaultExamSession(userId, input.defaultSeries);
+
+    if (input.subjects.length === 0) {
+      return { success: true as const, enrolled: 0 };
+    }
+
+    let enrolled = 0;
+    for (const subject of input.subjects) {
+      const series = subject.targetSeries || input.defaultSeries;
+      const result = await enrollInSubject(
+        userId,
+        subject.curriculumId,
+        subject.subjectId,
+        {
+          targetSeries: series,
+          tier: subject.tier ?? null,
+          targetGrade: subject.targetGrade ?? null,
+        }
+      );
+      if (result.success) enrolled += 1;
+    }
+
+    return { success: true as const, enrolled };
+  } catch (err: any) {
+    console.error('[curriculum] completeOnboardingEnrollment error:', err);
+    return { success: false as const, enrolled: 0, error: err.message };
+  }
+}
+
 export async function enrollSubjectUnits(
   userId: string,
   curriculumId: string,
@@ -1627,12 +1678,18 @@ export async function updateTopicProgress(
   notes?: string
 ) {
   try {
+    const guard = await requireSessionUser(userId);
+    if (!guard.ok) return { success: false, error: guard.error };
+
     const db = getDb();
     const now = new Date();
 
     const existing = await db.query.topicProgress.findFirst({
       where: and(eq(topicProgress.user_id, userId), eq(topicProgress.topic_id, topicId)),
     });
+
+    const wasCompleted = existing?.status === 'completed';
+    const isNewlyCompleted = status === 'completed' && !wasCompleted;
 
     if (existing) {
       await db
@@ -1655,7 +1712,18 @@ export async function updateTopicProgress(
       });
     }
 
-    return { success: true };
+    let gamification: AwardXpResult | undefined;
+    if (isNewlyCompleted) {
+      gamification = await awardXp(
+        userId,
+        XP_AMOUNTS.lesson,
+        'lesson',
+        topicId,
+        'Mastered syllabus topic'
+      );
+    }
+
+    return { success: true, gamification };
   } catch (err: any) {
     console.error('[curriculum] updateTopicProgress error:', err);
     return { success: false, error: err.message };
@@ -1670,8 +1738,22 @@ export async function toggleSubtopicProgress(
   totalSubtopics: number
 ) {
   try {
+    const guard = await requireSessionUser(userId);
+    if (!guard.ok) return { success: false, error: guard.error };
+
     const db = getDb();
     const now = new Date();
+
+    const topic = await db.query.topics.findFirst({
+      where: eq(topics.id, topicId),
+      columns: { subtopics: true, subtopics_count: true },
+    });
+    const parsedSubtopics = parseSubtopicsJson(topic?.subtopics);
+    const requiredCount =
+      parsedSubtopics.length > 0
+        ? parsedSubtopics.length
+        : Math.max(0, topic?.subtopics_count ?? 0);
+    void totalSubtopics;
 
     const existing = await db.query.topicProgress.findFirst({
       where: and(eq(topicProgress.user_id, userId), eq(topicProgress.topic_id, topicId)),
@@ -1692,11 +1774,13 @@ export async function toggleSubtopicProgress(
       completed = completed.filter((s: string) => s !== subtopicName);
     }
     
-    const newStatus = completed.length === totalSubtopics && totalSubtopics > 0 
+    const newStatus = requiredCount > 0 && completed.length >= requiredCount
       ? 'completed' 
       : (completed.length > 0 ? 'in_progress' : 'not_started');
       
     const completedStr = JSON.stringify(completed);
+    const wasCompleted = existing?.status === 'completed';
+    const isNewlyCompleted = newStatus === 'completed' && !wasCompleted;
 
     if (existing) {
       await db
@@ -1719,7 +1803,18 @@ export async function toggleSubtopicProgress(
       });
     }
 
-    return { success: true, newStatus };
+    let gamification: AwardXpResult | undefined;
+    if (isNewlyCompleted) {
+      gamification = await awardXp(
+        userId,
+        XP_AMOUNTS.lesson,
+        'lesson',
+        topicId,
+        'Mastered syllabus topic'
+      );
+    }
+
+    return { success: true, newStatus, gamification };
   } catch (err: any) {
     console.error('[curriculum] toggleSubtopicProgress error:', err);
     return { success: false, error: err.message };

@@ -25,6 +25,8 @@ export interface ActiveSessionSnapshot {
   cyclesCompletedToday: number;
   sessionLabel: string | null;
   focusStartedAt: number | null;
+  /** Server-issued token for XP-eligible focus blocks */
+  focusToken: string | null;
 }
 
 export interface PomodoroDailyEntry {

@@ -22,6 +22,7 @@ import {
   actionToggleTimetableEventComplete,
 } from '@/actions/timetable';
 import { expandRecurringEvents } from '@/lib/timetable/recurrence';
+import type { AwardXpResult } from '@/lib/gamification/types';
 
 // ---------------------------------------------------------------------------
 // Date Helpers
@@ -129,7 +130,7 @@ export interface UseTimetableReturn {
   createEvent: (data: TimetableEventFormData) => Promise<{ success: boolean; error?: string }>;
   updateEvent: (id: string, data: TimetableEventFormData) => Promise<{ success: boolean; error?: string }>;
   deleteEvent: (id: string) => Promise<{ success: boolean; error?: string }>;
-  toggleComplete: (id: string) => Promise<{ success: boolean; error?: string }>;
+  toggleComplete: (id: string) => Promise<{ success: boolean; error?: string; gamification?: AwardXpResult }>;
   moveEvent: (id: string, newStart: string, newEnd: string | null) => Promise<{ success: boolean; error?: string }>;
   undo: () => Promise<void>;
   redo: () => Promise<void>;
@@ -416,14 +417,14 @@ export function useTimetable(userId: string): UseTimetableReturn {
   );
 
   const toggleComplete = useCallback(
-    async (id: string): Promise<{ success: boolean; error?: string }> => {
+    async (id: string): Promise<{ success: boolean; error?: string; gamification?: AwardXpResult }> => {
       const baseId = id.includes('::') ? id.split('::')[0] : id;
-      const ev = allEvents.find((e) => e.id === baseId);
+      const ev = allEvents.find((e) => e.id === baseId || e.id.startsWith(`${baseId}::`));
       const isCompleted = !ev?.is_completed;
       const res = await actionToggleTimetableEventComplete(userId, baseId, isCompleted);
       if (res.success) {
         refresh();
-        return { success: true };
+        return { success: true, gamification: res.gamification };
       }
       return { success: false, error: res.error || 'Failed to toggle complete' };
     },
