@@ -22,8 +22,11 @@
   "r2_buckets": [
     {
       "binding": "ASSETS_BUCKET",
-      "bucket_name": "the-ants-assets",
-      "remote": true
+      "bucket_name": "the-ants-assets"
+      // Local Miniflare R2 during `wrangler dev`.
+      // Remote R2 (`"remote": true`) needs Workers Scripts Write on the API token
+      // and often fails behind VPN/SSL inspection with misleading error 10136.
+      // Use production R2 via deploy; for local asset tests run without remote R2.
     }
   ],
   "triggers": {

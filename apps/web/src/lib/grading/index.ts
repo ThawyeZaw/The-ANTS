@@ -29,6 +29,8 @@ export {
   cashInsForUnit,
   inferCashInFromUnits,
   requiredOptionalCount,
+  resolveIalCatalogUnits,
+  IAL_PURE_CORE_UNITS,
   awardLevelFromCashInCode,
   optionalUnitPresets,
   formatIalUnitLabel,

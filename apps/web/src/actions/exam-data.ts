@@ -22,6 +22,10 @@ import {
 import { formatExamSeriesLabel } from '@/lib/grading';
 import { healEnrollmentCountdowns } from '@/actions/enrollment-sync';
 import { IAL_CASH_INS, type IalCashInCode } from '@/lib/grading/ial-cash-in';
+import {
+  actionClearSourceQueue,
+  actionEnqueueExamCountdownReminders,
+} from '@/actions/notifications';
 
 function asTitle<T extends { name: string; id: string }>(row: T) {
   return { ...row, title: row.name };
@@ -436,6 +440,20 @@ export async function createExamCountdown(input: {
     })
     .returning();
 
+  if (inserted?.id && inserted.exam_date) {
+    try {
+      await actionEnqueueExamCountdownReminders(
+        inserted.id,
+        input.userId,
+        title,
+        new Date(inserted.exam_date),
+        Boolean(input.isMock)
+      );
+    } catch (err) {
+      console.error('[exam-data] enqueue countdown reminders failed', err);
+    }
+  }
+
   return { success: true as const, countdown: serializeCountdown(inserted as Record<string, unknown>) };
 }
 
@@ -448,6 +466,11 @@ export async function deleteExamCountdown(userId: string, countdownId: string) {
     return { success: false as const, error: 'Countdown not found or unauthorized' };
   }
   await db.delete(examCountdowns).where(eq(examCountdowns.id, countdownId));
+  try {
+    await actionClearSourceQueue('exam_countdown', countdownId);
+  } catch (err) {
+    console.error('[exam-data] clear countdown queue failed', err);
+  }
   return { success: true as const, id: countdownId };
 }
 

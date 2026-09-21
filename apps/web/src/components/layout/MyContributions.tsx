@@ -58,14 +58,14 @@ export default function MyContributions() {
             No contributions yet. Start creating resources to see them here.
           </p>
           <Link
-            href="/editor"
+            href="/past-papers"
             className={cn(
               'text-sm font-medium text-[var(--primary)]',
               'hover:underline underline-offset-2',
               'transition-colors'
             )}
           >
-            Go to Contributor Workspace →
+            Open Past Paper Catalog →
           </Link>
         </div>
       ) : (

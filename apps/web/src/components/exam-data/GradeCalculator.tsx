@@ -49,7 +49,7 @@ import {
   gradeFromUms,
   umsCapFromBoundaries,
 } from '@/lib/grading';
-import { groupEdexcelIalSubjects } from '@/lib/edexcel-ial';
+import { groupEdexcelIalSubjects, IAL_CALCULATOR_ONLY_IDS } from '@/lib/edexcel-ial';
 import { useEdexcelSuiteSelectors } from './useEdexcelSuiteSelectors';
 import { EdexcelSuiteSelectors } from './EdexcelSuiteSelectors';
 import { IalUmsCalculator } from './IalUmsCalculator';
@@ -156,6 +156,9 @@ export default function GradeCalculator() {
 
   const activeIalGroup = useMemo(() => {
     if (!isEdexcelIal || groupedIalSubjects.length === 0) return null;
+    if (IAL_CALCULATOR_ONLY_IDS.has(selectedSubject)) {
+      return groupedIalSubjects.find((g) => g.id === 'subj-edx-ial-math-group') ?? null;
+    }
     return (
       groupedIalSubjects.find(
         (g) => g.id === selectedSubject || g.units.some((u) => u.id === selectedSubject)

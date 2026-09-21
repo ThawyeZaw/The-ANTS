@@ -57,7 +57,44 @@ export interface GroupedSubject<T extends BaseSubject> {
   qualification_data?: any;
 }
 
-const EDEXCEL_IAL_PREFIX = 'subj-edx-ial-';
+export const EDEXCEL_IAL_PREFIX = 'subj-edx-ial-';
+export const IAL_GROUP_SUFFIX = '-group';
+export const IAL_MATHS_SUITE_ID = 'subj-edx-ial-maths-suite';
+
+/** Calculator-only synthetic IDs — not DB rows or catalog groups. */
+export const IAL_CALCULATOR_ONLY_IDS = new Set([
+  'subj-edx-ial-pure-group',
+  'subj-edx-ial-math-fm-group',
+]);
+
+/** Virtual group IDs (e.g. subj-edx-ial-phys-group) — not DB rows. */
+export function isIalVirtualGroupId(id: string): boolean {
+  return id.startsWith(EDEXCEL_IAL_PREFIX) && id.endsWith(IAL_GROUP_SUFFIX);
+}
+
+/** Prefix slug from a virtual group ID (phys-group → phys, math-group → math). */
+export function ialGroupPrefixFromId(groupId: string): string | null {
+  if (!isIalVirtualGroupId(groupId)) return null;
+  const slug = groupId.slice(EDEXCEL_IAL_PREFIX.length, -IAL_GROUP_SUFFIX.length);
+  return slug || null;
+}
+
+/** Unit subject IDs belonging to a virtual IAL group. */
+export function getIalGroupUnitIds(groupId: string, catalogSubjects: BaseSubject[]): string[] {
+  const group = groupEdexcelIalSubjects(catalogSubjects).find((g) => g.id === groupId);
+  return group?.units.map((u) => u.id) ?? [];
+}
+
+/** Resolve any IAL workspace route ID to a virtual group ID for combined topic/paper views. */
+export function resolveIalWorkspaceGroupId(subjectId: string): string | null {
+  if (isIalVirtualGroupId(subjectId)) return subjectId;
+  if (subjectId === IAL_MATHS_SUITE_ID) return `${EDEXCEL_IAL_PREFIX}math-group`;
+  return null;
+}
+
+export function isIalCombinedWorkspaceId(subjectId: string): boolean {
+  return resolveIalWorkspaceGroupId(subjectId) !== null;
+}
 
 /**
  * Maps subject IDs to their parent subject group.
@@ -240,12 +277,12 @@ export function groupEdexcelIalSubjects<T extends BaseSubject>(subjects: T[]): G
     // If this is the Mathematics group and we have the mathsSuiteParent row, merge its rich metadata
     if (group.title === 'Mathematics' && mathsSuiteParent) {
       group.qualification_data = mathsSuiteParent.qualification_data;
-      group.primarySubjectId = mathsSuiteParent.id;
+      group.primarySubjectId = group.id;
       if (mathsSuiteParent.description) {
         group.description = mathsSuiteParent.description;
       }
     } else if (group.units.length > 0) {
-      group.primarySubjectId = group.units[0].id;
+      group.primarySubjectId = group.id;
     }
 
     // Aggregate progress & enrollments across units

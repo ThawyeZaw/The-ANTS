@@ -6,7 +6,7 @@
 // Tabs: Topic Tracker (default) | Past Papers (Excel grid)
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { ChevronLeft, ClipboardCheck, BookOpen, GraduationCap, ArrowLeft, Calculator, Timer } from 'lucide-react';
@@ -21,8 +21,7 @@ import {
 } from '@/actions/curriculum';
 import { TopicTracker } from '@/components/curriculum/TopicTracker';
 import { PaperGrid } from '@/components/past-papers/PaperGrid';
-import { useEdexcelSuiteSelectors } from '@/components/exam-data/useEdexcelSuiteSelectors';
-import { EdexcelSuiteSelectors } from '@/components/exam-data/EdexcelSuiteSelectors';
+import { groupEdexcelIalSubjects, isIalVirtualGroupId } from '@/lib/edexcel-ial';
 import { cn } from '@/lib/utils';
 
 type Tab = 'topics' | 'papers';
@@ -46,6 +45,7 @@ export default function SubjectDetailPage() {
   const activeTab = (searchParams.get('tab') as Tab | null) ?? 'topics';
 
   const [subject, setSubject] = useState<SubjectWithProgress | null>(null);
+  const [subjectNotFound, setSubjectNotFound] = useState(false);
   const [topics, setTopics] = useState<TopicWithProgress[]>([]);
   const [loadingTopics, setLoadingTopics] = useState(true);
   const [paperGridData, setPaperGridData] = useState<PaperGridData | null>(null);
@@ -67,14 +67,57 @@ export default function SubjectDetailPage() {
 
     try {
       if (showLoader) setLoadingTopics(true);
+      setSubjectNotFound(false);
       const [allSubjects, topicList] = await Promise.all([
         getSubjectsByCurriculum(curriculumId, user?.id),
         getSubjectTopicsWithProgress(subjectId, user?.id),
       ]);
 
       const found = allSubjects.find((s) => s.id === subjectId);
-      setSubject(found ?? null);
+      if (found) {
+        setSubject(found);
+      } else if (isIalVirtualGroupId(subjectId)) {
+        const group = groupEdexcelIalSubjects(allSubjects).find((g) => g.id === subjectId);
+        if (group) {
+          setSubject({
+            id: group.id,
+            curriculum_id: curriculumId,
+            name: group.title,
+            title: group.title,
+            code: group.code,
+            description: group.description ?? null,
+            icon_url: null,
+            color_code: group.color_code,
+            created_at: null,
+            subject_type:
+              group.title === 'Mathematics' || group.title === 'Further Mathematics'
+                ? 'modular_maths_suite'
+                : null,
+            qualification_data: group.qualification_data,
+            topicCount: group.topicCount,
+            completedTopics: group.completedTopics,
+            paperCount: group.paperCount,
+            completedPapers: group.completedPapers,
+            isEnrolled: group.isEnrolled,
+            target_series: null,
+            target_grade: null,
+            tier: null,
+            award_level: null,
+            paper_preferences: null,
+          });
+        } else {
+          setSubject(null);
+          setSubjectNotFound(true);
+        }
+      } else {
+        setSubject(null);
+        setSubjectNotFound(true);
+      }
       setTopics(topicList);
+    } catch {
+      setSubject(null);
+      setSubjectNotFound(true);
+      setTopics([]);
     } finally {
       if (showLoader) setLoadingTopics(false);
     }
@@ -103,33 +146,6 @@ export default function SubjectDetailPage() {
   const color = subject?.color_code ?? '#6366f1';
   const curriculumLabel = CURRICULUM_LABELS[curriculumId] ?? 'Curriculum';
 
-  const isSuite = subject?.subject_type === 'modular_maths_suite';
-  const suiteSelectors = useEdexcelSuiteSelectors(
-    isSuite ? subject?.qualification_data : null
-  );
-
-  const filteredTopics = useMemo(() => {
-    if (!isSuite || suiteSelectors.activeUnits.size === 0) return topics;
-    return topics.filter(t => {
-      // Topic names are prefixed with the unit syllabus code, e.g. "WMA11 - Algebra and functions".
-      // Split on " - " and take the first segment to match against the active unitCode.
-      const unitPrefix = t.name.split(' - ')[0].trim();
-      return suiteSelectors.activeUnits.has(unitPrefix);
-    });
-  }, [topics, isSuite, suiteSelectors.activeUnits]);
-
-  const filteredGridData = useMemo(() => {
-    if (!paperGridData) return null;
-    if (!isSuite || suiteSelectors.activeUnits.size === 0) return paperGridData;
-    return {
-      ...paperGridData,
-      rows: paperGridData.rows.filter(row => {
-         const baseCode = row.paperNumber.split('/')[0];
-         return suiteSelectors.activeUnits.has(baseCode) || suiteSelectors.activeUnits.has(row.paperNumber);
-      })
-    };
-  }, [paperGridData, isSuite, suiteSelectors.activeUnits]);
-
   return (
     <div className="min-h-screen bg-background transition-colors pb-12">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
@@ -152,6 +168,32 @@ export default function SubjectDetailPage() {
           )}
         </nav>
 
+        {subjectNotFound && !loadingTopics ? (
+          <div className="rounded-2xl border border-dashed border-border bg-background-card p-10 text-center space-y-4">
+            <GraduationCap className="h-10 w-10 mx-auto text-foreground-muted opacity-40" />
+            <div className="space-y-1">
+              <h1 className="text-lg font-bold text-foreground">Subject not found</h1>
+              <p className="text-sm text-foreground-muted max-w-md mx-auto">
+                This syllabus workspace does not exist or is not available in the catalog yet.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <Link
+                href={`/curriculum/${curriculumId}`}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:border-primary/40"
+              >
+                Browse {curriculumLabel}
+              </Link>
+              <Link
+                href="/curriculum"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+              >
+                My Curriculum
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <>
         {/* Subject header */}
         <div className="flex items-start gap-4 p-5 rounded-2xl border border-border bg-background-card">
           <div
@@ -174,7 +216,11 @@ export default function SubjectDetailPage() {
               </span>
             )}
             <h1 className="text-2xl font-bold text-foreground leading-tight">
-              {subject?.name ?? <span className="animate-pulse bg-foreground-muted/15 rounded w-48 h-7 inline-block" />}
+              {loadingTopics && !subject ? (
+                <span className="animate-pulse bg-foreground-muted/15 rounded w-48 h-7 inline-block" />
+              ) : (
+                subject?.name ?? 'Subject'
+              )}
             </h1>
             <p className="text-xs text-foreground-muted">{curriculumLabel} &middot; Syllabus Specification</p>
             {subject && (
@@ -205,35 +251,6 @@ export default function SubjectDetailPage() {
         <p className="text-xs text-foreground-muted -mt-2">
           Topic progress and past paper practice are tracked separately — finishing a paper does not mark syllabus topics complete.
         </p>
-
-        {isSuite && (
-          <div className="p-4 sm:p-5 rounded-3xl border border-border bg-background-card shadow-xs space-y-4">
-             <div className="space-y-1.5">
-               <label className="block text-xs font-bold uppercase tracking-wider text-foreground-secondary">
-                 Target Cash-In / Award
-               </label>
-               <select
-                 value={suiteSelectors.selectedCashIn}
-                 onChange={(e) => suiteSelectors.setSelectedCashIn(e.target.value)}
-                 className="w-full md:w-1/2 bg-background-secondary border border-border rounded-2xl py-3 px-4 text-xs font-bold text-foreground outline-none focus:border-primary transition-colors"
-               >
-                 {suiteSelectors.availableCashIns.map((q: any) => (
-                   <option key={q.cashInCode} value={q.cashInCode}>
-                     {q.cashInCode} &middot; {q.qualificationTitle}
-                   </option>
-                 ))}
-               </select>
-             </div>
-             
-             <EdexcelSuiteSelectors
-                activeQualification={suiteSelectors.activeQualification}
-                selectedElectives={suiteSelectors.selectedElectives}
-                handleElectiveToggle={suiteSelectors.handleElectiveToggle}
-                selectedPairIndex={suiteSelectors.selectedPairIndex}
-                setSelectedPairIndex={suiteSelectors.setSelectedPairIndex}
-             />
-          </div>
-        )}
 
         {/* Tabs */}
         <div className="flex gap-2 border-b border-border">
@@ -269,7 +286,7 @@ export default function SubjectDetailPage() {
                 curriculumId={curriculumId}
                 subjectId={subjectId}
                 userId={user?.id ?? ''}
-                initialTopics={filteredTopics}
+                initialTopics={topics}
                 onTopicChange={() => {
                   // TopicTracker already manages topic status optimistically.
                   // Background sync happens silently with zero screen reload.
@@ -281,15 +298,15 @@ export default function SubjectDetailPage() {
 
         {activeTab === 'papers' && (
           <div className="space-y-3">
-            {filteredGridData?.groupTitle && (
+            {paperGridData?.groupTitle && (
               <div className="flex flex-wrap items-center justify-between gap-2 p-3.5 px-4 rounded-xl border border-border bg-background-card/60">
                 <div>
                   <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
                     <BookOpen className="h-4 w-4 text-primary" />
-                    {filteredGridData.groupTitle} Past Paper Tracker
+                    {paperGridData.groupTitle} Past Paper Tracker
                   </h2>
                   <p className="text-xs text-foreground-muted">
-                    Tracking past papers across all {filteredGridData.rows.length} modular units for this qualification
+                    Tracking past papers across all {paperGridData.rows.length} modular units for this qualification
                   </p>
                 </div>
               </div>
@@ -298,10 +315,10 @@ export default function SubjectDetailPage() {
               <div className="flex items-center justify-center py-16">
                 <div className="h-8 w-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
               </div>
-            ) : filteredGridData ? (
+            ) : paperGridData ? (
               <PaperGrid
                 userId={user?.id ?? ''}
-                data={filteredGridData}
+                data={paperGridData}
                 onRecordChange={() => {
                   // PaperGrid manages cell score and status optimistically.
                   // Background sync happens silently with zero screen reload.
@@ -309,6 +326,8 @@ export default function SubjectDetailPage() {
               />
             ) : null}
           </div>
+        )}
+          </>
         )}
       </div>
     </div>

@@ -17,12 +17,14 @@ import {
   Clock,
   Undo2,
   Redo2,
+  ClipboardList,
 } from 'lucide-react';
 import type { TimetableEvent, TimetableView, TimetableEventFormData, TimetableEventType } from '@/types/timetable';
 import { useAuth } from '@/hooks/useAuth';
 import { useTimetable, formatDateLocal, combineDateTime } from '@/hooks/useTimetable';
 import { useZoomToFit } from '@/hooks/useZoomToFit';
 import { DEFAULT_TIMETABLE_FILTERS, GRID_TOTAL_HOURS, GRID_START_HOUR, GRID_END_HOUR, SNAP_MINUTES, EVENT_TYPE_CONFIG } from '@/constants/timetable';
+import { cn } from '@/lib/utils';
 import WeekView from './WeekView';
 import DayView from './DayView';
 import MonthView from './MonthView';
@@ -30,6 +32,7 @@ import EventModal from './EventModal';
 import InlineCreate from './InlineCreate';
 import TimetableFilters from './TimetableFilters';
 import IntegrationBanner from './IntegrationBanner';
+import { TodoPanel } from './TodoPanel';
 import { useGamificationFeedback } from '@/components/gamification/GamificationFeedbackProvider';
 
 // ---------------------------------------------------------------------------
@@ -121,6 +124,9 @@ export default function TimetableManager(props: TimetableManagerProps) {
 
   // Filter panel
   const [filterOpen, setFilterOpen] = useState(false);
+
+  // Todo panel open state
+  const [todoOpen, setTodoOpen] = useState(true);
 
   // Recurring instance edit choice dialog
   const [recurringChoice, setRecurringChoice] = useState<{
@@ -606,6 +612,22 @@ export default function TimetableManager(props: TimetableManagerProps) {
           <Plus size={16} />
           Add Event
         </button>
+
+        {/* Todo panel toggle */}
+        <button
+          id="timetable-toggle-todo"
+          onClick={() => setTodoOpen((v) => !v)}
+          title={todoOpen ? 'Hide tasks' : 'Show tasks'}
+          className={cn(
+            'flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium border transition-all',
+            todoOpen
+              ? 'bg-primary/10 text-primary border-primary/30'
+              : 'text-foreground-muted border-border hover:bg-foreground/5'
+          )}
+        >
+          <ClipboardList size={16} />
+          <span className="hidden sm:inline">Tasks</span>
+        </button>
       </div>
 
       {/* ── Integration Banner ── */}
@@ -681,9 +703,11 @@ export default function TimetableManager(props: TimetableManagerProps) {
         </div>
       )}
 
-      {/* ── Calendar Body ── */}
+      {/* ── Calendar Body + Todo Panel (split-pane on lg) ── */}
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div className="flex-1 overflow-hidden relative" ref={gridContainerRef}>
+        <div className="flex flex-1 overflow-hidden">
+          {/* Calendar grid */}
+          <div className="flex-1 overflow-hidden relative" ref={gridContainerRef}>
           {/* Inline quick-create overlay */}
           {inlineCreate && (view === 'day' || view === 'week') && (
             <div className="absolute left-16 right-0 z-30" style={{ top: 0 }}>
@@ -747,33 +771,53 @@ export default function TimetableManager(props: TimetableManagerProps) {
               />
             </div>
           )}
+          </div>
+
+          {/* Drag Overlay — shows a ghost of the event being dragged */}
+          <DragOverlay dropAnimation={null}>
+            {activeDragEvent ? (
+              <div
+                className="rounded-md opacity-80 shadow-lg pointer-events-none"
+                style={{
+                  width: 160,
+                  height: 36,
+                  backgroundColor: 'color-mix(in srgb, var(--primary) 45%, transparent)',
+                  border: '2px solid var(--primary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  fontSize: 11,
+                  color: 'white',
+                  padding: '0 8px',
+                }}
+              >
+                <span className="truncate font-medium">{activeDragEvent.title}</span>
+                <span className="shrink-0 text-[10px] opacity-75 ml-auto">
+                  <span className="tabular-nums">{SNAP_MINUTES}&apos; snap</span>
+                </span>
+              </div>
+            ) : null}
+          </DragOverlay>
         </div>
 
-        {/* Drag Overlay — shows a ghost of the event being dragged */}
-        <DragOverlay dropAnimation={null}>
-          {activeDragEvent ? (
-            <div
-              className="rounded-md opacity-80 shadow-lg pointer-events-none"
-              style={{
-                width: 160,
-                height: 36,
-                backgroundColor: 'color-mix(in srgb, var(--primary) 45%, transparent)',
-                border: '2px solid var(--primary)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                fontSize: 11,
-                color: 'white',
-                padding: '0 8px',
+        {/* Todo Panel — right side (hidden on small screens unless todoOpen) */}
+        {todoOpen && (
+          <div className="w-full sm:w-80 shrink-0 border-t sm:border-t-0 overflow-hidden">
+            <TodoPanel
+              events={events}
+              onToggleComplete={async (id) => {
+                const res = await toggleComplete(id);
+                if (res.gamification) handleAwardResult(res.gamification);
+                return { success: res.success };
               }}
-            >
-              <span className="truncate font-medium">{activeDragEvent.title}</span>
-              <span className="shrink-0 text-[10px] opacity-75 ml-auto">
-                <span className="tabular-nums">{SNAP_MINUTES}&apos; snap</span>
-              </span>
-            </div>
-          ) : null}
-        </DragOverlay>
+              onCreateTodo={async (data) => {
+                if (!data.title) return { success: false };
+                return createEvent(data as Parameters<typeof createEvent>[0]);
+              }}
+              isLoading={isLoading}
+            />
+          </div>
+        )}
       </DndContext>
 
       {/* ── Event Modal ── */}

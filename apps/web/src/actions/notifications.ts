@@ -252,7 +252,8 @@ export async function actionClearSourceQueue(
       .where(
         and(
           eq(notificationQueue.status, 'pending'),
-          eq(notificationQueue.id, sourceId)
+          sql`json_extract(${notificationQueue.payload}, '$.source_id') = ${sourceId}`,
+          sql`json_extract(${notificationQueue.payload}, '$.source_type') = ${sourceType}`
         )
       );
   } catch (err) {

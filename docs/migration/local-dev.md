@@ -11,7 +11,7 @@
 npm run dev
 ```
 
-Confirm API logs show **`D1 Database — remote`**, **`the-ants-db`**, and **`R2 Bucket — remote`** (`the-ants-assets`).
+Confirm API logs show **`D1 Database — remote`**, **`the-ants-db`**. R2 defaults to **local** Miniflare during `npm run dev` (avoids Wrangler edge-preview error 10136). Production still uses remote `the-ants-assets` on deploy.
 
 Ensure `.env.local` (repo root or `apps/web/.env.local`) includes:
 

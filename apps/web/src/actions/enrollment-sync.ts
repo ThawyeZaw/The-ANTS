@@ -32,9 +32,15 @@ async function deleteAutoCountdowns(userId: string, subjectId: string) {
   const existing = await db.query.examCountdowns.findMany({
     where: and(eq(examCountdowns.user_id, userId), eq(examCountdowns.subject_id, subjectId)),
   });
+  const { actionClearSourceQueue } = await import('@/actions/notifications');
   for (const row of existing) {
     if (row.is_custom) continue;
     await db.delete(examCountdowns).where(eq(examCountdowns.id, row.id));
+    try {
+      await actionClearSourceQueue('exam_countdown', row.id);
+    } catch {
+      /* ignore */
+    }
   }
 }
 
@@ -123,20 +129,38 @@ export async function syncEnrollmentCountdowns(input: {
   let count = 0;
   for (const exam of matching) {
     if (!exam.exam_date) continue;
-    await db.insert(examCountdowns).values({
-      user_id: input.userId,
-      subject_id: input.subjectId,
-      exam_id: exam.id,
-      title: exam.title,
-      exam_board: exam.exam_board ?? curriculum.code,
-      paper_name: paperLabel(exam.paper_number),
-      exam_date: exam.exam_date,
-      color_code: color,
-      target_grade: input.targetGrade ?? null,
-      is_custom: false,
-      is_pinned: false,
-    });
+    const [inserted] = await db
+      .insert(examCountdowns)
+      .values({
+        user_id: input.userId,
+        subject_id: input.subjectId,
+        exam_id: exam.id,
+        title: exam.title,
+        exam_board: exam.exam_board ?? curriculum.code,
+        paper_name: paperLabel(exam.paper_number),
+        exam_date: exam.exam_date,
+        color_code: color,
+        target_grade: input.targetGrade ?? null,
+        is_custom: false,
+        is_pinned: false,
+      })
+      .returning();
     count += 1;
+
+    if (inserted?.id && inserted.exam_date) {
+      try {
+        const { actionEnqueueExamCountdownReminders } = await import('@/actions/notifications');
+        await actionEnqueueExamCountdownReminders(
+          inserted.id,
+          input.userId,
+          exam.title,
+          new Date(inserted.exam_date),
+          false
+        );
+      } catch (err) {
+        console.error('[enrollment-sync] enqueue countdown reminders failed', err);
+      }
+    }
   }
 
   return { success: true as const, count };

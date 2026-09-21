@@ -67,11 +67,11 @@ export default function ContributorDashboard() {
 
           <div className="flex items-center gap-2">
             <Link
-              href="/editor"
+              href="/past-papers"
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-violet-500 text-white text-xs font-bold shadow-md hover:bg-violet-600 transition-all"
             >
               <Pencil className="w-3.5 h-3.5" />
-              Editor Workspace
+              Past Paper Catalog
             </Link>
           </div>
         </div>
