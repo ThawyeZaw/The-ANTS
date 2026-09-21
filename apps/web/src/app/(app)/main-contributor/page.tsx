@@ -82,11 +82,11 @@ export default function MainContributorDashboard() {
               Manage Users
             </Link>
             <Link
-              href="/editor"
+              href="/past-papers"
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-background-secondary border border-border text-foreground text-xs font-bold hover:bg-background-secondary/80 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
               <ClipboardCheck className="w-3.5 h-3.5" />
-              Exam Editor
+              Past Paper Catalog
             </Link>
             <Link
               href="/org-activities/manage"

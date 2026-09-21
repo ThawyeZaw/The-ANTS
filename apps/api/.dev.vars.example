@@ -5,9 +5,12 @@ TELEGRAM_BOT_TOKEN=
 # Legacy — not used by Workers runtime (D1 binding `DB` is live DB)
 # DATABASE_URL=
 
-# Required for `npm run dev:shared` (team D1) and `npm run dev:remote` (prod — avoid).
+# Required for `npm run dev` (remote D1) / `npm run dev:shared`.
 # Create at https://dash.cloudflare.com/profile/api-tokens
-# Permissions: Account / D1 / Edit, Account / Workers Scripts / Read
+# Permissions (minimum for remote D1 + edge-preview):
+#   - Account / D1 / Edit
+#   - Account / Workers Scripts / Edit   ← Read-only is NOT enough for remote bindings
+#   - Account / Workers R2 Storage / Edit (only if you set R2 `"remote": true`)
 # CLOUDFLARE_API_TOKEN=
 #
 # Team workflow: docs/migration/local-dev.md

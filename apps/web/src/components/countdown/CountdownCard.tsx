@@ -13,9 +13,11 @@ interface CountdownCardProps {
 }
 
 function getTimeBreakdown(targetDateStr: string | null) {
-  if (!targetDateStr) return { days: 0, hours: 0, minutes: 0, seconds: 0, isPast: true, totalHours: 0 };
+  if (!targetDateStr)
+    return { days: 0, hours: 0, minutes: 0, seconds: 0, isPast: true, totalHours: 0 };
   const diff = new Date(targetDateStr).getTime() - Date.now();
-  if (diff <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0, isPast: true, totalHours: 0 };
+  if (diff <= 0)
+    return { days: 0, hours: 0, minutes: 0, seconds: 0, isPast: true, totalHours: 0 };
 
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
@@ -38,37 +40,44 @@ export function CountdownCard({ countdown, onDelete, canDelete = true }: Countdo
     return () => clearInterval(interval);
   }, [targetDate]);
 
-  const title = countdown.custom_title || countdown.title || countdown.paper_name || 'Upcoming Exam';
+  const title =
+    countdown.custom_title || countdown.title || countdown.paper_name || 'Upcoming Exam';
   const examBoard = countdown.exam_board || countdown.qualification_group || null;
   const paperName = countdown.paper_name || null;
   const targetGrade = countdown.target_grade || null;
 
   const formattedDate = formatExamDateTime(targetDate);
 
-  // Urgency indicator
   const isUrgent = !time.isPast && time.days < 7;
   const isUpcoming = !time.isPast && time.days >= 7 && time.days < 30;
 
   return (
     <div
       className={cn(
-        'group relative overflow-hidden rounded-2xl border transition-all duration-300 p-5 bg-[var(--background-card)]',
+        'group relative overflow-hidden rounded-2xl border p-4 transition-all duration-300 sm:p-5 bg-background-card',
         isUrgent
-          ? 'border-amber-500/40 shadow-sm shadow-amber-500/10 hover:border-amber-500/60'
-          : 'border-[var(--border)] hover:border-[var(--primary)]/40 hover:shadow-md'
+          ? 'border-rose-300/70 shadow-sm shadow-rose-500/10 dark:border-rose-500/40'
+          : isUpcoming
+            ? 'border-amber-500/30 hover:border-amber-500/50'
+            : 'border-border hover:border-primary/40 hover:shadow-md'
       )}
     >
-      {/* Top row: Board / Paper badge & Delete */}
-      <div className="flex items-start justify-between gap-3 mb-3">
+      <div className="mb-3 flex items-start justify-between gap-3">
         <div className="flex flex-wrap items-center gap-1.5">
           {examBoard && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/20">
+            <span className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
               {examBoard}
             </span>
           )}
           {paperName && (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-mono text-[var(--foreground-secondary)] bg-[var(--background-secondary)]">
+            <span className="inline-flex items-center rounded-md bg-background-secondary px-2 py-0.5 font-mono text-xs text-foreground-secondary">
               {paperName}
+            </span>
+          )}
+          {isUrgent && (
+            <span className="inline-flex items-center gap-1 rounded-md border border-rose-200 bg-rose-50 px-2 py-0.5 text-[11px] font-semibold text-rose-800 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-500" />
+              Deadline
             </span>
           )}
           {targetGrade && (
@@ -78,27 +87,26 @@ export function CountdownCard({ countdown, onDelete, canDelete = true }: Countdo
                   ? `/calculator?subject=${countdown.subject_id}`
                   : '/calculator'
               }
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20"
+              className="inline-flex items-center gap-1 rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-600 hover:bg-emerald-500/20 dark:text-emerald-400"
             >
-              <Sparkles className="w-3 h-3" />
+              <Sparkles className="h-3 w-3" />
               Target: {targetGrade}
-              <Calculator className="w-3 h-3" />
+              <Calculator className="h-3 w-3" />
             </Link>
           )}
         </div>
 
         <div className="flex items-center gap-2">
           {isUrgent && (
-            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-600 dark:text-amber-400 animate-pulse">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-              {time.days === 0 ? 'Exam Today!' : `${time.days}d left`}
+            <span className="inline-flex items-center gap-1 animate-pulse text-[11px] font-semibold text-rose-600 dark:text-rose-400">
+              {time.days === 0 ? 'Exam today' : `${time.days}d left`}
             </span>
           )}
 
           {canDelete && onDelete && countdown.id && (
             <button
               onClick={() => onDelete(countdown.id)}
-              className="opacity-60 hover:opacity-100 p-1.5 rounded-lg text-[var(--foreground-muted)] hover:text-red-500 hover:bg-red-500/10 transition-colors"
+              className="rounded-lg p-1.5 text-foreground-muted opacity-60 transition-colors hover:bg-red-500/10 hover:text-red-500 hover:opacity-100"
               title="Delete countdown"
               aria-label={`Delete ${title} countdown`}
             >
@@ -108,65 +116,62 @@ export function CountdownCard({ countdown, onDelete, canDelete = true }: Countdo
         </div>
       </div>
 
-      {/* Main Title & Scheduled Date */}
       <div className="mb-4">
-        <h3 className="text-base sm:text-lg font-bold text-[var(--foreground)] line-clamp-1 group-hover:text-[var(--primary)] transition-colors">
+        <h3 className="line-clamp-1 text-base font-bold text-foreground transition-colors group-hover:text-primary sm:text-lg">
           {title}
         </h3>
-        <div className="mt-1 flex items-center gap-1.5 text-xs text-[var(--foreground-secondary)]">
-          <Calendar className="h-3.5 w-3.5 text-[var(--foreground-muted)] shrink-0" />
+        <div className="mt-1 flex items-center gap-1.5 text-xs text-foreground-secondary">
+          <Calendar className="h-3.5 w-3.5 shrink-0 text-foreground-muted" />
           <span>{formattedDate}</span>
         </div>
       </div>
 
-      {/* Timer Display */}
-      <div className="rounded-xl bg-[var(--background-secondary)]/80 border border-[var(--border)] p-3">
+      <div className="rounded-xl border border-border bg-background-secondary/80 p-2.5 sm:p-3">
         {time.isPast ? (
-          <div className="flex items-center justify-center gap-2 py-2 text-emerald-600 dark:text-emerald-400 font-semibold text-sm">
+          <div className="flex items-center justify-center gap-2 py-2 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
             <Clock className="h-4 w-4" />
             <span>Exam concluded</span>
           </div>
         ) : (
-          <div className="grid grid-cols-4 gap-2 text-center">
-            {/* Days */}
-            <div className="flex flex-col items-center bg-[var(--background-card)] py-1.5 px-1 rounded-lg border border-[var(--border)]/50">
-              <span className="text-2xl sm:text-3xl font-bold font-mono text-[var(--foreground)] tracking-tight">
-                {String(time.days).padStart(2, '0')}
-              </span>
-              <span className="text-[10px] uppercase font-semibold text-[var(--foreground-muted)] tracking-wider mt-0.5">
-                Days
-              </span>
-            </div>
-
-            {/* Hours */}
-            <div className="flex flex-col items-center bg-[var(--background-card)] py-1.5 px-1 rounded-lg border border-[var(--border)]/50">
-              <span className="text-2xl sm:text-3xl font-bold font-mono text-[var(--foreground)] tracking-tight">
-                {String(time.hours).padStart(2, '0')}
-              </span>
-              <span className="text-[10px] uppercase font-semibold text-[var(--foreground-muted)] tracking-wider mt-0.5">
-                Hours
-              </span>
-            </div>
-
-            {/* Mins */}
-            <div className="flex flex-col items-center bg-[var(--background-card)] py-1.5 px-1 rounded-lg border border-[var(--border)]/50">
-              <span className="text-2xl sm:text-3xl font-bold font-mono text-[var(--foreground)] tracking-tight">
-                {String(time.minutes).padStart(2, '0')}
-              </span>
-              <span className="text-[10px] uppercase font-semibold text-[var(--foreground-muted)] tracking-wider mt-0.5">
-                Mins
-              </span>
-            </div>
-
-            {/* Secs */}
-            <div className="flex flex-col items-center bg-[var(--background-card)] py-1.5 px-1 rounded-lg border border-[var(--border)]/50">
-              <span className="text-2xl sm:text-3xl font-bold font-mono text-[var(--primary)] tracking-tight">
-                {String(time.seconds).padStart(2, '0')}
-              </span>
-              <span className="text-[10px] uppercase font-semibold text-[var(--primary)]/80 tracking-wider mt-0.5">
-                Secs
-              </span>
-            </div>
+          <div className="grid grid-cols-4 gap-1.5 text-center sm:gap-2">
+            {(
+              [
+                { value: time.days, label: 'Days', accent: false },
+                { value: time.hours, label: 'Hours', accent: false },
+                { value: time.minutes, label: 'Mins', accent: false },
+                { value: time.seconds, label: 'Secs', accent: true },
+              ] as const
+            ).map((cell) => (
+              <div
+                key={cell.label}
+                className="flex flex-col items-center rounded-lg border border-border/50 bg-background-card px-1 py-1.5"
+              >
+                <span
+                  className={cn(
+                    'font-mono text-xl font-bold tracking-tight tabular-nums sm:text-3xl',
+                    cell.accent
+                      ? isUrgent
+                        ? 'text-rose-600 dark:text-rose-400'
+                        : 'text-primary'
+                      : 'text-foreground'
+                  )}
+                >
+                  {String(cell.value).padStart(2, '0')}
+                </span>
+                <span
+                  className={cn(
+                    'mt-0.5 text-[10px] font-semibold uppercase tracking-wider',
+                    cell.accent
+                      ? isUrgent
+                        ? 'text-rose-600/80 dark:text-rose-400/80'
+                        : 'text-primary/80'
+                      : 'text-foreground-muted'
+                  )}
+                >
+                  {cell.label}
+                </span>
+              </div>
+            ))}
           </div>
         )}
       </div>

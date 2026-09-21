@@ -40,7 +40,17 @@ import {
 import { awardXp, XP_AMOUNTS, type AwardXpResult } from '@/lib/gamification/award';
 import { requireSessionUser } from '@/lib/auth-session';
 import { parseSubtopicsJson } from '@/lib/curriculum/subtopics';
+import {
+  buildIalUnitMetaBySubjectId,
+  stripIalTopicUnitPrefix,
+} from '@/lib/curriculum/ial-topics';
 import { isPaperAvailable } from '@/lib/exam-papers/availability';
+import {
+  getIalGroupUnitIds,
+  groupEdexcelIalSubjects,
+  isIalCombinedWorkspaceId,
+  resolveIalWorkspaceGroupId,
+} from '@/lib/edexcel-ial';
 import type { SubjectTier } from '@/lib/grading/types';
 import type { EdexcelIALQualificationSpecification } from '@/lib/grading/ial-structure';
 import {
@@ -112,6 +122,10 @@ export interface TopicWithProgress {
   completed_at: Date | null;
   completed_subtopics: string | null;
   notes: string | null;
+  /** IAL modular units — syllabus code e.g. WMA11 */
+  unit_code?: string | null;
+  /** IAL modular units — human title e.g. Pure Mathematics 1 */
+  unit_title?: string | null;
 }
 
 // ── getPaperGridData types ─────────────────────────────────────────────────────
@@ -402,10 +416,100 @@ export async function getSubjectTopicsWithProgress(
   try {
     const db = getDb();
 
-    const allTopics = await db.query.topics.findMany({
-      where: eq(topics.subject_id, subjectId),
-      orderBy: [asc(topics.order_index)],
-    });
+    let allTopics: (typeof topics.$inferSelect)[] = [];
+    let unitCodeBySubjectId = new Map<string, string>();
+
+    if (isIalCombinedWorkspaceId(subjectId)) {
+      const groupId = resolveIalWorkspaceGroupId(subjectId)!;
+      const catalog = await db.query.subjects.findMany({
+        where: eq(subjects.curriculum_id, 'curr-edexcel-ial'),
+        columns: { id: true, code: true, name: true, qualification_data: true },
+      });
+      let unitIds = getIalGroupUnitIds(groupId, catalog);
+      if (unitIds.length === 0) return [];
+
+      if (userId) {
+        const enrolledRows = await db.query.userEnrollments.findMany({
+          where: and(
+            eq(userEnrollments.user_id, userId),
+            inArray(userEnrollments.subject_id, unitIds)
+          ),
+          columns: { subject_id: true },
+        });
+        const enrolledIds = enrolledRows.map((r) => r.subject_id);
+        if (enrolledIds.length > 0) {
+          unitIds = unitIds.filter((id) => enrolledIds.includes(id));
+        }
+      }
+
+      const mathsSuite = catalog.find((s) => s.id === 'subj-edx-ial-maths-suite');
+      const unitMeta = buildIalUnitMetaBySubjectId(
+        catalog,
+        mathsSuite?.qualification_data as string | Record<string, unknown> | null | undefined
+      );
+
+      for (const row of catalog) {
+        if (row.code) unitCodeBySubjectId.set(row.id, row.code);
+      }
+
+      const unitOrder = new Map(unitIds.map((id, index) => [id, index]));
+      allTopics = await db.query.topics.findMany({
+        where: inArray(topics.subject_id, unitIds),
+        orderBy: [asc(topics.order_index)],
+      });
+      allTopics.sort((a, b) => {
+        const unitA = unitOrder.get(a.subject_id) ?? 0;
+        const unitB = unitOrder.get(b.subject_id) ?? 0;
+        if (unitA !== unitB) return unitA - unitB;
+        return (a.order_index ?? 0) - (b.order_index ?? 0);
+      });
+
+      const topicIds = allTopics.map((t) => t.id);
+      const filteredProgress =
+        userId && topicIds.length > 0
+          ? await db.query.topicProgress.findMany({
+              where: and(
+                eq(topicProgress.user_id, userId),
+                inArray(topicProgress.topic_id, topicIds)
+              ),
+            })
+          : [];
+
+      const progressMap = new Map(filteredProgress.map((p) => [p.topic_id, p]));
+
+      return allTopics.map((t) => {
+        const prog = progressMap.get(t.id);
+        const meta = unitMeta.get(t.subject_id);
+        const unitCode = meta?.unitCode ?? unitCodeBySubjectId.get(t.subject_id) ?? null;
+        const unitTitle = meta?.unitTitle ?? null;
+        const displayName = unitCode
+          ? stripIalTopicUnitPrefix(t.name, unitCode)
+          : t.name;
+        return {
+          id: t.id,
+          subject_id: t.subject_id,
+          name: displayName,
+          description: t.description,
+          order_index: t.order_index,
+          subtopics_count: t.subtopics_count,
+          subtopics: t.subtopics,
+          difficulty_level: t.difficulty_level,
+          estimated_hours: t.estimated_hours,
+          status: prog?.status ?? 'not_started',
+          last_studied_at: prog?.last_studied_at ?? null,
+          completed_at: prog?.completed_at ?? null,
+          completed_subtopics: prog?.completed_subtopics ?? null,
+          notes: prog?.notes ?? null,
+          unit_code: unitCode,
+          unit_title: unitTitle,
+        };
+      });
+    } else {
+      allTopics = await db.query.topics.findMany({
+        where: eq(topics.subject_id, subjectId),
+        orderBy: [asc(topics.order_index)],
+      });
+    }
 
     const topicIds = allTopics.map((t) => t.id);
     const filteredProgress =
@@ -422,10 +526,15 @@ export async function getSubjectTopicsWithProgress(
 
     return allTopics.map((t) => {
       const prog = progressMap.get(t.id);
+      const unitCode = unitCodeBySubjectId.get(t.subject_id);
+      const displayName =
+        unitCode && isIalCombinedWorkspaceId(subjectId)
+          ? `${unitCode} — ${t.name}`
+          : t.name;
       return {
         id: t.id,
         subject_id: t.subject_id,
-        name: t.name,
+        name: displayName,
         description: t.description,
         order_index: t.order_index,
         subtopics_count: t.subtopics_count,
@@ -465,6 +574,9 @@ export async function getPaperGridData(
     });
     const subjectCode = subject?.code ?? '';
     const board = boardFromCurriculumCode(subject?.curriculum?.code);
+    const curriculumId =
+      subject?.curriculum_id ??
+      (subjectId.startsWith('subj-edx-ial-') ? 'curr-edexcel-ial' : null);
 
     const isEdexcelIal =
       board === 'EDEXCEL_IAL' ||
@@ -476,7 +588,9 @@ export async function getPaperGridData(
     let sortedSiblings: (typeof subject)[] = [];
 
     if (isEdexcelIal) {
-      const suffix = subjectId.replace('subj-edx-ial-', '');
+      const workspaceGroupId = resolveIalWorkspaceGroupId(subjectId);
+      const idForGrouping = workspaceGroupId ?? subjectId;
+      const suffix = idForGrouping.replace('subj-edx-ial-', '');
       const prefixMatch = suffix.match(/^[a-z]+/);
       const prefix = prefixMatch ? prefixMatch[0] : '';
 
@@ -547,11 +661,34 @@ export async function getPaperGridData(
         }
       }
 
+      if (workspaceGroupId && curriculumId) {
+        const catalog = await db.query.subjects.findMany({
+          where: eq(subjects.curriculum_id, curriculumId),
+          columns: { id: true, code: true },
+        });
+        const groupUnitIds = getIalGroupUnitIds(workspaceGroupId, catalog);
+        if (groupUnitIds.length > 0) {
+          const enrolledRows = await db.query.userEnrollments.findMany({
+            where: and(
+              eq(userEnrollments.user_id, userId),
+              inArray(userEnrollments.subject_id, groupUnitIds)
+            ),
+            columns: { subject_id: true },
+          });
+          if (enrolledRows.length > 0) {
+            const codeById = new Map(catalog.map((s) => [s.id, s.code]));
+            targetUnitCodes = enrolledRows
+              .map((r) => codeById.get(r.subject_id))
+              .filter((c): c is string => Boolean(c));
+          }
+        }
+      }
+
       if (targetUnitCodes.length === 0) {
         if (isMath) {
           targetUnitCodes = ['WMA11', 'WMA12', 'WMA13', 'WMA14', 'WME01', 'WST01'];
         } else if (isFurtherMath) {
-          targetUnitCodes = ['WFM01', 'WFM02', 'WFM03', 'WME01', 'WST01', 'WST02'];
+          targetUnitCodes = ['WFM01', 'WFM02', 'WFM03', 'WME02', 'WST02', 'WST03'];
         } else if (defaultCashIn) {
           const { IAL_CASH_INS } = await import('@/lib/grading/ial-cash-in');
           const award = IAL_CASH_INS[defaultCashIn as keyof typeof IAL_CASH_INS];
@@ -561,10 +698,10 @@ export async function getPaperGridData(
         }
       }
 
-      if (targetUnitCodes.length > 0 && subject?.curriculum_id) {
+      if (targetUnitCodes.length > 0 && curriculumId) {
         const siblingSubjects = await db.query.subjects.findMany({
           where: and(
-            eq(subjects.curriculum_id, subject.curriculum_id),
+            eq(subjects.curriculum_id, curriculumId),
             inArray(subjects.code, targetUnitCodes)
           ),
         });
@@ -583,8 +720,16 @@ export async function getPaperGridData(
       ? sortedSiblings.map((s) => s!.id)
       : [subjectId];
 
+    const enrollLookupIds =
+      isEdexcelIal && sortedSiblings.length > 0
+        ? sortedSiblings.map((s) => s!.id)
+        : [subjectId];
+
     const enroll = await db.query.userEnrollments.findFirst({
-      where: and(eq(userEnrollments.user_id, userId), eq(userEnrollments.subject_id, subjectId)),
+      where: and(
+        eq(userEnrollments.user_id, userId),
+        inArray(userEnrollments.subject_id, enrollLookupIds)
+      ),
       columns: { tier: true, award_level: true, paper_preferences: true },
     });
     const effectiveTier = (tier ?? (enroll?.tier as SubjectTier | null) ?? null) as SubjectTier | null;
@@ -1349,43 +1494,71 @@ export async function getSubjectCalculatorContext(
 ): Promise<SubjectCalculatorContext | null> {
   try {
     const db = getDb();
+    const workspaceGroupId = resolveIalWorkspaceGroupId(subjectId);
+
     const subject = await db.query.subjects.findFirst({
       where: eq(subjects.id, subjectId),
       with: { curriculum: true },
     });
-    if (!subject) return null;
+
+    let lookupSubjectIds = [subjectId];
+    let subjectCode = subject?.code ?? '';
+    let curriculumCode = subject?.curriculum?.code ?? '';
+    let referenceSubject = subject;
+
+    if (workspaceGroupId) {
+      const catalog = await db.query.subjects.findMany({
+        where: eq(subjects.curriculum_id, 'curr-edexcel-ial'),
+        with: { curriculum: true },
+      });
+      const unitIds = getIalGroupUnitIds(workspaceGroupId, catalog);
+      if (unitIds.length === 0) return null;
+
+      lookupSubjectIds = unitIds;
+      const group = groupEdexcelIalSubjects(catalog).find((g) => g.id === workspaceGroupId);
+      subjectCode = group?.code ?? catalog.find((s) => unitIds.includes(s.id))?.code ?? '';
+      curriculumCode = 'EDEXCEL_IAL';
+      referenceSubject = catalog.find((s) => unitIds.includes(s.id)) ?? subject;
+    } else if (!subject) {
+      return null;
+    }
 
     const [enroll, selection, boundarySample, compositeSample] = await Promise.all([
       db.query.userEnrollments.findFirst({
-        where: and(eq(userEnrollments.user_id, userId), eq(userEnrollments.subject_id, subjectId)),
+        where: and(
+          eq(userEnrollments.user_id, userId),
+          inArray(userEnrollments.subject_id, lookupSubjectIds)
+        ),
       }),
       db.query.userComponentSelections.findFirst({
         where: and(
           eq(userComponentSelections.user_id, userId),
-          eq(userComponentSelections.subject_id, subjectId)
+          inArray(userComponentSelections.subject_id, lookupSubjectIds)
         ),
       }),
       db.query.pastPapers.findFirst({
-        where: eq(pastPapers.subject_id, subjectId),
+        where: inArray(pastPapers.subject_id, lookupSubjectIds),
         with: { gradeBoundaries: true },
       }),
       db.query.subjectGradeBoundaries.findFirst({
-        where: eq(subjectGradeBoundaries.subject_id, subjectId),
+        where: inArray(subjectGradeBoundaries.subject_id, lookupSubjectIds),
       }),
     ]);
 
-    const curriculumCode = subject.curriculum?.code ?? '';
+    if (!curriculumCode) {
+      curriculumCode = referenceSubject?.curriculum?.code ?? '';
+    }
 
     return {
       subjectId,
-      subjectCode: subject.code,
+      subjectCode,
       curriculumCode,
       awardLevel: (enroll?.award_level as AwardLevel | null) ?? null,
       tier: (enroll?.tier as SubjectTier | null) ?? null,
       paperPreferences:
         (selection?.paper_preferences as PaperPreferences | null) ??
         (enroll?.paper_preferences as PaperPreferences | null) ??
-        defaultPaperPreferences(subject.code),
+        defaultPaperPreferences(subjectCode),
       targetSeries: enroll?.target_series ?? null,
       routeKey: selection?.route_key ?? null,
       hasOfficialBoundaries:

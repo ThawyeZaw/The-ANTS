@@ -6,6 +6,8 @@ export interface UnitDefinition {
   stage: 'AS' | 'A2';
   umsWeight: number;
   directPrerequisites?: string[];
+  /** Catalog subject row id (maths suite seed JSON). */
+  subjectId?: string;
 }
 
 export type ElectiveStrategy =

@@ -11,6 +11,7 @@ import { useEffect, Suspense } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { LessonProvider } from '@/context/LessonContext';
+import { SidebarProvider, useSidebar } from '@/context/SidebarContext';
 import NavBar from '@/components/layout/NavBar';
 import { WorkspaceToastProvider } from '@/components/workspace/WorkspaceToast';
 import { GamificationFeedbackProvider } from '@/components/gamification/GamificationFeedbackProvider';
@@ -68,6 +69,47 @@ function GuestChrome({
   );
 }
 
+// Inner shell: reads sidebar context to adjust content margin
+function AuthenticatedShell({
+  children,
+  immersive,
+}: {
+  children: React.ReactNode;
+  immersive: boolean;
+}) {
+  const { collapsed } = useSidebar();
+
+  return (
+    <div className="min-h-screen bg-background" data-sidebar-collapsed={collapsed ? 'true' : 'false'}>
+      <NavBar />
+      <div
+        className={
+          immersive
+            ? [
+                'h-dvh overflow-hidden',
+                'md:pl-[var(--sidebar-width-collapsed)]',
+                collapsed ? 'lg:pl-[var(--sidebar-width-collapsed)]' : 'lg:pl-[var(--sidebar-width)]',
+                'transition-[padding] duration-200 ease-out motion-reduce:transition-none',
+              ].join(' ')
+            : [
+                'min-h-screen pb-[calc(var(--bottom-nav-height)+env(safe-area-inset-bottom))] md:pb-0',
+                'md:pl-[var(--sidebar-width-collapsed)]',
+                collapsed ? 'lg:pl-[var(--sidebar-width-collapsed)]' : 'lg:pl-[var(--sidebar-width)]',
+                'transition-[padding] duration-200 ease-out motion-reduce:transition-none',
+              ].join(' ')
+        }
+      >
+        <main
+          id="main-content"
+          className={immersive ? 'h-full w-full overflow-hidden' : 'mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8'}
+        >
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+}
+
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
@@ -104,29 +146,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <Suspense fallback={null}>
-      <WorkspaceToastProvider>
-        <GamificationFeedbackProvider>
-          <LessonProvider>
-            <div className="min-h-screen bg-background">
-              <NavBar />
-              <div
-                className={
-                  immersive
-                    ? 'h-dvh overflow-hidden md:pl-[var(--sidebar-width-collapsed)] lg:pl-[var(--sidebar-width)] transition-[padding] duration-200 ease-out motion-reduce:transition-none'
-                    : 'min-h-screen pb-[calc(var(--bottom-nav-height)+env(safe-area-inset-bottom))] md:pb-0 md:pl-[var(--sidebar-width-collapsed)] lg:pl-[var(--sidebar-width)] transition-[padding] duration-200 ease-out motion-reduce:transition-none'
-                }
-              >
-                <main
-                  id="main-content"
-                  className={immersive ? 'h-full w-full overflow-hidden' : 'mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8'}
-                >
-                  {children}
-                </main>
-              </div>
-            </div>
-          </LessonProvider>
-        </GamificationFeedbackProvider>
-      </WorkspaceToastProvider>
+      <SidebarProvider>
+        <WorkspaceToastProvider>
+          <GamificationFeedbackProvider>
+            <LessonProvider>
+              <AuthenticatedShell immersive={immersive}>
+                {children}
+              </AuthenticatedShell>
+            </LessonProvider>
+          </GamificationFeedbackProvider>
+        </WorkspaceToastProvider>
+      </SidebarProvider>
     </Suspense>
   );
 }

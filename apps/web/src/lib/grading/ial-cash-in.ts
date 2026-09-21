@@ -713,6 +713,34 @@ export function requiredOptionalCount(award: IalCashInAward): number {
   return Math.max(0, award.unitCount - award.compulsory.length);
 }
 
+/** Pure P1–P4 unit codes — excluded from Further Mathematics elective picks. */
+export const IAL_PURE_CORE_UNITS = ['WMA11', 'WMA12', 'WMA13', 'WMA14'] as const;
+
+/** Resolve catalog rows for Pearson unit codes (preserves code order). */
+export function resolveIalCatalogUnits<T extends { code?: string | null }>(
+  catalogSubjects: readonly T[],
+  unitCodes: readonly string[]
+): T[] {
+  const byCode = new Map<string, T>();
+  for (const subject of catalogSubjects) {
+    const code = (subject.code ?? '').trim().toUpperCase();
+    if (code) byCode.set(code, subject);
+  }
+
+  const seen = new Set<string>();
+  const resolved: T[] = [];
+  for (const raw of unitCodes) {
+    const code = raw.toUpperCase();
+    if (seen.has(code)) continue;
+    const subject = byCode.get(code);
+    if (subject) {
+      seen.add(code);
+      resolved.push(subject);
+    }
+  }
+  return resolved;
+}
+
 export function awardLevelFromCashInCode(code: IalCashInCode): AwardLevel {
   return code.startsWith('Y') ? 'A Level' : 'AS';
 }
@@ -751,6 +779,7 @@ export function optionalUnitPresets(award: IalCashInAward): { label: string; uni
       { label: 'F1–F3 + M1 + S1', units: ['WFM02', 'WFM03', 'WME01', 'WST01', 'WST02'] },
       { label: 'F1–F3 + M1 + S2', units: ['WFM02', 'WFM03', 'WME01', 'WME02', 'WST01'] },
       { label: 'F1–F3 + S1 + S2', units: ['WFM02', 'WFM03', 'WST01', 'WST02', 'WME01'] },
+      { label: 'F1–F3 + M1 + D1', units: ['WFM02', 'WFM03', 'WME01', 'WST01', 'WDM11'] },
     ];
   }
 

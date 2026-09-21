@@ -365,6 +365,52 @@ h6 {
   border: 1px solid var(--glass-border);
 }
 
+/* ── NavBar animations & utilities ───────────────────────────────────────── */
+.nav-section-enter {
+  animation: navSectionEnter 0.15s ease-out;
+}
+
+.nav-popover-enter {
+  animation: navPopoverEnter 0.15s ease-out;
+}
+
+.nav-sheet-enter {
+  animation: navSheetEnter 0.2s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+.nav-backdrop-enter {
+  animation: fadeIn 0.12s ease-out;
+}
+
+.nav-tab-indicator {
+  animation: navTabIn 0.15s ease-out;
+}
+
+@keyframes navSectionEnter {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes navPopoverEnter {
+  from { opacity: 0; transform: translateY(4px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes navSheetEnter {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes navTabIn {
+  from { transform: scaleX(0.5) translateX(-50%); opacity: 0; }
+  to { transform: scaleX(1) translateX(-50%); opacity: 1; }
+}
+
+/* General fade-in for page entry */
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
 /* ── Keyframe Animations ──────────────────────────────────────────────────── */
 @keyframes fadeIn {
   from {

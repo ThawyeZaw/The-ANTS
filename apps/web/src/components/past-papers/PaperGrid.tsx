@@ -228,6 +228,7 @@ function GridCell({
   qualification,
   examBoard,
   onUpdate,
+  as = 'td',
 }: {
   cell: PaperGridCell | undefined;
   paperId: string;
@@ -239,6 +240,7 @@ function GridCell({
   qualification: string;
   examBoard: string;
   onUpdate: (sessionKey: string, updated: Partial<PaperGridCell>) => void;
+  as?: 'td' | 'div';
 }) {
   const [open, setOpen] = useState(false);
 
@@ -262,8 +264,11 @@ function GridCell({
   
   const displayValue = effectiveCell.isDisabled ? '' : getCellDisplayValue(effectiveCell, displayMode, isIAL);
 
+  const Wrapper = as;
+  const wrapperClass = as === 'td' ? 'relative p-0.5' : 'relative';
+
   return (
-    <td className="relative p-0.5">
+    <Wrapper className={wrapperClass}>
       <button
         onClick={() => !effectiveCell.isDisabled && setOpen((o) => !o)}
         disabled={effectiveCell.isDisabled}
@@ -295,7 +300,7 @@ function GridCell({
           onClose={() => setOpen(false)}
         />
       )}
-    </td>
+    </Wrapper>
   );
 }
 
@@ -513,6 +518,7 @@ export function PaperGrid({ userId, data, onRecordChange }: PaperGridProps) {
                   <div key={sessionKey} className="flex flex-col gap-1">
                     <span className="text-[10px] font-mono text-foreground-muted text-center">{s.label}</span>
                     <GridCell
+                      as="div"
                       cell={cell}
                       paperId={paperId}
                       sessionKey={sessionKey}

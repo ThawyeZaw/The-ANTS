@@ -1,10 +1,6 @@
 'use client';
 
-// ──────────────────────────────────────────────────────────────────────────────
-// The ANTs — /contribute (Legacy Redirect)
-// Redirects to the unified Contributor Workspace at /editor
-// ──────────────────────────────────────────────────────────────────────────────
-
+// Legacy /contribute — redirects to dashboard (exam editor retired).
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -13,14 +9,14 @@ export default function ContributeRedirectPage() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/editor');
+    router.replace('/dashboard');
   }, [router]);
 
   return (
-    <div className="min-h-[50vh] flex items-center justify-center">
-      <div className="flex flex-col items-center gap-4 animate-pulse-soft">
+    <div className="flex min-h-[50vh] items-center justify-center">
+      <div className="flex animate-pulse-soft flex-col items-center gap-4">
         <Image src="/logo.png" alt="The ANTs logo" width={40} height={40} />
-        <p className="text-sm text-foreground-muted">Redirecting to Contributor Workspace...</p>
+        <p className="text-sm text-foreground-muted">Redirecting…</p>
       </div>
     </div>
   );

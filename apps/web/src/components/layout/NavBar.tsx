@@ -1,8 +1,10 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — App Navigation Shell (renovated)
-// Desktop: md icon rail · lg expanded sidebar · Mobile: bottom bar + slide-up sheets
+// The ANTS — App Navigation Shell (redesigned)
+// Desktop: collapsible sidebar — expanded (lg) or icon-rail (collapsed/md)
+// Mobile:  bottom bar + slide-up sheets
+// All tools always visible; collapsed mode shows flat icon stack with tooltips.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
@@ -27,14 +29,18 @@ import {
   Info,
   Sparkles,
   Pencil,
+  ClipboardCheck,
   LayoutDashboard,
   Home,
   MoreHorizontal,
   Trophy,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
 import { useStaffProfileEligible } from '@/hooks/useStaffProfileEligible';
+import { useSidebar } from '@/context/SidebarContext';
 import { cn, getInitials } from '@/lib/utils';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 
@@ -42,19 +48,20 @@ interface NavItem {
   label: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
+  description?: string;
 }
 
 type PanelKey = 'tools' | 'team' | 'user' | null;
 type SectionKey = 'tools' | 'team' | 'role' | null;
 
 const TOOLS_LINKS: NavItem[] = [
-  { label: 'Past Paper Tracker', href: '/past-papers', icon: BookOpen },
-  { label: 'Smart Timetable', href: '/timetable', icon: CalendarDays },
-  { label: 'Pomodoro Focus Timer', href: '/pomodoro', icon: Timer },
-  { label: 'Scholar Leaderboard', href: '/leaderboard', icon: Trophy },
-  { label: 'Exam Countdown', href: '/countdown', icon: Clock },
-  { label: 'Grade Calculator', href: '/calculator', icon: Calculator },
-  { label: 'My Workspace', href: '/workspace', icon: Wrench },
+  { label: 'Past Paper Tracker', href: '/past-papers', icon: BookOpen, description: 'Track solved papers & grades' },
+  { label: 'Smart Timetable', href: '/timetable', icon: CalendarDays, description: 'Time-blocking & task list' },
+  { label: 'Pomodoro Timer', href: '/pomodoro', icon: Timer, description: 'Focus sessions with ambient sound' },
+  { label: 'Exam Countdown', href: '/countdown', icon: Clock, description: 'Days until your next paper' },
+  { label: 'Grade Calculator', href: '/calculator', icon: Calculator, description: 'CAIE & Edexcel grade boundaries' },
+  { label: 'Leaderboard', href: '/leaderboard', icon: Trophy, description: 'Scholar rankings' },
+  { label: 'My Workspace', href: '/workspace', icon: Wrench, description: 'Personal tools & settings' },
 ];
 
 const TEAM_LINKS: NavItem[] = [
@@ -62,56 +69,48 @@ const TEAM_LINKS: NavItem[] = [
   { label: 'About The ANTS', href: '/about', icon: Info },
 ];
 
-function isCurriculumActive(pathname: string) {
-  return pathname.startsWith('/curriculum');
-}
+// ── Active detection helpers ──────────────────────────────────────────────────
 
-function isToolsActive(pathname: string) {
-  return (
-    pathname.startsWith('/past-papers') ||
-    pathname.startsWith('/timetable') ||
-    pathname.startsWith('/pomodoro') ||
-    pathname.startsWith('/leaderboard') ||
-    pathname.startsWith('/countdown') ||
-    pathname.startsWith('/calculator') ||
-    pathname.startsWith('/workspace') ||
-    pathname.startsWith('/tools')
-  );
+function isCurriculumActive(p: string) { return p.startsWith('/curriculum'); }
+function isToolsActive(p: string) {
+  return TOOLS_LINKS.some((t) => p === t.href || p.startsWith(`${t.href}/`));
 }
-
-function isTeamActive(pathname: string) {
-  return pathname.startsWith('/team') || pathname.startsWith('/about');
+function isTeamActive(p: string) { return p.startsWith('/team') || p.startsWith('/about'); }
+function isHomeActive(p: string) {
+  return p === '/' || p.startsWith('/dashboard') || p.startsWith('/student');
 }
-
-function isHomeActive(pathname: string) {
-  return (
-    pathname === '/' ||
-    pathname.startsWith('/dashboard') ||
-    pathname.startsWith('/student')
-  );
-}
-
-function isHrefActive(href: string, pathname: string, _tab: string | null): boolean {
+function isHrefActive(href: string, pathname: string): boolean {
   const [path] = href.split('?');
   if (path === '/about') return pathname.startsWith('/about');
   if (path === '/team') return pathname.startsWith('/team');
   return pathname === path || pathname.startsWith(`${path}/`);
 }
-
 function defaultSectionForPath(pathname: string): SectionKey {
   if (isToolsActive(pathname)) return 'tools';
   if (isTeamActive(pathname)) return 'team';
   return null;
 }
 
+// ── Tooltip (shown in collapsed icon-rail mode) ───────────────────────────────
+function Tooltip({ label }: { label: string }) {
+  return (
+    <span className="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded-lg text-xs font-semibold bg-background-card border border-border text-foreground shadow-lg whitespace-nowrap z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+      {label}
+    </span>
+  );
+}
+
+// ── Single nav item link (expanded sidebar) ───────────────────────────────────
 function NavItemLink({
   item,
   active,
   onNavigate,
+  indent = false,
 }: {
   item: NavItem;
   active: boolean;
   onNavigate?: () => void;
+  indent?: boolean;
 }) {
   const Icon = item.icon;
   return (
@@ -123,6 +122,7 @@ function NavItemLink({
         'nav-item relative flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium',
         'transition-colors duration-200 cursor-pointer',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+        indent && 'ml-1',
         active
           ? 'bg-primary/10 text-primary'
           : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary'
@@ -137,6 +137,38 @@ function NavItemLink({
   );
 }
 
+// ── Collapsed rail icon button (shows tooltip on hover) ───────────────────────
+function RailIconLink({
+  href,
+  label,
+  icon: Icon,
+  active,
+}: {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  active: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      aria-label={label}
+      aria-current={active ? 'page' : undefined}
+      className={cn(
+        'group relative flex items-center justify-center p-2.5 rounded-xl transition-colors duration-200 w-full',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+        active
+          ? 'bg-primary/10 text-primary'
+          : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary'
+      )}
+    >
+      <Icon className="w-4 h-4" />
+      <Tooltip label={label} />
+    </Link>
+  );
+}
+
+// ── Collapsible section label ─────────────────────────────────────────────────
 function SectionLabel({
   title,
   icon: Icon,
@@ -159,19 +191,19 @@ function SectionLabel({
       aria-expanded={open}
       aria-controls={controlsId}
       className={cn(
-        'w-full inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold',
+        'w-full inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold uppercase tracking-wider',
         'transition-colors duration-200 cursor-pointer',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
         active || open
-          ? 'bg-primary/10 text-primary'
-          : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary'
+          ? 'text-primary'
+          : 'text-foreground-muted hover:text-foreground hover:bg-background-secondary'
       )}
     >
-      <Icon className="w-4 h-4 shrink-0" />
+      <Icon className="w-3.5 h-3.5 shrink-0" />
       <span className="flex-1 text-left">{title}</span>
       <ChevronDown
         className={cn(
-          'w-3.5 h-3.5 opacity-60 transition-transform duration-200',
+          'w-3 h-3 opacity-60 transition-transform duration-200',
           open && 'rotate-180'
         )}
       />
@@ -179,39 +211,7 @@ function SectionLabel({
   );
 }
 
-function RailIconLink({
-  href,
-  label,
-  icon: Icon,
-  active,
-}: {
-  href: string;
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  active: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      aria-label={label}
-      aria-current={active ? 'page' : undefined}
-      className={cn(
-        'group relative flex items-center justify-center p-2.5 rounded-xl transition-colors duration-200',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-        active
-          ? 'bg-primary/10 text-primary'
-          : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary'
-      )}
-    >
-      <Icon className="w-4 h-4" />
-      {/* Tooltip — visible on hover */}
-      <span className="absolute left-full ml-2.5 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded-lg text-xs font-semibold bg-background-card border border-border text-foreground shadow-lg whitespace-nowrap z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-        {label}
-      </span>
-    </Link>
-  );
-}
-
+// ── Main NavBar export ────────────────────────────────────────────────────────
 export default function NavBar() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -219,45 +219,31 @@ export default function NavBar() {
   const { user, isAuthenticated, logout } = useAuth();
   const { isTutor, isContributor, isAdmin } = useRole();
   const staffEligible = useStaffProfileEligible();
+  const { collapsed, toggleCollapsed } = useSidebar();
 
   const [mounted, setMounted] = useState(false);
   const [openPanel, setOpenPanel] = useState<PanelKey>(null);
   const [openSection, setOpenSection] = useState<SectionKey>(() => defaultSectionForPath(pathname));
-  const [openRailTools, setOpenRailTools] = useState(false);
 
   const navRef = useRef<HTMLElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
-  const railToolsRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     setOpenPanel(null);
-    setOpenRailTools(false);
     setOpenSection(defaultSectionForPath(pathname));
   }, [pathname]);
 
   useEffect(() => {
-    if (!openPanel && !openRailTools) return;
+    if (!openPanel) return;
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') { setOpenPanel(null); setOpenRailTools(false); }
+      if (e.key === 'Escape') setOpenPanel(null);
     }
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [openPanel, openRailTools]);
-
-  useEffect(() => {
-    if (!openRailTools) return;
-    function handleClickOutside(e: MouseEvent) {
-      if (railToolsRef.current?.contains(e.target as Node)) return;
-      setOpenRailTools(false);
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [openRailTools]);
+  }, [openPanel]);
 
   useEffect(() => {
     if (openPanel !== 'user') return;
@@ -279,18 +265,15 @@ export default function NavBar() {
     focusable?.focus();
   }, [openPanel]);
 
-  const togglePanel = useCallback((name: Exclude<PanelKey, null>) => {
-    setOpenPanel((curr) => (curr === name ? null : name));
-  }, []);
-
   const toggleSection = useCallback((key: Exclude<SectionKey, null>) => {
-    setOpenSection(key);
+    setOpenSection((cur) => (cur === key ? null : key));
   }, []);
 
   const hasStaffRole = isTutor || isContributor || isAdmin;
   const homeHref = mounted && isAuthenticated ? '/dashboard' : '/';
   const closePanel = useCallback(() => setOpenPanel(null), []);
 
+  // ── User menu links ──────────────────────────────────────────────────────────
   const userMenuLinks = (
     <>
       {mounted && isAuthenticated && user ? (
@@ -300,10 +283,7 @@ export default function NavBar() {
             <p className="text-xs text-foreground-muted truncate font-mono">@{user.profile.username}</p>
             <div className="flex flex-wrap gap-1 mt-1.5">
               {(user.profile.roles || [user.profile.role]).map((r) => (
-                <span
-                  key={r}
-                  className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20"
-                >
+                <span key={r} className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20">
                   {r}
                 </span>
               ))}
@@ -340,10 +320,7 @@ export default function NavBar() {
             </Link>
             <button
               type="button"
-              onClick={() => {
-                closePanel();
-                logout();
-              }}
+              onClick={() => { closePanel(); logout(); }}
               className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold text-destructive hover:bg-destructive/10 transition-colors cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
               <LogOut className="w-4 h-4" />
@@ -353,18 +330,10 @@ export default function NavBar() {
         </>
       ) : (
         <div className="space-y-2 p-2">
-          <Link
-            href="/login"
-            onClick={closePanel}
-            className="block w-full text-center px-3.5 py-2.5 rounded-xl text-sm font-semibold text-foreground hover:bg-background-secondary transition-colors"
-          >
+          <Link href="/login" onClick={closePanel} className="block w-full text-center px-3.5 py-2.5 rounded-xl text-sm font-semibold text-foreground hover:bg-background-secondary transition-colors">
             Sign In
           </Link>
-          <Link
-            href="/signup"
-            onClick={closePanel}
-            className="block w-full text-center px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-bold shadow-md hover:bg-primary-hover transition-all"
-          >
+          <Link href="/signup" onClick={closePanel} className="block w-full text-center px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-bold shadow-md hover:bg-primary-hover transition-all">
             Get Started
           </Link>
         </div>
@@ -372,8 +341,7 @@ export default function NavBar() {
     </>
   );
 
-  const roleLinkClass =
-    'flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-foreground hover:bg-background-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary';
+  const roleLinkClass = 'flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-foreground hover:bg-background-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary';
 
   const roleLinks = (
     <div className="space-y-0.5">
@@ -384,9 +352,9 @@ export default function NavBar() {
         </Link>
       )}
       {(isContributor || isAdmin) && (
-        <Link href="/editor" onClick={closePanel} className={roleLinkClass}>
-          <Pencil className="w-4 h-4 text-primary shrink-0" />
-          <span className="truncate">Exam Editor</span>
+        <Link href="/past-papers" onClick={closePanel} className={roleLinkClass}>
+          <ClipboardCheck className="w-4 h-4 text-primary shrink-0" />
+          <span className="truncate">Past Paper Catalog</span>
         </Link>
       )}
       {isAdmin && (
@@ -404,31 +372,28 @@ export default function NavBar() {
     </div>
   );
 
-  const renderSectionLinks = (items: NavItem[]) =>
-    items.map((item) => (
-      <NavItemLink
-        key={item.href}
-        item={item}
-        active={isHrefActive(item.href, pathname, tab)}
-        onNavigate={closePanel}
-      />
-    ));
-
+  // ── Desktop sidebar ──────────────────────────────────────────────────────────
   return (
     <nav ref={navRef} aria-label="Primary" className="contents">
-      {/* ── Desktop sidebar ───────────────────────────────────────────────── */}
       <aside
         className={cn(
           'hidden md:flex fixed inset-y-0 left-0 z-40 flex-col',
-          'w-[var(--sidebar-width-collapsed)] lg:w-[var(--sidebar-width)]',
           'bg-background/95 backdrop-blur-md border-r border-border',
-          'transition-[width] duration-200 ease-out motion-reduce:transition-none'
+          'transition-[width] duration-200 ease-out motion-reduce:transition-none',
+          collapsed
+            ? 'w-[var(--sidebar-width-collapsed)]'
+            : 'w-[var(--sidebar-width-collapsed)] lg:w-[var(--sidebar-width)]'
         )}
       >
-        <div className="flex items-center justify-center lg:justify-start gap-2.5 px-2 lg:px-4 h-16 shrink-0 border-b border-border/60">
+        {/* ── Logo + Toggle ──────────────────────────────────────────────── */}
+        <div className="flex items-center justify-between px-2 lg:px-3 h-16 shrink-0 border-b border-border/60">
           <Link
             href={homeHref}
-            className="flex items-center gap-2.5 group min-w-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className={cn(
+              'flex items-center gap-2.5 group min-w-0 rounded-xl',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+              (collapsed) && 'justify-center w-full'
+            )}
             title="The ANTS"
           >
             <Image
@@ -439,83 +404,93 @@ export default function NavBar() {
               className="w-8 h-8 rounded-xl object-contain shrink-0 group-hover:scale-105 transition-transform duration-200"
               priority
             />
-            <span className="hidden lg:block font-brand font-black text-lg tracking-tight text-foreground leading-none truncate">
-              The ANTS
-            </span>
+            {!collapsed && (
+              <span className="hidden lg:block font-brand font-black text-lg tracking-tight text-foreground leading-none truncate">
+                The ANTS
+              </span>
+            )}
           </Link>
+
+          {/* Toggle button — only visible on lg when not collapsed, or when collapsed */}
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            className={cn(
+              'hidden lg:flex items-center justify-center p-1.5 rounded-lg text-foreground-muted hover:text-foreground hover:bg-background-secondary transition-colors shrink-0',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+              collapsed && 'mx-auto'
+            )}
+          >
+            {collapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+          </button>
         </div>
 
-        {/* md: icon rail */}
-        <div className="lg:hidden flex-1 overflow-y-auto px-2 py-3 space-y-1">
+        {/* ── Collapsed icon rail (md always, lg when collapsed) ─────────── */}
+        <div className={cn(
+          'flex-1 overflow-y-auto px-2 py-3 space-y-1',
+          !collapsed && 'lg:hidden'
+        )}>
+          {/* Pinned — Home */}
           <RailIconLink
             href={homeHref}
             label={mounted && isAuthenticated ? 'Dashboard' : 'Home'}
             icon={mounted && isAuthenticated ? LayoutDashboard : Home}
             active={isHomeActive(pathname)}
           />
+          {/* Pinned — Curriculum */}
           <RailIconLink href="/curriculum" label="Curriculum" icon={GraduationCap} active={isCurriculumActive(pathname)} />
 
-          {/* Study Tools — opens flyout popover on tablet */}
-          <div ref={railToolsRef} className="relative">
-            <button
-              type="button"
-              onClick={() => setOpenRailTools((v) => !v)}
-              aria-expanded={openRailTools}
-              aria-label="Study Tools"
-              className={cn(
-                'group relative flex items-center justify-center p-2.5 rounded-xl w-full transition-colors duration-200',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-                isToolsActive(pathname) || openRailTools
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary'
-              )}
-            >
-              <Wrench className="w-4 h-4" />
-              {/* Tooltip — only visible when flyout is closed */}
-              {!openRailTools && (
-                <span className="absolute left-full ml-2.5 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded-lg text-xs font-semibold bg-background-card border border-border text-foreground shadow-lg whitespace-nowrap z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                  Study Tools
-                </span>
-              )}
-            </button>
-
-            {/* Flyout popover */}
-            {openRailTools && (
-              <div
-                role="dialog"
-                aria-label="Study Tools"
-                className="absolute left-full top-0 ml-2 w-52 bg-background-card border border-border rounded-2xl shadow-2xl p-2 z-50 nav-popover-enter"
-              >
-                <p className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-foreground-muted">
-                  Study Tools
-                </p>
-                <div className="space-y-0.5">
-                  {TOOLS_LINKS.map((item) => (
-                    <NavItemLink
-                      key={item.href}
-                      item={item}
-                      active={isHrefActive(item.href, pathname, null)}
-                      onNavigate={() => setOpenRailTools(false)}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
+          {/* Study Tools — flat icon stack (all visible, no popover) */}
+          <div className="pt-1 mt-1 border-t border-border/40 space-y-1">
+            {TOOLS_LINKS.map((item) => (
+              <RailIconLink
+                key={item.href}
+                href={item.href}
+                label={item.label}
+                icon={item.icon}
+                active={isHrefActive(item.href, pathname)}
+              />
+            ))}
           </div>
 
-          <RailIconLink href="/team" label="Tutors & Contributors" icon={Users} active={isTeamActive(pathname)} />
+          {/* Community */}
+          <div className="pt-1 mt-1 border-t border-border/40 space-y-1">
+            {TEAM_LINKS.map((item) => (
+              <RailIconLink
+                key={item.href}
+                href={item.href}
+                label={item.label}
+                icon={item.icon}
+                active={isHrefActive(item.href, pathname)}
+              />
+            ))}
+          </div>
+
+          {/* Staff-only tools */}
           {mounted && hasStaffRole && (
-            <RailIconLink href="/editor" label="Workspace Tools" icon={Sparkles} active={pathname.startsWith('/editor') || pathname.startsWith('/main-contributor') || pathname.startsWith('/about')} />
+            <div className="pt-1 mt-1 border-t border-border/40 space-y-1">
+              <RailIconLink
+                href="/past-papers"
+                label="Past Paper Catalog"
+                icon={ClipboardCheck}
+                active={pathname.startsWith('/past-papers') || pathname.startsWith('/main-contributor')}
+              />
+            </div>
           )}
         </div>
 
-        {/* lg: expanded exclusive accordion */}
-        <div className="hidden lg:flex flex-1 flex-col overflow-y-auto px-3 py-3 space-y-0.5">
+        {/* ── Expanded sidebar (lg only, when not collapsed) ─────────────── */}
+        <div className={cn(
+          'hidden flex-1 flex-col overflow-y-auto px-3 py-3 space-y-0.5',
+          !collapsed && 'lg:flex'
+        )}>
+          {/* Pinned — Dashboard */}
           <Link
             href={homeHref}
             aria-current={isHomeActive(pathname) ? 'page' : undefined}
             className={cn(
-              'relative flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium mb-1',
+              'relative flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium',
               'transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
               isHomeActive(pathname)
                 ? 'bg-primary/10 text-primary'
@@ -523,21 +498,18 @@ export default function NavBar() {
             )}
           >
             {isHomeActive(pathname) && (
-              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full bg-primary nav-active-bar" />
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full bg-primary" />
             )}
-            {mounted && isAuthenticated ? (
-              <LayoutDashboard className="w-4 h-4 shrink-0" />
-            ) : (
-              <Home className="w-4 h-4 shrink-0" />
-            )}
+            {mounted && isAuthenticated ? <LayoutDashboard className="w-4 h-4 shrink-0" /> : <Home className="w-4 h-4 shrink-0" />}
             <span className="truncate">{mounted && isAuthenticated ? 'Dashboard' : 'Home'}</span>
           </Link>
 
+          {/* Pinned — Curriculum */}
           <Link
             href="/curriculum"
             aria-current={isCurriculumActive(pathname) ? 'page' : undefined}
             className={cn(
-              'relative flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold',
+              'relative flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium',
               'transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
               isCurriculumActive(pathname)
                 ? 'bg-primary/10 text-primary'
@@ -545,31 +517,41 @@ export default function NavBar() {
             )}
           >
             {isCurriculumActive(pathname) && (
-              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full bg-primary nav-active-bar" />
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full bg-primary" />
             )}
             <GraduationCap className="w-4 h-4 shrink-0" />
             <span className="truncate">Curriculum</span>
           </Link>
 
-          <div>
+          {/* Study Tools accordion — open by default */}
+          <div className="pt-1 mt-1 border-t border-border/40">
             <SectionLabel
               title="Study Tools"
-              icon={Wrench}
+              icon={Sparkles}
               open={openSection === 'tools'}
               active={isToolsActive(pathname)}
               onToggle={() => toggleSection('tools')}
               controlsId="nav-section-tools"
             />
             {openSection === 'tools' && (
-              <div id="nav-section-tools" className="mt-0.5 space-y-0.5 pl-1 nav-section-enter">
-                {renderSectionLinks(TOOLS_LINKS)}
+              <div id="nav-section-tools" className="mt-1 space-y-0.5 nav-section-enter">
+                {TOOLS_LINKS.map((item) => (
+                  <NavItemLink
+                    key={item.href}
+                    item={item}
+                    active={isHrefActive(item.href, pathname)}
+                    onNavigate={closePanel}
+                    indent
+                  />
+                ))}
               </div>
             )}
           </div>
 
+          {/* Community accordion */}
           <div>
             <SectionLabel
-              title="Tutors & Contributors"
+              title="Community"
               icon={Users}
               open={openSection === 'team'}
               active={isTeamActive(pathname)}
@@ -577,14 +559,23 @@ export default function NavBar() {
               controlsId="nav-section-team"
             />
             {openSection === 'team' && (
-              <div id="nav-section-team" className="mt-0.5 space-y-0.5 pl-1 nav-section-enter">
-                {renderSectionLinks(TEAM_LINKS)}
+              <div id="nav-section-team" className="mt-1 space-y-0.5 nav-section-enter">
+                {TEAM_LINKS.map((item) => (
+                  <NavItemLink
+                    key={item.href}
+                    item={item}
+                    active={isHrefActive(item.href, pathname)}
+                    onNavigate={closePanel}
+                    indent
+                  />
+                ))}
               </div>
             )}
           </div>
 
+          {/* Staff-only Workspace Tools */}
           {mounted && hasStaffRole && (
-            <div className="pt-2 mt-2 border-t border-border/60">
+            <div className="pt-2 mt-1 border-t border-border/40">
               <SectionLabel
                 title="Workspace Tools"
                 icon={Sparkles}
@@ -594,7 +585,7 @@ export default function NavBar() {
                 controlsId="nav-section-role"
               />
               {openSection === 'role' && (
-                <div id="nav-section-role" className="mt-0.5 pl-1 nav-section-enter">
+                <div id="nav-section-role" className="mt-1 nav-section-enter">
                   {roleLinks}
                 </div>
               )}
@@ -602,48 +593,43 @@ export default function NavBar() {
           )}
         </div>
 
-        {/* Account footer */}
+        {/* ── Account footer ─────────────────────────────────────────────── */}
         <div className="shrink-0 border-t border-border/60 p-2 lg:p-3 relative" ref={userMenuRef}>
           {mounted && isAuthenticated && user ? (
             <>
-              <div className="flex justify-center lg:justify-start mb-2 px-0.5">
+              <div className={cn('flex mb-2 px-0.5', collapsed ? 'justify-center' : 'justify-center lg:justify-start')}>
                 <ThemeToggle />
               </div>
               <button
                 type="button"
-                onClick={() => togglePanel('user')}
+                onClick={() => setOpenPanel((curr) => (curr === 'user' ? null : 'user'))}
                 aria-expanded={openPanel === 'user'}
                 aria-controls="nav-user-menu"
                 title={user.profile.name}
                 className={cn(
-                  'w-full flex items-center gap-2 p-1.5 lg:pr-2.5 rounded-2xl border border-border',
+                  'w-full flex items-center gap-2 p-1.5 rounded-2xl border border-border',
                   'hover:border-primary/40 bg-background-secondary/50 transition-all cursor-pointer',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-                  'justify-center lg:justify-start'
+                  collapsed ? 'justify-center lg:pr-1.5' : 'justify-center lg:justify-start lg:pr-2.5'
                 )}
               >
                 {user.profile.avatar ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={user.profile.avatar}
-                    alt={user.profile.name}
-                    className="w-8 h-8 rounded-xl object-cover shrink-0 shadow-xs"
-                  />
+                  <img src={user.profile.avatar} alt={user.profile.name} className="w-8 h-8 rounded-xl object-cover shrink-0 shadow-xs" />
                 ) : (
                   <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-xs">
                     {getInitials(user.profile.name)}
                   </div>
                 )}
-                <div className="hidden lg:block min-w-0 flex-1 text-left">
-                  <p className="text-sm font-semibold text-foreground truncate">{user.profile.name}</p>
-                  <p className="text-xs text-foreground-muted truncate">@{user.profile.username}</p>
-                </div>
-                <ChevronDown
-                  className={cn(
-                    'hidden lg:block w-3.5 h-3.5 opacity-60 transition-transform duration-200 shrink-0',
-                    openPanel === 'user' && 'rotate-180'
-                  )}
-                />
+                {!collapsed && (
+                  <div className="hidden lg:block min-w-0 flex-1 text-left">
+                    <p className="text-sm font-semibold text-foreground truncate">{user.profile.name}</p>
+                    <p className="text-xs text-foreground-muted truncate">@{user.profile.username}</p>
+                  </div>
+                )}
+                {!collapsed && (
+                  <ChevronDown className={cn('hidden lg:block w-3.5 h-3.5 opacity-60 transition-transform duration-200 shrink-0', openPanel === 'user' && 'rotate-180')} />
+                )}
               </button>
               {openPanel === 'user' && (
                 <div
@@ -657,7 +643,7 @@ export default function NavBar() {
             </>
           ) : (
             <div className="flex flex-col gap-2">
-              <div className="flex justify-center lg:justify-start px-0.5">
+              <div className={cn('flex px-0.5', collapsed ? 'justify-center' : 'justify-center lg:justify-start')}>
                 <ThemeToggle />
               </div>
               <Link
@@ -666,20 +652,22 @@ export default function NavBar() {
                 className="px-2 lg:px-3.5 py-2 rounded-xl text-sm font-semibold text-center text-foreground hover:bg-background-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 <UserCircle className="w-5 h-5 mx-auto lg:hidden" />
-                <span className="hidden lg:inline">Sign In</span>
+                <span className={cn(collapsed ? 'hidden' : 'hidden lg:inline')}>Sign In</span>
               </Link>
-              <Link
-                href="/signup"
-                className="hidden lg:block px-4 py-2 rounded-xl bg-primary text-white text-sm font-bold text-center shadow-md hover:bg-primary-hover transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              >
-                Get Started
-              </Link>
+              {!collapsed && (
+                <Link
+                  href="/signup"
+                  className="hidden lg:block px-4 py-2 rounded-xl bg-primary text-white text-sm font-bold text-center shadow-md hover:bg-primary-hover transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                >
+                  Get Started
+                </Link>
+              )}
             </div>
           )}
         </div>
       </aside>
 
-      {/* ── Mobile bottom bar + slide-up sheet ───────────────────────────── */}
+      {/* ── Mobile bottom bar + slide-up sheet ──────────────────────────── */}
       <div className="md:hidden fixed inset-x-0 bottom-0 z-40">
         {openPanel && (
           <div
@@ -696,11 +684,9 @@ export default function NavBar() {
             role="dialog"
             aria-modal="true"
             aria-label={
-              openPanel === 'tools'
-                ? 'Study Tools'
-                : openPanel === 'team'
-                  ? 'Tutors & Contributors'
-                  : 'Account'
+              openPanel === 'tools' ? 'Study Tools'
+              : openPanel === 'team' ? 'Community'
+              : 'Account'
             }
             className="relative z-50 rounded-t-2xl border border-border border-b-0 bg-background-card shadow-2xl max-h-[70vh] overflow-y-auto nav-sheet-enter"
           >
@@ -713,15 +699,33 @@ export default function NavBar() {
                 <p className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-foreground-muted">
                   Study Tools
                 </p>
-                <div className="space-y-0.5">{renderSectionLinks(TOOLS_LINKS)}</div>
+                <div className="space-y-0.5">
+                  {TOOLS_LINKS.map((item) => (
+                    <NavItemLink
+                      key={item.href}
+                      item={item}
+                      active={isHrefActive(item.href, pathname)}
+                      onNavigate={closePanel}
+                    />
+                  ))}
+                </div>
               </div>
             )}
             {openPanel === 'team' && (
               <div className="px-2 pb-3">
                 <p className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-foreground-muted">
-                  Tutors &amp; Contributors
+                  Community
                 </p>
-                <div className="space-y-0.5">{renderSectionLinks(TEAM_LINKS)}</div>
+                <div className="space-y-0.5">
+                  {TEAM_LINKS.map((item) => (
+                    <NavItemLink
+                      key={item.href}
+                      item={item}
+                      active={isHrefActive(item.href, pathname)}
+                      onNavigate={closePanel}
+                    />
+                  ))}
+                </div>
               </div>
             )}
             {openPanel === 'user' && (
@@ -736,9 +740,7 @@ export default function NavBar() {
                 )}
                 {userMenuLinks}
                 <div className="mt-2 pt-1 border-t border-border/60 px-3 py-1.5 flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-foreground-muted">
-                    Theme
-                  </span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-foreground-muted">Theme</span>
                   <ThemeToggle />
                 </div>
               </div>
@@ -762,17 +764,17 @@ export default function NavBar() {
             />
             <MobileTab
               label="Study Tools"
-              icon={Wrench}
+              icon={Sparkles}
               active={isToolsActive(pathname) || openPanel === 'tools'}
-              onClick={() => togglePanel('tools')}
+              onClick={() => setOpenPanel((curr) => (curr === 'tools' ? null : 'tools'))}
               expanded={openPanel === 'tools'}
               controlsId="nav-sheet"
             />
             <MobileTab
-              label="Team"
+              label="Community"
               icon={Users}
               active={isTeamActive(pathname) || openPanel === 'team'}
-              onClick={() => togglePanel('team')}
+              onClick={() => setOpenPanel((curr) => (curr === 'team' ? null : 'team'))}
               expanded={openPanel === 'team'}
               controlsId="nav-sheet"
             />
@@ -780,18 +782,14 @@ export default function NavBar() {
               label={mounted && isAuthenticated ? 'Account' : 'More'}
               icon={mounted && isAuthenticated ? UserCircle : MoreHorizontal}
               active={openPanel === 'user'}
-              onClick={() => togglePanel('user')}
+              onClick={() => setOpenPanel((curr) => (curr === 'user' ? null : 'user'))}
               expanded={openPanel === 'user'}
               controlsId="nav-sheet"
               avatar={
                 mounted && isAuthenticated && user ? (
                   user.profile.avatar ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={user.profile.avatar}
-                      alt=""
-                      className="w-5 h-5 rounded-full object-cover"
-                    />
+                    <img src={user.profile.avatar} alt="" className="w-5 h-5 rounded-full object-cover" />
                   ) : (
                     <span className="w-5 h-5 rounded-full bg-primary flex items-center justify-center text-[9px] font-bold text-white">
                       {getInitials(user.profile.name)}
@@ -807,6 +805,7 @@ export default function NavBar() {
   );
 }
 
+// ── Mobile Tab ────────────────────────────────────────────────────────────────
 function MobileTab({
   label,
   icon: Icon,

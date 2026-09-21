@@ -5,6 +5,9 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { PersonaProvider } from "@/context/PersonaContext";
 import QueryProvider from "@/components/QueryProvider";
+import { validateEnv } from "@/lib/validateEnv";
+
+validateEnv();
 
 const quicksand = Quicksand({
   variable: "--font-quicksand",
