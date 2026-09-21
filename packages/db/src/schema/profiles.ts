@@ -45,6 +45,8 @@ export const profiles = sqliteTable('profiles', {
   certification_ids: jsonText<string[]>('certification_ids'),
   timezone: text('timezone').default('UTC'),
   onboarding_completed: bool('onboarding_completed', true),
+  /** When false, user is hidden from /leaderboard and public scholar stats. Default visible. */
+  leaderboard_visible: bool('leaderboard_visible', true),
   preferred_name: text('preferred_name'),
   institution_name: text('institution_name'),
   telegram_chat_id: text('telegram_chat_id'),

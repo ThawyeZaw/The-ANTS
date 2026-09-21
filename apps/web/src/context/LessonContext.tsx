@@ -17,7 +17,6 @@ import {
 } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useAuthContext } from './AuthContext';
-import { awardXp } from '@/actions/gamification';
 import {
   listCurriculumCatalog,
   listTopicProgressForUser,
@@ -198,10 +197,13 @@ export function LessonProvider({ children }: { children: ReactNode }) {
       setAllTopics(tops);
 
       if (userId) {
+        const skipCountdownFetch = pathname?.startsWith('/countdown');
         const [progressRows, enrollRows, countdownRows] = await Promise.all([
           needsTopics ? listTopicProgressForUser(userId).catch(() => []) : Promise.resolve([]),
           listUserEnrollments(userId).catch(() => []),
-          listExamCountdownsForUser(userId).catch(() => []),
+          skipCountdownFetch
+            ? Promise.resolve([])
+            : listExamCountdownsForUser(userId).catch(() => []),
         ]);
 
         if (enrollRows.length > 0) {
@@ -375,13 +377,6 @@ export function LessonProvider({ children }: { children: ReactNode }) {
             },
           ];
         });
-        if (patch.status === 'completed') {
-          try {
-            await awardXp(userId, 15, 'lesson', topicId, 'Mastered syllabus topic');
-          } catch (e) {
-            console.error('Failed to award lesson XP:', e);
-          }
-        }
       } catch (err) {
         console.error('Error updating progress:', err);
       }

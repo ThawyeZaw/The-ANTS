@@ -7,6 +7,8 @@
 import type { TimetableEvent, TimetableEventFormData } from '@/types/timetable';
 import { getDb, timetableEvents } from '@/lib/db';
 import { eq, and, gte, lte } from 'drizzle-orm';
+import { awardXp, XP_AMOUNTS, type AwardXpResult } from '@/lib/gamification/award';
+import { requireSessionUser } from '@/lib/auth-session';
 
 function combineDateTime(dateStr: string, timeStr: string): string {
   return new Date(`${dateStr}T${timeStr}:00`).toISOString();
@@ -354,8 +356,11 @@ export async function actionToggleTimetableEventComplete(
   userId: string,
   eventId: string,
   isCompleted?: boolean
-): Promise<{ success: boolean; event?: TimetableEvent; error?: string }> {
+): Promise<{ success: boolean; event?: TimetableEvent; gamification?: AwardXpResult; error?: string }> {
   try {
+    const guard = await requireSessionUser(userId);
+    if (!guard.ok) return { success: false, error: guard.error };
+
     const db = getDb();
     const baseId = eventId.includes('::') ? eventId.split('::')[0] : eventId;
     const existing = await db.query.timetableEvents.findFirst({
@@ -365,7 +370,8 @@ export async function actionToggleTimetableEventComplete(
     if (!existing) return { success: false, error: 'Event not found' };
 
     const currentMeta = (existing.metadata as Record<string, any>) ?? {};
-    const newVal = isCompleted !== undefined ? isCompleted : !currentMeta.is_completed;
+    const wasCompleted = !!currentMeta.is_completed;
+    const newVal = isCompleted !== undefined ? isCompleted : !wasCompleted;
     const updatedMeta = {
       ...currentMeta,
       is_completed: newVal,
@@ -380,7 +386,18 @@ export async function actionToggleTimetableEventComplete(
       .where(eq(timetableEvents.id, baseId))
       .returning();
 
-    return { success: true, event: formatDbEvent(updated) };
+    let gamification: AwardXpResult | undefined;
+    if (newVal && !wasCompleted) {
+      gamification = await awardXp(
+        userId,
+        XP_AMOUNTS.timetable,
+        'timetable',
+        baseId,
+        'Completed scheduled study session'
+      );
+    }
+
+    return { success: true, event: formatDbEvent(updated), gamification };
   } catch (err) {
     return { success: false, error: `Failed to toggle event: ${String(err)}` };
   }

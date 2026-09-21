@@ -4,6 +4,7 @@ import BackButton from '@/components/ui/BackButton';
 import Link from 'next/link';
 import PortfolioSections from './PortfolioSections';
 import ProfileHero from './ProfileHero';
+import { ScholarStatsStrip } from '@/components/gamification/ScholarStatsStrip';
 import type { Profile } from '@/types';
 import type { ActivityItem } from '@/hooks/useProfile';
 
@@ -40,6 +41,10 @@ export default function StaffPublicProfile({
       </div>
 
       <ProfileHero profile={profile} isOwnProfile={isOwnProfile} />
+
+      {profile.leaderboardVisible !== false && (
+        <ScholarStatsStrip userId={profile.id} />
+      )}
 
       <div className="pt-6 border-t border-border">
         <PortfolioSections profile={profile} certifications={certifications} activities={activities} />

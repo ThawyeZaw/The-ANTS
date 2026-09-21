@@ -18,7 +18,7 @@ import {
   Lock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { BadgeDefinition } from '@/actions/gamification';
+import type { BadgeDefinition } from '@/lib/gamification/badges';
 
 interface BadgeWithStatus extends BadgeDefinition {
   unlocked: boolean;
@@ -91,7 +91,7 @@ export function BadgeShelf({ badges, className }: BadgeShelfProps) {
                 {b.title}
               </span>
               <span className="text-[10px] text-foreground-muted line-clamp-1 mt-0.5">
-                {b.unlocked ? `+${b.xpReward} XP` : 'Locked'}
+                {b.unlocked ? 'Unlocked' : 'Locked'}
               </span>
             </button>
           );
@@ -142,13 +142,6 @@ export function BadgeShelf({ badges, className }: BadgeShelfProps) {
               <p className="text-xs text-foreground-muted leading-relaxed">
                 {activeBadge.description}
               </p>
-            </div>
-
-            <div className="pt-2 border-t border-border flex items-center justify-between text-xs text-foreground-secondary">
-              <span>Reward</span>
-              <span className="font-mono font-bold text-primary">
-                +{activeBadge.xpReward} XP
-              </span>
             </div>
 
             <button

@@ -254,6 +254,7 @@ export async function actionGetFullProfile(
       teachingSubjects: undefined,
       institutionName: undefined,
       createdAt: profileRow.created_at?.toISOString() ?? '',
+      leaderboardVisible: profileRow.leaderboard_visible ?? true,
     };
 
     let contributorData: ContributorProfileData | null = null;
@@ -457,6 +458,7 @@ export async function actionUpdateProfile(
     if (data.institutionName !== undefined) setPayload.institution_name = data.institutionName;
     if (data.telegramHandle !== undefined) setPayload.telegram_handle = data.telegramHandle.replace('@', '').trim();
     if (data.notificationPreferences !== undefined) setPayload.notification_preferences = data.notificationPreferences;
+    if (data.leaderboardVisible !== undefined) setPayload.leaderboard_visible = data.leaderboardVisible;
 
     await db
       .update(profiles)

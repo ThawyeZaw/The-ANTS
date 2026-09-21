@@ -116,6 +116,7 @@ function mapProfile(row: Record<string, unknown>): Profile {
     timezone: (row.timezone as string) ?? undefined,
     institutionName: (row.institution_name as string) ?? undefined,
     onboardingData: (row.onboarding_data as OnboardingCurriculumSelection[]) ?? [],
+    leaderboardVisible: (row.leaderboard_visible as boolean) ?? true,
   };
 }
 
@@ -196,6 +197,7 @@ interface AuthContextValue {
         | 'timezone'
         | 'preferredName'
         | 'institutionName'
+        | 'leaderboardVisible'
       >
     >
   ) => Promise<{ success: boolean; error?: string }>;
@@ -521,6 +523,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           | 'timezone'
           | 'preferredName'
           | 'institutionName'
+          | 'leaderboardVisible'
         >
       >
     ) => {

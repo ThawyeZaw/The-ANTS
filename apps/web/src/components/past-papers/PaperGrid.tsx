@@ -9,6 +9,7 @@
 import { useState, useTransition, useRef, useEffect } from 'react';
 import { Check, X, Loader2, ChevronDown, BookOpen } from 'lucide-react';
 import { upsertPastPaperRecord } from '@/actions/past-papers';
+import { useGamificationFeedback } from '@/components/gamification/GamificationFeedbackProvider';
 import { type PaperGridData, type PaperGridCell, type PaperGridRow, type PaperGridSession } from '@/actions/curriculum';
 import { cn } from '@/lib/utils';
 import { getPluginForPaper } from '@/lib/grading';
@@ -77,6 +78,7 @@ function CellPopover({
   const [mode, setMode] = useState<'check' | 'score'>(cell.rawScore !== null ? 'score' : 'check');
   const [scoreInput, setScoreInput] = useState(cell.rawScore !== null ? String(cell.rawScore) : '');
   const [isPending, startTransition] = useTransition();
+  const { handleAwardResult } = useGamificationFeedback();
   const ref = useRef<HTMLDivElement>(null);
 
   // Close on outside click
@@ -123,6 +125,7 @@ function CellPopover({
           calculatedGrade,
           calculatedUms,
         });
+        if (res.gamification) handleAwardResult(res.gamification);
         if (res.calculatedGrade || res.calculatedUms) {
           onSave({
             calculatedGrade: res.calculatedGrade ?? calculatedGrade ?? null,

@@ -13,12 +13,12 @@ import {
   curriculums,
   subjects,
   userXpLedger,
-  userBadges,
-  userStreaks,
   type ComponentMark,
 } from '@/lib/db';
 import { eq, and, desc, asc, inArray } from 'drizzle-orm';
 import { getPluginForPaper } from '@/lib/grading';
+import { awardXp, XP_AMOUNTS, type AwardXpResult } from '@/lib/gamification/award';
+import { requireSessionUser } from '@/lib/auth-session';
 
 export interface PastPaperFilter {
   subjectId?: string;
@@ -232,6 +232,9 @@ export interface UpsertPastPaperRecordInput {
 /** Record or update student progress on a past paper + award XP */
 export async function upsertPastPaperRecord(input: UpsertPastPaperRecordInput) {
   try {
+    const guard = await requireSessionUser(input.userId);
+    if (!guard.ok) return { success: false, error: guard.error };
+
     const db = getDb();
     const now = new Date();
 
@@ -310,94 +313,40 @@ export async function upsertPastPaperRecord(input: UpsertPastPaperRecordInput) {
       });
     }
 
-    // ── Award Gamification XP & Badges if completed ──────────────────────────
+    const hasMarks =
+      (input.componentMarks && input.componentMarks.length > 0) ||
+      (input.rawScore !== undefined && input.rawScore !== null && input.maxScore !== undefined);
+
+    let gamification: AwardXpResult | undefined;
     if (isNewlyCompleted) {
-      const hasMarks = input.componentMarks && input.componentMarks.length > 0;
-      const xpEarned = hasMarks ? 35 : 20;
-
-      // 1. Record in XP ledger
-      await db.insert(userXpLedger).values({
-        user_id: input.userId,
-        xp_amount: xpEarned,
-        source: 'past_paper',
-        source_id: input.pastPaperId,
-        description: hasMarks
-          ? 'Completed past paper with grade marks'
-          : 'Completed past paper',
-      });
-
-      // 2. Update user streak & total XP
-      const streakRecord = await db.query.userStreaks.findFirst({
-        where: eq(userStreaks.user_id, input.userId),
-      });
-
-      const todayStr = now.toISOString().slice(0, 10);
-      let newCurrentStreak = 1;
-      let newLongestStreak = 1;
-      let newTotalXp = xpEarned;
-
-      if (streakRecord) {
-        newTotalXp = (streakRecord.total_xp || 0) + xpEarned;
-        const lastDateStr = streakRecord.last_activity_date
-          ? new Date(streakRecord.last_activity_date).toISOString().slice(0, 10)
-          : null;
-
-        if (lastDateStr === todayStr) {
-          newCurrentStreak = streakRecord.current_streak;
-        } else if (lastDateStr) {
-          const diffDays = Math.floor(
-            (new Date(todayStr).getTime() - new Date(lastDateStr).getTime()) /
-              (1000 * 60 * 60 * 24)
-          );
-          if (diffDays === 1) {
-            newCurrentStreak = streakRecord.current_streak + 1;
-          } else {
-            newCurrentStreak = 1;
-          }
-        }
-        newLongestStreak = Math.max(streakRecord.longest_streak || 0, newCurrentStreak);
-
-        const newLevel = Math.floor(newTotalXp / 100) + 1;
-
-        await db
-          .update(userStreaks)
-          .set({
-            total_xp: newTotalXp,
-            level: newLevel,
-            current_streak: newCurrentStreak,
-            longest_streak: newLongestStreak,
-            last_activity_date: now,
-            updated_at: now,
-          })
-          .where(eq(userStreaks.user_id, input.userId));
-      } else {
-        await db.insert(userStreaks).values({
-          user_id: input.userId,
-          total_xp: newTotalXp,
-          level: 1,
-          current_streak: 1,
-          longest_streak: 1,
-          last_activity_date: now,
-          updated_at: now,
-        });
-      }
-
-      // 3. First paper badge check
-      const existingBadge = await db.query.userBadges.findFirst({
+      const xpEarned = hasMarks ? XP_AMOUNTS.pastPaperWithMarks : XP_AMOUNTS.pastPaperPlain;
+      gamification = await awardXp(
+        input.userId,
+        xpEarned,
+        'past_paper',
+        input.pastPaperId,
+        hasMarks ? 'Completed past paper with grade marks' : 'Completed past paper'
+      );
+    } else if (input.status === 'done' && hasMarks) {
+      const baseAward = await db.query.userXpLedger.findFirst({
         where: and(
-          eq(userBadges.user_id, input.userId),
-          eq(userBadges.badge_key, 'first_paper_done')
+          eq(userXpLedger.user_id, input.userId),
+          eq(userXpLedger.source, 'past_paper'),
+          eq(userXpLedger.source_id, input.pastPaperId)
         ),
       });
-      if (!existingBadge) {
-        await db.insert(userBadges).values({
-          user_id: input.userId,
-          badge_key: 'first_paper_done',
-        });
+      if (baseAward?.xp_amount === XP_AMOUNTS.pastPaperPlain) {
+        gamification = await awardXp(
+          input.userId,
+          XP_AMOUNTS.pastPaperMarksTopUp,
+          'past_paper',
+          `${input.pastPaperId}:marks`,
+          'Added grade marks to a completed past paper'
+        );
       }
     }
 
-    return { success: true, calculatedGrade, calculatedUms, percentage };
+    return { success: true, calculatedGrade, calculatedUms, percentage, gamification };
   } catch (error: any) {
     console.error('[past-papers] upsertPastPaperRecord error:', error);
     return { success: false, error: error.message };
@@ -421,33 +370,3 @@ export async function getPastPaperWithBoundaries(pastPaperId: string) {
   }
 }
 
-/** Get gamification stats for user (XP, Level, Streak, Badges) */
-export async function getUserGamificationStats(userId: string) {
-  try {
-    const db = getDb();
-    const streak = await db.query.userStreaks.findFirst({
-      where: eq(userStreaks.user_id, userId),
-    });
-    const badges = await db.query.userBadges.findMany({
-      where: eq(userBadges.user_id, userId),
-      orderBy: [desc(userBadges.earned_at)],
-    });
-
-    return {
-      totalXp: streak?.total_xp ?? 0,
-      level: streak?.level ?? 1,
-      currentStreak: streak?.current_streak ?? 0,
-      longestStreak: streak?.longest_streak ?? 0,
-      badges: badges.map((b) => b.badge_key),
-    };
-  } catch (error) {
-    console.error('[past-papers] getUserGamificationStats error:', error);
-    return {
-      totalXp: 0,
-      level: 1,
-      currentStreak: 0,
-      longestStreak: 0,
-      badges: [],
-    };
-  }
-}

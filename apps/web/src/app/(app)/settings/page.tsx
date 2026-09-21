@@ -6,7 +6,8 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import BackButton from '@/components/ui/BackButton';
-import { User, Bell, Globe } from 'lucide-react';
+import { User, Bell, Globe, Shield } from 'lucide-react';
+import { LeaderboardVisibilityToggle } from '@/components/gamification/LeaderboardVisibilityToggle';
 import Link from 'next/link';
 import TelegramConnect, { type NotificationPreferences } from '@/components/settings/TelegramConnect';
 import TimezoneSelector from '@/components/settings/TimezoneSelector';
@@ -111,6 +112,20 @@ function SettingsPageInner() {
 
   return (
     <div className="space-y-6">
+      <SettingsSection
+        title="Privacy & Leaderboard"
+        description="Control whether your scholar stats appear on public rankings"
+        icon={<Shield className="h-4 w-4" />}
+      >
+        {user ? (
+          <LeaderboardVisibilityToggle
+            userId={user.id}
+            initialVisible={profile?.leaderboardVisible !== false}
+            onVisibilityChange={(visible) => updateProfile({ leaderboardVisible: visible })}
+          />
+        ) : null}
+      </SettingsSection>
+
       {/* Telegram Section */}
       <SettingsSection
         title="Telegram Notifications"

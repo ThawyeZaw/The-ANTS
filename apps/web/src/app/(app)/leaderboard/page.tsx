@@ -16,32 +16,33 @@ import {
 import BackButton from '@/components/ui/BackButton';
 import { useAuth } from '@/hooks/useAuth';
 import { getLeaderboard, type LeaderboardEntry } from '@/actions/leaderboard';
+import { LeaderboardVisibilityToggle } from '@/components/gamification/LeaderboardVisibilityToggle';
 import { cn } from '@/lib/utils';
 
 export default function LeaderboardPage() {
-  const { user } = useAuth();
+  const { user, updateProfile } = useAuth();
   const [timeframe, setTimeframe] = useState<'all_time' | 'weekly'>('all_time');
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
+  const [myEntry, setMyEntry] = useState<LeaderboardEntry | undefined>();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
       const data = await getLeaderboard(user?.id, timeframe);
-      setEntries(data);
+      setEntries(data.entries);
+      setMyEntry(data.myEntry);
       setLoading(false);
     }
     load();
   }, [user?.id, timeframe]);
 
   const top3 = entries.slice(0, 3);
-  const myEntry = entries.find((e) => e.isCurrentUser);
 
   return (
     <div className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8 space-y-8 max-w-5xl mx-auto animate-fade-in pb-16">
       <BackButton href="/dashboard" label="Back to Dashboard" />
 
-      {/* ── Top Hero Banner ───────────────────────────────────────────────── */}
       <div className="rounded-3xl border border-border bg-background-card p-6 sm:p-8 shadow-xs relative overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="space-y-2">
@@ -57,7 +58,6 @@ export default function LeaderboardPage() {
             </p>
           </div>
 
-          {/* Timeframe Filter Buttons */}
           <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-background-secondary border border-border shrink-0 self-start sm:self-auto">
             <button
               type="button"
@@ -87,7 +87,15 @@ export default function LeaderboardPage() {
         </div>
       </div>
 
-      {/* ── My Current Rank (if logged in and in leaderboard) ──────────────── */}
+      {user && (
+        <LeaderboardVisibilityToggle
+          userId={user.id}
+          initialVisible={user.profile.leaderboardVisible !== false}
+          compact
+          onVisibilityChange={(visible) => updateProfile({ leaderboardVisible: visible })}
+        />
+      )}
+
       {myEntry && (
         <div className="p-4 sm:p-5 rounded-2xl border border-primary/30 bg-primary/5 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -107,7 +115,7 @@ export default function LeaderboardPage() {
           <div className="flex items-center gap-6">
             <div className="text-right">
               <span className="text-[10px] text-foreground-muted uppercase font-bold block">
-                Total XP
+                {timeframe === 'weekly' ? 'Weekly XP' : 'Total XP'}
               </span>
               <span className="text-base font-bold font-mono text-primary">
                 {myEntry.totalXp} XP
@@ -123,13 +131,11 @@ export default function LeaderboardPage() {
         </div>
       )}
 
-      {/* ── Top 3 Podium Cards ────────────────────────────────────────────── */}
       {!loading && top3.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
           {top3.map((entry, idx) => {
             const isFirst = idx === 0;
             const isSecond = idx === 1;
-            const isThird = idx === 2;
 
             return (
               <div
@@ -143,7 +149,6 @@ export default function LeaderboardPage() {
                     : 'bg-background-card border-border shadow-xs order-3'
                 )}
               >
-                {/* Crown / Medal Icon */}
                 <div
                   className={cn(
                     'w-14 h-14 rounded-2xl flex items-center justify-center font-bold text-xl shadow-xs',
@@ -197,7 +202,6 @@ export default function LeaderboardPage() {
         </div>
       )}
 
-      {/* ── Full Rankings Table ───────────────────────────────────────────── */}
       <div className="rounded-3xl border border-border bg-background-card overflow-hidden shadow-xs">
         <div className="p-5 border-b border-border flex items-center justify-between">
           <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
@@ -239,8 +243,13 @@ export default function LeaderboardPage() {
                     </td>
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
-                          {entry.name.slice(0, 1).toUpperCase()}
+                        <div className="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs overflow-hidden">
+                          {entry.avatarUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={entry.avatarUrl} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            entry.name.slice(0, 1).toUpperCase()
+                          )}
                         </div>
                         <span className="font-bold text-foreground">
                           {entry.name}
