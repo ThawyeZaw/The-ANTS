@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCountdown } from '@/hooks/useCountdown';
 import { CountdownCard } from './CountdownCard';
+import { EditCountdownModal } from './EditCountdownModal';
 import { groupEdexcelIalSubjects } from '@/lib/edexcel-ial';
 import {
   Plus,
@@ -45,29 +46,35 @@ interface CountdownManagerProps {
   userId: string;
 }
 
+function countdownWasEdited(countdown: CountdownWithTime, exams: { id: string; title?: string | null; exam_date?: string | Date | null; date?: string | null }[]) {
+  if (!countdown.exam_id) return false;
+  const exam = exams.find((item) => item.id === countdown.exam_id);
+  if (!exam) return false;
+  const officialTime = new Date(exam.exam_date || exam.date || 0).getTime();
+  const personalTime = new Date(countdown.exam_date || countdown.target_date || 0).getTime();
+  const officialTitle = (exam.title || '').trim();
+  const personalTitle = (countdown.custom_title || countdown.title || '').trim();
+  if (!officialTime || !personalTime) return officialTitle !== personalTitle;
+  return officialTime !== personalTime || (officialTitle.length > 0 && officialTitle !== personalTitle);
+}
+
 type PageTab = 'mine' | 'browse';
 
-function PendingTimetableCard() {
-  return (
-    <div className="flex min-h-[160px] flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border bg-background-card/50 p-5 text-center">
-      <Calendar className="h-8 w-8 text-foreground-muted" />
-      <div>
-        <p className="text-sm font-medium text-foreground">Timetable not released yet</p>
-        <p className="mt-1 text-xs text-foreground-muted">
-          We&apos;ll update this automatically when exam dates are available.
-        </p>
-      </div>
-    </div>
-  );
-}
 
 export function CountdownManager({ userId }: CountdownManagerProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const { groupedCountdowns, countdowns, availableExams, createCountdown, deleteCountdown } =
-    useCountdown(userId);
+  const {
+    countdowns,
+    availableExams,
+    createCountdown,
+    updateCountdown,
+    deleteCountdown,
+  } = useCountdown(userId);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editing, setEditing] = useState<CountdownWithTime | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [pageTab, setPageTab] = useState<PageTab>(
     (searchParams.get('tab') as PageTab) === 'browse' ? 'browse' : 'mine'
   );
@@ -152,26 +159,7 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
     return subjectToCurriculum.get(subjectId) === filterCurriculumId;
   };
 
-  const subjectNameMap: Record<string, string> = {};
-  for (const curr of catalog) {
-    for (const subj of curr.subjects) subjectNameMap[subj.id] = subj.title;
-  }
-  for (const curr of enrolledCurriculums) {
-    for (const subj of curr.subjects) subjectNameMap[subj.id] = subj.title;
-  }
-
   const enrolledSubjectIds = useMemo(() => new Set(hubEnrolledIds), [hubEnrolledIds]);
-
-  const isUserManagedCountdown = useCallback(
-    (c: CountdownWithTime) => {
-      const isCustom = Boolean((c as any).is_custom);
-      const subjectId = (c as any).subject_id as string | null | undefined;
-      if (isCustom) return true;
-      if (subjectId && enrolledSubjectIds.has(subjectId)) return false;
-      return true;
-    },
-    [enrolledSubjectIds]
-  );
 
   const boards = [
     { id: 'all', label: 'All' },
@@ -220,59 +208,46 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
     return groups;
   }, [filteredOfficialExams]);
 
-  const enrolledPaperCountdowns = countdowns.filter((c) => {
-    if (c.is_custom) return false;
-    if (c.timeLeft?.isPast) return false;
-    if (!c.subject_id || !enrolledSubjectIds.has(c.subject_id)) return false;
-    return matchesSubjectFilter(c.subject_id, (c as any).curriculum_id);
-  });
+  const matchesBoard = (countdown: CountdownWithTime) => {
+    if (selectedBoardFilter === 'all') return true;
+    if (selectedBoardFilter === 'Custom') return Boolean(countdown.is_custom);
+    return (countdown.exam_board || '')
+      .toUpperCase()
+      .includes(selectedBoardFilter.toUpperCase());
+  };
 
-  const pinnedCustomCountdowns = useMemo(() => {
-    return countdowns.filter(
-      (c) =>
-        !c.timeLeft.isPast &&
-        matchesSubjectFilter((c as any).subject_id, (c as any).curriculum_id) &&
-        isUserManagedCountdown(c) &&
-        (selectedBoardFilter === 'all' ||
-          (selectedBoardFilter === 'Custom'
-            ? Boolean(c.is_custom)
-            : (c.exam_board || '')
-                .toUpperCase()
-                .includes(selectedBoardFilter.toUpperCase()) ||
-              Boolean(c.is_custom) === false))
-    );
-  }, [
-    countdowns,
-    filterSubjectId,
-    filterCurriculumId,
-    isUserManagedCountdown,
-    selectedBoardFilter,
-  ]);
+  const activeCountdowns = useMemo(() => {
+    const seen = new Set<string>();
+    return countdowns.filter((countdown) => {
+      if (countdown.timeLeft.isPast) return false;
+      if (!matchesSubjectFilter(countdown.subject_id, (countdown as any).curriculum_id)) return false;
+      if (!matchesBoard(countdown)) return false;
+      const key = countdown.exam_id || countdown.id;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [countdowns, filterSubjectId, filterCurriculumId, selectedBoardFilter, subjectToCurriculum]);
 
-  const enrolledPapersBySubject = (() => {
-    const groups = new Map<string, CountdownWithTime[]>();
-    for (const c of enrolledPaperCountdowns) {
-      const sid = c.subject_id || 'unknown';
-      const list = groups.get(sid) ?? [];
-      list.push(c);
-      groups.set(sid, list);
-    }
-    for (const list of groups.values()) {
-      list.sort((a, b) => {
-        const ta = new Date((a as any).exam_date || 0).getTime();
-        const tb = new Date((b as any).exam_date || 0).getTime();
-        return ta - tb;
-      });
-    }
-    return [...groups.entries()].sort((a, b) =>
-      (subjectNameMap[a[0]] ?? a[0]).localeCompare(subjectNameMap[b[0]] ?? b[0])
-    );
-  })();
+  const sortedActive = useMemo(
+    () =>
+      [...activeCountdowns].sort(
+        (a, b) =>
+          new Date(a.exam_date || a.target_date || 0).getTime() -
+          new Date(b.exam_date || b.target_date || 0).getTime()
+      ),
+    [activeCountdowns]
+  );
 
   const pendingEnrolledSubjects = enrolledCurriculums
     .flatMap((curr) => curr.subjects)
     .filter((s) => enrolledSubjectIds.has(s.id) && matchesSubjectFilter(s.id))
-    .filter((s) => !countdowns.some((c) => !c.is_custom && c.subject_id === s.id));
+    .filter(
+      (s) =>
+        !availableExams.some(
+          (exam) => exam.subject_id === s.id && Boolean(exam.exam_date || (exam as any).date)
+        )
+    );
 
   const allPastExams = useMemo(() => {
     return countdowns.filter(
@@ -298,10 +273,7 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
   const isAlreadyTracked = (examId: string) =>
     countdowns.some((c) => (c as any).exam_id === examId);
 
-  const mineEmpty =
-    pinnedCustomCountdowns.length === 0 &&
-    enrolledPaperCountdowns.length === 0 &&
-    pendingEnrolledSubjects.length === 0;
+  const mineEmpty = activeCountdowns.length === 0 && pendingEnrolledSubjects.length === 0;
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-5">
@@ -347,7 +319,7 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
       </div>
 
       <p className="-mt-2 text-xs text-foreground-muted">
-        Official sitting times are shown in Myanmar time (MMT). Morning papers start at 09:00.
+        Edits and removals stay on your account. Times are shown in Myanmar time (MMT).
       </p>
 
       {/* Tabs */}
@@ -458,23 +430,23 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
 
       {/* ── My exams tab ─────────────────────────────────────────────── */}
       {pageTab === 'mine' && (
-        <div className="space-y-8">
+        <div className="space-y-5">
           {mineEmpty ? (
             <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-background-secondary/50 py-16 text-center">
               <Timer className="mb-3 h-12 w-12 text-foreground-muted" />
               <h3 className="mb-1 text-lg font-bold text-foreground">No exam countdowns yet</h3>
               <p className="mb-5 max-w-sm text-xs text-foreground-secondary">
-                Enroll subjects in Curriculum (or during setup) to auto-sync paper timers, or
-                pin dates from the timetable browser.
+                Add papers from the timetable, or enroll a subject in Curriculum to track its sittings.
               </p>
               <div className="flex flex-wrap justify-center gap-2">
-                <Link
-                  href="/curriculum"
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(true)}
                   className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition-all hover:bg-primary-hover"
                 >
-                  <BookOpen className="h-4 w-4" />
-                  Open Curriculum
-                </Link>
+                  <Plus className="h-4 w-4" />
+                  Add countdown
+                </button>
                 <button
                   type="button"
                   onClick={() => writeFilters(filterCurriculumId, filterSubjectId, 'browse')}
@@ -485,123 +457,78 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
                 </button>
               </div>
             </div>
+          ) : activeCountdowns.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border bg-background-card/60 p-8 text-center">
+              <p className="text-sm font-semibold text-foreground">No countdowns match this filter</p>
+              <p className="mt-1 text-xs text-foreground-muted">
+                Try another curriculum or subject, or clear the filters.
+              </p>
+            </div>
           ) : (
-            <>
-              {pinnedCustomCountdowns.length > 0 && (
-                <section className="space-y-4">
-                  <div className="flex items-center gap-2.5">
-                    <Timer className="h-4 w-4 text-primary" />
-                    <h2 className="text-lg font-bold text-foreground">Pinned & custom</h2>
-                    <span className="rounded-full border border-border bg-background-secondary px-2.5 py-0.5 text-xs font-medium text-foreground-muted">
-                      {pinnedCustomCountdowns.length}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 sm:gap-5">
-                    {pinnedCustomCountdowns.map((countdown) => (
-                      <CountdownCard
-                        key={countdown.id}
-                        countdown={countdown}
-                        onDelete={deleteCountdown}
-                        canDelete={true}
-                      />
-                    ))}
-                  </div>
-                </section>
+            <section className="space-y-4">
+              <div className="flex items-center gap-2.5">
+                <Timer className="h-4 w-4 text-primary" />
+                <h2 className="text-base font-bold text-foreground">Your exams</h2>
+                <span className="rounded-full border border-border bg-background-secondary px-2.5 py-0.5 text-xs font-medium text-foreground-muted">
+                  {activeCountdowns.length}
+                </span>
+              </div>
+
+              <div className="grid gap-2 [grid-template-columns:repeat(auto-fill,minmax(17.5rem,1fr))]">
+                {sortedActive.map((countdown) => (
+                  <CountdownCard
+                    key={countdown.id}
+                    countdown={countdown}
+                    edited={countdownWasEdited(countdown, availableExams)}
+                    onEdit={setEditing}
+                    onDelete={(id) => {
+                      setPendingDeleteId(null);
+                      void deleteCountdown(id);
+                    }}
+                    confirmDelete={pendingDeleteId === countdown.id}
+                    onAskDelete={setPendingDeleteId}
+                    onCancelDelete={() => setPendingDeleteId(null)}
+                  />
+                ))}
+              </div>
+
+              {pendingEnrolledSubjects.length > 0 && (
+                <p className="text-xs text-foreground-muted">
+                  Timetable not released yet for{' '}
+                  {pendingEnrolledSubjects.map((subject) => subject.title).join(', ')}.
+                </p>
               )}
-
-              <section className="space-y-4">
-                <div className="flex items-center gap-2.5">
-                  <BookOpen className="h-4 w-4 text-primary" />
-                  <h2 className="text-lg font-bold text-foreground">Enrolled papers</h2>
-                  <span className="rounded-full border border-border bg-background-secondary px-2.5 py-0.5 text-xs font-medium text-foreground-muted">
-                    {enrolledPaperCountdowns.length} paper
-                    {enrolledPaperCountdowns.length === 1 ? '' : 's'}
-                  </span>
-                </div>
-
-                {hubEnrolledIds.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-border bg-background-card/60 p-8 text-center">
-                    <BookOpen className="mx-auto mb-3 h-8 w-8 text-foreground-muted" />
-                    <p className="text-sm font-semibold text-foreground">No enrolled subjects yet</p>
-                    <p className="mx-auto mt-1 max-w-md text-xs text-foreground-muted">
-                      Add a subject in Curriculum and choose its exam series. Every paper (or IAL
-                      unit) is then tracked automatically.
-                    </p>
-                    <Link
-                      href="/curriculum"
-                      className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover"
-                    >
-                      Explore Curriculum Hub
-                    </Link>
-                  </div>
-                ) : enrolledPaperCountdowns.length === 0 &&
-                  pendingEnrolledSubjects.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-border bg-background-card/60 p-8 text-center">
-                    <p className="text-sm font-semibold text-foreground">
-                      No enrolled papers match this filter
-                    </p>
-                    <p className="mt-1 text-xs text-foreground-muted">
-                      Try another curriculum or subject, or clear the filters.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    {enrolledPapersBySubject.map(([subjectId, papers]) => (
-                      <div key={subjectId} className="space-y-3">
-                        <div className="flex items-center gap-3">
-                          <h3 className="text-xs font-bold uppercase tracking-wider text-foreground-secondary">
-                            {subjectNameMap[subjectId] ?? 'Subject'}
-                          </h3>
-                          <span className="font-mono text-[10px] text-foreground-muted">
-                            {papers.length} paper{papers.length === 1 ? '' : 's'}
-                          </span>
-                          <div className="h-px flex-1 bg-border" />
-                        </div>
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 sm:gap-5">
-                          {papers.map((countdown) => (
-                            <CountdownCard
-                              key={countdown.id}
-                              countdown={countdown}
-                              canDelete={false}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                    {pendingEnrolledSubjects.length > 0 && (
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 sm:gap-5">
-                        {pendingEnrolledSubjects.map((subject) => (
-                          <PendingTimetableCard key={subject.id} />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </section>
-            </>
+            </section>
           )}
 
           {allPastExams.length > 0 && (
-            <section className="space-y-4 border-t border-border pt-6 opacity-80">
+            <section className="space-y-3 border-t border-border pt-4">
               <button
                 type="button"
                 onClick={() => setPastOpen(!pastOpen)}
                 className="flex w-full items-center gap-2.5 text-left"
               >
                 <Timer className="h-4 w-4 text-foreground-muted" />
-                <h2 className="text-lg font-bold text-foreground-muted">Past exams</h2>
+                <h2 className="text-sm font-bold text-foreground-muted">Past exams</h2>
                 <span className="rounded-full border border-border px-2 py-0.5 text-[11px] text-foreground-muted">
                   {allPastExams.length}
                 </span>
               </button>
               {pastOpen && (
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 sm:gap-5">
+                <div className="grid gap-2 [grid-template-columns:repeat(auto-fill,minmax(17.5rem,1fr))]">
                   {allPastExams.map((countdown) => (
                     <CountdownCard
                       key={countdown.id}
                       countdown={countdown}
-                      onDelete={deleteCountdown}
-                      canDelete={isUserManagedCountdown(countdown)}
+                      edited={countdownWasEdited(countdown, availableExams)}
+                      onEdit={setEditing}
+                      onDelete={(id) => {
+                        setPendingDeleteId(null);
+                        void deleteCountdown(id);
+                      }}
+                      confirmDelete={pendingDeleteId === countdown.id}
+                      onAskDelete={setPendingDeleteId}
+                      onCancelDelete={() => setPendingDeleteId(null)}
                     />
                   ))}
                 </div>
@@ -744,6 +671,23 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
           initialCurriculumId={filterCurriculumId}
           initialSubjectId={filterSubjectId}
           onCreate={createCountdown}
+        />
+      )}
+
+      {editing && (
+        <EditCountdownModal
+          countdown={editing}
+          onClose={() => setEditing(null)}
+          onSave={async (data) => {
+            await updateCountdown(editing.id, data);
+          }}
+          onRestoreOfficial={
+            editing.exam_id
+              ? async () => {
+                  await updateCountdown(editing.id, { restoreOfficial: true });
+                }
+              : undefined
+          }
         />
       )}
     </div>

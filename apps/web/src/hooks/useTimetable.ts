@@ -140,7 +140,7 @@ export interface UseTimetableReturn {
 }
 
 export function useTimetable(userId: string): UseTimetableReturn {
-  const [view, setViewState] = useState<TimetableView>('week');
+  const [view, setViewState] = useState<TimetableView>('day');
   const [currentDate, setCurrentDate] = useState<Date>(() => new Date());
   const [filters, setFilters] = useState<TimetableFilters>(DEFAULT_TIMETABLE_FILTERS);
   const [allEvents, setAllEvents] = useState<TimetableEvent[]>([]);
@@ -159,9 +159,9 @@ export function useTimetable(userId: string): UseTimetableReturn {
   const [rangeStart, rangeEnd] = useMemo(() => {
     switch (view) {
       case 'day': {
-        const s = new Date(currentDate);
-        s.setHours(0, 0, 0, 0);
-        const e = new Date(currentDate);
+        const s = new Date(weekStart);
+        const e = new Date(weekStart);
+        e.setDate(e.getDate() + 6);
         e.setHours(23, 59, 59, 999);
         return [s, e];
       }
@@ -177,6 +177,16 @@ export function useTimetable(userId: string): UseTimetableReturn {
         s.setDate(s.getDate() - 7);
         const e = new Date(monthEnd);
         e.setDate(e.getDate() + 7);
+        return [s, e];
+      }
+      case 'list': {
+        const today = new Date();
+        const s = new Date(Math.min(today.getTime(), monthStart.getTime(), weekStart.getTime()));
+        s.setDate(s.getDate() - 14);
+        s.setHours(0, 0, 0, 0);
+        const e = new Date(Math.max(today.getTime(), monthEnd.getTime()));
+        e.setDate(e.getDate() + 45);
+        e.setHours(23, 59, 59, 999);
         return [s, e];
       }
     }
@@ -235,6 +245,9 @@ export function useTimetable(userId: string): UseTimetableReturn {
           case 'month':
             d.setMonth(d.getMonth() + delta);
             break;
+          case 'list':
+            d.setDate(d.getDate() + delta * 7);
+            break;
         }
         return d;
       });
@@ -244,7 +257,25 @@ export function useTimetable(userId: string): UseTimetableReturn {
 
   const goToToday = useCallback(() => setCurrentDate(new Date()), []);
   const goToDate = useCallback((date: Date) => setCurrentDate(date), []);
-  const setView = useCallback((v: TimetableView) => setViewState(v), []);
+  const setView = useCallback((v: TimetableView) => {
+    setViewState(v);
+    try {
+      window.localStorage.setItem('ants-timetable-view', v);
+    } catch {
+      /* ignore private mode */
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem('ants-timetable-view');
+      if (saved === 'day' || saved === 'week' || saved === 'month' || saved === 'list') {
+        setViewState(saved);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const toggleEventTypeFilter = useCallback((type: TimetableEventType) => {
     setFilters((prev) => {
@@ -257,7 +288,7 @@ export function useTimetable(userId: string): UseTimetableReturn {
   const events = useMemo(() => {
     return allEvents.filter((e) => {
       if (!filters.eventTypes.includes(e.event_type)) return false;
-      if (!filters.showCompleted && e.is_todo && e.is_completed) return false;
+      if (!filters.showCompleted && e.is_completed) return false;
       return true;
     });
   }, [allEvents, filters]);
@@ -332,11 +363,13 @@ export function useTimetable(userId: string): UseTimetableReturn {
           is_recurring: rest.is_recurring,
           recurrence_rule: recurrence_rule ?? null,
           color_code: rest.color_code,
+          is_todo: true,
           metadata: {
             description: rest.description,
             location: rest.location,
             subject: rest.subject,
             reminder_minutes,
+            is_todo: true,
           },
         });
 
@@ -383,11 +416,13 @@ export function useTimetable(userId: string): UseTimetableReturn {
           is_recurring: rest.is_recurring,
           recurrence_rule: recurrence_rule ?? null,
           color_code: rest.color_code,
+          is_todo: true,
           metadata: {
             description: rest.description,
             location: rest.location,
             subject: rest.subject,
             reminder_minutes,
+            is_todo: true,
           },
         });
 
@@ -419,9 +454,15 @@ export function useTimetable(userId: string): UseTimetableReturn {
   const toggleComplete = useCallback(
     async (id: string): Promise<{ success: boolean; error?: string; gamification?: AwardXpResult }> => {
       const baseId = id.includes('::') ? id.split('::')[0] : id;
-      const ev = allEvents.find((e) => e.id === baseId || e.id.startsWith(`${baseId}::`));
+      const instanceDate = id.includes('::') ? id.split('::')[1] : null;
+      const ev = allEvents.find((e) => e.id === id);
       const isCompleted = !ev?.is_completed;
-      const res = await actionToggleTimetableEventComplete(userId, baseId, isCompleted);
+      const res = await actionToggleTimetableEventComplete(
+        userId,
+        baseId,
+        isCompleted,
+        ev?.is_recurring ? instanceDate : null
+      );
       if (res.success) {
         refresh();
         return { success: true, gamification: res.gamification };

@@ -271,6 +271,18 @@ export function createExamRoutes(getDb: () => ReturnType<typeof createDb>) {
         }
       }
 
+      if (data.examId) {
+        const existing = await db.query.examCountdowns.findFirst({
+          where: and(eq(examCountdowns.user_id, data.userId), eq(examCountdowns.exam_id, data.examId)),
+        });
+        if (existing) {
+          return c.json(
+            { success: true, countdown: serializeCountdown(existing as Record<string, unknown>) },
+            200
+          );
+        }
+      }
+
       const [newCountdown] = await db
         .insert(examCountdowns)
         .values({
@@ -296,7 +308,50 @@ export function createExamRoutes(getDb: () => ReturnType<typeof createDb>) {
     }
   });
 
-  // 4. Delete countdown
+  // 4. Update a user's own countdown. Does not change the shared exam timetable.
+  router.patch('/countdowns/:id', async (c) => {
+    try {
+      const db = getDb();
+      const id = c.req.param('id');
+      const raw = await c.req.json();
+      const userId = raw.userId ?? raw.user_id;
+      if (!userId) return c.json({ error: 'userId is required' }, 400);
+
+      const existing = await db.query.examCountdowns.findFirst({
+        where: and(eq(examCountdowns.id, id), eq(examCountdowns.user_id, userId)),
+      });
+      if (!existing) return c.json({ error: 'Countdown not found or unauthorized' }, 404);
+
+      const title = String(raw.title ?? raw.custom_title ?? existing.title).trim();
+      const examDateRaw = raw.examDate ?? raw.exam_date ?? raw.target_date;
+      const examDate = examDateRaw ? new Date(examDateRaw) : new Date(existing.exam_date);
+      if (!title || Number.isNaN(examDate.getTime())) {
+        return c.json({ error: 'Title and a valid date are required' }, 400);
+      }
+
+      const [updated] = await db
+        .update(examCountdowns)
+        .set({
+          title,
+          exam_date: examDate,
+          paper_name: raw.paperName ?? raw.paper_name ?? existing.paper_name,
+          target_grade: raw.targetGrade ?? raw.target_grade ?? existing.target_grade,
+          exam_board: raw.examBoard ?? raw.exam_board ?? existing.exam_board,
+        })
+        .where(eq(examCountdowns.id, id))
+        .returning();
+
+      return c.json({
+        success: true,
+        countdown: serializeCountdown((updated ?? existing) as Record<string, unknown>),
+      });
+    } catch (err) {
+      console.error('[exams] update countdown failed', err);
+      return c.json({ error: 'Failed to update countdown' }, 500);
+    }
+  });
+
+  // 5. Delete countdown
   router.delete('/countdowns/:id', async (c) => {
     try {
       const db = getDb();

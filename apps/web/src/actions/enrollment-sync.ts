@@ -95,8 +95,6 @@ export async function syncEnrollmentCountdowns(input: {
   const awardLevel = input.awardLevel ?? null;
   const routePrefs = input.paperPreferences ?? null;
 
-  await deleteAutoCountdowns(input.userId, input.subjectId);
-
   const catalog = await db.query.exams.findMany({
     where: eq(exams.subject_id, input.subjectId),
   });
@@ -126,18 +124,52 @@ export async function syncEnrollmentCountdowns(input: {
       ? subject.code
       : formatPaperRowLabel(examPaper ?? subject.code, null, board);
 
+  const existing = await db.query.examCountdowns.findMany({
+    where: and(eq(examCountdowns.user_id, input.userId), eq(examCountdowns.subject_id, input.subjectId)),
+  });
+
+  const matchingIds = new Set(matching.filter((exam) => exam.exam_date).map((exam) => exam.id));
+  const dismissed = new Set(input.paperPreferences?.dismissedExamIds ?? []);
+  const { actionClearSourceQueue, actionEnqueueExamCountdownReminders } = await import(
+    '@/actions/notifications'
+  );
+
+  for (const row of existing) {
+    if (row.is_custom) continue;
+    if (!row.exam_id || !matchingIds.has(row.exam_id)) {
+      await db.delete(examCountdowns).where(eq(examCountdowns.id, row.id));
+      try {
+        await actionClearSourceQueue('exam_countdown', row.id);
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+
+  const keptExamIds = new Set(
+    existing
+      .filter((row) => !row.is_custom && row.exam_id && matchingIds.has(row.exam_id))
+      .map((row) => row.exam_id as string)
+  );
+
   let count = 0;
   for (const exam of matching) {
     if (!exam.exam_date) continue;
+    if (dismissed.has(exam.id) || keptExamIds.has(exam.id)) continue;
+
+    const nextTitle = exam.title;
+    const nextPaper = paperLabel(exam.paper_number);
+    const nextBoard = exam.exam_board ?? curriculum.code;
+
     const [inserted] = await db
       .insert(examCountdowns)
       .values({
         user_id: input.userId,
         subject_id: input.subjectId,
         exam_id: exam.id,
-        title: exam.title,
-        exam_board: exam.exam_board ?? curriculum.code,
-        paper_name: paperLabel(exam.paper_number),
+        title: nextTitle,
+        exam_board: nextBoard,
+        paper_name: nextPaper,
         exam_date: exam.exam_date,
         color_code: color,
         target_grade: input.targetGrade ?? null,
@@ -149,11 +181,10 @@ export async function syncEnrollmentCountdowns(input: {
 
     if (inserted?.id && inserted.exam_date) {
       try {
-        const { actionEnqueueExamCountdownReminders } = await import('@/actions/notifications');
         await actionEnqueueExamCountdownReminders(
           inserted.id,
           input.userId,
-          exam.title,
+          nextTitle,
           new Date(inserted.exam_date),
           false
         );

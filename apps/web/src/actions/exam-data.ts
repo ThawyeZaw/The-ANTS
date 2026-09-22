@@ -12,12 +12,14 @@ import {
   exams,
   examCountdowns,
   pastPapers,
+  userEnrollments,
 } from '@/lib/db';
 import { eq, and, gt, gte, asc, desc, inArray } from 'drizzle-orm';
 import {
   boardFromCurriculumCode,
   examMatchesMyanmarPaper,
   examRowMatchesMyanmar,
+  type PaperPreferences,
 } from '@/lib/exam-papers/myanmar-papers';
 import { formatExamSeriesLabel } from '@/lib/grading';
 import { healEnrollmentCountdowns } from '@/actions/enrollment-sync';
@@ -367,6 +369,25 @@ export async function listExamCountdownsForUser(userId: string) {
   return rows.map((row) => serializeCountdown(row as Record<string, unknown>));
 }
 
+async function setDismissedExam(userId: string, subjectId: string | null | undefined, examId: string, dismissed: boolean) {
+  if (!subjectId) return;
+  const db = getDb();
+  const enrollment = await db.query.userEnrollments.findFirst({
+    where: and(eq(userEnrollments.user_id, userId as any), eq(userEnrollments.subject_id, subjectId as any)),
+  });
+  if (!enrollment) return;
+
+  const prefs = (enrollment.paper_preferences as PaperPreferences | null) ?? {};
+  const ids = new Set(prefs.dismissedExamIds ?? []);
+  if (dismissed) ids.add(examId);
+  else ids.delete(examId);
+
+  await db
+    .update(userEnrollments)
+    .set({ paper_preferences: { ...prefs, dismissedExamIds: [...ids] } })
+    .where(eq(userEnrollments.id, enrollment.id));
+}
+
 export async function createExamCountdown(input: {
   userId: string;
   title: string;
@@ -422,6 +443,22 @@ export async function createExamCountdown(input: {
     }
   }
 
+  if (input.examId) {
+    await setDismissedExam(input.userId, subjectId, input.examId, false);
+    const existing = await db.query.examCountdowns.findFirst({
+      where: and(
+        eq(examCountdowns.user_id, input.userId as any),
+        eq(examCountdowns.exam_id, input.examId)
+      ),
+    });
+    if (existing) {
+      return {
+        success: true as const,
+        countdown: serializeCountdown(existing as Record<string, unknown>),
+      };
+    }
+  }
+
   const [inserted] = await db
     .insert(examCountdowns)
     .values({
@@ -457,6 +494,79 @@ export async function createExamCountdown(input: {
   return { success: true as const, countdown: serializeCountdown(inserted as Record<string, unknown>) };
 }
 
+export async function updateExamCountdown(input: {
+  userId: string;
+  countdownId: string;
+  title?: string;
+  examDate?: string;
+  paperName?: string | null;
+  targetGrade?: string | null;
+  examBoard?: string | null;
+  restoreOfficial?: boolean;
+}) {
+  const db = getDb();
+  const existing = await db.query.examCountdowns.findFirst({
+    where: and(eq(examCountdowns.id, input.countdownId), eq(examCountdowns.user_id, input.userId as any)),
+  });
+  if (!existing) {
+    return { success: false as const, error: 'Countdown not found or unauthorized' };
+  }
+
+  let title = input.title?.trim() || existing.title;
+  let examDate = input.examDate ? new Date(input.examDate) : new Date(existing.exam_date);
+  let paperName = input.paperName === undefined ? existing.paper_name : input.paperName;
+  let targetGrade = input.targetGrade === undefined ? existing.target_grade : input.targetGrade;
+  let examBoard = input.examBoard === undefined ? existing.exam_board : input.examBoard;
+
+  if (input.restoreOfficial && existing.exam_id) {
+    const official = await db.query.exams.findFirst({
+      where: eq(exams.id, existing.exam_id),
+    });
+    if (official?.exam_date) {
+      title = official.title;
+      examDate = new Date(official.exam_date);
+      examBoard = official.exam_board ?? existing.exam_board;
+    }
+  }
+
+  if (Number.isNaN(examDate.getTime())) {
+    return { success: false as const, error: 'Enter a valid date and time' };
+  }
+  if (!title) {
+    return { success: false as const, error: 'Title is required' };
+  }
+
+  const [updated] = await db
+    .update(examCountdowns)
+    .set({
+      title,
+      exam_date: examDate,
+      paper_name: paperName ?? null,
+      target_grade: targetGrade?.trim() ? targetGrade.trim() : null,
+      exam_board: examBoard ?? null,
+    })
+    .where(eq(examCountdowns.id, existing.id))
+    .returning();
+
+  const row = updated ?? existing;
+  try {
+    await actionClearSourceQueue('exam_countdown', existing.id);
+    if (row.exam_date) {
+      await actionEnqueueExamCountdownReminders(
+        existing.id,
+        input.userId,
+        title,
+        new Date(row.exam_date),
+        Boolean(row.is_mock)
+      );
+    }
+  } catch (err) {
+    console.error('[exam-data] update countdown reminders failed', err);
+  }
+
+  return { success: true as const, countdown: serializeCountdown(row as Record<string, unknown>) };
+}
+
 export async function deleteExamCountdown(userId: string, countdownId: string) {
   const db = getDb();
   const existing = await db.query.examCountdowns.findFirst({
@@ -465,7 +575,12 @@ export async function deleteExamCountdown(userId: string, countdownId: string) {
   if (!existing) {
     return { success: false as const, error: 'Countdown not found or unauthorized' };
   }
+
+  if (existing.exam_id) {
+    await setDismissedExam(userId, existing.subject_id, existing.exam_id, true);
+  }
   await db.delete(examCountdowns).where(eq(examCountdowns.id, countdownId));
+
   try {
     await actionClearSourceQueue('exam_countdown', countdownId);
   } catch (err) {

@@ -12,6 +12,7 @@ import {
   deleteExamCountdown,
   listExamCountdownsForUser,
   listExams,
+  updateExamCountdown,
 } from '@/actions/exam-data';
 
 export interface TimeLeft {
@@ -186,26 +187,74 @@ export function useCountdown(userId: string | undefined) {
         }
 
         const newCountdown = json.countdown;
-        setCountdowns((prev) =>
-          sortCountdowns([
-            ...prev,
-            {
-              ...newCountdown,
-              target_date: newCountdown.exam_date,
-              qualification_group: deriveQualificationGroup({
-                ...newCountdown,
-                qualification_group: group,
-              }),
-              timeLeft: calculateTimeLeft(newCountdown.exam_date as string | null),
-            } as CountdownWithTime,
-          ])
-        );
+        const next = {
+          ...newCountdown,
+          target_date: newCountdown.exam_date,
+          qualification_group: deriveQualificationGroup({
+            ...newCountdown,
+            qualification_group: group,
+          }),
+          timeLeft: calculateTimeLeft(newCountdown.exam_date as string | null),
+        } as CountdownWithTime;
+        setCountdowns((prev) => {
+          const without = prev.filter((item) => item.id !== next.id);
+          return sortCountdowns([...without, next]);
+        });
       } catch (err) {
         console.error('Error creating countdown:', err);
         throw err;
       }
     },
     [userId, availableExams]
+  );
+
+  const handleUpdateCountdown = useCallback(
+    async (
+      id: string,
+      data: {
+        title?: string;
+        examDate?: string;
+        paperName?: string | null;
+        targetGrade?: string | null;
+        examBoard?: string | null;
+        restoreOfficial?: boolean;
+      }
+    ) => {
+      if (!userId) {
+        throw new Error('You must be signed in to edit a countdown.');
+      }
+      const json = await updateExamCountdown({
+        userId,
+        countdownId: id,
+        ...data,
+      });
+      if (!json.success) {
+        throw new Error(json.error || 'Failed to update countdown.');
+      }
+      const updated = json.countdown;
+      setCountdowns((prev) =>
+        sortCountdowns(
+          prev.map((item) =>
+            item.id === id
+              ? ({
+                  ...item,
+                  ...updated,
+                  custom_title: updated.custom_title ?? updated.title ?? item.custom_title,
+                  target_date: (updated.exam_date || updated.target_date) as string | null,
+                  qualification_group: deriveQualificationGroup({
+                    ...item,
+                    ...updated,
+                  }),
+                  timeLeft: calculateTimeLeft(
+                    (updated.exam_date || updated.target_date) as string | null
+                  ),
+                } as CountdownWithTime)
+              : item
+          )
+        )
+      );
+    },
+    [userId]
   );
 
   const handleDeleteCountdown = useCallback(
@@ -242,6 +291,7 @@ export function useCountdown(userId: string | undefined) {
     availableExams,
     isLoading,
     createCountdown: handleCreateCountdown,
+    updateCountdown: handleUpdateCountdown,
     deleteCountdown: handleDeleteCountdown,
   };
 }

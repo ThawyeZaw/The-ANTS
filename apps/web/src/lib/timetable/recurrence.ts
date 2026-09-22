@@ -142,14 +142,17 @@ export function expandRecurringEvents(
       const instanceEnd = duration > 0 ? new Date(instanceStart.getTime() + duration) : null;
 
       const dateStr = formatDateISO(instanceStart);
-      const isOriginalDate = originalStart && formatDateISO(originalStart) === dateStr;
-      const instanceId = isOriginalDate ? event.id : `${event.id}::${dateStr}`;
+      const completedDates = Array.isArray((event.metadata as { completed_dates?: unknown } | null)?.completed_dates)
+        ? ((event.metadata as { completed_dates: unknown[] }).completed_dates.filter((d) => typeof d === 'string') as string[])
+        : [];
 
       results.push({
         ...event,
-        id: instanceId,
+        id: `${event.id}::${dateStr}`,
+        series_start: event.start_time,
         start_time: event.start_time ? instanceStart.toISOString() : null,
         end_time: event.end_time && instanceEnd ? instanceEnd.toISOString() : null,
+        is_completed: completedDates.includes(dateStr),
       });
     }
 

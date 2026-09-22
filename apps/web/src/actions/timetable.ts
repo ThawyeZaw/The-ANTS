@@ -30,7 +30,7 @@ function formatDbEvent(e: any): TimetableEvent {
     is_recurring: e.is_recurring ?? false,
     recurrence_rule: (e.recurrence_pattern || meta.recurrence_rule) as any,
     color_code: e.color_code ?? '#3B82F6',
-    is_todo: meta.is_todo ?? false,
+    is_todo: true,
     is_completed: meta.is_completed ?? false,
     completed_at: meta.completed_at ?? null,
     event_source: (meta.event_source as any) ?? 'user',
@@ -175,7 +175,7 @@ export async function actionCreateTimetableEvent(
           description: data.description || (data.metadata?.description as string) || null,
           subject: data.subject || (data.metadata?.subject as string) || null,
           location: data.location || (data.metadata?.location as string) || null,
-          is_todo: data.is_todo ?? false,
+          is_todo: true,
           is_completed: false,
           completed_at: null,
           event_source: 'user',
@@ -268,7 +268,21 @@ export async function actionUpdateTimetableEvent(
     if (data.is_recurring !== undefined) updatePayload.is_recurring = data.is_recurring;
     if (data.recurrence_rule !== undefined) updatePayload.recurrence_pattern = data.recurrence_rule as any;
     if (data.color_code !== undefined) updatePayload.color_code = data.color_code;
-    if (data.metadata !== undefined) updatePayload.metadata = data.metadata as any;
+    if (data.metadata !== undefined) {
+      const existingRow = await db.query.timetableEvents.findFirst({
+        where: and(eq(timetableEvents.id, baseId), eq(timetableEvents.user_id, userId)),
+      });
+      const prev = (existingRow?.metadata as Record<string, unknown> | null) ?? {};
+      const next = data.metadata as Record<string, unknown>;
+      updatePayload.metadata = {
+        ...prev,
+        ...next,
+        is_todo: true,
+        is_completed: prev.is_completed ?? false,
+        completed_at: prev.completed_at ?? null,
+        completed_dates: Array.isArray(prev.completed_dates) ? prev.completed_dates : [],
+      } as any;
+    }
     if (data.start_time) updatePayload.start_time = new Date(data.start_time);
     if (data.end_time) updatePayload.end_time = new Date(data.end_time);
 
@@ -355,7 +369,8 @@ export async function toggleEventCompleteAction(
 export async function actionToggleTimetableEventComplete(
   userId: string,
   eventId: string,
-  isCompleted?: boolean
+  isCompleted?: boolean,
+  instanceDate?: string | null
 ): Promise<{ success: boolean; event?: TimetableEvent; gamification?: AwardXpResult; error?: string }> {
   try {
     const guard = await requireSessionUser(userId);
@@ -370,13 +385,39 @@ export async function actionToggleTimetableEventComplete(
     if (!existing) return { success: false, error: 'Event not found' };
 
     const currentMeta = (existing.metadata as Record<string, any>) ?? {};
-    const wasCompleted = !!currentMeta.is_completed;
-    const newVal = isCompleted !== undefined ? isCompleted : !wasCompleted;
-    const updatedMeta = {
-      ...currentMeta,
-      is_completed: newVal,
-      completed_at: newVal ? new Date().toISOString() : null,
-    };
+    const dateKey = instanceDate && /^\d{4}-\d{2}-\d{2}$/.test(instanceDate) ? instanceDate : null;
+    const priorDates = Array.isArray(currentMeta.completed_dates)
+      ? currentMeta.completed_dates.filter((d: unknown) => typeof d === 'string') as string[]
+      : [];
+    const perDay = Boolean(dateKey && existing.is_recurring);
+
+    let newVal: boolean;
+    let updatedMeta: Record<string, unknown>;
+    let xpSourceId = baseId;
+    let wasAlreadyDone = false;
+
+    if (perDay && dateKey) {
+      wasAlreadyDone = priorDates.includes(dateKey);
+      newVal = isCompleted !== undefined ? isCompleted : !wasAlreadyDone;
+      const nextDates = new Set(priorDates);
+      if (newVal) nextDates.add(dateKey);
+      else nextDates.delete(dateKey);
+      updatedMeta = {
+        ...currentMeta,
+        is_todo: true,
+        completed_dates: [...nextDates],
+      };
+      xpSourceId = `${baseId}:${dateKey}`;
+    } else {
+      wasAlreadyDone = !!currentMeta.is_completed;
+      newVal = isCompleted !== undefined ? isCompleted : !wasAlreadyDone;
+      updatedMeta = {
+        ...currentMeta,
+        is_todo: true,
+        is_completed: newVal,
+        completed_at: newVal ? new Date().toISOString() : null,
+      };
+    }
 
     const [updated] = await db
       .update(timetableEvents)
@@ -387,12 +428,12 @@ export async function actionToggleTimetableEventComplete(
       .returning();
 
     let gamification: AwardXpResult | undefined;
-    if (newVal && !wasCompleted) {
+    if (newVal && !wasAlreadyDone) {
       gamification = await awardXp(
         userId,
         XP_AMOUNTS.timetable,
         'timetable',
-        baseId,
+        xpSourceId,
         'Completed scheduled study session'
       );
     }

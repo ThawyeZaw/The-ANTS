@@ -69,6 +69,11 @@ export interface TimetableEvent {
   /** ISO datetime when is_completed was set to true */
   completed_at: string | null;
   /**
+   * For an expanded repeating task, the original series start.
+   * Edits keep this anchor so changing one day does not move the habit.
+   */
+  series_start?: string | null;
+  /**
    * Source of this event.
    * - 'user' events are fully editable.
    * - All other sources are read-only virtual events rendered from other tables.
@@ -81,7 +86,7 @@ export interface TimetableEvent {
 }
 
 /** Active view mode for the timetable */
-export type TimetableView = 'day' | 'week' | 'month';
+export type TimetableView = 'day' | 'week' | 'month' | 'list';
 
 /** UI filter state for the timetable */
 export interface TimetableFilters {
