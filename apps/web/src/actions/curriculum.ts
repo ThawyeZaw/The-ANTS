@@ -1707,7 +1707,9 @@ export async function listSubjectCompositeBoundaries(
       if (opts?.variant && r.variant && r.variant !== opts.variant) return false;
       return true;
     });
-    compositeBoundariesCache.set(cacheKey, { data: result, expiresAt: Date.now() + 15 * 60 * 1000 });
+    if (result.length > 0) {
+      compositeBoundariesCache.set(cacheKey, { data: result, expiresAt: Date.now() + 15 * 60 * 1000 });
+    }
     return result;
   } catch (err) {
     console.error('[curriculum] listSubjectCompositeBoundaries error:', err);

@@ -552,9 +552,128 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0417-w25-EZ-02-03-13-G', 'subj-caie-igcse-ict', 2025, 'Oct/Nov', '3', NULL, 'G', 36, 54, strftime('%s', 'now') * 1000),
 ('sgb-0417-w25-EZ-02-03-13-U', 'subj-caie-igcse-ict', 2025, 'Oct/Nov', '3', NULL, 'U', 0, 35, strftime('%s', 'now') * 1000);
 INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0417-s26-C112131-11-21-31-Astar', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'A*', 197, 280, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112131-11-21-31-A', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'A', 171, 196, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112131-11-21-31-B', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'B', 145, 170, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112131-11-21-31-C', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'C', 119, 144, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112131-11-21-31-D', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'D', 100, 118, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112131-11-21-31-E', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'E', 82, 99, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112131-11-21-31-F', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'F', 62, 81, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112131-11-21-31-G', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'G', 42, 61, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112131-11-21-31-U', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'U', 0, 41, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112132-11-21-32-Astar', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'A*', 199, 280, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112132-11-21-32-A', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'A', 173, 198, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112132-11-21-32-B', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'B', 147, 172, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112132-11-21-32-C', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'C', 121, 146, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112132-11-21-32-D', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'D', 100, 120, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112132-11-21-32-E', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'E', 80, 99, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112132-11-21-32-F', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'F', 58, 79, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112132-11-21-32-G', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'G', 36, 57, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112132-11-21-32-U', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'U', 0, 35, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112231-11-22-31-Astar', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'A*', 197, 280, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112231-11-22-31-A', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'A', 171, 196, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112231-11-22-31-B', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'B', 145, 170, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112231-11-22-31-C', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'C', 119, 144, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112231-11-22-31-D', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'D', 100, 118, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112231-11-22-31-E', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'E', 82, 99, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112231-11-22-31-F', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'F', 62, 81, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112231-11-22-31-G', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'G', 42, 61, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112231-11-22-31-U', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'U', 0, 41, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112232-11-22-32-Astar', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'A*', 199, 280, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112232-11-22-32-A', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'A', 173, 198, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112232-11-22-32-B', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'B', 147, 172, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112232-11-22-32-C', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'C', 121, 146, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112232-11-22-32-D', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'D', 100, 120, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112232-11-22-32-E', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'E', 80, 99, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112232-11-22-32-F', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'F', 58, 79, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112232-11-22-32-G', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'G', 36, 57, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C112232-11-22-32-U', 'subj-caie-igcse-ict', 2026, 'May/June', '1', NULL, 'U', 0, 35, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122131-12-21-31-Astar', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'A*', 202, 280, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122131-12-21-31-A', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'A', 175, 201, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122131-12-21-31-B', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'B', 148, 174, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122131-12-21-31-C', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'C', 122, 147, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122131-12-21-31-D', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'D', 103, 121, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122131-12-21-31-E', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'E', 85, 102, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122131-12-21-31-F', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'F', 66, 84, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122131-12-21-31-G', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'G', 47, 65, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122131-12-21-31-U', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'U', 0, 46, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122132-12-21-32-Astar', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'A*', 204, 280, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122132-12-21-32-A', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'A', 177, 203, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122132-12-21-32-B', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'B', 150, 176, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122132-12-21-32-C', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'C', 124, 149, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122132-12-21-32-D', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'D', 103, 123, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122132-12-21-32-E', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'E', 83, 102, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122132-12-21-32-F', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'F', 63, 82, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122132-12-21-32-G', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'G', 43, 62, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122132-12-21-32-U', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'U', 0, 42, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122231-12-22-31-Astar', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'A*', 202, 280, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122231-12-22-31-A', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'A', 175, 201, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122231-12-22-31-B', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'B', 148, 174, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122231-12-22-31-C', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'C', 122, 147, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122231-12-22-31-D', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'D', 103, 121, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122231-12-22-31-E', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'E', 85, 102, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0417-s26-C122231-12-22-31-F', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'F', 66, 84, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122231-12-22-31-G', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'G', 47, 65, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122231-12-22-31-U', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'U', 0, 46, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122232-12-22-32-Astar', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'A*', 204, 280, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122232-12-22-32-A', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'A', 177, 203, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122232-12-22-32-B', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'B', 150, 176, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122232-12-22-32-C', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'C', 124, 149, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122232-12-22-32-D', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'D', 103, 123, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122232-12-22-32-E', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'E', 83, 102, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122232-12-22-32-F', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'F', 63, 82, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122232-12-22-32-G', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'G', 43, 62, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C122232-12-22-32-U', 'subj-caie-igcse-ict', 2026, 'May/June', '2', NULL, 'U', 0, 42, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132131-13-21-31-Astar', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'A*', 199, 280, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132131-13-21-31-A', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'A', 172, 198, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132131-13-21-31-B', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'B', 145, 171, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132131-13-21-31-C', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'C', 119, 144, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132131-13-21-31-D', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'D', 100, 118, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132131-13-21-31-E', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'E', 82, 99, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132131-13-21-31-F', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'F', 63, 81, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132131-13-21-31-G', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'G', 44, 62, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132131-13-21-31-U', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'U', 0, 43, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132132-13-21-32-Astar', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'A*', 202, 280, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132132-13-21-32-A', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'A', 175, 201, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132132-13-21-32-B', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'B', 148, 174, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132132-13-21-32-C', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'C', 121, 147, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132132-13-21-32-D', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'D', 100, 120, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132132-13-21-32-E', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'E', 80, 99, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132132-13-21-32-F', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'F', 60, 79, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132132-13-21-32-G', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'G', 40, 59, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132132-13-21-32-U', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'U', 0, 39, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132231-13-22-31-Astar', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'A*', 199, 280, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132231-13-22-31-A', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'A', 172, 198, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132231-13-22-31-B', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'B', 145, 171, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132231-13-22-31-C', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'C', 119, 144, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132231-13-22-31-D', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'D', 100, 118, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132231-13-22-31-E', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'E', 82, 99, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132231-13-22-31-F', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'F', 63, 81, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132231-13-22-31-G', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'G', 44, 62, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132231-13-22-31-U', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'U', 0, 43, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132232-13-22-32-Astar', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'A*', 202, 280, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132232-13-22-32-A', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'A', 175, 201, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132232-13-22-32-B', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'B', 148, 174, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132232-13-22-32-C', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'C', 121, 147, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132232-13-22-32-D', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'D', 100, 120, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132232-13-22-32-E', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'E', 80, 99, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132232-13-22-32-F', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'F', 60, 79, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132232-13-22-32-G', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'G', 40, 59, strftime('%s', 'now') * 1000),
+('sgb-0417-s26-C132232-13-22-32-U', 'subj-caie-igcse-ict', 2026, 'May/June', '3', NULL, 'U', 0, 39, strftime('%s', 'now') * 1000),
+('sgb-0417-m26-C122131-12-21-31-Astar', 'subj-caie-igcse-ict', 2026, 'Feb/March', '2', NULL, 'A*', 216, 280, strftime('%s', 'now') * 1000),
+('sgb-0417-m26-C122131-12-21-31-A', 'subj-caie-igcse-ict', 2026, 'Feb/March', '2', NULL, 'A', 187, 215, strftime('%s', 'now') * 1000),
+('sgb-0417-m26-C122131-12-21-31-B', 'subj-caie-igcse-ict', 2026, 'Feb/March', '2', NULL, 'B', 158, 186, strftime('%s', 'now') * 1000),
+('sgb-0417-m26-C122131-12-21-31-C', 'subj-caie-igcse-ict', 2026, 'Feb/March', '2', NULL, 'C', 129, 157, strftime('%s', 'now') * 1000),
+('sgb-0417-m26-C122131-12-21-31-D', 'subj-caie-igcse-ict', 2026, 'Feb/March', '2', NULL, 'D', 110, 128, strftime('%s', 'now') * 1000),
+('sgb-0417-m26-C122131-12-21-31-E', 'subj-caie-igcse-ict', 2026, 'Feb/March', '2', NULL, 'E', 91, 109, strftime('%s', 'now') * 1000),
+('sgb-0417-m26-C122131-12-21-31-F', 'subj-caie-igcse-ict', 2026, 'Feb/March', '2', NULL, 'F', 71, 90, strftime('%s', 'now') * 1000),
+('sgb-0417-m26-C122131-12-21-31-G', 'subj-caie-igcse-ict', 2026, 'Feb/March', '2', NULL, 'G', 51, 70, strftime('%s', 'now') * 1000),
+('sgb-0417-m26-C122131-12-21-31-U', 'subj-caie-igcse-ict', 2026, 'Feb/March', '2', NULL, 'U', 0, 50, strftime('%s', 'now') * 1000),
 ('sgb-0450-s22-X-11-21-Astar', 'subj-caie-igcse-biz', 2022, 'May/June', '1', NULL, 'A*', 89, 160, strftime('%s', 'now') * 1000),
 ('sgb-0450-s22-X-11-21-A', 'subj-caie-igcse-biz', 2022, 'May/June', '1', NULL, 'A', 73, 88, strftime('%s', 'now') * 1000),
-('sgb-0450-s22-X-11-21-B', 'subj-caie-igcse-biz', 2022, 'May/June', '1', NULL, 'B', 57, 72, strftime('%s', 'now') * 1000),
+('sgb-0450-s22-X-11-21-B', 'subj-caie-igcse-biz', 2022, 'May/June', '1', NULL, 'B', 57, 72, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0450-s22-X-11-21-C', 'subj-caie-igcse-biz', 2022, 'May/June', '1', NULL, 'C', 42, 56, strftime('%s', 'now') * 1000),
 ('sgb-0450-s22-X-11-21-D', 'subj-caie-igcse-biz', 2022, 'May/June', '1', NULL, 'D', 35, 41, strftime('%s', 'now') * 1000),
 ('sgb-0450-s22-X-11-21-E', 'subj-caie-igcse-biz', 2022, 'May/June', '1', NULL, 'E', 29, 34, strftime('%s', 'now') * 1000),
@@ -611,11 +730,11 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0450-w22-Y-12-22-B', 'subj-caie-igcse-biz', 2022, 'Oct/Nov', '2', NULL, 'B', 55, 69, strftime('%s', 'now') * 1000),
 ('sgb-0450-w22-Y-12-22-C', 'subj-caie-igcse-biz', 2022, 'Oct/Nov', '2', NULL, 'C', 40, 54, strftime('%s', 'now') * 1000),
 ('sgb-0450-w22-Y-12-22-D', 'subj-caie-igcse-biz', 2022, 'Oct/Nov', '2', NULL, 'D', 34, 39, strftime('%s', 'now') * 1000),
-('sgb-0450-w22-Y-12-22-E', 'subj-caie-igcse-biz', 2022, 'Oct/Nov', '2', NULL, 'E', 28, 33, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0450-w22-Y-12-22-E', 'subj-caie-igcse-biz', 2022, 'Oct/Nov', '2', NULL, 'E', 28, 33, strftime('%s', 'now') * 1000),
 ('sgb-0450-w22-Y-12-22-F', 'subj-caie-igcse-biz', 2022, 'Oct/Nov', '2', NULL, 'F', 22, 27, strftime('%s', 'now') * 1000),
 ('sgb-0450-w22-Y-12-22-G', 'subj-caie-igcse-biz', 2022, 'Oct/Nov', '2', NULL, 'G', 16, 21, strftime('%s', 'now') * 1000),
-('sgb-0450-w22-Y-12-22-U', 'subj-caie-igcse-biz', 2022, 'Oct/Nov', '2', NULL, 'U', 0, 15, strftime('%s', 'now') * 1000),
+('sgb-0450-w22-Y-12-22-U', 'subj-caie-igcse-biz', 2022, 'Oct/Nov', '2', NULL, 'U', 0, 15, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0450-w22-Z-13-23-Astar', 'subj-caie-igcse-biz', 2022, 'Oct/Nov', '3', NULL, 'A*', 95, 160, strftime('%s', 'now') * 1000),
 ('sgb-0450-w22-Z-13-23-A', 'subj-caie-igcse-biz', 2022, 'Oct/Nov', '3', NULL, 'A', 77, 94, strftime('%s', 'now') * 1000),
 ('sgb-0450-w22-Z-13-23-B', 'subj-caie-igcse-biz', 2022, 'Oct/Nov', '3', NULL, 'B', 59, 76, strftime('%s', 'now') * 1000),
@@ -672,11 +791,11 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0450-w23-X-11-21-U', 'subj-caie-igcse-biz', 2023, 'Oct/Nov', '1', NULL, 'U', 0, 15, strftime('%s', 'now') * 1000),
 ('sgb-0450-w23-Y-12-22-Astar', 'subj-caie-igcse-biz', 2023, 'Oct/Nov', '2', NULL, 'A*', 102, 160, strftime('%s', 'now') * 1000),
 ('sgb-0450-w23-Y-12-22-A', 'subj-caie-igcse-biz', 2023, 'Oct/Nov', '2', NULL, 'A', 85, 101, strftime('%s', 'now') * 1000),
-('sgb-0450-w23-Y-12-22-B', 'subj-caie-igcse-biz', 2023, 'Oct/Nov', '2', NULL, 'B', 68, 84, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0450-w23-Y-12-22-B', 'subj-caie-igcse-biz', 2023, 'Oct/Nov', '2', NULL, 'B', 68, 84, strftime('%s', 'now') * 1000),
 ('sgb-0450-w23-Y-12-22-C', 'subj-caie-igcse-biz', 2023, 'Oct/Nov', '2', NULL, 'C', 51, 67, strftime('%s', 'now') * 1000),
 ('sgb-0450-w23-Y-12-22-D', 'subj-caie-igcse-biz', 2023, 'Oct/Nov', '2', NULL, 'D', 42, 50, strftime('%s', 'now') * 1000),
-('sgb-0450-w23-Y-12-22-E', 'subj-caie-igcse-biz', 2023, 'Oct/Nov', '2', NULL, 'E', 33, 41, strftime('%s', 'now') * 1000),
+('sgb-0450-w23-Y-12-22-E', 'subj-caie-igcse-biz', 2023, 'Oct/Nov', '2', NULL, 'E', 33, 41, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0450-w23-Y-12-22-F', 'subj-caie-igcse-biz', 2023, 'Oct/Nov', '2', NULL, 'F', 25, 32, strftime('%s', 'now') * 1000),
 ('sgb-0450-w23-Y-12-22-G', 'subj-caie-igcse-biz', 2023, 'Oct/Nov', '2', NULL, 'G', 17, 24, strftime('%s', 'now') * 1000),
 ('sgb-0450-w23-Y-12-22-U', 'subj-caie-igcse-biz', 2023, 'Oct/Nov', '2', NULL, 'U', 0, 16, strftime('%s', 'now') * 1000),
@@ -733,11 +852,11 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0450-w24-W-12-21-E', 'subj-caie-igcse-biz', 2024, 'Oct/Nov', '2', NULL, 'E', 32, 39, strftime('%s', 'now') * 1000),
 ('sgb-0450-w24-W-12-21-F', 'subj-caie-igcse-biz', 2024, 'Oct/Nov', '2', NULL, 'F', 24, 31, strftime('%s', 'now') * 1000),
 ('sgb-0450-w24-W-12-21-G', 'subj-caie-igcse-biz', 2024, 'Oct/Nov', '2', NULL, 'G', 16, 23, strftime('%s', 'now') * 1000),
-('sgb-0450-w24-W-12-21-U', 'subj-caie-igcse-biz', 2024, 'Oct/Nov', '2', NULL, 'U', 0, 15, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0450-w24-W-12-21-U', 'subj-caie-igcse-biz', 2024, 'Oct/Nov', '2', NULL, 'U', 0, 15, strftime('%s', 'now') * 1000),
 ('sgb-0450-w24-X-11-21-Astar', 'subj-caie-igcse-biz', 2024, 'Oct/Nov', '1', NULL, 'A*', 102, 160, strftime('%s', 'now') * 1000),
 ('sgb-0450-w24-X-11-21-A', 'subj-caie-igcse-biz', 2024, 'Oct/Nov', '1', NULL, 'A', 83, 101, strftime('%s', 'now') * 1000),
-('sgb-0450-w24-X-11-21-B', 'subj-caie-igcse-biz', 2024, 'Oct/Nov', '1', NULL, 'B', 64, 82, strftime('%s', 'now') * 1000),
+('sgb-0450-w24-X-11-21-B', 'subj-caie-igcse-biz', 2024, 'Oct/Nov', '1', NULL, 'B', 64, 82, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0450-w24-X-11-21-C', 'subj-caie-igcse-biz', 2024, 'Oct/Nov', '1', NULL, 'C', 46, 63, strftime('%s', 'now') * 1000),
 ('sgb-0450-w24-X-11-21-D', 'subj-caie-igcse-biz', 2024, 'Oct/Nov', '1', NULL, 'D', 39, 45, strftime('%s', 'now') * 1000),
 ('sgb-0450-w24-X-11-21-E', 'subj-caie-igcse-biz', 2024, 'Oct/Nov', '1', NULL, 'E', 32, 38, strftime('%s', 'now') * 1000),
@@ -794,11 +913,11 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0450-s25-Z-13-23-B', 'subj-caie-igcse-biz', 2025, 'May/June', '3', NULL, 'B', 70, 86, strftime('%s', 'now') * 1000),
 ('sgb-0450-s25-Z-13-23-C', 'subj-caie-igcse-biz', 2025, 'May/June', '3', NULL, 'C', 54, 69, strftime('%s', 'now') * 1000),
 ('sgb-0450-s25-Z-13-23-D', 'subj-caie-igcse-biz', 2025, 'May/June', '3', NULL, 'D', 45, 53, strftime('%s', 'now') * 1000),
-('sgb-0450-s25-Z-13-23-E', 'subj-caie-igcse-biz', 2025, 'May/June', '3', NULL, 'E', 37, 44, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0450-s25-Z-13-23-E', 'subj-caie-igcse-biz', 2025, 'May/June', '3', NULL, 'E', 37, 44, strftime('%s', 'now') * 1000),
 ('sgb-0450-s25-Z-13-23-F', 'subj-caie-igcse-biz', 2025, 'May/June', '3', NULL, 'F', 28, 36, strftime('%s', 'now') * 1000),
 ('sgb-0450-s25-Z-13-23-G', 'subj-caie-igcse-biz', 2025, 'May/June', '3', NULL, 'G', 19, 27, strftime('%s', 'now') * 1000),
-('sgb-0450-s25-Z-13-23-U', 'subj-caie-igcse-biz', 2025, 'May/June', '3', NULL, 'U', 0, 18, strftime('%s', 'now') * 1000),
+('sgb-0450-s25-Z-13-23-U', 'subj-caie-igcse-biz', 2025, 'May/June', '3', NULL, 'U', 0, 18, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0450-m25-Y-12-22-Astar', 'subj-caie-igcse-biz', 2025, 'Feb/March', '2', NULL, 'A*', 108, 160, strftime('%s', 'now') * 1000),
 ('sgb-0450-m25-Y-12-22-A', 'subj-caie-igcse-biz', 2025, 'Feb/March', '2', NULL, 'A', 92, 107, strftime('%s', 'now') * 1000),
 ('sgb-0450-m25-Y-12-22-B', 'subj-caie-igcse-biz', 2025, 'Feb/March', '2', NULL, 'B', 76, 91, strftime('%s', 'now') * 1000),
@@ -844,6 +963,43 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0450-w25-Z-13-23-F', 'subj-caie-igcse-biz', 2025, 'Oct/Nov', '3', NULL, 'F', 24, 31, strftime('%s', 'now') * 1000),
 ('sgb-0450-w25-Z-13-23-G', 'subj-caie-igcse-biz', 2025, 'Oct/Nov', '3', NULL, 'G', 16, 23, strftime('%s', 'now') * 1000),
 ('sgb-0450-w25-Z-13-23-U', 'subj-caie-igcse-biz', 2025, 'Oct/Nov', '3', NULL, 'U', 0, 15, strftime('%s', 'now') * 1000),
+('sgb-0450-s26-C1121-11-21-Astar', 'subj-caie-igcse-biz', 2026, 'May/June', '1', NULL, 'A*', 95, 160, strftime('%s', 'now') * 1000),
+('sgb-0450-s26-C1121-11-21-A', 'subj-caie-igcse-biz', 2026, 'May/June', '1', NULL, 'A', 80, 94, strftime('%s', 'now') * 1000),
+('sgb-0450-s26-C1121-11-21-B', 'subj-caie-igcse-biz', 2026, 'May/June', '1', NULL, 'B', 65, 79, strftime('%s', 'now') * 1000),
+('sgb-0450-s26-C1121-11-21-C', 'subj-caie-igcse-biz', 2026, 'May/June', '1', NULL, 'C', 50, 64, strftime('%s', 'now') * 1000),
+('sgb-0450-s26-C1121-11-21-D', 'subj-caie-igcse-biz', 2026, 'May/June', '1', NULL, 'D', 42, 49, strftime('%s', 'now') * 1000),
+('sgb-0450-s26-C1121-11-21-E', 'subj-caie-igcse-biz', 2026, 'May/June', '1', NULL, 'E', 34, 41, strftime('%s', 'now') * 1000),
+('sgb-0450-s26-C1121-11-21-F', 'subj-caie-igcse-biz', 2026, 'May/June', '1', NULL, 'F', 26, 33, strftime('%s', 'now') * 1000),
+('sgb-0450-s26-C1121-11-21-G', 'subj-caie-igcse-biz', 2026, 'May/June', '1', NULL, 'G', 18, 25, strftime('%s', 'now') * 1000),
+('sgb-0450-s26-C1121-11-21-U', 'subj-caie-igcse-biz', 2026, 'May/June', '1', NULL, 'U', 0, 17, strftime('%s', 'now') * 1000),
+('sgb-0450-s26-C1222-12-22-Astar', 'subj-caie-igcse-biz', 2026, 'May/June', '2', NULL, 'A*', 105, 160, strftime('%s', 'now') * 1000),
+('sgb-0450-s26-C1222-12-22-A', 'subj-caie-igcse-biz', 2026, 'May/June', '2', NULL, 'A', 89, 104, strftime('%s', 'now') * 1000),
+('sgb-0450-s26-C1222-12-22-B', 'subj-caie-igcse-biz', 2026, 'May/June', '2', NULL, 'B', 73, 88, strftime('%s', 'now') * 1000),
+('sgb-0450-s26-C1222-12-22-C', 'subj-caie-igcse-biz', 2026, 'May/June', '2', NULL, 'C', 57, 72, strftime('%s', 'now') * 1000),
+('sgb-0450-s26-C1222-12-22-D', 'subj-caie-igcse-biz', 2026, 'May/June', '2', NULL, 'D', 48, 56, strftime('%s', 'now') * 1000),
+('sgb-0450-s26-C1222-12-22-E', 'subj-caie-igcse-biz', 2026, 'May/June', '2', NULL, 'E', 39, 47, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0450-s26-C1222-12-22-F', 'subj-caie-igcse-biz', 2026, 'May/June', '2', NULL, 'F', 29, 38, strftime('%s', 'now') * 1000),
+('sgb-0450-s26-C1222-12-22-G', 'subj-caie-igcse-biz', 2026, 'May/June', '2', NULL, 'G', 19, 28, strftime('%s', 'now') * 1000),
+('sgb-0450-s26-C1222-12-22-U', 'subj-caie-igcse-biz', 2026, 'May/June', '2', NULL, 'U', 0, 18, strftime('%s', 'now') * 1000),
+('sgb-0450-s26-C1323-13-23-Astar', 'subj-caie-igcse-biz', 2026, 'May/June', '3', NULL, 'A*', 97, 160, strftime('%s', 'now') * 1000),
+('sgb-0450-s26-C1323-13-23-A', 'subj-caie-igcse-biz', 2026, 'May/June', '3', NULL, 'A', 80, 96, strftime('%s', 'now') * 1000),
+('sgb-0450-s26-C1323-13-23-B', 'subj-caie-igcse-biz', 2026, 'May/June', '3', NULL, 'B', 63, 79, strftime('%s', 'now') * 1000),
+('sgb-0450-s26-C1323-13-23-C', 'subj-caie-igcse-biz', 2026, 'May/June', '3', NULL, 'C', 46, 62, strftime('%s', 'now') * 1000),
+('sgb-0450-s26-C1323-13-23-D', 'subj-caie-igcse-biz', 2026, 'May/June', '3', NULL, 'D', 39, 45, strftime('%s', 'now') * 1000),
+('sgb-0450-s26-C1323-13-23-E', 'subj-caie-igcse-biz', 2026, 'May/June', '3', NULL, 'E', 32, 38, strftime('%s', 'now') * 1000),
+('sgb-0450-s26-C1323-13-23-F', 'subj-caie-igcse-biz', 2026, 'May/June', '3', NULL, 'F', 26, 31, strftime('%s', 'now') * 1000),
+('sgb-0450-s26-C1323-13-23-G', 'subj-caie-igcse-biz', 2026, 'May/June', '3', NULL, 'G', 20, 25, strftime('%s', 'now') * 1000),
+('sgb-0450-s26-C1323-13-23-U', 'subj-caie-igcse-biz', 2026, 'May/June', '3', NULL, 'U', 0, 19, strftime('%s', 'now') * 1000),
+('sgb-0450-m26-C1222-12-22-Astar', 'subj-caie-igcse-biz', 2026, 'Feb/March', '2', NULL, 'A*', 100, 160, strftime('%s', 'now') * 1000),
+('sgb-0450-m26-C1222-12-22-A', 'subj-caie-igcse-biz', 2026, 'Feb/March', '2', NULL, 'A', 84, 99, strftime('%s', 'now') * 1000),
+('sgb-0450-m26-C1222-12-22-B', 'subj-caie-igcse-biz', 2026, 'Feb/March', '2', NULL, 'B', 68, 83, strftime('%s', 'now') * 1000),
+('sgb-0450-m26-C1222-12-22-C', 'subj-caie-igcse-biz', 2026, 'Feb/March', '2', NULL, 'C', 53, 67, strftime('%s', 'now') * 1000),
+('sgb-0450-m26-C1222-12-22-D', 'subj-caie-igcse-biz', 2026, 'Feb/March', '2', NULL, 'D', 44, 52, strftime('%s', 'now') * 1000),
+('sgb-0450-m26-C1222-12-22-E', 'subj-caie-igcse-biz', 2026, 'Feb/March', '2', NULL, 'E', 35, 43, strftime('%s', 'now') * 1000),
+('sgb-0450-m26-C1222-12-22-F', 'subj-caie-igcse-biz', 2026, 'Feb/March', '2', NULL, 'F', 26, 34, strftime('%s', 'now') * 1000),
+('sgb-0450-m26-C1222-12-22-G', 'subj-caie-igcse-biz', 2026, 'Feb/March', '2', NULL, 'G', 17, 25, strftime('%s', 'now') * 1000),
+('sgb-0450-m26-C1222-12-22-U', 'subj-caie-igcse-biz', 2026, 'Feb/March', '2', NULL, 'U', 0, 16, strftime('%s', 'now') * 1000),
 ('sgb-0452-s22-AX-11-21-Astar', 'subj-caie-igcse-acc', 2022, 'May/June', '1', NULL, 'A*', 90, 143, strftime('%s', 'now') * 1000),
 ('sgb-0452-s22-AX-11-21-A', 'subj-caie-igcse-acc', 2022, 'May/June', '1', NULL, 'A', 72, 89, strftime('%s', 'now') * 1000),
 ('sgb-0452-s22-AX-11-21-B', 'subj-caie-igcse-acc', 2022, 'May/June', '1', NULL, 'B', 54, 71, strftime('%s', 'now') * 1000),
@@ -855,8 +1011,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0452-s22-AX-11-21-U', 'subj-caie-igcse-acc', 2022, 'May/June', '1', NULL, 'U', 0, 15, strftime('%s', 'now') * 1000),
 ('sgb-0452-s22-AY-12-22-Astar', 'subj-caie-igcse-acc', 2022, 'May/June', '2', NULL, 'A*', 90, 143, strftime('%s', 'now') * 1000),
 ('sgb-0452-s22-AY-12-22-A', 'subj-caie-igcse-acc', 2022, 'May/June', '2', NULL, 'A', 72, 89, strftime('%s', 'now') * 1000),
-('sgb-0452-s22-AY-12-22-B', 'subj-caie-igcse-acc', 2022, 'May/June', '2', NULL, 'B', 54, 71, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0452-s22-AY-12-22-B', 'subj-caie-igcse-acc', 2022, 'May/June', '2', NULL, 'B', 54, 71, strftime('%s', 'now') * 1000),
 ('sgb-0452-s22-AY-12-22-C', 'subj-caie-igcse-acc', 2022, 'May/June', '2', NULL, 'C', 36, 53, strftime('%s', 'now') * 1000),
 ('sgb-0452-s22-AY-12-22-D', 'subj-caie-igcse-acc', 2022, 'May/June', '2', NULL, 'D', 31, 35, strftime('%s', 'now') * 1000),
 ('sgb-0452-s22-AY-12-22-E', 'subj-caie-igcse-acc', 2022, 'May/June', '2', NULL, 'E', 26, 30, strftime('%s', 'now') * 1000),
@@ -883,7 +1038,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0452-m22-AY-12-22-U', 'subj-caie-igcse-acc', 2022, 'Feb/March', '2', NULL, 'U', 0, 14, strftime('%s', 'now') * 1000),
 ('sgb-0452-w22-AX-11-21-Astar', 'subj-caie-igcse-acc', 2022, 'Oct/Nov', '1', NULL, 'A*', 85, 143, strftime('%s', 'now') * 1000),
 ('sgb-0452-w22-AX-11-21-A', 'subj-caie-igcse-acc', 2022, 'Oct/Nov', '1', NULL, 'A', 69, 84, strftime('%s', 'now') * 1000),
-('sgb-0452-w22-AX-11-21-B', 'subj-caie-igcse-acc', 2022, 'Oct/Nov', '1', NULL, 'B', 53, 68, strftime('%s', 'now') * 1000),
+('sgb-0452-w22-AX-11-21-B', 'subj-caie-igcse-acc', 2022, 'Oct/Nov', '1', NULL, 'B', 53, 68, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0452-w22-AX-11-21-C', 'subj-caie-igcse-acc', 2022, 'Oct/Nov', '1', NULL, 'C', 38, 52, strftime('%s', 'now') * 1000),
 ('sgb-0452-w22-AX-11-21-D', 'subj-caie-igcse-acc', 2022, 'Oct/Nov', '1', NULL, 'D', 32, 37, strftime('%s', 'now') * 1000),
 ('sgb-0452-w22-AX-11-21-E', 'subj-caie-igcse-acc', 2022, 'Oct/Nov', '1', NULL, 'E', 27, 31, strftime('%s', 'now') * 1000),
@@ -916,8 +1072,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0452-s23-AX-11-21-E', 'subj-caie-igcse-acc', 2023, 'May/June', '1', NULL, 'E', 29, 33, strftime('%s', 'now') * 1000),
 ('sgb-0452-s23-AX-11-21-F', 'subj-caie-igcse-acc', 2023, 'May/June', '1', NULL, 'F', 24, 28, strftime('%s', 'now') * 1000),
 ('sgb-0452-s23-AX-11-21-G', 'subj-caie-igcse-acc', 2023, 'May/June', '1', NULL, 'G', 19, 23, strftime('%s', 'now') * 1000),
-('sgb-0452-s23-AX-11-21-U', 'subj-caie-igcse-acc', 2023, 'May/June', '1', NULL, 'U', 0, 18, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0452-s23-AX-11-21-U', 'subj-caie-igcse-acc', 2023, 'May/June', '1', NULL, 'U', 0, 18, strftime('%s', 'now') * 1000),
 ('sgb-0452-s23-AY-12-22-Astar', 'subj-caie-igcse-acc', 2023, 'May/June', '2', NULL, 'A*', 108, 143, strftime('%s', 'now') * 1000),
 ('sgb-0452-s23-AY-12-22-A', 'subj-caie-igcse-acc', 2023, 'May/June', '2', NULL, 'A', 85, 107, strftime('%s', 'now') * 1000),
 ('sgb-0452-s23-AY-12-22-B', 'subj-caie-igcse-acc', 2023, 'May/June', '2', NULL, 'B', 62, 84, strftime('%s', 'now') * 1000),
@@ -944,7 +1099,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0452-m23-AY-12-22-E', 'subj-caie-igcse-acc', 2023, 'Feb/March', '2', NULL, 'E', 40, 50, strftime('%s', 'now') * 1000),
 ('sgb-0452-m23-AY-12-22-F', 'subj-caie-igcse-acc', 2023, 'Feb/March', '2', NULL, 'F', 29, 39, strftime('%s', 'now') * 1000),
 ('sgb-0452-m23-AY-12-22-G', 'subj-caie-igcse-acc', 2023, 'Feb/March', '2', NULL, 'G', 18, 28, strftime('%s', 'now') * 1000),
-('sgb-0452-m23-AY-12-22-U', 'subj-caie-igcse-acc', 2023, 'Feb/March', '2', NULL, 'U', 0, 17, strftime('%s', 'now') * 1000),
+('sgb-0452-m23-AY-12-22-U', 'subj-caie-igcse-acc', 2023, 'Feb/March', '2', NULL, 'U', 0, 17, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0452-w23-AX-11-21-Astar', 'subj-caie-igcse-acc', 2023, 'Oct/Nov', '1', NULL, 'A*', 109, 143, strftime('%s', 'now') * 1000),
 ('sgb-0452-w23-AX-11-21-A', 'subj-caie-igcse-acc', 2023, 'Oct/Nov', '1', NULL, 'A', 88, 108, strftime('%s', 'now') * 1000),
 ('sgb-0452-w23-AX-11-21-B', 'subj-caie-igcse-acc', 2023, 'Oct/Nov', '1', NULL, 'B', 67, 87, strftime('%s', 'now') * 1000),
@@ -977,8 +1133,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0452-s24-AX-11-21-B', 'subj-caie-igcse-acc', 2024, 'May/June', '1', NULL, 'B', 55, 73, strftime('%s', 'now') * 1000),
 ('sgb-0452-s24-AX-11-21-C', 'subj-caie-igcse-acc', 2024, 'May/June', '1', NULL, 'C', 37, 54, strftime('%s', 'now') * 1000),
 ('sgb-0452-s24-AX-11-21-D', 'subj-caie-igcse-acc', 2024, 'May/June', '1', NULL, 'D', 31, 36, strftime('%s', 'now') * 1000),
-('sgb-0452-s24-AX-11-21-E', 'subj-caie-igcse-acc', 2024, 'May/June', '1', NULL, 'E', 26, 30, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0452-s24-AX-11-21-E', 'subj-caie-igcse-acc', 2024, 'May/June', '1', NULL, 'E', 26, 30, strftime('%s', 'now') * 1000),
 ('sgb-0452-s24-AX-11-21-F', 'subj-caie-igcse-acc', 2024, 'May/June', '1', NULL, 'F', 21, 25, strftime('%s', 'now') * 1000),
 ('sgb-0452-s24-AX-11-21-G', 'subj-caie-igcse-acc', 2024, 'May/June', '1', NULL, 'G', 16, 20, strftime('%s', 'now') * 1000),
 ('sgb-0452-s24-AX-11-21-U', 'subj-caie-igcse-acc', 2024, 'May/June', '1', NULL, 'U', 0, 15, strftime('%s', 'now') * 1000),
@@ -1005,7 +1160,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0452-m24-AY-12-22-B', 'subj-caie-igcse-acc', 2024, 'Feb/March', '2', NULL, 'B', 83, 100, strftime('%s', 'now') * 1000),
 ('sgb-0452-m24-AY-12-22-C', 'subj-caie-igcse-acc', 2024, 'Feb/March', '2', NULL, 'C', 65, 82, strftime('%s', 'now') * 1000),
 ('sgb-0452-m24-AY-12-22-D', 'subj-caie-igcse-acc', 2024, 'Feb/March', '2', NULL, 'D', 54, 64, strftime('%s', 'now') * 1000),
-('sgb-0452-m24-AY-12-22-E', 'subj-caie-igcse-acc', 2024, 'Feb/March', '2', NULL, 'E', 43, 53, strftime('%s', 'now') * 1000),
+('sgb-0452-m24-AY-12-22-E', 'subj-caie-igcse-acc', 2024, 'Feb/March', '2', NULL, 'E', 43, 53, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0452-m24-AY-12-22-F', 'subj-caie-igcse-acc', 2024, 'Feb/March', '2', NULL, 'F', 33, 42, strftime('%s', 'now') * 1000),
 ('sgb-0452-m24-AY-12-22-G', 'subj-caie-igcse-acc', 2024, 'Feb/March', '2', NULL, 'G', 23, 32, strftime('%s', 'now') * 1000),
 ('sgb-0452-m24-AY-12-22-U', 'subj-caie-igcse-acc', 2024, 'Feb/March', '2', NULL, 'U', 0, 22, strftime('%s', 'now') * 1000),
@@ -1038,8 +1194,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0452-w24-AZ-13-23-U', 'subj-caie-igcse-acc', 2024, 'Oct/Nov', '3', NULL, 'U', 0, 14, strftime('%s', 'now') * 1000),
 ('sgb-0452-s25-AX-11-21-Astar', 'subj-caie-igcse-acc', 2025, 'May/June', '1', NULL, 'A*', 99, 143, strftime('%s', 'now') * 1000),
 ('sgb-0452-s25-AX-11-21-A', 'subj-caie-igcse-acc', 2025, 'May/June', '1', NULL, 'A', 79, 98, strftime('%s', 'now') * 1000),
-('sgb-0452-s25-AX-11-21-B', 'subj-caie-igcse-acc', 2025, 'May/June', '1', NULL, 'B', 59, 78, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0452-s25-AX-11-21-B', 'subj-caie-igcse-acc', 2025, 'May/June', '1', NULL, 'B', 59, 78, strftime('%s', 'now') * 1000),
 ('sgb-0452-s25-AX-11-21-C', 'subj-caie-igcse-acc', 2025, 'May/June', '1', NULL, 'C', 40, 58, strftime('%s', 'now') * 1000),
 ('sgb-0452-s25-AX-11-21-D', 'subj-caie-igcse-acc', 2025, 'May/June', '1', NULL, 'D', 34, 39, strftime('%s', 'now') * 1000),
 ('sgb-0452-s25-AX-11-21-E', 'subj-caie-igcse-acc', 2025, 'May/June', '1', NULL, 'E', 29, 33, strftime('%s', 'now') * 1000),
@@ -1066,7 +1221,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0452-s25-AZ-13-23-U', 'subj-caie-igcse-acc', 2025, 'May/June', '3', NULL, 'U', 0, 16, strftime('%s', 'now') * 1000),
 ('sgb-0452-m25-AY-12-22-Astar', 'subj-caie-igcse-acc', 2025, 'Feb/March', '2', NULL, 'A*', 115, 143, strftime('%s', 'now') * 1000),
 ('sgb-0452-m25-AY-12-22-A', 'subj-caie-igcse-acc', 2025, 'Feb/March', '2', NULL, 'A', 93, 114, strftime('%s', 'now') * 1000),
-('sgb-0452-m25-AY-12-22-B', 'subj-caie-igcse-acc', 2025, 'Feb/March', '2', NULL, 'B', 71, 92, strftime('%s', 'now') * 1000),
+('sgb-0452-m25-AY-12-22-B', 'subj-caie-igcse-acc', 2025, 'Feb/March', '2', NULL, 'B', 71, 92, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0452-m25-AY-12-22-C', 'subj-caie-igcse-acc', 2025, 'Feb/March', '2', NULL, 'C', 50, 70, strftime('%s', 'now') * 1000),
 ('sgb-0452-m25-AY-12-22-D', 'subj-caie-igcse-acc', 2025, 'Feb/March', '2', NULL, 'D', 43, 49, strftime('%s', 'now') * 1000),
 ('sgb-0452-m25-AY-12-22-E', 'subj-caie-igcse-acc', 2025, 'Feb/March', '2', NULL, 'E', 36, 42, strftime('%s', 'now') * 1000),
@@ -1091,6 +1247,52 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0452-w25-AZ-13-23-F', 'subj-caie-igcse-acc', 2025, 'Oct/Nov', '3', NULL, 'F', 24, 31, strftime('%s', 'now') * 1000),
 ('sgb-0452-w25-AZ-13-23-G', 'subj-caie-igcse-acc', 2025, 'Oct/Nov', '3', NULL, 'G', 16, 23, strftime('%s', 'now') * 1000),
 ('sgb-0452-w25-AZ-13-23-U', 'subj-caie-igcse-acc', 2025, 'Oct/Nov', '3', NULL, 'U', 0, 15, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1121-11-21-Astar', 'subj-caie-igcse-acc', 2026, 'May/June', '1', NULL, 'A*', 100, 143, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1121-11-21-A', 'subj-caie-igcse-acc', 2026, 'May/June', '1', NULL, 'A', 80, 99, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1121-11-21-B', 'subj-caie-igcse-acc', 2026, 'May/June', '1', NULL, 'B', 60, 79, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1121-11-21-C', 'subj-caie-igcse-acc', 2026, 'May/June', '1', NULL, 'C', 40, 59, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1121-11-21-D', 'subj-caie-igcse-acc', 2026, 'May/June', '1', NULL, 'D', 34, 39, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1121-11-21-E', 'subj-caie-igcse-acc', 2026, 'May/June', '1', NULL, 'E', 29, 33, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1121-11-21-F', 'subj-caie-igcse-acc', 2026, 'May/June', '1', NULL, 'F', 23, 28, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1121-11-21-G', 'subj-caie-igcse-acc', 2026, 'May/June', '1', NULL, 'G', 17, 22, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1121-11-21-U', 'subj-caie-igcse-acc', 2026, 'May/June', '1', NULL, 'U', 0, 16, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1222-12-22-Astar', 'subj-caie-igcse-acc', 2026, 'May/June', '2', NULL, 'A*', 111, 143, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1222-12-22-A', 'subj-caie-igcse-acc', 2026, 'May/June', '2', NULL, 'A', 88, 110, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1222-12-22-B', 'subj-caie-igcse-acc', 2026, 'May/June', '2', NULL, 'B', 65, 87, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1222-12-22-C', 'subj-caie-igcse-acc', 2026, 'May/June', '2', NULL, 'C', 42, 64, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1222-12-22-D', 'subj-caie-igcse-acc', 2026, 'May/June', '2', NULL, 'D', 35, 41, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1222-12-22-E', 'subj-caie-igcse-acc', 2026, 'May/June', '2', NULL, 'E', 29, 34, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1222-12-22-F', 'subj-caie-igcse-acc', 2026, 'May/June', '2', NULL, 'F', 23, 28, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1222-12-22-G', 'subj-caie-igcse-acc', 2026, 'May/June', '2', NULL, 'G', 17, 22, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1222-12-22-U', 'subj-caie-igcse-acc', 2026, 'May/June', '2', NULL, 'U', 0, 16, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1323-13-23-Astar', 'subj-caie-igcse-acc', 2026, 'May/June', '3', NULL, 'A*', 100, 143, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1323-13-23-A', 'subj-caie-igcse-acc', 2026, 'May/June', '3', NULL, 'A', 80, 99, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1323-13-23-B', 'subj-caie-igcse-acc', 2026, 'May/June', '3', NULL, 'B', 60, 79, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1323-13-23-C', 'subj-caie-igcse-acc', 2026, 'May/June', '3', NULL, 'C', 40, 59, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1323-13-23-D', 'subj-caie-igcse-acc', 2026, 'May/June', '3', NULL, 'D', 34, 39, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1323-13-23-E', 'subj-caie-igcse-acc', 2026, 'May/June', '3', NULL, 'E', 29, 33, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1323-13-23-F', 'subj-caie-igcse-acc', 2026, 'May/June', '3', NULL, 'F', 23, 28, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1323-13-23-G', 'subj-caie-igcse-acc', 2026, 'May/June', '3', NULL, 'G', 17, 22, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1323-13-23-U', 'subj-caie-igcse-acc', 2026, 'May/June', '3', NULL, 'U', 0, 16, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1721-17-21-Astar', 'subj-caie-igcse-acc', 2026, 'May/June', '7', NULL, 'A*', 100, 143, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1721-17-21-A', 'subj-caie-igcse-acc', 2026, 'May/June', '7', NULL, 'A', 80, 99, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1721-17-21-B', 'subj-caie-igcse-acc', 2026, 'May/June', '7', NULL, 'B', 60, 79, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1721-17-21-C', 'subj-caie-igcse-acc', 2026, 'May/June', '7', NULL, 'C', 40, 59, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1721-17-21-D', 'subj-caie-igcse-acc', 2026, 'May/June', '7', NULL, 'D', 34, 39, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1721-17-21-E', 'subj-caie-igcse-acc', 2026, 'May/June', '7', NULL, 'E', 29, 33, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1721-17-21-F', 'subj-caie-igcse-acc', 2026, 'May/June', '7', NULL, 'F', 23, 28, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1721-17-21-G', 'subj-caie-igcse-acc', 2026, 'May/June', '7', NULL, 'G', 17, 22, strftime('%s', 'now') * 1000),
+('sgb-0452-s26-C1721-17-21-U', 'subj-caie-igcse-acc', 2026, 'May/June', '7', NULL, 'U', 0, 16, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0452-m26-C1222-12-22-Astar', 'subj-caie-igcse-acc', 2026, 'Feb/March', '2', NULL, 'A*', 108, 143, strftime('%s', 'now') * 1000),
+('sgb-0452-m26-C1222-12-22-A', 'subj-caie-igcse-acc', 2026, 'Feb/March', '2', NULL, 'A', 87, 107, strftime('%s', 'now') * 1000),
+('sgb-0452-m26-C1222-12-22-B', 'subj-caie-igcse-acc', 2026, 'Feb/March', '2', NULL, 'B', 66, 86, strftime('%s', 'now') * 1000),
+('sgb-0452-m26-C1222-12-22-C', 'subj-caie-igcse-acc', 2026, 'Feb/March', '2', NULL, 'C', 46, 65, strftime('%s', 'now') * 1000),
+('sgb-0452-m26-C1222-12-22-D', 'subj-caie-igcse-acc', 2026, 'Feb/March', '2', NULL, 'D', 39, 45, strftime('%s', 'now') * 1000),
+('sgb-0452-m26-C1222-12-22-E', 'subj-caie-igcse-acc', 2026, 'Feb/March', '2', NULL, 'E', 33, 38, strftime('%s', 'now') * 1000),
+('sgb-0452-m26-C1222-12-22-F', 'subj-caie-igcse-acc', 2026, 'Feb/March', '2', NULL, 'F', 26, 32, strftime('%s', 'now') * 1000),
+('sgb-0452-m26-C1222-12-22-G', 'subj-caie-igcse-acc', 2026, 'Feb/March', '2', NULL, 'G', 19, 25, strftime('%s', 'now') * 1000),
+('sgb-0452-m26-C1222-12-22-U', 'subj-caie-igcse-acc', 2026, 'Feb/March', '2', NULL, 'U', 0, 18, strftime('%s', 'now') * 1000),
 ('sgb-0455-s22-X-11-21-Astar', 'subj-caie-igcse-econ', 2022, 'May/June', '1', NULL, 'A*', 110, 150, strftime('%s', 'now') * 1000),
 ('sgb-0455-s22-X-11-21-A', 'subj-caie-igcse-econ', 2022, 'May/June', '1', NULL, 'A', 94, 109, strftime('%s', 'now') * 1000),
 ('sgb-0455-s22-X-11-21-B', 'subj-caie-igcse-econ', 2022, 'May/June', '1', NULL, 'B', 78, 93, strftime('%s', 'now') * 1000),
@@ -1099,8 +1301,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0455-s22-X-11-21-E', 'subj-caie-igcse-econ', 2022, 'May/June', '1', NULL, 'E', 40, 50, strftime('%s', 'now') * 1000),
 ('sgb-0455-s22-X-11-21-F', 'subj-caie-igcse-econ', 2022, 'May/June', '1', NULL, 'F', 29, 39, strftime('%s', 'now') * 1000),
 ('sgb-0455-s22-X-11-21-G', 'subj-caie-igcse-econ', 2022, 'May/June', '1', NULL, 'G', 18, 28, strftime('%s', 'now') * 1000),
-('sgb-0455-s22-X-11-21-U', 'subj-caie-igcse-econ', 2022, 'May/June', '1', NULL, 'U', 0, 17, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0455-s22-X-11-21-U', 'subj-caie-igcse-econ', 2022, 'May/June', '1', NULL, 'U', 0, 17, strftime('%s', 'now') * 1000),
 ('sgb-0455-s22-Y-12-22-Astar', 'subj-caie-igcse-econ', 2022, 'May/June', '2', NULL, 'A*', 114, 150, strftime('%s', 'now') * 1000),
 ('sgb-0455-s22-Y-12-22-A', 'subj-caie-igcse-econ', 2022, 'May/June', '2', NULL, 'A', 95, 113, strftime('%s', 'now') * 1000),
 ('sgb-0455-s22-Y-12-22-B', 'subj-caie-igcse-econ', 2022, 'May/June', '2', NULL, 'B', 76, 94, strftime('%s', 'now') * 1000),
@@ -1142,7 +1343,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0455-w22-Y-12-22-B', 'subj-caie-igcse-econ', 2022, 'Oct/Nov', '2', NULL, 'B', 81, 98, strftime('%s', 'now') * 1000),
 ('sgb-0455-w22-Y-12-22-C', 'subj-caie-igcse-econ', 2022, 'Oct/Nov', '2', NULL, 'C', 64, 80, strftime('%s', 'now') * 1000),
 ('sgb-0455-w22-Y-12-22-D', 'subj-caie-igcse-econ', 2022, 'Oct/Nov', '2', NULL, 'D', 53, 63, strftime('%s', 'now') * 1000),
-('sgb-0455-w22-Y-12-22-E', 'subj-caie-igcse-econ', 2022, 'Oct/Nov', '2', NULL, 'E', 42, 52, strftime('%s', 'now') * 1000),
+('sgb-0455-w22-Y-12-22-E', 'subj-caie-igcse-econ', 2022, 'Oct/Nov', '2', NULL, 'E', 42, 52, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0455-w22-Y-12-22-F', 'subj-caie-igcse-econ', 2022, 'Oct/Nov', '2', NULL, 'F', 31, 41, strftime('%s', 'now') * 1000),
 ('sgb-0455-w22-Y-12-22-G', 'subj-caie-igcse-econ', 2022, 'Oct/Nov', '2', NULL, 'G', 20, 30, strftime('%s', 'now') * 1000),
 ('sgb-0455-w22-Y-12-22-U', 'subj-caie-igcse-econ', 2022, 'Oct/Nov', '2', NULL, 'U', 0, 19, strftime('%s', 'now') * 1000),
@@ -1160,8 +1362,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0455-s23-X-11-21-B', 'subj-caie-igcse-econ', 2023, 'May/June', '1', NULL, 'B', 81, 94, strftime('%s', 'now') * 1000),
 ('sgb-0455-s23-X-11-21-C', 'subj-caie-igcse-econ', 2023, 'May/June', '1', NULL, 'C', 68, 80, strftime('%s', 'now') * 1000),
 ('sgb-0455-s23-X-11-21-D', 'subj-caie-igcse-econ', 2023, 'May/June', '1', NULL, 'D', 57, 67, strftime('%s', 'now') * 1000),
-('sgb-0455-s23-X-11-21-E', 'subj-caie-igcse-econ', 2023, 'May/June', '1', NULL, 'E', 46, 56, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0455-s23-X-11-21-E', 'subj-caie-igcse-econ', 2023, 'May/June', '1', NULL, 'E', 46, 56, strftime('%s', 'now') * 1000),
 ('sgb-0455-s23-X-11-21-F', 'subj-caie-igcse-econ', 2023, 'May/June', '1', NULL, 'F', 37, 45, strftime('%s', 'now') * 1000),
 ('sgb-0455-s23-X-11-21-G', 'subj-caie-igcse-econ', 2023, 'May/June', '1', NULL, 'G', 28, 36, strftime('%s', 'now') * 1000),
 ('sgb-0455-s23-X-11-21-U', 'subj-caie-igcse-econ', 2023, 'May/June', '1', NULL, 'U', 0, 27, strftime('%s', 'now') * 1000),
@@ -1203,7 +1404,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0455-w23-X-11-21-U', 'subj-caie-igcse-econ', 2023, 'Oct/Nov', '1', NULL, 'U', 0, 22, strftime('%s', 'now') * 1000),
 ('sgb-0455-w23-Y-12-22-Astar', 'subj-caie-igcse-econ', 2023, 'Oct/Nov', '2', NULL, 'A*', 125, 150, strftime('%s', 'now') * 1000),
 ('sgb-0455-w23-Y-12-22-A', 'subj-caie-igcse-econ', 2023, 'Oct/Nov', '2', NULL, 'A', 105, 124, strftime('%s', 'now') * 1000),
-('sgb-0455-w23-Y-12-22-B', 'subj-caie-igcse-econ', 2023, 'Oct/Nov', '2', NULL, 'B', 85, 104, strftime('%s', 'now') * 1000),
+('sgb-0455-w23-Y-12-22-B', 'subj-caie-igcse-econ', 2023, 'Oct/Nov', '2', NULL, 'B', 85, 104, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0455-w23-Y-12-22-C', 'subj-caie-igcse-econ', 2023, 'Oct/Nov', '2', NULL, 'C', 65, 84, strftime('%s', 'now') * 1000),
 ('sgb-0455-w23-Y-12-22-D', 'subj-caie-igcse-econ', 2023, 'Oct/Nov', '2', NULL, 'D', 54, 64, strftime('%s', 'now') * 1000),
 ('sgb-0455-w23-Y-12-22-E', 'subj-caie-igcse-econ', 2023, 'Oct/Nov', '2', NULL, 'E', 44, 53, strftime('%s', 'now') * 1000),
@@ -1221,8 +1423,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0455-w23-Z-13-23-U', 'subj-caie-igcse-econ', 2023, 'Oct/Nov', '3', NULL, 'U', 0, 20, strftime('%s', 'now') * 1000),
 ('sgb-0455-s24-X-11-21-Astar', 'subj-caie-igcse-econ', 2024, 'May/June', '1', NULL, 'A*', 112, 150, strftime('%s', 'now') * 1000),
 ('sgb-0455-s24-X-11-21-A', 'subj-caie-igcse-econ', 2024, 'May/June', '1', NULL, 'A', 97, 111, strftime('%s', 'now') * 1000),
-('sgb-0455-s24-X-11-21-B', 'subj-caie-igcse-econ', 2024, 'May/June', '1', NULL, 'B', 82, 96, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0455-s24-X-11-21-B', 'subj-caie-igcse-econ', 2024, 'May/June', '1', NULL, 'B', 82, 96, strftime('%s', 'now') * 1000),
 ('sgb-0455-s24-X-11-21-C', 'subj-caie-igcse-econ', 2024, 'May/June', '1', NULL, 'C', 67, 81, strftime('%s', 'now') * 1000),
 ('sgb-0455-s24-X-11-21-D', 'subj-caie-igcse-econ', 2024, 'May/June', '1', NULL, 'D', 57, 66, strftime('%s', 'now') * 1000),
 ('sgb-0455-s24-X-11-21-E', 'subj-caie-igcse-econ', 2024, 'May/June', '1', NULL, 'E', 47, 56, strftime('%s', 'now') * 1000),
@@ -1264,7 +1465,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0455-w24-X-11-21-E', 'subj-caie-igcse-econ', 2024, 'Oct/Nov', '1', NULL, 'E', 44, 53, strftime('%s', 'now') * 1000),
 ('sgb-0455-w24-X-11-21-F', 'subj-caie-igcse-econ', 2024, 'Oct/Nov', '1', NULL, 'F', 33, 43, strftime('%s', 'now') * 1000),
 ('sgb-0455-w24-X-11-21-G', 'subj-caie-igcse-econ', 2024, 'Oct/Nov', '1', NULL, 'G', 22, 32, strftime('%s', 'now') * 1000),
-('sgb-0455-w24-X-11-21-U', 'subj-caie-igcse-econ', 2024, 'Oct/Nov', '1', NULL, 'U', 0, 21, strftime('%s', 'now') * 1000),
+('sgb-0455-w24-X-11-21-U', 'subj-caie-igcse-econ', 2024, 'Oct/Nov', '1', NULL, 'U', 0, 21, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0455-w24-Y-12-22-Astar', 'subj-caie-igcse-econ', 2024, 'Oct/Nov', '2', NULL, 'A*', 124, 150, strftime('%s', 'now') * 1000),
 ('sgb-0455-w24-Y-12-22-A', 'subj-caie-igcse-econ', 2024, 'Oct/Nov', '2', NULL, 'A', 107, 123, strftime('%s', 'now') * 1000),
 ('sgb-0455-w24-Y-12-22-B', 'subj-caie-igcse-econ', 2024, 'Oct/Nov', '2', NULL, 'B', 90, 106, strftime('%s', 'now') * 1000),
@@ -1282,8 +1484,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0455-w24-Z-13-23-E', 'subj-caie-igcse-econ', 2024, 'Oct/Nov', '3', NULL, 'E', 45, 56, strftime('%s', 'now') * 1000),
 ('sgb-0455-w24-Z-13-23-F', 'subj-caie-igcse-econ', 2024, 'Oct/Nov', '3', NULL, 'F', 34, 44, strftime('%s', 'now') * 1000),
 ('sgb-0455-w24-Z-13-23-G', 'subj-caie-igcse-econ', 2024, 'Oct/Nov', '3', NULL, 'G', 23, 33, strftime('%s', 'now') * 1000),
-('sgb-0455-w24-Z-13-23-U', 'subj-caie-igcse-econ', 2024, 'Oct/Nov', '3', NULL, 'U', 0, 22, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0455-w24-Z-13-23-U', 'subj-caie-igcse-econ', 2024, 'Oct/Nov', '3', NULL, 'U', 0, 22, strftime('%s', 'now') * 1000),
 ('sgb-0455-s25-X-11-21-Astar', 'subj-caie-igcse-econ', 2025, 'May/June', '1', NULL, 'A*', 114, 150, strftime('%s', 'now') * 1000),
 ('sgb-0455-s25-X-11-21-A', 'subj-caie-igcse-econ', 2025, 'May/June', '1', NULL, 'A', 97, 113, strftime('%s', 'now') * 1000),
 ('sgb-0455-s25-X-11-21-B', 'subj-caie-igcse-econ', 2025, 'May/June', '1', NULL, 'B', 80, 96, strftime('%s', 'now') * 1000),
@@ -1325,7 +1526,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0455-w25-X-11-21-B', 'subj-caie-igcse-econ', 2025, 'Oct/Nov', '1', NULL, 'B', 90, 107, strftime('%s', 'now') * 1000),
 ('sgb-0455-w25-X-11-21-C', 'subj-caie-igcse-econ', 2025, 'Oct/Nov', '1', NULL, 'C', 72, 89, strftime('%s', 'now') * 1000),
 ('sgb-0455-w25-X-11-21-D', 'subj-caie-igcse-econ', 2025, 'Oct/Nov', '1', NULL, 'D', 59, 71, strftime('%s', 'now') * 1000),
-('sgb-0455-w25-X-11-21-E', 'subj-caie-igcse-econ', 2025, 'Oct/Nov', '1', NULL, 'E', 47, 58, strftime('%s', 'now') * 1000),
+('sgb-0455-w25-X-11-21-E', 'subj-caie-igcse-econ', 2025, 'Oct/Nov', '1', NULL, 'E', 47, 58, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0455-w25-X-11-21-F', 'subj-caie-igcse-econ', 2025, 'Oct/Nov', '1', NULL, 'F', 36, 46, strftime('%s', 'now') * 1000),
 ('sgb-0455-w25-X-11-21-G', 'subj-caie-igcse-econ', 2025, 'Oct/Nov', '1', NULL, 'G', 25, 35, strftime('%s', 'now') * 1000),
 ('sgb-0455-w25-X-11-21-U', 'subj-caie-igcse-econ', 2025, 'Oct/Nov', '1', NULL, 'U', 0, 24, strftime('%s', 'now') * 1000),
@@ -1343,11 +1545,56 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0455-w25-Z-13-23-B', 'subj-caie-igcse-econ', 2025, 'Oct/Nov', '3', NULL, 'B', 88, 104, strftime('%s', 'now') * 1000),
 ('sgb-0455-w25-Z-13-23-C', 'subj-caie-igcse-econ', 2025, 'Oct/Nov', '3', NULL, 'C', 71, 87, strftime('%s', 'now') * 1000),
 ('sgb-0455-w25-Z-13-23-D', 'subj-caie-igcse-econ', 2025, 'Oct/Nov', '3', NULL, 'D', 59, 70, strftime('%s', 'now') * 1000),
-('sgb-0455-w25-Z-13-23-E', 'subj-caie-igcse-econ', 2025, 'Oct/Nov', '3', NULL, 'E', 48, 58, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0455-w25-Z-13-23-E', 'subj-caie-igcse-econ', 2025, 'Oct/Nov', '3', NULL, 'E', 48, 58, strftime('%s', 'now') * 1000),
 ('sgb-0455-w25-Z-13-23-F', 'subj-caie-igcse-econ', 2025, 'Oct/Nov', '3', NULL, 'F', 36, 47, strftime('%s', 'now') * 1000),
 ('sgb-0455-w25-Z-13-23-G', 'subj-caie-igcse-econ', 2025, 'Oct/Nov', '3', NULL, 'G', 24, 35, strftime('%s', 'now') * 1000),
 ('sgb-0455-w25-Z-13-23-U', 'subj-caie-igcse-econ', 2025, 'Oct/Nov', '3', NULL, 'U', 0, 23, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1121-11-21-Astar', 'subj-caie-igcse-econ', 2026, 'May/June', '1', NULL, 'A*', 118, 150, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1121-11-21-A', 'subj-caie-igcse-econ', 2026, 'May/June', '1', NULL, 'A', 102, 117, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1121-11-21-B', 'subj-caie-igcse-econ', 2026, 'May/June', '1', NULL, 'B', 86, 101, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1121-11-21-C', 'subj-caie-igcse-econ', 2026, 'May/June', '1', NULL, 'C', 71, 85, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1121-11-21-D', 'subj-caie-igcse-econ', 2026, 'May/June', '1', NULL, 'D', 62, 70, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1121-11-21-E', 'subj-caie-igcse-econ', 2026, 'May/June', '1', NULL, 'E', 54, 61, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1121-11-21-F', 'subj-caie-igcse-econ', 2026, 'May/June', '1', NULL, 'F', 44, 53, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1121-11-21-G', 'subj-caie-igcse-econ', 2026, 'May/June', '1', NULL, 'G', 34, 43, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1121-11-21-U', 'subj-caie-igcse-econ', 2026, 'May/June', '1', NULL, 'U', 0, 33, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1222-12-22-Astar', 'subj-caie-igcse-econ', 2026, 'May/June', '2', NULL, 'A*', 115, 150, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1222-12-22-A', 'subj-caie-igcse-econ', 2026, 'May/June', '2', NULL, 'A', 97, 114, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1222-12-22-B', 'subj-caie-igcse-econ', 2026, 'May/June', '2', NULL, 'B', 79, 96, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1222-12-22-C', 'subj-caie-igcse-econ', 2026, 'May/June', '2', NULL, 'C', 62, 78, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1222-12-22-D', 'subj-caie-igcse-econ', 2026, 'May/June', '2', NULL, 'D', 52, 61, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1222-12-22-E', 'subj-caie-igcse-econ', 2026, 'May/June', '2', NULL, 'E', 43, 51, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1222-12-22-F', 'subj-caie-igcse-econ', 2026, 'May/June', '2', NULL, 'F', 35, 42, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1222-12-22-G', 'subj-caie-igcse-econ', 2026, 'May/June', '2', NULL, 'G', 27, 34, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1222-12-22-U', 'subj-caie-igcse-econ', 2026, 'May/June', '2', NULL, 'U', 0, 26, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1323-13-23-Astar', 'subj-caie-igcse-econ', 2026, 'May/June', '3', NULL, 'A*', 122, 150, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1323-13-23-A', 'subj-caie-igcse-econ', 2026, 'May/June', '3', NULL, 'A', 103, 121, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1323-13-23-B', 'subj-caie-igcse-econ', 2026, 'May/June', '3', NULL, 'B', 84, 102, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1323-13-23-C', 'subj-caie-igcse-econ', 2026, 'May/June', '3', NULL, 'C', 66, 83, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1323-13-23-D', 'subj-caie-igcse-econ', 2026, 'May/June', '3', NULL, 'D', 57, 65, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1323-13-23-E', 'subj-caie-igcse-econ', 2026, 'May/June', '3', NULL, 'E', 49, 56, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1323-13-23-F', 'subj-caie-igcse-econ', 2026, 'May/June', '3', NULL, 'F', 40, 48, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1323-13-23-G', 'subj-caie-igcse-econ', 2026, 'May/June', '3', NULL, 'G', 31, 39, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1323-13-23-U', 'subj-caie-igcse-econ', 2026, 'May/June', '3', NULL, 'U', 0, 30, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1721-17-21-Astar', 'subj-caie-igcse-econ', 2026, 'May/June', '7', NULL, 'A*', 118, 150, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1721-17-21-A', 'subj-caie-igcse-econ', 2026, 'May/June', '7', NULL, 'A', 102, 117, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1721-17-21-B', 'subj-caie-igcse-econ', 2026, 'May/June', '7', NULL, 'B', 86, 101, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1721-17-21-C', 'subj-caie-igcse-econ', 2026, 'May/June', '7', NULL, 'C', 71, 85, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1721-17-21-D', 'subj-caie-igcse-econ', 2026, 'May/June', '7', NULL, 'D', 62, 70, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1721-17-21-E', 'subj-caie-igcse-econ', 2026, 'May/June', '7', NULL, 'E', 54, 61, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1721-17-21-F', 'subj-caie-igcse-econ', 2026, 'May/June', '7', NULL, 'F', 44, 53, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1721-17-21-G', 'subj-caie-igcse-econ', 2026, 'May/June', '7', NULL, 'G', 34, 43, strftime('%s', 'now') * 1000),
+('sgb-0455-s26-C1721-17-21-U', 'subj-caie-igcse-econ', 2026, 'May/June', '7', NULL, 'U', 0, 33, strftime('%s', 'now') * 1000),
+('sgb-0455-m26-C1222-12-22-Astar', 'subj-caie-igcse-econ', 2026, 'Feb/March', '2', NULL, 'A*', 130, 150, strftime('%s', 'now') * 1000),
+('sgb-0455-m26-C1222-12-22-A', 'subj-caie-igcse-econ', 2026, 'Feb/March', '2', NULL, 'A', 111, 129, strftime('%s', 'now') * 1000),
+('sgb-0455-m26-C1222-12-22-B', 'subj-caie-igcse-econ', 2026, 'Feb/March', '2', NULL, 'B', 91, 110, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0455-m26-C1222-12-22-C', 'subj-caie-igcse-econ', 2026, 'Feb/March', '2', NULL, 'C', 72, 90, strftime('%s', 'now') * 1000),
+('sgb-0455-m26-C1222-12-22-D', 'subj-caie-igcse-econ', 2026, 'Feb/March', '2', NULL, 'D', 60, 71, strftime('%s', 'now') * 1000),
+('sgb-0455-m26-C1222-12-22-E', 'subj-caie-igcse-econ', 2026, 'Feb/March', '2', NULL, 'E', 48, 59, strftime('%s', 'now') * 1000),
+('sgb-0455-m26-C1222-12-22-F', 'subj-caie-igcse-econ', 2026, 'Feb/March', '2', NULL, 'F', 38, 47, strftime('%s', 'now') * 1000),
+('sgb-0455-m26-C1222-12-22-G', 'subj-caie-igcse-econ', 2026, 'Feb/March', '2', NULL, 'G', 28, 37, strftime('%s', 'now') * 1000),
+('sgb-0455-m26-C1222-12-22-U', 'subj-caie-igcse-econ', 2026, 'Feb/March', '2', NULL, 'U', 0, 27, strftime('%s', 'now') * 1000),
 ('sgb-0478-s22-AX-11-21-Astar', 'subj-caie-igcse-cs', 2022, 'May/June', '1', NULL, 'A*', 89, 125, strftime('%s', 'now') * 1000),
 ('sgb-0478-s22-AX-11-21-A', 'subj-caie-igcse-cs', 2022, 'May/June', '1', NULL, 'A', 73, 88, strftime('%s', 'now') * 1000),
 ('sgb-0478-s22-AX-11-21-B', 'subj-caie-igcse-cs', 2022, 'May/June', '1', NULL, 'B', 57, 72, strftime('%s', 'now') * 1000),
@@ -1401,11 +1648,11 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0478-w22-AY-12-22-E', 'subj-caie-igcse-cs', 2022, 'Oct/Nov', '2', NULL, 'E', 25, 31, strftime('%s', 'now') * 1000),
 ('sgb-0478-w22-AY-12-22-F', 'subj-caie-igcse-cs', 2022, 'Oct/Nov', '2', NULL, 'F', 19, 24, strftime('%s', 'now') * 1000),
 ('sgb-0478-w22-AY-12-22-G', 'subj-caie-igcse-cs', 2022, 'Oct/Nov', '2', NULL, 'G', 13, 18, strftime('%s', 'now') * 1000),
-('sgb-0478-w22-AY-12-22-U', 'subj-caie-igcse-cs', 2022, 'Oct/Nov', '2', NULL, 'U', 0, 12, strftime('%s', 'now') * 1000),
+('sgb-0478-w22-AY-12-22-U', 'subj-caie-igcse-cs', 2022, 'Oct/Nov', '2', NULL, 'U', 0, 12, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0478-w22-AZ-13-23-Astar', 'subj-caie-igcse-cs', 2022, 'Oct/Nov', '3', NULL, 'A*', 87, 125, strftime('%s', 'now') * 1000),
 ('sgb-0478-w22-AZ-13-23-A', 'subj-caie-igcse-cs', 2022, 'Oct/Nov', '3', NULL, 'A', 73, 86, strftime('%s', 'now') * 1000),
-('sgb-0478-w22-AZ-13-23-B', 'subj-caie-igcse-cs', 2022, 'Oct/Nov', '3', NULL, 'B', 59, 72, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0478-w22-AZ-13-23-B', 'subj-caie-igcse-cs', 2022, 'Oct/Nov', '3', NULL, 'B', 59, 72, strftime('%s', 'now') * 1000),
 ('sgb-0478-w22-AZ-13-23-C', 'subj-caie-igcse-cs', 2022, 'Oct/Nov', '3', NULL, 'C', 45, 58, strftime('%s', 'now') * 1000),
 ('sgb-0478-w22-AZ-13-23-D', 'subj-caie-igcse-cs', 2022, 'Oct/Nov', '3', NULL, 'D', 37, 44, strftime('%s', 'now') * 1000),
 ('sgb-0478-w22-AZ-13-23-E', 'subj-caie-igcse-cs', 2022, 'Oct/Nov', '3', NULL, 'E', 29, 36, strftime('%s', 'now') * 1000),
@@ -1462,11 +1709,11 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0478-w23-AY-12-22-B', 'subj-caie-igcse-cs', 2023, 'Oct/Nov', '2', NULL, 'B', 65, 84, strftime('%s', 'now') * 1000),
 ('sgb-0478-w23-AY-12-22-C', 'subj-caie-igcse-cs', 2023, 'Oct/Nov', '2', NULL, 'C', 46, 64, strftime('%s', 'now') * 1000),
 ('sgb-0478-w23-AY-12-22-D', 'subj-caie-igcse-cs', 2023, 'Oct/Nov', '2', NULL, 'D', 37, 45, strftime('%s', 'now') * 1000),
-('sgb-0478-w23-AY-12-22-E', 'subj-caie-igcse-cs', 2023, 'Oct/Nov', '2', NULL, 'E', 29, 36, strftime('%s', 'now') * 1000),
+('sgb-0478-w23-AY-12-22-E', 'subj-caie-igcse-cs', 2023, 'Oct/Nov', '2', NULL, 'E', 29, 36, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0478-w23-AY-12-22-F', 'subj-caie-igcse-cs', 2023, 'Oct/Nov', '2', NULL, 'F', 22, 28, strftime('%s', 'now') * 1000),
 ('sgb-0478-w23-AY-12-22-G', 'subj-caie-igcse-cs', 2023, 'Oct/Nov', '2', NULL, 'G', 15, 21, strftime('%s', 'now') * 1000),
-('sgb-0478-w23-AY-12-22-U', 'subj-caie-igcse-cs', 2023, 'Oct/Nov', '2', NULL, 'U', 0, 14, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0478-w23-AY-12-22-U', 'subj-caie-igcse-cs', 2023, 'Oct/Nov', '2', NULL, 'U', 0, 14, strftime('%s', 'now') * 1000),
 ('sgb-0478-w23-AZ-13-23-Astar', 'subj-caie-igcse-cs', 2023, 'Oct/Nov', '3', NULL, 'A*', 105, 150, strftime('%s', 'now') * 1000),
 ('sgb-0478-w23-AZ-13-23-A', 'subj-caie-igcse-cs', 2023, 'Oct/Nov', '3', NULL, 'A', 85, 104, strftime('%s', 'now') * 1000),
 ('sgb-0478-w23-AZ-13-23-B', 'subj-caie-igcse-cs', 2023, 'Oct/Nov', '3', NULL, 'B', 65, 84, strftime('%s', 'now') * 1000),
@@ -1523,11 +1770,11 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0478-w24-AX-11-21-U', 'subj-caie-igcse-cs', 2024, 'Oct/Nov', '1', NULL, 'U', 0, 14, strftime('%s', 'now') * 1000),
 ('sgb-0478-w24-AY-12-22-Astar', 'subj-caie-igcse-cs', 2024, 'Oct/Nov', '2', NULL, 'A*', 107, 150, strftime('%s', 'now') * 1000),
 ('sgb-0478-w24-AY-12-22-A', 'subj-caie-igcse-cs', 2024, 'Oct/Nov', '2', NULL, 'A', 88, 106, strftime('%s', 'now') * 1000),
-('sgb-0478-w24-AY-12-22-B', 'subj-caie-igcse-cs', 2024, 'Oct/Nov', '2', NULL, 'B', 69, 87, strftime('%s', 'now') * 1000),
+('sgb-0478-w24-AY-12-22-B', 'subj-caie-igcse-cs', 2024, 'Oct/Nov', '2', NULL, 'B', 69, 87, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0478-w24-AY-12-22-C', 'subj-caie-igcse-cs', 2024, 'Oct/Nov', '2', NULL, 'C', 51, 68, strftime('%s', 'now') * 1000),
 ('sgb-0478-w24-AY-12-22-D', 'subj-caie-igcse-cs', 2024, 'Oct/Nov', '2', NULL, 'D', 42, 50, strftime('%s', 'now') * 1000),
-('sgb-0478-w24-AY-12-22-E', 'subj-caie-igcse-cs', 2024, 'Oct/Nov', '2', NULL, 'E', 33, 41, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0478-w24-AY-12-22-E', 'subj-caie-igcse-cs', 2024, 'Oct/Nov', '2', NULL, 'E', 33, 41, strftime('%s', 'now') * 1000),
 ('sgb-0478-w24-AY-12-22-F', 'subj-caie-igcse-cs', 2024, 'Oct/Nov', '2', NULL, 'F', 24, 32, strftime('%s', 'now') * 1000),
 ('sgb-0478-w24-AY-12-22-G', 'subj-caie-igcse-cs', 2024, 'Oct/Nov', '2', NULL, 'G', 15, 23, strftime('%s', 'now') * 1000),
 ('sgb-0478-w24-AY-12-22-U', 'subj-caie-igcse-cs', 2024, 'Oct/Nov', '2', NULL, 'U', 0, 14, strftime('%s', 'now') * 1000),
@@ -1584,11 +1831,11 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0478-w25-AX-11-21-E', 'subj-caie-igcse-cs', 2025, 'Oct/Nov', '1', NULL, 'E', 29, 36, strftime('%s', 'now') * 1000),
 ('sgb-0478-w25-AX-11-21-F', 'subj-caie-igcse-cs', 2025, 'Oct/Nov', '1', NULL, 'F', 22, 28, strftime('%s', 'now') * 1000),
 ('sgb-0478-w25-AX-11-21-G', 'subj-caie-igcse-cs', 2025, 'Oct/Nov', '1', NULL, 'G', 15, 21, strftime('%s', 'now') * 1000),
-('sgb-0478-w25-AX-11-21-U', 'subj-caie-igcse-cs', 2025, 'Oct/Nov', '1', NULL, 'U', 0, 14, strftime('%s', 'now') * 1000),
+('sgb-0478-w25-AX-11-21-U', 'subj-caie-igcse-cs', 2025, 'Oct/Nov', '1', NULL, 'U', 0, 14, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0478-w25-AY-12-22-Astar', 'subj-caie-igcse-cs', 2025, 'Oct/Nov', '2', NULL, 'A*', 104, 150, strftime('%s', 'now') * 1000),
 ('sgb-0478-w25-AY-12-22-A', 'subj-caie-igcse-cs', 2025, 'Oct/Nov', '2', NULL, 'A', 84, 103, strftime('%s', 'now') * 1000),
-('sgb-0478-w25-AY-12-22-B', 'subj-caie-igcse-cs', 2025, 'Oct/Nov', '2', NULL, 'B', 64, 83, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0478-w25-AY-12-22-B', 'subj-caie-igcse-cs', 2025, 'Oct/Nov', '2', NULL, 'B', 64, 83, strftime('%s', 'now') * 1000),
 ('sgb-0478-w25-AY-12-22-C', 'subj-caie-igcse-cs', 2025, 'Oct/Nov', '2', NULL, 'C', 45, 63, strftime('%s', 'now') * 1000),
 ('sgb-0478-w25-AY-12-22-D', 'subj-caie-igcse-cs', 2025, 'Oct/Nov', '2', NULL, 'D', 37, 44, strftime('%s', 'now') * 1000),
 ('sgb-0478-w25-AY-12-22-E', 'subj-caie-igcse-cs', 2025, 'Oct/Nov', '2', NULL, 'E', 29, 36, strftime('%s', 'now') * 1000),
@@ -1604,12 +1851,49 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0478-w25-AZ-13-23-F', 'subj-caie-igcse-cs', 2025, 'Oct/Nov', '3', NULL, 'F', 22, 28, strftime('%s', 'now') * 1000),
 ('sgb-0478-w25-AZ-13-23-G', 'subj-caie-igcse-cs', 2025, 'Oct/Nov', '3', NULL, 'G', 15, 21, strftime('%s', 'now') * 1000),
 ('sgb-0478-w25-AZ-13-23-U', 'subj-caie-igcse-cs', 2025, 'Oct/Nov', '3', NULL, 'U', 0, 14, strftime('%s', 'now') * 1000),
+('sgb-0478-s26-C1121-11-21-Astar', 'subj-caie-igcse-cs', 2026, 'May/June', '1', NULL, 'A*', 117, 150, strftime('%s', 'now') * 1000),
+('sgb-0478-s26-C1121-11-21-A', 'subj-caie-igcse-cs', 2026, 'May/June', '1', NULL, 'A', 93, 116, strftime('%s', 'now') * 1000),
+('sgb-0478-s26-C1121-11-21-B', 'subj-caie-igcse-cs', 2026, 'May/June', '1', NULL, 'B', 69, 92, strftime('%s', 'now') * 1000),
+('sgb-0478-s26-C1121-11-21-C', 'subj-caie-igcse-cs', 2026, 'May/June', '1', NULL, 'C', 46, 68, strftime('%s', 'now') * 1000),
+('sgb-0478-s26-C1121-11-21-D', 'subj-caie-igcse-cs', 2026, 'May/June', '1', NULL, 'D', 39, 45, strftime('%s', 'now') * 1000),
+('sgb-0478-s26-C1121-11-21-E', 'subj-caie-igcse-cs', 2026, 'May/June', '1', NULL, 'E', 32, 38, strftime('%s', 'now') * 1000),
+('sgb-0478-s26-C1121-11-21-F', 'subj-caie-igcse-cs', 2026, 'May/June', '1', NULL, 'F', 25, 31, strftime('%s', 'now') * 1000),
+('sgb-0478-s26-C1121-11-21-G', 'subj-caie-igcse-cs', 2026, 'May/June', '1', NULL, 'G', 18, 24, strftime('%s', 'now') * 1000),
+('sgb-0478-s26-C1121-11-21-U', 'subj-caie-igcse-cs', 2026, 'May/June', '1', NULL, 'U', 0, 17, strftime('%s', 'now') * 1000),
+('sgb-0478-s26-C1222-12-22-Astar', 'subj-caie-igcse-cs', 2026, 'May/June', '2', NULL, 'A*', 120, 150, strftime('%s', 'now') * 1000),
+('sgb-0478-s26-C1222-12-22-A', 'subj-caie-igcse-cs', 2026, 'May/June', '2', NULL, 'A', 94, 119, strftime('%s', 'now') * 1000),
+('sgb-0478-s26-C1222-12-22-B', 'subj-caie-igcse-cs', 2026, 'May/June', '2', NULL, 'B', 68, 93, strftime('%s', 'now') * 1000),
+('sgb-0478-s26-C1222-12-22-C', 'subj-caie-igcse-cs', 2026, 'May/June', '2', NULL, 'C', 43, 67, strftime('%s', 'now') * 1000),
+('sgb-0478-s26-C1222-12-22-D', 'subj-caie-igcse-cs', 2026, 'May/June', '2', NULL, 'D', 36, 42, strftime('%s', 'now') * 1000),
+('sgb-0478-s26-C1222-12-22-E', 'subj-caie-igcse-cs', 2026, 'May/June', '2', NULL, 'E', 29, 35, strftime('%s', 'now') * 1000),
+('sgb-0478-s26-C1222-12-22-F', 'subj-caie-igcse-cs', 2026, 'May/June', '2', NULL, 'F', 22, 28, strftime('%s', 'now') * 1000),
+('sgb-0478-s26-C1222-12-22-G', 'subj-caie-igcse-cs', 2026, 'May/June', '2', NULL, 'G', 15, 21, strftime('%s', 'now') * 1000),
+('sgb-0478-s26-C1222-12-22-U', 'subj-caie-igcse-cs', 2026, 'May/June', '2', NULL, 'U', 0, 14, strftime('%s', 'now') * 1000),
+('sgb-0478-s26-C1323-13-23-Astar', 'subj-caie-igcse-cs', 2026, 'May/June', '3', NULL, 'A*', 115, 150, strftime('%s', 'now') * 1000),
+('sgb-0478-s26-C1323-13-23-A', 'subj-caie-igcse-cs', 2026, 'May/June', '3', NULL, 'A', 91, 114, strftime('%s', 'now') * 1000),
+('sgb-0478-s26-C1323-13-23-B', 'subj-caie-igcse-cs', 2026, 'May/June', '3', NULL, 'B', 67, 90, strftime('%s', 'now') * 1000),
+('sgb-0478-s26-C1323-13-23-C', 'subj-caie-igcse-cs', 2026, 'May/June', '3', NULL, 'C', 43, 66, strftime('%s', 'now') * 1000),
+('sgb-0478-s26-C1323-13-23-D', 'subj-caie-igcse-cs', 2026, 'May/June', '3', NULL, 'D', 36, 42, strftime('%s', 'now') * 1000),
+('sgb-0478-s26-C1323-13-23-E', 'subj-caie-igcse-cs', 2026, 'May/June', '3', NULL, 'E', 30, 35, strftime('%s', 'now') * 1000),
+('sgb-0478-s26-C1323-13-23-F', 'subj-caie-igcse-cs', 2026, 'May/June', '3', NULL, 'F', 24, 29, strftime('%s', 'now') * 1000),
+('sgb-0478-s26-C1323-13-23-G', 'subj-caie-igcse-cs', 2026, 'May/June', '3', NULL, 'G', 18, 23, strftime('%s', 'now') * 1000),
+('sgb-0478-s26-C1323-13-23-U', 'subj-caie-igcse-cs', 2026, 'May/June', '3', NULL, 'U', 0, 17, strftime('%s', 'now') * 1000),
+('sgb-0478-m26-C1222-12-22-Astar', 'subj-caie-igcse-cs', 2026, 'Feb/March', '2', NULL, 'A*', 111, 150, strftime('%s', 'now') * 1000),
+('sgb-0478-m26-C1222-12-22-A', 'subj-caie-igcse-cs', 2026, 'Feb/March', '2', NULL, 'A', 89, 110, strftime('%s', 'now') * 1000),
+('sgb-0478-m26-C1222-12-22-B', 'subj-caie-igcse-cs', 2026, 'Feb/March', '2', NULL, 'B', 67, 88, strftime('%s', 'now') * 1000),
+('sgb-0478-m26-C1222-12-22-C', 'subj-caie-igcse-cs', 2026, 'Feb/March', '2', NULL, 'C', 45, 66, strftime('%s', 'now') * 1000),
+('sgb-0478-m26-C1222-12-22-D', 'subj-caie-igcse-cs', 2026, 'Feb/March', '2', NULL, 'D', 37, 44, strftime('%s', 'now') * 1000),
+('sgb-0478-m26-C1222-12-22-E', 'subj-caie-igcse-cs', 2026, 'Feb/March', '2', NULL, 'E', 30, 36, strftime('%s', 'now') * 1000),
+('sgb-0478-m26-C1222-12-22-F', 'subj-caie-igcse-cs', 2026, 'Feb/March', '2', NULL, 'F', 23, 29, strftime('%s', 'now') * 1000),
+('sgb-0478-m26-C1222-12-22-G', 'subj-caie-igcse-cs', 2026, 'Feb/March', '2', NULL, 'G', 16, 22, strftime('%s', 'now') * 1000),
+('sgb-0478-m26-C1222-12-22-U', 'subj-caie-igcse-cs', 2026, 'Feb/March', '2', NULL, 'U', 0, 15, strftime('%s', 'now') * 1000),
 ('sgb-0500-s22-AR-03-11-Astar', 'subj-caie-igcse-eng-first', 2022, 'May/June', '1', NULL, 'A*', 118, 160, strftime('%s', 'now') * 1000),
 ('sgb-0500-s22-AR-03-11-A', 'subj-caie-igcse-eng-first', 2022, 'May/June', '1', NULL, 'A', 104, 117, strftime('%s', 'now') * 1000),
 ('sgb-0500-s22-AR-03-11-B', 'subj-caie-igcse-eng-first', 2022, 'May/June', '1', NULL, 'B', 90, 103, strftime('%s', 'now') * 1000),
 ('sgb-0500-s22-AR-03-11-C', 'subj-caie-igcse-eng-first', 2022, 'May/June', '1', NULL, 'C', 76, 89, strftime('%s', 'now') * 1000),
 ('sgb-0500-s22-AR-03-11-D', 'subj-caie-igcse-eng-first', 2022, 'May/June', '1', NULL, 'D', 64, 75, strftime('%s', 'now') * 1000),
-('sgb-0500-s22-AR-03-11-E', 'subj-caie-igcse-eng-first', 2022, 'May/June', '1', NULL, 'E', 52, 63, strftime('%s', 'now') * 1000),
+('sgb-0500-s22-AR-03-11-E', 'subj-caie-igcse-eng-first', 2022, 'May/June', '1', NULL, 'E', 52, 63, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0500-s22-AR-03-11-F', 'subj-caie-igcse-eng-first', 2022, 'May/June', '1', NULL, 'F', 40, 51, strftime('%s', 'now') * 1000),
 ('sgb-0500-s22-AR-03-11-G', 'subj-caie-igcse-eng-first', 2022, 'May/June', '1', NULL, 'G', 28, 39, strftime('%s', 'now') * 1000),
 ('sgb-0500-s22-AR-03-11-U', 'subj-caie-igcse-eng-first', 2022, 'May/June', '1', NULL, 'U', 0, 27, strftime('%s', 'now') * 1000),
@@ -1648,8 +1932,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-s22-AY-03-12-E', 'subj-caie-igcse-eng-first', 2022, 'May/June', '2', NULL, 'E', 50, 60, strftime('%s', 'now') * 1000),
 ('sgb-0500-s22-AY-03-12-F', 'subj-caie-igcse-eng-first', 2022, 'May/June', '2', NULL, 'F', 39, 49, strftime('%s', 'now') * 1000),
 ('sgb-0500-s22-AY-03-12-G', 'subj-caie-igcse-eng-first', 2022, 'May/June', '2', NULL, 'G', 28, 38, strftime('%s', 'now') * 1000),
-('sgb-0500-s22-AY-03-12-U', 'subj-caie-igcse-eng-first', 2022, 'May/June', '2', NULL, 'U', 0, 27, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0500-s22-AY-03-12-U', 'subj-caie-igcse-eng-first', 2022, 'May/June', '2', NULL, 'U', 0, 27, strftime('%s', 'now') * 1000),
 ('sgb-0500-s22-AZ-03-13-Astar', 'subj-caie-igcse-eng-first', 2022, 'May/June', '3', NULL, 'A*', 122, 160, strftime('%s', 'now') * 1000),
 ('sgb-0500-s22-AZ-03-13-A', 'subj-caie-igcse-eng-first', 2022, 'May/June', '3', NULL, 'A', 106, 121, strftime('%s', 'now') * 1000),
 ('sgb-0500-s22-AZ-03-13-B', 'subj-caie-igcse-eng-first', 2022, 'May/June', '3', NULL, 'B', 90, 105, strftime('%s', 'now') * 1000),
@@ -1670,7 +1953,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-s22-BR-11-21-U', 'subj-caie-igcse-eng-first', 2022, 'May/June', '1', NULL, 'U', 0, 29, strftime('%s', 'now') * 1000),
 ('sgb-0500-s22-BS-12-22-Astar', 'subj-caie-igcse-eng-first', 2022, 'May/June', '2', NULL, 'A*', 110, 160, strftime('%s', 'now') * 1000),
 ('sgb-0500-s22-BS-12-22-A', 'subj-caie-igcse-eng-first', 2022, 'May/June', '2', NULL, 'A', 97, 109, strftime('%s', 'now') * 1000),
-('sgb-0500-s22-BS-12-22-B', 'subj-caie-igcse-eng-first', 2022, 'May/June', '2', NULL, 'B', 84, 96, strftime('%s', 'now') * 1000),
+('sgb-0500-s22-BS-12-22-B', 'subj-caie-igcse-eng-first', 2022, 'May/June', '2', NULL, 'B', 84, 96, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0500-s22-BS-12-22-C', 'subj-caie-igcse-eng-first', 2022, 'May/June', '2', NULL, 'C', 72, 83, strftime('%s', 'now') * 1000),
 ('sgb-0500-s22-BS-12-22-D', 'subj-caie-igcse-eng-first', 2022, 'May/June', '2', NULL, 'D', 61, 71, strftime('%s', 'now') * 1000),
 ('sgb-0500-s22-BS-12-22-E', 'subj-caie-igcse-eng-first', 2022, 'May/June', '2', NULL, 'E', 50, 60, strftime('%s', 'now') * 1000),
@@ -1709,8 +1993,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-s22-BZ-13-23-B', 'subj-caie-igcse-eng-first', 2022, 'May/June', '3', NULL, 'B', 88, 100, strftime('%s', 'now') * 1000),
 ('sgb-0500-s22-BZ-13-23-C', 'subj-caie-igcse-eng-first', 2022, 'May/June', '3', NULL, 'C', 75, 87, strftime('%s', 'now') * 1000),
 ('sgb-0500-s22-BZ-13-23-D', 'subj-caie-igcse-eng-first', 2022, 'May/June', '3', NULL, 'D', 63, 74, strftime('%s', 'now') * 1000),
-('sgb-0500-s22-BZ-13-23-E', 'subj-caie-igcse-eng-first', 2022, 'May/June', '3', NULL, 'E', 51, 62, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0500-s22-BZ-13-23-E', 'subj-caie-igcse-eng-first', 2022, 'May/June', '3', NULL, 'E', 51, 62, strftime('%s', 'now') * 1000),
 ('sgb-0500-s22-BZ-13-23-F', 'subj-caie-igcse-eng-first', 2022, 'May/June', '3', NULL, 'F', 39, 50, strftime('%s', 'now') * 1000),
 ('sgb-0500-s22-BZ-13-23-G', 'subj-caie-igcse-eng-first', 2022, 'May/June', '3', NULL, 'G', 27, 38, strftime('%s', 'now') * 1000),
 ('sgb-0500-s22-BZ-13-23-U', 'subj-caie-igcse-eng-first', 2022, 'May/June', '3', NULL, 'U', 0, 26, strftime('%s', 'now') * 1000),
@@ -1731,7 +2014,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-s22-CS-12-83-93-E', 'subj-caie-igcse-eng-first', 2022, 'May/June', '2', NULL, 'E', 49, 59, strftime('%s', 'now') * 1000),
 ('sgb-0500-s22-CS-12-83-93-F', 'subj-caie-igcse-eng-first', 2022, 'May/June', '2', NULL, 'F', 38, 48, strftime('%s', 'now') * 1000),
 ('sgb-0500-s22-CS-12-83-93-G', 'subj-caie-igcse-eng-first', 2022, 'May/June', '2', NULL, 'G', 27, 37, strftime('%s', 'now') * 1000),
-('sgb-0500-s22-CS-12-83-93-U', 'subj-caie-igcse-eng-first', 2022, 'May/June', '2', NULL, 'U', 0, 26, strftime('%s', 'now') * 1000),
+('sgb-0500-s22-CS-12-83-93-U', 'subj-caie-igcse-eng-first', 2022, 'May/June', '2', NULL, 'U', 0, 26, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0500-m22-AS-03-12-Astar', 'subj-caie-igcse-eng-first', 2022, 'Feb/March', '2', NULL, 'A*', 117, 160, strftime('%s', 'now') * 1000),
 ('sgb-0500-m22-AS-03-12-A', 'subj-caie-igcse-eng-first', 2022, 'Feb/March', '2', NULL, 'A', 102, 116, strftime('%s', 'now') * 1000),
 ('sgb-0500-m22-AS-03-12-B', 'subj-caie-igcse-eng-first', 2022, 'Feb/March', '2', NULL, 'B', 87, 101, strftime('%s', 'now') * 1000),
@@ -1770,8 +2054,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-m22-BY-12-22-U', 'subj-caie-igcse-eng-first', 2022, 'Feb/March', '2', NULL, 'U', 0, 18, strftime('%s', 'now') * 1000),
 ('sgb-0500-w22-AR-03-11-Astar', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '1', NULL, 'A*', 113, 160, strftime('%s', 'now') * 1000),
 ('sgb-0500-w22-AR-03-11-A', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '1', NULL, 'A', 100, 112, strftime('%s', 'now') * 1000),
-('sgb-0500-w22-AR-03-11-B', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '1', NULL, 'B', 87, 99, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0500-w22-AR-03-11-B', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '1', NULL, 'B', 87, 99, strftime('%s', 'now') * 1000),
 ('sgb-0500-w22-AR-03-11-C', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '1', NULL, 'C', 74, 86, strftime('%s', 'now') * 1000),
 ('sgb-0500-w22-AR-03-11-D', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '1', NULL, 'D', 61, 73, strftime('%s', 'now') * 1000),
 ('sgb-0500-w22-AR-03-11-E', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '1', NULL, 'E', 49, 60, strftime('%s', 'now') * 1000),
@@ -1792,7 +2075,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-w22-AT-03-13-B', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '3', NULL, 'B', 93, 105, strftime('%s', 'now') * 1000),
 ('sgb-0500-w22-AT-03-13-C', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '3', NULL, 'C', 81, 92, strftime('%s', 'now') * 1000),
 ('sgb-0500-w22-AT-03-13-D', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '3', NULL, 'D', 66, 80, strftime('%s', 'now') * 1000),
-('sgb-0500-w22-AT-03-13-E', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '3', NULL, 'E', 51, 65, strftime('%s', 'now') * 1000),
+('sgb-0500-w22-AT-03-13-E', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '3', NULL, 'E', 51, 65, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0500-w22-AT-03-13-F', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '3', NULL, 'F', 36, 50, strftime('%s', 'now') * 1000),
 ('sgb-0500-w22-AT-03-13-G', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '3', NULL, 'G', 21, 35, strftime('%s', 'now') * 1000),
 ('sgb-0500-w22-AT-03-13-U', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '3', NULL, 'U', 0, 20, strftime('%s', 'now') * 1000),
@@ -1831,8 +2115,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-w22-BR-11-21-E', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '1', NULL, 'E', 49, 60, strftime('%s', 'now') * 1000),
 ('sgb-0500-w22-BR-11-21-F', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '1', NULL, 'F', 37, 48, strftime('%s', 'now') * 1000),
 ('sgb-0500-w22-BR-11-21-G', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '1', NULL, 'G', 25, 36, strftime('%s', 'now') * 1000),
-('sgb-0500-w22-BR-11-21-U', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '1', NULL, 'U', 0, 24, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0500-w22-BR-11-21-U', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '1', NULL, 'U', 0, 24, strftime('%s', 'now') * 1000),
 ('sgb-0500-w22-BS-12-22-Astar', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '2', NULL, 'A*', 121, 160, strftime('%s', 'now') * 1000),
 ('sgb-0500-w22-BS-12-22-A', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '2', NULL, 'A', 108, 120, strftime('%s', 'now') * 1000),
 ('sgb-0500-w22-BS-12-22-B', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '2', NULL, 'B', 95, 107, strftime('%s', 'now') * 1000),
@@ -1853,7 +2136,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-w22-BT-13-23-U', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '3', NULL, 'U', 0, 22, strftime('%s', 'now') * 1000),
 ('sgb-0500-w22-BX-11-21-Astar', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '1', NULL, 'A*', 109, 160, strftime('%s', 'now') * 1000),
 ('sgb-0500-w22-BX-11-21-A', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '1', NULL, 'A', 97, 108, strftime('%s', 'now') * 1000),
-('sgb-0500-w22-BX-11-21-B', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '1', NULL, 'B', 85, 96, strftime('%s', 'now') * 1000),
+('sgb-0500-w22-BX-11-21-B', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '1', NULL, 'B', 85, 96, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0500-w22-BX-11-21-C', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '1', NULL, 'C', 73, 84, strftime('%s', 'now') * 1000),
 ('sgb-0500-w22-BX-11-21-D', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '1', NULL, 'D', 61, 72, strftime('%s', 'now') * 1000),
 ('sgb-0500-w22-BX-11-21-E', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '1', NULL, 'E', 49, 60, strftime('%s', 'now') * 1000),
@@ -1892,8 +2176,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-w22-CS-12-93-B', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '2', NULL, 'B', 95, 108, strftime('%s', 'now') * 1000),
 ('sgb-0500-w22-CS-12-93-C', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '2', NULL, 'C', 81, 94, strftime('%s', 'now') * 1000),
 ('sgb-0500-w22-CS-12-93-D', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '2', NULL, 'D', 65, 80, strftime('%s', 'now') * 1000),
-('sgb-0500-w22-CS-12-93-E', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '2', NULL, 'E', 49, 64, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0500-w22-CS-12-93-E', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '2', NULL, 'E', 49, 64, strftime('%s', 'now') * 1000),
 ('sgb-0500-w22-CS-12-93-F', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '2', NULL, 'F', 33, 48, strftime('%s', 'now') * 1000),
 ('sgb-0500-w22-CS-12-93-G', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '2', NULL, 'G', 17, 32, strftime('%s', 'now') * 1000),
 ('sgb-0500-w22-CS-12-93-U', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '2', NULL, 'U', 0, 16, strftime('%s', 'now') * 1000),
@@ -1914,7 +2197,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-w22-CT-13-93-E', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '3', NULL, 'E', 50, 64, strftime('%s', 'now') * 1000),
 ('sgb-0500-w22-CT-13-93-F', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '3', NULL, 'F', 35, 49, strftime('%s', 'now') * 1000),
 ('sgb-0500-w22-CT-13-93-G', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '3', NULL, 'G', 20, 34, strftime('%s', 'now') * 1000),
-('sgb-0500-w22-CT-13-93-U', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '3', NULL, 'U', 0, 19, strftime('%s', 'now') * 1000),
+('sgb-0500-w22-CT-13-93-U', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '3', NULL, 'U', 0, 19, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0500-w22-CU-12-83-Astar', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '2', NULL, 'A*', 124, 160, strftime('%s', 'now') * 1000),
 ('sgb-0500-w22-CU-12-83-A', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '2', NULL, 'A', 110, 123, strftime('%s', 'now') * 1000),
 ('sgb-0500-w22-CU-12-83-B', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '2', NULL, 'B', 96, 109, strftime('%s', 'now') * 1000),
@@ -1953,8 +2237,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-w22-CY-12-83-U', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '2', NULL, 'U', 0, 17, strftime('%s', 'now') * 1000),
 ('sgb-0500-w22-CY-12-93-Astar', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '2', NULL, 'A*', 123, 160, strftime('%s', 'now') * 1000),
 ('sgb-0500-w22-CY-12-93-A', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '2', NULL, 'A', 109, 122, strftime('%s', 'now') * 1000),
-('sgb-0500-w22-CY-12-93-B', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '2', NULL, 'B', 95, 108, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0500-w22-CY-12-93-B', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '2', NULL, 'B', 95, 108, strftime('%s', 'now') * 1000),
 ('sgb-0500-w22-CY-12-93-C', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '2', NULL, 'C', 81, 94, strftime('%s', 'now') * 1000),
 ('sgb-0500-w22-CY-12-93-D', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '2', NULL, 'D', 65, 80, strftime('%s', 'now') * 1000),
 ('sgb-0500-w22-CY-12-93-E', 'subj-caie-igcse-eng-first', 2022, 'Oct/Nov', '2', NULL, 'E', 49, 64, strftime('%s', 'now') * 1000),
@@ -1975,7 +2258,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-s23-AS-03-12-B', 'subj-caie-igcse-eng-first', 2023, 'May/June', '2', NULL, 'B', 92, 105, strftime('%s', 'now') * 1000),
 ('sgb-0500-s23-AS-03-12-C', 'subj-caie-igcse-eng-first', 2023, 'May/June', '2', NULL, 'C', 79, 91, strftime('%s', 'now') * 1000),
 ('sgb-0500-s23-AS-03-12-D', 'subj-caie-igcse-eng-first', 2023, 'May/June', '2', NULL, 'D', 66, 78, strftime('%s', 'now') * 1000),
-('sgb-0500-s23-AS-03-12-E', 'subj-caie-igcse-eng-first', 2023, 'May/June', '2', NULL, 'E', 53, 65, strftime('%s', 'now') * 1000),
+('sgb-0500-s23-AS-03-12-E', 'subj-caie-igcse-eng-first', 2023, 'May/June', '2', NULL, 'E', 53, 65, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0500-s23-AS-03-12-F', 'subj-caie-igcse-eng-first', 2023, 'May/June', '2', NULL, 'F', 40, 52, strftime('%s', 'now') * 1000),
 ('sgb-0500-s23-AS-03-12-G', 'subj-caie-igcse-eng-first', 2023, 'May/June', '2', NULL, 'G', 27, 39, strftime('%s', 'now') * 1000),
 ('sgb-0500-s23-AS-03-12-U', 'subj-caie-igcse-eng-first', 2023, 'May/June', '2', NULL, 'U', 0, 26, strftime('%s', 'now') * 1000),
@@ -2014,8 +2298,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-s23-BR-11-21-E', 'subj-caie-igcse-eng-first', 2023, 'May/June', '1', NULL, 'E', 53, 63, strftime('%s', 'now') * 1000),
 ('sgb-0500-s23-BR-11-21-F', 'subj-caie-igcse-eng-first', 2023, 'May/June', '1', NULL, 'F', 41, 52, strftime('%s', 'now') * 1000),
 ('sgb-0500-s23-BR-11-21-G', 'subj-caie-igcse-eng-first', 2023, 'May/June', '1', NULL, 'G', 29, 40, strftime('%s', 'now') * 1000),
-('sgb-0500-s23-BR-11-21-U', 'subj-caie-igcse-eng-first', 2023, 'May/June', '1', NULL, 'U', 0, 28, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0500-s23-BR-11-21-U', 'subj-caie-igcse-eng-first', 2023, 'May/June', '1', NULL, 'U', 0, 28, strftime('%s', 'now') * 1000),
 ('sgb-0500-s23-BS-12-22-Astar', 'subj-caie-igcse-eng-first', 2023, 'May/June', '2', NULL, 'A*', 114, 160, strftime('%s', 'now') * 1000),
 ('sgb-0500-s23-BS-12-22-A', 'subj-caie-igcse-eng-first', 2023, 'May/June', '2', NULL, 'A', 102, 113, strftime('%s', 'now') * 1000),
 ('sgb-0500-s23-BS-12-22-B', 'subj-caie-igcse-eng-first', 2023, 'May/June', '2', NULL, 'B', 90, 101, strftime('%s', 'now') * 1000),
@@ -2036,7 +2319,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-s23-BT-13-23-U', 'subj-caie-igcse-eng-first', 2023, 'May/June', '3', NULL, 'U', 0, 26, strftime('%s', 'now') * 1000),
 ('sgb-0500-s23-BX-11-21-Astar', 'subj-caie-igcse-eng-first', 2023, 'May/June', '1', NULL, 'A*', 115, 160, strftime('%s', 'now') * 1000),
 ('sgb-0500-s23-BX-11-21-A', 'subj-caie-igcse-eng-first', 2023, 'May/June', '1', NULL, 'A', 102, 114, strftime('%s', 'now') * 1000),
-('sgb-0500-s23-BX-11-21-B', 'subj-caie-igcse-eng-first', 2023, 'May/June', '1', NULL, 'B', 89, 101, strftime('%s', 'now') * 1000),
+('sgb-0500-s23-BX-11-21-B', 'subj-caie-igcse-eng-first', 2023, 'May/June', '1', NULL, 'B', 89, 101, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0500-s23-BX-11-21-C', 'subj-caie-igcse-eng-first', 2023, 'May/June', '1', NULL, 'C', 76, 88, strftime('%s', 'now') * 1000),
 ('sgb-0500-s23-BX-11-21-D', 'subj-caie-igcse-eng-first', 2023, 'May/June', '1', NULL, 'D', 64, 75, strftime('%s', 'now') * 1000),
 ('sgb-0500-s23-BX-11-21-E', 'subj-caie-igcse-eng-first', 2023, 'May/June', '1', NULL, 'E', 53, 63, strftime('%s', 'now') * 1000),
@@ -2075,8 +2359,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-s23-CR-11-93-B', 'subj-caie-igcse-eng-first', 2023, 'May/June', '1', NULL, 'B', 89, 103, strftime('%s', 'now') * 1000),
 ('sgb-0500-s23-CR-11-93-C', 'subj-caie-igcse-eng-first', 2023, 'May/June', '1', NULL, 'C', 75, 88, strftime('%s', 'now') * 1000),
 ('sgb-0500-s23-CR-11-93-D', 'subj-caie-igcse-eng-first', 2023, 'May/June', '1', NULL, 'D', 63, 74, strftime('%s', 'now') * 1000),
-('sgb-0500-s23-CR-11-93-E', 'subj-caie-igcse-eng-first', 2023, 'May/June', '1', NULL, 'E', 51, 62, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0500-s23-CR-11-93-E', 'subj-caie-igcse-eng-first', 2023, 'May/June', '1', NULL, 'E', 51, 62, strftime('%s', 'now') * 1000),
 ('sgb-0500-s23-CR-11-93-F', 'subj-caie-igcse-eng-first', 2023, 'May/June', '1', NULL, 'F', 39, 50, strftime('%s', 'now') * 1000),
 ('sgb-0500-s23-CR-11-93-G', 'subj-caie-igcse-eng-first', 2023, 'May/June', '1', NULL, 'G', 27, 38, strftime('%s', 'now') * 1000),
 ('sgb-0500-s23-CR-11-93-U', 'subj-caie-igcse-eng-first', 2023, 'May/June', '1', NULL, 'U', 0, 26, strftime('%s', 'now') * 1000),
@@ -2097,7 +2380,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-s23-CS-12-93-E', 'subj-caie-igcse-eng-first', 2023, 'May/June', '2', NULL, 'E', 51, 63, strftime('%s', 'now') * 1000),
 ('sgb-0500-s23-CS-12-93-F', 'subj-caie-igcse-eng-first', 2023, 'May/June', '2', NULL, 'F', 38, 50, strftime('%s', 'now') * 1000),
 ('sgb-0500-s23-CS-12-93-G', 'subj-caie-igcse-eng-first', 2023, 'May/June', '2', NULL, 'G', 25, 37, strftime('%s', 'now') * 1000),
-('sgb-0500-s23-CS-12-93-U', 'subj-caie-igcse-eng-first', 2023, 'May/June', '2', NULL, 'U', 0, 24, strftime('%s', 'now') * 1000),
+('sgb-0500-s23-CS-12-93-U', 'subj-caie-igcse-eng-first', 2023, 'May/June', '2', NULL, 'U', 0, 24, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0500-s23-CT-13-83-Astar', 'subj-caie-igcse-eng-first', 2023, 'May/June', '3', NULL, 'A*', 113, 160, strftime('%s', 'now') * 1000),
 ('sgb-0500-s23-CT-13-83-A', 'subj-caie-igcse-eng-first', 2023, 'May/June', '3', NULL, 'A', 100, 112, strftime('%s', 'now') * 1000),
 ('sgb-0500-s23-CT-13-83-B', 'subj-caie-igcse-eng-first', 2023, 'May/June', '3', NULL, 'B', 87, 99, strftime('%s', 'now') * 1000),
@@ -2136,8 +2420,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-m23-AY-03-12-U', 'subj-caie-igcse-eng-first', 2023, 'Feb/March', '2', NULL, 'U', 0, 17, strftime('%s', 'now') * 1000),
 ('sgb-0500-m23-BS-12-22-Astar', 'subj-caie-igcse-eng-first', 2023, 'Feb/March', '2', NULL, 'A*', 119, 160, strftime('%s', 'now') * 1000),
 ('sgb-0500-m23-BS-12-22-A', 'subj-caie-igcse-eng-first', 2023, 'Feb/March', '2', NULL, 'A', 105, 118, strftime('%s', 'now') * 1000),
-('sgb-0500-m23-BS-12-22-B', 'subj-caie-igcse-eng-first', 2023, 'Feb/March', '2', NULL, 'B', 91, 104, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0500-m23-BS-12-22-B', 'subj-caie-igcse-eng-first', 2023, 'Feb/March', '2', NULL, 'B', 91, 104, strftime('%s', 'now') * 1000),
 ('sgb-0500-m23-BS-12-22-C', 'subj-caie-igcse-eng-first', 2023, 'Feb/March', '2', NULL, 'C', 78, 90, strftime('%s', 'now') * 1000),
 ('sgb-0500-m23-BS-12-22-D', 'subj-caie-igcse-eng-first', 2023, 'Feb/March', '2', NULL, 'D', 63, 77, strftime('%s', 'now') * 1000),
 ('sgb-0500-m23-BS-12-22-E', 'subj-caie-igcse-eng-first', 2023, 'Feb/March', '2', NULL, 'E', 48, 62, strftime('%s', 'now') * 1000),
@@ -2158,7 +2441,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-w23-AR-03-11-B', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '1', NULL, 'B', 90, 103, strftime('%s', 'now') * 1000),
 ('sgb-0500-w23-AR-03-11-C', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '1', NULL, 'C', 77, 89, strftime('%s', 'now') * 1000),
 ('sgb-0500-w23-AR-03-11-D', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '1', NULL, 'D', 64, 76, strftime('%s', 'now') * 1000),
-('sgb-0500-w23-AR-03-11-E', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '1', NULL, 'E', 52, 63, strftime('%s', 'now') * 1000),
+('sgb-0500-w23-AR-03-11-E', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '1', NULL, 'E', 52, 63, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0500-w23-AR-03-11-F', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '1', NULL, 'F', 39, 51, strftime('%s', 'now') * 1000),
 ('sgb-0500-w23-AR-03-11-G', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '1', NULL, 'G', 26, 38, strftime('%s', 'now') * 1000),
 ('sgb-0500-w23-AR-03-11-U', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '1', NULL, 'U', 0, 25, strftime('%s', 'now') * 1000),
@@ -2197,8 +2481,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-w23-AY-03-12-E', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '2', NULL, 'E', 54, 67, strftime('%s', 'now') * 1000),
 ('sgb-0500-w23-AY-03-12-F', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '2', NULL, 'F', 39, 53, strftime('%s', 'now') * 1000),
 ('sgb-0500-w23-AY-03-12-G', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '2', NULL, 'G', 24, 38, strftime('%s', 'now') * 1000),
-('sgb-0500-w23-AY-03-12-U', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '2', NULL, 'U', 0, 23, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0500-w23-AY-03-12-U', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '2', NULL, 'U', 0, 23, strftime('%s', 'now') * 1000),
 ('sgb-0500-w23-AZ-03-13-Astar', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '3', NULL, 'A*', 124, 160, strftime('%s', 'now') * 1000),
 ('sgb-0500-w23-AZ-03-13-A', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '3', NULL, 'A', 111, 123, strftime('%s', 'now') * 1000),
 ('sgb-0500-w23-AZ-03-13-B', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '3', NULL, 'B', 98, 110, strftime('%s', 'now') * 1000),
@@ -2219,7 +2502,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-w23-BR-11-21-U', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '1', NULL, 'U', 0, 25, strftime('%s', 'now') * 1000),
 ('sgb-0500-w23-BS-12-22-Astar', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '2', NULL, 'A*', 122, 160, strftime('%s', 'now') * 1000),
 ('sgb-0500-w23-BS-12-22-A', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '2', NULL, 'A', 109, 121, strftime('%s', 'now') * 1000),
-('sgb-0500-w23-BS-12-22-B', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '2', NULL, 'B', 96, 108, strftime('%s', 'now') * 1000),
+('sgb-0500-w23-BS-12-22-B', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '2', NULL, 'B', 96, 108, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0500-w23-BS-12-22-C', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '2', NULL, 'C', 83, 95, strftime('%s', 'now') * 1000),
 ('sgb-0500-w23-BS-12-22-D', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '2', NULL, 'D', 68, 82, strftime('%s', 'now') * 1000),
 ('sgb-0500-w23-BS-12-22-E', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '2', NULL, 'E', 54, 67, strftime('%s', 'now') * 1000),
@@ -2258,8 +2542,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-w23-BZ-13-23-B', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '3', NULL, 'B', 96, 106, strftime('%s', 'now') * 1000),
 ('sgb-0500-w23-BZ-13-23-C', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '3', NULL, 'C', 85, 95, strftime('%s', 'now') * 1000),
 ('sgb-0500-w23-BZ-13-23-D', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '3', NULL, 'D', 70, 84, strftime('%s', 'now') * 1000),
-('sgb-0500-w23-BZ-13-23-E', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '3', NULL, 'E', 56, 69, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0500-w23-BZ-13-23-E', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '3', NULL, 'E', 56, 69, strftime('%s', 'now') * 1000),
 ('sgb-0500-w23-BZ-13-23-F', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '3', NULL, 'F', 41, 55, strftime('%s', 'now') * 1000),
 ('sgb-0500-w23-BZ-13-23-G', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '3', NULL, 'G', 26, 40, strftime('%s', 'now') * 1000),
 ('sgb-0500-w23-BZ-13-23-U', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '3', NULL, 'U', 0, 25, strftime('%s', 'now') * 1000),
@@ -2280,7 +2563,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-w23-CR-11-93-E', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '1', NULL, 'E', 50, 61, strftime('%s', 'now') * 1000),
 ('sgb-0500-w23-CR-11-93-F', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '1', NULL, 'F', 37, 49, strftime('%s', 'now') * 1000),
 ('sgb-0500-w23-CR-11-93-G', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '1', NULL, 'G', 24, 36, strftime('%s', 'now') * 1000),
-('sgb-0500-w23-CR-11-93-U', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '1', NULL, 'U', 0, 23, strftime('%s', 'now') * 1000),
+('sgb-0500-w23-CR-11-93-U', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '1', NULL, 'U', 0, 23, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0500-w23-CS-12-83-Astar', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '2', NULL, 'A*', 127, 160, strftime('%s', 'now') * 1000),
 ('sgb-0500-w23-CS-12-83-A', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '2', NULL, 'A', 112, 126, strftime('%s', 'now') * 1000),
 ('sgb-0500-w23-CS-12-83-B', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '2', NULL, 'B', 97, 111, strftime('%s', 'now') * 1000),
@@ -2319,8 +2603,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-w23-CT-13-93-U', 'subj-caie-igcse-eng-first', 2023, 'Oct/Nov', '3', NULL, 'U', 0, 23, strftime('%s', 'now') * 1000),
 ('sgb-0500-s24-AR-03-11-Astar', 'subj-caie-igcse-eng-first', 2024, 'May/June', '1', NULL, 'A*', 121, 160, strftime('%s', 'now') * 1000),
 ('sgb-0500-s24-AR-03-11-A', 'subj-caie-igcse-eng-first', 2024, 'May/June', '1', NULL, 'A', 106, 120, strftime('%s', 'now') * 1000),
-('sgb-0500-s24-AR-03-11-B', 'subj-caie-igcse-eng-first', 2024, 'May/June', '1', NULL, 'B', 91, 105, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0500-s24-AR-03-11-B', 'subj-caie-igcse-eng-first', 2024, 'May/June', '1', NULL, 'B', 91, 105, strftime('%s', 'now') * 1000),
 ('sgb-0500-s24-AR-03-11-C', 'subj-caie-igcse-eng-first', 2024, 'May/June', '1', NULL, 'C', 77, 90, strftime('%s', 'now') * 1000),
 ('sgb-0500-s24-AR-03-11-D', 'subj-caie-igcse-eng-first', 2024, 'May/June', '1', NULL, 'D', 65, 76, strftime('%s', 'now') * 1000),
 ('sgb-0500-s24-AR-03-11-E', 'subj-caie-igcse-eng-first', 2024, 'May/June', '1', NULL, 'E', 53, 64, strftime('%s', 'now') * 1000),
@@ -2341,7 +2624,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-s24-AT-03-13-B', 'subj-caie-igcse-eng-first', 2024, 'May/June', '3', NULL, 'B', 90, 103, strftime('%s', 'now') * 1000),
 ('sgb-0500-s24-AT-03-13-C', 'subj-caie-igcse-eng-first', 2024, 'May/June', '3', NULL, 'C', 76, 89, strftime('%s', 'now') * 1000),
 ('sgb-0500-s24-AT-03-13-D', 'subj-caie-igcse-eng-first', 2024, 'May/June', '3', NULL, 'D', 64, 75, strftime('%s', 'now') * 1000),
-('sgb-0500-s24-AT-03-13-E', 'subj-caie-igcse-eng-first', 2024, 'May/June', '3', NULL, 'E', 52, 63, strftime('%s', 'now') * 1000),
+('sgb-0500-s24-AT-03-13-E', 'subj-caie-igcse-eng-first', 2024, 'May/June', '3', NULL, 'E', 52, 63, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0500-s24-AT-03-13-F', 'subj-caie-igcse-eng-first', 2024, 'May/June', '3', NULL, 'F', 40, 51, strftime('%s', 'now') * 1000),
 ('sgb-0500-s24-AT-03-13-G', 'subj-caie-igcse-eng-first', 2024, 'May/June', '3', NULL, 'G', 28, 39, strftime('%s', 'now') * 1000),
 ('sgb-0500-s24-AT-03-13-U', 'subj-caie-igcse-eng-first', 2024, 'May/June', '3', NULL, 'U', 0, 27, strftime('%s', 'now') * 1000),
@@ -2380,8 +2664,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-s24-BS-12-22-E', 'subj-caie-igcse-eng-first', 2024, 'May/June', '2', NULL, 'E', 54, 65, strftime('%s', 'now') * 1000),
 ('sgb-0500-s24-BS-12-22-F', 'subj-caie-igcse-eng-first', 2024, 'May/June', '2', NULL, 'F', 41, 53, strftime('%s', 'now') * 1000),
 ('sgb-0500-s24-BS-12-22-G', 'subj-caie-igcse-eng-first', 2024, 'May/June', '2', NULL, 'G', 28, 40, strftime('%s', 'now') * 1000),
-('sgb-0500-s24-BS-12-22-U', 'subj-caie-igcse-eng-first', 2024, 'May/June', '2', NULL, 'U', 0, 27, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0500-s24-BS-12-22-U', 'subj-caie-igcse-eng-first', 2024, 'May/June', '2', NULL, 'U', 0, 27, strftime('%s', 'now') * 1000),
 ('sgb-0500-s24-BT-13-23-Astar', 'subj-caie-igcse-eng-first', 2024, 'May/June', '3', NULL, 'A*', 113, 160, strftime('%s', 'now') * 1000),
 ('sgb-0500-s24-BT-13-23-A', 'subj-caie-igcse-eng-first', 2024, 'May/June', '3', NULL, 'A', 100, 112, strftime('%s', 'now') * 1000),
 ('sgb-0500-s24-BT-13-23-B', 'subj-caie-igcse-eng-first', 2024, 'May/June', '3', NULL, 'B', 87, 99, strftime('%s', 'now') * 1000),
@@ -2402,7 +2685,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-s24-BX-11-21-U', 'subj-caie-igcse-eng-first', 2024, 'May/June', '1', NULL, 'U', 0, 28, strftime('%s', 'now') * 1000),
 ('sgb-0500-s24-BY-12-22-Astar', 'subj-caie-igcse-eng-first', 2024, 'May/June', '2', NULL, 'A*', 111, 160, strftime('%s', 'now') * 1000),
 ('sgb-0500-s24-BY-12-22-A', 'subj-caie-igcse-eng-first', 2024, 'May/June', '2', NULL, 'A', 100, 110, strftime('%s', 'now') * 1000),
-('sgb-0500-s24-BY-12-22-B', 'subj-caie-igcse-eng-first', 2024, 'May/June', '2', NULL, 'B', 89, 99, strftime('%s', 'now') * 1000),
+('sgb-0500-s24-BY-12-22-B', 'subj-caie-igcse-eng-first', 2024, 'May/June', '2', NULL, 'B', 89, 99, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0500-s24-BY-12-22-C', 'subj-caie-igcse-eng-first', 2024, 'May/June', '2', NULL, 'C', 78, 88, strftime('%s', 'now') * 1000),
 ('sgb-0500-s24-BY-12-22-D', 'subj-caie-igcse-eng-first', 2024, 'May/June', '2', NULL, 'D', 66, 77, strftime('%s', 'now') * 1000),
 ('sgb-0500-s24-BY-12-22-E', 'subj-caie-igcse-eng-first', 2024, 'May/June', '2', NULL, 'E', 54, 65, strftime('%s', 'now') * 1000),
@@ -2441,8 +2725,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-s24-CS-12-93-B', 'subj-caie-igcse-eng-first', 2024, 'May/June', '2', NULL, 'B', 91, 103, strftime('%s', 'now') * 1000),
 ('sgb-0500-s24-CS-12-93-C', 'subj-caie-igcse-eng-first', 2024, 'May/June', '2', NULL, 'C', 79, 90, strftime('%s', 'now') * 1000),
 ('sgb-0500-s24-CS-12-93-D', 'subj-caie-igcse-eng-first', 2024, 'May/June', '2', NULL, 'D', 66, 78, strftime('%s', 'now') * 1000),
-('sgb-0500-s24-CS-12-93-E', 'subj-caie-igcse-eng-first', 2024, 'May/June', '2', NULL, 'E', 54, 65, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0500-s24-CS-12-93-E', 'subj-caie-igcse-eng-first', 2024, 'May/June', '2', NULL, 'E', 54, 65, strftime('%s', 'now') * 1000),
 ('sgb-0500-s24-CS-12-93-F', 'subj-caie-igcse-eng-first', 2024, 'May/June', '2', NULL, 'F', 41, 53, strftime('%s', 'now') * 1000),
 ('sgb-0500-s24-CS-12-93-G', 'subj-caie-igcse-eng-first', 2024, 'May/June', '2', NULL, 'G', 28, 40, strftime('%s', 'now') * 1000),
 ('sgb-0500-s24-CS-12-93-U', 'subj-caie-igcse-eng-first', 2024, 'May/June', '2', NULL, 'U', 0, 27, strftime('%s', 'now') * 1000),
@@ -2463,7 +2746,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-m24-AY-03-12-E', 'subj-caie-igcse-eng-first', 2024, 'Feb/March', '2', NULL, 'E', 55, 68, strftime('%s', 'now') * 1000),
 ('sgb-0500-m24-AY-03-12-F', 'subj-caie-igcse-eng-first', 2024, 'Feb/March', '2', NULL, 'F', 40, 54, strftime('%s', 'now') * 1000),
 ('sgb-0500-m24-AY-03-12-G', 'subj-caie-igcse-eng-first', 2024, 'Feb/March', '2', NULL, 'G', 25, 39, strftime('%s', 'now') * 1000),
-('sgb-0500-m24-AY-03-12-U', 'subj-caie-igcse-eng-first', 2024, 'Feb/March', '2', NULL, 'U', 0, 24, strftime('%s', 'now') * 1000),
+('sgb-0500-m24-AY-03-12-U', 'subj-caie-igcse-eng-first', 2024, 'Feb/March', '2', NULL, 'U', 0, 24, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0500-m24-BS-12-22-Astar', 'subj-caie-igcse-eng-first', 2024, 'Feb/March', '2', NULL, 'A*', 120, 160, strftime('%s', 'now') * 1000),
 ('sgb-0500-m24-BS-12-22-A', 'subj-caie-igcse-eng-first', 2024, 'Feb/March', '2', NULL, 'A', 108, 119, strftime('%s', 'now') * 1000),
 ('sgb-0500-m24-BS-12-22-B', 'subj-caie-igcse-eng-first', 2024, 'Feb/March', '2', NULL, 'B', 96, 107, strftime('%s', 'now') * 1000),
@@ -2502,8 +2786,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-w24-AS-03-12-U', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '2', NULL, 'U', 0, 20, strftime('%s', 'now') * 1000),
 ('sgb-0500-w24-AT-03-13-Astar', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '3', NULL, 'A*', 124, 160, strftime('%s', 'now') * 1000),
 ('sgb-0500-w24-AT-03-13-A', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '3', NULL, 'A', 110, 123, strftime('%s', 'now') * 1000),
-('sgb-0500-w24-AT-03-13-B', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '3', NULL, 'B', 96, 109, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0500-w24-AT-03-13-B', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '3', NULL, 'B', 96, 109, strftime('%s', 'now') * 1000),
 ('sgb-0500-w24-AT-03-13-C', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '3', NULL, 'C', 82, 95, strftime('%s', 'now') * 1000),
 ('sgb-0500-w24-AT-03-13-D', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '3', NULL, 'D', 66, 81, strftime('%s', 'now') * 1000),
 ('sgb-0500-w24-AT-03-13-E', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '3', NULL, 'E', 51, 65, strftime('%s', 'now') * 1000),
@@ -2524,7 +2807,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-w24-AZ-03-13-B', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '3', NULL, 'B', 96, 109, strftime('%s', 'now') * 1000),
 ('sgb-0500-w24-AZ-03-13-C', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '3', NULL, 'C', 82, 95, strftime('%s', 'now') * 1000),
 ('sgb-0500-w24-AZ-03-13-D', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '3', NULL, 'D', 66, 81, strftime('%s', 'now') * 1000),
-('sgb-0500-w24-AZ-03-13-E', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '3', NULL, 'E', 51, 65, strftime('%s', 'now') * 1000),
+('sgb-0500-w24-AZ-03-13-E', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '3', NULL, 'E', 51, 65, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0500-w24-AZ-03-13-F', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '3', NULL, 'F', 36, 50, strftime('%s', 'now') * 1000),
 ('sgb-0500-w24-AZ-03-13-G', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '3', NULL, 'G', 21, 35, strftime('%s', 'now') * 1000),
 ('sgb-0500-w24-AZ-03-13-U', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '3', NULL, 'U', 0, 20, strftime('%s', 'now') * 1000),
@@ -2563,8 +2847,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-w24-BX-11-21-E', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '1', NULL, 'E', 50, 62, strftime('%s', 'now') * 1000),
 ('sgb-0500-w24-BX-11-21-F', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '1', NULL, 'F', 36, 49, strftime('%s', 'now') * 1000),
 ('sgb-0500-w24-BX-11-21-G', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '1', NULL, 'G', 22, 35, strftime('%s', 'now') * 1000),
-('sgb-0500-w24-BX-11-21-U', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '1', NULL, 'U', 0, 21, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0500-w24-BX-11-21-U', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '1', NULL, 'U', 0, 21, strftime('%s', 'now') * 1000),
 ('sgb-0500-w24-BY-12-22-Astar', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '2', NULL, 'A*', 124, 160, strftime('%s', 'now') * 1000),
 ('sgb-0500-w24-BY-12-22-A', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '2', NULL, 'A', 110, 123, strftime('%s', 'now') * 1000),
 ('sgb-0500-w24-BY-12-22-B', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '2', NULL, 'B', 96, 109, strftime('%s', 'now') * 1000),
@@ -2585,7 +2868,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-w24-BZ-13-23-U', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '3', NULL, 'U', 0, 20, strftime('%s', 'now') * 1000),
 ('sgb-0500-w24-CR-11-83-Astar', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '1', NULL, 'A*', 119, 160, strftime('%s', 'now') * 1000),
 ('sgb-0500-w24-CR-11-83-A', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '1', NULL, 'A', 105, 118, strftime('%s', 'now') * 1000),
-('sgb-0500-w24-CR-11-83-B', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '1', NULL, 'B', 91, 104, strftime('%s', 'now') * 1000),
+('sgb-0500-w24-CR-11-83-B', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '1', NULL, 'B', 91, 104, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0500-w24-CR-11-83-C', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '1', NULL, 'C', 78, 90, strftime('%s', 'now') * 1000),
 ('sgb-0500-w24-CR-11-83-D', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '1', NULL, 'D', 64, 77, strftime('%s', 'now') * 1000),
 ('sgb-0500-w24-CR-11-83-E', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '1', NULL, 'E', 50, 63, strftime('%s', 'now') * 1000),
@@ -2624,8 +2908,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-w24-CT-13-83-B', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '3', NULL, 'B', 96, 109, strftime('%s', 'now') * 1000),
 ('sgb-0500-w24-CT-13-83-C', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '3', NULL, 'C', 82, 95, strftime('%s', 'now') * 1000),
 ('sgb-0500-w24-CT-13-83-D', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '3', NULL, 'D', 66, 81, strftime('%s', 'now') * 1000),
-('sgb-0500-w24-CT-13-83-E', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '3', NULL, 'E', 51, 65, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0500-w24-CT-13-83-E', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '3', NULL, 'E', 51, 65, strftime('%s', 'now') * 1000),
 ('sgb-0500-w24-CT-13-83-F', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '3', NULL, 'F', 36, 50, strftime('%s', 'now') * 1000),
 ('sgb-0500-w24-CT-13-83-G', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '3', NULL, 'G', 21, 35, strftime('%s', 'now') * 1000),
 ('sgb-0500-w24-CT-13-83-U', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '3', NULL, 'U', 0, 20, strftime('%s', 'now') * 1000),
@@ -2646,7 +2929,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-w24-CY-12-83-E', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '2', NULL, 'E', 53, 67, strftime('%s', 'now') * 1000),
 ('sgb-0500-w24-CY-12-83-F', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '2', NULL, 'F', 37, 52, strftime('%s', 'now') * 1000),
 ('sgb-0500-w24-CY-12-83-G', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '2', NULL, 'G', 21, 36, strftime('%s', 'now') * 1000),
-('sgb-0500-w24-CY-12-83-U', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '2', NULL, 'U', 0, 20, strftime('%s', 'now') * 1000),
+('sgb-0500-w24-CY-12-83-U', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '2', NULL, 'U', 0, 20, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0500-w24-CY-12-93-Astar', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '2', NULL, 'A*', 128, 160, strftime('%s', 'now') * 1000),
 ('sgb-0500-w24-CY-12-93-A', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '2', NULL, 'A', 113, 127, strftime('%s', 'now') * 1000),
 ('sgb-0500-w24-CY-12-93-B', 'subj-caie-igcse-eng-first', 2024, 'Oct/Nov', '2', NULL, 'B', 98, 112, strftime('%s', 'now') * 1000),
@@ -2685,8 +2969,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-s25-AR-03-11-U', 'subj-caie-igcse-eng-first', 2025, 'May/June', '1', NULL, 'U', 0, 27, strftime('%s', 'now') * 1000),
 ('sgb-0500-s25-AS-03-12-Astar', 'subj-caie-igcse-eng-first', 2025, 'May/June', '2', NULL, 'A*', 116, 160, strftime('%s', 'now') * 1000),
 ('sgb-0500-s25-AS-03-12-A', 'subj-caie-igcse-eng-first', 2025, 'May/June', '2', NULL, 'A', 103, 115, strftime('%s', 'now') * 1000),
-('sgb-0500-s25-AS-03-12-B', 'subj-caie-igcse-eng-first', 2025, 'May/June', '2', NULL, 'B', 90, 102, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0500-s25-AS-03-12-B', 'subj-caie-igcse-eng-first', 2025, 'May/June', '2', NULL, 'B', 90, 102, strftime('%s', 'now') * 1000),
 ('sgb-0500-s25-AS-03-12-C', 'subj-caie-igcse-eng-first', 2025, 'May/June', '2', NULL, 'C', 78, 89, strftime('%s', 'now') * 1000),
 ('sgb-0500-s25-AS-03-12-D', 'subj-caie-igcse-eng-first', 2025, 'May/June', '2', NULL, 'D', 66, 77, strftime('%s', 'now') * 1000),
 ('sgb-0500-s25-AS-03-12-E', 'subj-caie-igcse-eng-first', 2025, 'May/June', '2', NULL, 'E', 54, 65, strftime('%s', 'now') * 1000),
@@ -2707,7 +2990,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-s25-AX-03-11-B', 'subj-caie-igcse-eng-first', 2025, 'May/June', '1', NULL, 'B', 92, 105, strftime('%s', 'now') * 1000),
 ('sgb-0500-s25-AX-03-11-C', 'subj-caie-igcse-eng-first', 2025, 'May/June', '1', NULL, 'C', 79, 91, strftime('%s', 'now') * 1000),
 ('sgb-0500-s25-AX-03-11-D', 'subj-caie-igcse-eng-first', 2025, 'May/June', '1', NULL, 'D', 66, 78, strftime('%s', 'now') * 1000),
-('sgb-0500-s25-AX-03-11-E', 'subj-caie-igcse-eng-first', 2025, 'May/June', '1', NULL, 'E', 54, 65, strftime('%s', 'now') * 1000),
+('sgb-0500-s25-AX-03-11-E', 'subj-caie-igcse-eng-first', 2025, 'May/June', '1', NULL, 'E', 54, 65, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0500-s25-AX-03-11-F', 'subj-caie-igcse-eng-first', 2025, 'May/June', '1', NULL, 'F', 41, 53, strftime('%s', 'now') * 1000),
 ('sgb-0500-s25-AX-03-11-G', 'subj-caie-igcse-eng-first', 2025, 'May/June', '1', NULL, 'G', 28, 40, strftime('%s', 'now') * 1000),
 ('sgb-0500-s25-AX-03-11-U', 'subj-caie-igcse-eng-first', 2025, 'May/June', '1', NULL, 'U', 0, 27, strftime('%s', 'now') * 1000),
@@ -2746,8 +3030,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-s25-BT-13-23-E', 'subj-caie-igcse-eng-first', 2025, 'May/June', '3', NULL, 'E', 53, 63, strftime('%s', 'now') * 1000),
 ('sgb-0500-s25-BT-13-23-F', 'subj-caie-igcse-eng-first', 2025, 'May/June', '3', NULL, 'F', 40, 52, strftime('%s', 'now') * 1000),
 ('sgb-0500-s25-BT-13-23-G', 'subj-caie-igcse-eng-first', 2025, 'May/June', '3', NULL, 'G', 27, 39, strftime('%s', 'now') * 1000),
-('sgb-0500-s25-BT-13-23-U', 'subj-caie-igcse-eng-first', 2025, 'May/June', '3', NULL, 'U', 0, 26, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0500-s25-BT-13-23-U', 'subj-caie-igcse-eng-first', 2025, 'May/June', '3', NULL, 'U', 0, 26, strftime('%s', 'now') * 1000),
 ('sgb-0500-s25-BX-11-21-Astar', 'subj-caie-igcse-eng-first', 2025, 'May/June', '1', NULL, 'A*', 116, 160, strftime('%s', 'now') * 1000),
 ('sgb-0500-s25-BX-11-21-A', 'subj-caie-igcse-eng-first', 2025, 'May/June', '1', NULL, 'A', 103, 115, strftime('%s', 'now') * 1000),
 ('sgb-0500-s25-BX-11-21-B', 'subj-caie-igcse-eng-first', 2025, 'May/June', '1', NULL, 'B', 90, 102, strftime('%s', 'now') * 1000),
@@ -2768,7 +3051,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-s25-BY-12-22-U', 'subj-caie-igcse-eng-first', 2025, 'May/June', '2', NULL, 'U', 0, 27, strftime('%s', 'now') * 1000),
 ('sgb-0500-s25-CR-11-83-Astar', 'subj-caie-igcse-eng-first', 2025, 'May/June', '1', NULL, 'A*', 120, 160, strftime('%s', 'now') * 1000),
 ('sgb-0500-s25-CR-11-83-A', 'subj-caie-igcse-eng-first', 2025, 'May/June', '1', NULL, 'A', 106, 119, strftime('%s', 'now') * 1000),
-('sgb-0500-s25-CR-11-83-B', 'subj-caie-igcse-eng-first', 2025, 'May/June', '1', NULL, 'B', 92, 105, strftime('%s', 'now') * 1000),
+('sgb-0500-s25-CR-11-83-B', 'subj-caie-igcse-eng-first', 2025, 'May/June', '1', NULL, 'B', 92, 105, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0500-s25-CR-11-83-C', 'subj-caie-igcse-eng-first', 2025, 'May/June', '1', NULL, 'C', 79, 91, strftime('%s', 'now') * 1000),
 ('sgb-0500-s25-CR-11-83-D', 'subj-caie-igcse-eng-first', 2025, 'May/June', '1', NULL, 'D', 66, 78, strftime('%s', 'now') * 1000),
 ('sgb-0500-s25-CR-11-83-E', 'subj-caie-igcse-eng-first', 2025, 'May/June', '1', NULL, 'E', 54, 65, strftime('%s', 'now') * 1000),
@@ -2807,8 +3091,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-s25-CX-11-83-B', 'subj-caie-igcse-eng-first', 2025, 'May/June', '1', NULL, 'B', 92, 105, strftime('%s', 'now') * 1000),
 ('sgb-0500-s25-CX-11-83-C', 'subj-caie-igcse-eng-first', 2025, 'May/June', '1', NULL, 'C', 79, 91, strftime('%s', 'now') * 1000),
 ('sgb-0500-s25-CX-11-83-D', 'subj-caie-igcse-eng-first', 2025, 'May/June', '1', NULL, 'D', 66, 78, strftime('%s', 'now') * 1000),
-('sgb-0500-s25-CX-11-83-E', 'subj-caie-igcse-eng-first', 2025, 'May/June', '1', NULL, 'E', 54, 65, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0500-s25-CX-11-83-E', 'subj-caie-igcse-eng-first', 2025, 'May/June', '1', NULL, 'E', 54, 65, strftime('%s', 'now') * 1000),
 ('sgb-0500-s25-CX-11-83-F', 'subj-caie-igcse-eng-first', 2025, 'May/June', '1', NULL, 'F', 41, 53, strftime('%s', 'now') * 1000),
 ('sgb-0500-s25-CX-11-83-G', 'subj-caie-igcse-eng-first', 2025, 'May/June', '1', NULL, 'G', 28, 40, strftime('%s', 'now') * 1000),
 ('sgb-0500-s25-CX-11-83-U', 'subj-caie-igcse-eng-first', 2025, 'May/June', '1', NULL, 'U', 0, 27, strftime('%s', 'now') * 1000),
@@ -2829,7 +3112,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-m25-AS-03-12-E', 'subj-caie-igcse-eng-first', 2025, 'Feb/March', '2', NULL, 'E', 55, 69, strftime('%s', 'now') * 1000),
 ('sgb-0500-m25-AS-03-12-F', 'subj-caie-igcse-eng-first', 2025, 'Feb/March', '2', NULL, 'F', 40, 54, strftime('%s', 'now') * 1000),
 ('sgb-0500-m25-AS-03-12-G', 'subj-caie-igcse-eng-first', 2025, 'Feb/March', '2', NULL, 'G', 25, 39, strftime('%s', 'now') * 1000),
-('sgb-0500-m25-AS-03-12-U', 'subj-caie-igcse-eng-first', 2025, 'Feb/March', '2', NULL, 'U', 0, 24, strftime('%s', 'now') * 1000),
+('sgb-0500-m25-AS-03-12-U', 'subj-caie-igcse-eng-first', 2025, 'Feb/March', '2', NULL, 'U', 0, 24, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0500-m25-BS-12-22-Astar', 'subj-caie-igcse-eng-first', 2025, 'Feb/March', '2', NULL, 'A*', 126, 160, strftime('%s', 'now') * 1000),
 ('sgb-0500-m25-BS-12-22-A', 'subj-caie-igcse-eng-first', 2025, 'Feb/March', '2', NULL, 'A', 112, 125, strftime('%s', 'now') * 1000),
 ('sgb-0500-m25-BS-12-22-B', 'subj-caie-igcse-eng-first', 2025, 'Feb/March', '2', NULL, 'B', 98, 111, strftime('%s', 'now') * 1000),
@@ -2868,8 +3152,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-w25-AS-03-12-U', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '2', NULL, 'U', 0, 21, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-AT-03-13-Astar', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '3', NULL, 'A*', 123, 160, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-AT-03-13-A', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '3', NULL, 'A', 109, 122, strftime('%s', 'now') * 1000),
-('sgb-0500-w25-AT-03-13-B', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '3', NULL, 'B', 95, 108, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0500-w25-AT-03-13-B', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '3', NULL, 'B', 95, 108, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-AT-03-13-C', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '3', NULL, 'C', 82, 94, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-AT-03-13-D', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '3', NULL, 'D', 67, 81, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-AT-03-13-E', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '3', NULL, 'E', 53, 66, strftime('%s', 'now') * 1000),
@@ -2890,7 +3173,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-w25-AY-03-12-B', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '2', NULL, 'B', 95, 109, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-AY-03-12-C', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '2', NULL, 'C', 81, 94, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-AY-03-12-D', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '2', NULL, 'D', 66, 80, strftime('%s', 'now') * 1000),
-('sgb-0500-w25-AY-03-12-E', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '2', NULL, 'E', 52, 65, strftime('%s', 'now') * 1000),
+('sgb-0500-w25-AY-03-12-E', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '2', NULL, 'E', 52, 65, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0500-w25-AY-03-12-F', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '2', NULL, 'F', 37, 51, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-AY-03-12-G', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '2', NULL, 'G', 22, 36, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-AY-03-12-U', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '2', NULL, 'U', 0, 21, strftime('%s', 'now') * 1000),
@@ -2929,8 +3213,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-w25-BX-11-21-E', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '1', NULL, 'E', 51, 63, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-BX-11-21-F', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '1', NULL, 'F', 37, 50, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-BX-11-21-G', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '1', NULL, 'G', 23, 36, strftime('%s', 'now') * 1000),
-('sgb-0500-w25-BX-11-21-U', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '1', NULL, 'U', 0, 22, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0500-w25-BX-11-21-U', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '1', NULL, 'U', 0, 22, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-BY-12-22-Astar', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '2', NULL, 'A*', 121, 160, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-BY-12-22-A', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '2', NULL, 'A', 107, 120, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-BY-12-22-B', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '2', NULL, 'B', 93, 106, strftime('%s', 'now') * 1000),
@@ -2951,7 +3234,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-w25-BZ-13-23-U', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '3', NULL, 'U', 0, 22, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-CR-11-83-Astar', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '1', NULL, 'A*', 121, 160, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-CR-11-83-A', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '1', NULL, 'A', 107, 120, strftime('%s', 'now') * 1000),
-('sgb-0500-w25-CR-11-83-B', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '1', NULL, 'B', 93, 106, strftime('%s', 'now') * 1000),
+('sgb-0500-w25-CR-11-83-B', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '1', NULL, 'B', 93, 106, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0500-w25-CR-11-83-C', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '1', NULL, 'C', 79, 92, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-CR-11-83-D', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '1', NULL, 'D', 65, 78, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-CR-11-83-E', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '1', NULL, 'E', 51, 64, strftime('%s', 'now') * 1000),
@@ -2990,8 +3274,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-w25-CT-13-83-B', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '3', NULL, 'B', 95, 108, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-CT-13-83-C', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '3', NULL, 'C', 82, 94, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-CT-13-83-D', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '3', NULL, 'D', 67, 81, strftime('%s', 'now') * 1000),
-('sgb-0500-w25-CT-13-83-E', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '3', NULL, 'E', 53, 66, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0500-w25-CT-13-83-E', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '3', NULL, 'E', 53, 66, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-CT-13-83-F', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '3', NULL, 'F', 38, 52, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-CT-13-83-G', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '3', NULL, 'G', 23, 37, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-CT-13-83-U', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '3', NULL, 'U', 0, 22, strftime('%s', 'now') * 1000),
@@ -3012,7 +3295,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-w25-CU-12-83-E', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '2', NULL, 'E', 52, 65, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-CU-12-83-F', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '2', NULL, 'F', 37, 51, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-CU-12-83-G', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '2', NULL, 'G', 22, 36, strftime('%s', 'now') * 1000),
-('sgb-0500-w25-CU-12-83-U', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '2', NULL, 'U', 0, 21, strftime('%s', 'now') * 1000),
+('sgb-0500-w25-CU-12-83-U', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '2', NULL, 'U', 0, 21, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0500-w25-CU-12-73-Astar', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '2', NULL, 'A*', 125, 160, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-CU-12-73-A', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '2', NULL, 'A', 110, 124, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-CU-12-73-B', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '2', NULL, 'B', 95, 109, strftime('%s', 'now') * 1000),
@@ -3051,8 +3335,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-w25-CY-12-93-U', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '2', NULL, 'U', 0, 21, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-CZ-13-83-Astar', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '3', NULL, 'A*', 123, 160, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-CZ-13-83-A', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '3', NULL, 'A', 109, 122, strftime('%s', 'now') * 1000),
-('sgb-0500-w25-CZ-13-83-B', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '3', NULL, 'B', 95, 108, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0500-w25-CZ-13-83-B', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '3', NULL, 'B', 95, 108, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-CZ-13-83-C', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '3', NULL, 'C', 82, 94, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-CZ-13-83-D', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '3', NULL, 'D', 67, 81, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-CZ-13-83-E', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '3', NULL, 'E', 53, 66, strftime('%s', 'now') * 1000),
@@ -3068,6 +3351,162 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0500-w25-CZ-13-93-F', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '3', NULL, 'F', 38, 52, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-CZ-13-93-G', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '3', NULL, 'G', 23, 37, strftime('%s', 'now') * 1000),
 ('sgb-0500-w25-CZ-13-93-U', 'subj-caie-igcse-eng-first', 2025, 'Oct/Nov', '3', NULL, 'U', 0, 22, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C0311-03-11-Astar', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'A*', 121, 160, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C0311-03-11-A', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'A', 107, 120, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C0311-03-11-B', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'B', 93, 106, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C0311-03-11-C', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'C', 79, 92, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C0311-03-11-D', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'D', 66, 78, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C0311-03-11-E', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'E', 53, 65, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0500-s26-C0311-03-11-F', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'F', 41, 52, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C0311-03-11-G', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'G', 29, 40, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C0311-03-11-U', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'U', 0, 28, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C0312-03-12-Astar', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'A*', 114, 160, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C0312-03-12-A', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'A', 101, 113, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C0312-03-12-B', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'B', 88, 100, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C0312-03-12-C', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'C', 75, 87, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C0312-03-12-D', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'D', 64, 74, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C0312-03-12-E', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'E', 53, 63, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C0312-03-12-F', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'F', 41, 52, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C0312-03-12-G', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'G', 29, 40, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C0312-03-12-U', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'U', 0, 28, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C0313-03-13-Astar', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'A*', 114, 160, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C0313-03-13-A', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'A', 101, 113, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C0313-03-13-B', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'B', 88, 100, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C0313-03-13-C', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'C', 76, 87, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C0313-03-13-D', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'D', 64, 75, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C0313-03-13-E', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'E', 53, 63, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C0313-03-13-F', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'F', 41, 52, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C0313-03-13-G', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'G', 29, 40, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C0313-03-13-U', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'U', 0, 28, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1121-11-21-Astar', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'A*', 116, 160, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1121-11-21-A', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'A', 103, 115, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1121-11-21-B', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'B', 90, 102, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1121-11-21-C', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'C', 78, 89, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1121-11-21-D', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'D', 65, 77, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1121-11-21-E', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'E', 53, 64, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1121-11-21-F', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'F', 41, 52, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1121-11-21-G', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'G', 29, 40, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1121-11-21-U', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'U', 0, 28, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1183-11-83-Astar', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'A*', 121, 160, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1183-11-83-A', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'A', 107, 120, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1183-11-83-B', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'B', 93, 106, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1183-11-83-C', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'C', 79, 92, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1183-11-83-D', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'D', 66, 78, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1183-11-83-E', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'E', 53, 65, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1183-11-83-F', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'F', 41, 52, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1183-11-83-G', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'G', 29, 40, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1183-11-83-U', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'U', 0, 28, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1193-11-93-Astar', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'A*', 121, 160, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1193-11-93-A', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'A', 107, 120, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1193-11-93-B', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'B', 93, 106, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1193-11-93-C', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'C', 79, 92, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1193-11-93-D', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'D', 66, 78, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1193-11-93-E', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'E', 53, 65, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1193-11-93-F', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'F', 41, 52, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1193-11-93-G', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'G', 29, 40, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1193-11-93-U', 'subj-caie-igcse-eng-first', 2026, 'May/June', '1', NULL, 'U', 0, 28, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1222-12-22-Astar', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'A*', 107, 160, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1222-12-22-A', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'A', 96, 106, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1222-12-22-B', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'B', 85, 95, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1222-12-22-C', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'C', 74, 84, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1222-12-22-D', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'D', 63, 73, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1222-12-22-E', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'E', 53, 62, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1222-12-22-F', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'F', 41, 52, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1222-12-22-G', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'G', 29, 40, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1222-12-22-U', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'U', 0, 28, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1283-12-83-Astar', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'A*', 114, 160, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1283-12-83-A', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'A', 101, 113, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1283-12-83-B', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'B', 88, 100, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0500-s26-C1283-12-83-C', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'C', 75, 87, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1283-12-83-D', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'D', 64, 74, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1283-12-83-E', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'E', 53, 63, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1283-12-83-F', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'F', 41, 52, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1283-12-83-G', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'G', 29, 40, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1283-12-83-U', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'U', 0, 28, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1293-12-93-Astar', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'A*', 114, 160, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1293-12-93-A', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'A', 101, 113, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1293-12-93-B', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'B', 88, 100, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1293-12-93-C', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'C', 75, 87, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1293-12-93-D', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'D', 64, 74, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1293-12-93-E', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'E', 53, 63, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1293-12-93-F', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'F', 41, 52, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1293-12-93-G', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'G', 29, 40, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1293-12-93-U', 'subj-caie-igcse-eng-first', 2026, 'May/June', '2', NULL, 'U', 0, 28, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1323-13-23-Astar', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'A*', 108, 160, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1323-13-23-A', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'A', 97, 107, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1323-13-23-B', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'B', 86, 96, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1323-13-23-C', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'C', 75, 85, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1323-13-23-D', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'D', 64, 74, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1323-13-23-E', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'E', 53, 63, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1323-13-23-F', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'F', 41, 52, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1323-13-23-G', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'G', 29, 40, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1323-13-23-U', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'U', 0, 28, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1383-13-83-Astar', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'A*', 114, 160, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1383-13-83-A', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'A', 101, 113, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1383-13-83-B', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'B', 88, 100, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1383-13-83-C', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'C', 76, 87, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1383-13-83-D', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'D', 64, 75, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1383-13-83-E', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'E', 53, 63, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1383-13-83-F', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'F', 41, 52, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1383-13-83-G', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'G', 29, 40, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1383-13-83-U', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'U', 0, 28, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1393-13-93-Astar', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'A*', 114, 160, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1393-13-93-A', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'A', 101, 113, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1393-13-93-B', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'B', 88, 100, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1393-13-93-C', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'C', 76, 87, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1393-13-93-D', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'D', 64, 75, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1393-13-93-E', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'E', 53, 63, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1393-13-93-F', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'F', 41, 52, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1393-13-93-G', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'G', 29, 40, strftime('%s', 'now') * 1000),
+('sgb-0500-s26-C1393-13-93-U', 'subj-caie-igcse-eng-first', 2026, 'May/June', '3', NULL, 'U', 0, 28, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C0312-03-12-Astar', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'A*', 122, 160, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C0312-03-12-A', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'A', 109, 121, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C0312-03-12-B', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'B', 96, 108, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C0312-03-12-C', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'C', 83, 95, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C0312-03-12-D', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'D', 69, 82, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C0312-03-12-E', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'E', 55, 68, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C0312-03-12-F', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'F', 40, 54, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C0312-03-12-G', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'G', 25, 39, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C0312-03-12-U', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'U', 0, 24, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1222-12-22-Astar', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'A*', 118, 160, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1222-12-22-A', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'A', 106, 117, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1222-12-22-B', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'B', 94, 105, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1222-12-22-C', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'C', 83, 93, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1222-12-22-D', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'D', 69, 82, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1222-12-22-E', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'E', 55, 68, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1222-12-22-F', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'F', 40, 54, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1222-12-22-G', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'G', 25, 39, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1222-12-22-U', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'U', 0, 24, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0500-m26-C1273-12-73-Astar', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'A*', 122, 160, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1273-12-73-A', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'A', 109, 121, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1273-12-73-B', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'B', 96, 108, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1273-12-73-C', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'C', 83, 95, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1273-12-73-D', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'D', 69, 82, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1273-12-73-E', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'E', 55, 68, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1273-12-73-F', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'F', 40, 54, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1273-12-73-G', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'G', 25, 39, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1273-12-73-U', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'U', 0, 24, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1283-12-83-Astar', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'A*', 122, 160, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1283-12-83-A', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'A', 109, 121, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1283-12-83-B', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'B', 96, 108, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1283-12-83-C', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'C', 83, 95, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1283-12-83-D', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'D', 69, 82, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1283-12-83-E', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'E', 55, 68, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1283-12-83-F', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'F', 40, 54, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1283-12-83-G', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'G', 25, 39, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1283-12-83-U', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'U', 0, 24, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1293-12-93-Astar', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'A*', 122, 160, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1293-12-93-A', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'A', 109, 121, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1293-12-93-B', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'B', 96, 108, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1293-12-93-C', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'C', 83, 95, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1293-12-93-D', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'D', 69, 82, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1293-12-93-E', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'E', 55, 68, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1293-12-93-F', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'F', 40, 54, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1293-12-93-G', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'G', 25, 39, strftime('%s', 'now') * 1000),
+('sgb-0500-m26-C1293-12-93-U', 'subj-caie-igcse-eng-first', 2026, 'Feb/March', '2', NULL, 'U', 0, 24, strftime('%s', 'now') * 1000),
 ('sgb-0510-s22-AX-11-31-51-C', 'subj-caie-igcse-esl', 2022, 'May/June', '1', NULL, 'C', 145, 200, strftime('%s', 'now') * 1000),
 ('sgb-0510-s22-AX-11-31-51-D', 'subj-caie-igcse-esl', 2022, 'May/June', '1', NULL, 'D', 125, 144, strftime('%s', 'now') * 1000),
 ('sgb-0510-s22-AX-11-31-51-E', 'subj-caie-igcse-esl', 2022, 'May/June', '1', NULL, 'E', 105, 124, strftime('%s', 'now') * 1000),
@@ -3100,7 +3539,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0510-s22-BY-12-32-82-U', 'subj-caie-igcse-esl', 2022, 'May/June', '2', NULL, 'U', 0, 64, strftime('%s', 'now') * 1000),
 ('sgb-0510-s22-CX-11-31-91-C', 'subj-caie-igcse-esl', 2022, 'May/June', '1', NULL, 'C', 145, 200, strftime('%s', 'now') * 1000),
 ('sgb-0510-s22-CX-11-31-91-D', 'subj-caie-igcse-esl', 2022, 'May/June', '1', NULL, 'D', 125, 144, strftime('%s', 'now') * 1000),
-('sgb-0510-s22-CX-11-31-91-E', 'subj-caie-igcse-esl', 2022, 'May/June', '1', NULL, 'E', 105, 124, strftime('%s', 'now') * 1000),
+('sgb-0510-s22-CX-11-31-91-E', 'subj-caie-igcse-esl', 2022, 'May/June', '1', NULL, 'E', 105, 124, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0510-s22-CX-11-31-91-F', 'subj-caie-igcse-esl', 2022, 'May/June', '1', NULL, 'F', 87, 104, strftime('%s', 'now') * 1000),
 ('sgb-0510-s22-CX-11-31-91-G', 'subj-caie-igcse-esl', 2022, 'May/June', '1', NULL, 'G', 70, 86, strftime('%s', 'now') * 1000),
 ('sgb-0510-s22-CX-11-31-91-U', 'subj-caie-igcse-esl', 2022, 'May/June', '1', NULL, 'U', 0, 69, strftime('%s', 'now') * 1000),
@@ -3112,8 +3552,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0510-s22-CY-12-32-92-U', 'subj-caie-igcse-esl', 2022, 'May/June', '2', NULL, 'U', 0, 64, strftime('%s', 'now') * 1000),
 ('sgb-0510-s22-FX-21-41-51-Astar', 'subj-caie-igcse-esl', 2022, 'May/June', '1', NULL, 'A*', 183, 200, strftime('%s', 'now') * 1000),
 ('sgb-0510-s22-FX-21-41-51-A', 'subj-caie-igcse-esl', 2022, 'May/June', '1', NULL, 'A', 167, 182, strftime('%s', 'now') * 1000),
-('sgb-0510-s22-FX-21-41-51-B', 'subj-caie-igcse-esl', 2022, 'May/June', '1', NULL, 'B', 148, 166, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0510-s22-FX-21-41-51-B', 'subj-caie-igcse-esl', 2022, 'May/June', '1', NULL, 'B', 148, 166, strftime('%s', 'now') * 1000),
 ('sgb-0510-s22-FX-21-41-51-C', 'subj-caie-igcse-esl', 2022, 'May/June', '1', NULL, 'C', 130, 147, strftime('%s', 'now') * 1000),
 ('sgb-0510-s22-FX-21-41-51-D', 'subj-caie-igcse-esl', 2022, 'May/June', '1', NULL, 'D', 110, 129, strftime('%s', 'now') * 1000),
 ('sgb-0510-s22-FX-21-41-51-E', 'subj-caie-igcse-esl', 2022, 'May/June', '1', NULL, 'E', 90, 109, strftime('%s', 'now') * 1000),
@@ -3161,7 +3600,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0510-s22-HY-22-42-92-E', 'subj-caie-igcse-esl', 2022, 'May/June', '2', NULL, 'E', 88, 107, strftime('%s', 'now') * 1000),
 ('sgb-0510-s22-HY-22-42-92-U', 'subj-caie-igcse-esl', 2022, 'May/June', '2', NULL, 'U', 0, 87, strftime('%s', 'now') * 1000),
 ('sgb-0510-s22-LB-12-32-C', 'subj-caie-igcse-esl', 2022, 'May/June', '2', NULL, 'C', 141, 200, strftime('%s', 'now') * 1000),
-('sgb-0510-s22-LB-12-32-D', 'subj-caie-igcse-esl', 2022, 'May/June', '2', NULL, 'D', 121, 140, strftime('%s', 'now') * 1000),
+('sgb-0510-s22-LB-12-32-D', 'subj-caie-igcse-esl', 2022, 'May/June', '2', NULL, 'D', 121, 140, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0510-s22-LB-12-32-E', 'subj-caie-igcse-esl', 2022, 'May/June', '2', NULL, 'E', 101, 120, strftime('%s', 'now') * 1000),
 ('sgb-0510-s22-LB-12-32-F', 'subj-caie-igcse-esl', 2022, 'May/June', '2', NULL, 'F', 83, 100, strftime('%s', 'now') * 1000),
 ('sgb-0510-s22-LB-12-32-G', 'subj-caie-igcse-esl', 2022, 'May/June', '2', NULL, 'G', 65, 82, strftime('%s', 'now') * 1000),
@@ -3173,8 +3613,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0510-s22-MA-21-41-D', 'subj-caie-igcse-esl', 2022, 'May/June', '1', NULL, 'D', 110, 129, strftime('%s', 'now') * 1000),
 ('sgb-0510-s22-MA-21-41-E', 'subj-caie-igcse-esl', 2022, 'May/June', '1', NULL, 'E', 90, 109, strftime('%s', 'now') * 1000),
 ('sgb-0510-s22-MA-21-41-U', 'subj-caie-igcse-esl', 2022, 'May/June', '1', NULL, 'U', 0, 89, strftime('%s', 'now') * 1000),
-('sgb-0510-s22-MB-22-42-Astar', 'subj-caie-igcse-esl', 2022, 'May/June', '2', NULL, 'A*', 184, 200, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0510-s22-MB-22-42-Astar', 'subj-caie-igcse-esl', 2022, 'May/June', '2', NULL, 'A*', 184, 200, strftime('%s', 'now') * 1000),
 ('sgb-0510-s22-MB-22-42-A', 'subj-caie-igcse-esl', 2022, 'May/June', '2', NULL, 'A', 168, 183, strftime('%s', 'now') * 1000),
 ('sgb-0510-s22-MB-22-42-B', 'subj-caie-igcse-esl', 2022, 'May/June', '2', NULL, 'B', 148, 167, strftime('%s', 'now') * 1000),
 ('sgb-0510-s22-MB-22-42-C', 'subj-caie-igcse-esl', 2022, 'May/June', '2', NULL, 'C', 128, 147, strftime('%s', 'now') * 1000),
@@ -3222,7 +3661,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0510-w22-BX-11-31-81-C', 'subj-caie-igcse-esl', 2022, 'Oct/Nov', '1', NULL, 'C', 154, 200, strftime('%s', 'now') * 1000),
 ('sgb-0510-w22-BX-11-31-81-D', 'subj-caie-igcse-esl', 2022, 'Oct/Nov', '1', NULL, 'D', 138, 153, strftime('%s', 'now') * 1000),
 ('sgb-0510-w22-BX-11-31-81-E', 'subj-caie-igcse-esl', 2022, 'Oct/Nov', '1', NULL, 'E', 123, 137, strftime('%s', 'now') * 1000),
-('sgb-0510-w22-BX-11-31-81-F', 'subj-caie-igcse-esl', 2022, 'Oct/Nov', '1', NULL, 'F', 105, 122, strftime('%s', 'now') * 1000),
+('sgb-0510-w22-BX-11-31-81-F', 'subj-caie-igcse-esl', 2022, 'Oct/Nov', '1', NULL, 'F', 105, 122, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0510-w22-BX-11-31-81-G', 'subj-caie-igcse-esl', 2022, 'Oct/Nov', '1', NULL, 'G', 87, 104, strftime('%s', 'now') * 1000),
 ('sgb-0510-w22-BX-11-31-81-U', 'subj-caie-igcse-esl', 2022, 'Oct/Nov', '1', NULL, 'U', 0, 86, strftime('%s', 'now') * 1000),
 ('sgb-0510-w22-BY-12-32-82-C', 'subj-caie-igcse-esl', 2022, 'Oct/Nov', '2', NULL, 'C', 154, 200, strftime('%s', 'now') * 1000),
@@ -3234,8 +3674,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0510-w22-CX-11-31-91-C', 'subj-caie-igcse-esl', 2022, 'Oct/Nov', '1', NULL, 'C', 154, 200, strftime('%s', 'now') * 1000),
 ('sgb-0510-w22-CX-11-31-91-D', 'subj-caie-igcse-esl', 2022, 'Oct/Nov', '1', NULL, 'D', 138, 153, strftime('%s', 'now') * 1000),
 ('sgb-0510-w22-CX-11-31-91-E', 'subj-caie-igcse-esl', 2022, 'Oct/Nov', '1', NULL, 'E', 123, 137, strftime('%s', 'now') * 1000),
-('sgb-0510-w22-CX-11-31-91-F', 'subj-caie-igcse-esl', 2022, 'Oct/Nov', '1', NULL, 'F', 105, 122, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0510-w22-CX-11-31-91-F', 'subj-caie-igcse-esl', 2022, 'Oct/Nov', '1', NULL, 'F', 105, 122, strftime('%s', 'now') * 1000),
 ('sgb-0510-w22-CX-11-31-91-G', 'subj-caie-igcse-esl', 2022, 'Oct/Nov', '1', NULL, 'G', 87, 104, strftime('%s', 'now') * 1000),
 ('sgb-0510-w22-CX-11-31-91-U', 'subj-caie-igcse-esl', 2022, 'Oct/Nov', '1', NULL, 'U', 0, 86, strftime('%s', 'now') * 1000),
 ('sgb-0510-w22-CY-12-32-92-C', 'subj-caie-igcse-esl', 2022, 'Oct/Nov', '2', NULL, 'C', 154, 200, strftime('%s', 'now') * 1000),
@@ -3283,7 +3722,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0510-w22-GY-22-42-82-B', 'subj-caie-igcse-esl', 2022, 'Oct/Nov', '2', NULL, 'B', 159, 169, strftime('%s', 'now') * 1000),
 ('sgb-0510-w22-GY-22-42-82-C', 'subj-caie-igcse-esl', 2022, 'Oct/Nov', '2', NULL, 'C', 148, 158, strftime('%s', 'now') * 1000),
 ('sgb-0510-w22-GY-22-42-82-D', 'subj-caie-igcse-esl', 2022, 'Oct/Nov', '2', NULL, 'D', 133, 147, strftime('%s', 'now') * 1000),
-('sgb-0510-w22-GY-22-42-82-E', 'subj-caie-igcse-esl', 2022, 'Oct/Nov', '2', NULL, 'E', 119, 132, strftime('%s', 'now') * 1000),
+('sgb-0510-w22-GY-22-42-82-E', 'subj-caie-igcse-esl', 2022, 'Oct/Nov', '2', NULL, 'E', 119, 132, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0510-w22-GY-22-42-82-U', 'subj-caie-igcse-esl', 2022, 'Oct/Nov', '2', NULL, 'U', 0, 118, strftime('%s', 'now') * 1000),
 ('sgb-0510-w22-HX-21-41-91-Astar', 'subj-caie-igcse-esl', 2022, 'Oct/Nov', '1', NULL, 'A*', 187, 200, strftime('%s', 'now') * 1000),
 ('sgb-0510-w22-HX-21-41-91-A', 'subj-caie-igcse-esl', 2022, 'Oct/Nov', '1', NULL, 'A', 175, 186, strftime('%s', 'now') * 1000),
@@ -3295,8 +3735,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0510-w22-HY-22-42-92-Astar', 'subj-caie-igcse-esl', 2022, 'Oct/Nov', '2', NULL, 'A*', 181, 200, strftime('%s', 'now') * 1000),
 ('sgb-0510-w22-HY-22-42-92-A', 'subj-caie-igcse-esl', 2022, 'Oct/Nov', '2', NULL, 'A', 170, 180, strftime('%s', 'now') * 1000),
 ('sgb-0510-w22-HY-22-42-92-B', 'subj-caie-igcse-esl', 2022, 'Oct/Nov', '2', NULL, 'B', 159, 169, strftime('%s', 'now') * 1000),
-('sgb-0510-w22-HY-22-42-92-C', 'subj-caie-igcse-esl', 2022, 'Oct/Nov', '2', NULL, 'C', 148, 158, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0510-w22-HY-22-42-92-C', 'subj-caie-igcse-esl', 2022, 'Oct/Nov', '2', NULL, 'C', 148, 158, strftime('%s', 'now') * 1000),
 ('sgb-0510-w22-HY-22-42-92-D', 'subj-caie-igcse-esl', 2022, 'Oct/Nov', '2', NULL, 'D', 133, 147, strftime('%s', 'now') * 1000),
 ('sgb-0510-w22-HY-22-42-92-E', 'subj-caie-igcse-esl', 2022, 'Oct/Nov', '2', NULL, 'E', 119, 132, strftime('%s', 'now') * 1000),
 ('sgb-0510-w22-HY-22-42-92-U', 'subj-caie-igcse-esl', 2022, 'Oct/Nov', '2', NULL, 'U', 0, 118, strftime('%s', 'now') * 1000),
@@ -3344,7 +3783,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0510-s23-AY-12-32-52-E', 'subj-caie-igcse-esl', 2023, 'May/June', '2', NULL, 'E', 107, 125, strftime('%s', 'now') * 1000),
 ('sgb-0510-s23-AY-12-32-52-F', 'subj-caie-igcse-esl', 2023, 'May/June', '2', NULL, 'F', 87, 106, strftime('%s', 'now') * 1000),
 ('sgb-0510-s23-AY-12-32-52-G', 'subj-caie-igcse-esl', 2023, 'May/June', '2', NULL, 'G', 67, 86, strftime('%s', 'now') * 1000),
-('sgb-0510-s23-AY-12-32-52-U', 'subj-caie-igcse-esl', 2023, 'May/June', '2', NULL, 'U', 0, 66, strftime('%s', 'now') * 1000),
+('sgb-0510-s23-AY-12-32-52-U', 'subj-caie-igcse-esl', 2023, 'May/June', '2', NULL, 'U', 0, 66, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0510-s23-AZ-13-33-53-C', 'subj-caie-igcse-esl', 2023, 'May/June', '3', NULL, 'C', 145, 200, strftime('%s', 'now') * 1000),
 ('sgb-0510-s23-AZ-13-33-53-D', 'subj-caie-igcse-esl', 2023, 'May/June', '3', NULL, 'D', 126, 144, strftime('%s', 'now') * 1000),
 ('sgb-0510-s23-AZ-13-33-53-E', 'subj-caie-igcse-esl', 2023, 'May/June', '3', NULL, 'E', 107, 125, strftime('%s', 'now') * 1000),
@@ -3356,8 +3796,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0510-s23-BX-11-31-81-E', 'subj-caie-igcse-esl', 2023, 'May/June', '1', NULL, 'E', 113, 132, strftime('%s', 'now') * 1000),
 ('sgb-0510-s23-BX-11-31-81-F', 'subj-caie-igcse-esl', 2023, 'May/June', '1', NULL, 'F', 93, 112, strftime('%s', 'now') * 1000),
 ('sgb-0510-s23-BX-11-31-81-G', 'subj-caie-igcse-esl', 2023, 'May/June', '1', NULL, 'G', 73, 92, strftime('%s', 'now') * 1000),
-('sgb-0510-s23-BX-11-31-81-U', 'subj-caie-igcse-esl', 2023, 'May/June', '1', NULL, 'U', 0, 72, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0510-s23-BX-11-31-81-U', 'subj-caie-igcse-esl', 2023, 'May/June', '1', NULL, 'U', 0, 72, strftime('%s', 'now') * 1000),
 ('sgb-0510-s23-BY-12-32-82-C', 'subj-caie-igcse-esl', 2023, 'May/June', '2', NULL, 'C', 145, 200, strftime('%s', 'now') * 1000),
 ('sgb-0510-s23-BY-12-32-82-D', 'subj-caie-igcse-esl', 2023, 'May/June', '2', NULL, 'D', 126, 144, strftime('%s', 'now') * 1000),
 ('sgb-0510-s23-BY-12-32-82-E', 'subj-caie-igcse-esl', 2023, 'May/June', '2', NULL, 'E', 107, 125, strftime('%s', 'now') * 1000),
@@ -3405,7 +3844,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0510-s23-FY-22-42-52-U', 'subj-caie-igcse-esl', 2023, 'May/June', '2', NULL, 'U', 0, 94, strftime('%s', 'now') * 1000),
 ('sgb-0510-s23-FZ-23-43-53-Astar', 'subj-caie-igcse-esl', 2023, 'May/June', '3', NULL, 'A*', 185, 200, strftime('%s', 'now') * 1000),
 ('sgb-0510-s23-FZ-23-43-53-A', 'subj-caie-igcse-esl', 2023, 'May/June', '3', NULL, 'A', 170, 184, strftime('%s', 'now') * 1000),
-('sgb-0510-s23-FZ-23-43-53-B', 'subj-caie-igcse-esl', 2023, 'May/June', '3', NULL, 'B', 152, 169, strftime('%s', 'now') * 1000),
+('sgb-0510-s23-FZ-23-43-53-B', 'subj-caie-igcse-esl', 2023, 'May/June', '3', NULL, 'B', 152, 169, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0510-s23-FZ-23-43-53-C', 'subj-caie-igcse-esl', 2023, 'May/June', '3', NULL, 'C', 135, 151, strftime('%s', 'now') * 1000),
 ('sgb-0510-s23-FZ-23-43-53-D', 'subj-caie-igcse-esl', 2023, 'May/June', '3', NULL, 'D', 116, 134, strftime('%s', 'now') * 1000),
 ('sgb-0510-s23-FZ-23-43-53-E', 'subj-caie-igcse-esl', 2023, 'May/June', '3', NULL, 'E', 97, 115, strftime('%s', 'now') * 1000),
@@ -3417,8 +3857,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0510-s23-GX-21-41-81-D', 'subj-caie-igcse-esl', 2023, 'May/June', '1', NULL, 'D', 116, 134, strftime('%s', 'now') * 1000),
 ('sgb-0510-s23-GX-21-41-81-E', 'subj-caie-igcse-esl', 2023, 'May/June', '1', NULL, 'E', 97, 115, strftime('%s', 'now') * 1000),
 ('sgb-0510-s23-GX-21-41-81-U', 'subj-caie-igcse-esl', 2023, 'May/June', '1', NULL, 'U', 0, 96, strftime('%s', 'now') * 1000),
-('sgb-0510-s23-GY-22-42-82-Astar', 'subj-caie-igcse-esl', 2023, 'May/June', '2', NULL, 'A*', 186, 200, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0510-s23-GY-22-42-82-Astar', 'subj-caie-igcse-esl', 2023, 'May/June', '2', NULL, 'A*', 186, 200, strftime('%s', 'now') * 1000),
 ('sgb-0510-s23-GY-22-42-82-A', 'subj-caie-igcse-esl', 2023, 'May/June', '2', NULL, 'A', 173, 185, strftime('%s', 'now') * 1000),
 ('sgb-0510-s23-GY-22-42-82-B', 'subj-caie-igcse-esl', 2023, 'May/June', '2', NULL, 'B', 154, 172, strftime('%s', 'now') * 1000),
 ('sgb-0510-s23-GY-22-42-82-C', 'subj-caie-igcse-esl', 2023, 'May/June', '2', NULL, 'C', 135, 153, strftime('%s', 'now') * 1000),
@@ -3466,7 +3905,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0510-s23-MB-22-42-D', 'subj-caie-igcse-esl', 2023, 'May/June', '2', NULL, 'D', 115, 134, strftime('%s', 'now') * 1000),
 ('sgb-0510-s23-MB-22-42-E', 'subj-caie-igcse-esl', 2023, 'May/June', '2', NULL, 'E', 95, 114, strftime('%s', 'now') * 1000),
 ('sgb-0510-s23-MB-22-42-U', 'subj-caie-igcse-esl', 2023, 'May/June', '2', NULL, 'U', 0, 94, strftime('%s', 'now') * 1000),
-('sgb-0510-m23-AY-12-32-52-C', 'subj-caie-igcse-esl', 2023, 'Feb/March', '2', NULL, 'C', 131, 200, strftime('%s', 'now') * 1000),
+('sgb-0510-m23-AY-12-32-52-C', 'subj-caie-igcse-esl', 2023, 'Feb/March', '2', NULL, 'C', 131, 200, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0510-m23-AY-12-32-52-D', 'subj-caie-igcse-esl', 2023, 'Feb/March', '2', NULL, 'D', 113, 130, strftime('%s', 'now') * 1000),
 ('sgb-0510-m23-AY-12-32-52-E', 'subj-caie-igcse-esl', 2023, 'Feb/March', '2', NULL, 'E', 96, 112, strftime('%s', 'now') * 1000),
 ('sgb-0510-m23-AY-12-32-52-F', 'subj-caie-igcse-esl', 2023, 'Feb/March', '2', NULL, 'F', 78, 95, strftime('%s', 'now') * 1000),
@@ -3478,8 +3918,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0510-m23-FY-22-42-52-C', 'subj-caie-igcse-esl', 2023, 'Feb/March', '2', NULL, 'C', 136, 148, strftime('%s', 'now') * 1000),
 ('sgb-0510-m23-FY-22-42-52-D', 'subj-caie-igcse-esl', 2023, 'Feb/March', '2', NULL, 'D', 119, 135, strftime('%s', 'now') * 1000),
 ('sgb-0510-m23-FY-22-42-52-E', 'subj-caie-igcse-esl', 2023, 'Feb/March', '2', NULL, 'E', 103, 118, strftime('%s', 'now') * 1000),
-('sgb-0510-m23-FY-22-42-52-U', 'subj-caie-igcse-esl', 2023, 'Feb/March', '2', NULL, 'U', 0, 102, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0510-m23-FY-22-42-52-U', 'subj-caie-igcse-esl', 2023, 'Feb/March', '2', NULL, 'U', 0, 102, strftime('%s', 'now') * 1000),
 ('sgb-0510-m23-HY-22-42-92-Astar', 'subj-caie-igcse-esl', 2023, 'Feb/March', '2', NULL, 'A*', 177, 200, strftime('%s', 'now') * 1000),
 ('sgb-0510-m23-HY-22-42-92-A', 'subj-caie-igcse-esl', 2023, 'Feb/March', '2', NULL, 'A', 163, 176, strftime('%s', 'now') * 1000),
 ('sgb-0510-m23-HY-22-42-92-B', 'subj-caie-igcse-esl', 2023, 'Feb/March', '2', NULL, 'B', 149, 162, strftime('%s', 'now') * 1000),
@@ -3527,7 +3966,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0510-w23-CY-12-32-92-D', 'subj-caie-igcse-esl', 2023, 'Oct/Nov', '2', NULL, 'D', 138, 153, strftime('%s', 'now') * 1000),
 ('sgb-0510-w23-CY-12-32-92-E', 'subj-caie-igcse-esl', 2023, 'Oct/Nov', '2', NULL, 'E', 123, 137, strftime('%s', 'now') * 1000),
 ('sgb-0510-w23-CY-12-32-92-F', 'subj-caie-igcse-esl', 2023, 'Oct/Nov', '2', NULL, 'F', 107, 122, strftime('%s', 'now') * 1000),
-('sgb-0510-w23-CY-12-32-92-G', 'subj-caie-igcse-esl', 2023, 'Oct/Nov', '2', NULL, 'G', 91, 106, strftime('%s', 'now') * 1000),
+('sgb-0510-w23-CY-12-32-92-G', 'subj-caie-igcse-esl', 2023, 'Oct/Nov', '2', NULL, 'G', 91, 106, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0510-w23-CY-12-32-92-U', 'subj-caie-igcse-esl', 2023, 'Oct/Nov', '2', NULL, 'U', 0, 90, strftime('%s', 'now') * 1000),
 ('sgb-0510-w23-DY-12-32-72-C', 'subj-caie-igcse-esl', 2023, 'Oct/Nov', '2', NULL, 'C', 154, 200, strftime('%s', 'now') * 1000),
 ('sgb-0510-w23-DY-12-32-72-D', 'subj-caie-igcse-esl', 2023, 'Oct/Nov', '2', NULL, 'D', 138, 153, strftime('%s', 'now') * 1000),
@@ -3539,8 +3979,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0510-w23-FX-21-41-51-A', 'subj-caie-igcse-esl', 2023, 'Oct/Nov', '1', NULL, 'A', 175, 186, strftime('%s', 'now') * 1000),
 ('sgb-0510-w23-FX-21-41-51-B', 'subj-caie-igcse-esl', 2023, 'Oct/Nov', '1', NULL, 'B', 161, 174, strftime('%s', 'now') * 1000),
 ('sgb-0510-w23-FX-21-41-51-C', 'subj-caie-igcse-esl', 2023, 'Oct/Nov', '1', NULL, 'C', 148, 160, strftime('%s', 'now') * 1000),
-('sgb-0510-w23-FX-21-41-51-D', 'subj-caie-igcse-esl', 2023, 'Oct/Nov', '1', NULL, 'D', 133, 147, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0510-w23-FX-21-41-51-D', 'subj-caie-igcse-esl', 2023, 'Oct/Nov', '1', NULL, 'D', 133, 147, strftime('%s', 'now') * 1000),
 ('sgb-0510-w23-FX-21-41-51-E', 'subj-caie-igcse-esl', 2023, 'Oct/Nov', '1', NULL, 'E', 119, 132, strftime('%s', 'now') * 1000),
 ('sgb-0510-w23-FX-21-41-51-U', 'subj-caie-igcse-esl', 2023, 'Oct/Nov', '1', NULL, 'U', 0, 118, strftime('%s', 'now') * 1000),
 ('sgb-0510-w23-FY-22-42-52-Astar', 'subj-caie-igcse-esl', 2023, 'Oct/Nov', '2', NULL, 'A*', 185, 200, strftime('%s', 'now') * 1000),
@@ -3588,7 +4027,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0510-w23-IY-22-42-72-Astar', 'subj-caie-igcse-esl', 2023, 'Oct/Nov', '2', NULL, 'A*', 185, 200, strftime('%s', 'now') * 1000),
 ('sgb-0510-w23-IY-22-42-72-A', 'subj-caie-igcse-esl', 2023, 'Oct/Nov', '2', NULL, 'A', 173, 184, strftime('%s', 'now') * 1000),
 ('sgb-0510-w23-IY-22-42-72-B', 'subj-caie-igcse-esl', 2023, 'Oct/Nov', '2', NULL, 'B', 161, 172, strftime('%s', 'now') * 1000),
-('sgb-0510-w23-IY-22-42-72-C', 'subj-caie-igcse-esl', 2023, 'Oct/Nov', '2', NULL, 'C', 150, 160, strftime('%s', 'now') * 1000),
+('sgb-0510-w23-IY-22-42-72-C', 'subj-caie-igcse-esl', 2023, 'Oct/Nov', '2', NULL, 'C', 150, 160, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0510-w23-IY-22-42-72-D', 'subj-caie-igcse-esl', 2023, 'Oct/Nov', '2', NULL, 'D', 135, 149, strftime('%s', 'now') * 1000),
 ('sgb-0510-w23-IY-22-42-72-E', 'subj-caie-igcse-esl', 2023, 'Oct/Nov', '2', NULL, 'E', 120, 134, strftime('%s', 'now') * 1000),
 ('sgb-0510-w23-IY-22-42-72-U', 'subj-caie-igcse-esl', 2023, 'Oct/Nov', '2', NULL, 'U', 0, 119, strftime('%s', 'now') * 1000),
@@ -3600,8 +4040,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0510-w23-LB-12-32-U', 'subj-caie-igcse-esl', 2023, 'Oct/Nov', '2', NULL, 'U', 0, 90, strftime('%s', 'now') * 1000),
 ('sgb-0510-w23-MA-21-41-Astar', 'subj-caie-igcse-esl', 2023, 'Oct/Nov', '1', NULL, 'A*', 187, 200, strftime('%s', 'now') * 1000),
 ('sgb-0510-w23-MA-21-41-A', 'subj-caie-igcse-esl', 2023, 'Oct/Nov', '1', NULL, 'A', 175, 186, strftime('%s', 'now') * 1000),
-('sgb-0510-w23-MA-21-41-B', 'subj-caie-igcse-esl', 2023, 'Oct/Nov', '1', NULL, 'B', 161, 174, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0510-w23-MA-21-41-B', 'subj-caie-igcse-esl', 2023, 'Oct/Nov', '1', NULL, 'B', 161, 174, strftime('%s', 'now') * 1000),
 ('sgb-0510-w23-MA-21-41-C', 'subj-caie-igcse-esl', 2023, 'Oct/Nov', '1', NULL, 'C', 148, 160, strftime('%s', 'now') * 1000),
 ('sgb-0510-w23-MA-21-41-D', 'subj-caie-igcse-esl', 2023, 'Oct/Nov', '1', NULL, 'D', 133, 147, strftime('%s', 'now') * 1000),
 ('sgb-0510-w23-MA-21-41-E', 'subj-caie-igcse-esl', 2023, 'Oct/Nov', '1', NULL, 'E', 119, 132, strftime('%s', 'now') * 1000),
@@ -3649,7 +4088,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0510-s24-BX-11-21-81-91-F', 'subj-caie-igcse-esl', 2024, 'May/June', '1', NULL, 'F', 80, 91, strftime('%s', 'now') * 1000),
 ('sgb-0510-s24-BX-11-21-81-91-G', 'subj-caie-igcse-esl', 2024, 'May/June', '1', NULL, 'G', 68, 79, strftime('%s', 'now') * 1000),
 ('sgb-0510-s24-BX-11-21-81-91-U', 'subj-caie-igcse-esl', 2024, 'May/June', '1', NULL, 'U', 0, 67, strftime('%s', 'now') * 1000),
-('sgb-0510-s24-BY-12-22-82-92-Astar', 'subj-caie-igcse-esl', 2024, 'May/June', '2', NULL, 'A*', 141, 150, strftime('%s', 'now') * 1000),
+('sgb-0510-s24-BY-12-22-82-92-Astar', 'subj-caie-igcse-esl', 2024, 'May/June', '2', NULL, 'A*', 141, 150, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0510-s24-BY-12-22-82-92-A', 'subj-caie-igcse-esl', 2024, 'May/June', '2', NULL, 'A', 136, 140, strftime('%s', 'now') * 1000),
 ('sgb-0510-s24-BY-12-22-82-92-B', 'subj-caie-igcse-esl', 2024, 'May/June', '2', NULL, 'B', 122, 135, strftime('%s', 'now') * 1000),
 ('sgb-0510-s24-BY-12-22-82-92-C', 'subj-caie-igcse-esl', 2024, 'May/June', '2', NULL, 'C', 109, 121, strftime('%s', 'now') * 1000),
@@ -3661,8 +4101,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0510-s24-LA-11-21-Astar', 'subj-caie-igcse-esl', 2024, 'May/June', '1', NULL, 'A*', 143, 150, strftime('%s', 'now') * 1000),
 ('sgb-0510-s24-LA-11-21-A', 'subj-caie-igcse-esl', 2024, 'May/June', '1', NULL, 'A', 137, 142, strftime('%s', 'now') * 1000),
 ('sgb-0510-s24-LA-11-21-B', 'subj-caie-igcse-esl', 2024, 'May/June', '1', NULL, 'B', 127, 136, strftime('%s', 'now') * 1000),
-('sgb-0510-s24-LA-11-21-C', 'subj-caie-igcse-esl', 2024, 'May/June', '1', NULL, 'C', 117, 126, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0510-s24-LA-11-21-C', 'subj-caie-igcse-esl', 2024, 'May/June', '1', NULL, 'C', 117, 126, strftime('%s', 'now') * 1000),
 ('sgb-0510-s24-LA-11-21-D', 'subj-caie-igcse-esl', 2024, 'May/June', '1', NULL, 'D', 104, 116, strftime('%s', 'now') * 1000),
 ('sgb-0510-s24-LA-11-21-E', 'subj-caie-igcse-esl', 2024, 'May/June', '1', NULL, 'E', 92, 103, strftime('%s', 'now') * 1000),
 ('sgb-0510-s24-LA-11-21-F', 'subj-caie-igcse-esl', 2024, 'May/June', '1', NULL, 'F', 80, 91, strftime('%s', 'now') * 1000),
@@ -3710,7 +4149,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0510-w24-AY-12-22-32-C', 'subj-caie-igcse-esl', 2024, 'Oct/Nov', '2', NULL, 'C', 116, 124, strftime('%s', 'now') * 1000),
 ('sgb-0510-w24-AY-12-22-32-D', 'subj-caie-igcse-esl', 2024, 'Oct/Nov', '2', NULL, 'D', 104, 115, strftime('%s', 'now') * 1000),
 ('sgb-0510-w24-AY-12-22-32-E', 'subj-caie-igcse-esl', 2024, 'Oct/Nov', '2', NULL, 'E', 92, 103, strftime('%s', 'now') * 1000),
-('sgb-0510-w24-AY-12-22-32-F', 'subj-caie-igcse-esl', 2024, 'Oct/Nov', '2', NULL, 'F', 81, 91, strftime('%s', 'now') * 1000),
+('sgb-0510-w24-AY-12-22-32-F', 'subj-caie-igcse-esl', 2024, 'Oct/Nov', '2', NULL, 'F', 81, 91, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0510-w24-AY-12-22-32-G', 'subj-caie-igcse-esl', 2024, 'Oct/Nov', '2', NULL, 'G', 70, 80, strftime('%s', 'now') * 1000),
 ('sgb-0510-w24-AY-12-22-32-U', 'subj-caie-igcse-esl', 2024, 'Oct/Nov', '2', NULL, 'U', 0, 69, strftime('%s', 'now') * 1000),
 ('sgb-0510-w24-AZ-13-23-33-Astar', 'subj-caie-igcse-esl', 2024, 'Oct/Nov', '3', NULL, 'A*', 142, 150, strftime('%s', 'now') * 1000),
@@ -3722,8 +4162,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0510-w24-AZ-13-23-33-F', 'subj-caie-igcse-esl', 2024, 'Oct/Nov', '3', NULL, 'F', 81, 91, strftime('%s', 'now') * 1000),
 ('sgb-0510-w24-AZ-13-23-33-G', 'subj-caie-igcse-esl', 2024, 'Oct/Nov', '3', NULL, 'G', 70, 80, strftime('%s', 'now') * 1000),
 ('sgb-0510-w24-AZ-13-23-33-U', 'subj-caie-igcse-esl', 2024, 'Oct/Nov', '3', NULL, 'U', 0, 69, strftime('%s', 'now') * 1000),
-('sgb-0510-w24-B1-11-21-81-Astar', 'subj-caie-igcse-esl', 2024, 'Oct/Nov', '1', NULL, 'A*', 143, 150, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0510-w24-B1-11-21-81-Astar', 'subj-caie-igcse-esl', 2024, 'Oct/Nov', '1', NULL, 'A*', 143, 150, strftime('%s', 'now') * 1000),
 ('sgb-0510-w24-B1-11-21-81-A', 'subj-caie-igcse-esl', 2024, 'Oct/Nov', '1', NULL, 'A', 137, 142, strftime('%s', 'now') * 1000),
 ('sgb-0510-w24-B1-11-21-81-B', 'subj-caie-igcse-esl', 2024, 'Oct/Nov', '1', NULL, 'B', 129, 136, strftime('%s', 'now') * 1000),
 ('sgb-0510-w24-B1-11-21-81-C', 'subj-caie-igcse-esl', 2024, 'Oct/Nov', '1', NULL, 'C', 121, 128, strftime('%s', 'now') * 1000),
@@ -3771,7 +4210,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0510-w24-LA-11-21-Astar', 'subj-caie-igcse-esl', 2024, 'Oct/Nov', '1', NULL, 'A*', 143, 150, strftime('%s', 'now') * 1000),
 ('sgb-0510-w24-LA-11-21-A', 'subj-caie-igcse-esl', 2024, 'Oct/Nov', '1', NULL, 'A', 137, 142, strftime('%s', 'now') * 1000),
 ('sgb-0510-w24-LA-11-21-B', 'subj-caie-igcse-esl', 2024, 'Oct/Nov', '1', NULL, 'B', 129, 136, strftime('%s', 'now') * 1000),
-('sgb-0510-w24-LA-11-21-C', 'subj-caie-igcse-esl', 2024, 'Oct/Nov', '1', NULL, 'C', 121, 128, strftime('%s', 'now') * 1000),
+('sgb-0510-w24-LA-11-21-C', 'subj-caie-igcse-esl', 2024, 'Oct/Nov', '1', NULL, 'C', 121, 128, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0510-w24-LA-11-21-D', 'subj-caie-igcse-esl', 2024, 'Oct/Nov', '1', NULL, 'D', 109, 120, strftime('%s', 'now') * 1000),
 ('sgb-0510-w24-LA-11-21-E', 'subj-caie-igcse-esl', 2024, 'Oct/Nov', '1', NULL, 'E', 97, 108, strftime('%s', 'now') * 1000),
 ('sgb-0510-w24-LA-11-21-F', 'subj-caie-igcse-esl', 2024, 'Oct/Nov', '1', NULL, 'F', 86, 96, strftime('%s', 'now') * 1000),
@@ -3783,8 +4223,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0510-w24-LB-12-22-C', 'subj-caie-igcse-esl', 2024, 'Oct/Nov', '2', NULL, 'C', 116, 124, strftime('%s', 'now') * 1000),
 ('sgb-0510-w24-LB-12-22-D', 'subj-caie-igcse-esl', 2024, 'Oct/Nov', '2', NULL, 'D', 104, 115, strftime('%s', 'now') * 1000),
 ('sgb-0510-w24-LB-12-22-E', 'subj-caie-igcse-esl', 2024, 'Oct/Nov', '2', NULL, 'E', 92, 103, strftime('%s', 'now') * 1000),
-('sgb-0510-w24-LB-12-22-F', 'subj-caie-igcse-esl', 2024, 'Oct/Nov', '2', NULL, 'F', 81, 91, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0510-w24-LB-12-22-F', 'subj-caie-igcse-esl', 2024, 'Oct/Nov', '2', NULL, 'F', 81, 91, strftime('%s', 'now') * 1000),
 ('sgb-0510-w24-LB-12-22-G', 'subj-caie-igcse-esl', 2024, 'Oct/Nov', '2', NULL, 'G', 70, 80, strftime('%s', 'now') * 1000),
 ('sgb-0510-w24-LB-12-22-U', 'subj-caie-igcse-esl', 2024, 'Oct/Nov', '2', NULL, 'U', 0, 69, strftime('%s', 'now') * 1000),
 ('sgb-0510-s25-AX-11-21-31-Astar', 'subj-caie-igcse-esl', 2025, 'May/June', '1', NULL, 'A*', 142, 150, strftime('%s', 'now') * 1000),
@@ -3832,7 +4271,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0510-s25-BY-12-22-82-F', 'subj-caie-igcse-esl', 2025, 'May/June', '2', NULL, 'F', 75, 84, strftime('%s', 'now') * 1000),
 ('sgb-0510-s25-BY-12-22-82-G', 'subj-caie-igcse-esl', 2025, 'May/June', '2', NULL, 'G', 65, 74, strftime('%s', 'now') * 1000),
 ('sgb-0510-s25-BY-12-22-82-U', 'subj-caie-igcse-esl', 2025, 'May/June', '2', NULL, 'U', 0, 64, strftime('%s', 'now') * 1000),
-('sgb-0510-s25-CX-11-21-91-Astar', 'subj-caie-igcse-esl', 2025, 'May/June', '1', NULL, 'A*', 142, 150, strftime('%s', 'now') * 1000),
+('sgb-0510-s25-CX-11-21-91-Astar', 'subj-caie-igcse-esl', 2025, 'May/June', '1', NULL, 'A*', 142, 150, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0510-s25-CX-11-21-91-A', 'subj-caie-igcse-esl', 2025, 'May/June', '1', NULL, 'A', 135, 141, strftime('%s', 'now') * 1000),
 ('sgb-0510-s25-CX-11-21-91-B', 'subj-caie-igcse-esl', 2025, 'May/June', '1', NULL, 'B', 125, 134, strftime('%s', 'now') * 1000),
 ('sgb-0510-s25-CX-11-21-91-C', 'subj-caie-igcse-esl', 2025, 'May/June', '1', NULL, 'C', 116, 124, strftime('%s', 'now') * 1000),
@@ -3844,8 +4284,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0510-s25-CY-12-22-92-Astar', 'subj-caie-igcse-esl', 2025, 'May/June', '2', NULL, 'A*', 142, 150, strftime('%s', 'now') * 1000),
 ('sgb-0510-s25-CY-12-22-92-A', 'subj-caie-igcse-esl', 2025, 'May/June', '2', NULL, 'A', 135, 141, strftime('%s', 'now') * 1000),
 ('sgb-0510-s25-CY-12-22-92-B', 'subj-caie-igcse-esl', 2025, 'May/June', '2', NULL, 'B', 121, 134, strftime('%s', 'now') * 1000),
-('sgb-0510-s25-CY-12-22-92-C', 'subj-caie-igcse-esl', 2025, 'May/June', '2', NULL, 'C', 108, 120, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0510-s25-CY-12-22-92-C', 'subj-caie-igcse-esl', 2025, 'May/June', '2', NULL, 'C', 108, 120, strftime('%s', 'now') * 1000),
 ('sgb-0510-s25-CY-12-22-92-D', 'subj-caie-igcse-esl', 2025, 'May/June', '2', NULL, 'D', 96, 107, strftime('%s', 'now') * 1000),
 ('sgb-0510-s25-CY-12-22-92-E', 'subj-caie-igcse-esl', 2025, 'May/June', '2', NULL, 'E', 85, 95, strftime('%s', 'now') * 1000),
 ('sgb-0510-s25-CY-12-22-92-F', 'subj-caie-igcse-esl', 2025, 'May/June', '2', NULL, 'F', 75, 84, strftime('%s', 'now') * 1000),
@@ -3893,7 +4332,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0510-m25-EV-12-22-72-C', 'subj-caie-igcse-esl', 2025, 'Feb/March', '2', NULL, 'C', 109, 118, strftime('%s', 'now') * 1000),
 ('sgb-0510-m25-EV-12-22-72-D', 'subj-caie-igcse-esl', 2025, 'Feb/March', '2', NULL, 'D', 98, 108, strftime('%s', 'now') * 1000),
 ('sgb-0510-m25-EV-12-22-72-E', 'subj-caie-igcse-esl', 2025, 'Feb/March', '2', NULL, 'E', 87, 97, strftime('%s', 'now') * 1000),
-('sgb-0510-m25-EV-12-22-72-F', 'subj-caie-igcse-esl', 2025, 'Feb/March', '2', NULL, 'F', 75, 86, strftime('%s', 'now') * 1000),
+('sgb-0510-m25-EV-12-22-72-F', 'subj-caie-igcse-esl', 2025, 'Feb/March', '2', NULL, 'F', 75, 86, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0510-m25-EV-12-22-72-G', 'subj-caie-igcse-esl', 2025, 'Feb/March', '2', NULL, 'G', 63, 74, strftime('%s', 'now') * 1000),
 ('sgb-0510-m25-EV-12-22-72-U', 'subj-caie-igcse-esl', 2025, 'Feb/March', '2', NULL, 'U', 0, 62, strftime('%s', 'now') * 1000),
 ('sgb-0510-w25-AX-11-21-31-Astar', 'subj-caie-igcse-esl', 2025, 'Oct/Nov', '1', NULL, 'A*', 143, 150, strftime('%s', 'now') * 1000),
@@ -3905,8 +4345,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0510-w25-AX-11-21-31-F', 'subj-caie-igcse-esl', 2025, 'Oct/Nov', '1', NULL, 'F', 82, 95, strftime('%s', 'now') * 1000),
 ('sgb-0510-w25-AX-11-21-31-G', 'subj-caie-igcse-esl', 2025, 'Oct/Nov', '1', NULL, 'G', 68, 81, strftime('%s', 'now') * 1000),
 ('sgb-0510-w25-AX-11-21-31-U', 'subj-caie-igcse-esl', 2025, 'Oct/Nov', '1', NULL, 'U', 0, 67, strftime('%s', 'now') * 1000),
-('sgb-0510-w25-AY-12-22-32-Astar', 'subj-caie-igcse-esl', 2025, 'Oct/Nov', '2', NULL, 'A*', 143, 150, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0510-w25-AY-12-22-32-Astar', 'subj-caie-igcse-esl', 2025, 'Oct/Nov', '2', NULL, 'A*', 143, 150, strftime('%s', 'now') * 1000),
 ('sgb-0510-w25-AY-12-22-32-A', 'subj-caie-igcse-esl', 2025, 'Oct/Nov', '2', NULL, 'A', 137, 142, strftime('%s', 'now') * 1000),
 ('sgb-0510-w25-AY-12-22-32-B', 'subj-caie-igcse-esl', 2025, 'Oct/Nov', '2', NULL, 'B', 127, 136, strftime('%s', 'now') * 1000),
 ('sgb-0510-w25-AY-12-22-32-C', 'subj-caie-igcse-esl', 2025, 'Oct/Nov', '2', NULL, 'C', 118, 126, strftime('%s', 'now') * 1000),
@@ -3954,7 +4393,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0510-w25-CY-12-22-92-Astar', 'subj-caie-igcse-esl', 2025, 'Oct/Nov', '2', NULL, 'A*', 143, 150, strftime('%s', 'now') * 1000),
 ('sgb-0510-w25-CY-12-22-92-A', 'subj-caie-igcse-esl', 2025, 'Oct/Nov', '2', NULL, 'A', 137, 142, strftime('%s', 'now') * 1000),
 ('sgb-0510-w25-CY-12-22-92-B', 'subj-caie-igcse-esl', 2025, 'Oct/Nov', '2', NULL, 'B', 127, 136, strftime('%s', 'now') * 1000),
-('sgb-0510-w25-CY-12-22-92-C', 'subj-caie-igcse-esl', 2025, 'Oct/Nov', '2', NULL, 'C', 118, 126, strftime('%s', 'now') * 1000),
+('sgb-0510-w25-CY-12-22-92-C', 'subj-caie-igcse-esl', 2025, 'Oct/Nov', '2', NULL, 'C', 118, 126, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0510-w25-CY-12-22-92-D', 'subj-caie-igcse-esl', 2025, 'Oct/Nov', '2', NULL, 'D', 105, 117, strftime('%s', 'now') * 1000),
 ('sgb-0510-w25-CY-12-22-92-E', 'subj-caie-igcse-esl', 2025, 'Oct/Nov', '2', NULL, 'E', 92, 104, strftime('%s', 'now') * 1000),
 ('sgb-0510-w25-CY-12-22-92-F', 'subj-caie-igcse-esl', 2025, 'Oct/Nov', '2', NULL, 'F', 79, 91, strftime('%s', 'now') * 1000),
@@ -3966,8 +4406,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0510-w25-EV-12-22-72-C', 'subj-caie-igcse-esl', 2025, 'Oct/Nov', '2', NULL, 'C', 118, 126, strftime('%s', 'now') * 1000),
 ('sgb-0510-w25-EV-12-22-72-D', 'subj-caie-igcse-esl', 2025, 'Oct/Nov', '2', NULL, 'D', 105, 117, strftime('%s', 'now') * 1000),
 ('sgb-0510-w25-EV-12-22-72-E', 'subj-caie-igcse-esl', 2025, 'Oct/Nov', '2', NULL, 'E', 92, 104, strftime('%s', 'now') * 1000),
-('sgb-0510-w25-EV-12-22-72-F', 'subj-caie-igcse-esl', 2025, 'Oct/Nov', '2', NULL, 'F', 79, 91, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0510-w25-EV-12-22-72-F', 'subj-caie-igcse-esl', 2025, 'Oct/Nov', '2', NULL, 'F', 79, 91, strftime('%s', 'now') * 1000),
 ('sgb-0510-w25-EV-12-22-72-G', 'subj-caie-igcse-esl', 2025, 'Oct/Nov', '2', NULL, 'G', 66, 78, strftime('%s', 'now') * 1000),
 ('sgb-0510-w25-EV-12-22-72-U', 'subj-caie-igcse-esl', 2025, 'Oct/Nov', '2', NULL, 'U', 0, 65, strftime('%s', 'now') * 1000),
 ('sgb-0510-w25-LB-12-22-Astar', 'subj-caie-igcse-esl', 2025, 'Oct/Nov', '2', NULL, 'A*', 143, 150, strftime('%s', 'now') * 1000),
@@ -3979,6 +4418,171 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0510-w25-LB-12-22-F', 'subj-caie-igcse-esl', 2025, 'Oct/Nov', '2', NULL, 'F', 79, 91, strftime('%s', 'now') * 1000),
 ('sgb-0510-w25-LB-12-22-G', 'subj-caie-igcse-esl', 2025, 'Oct/Nov', '2', NULL, 'G', 66, 78, strftime('%s', 'now') * 1000),
 ('sgb-0510-w25-LB-12-22-U', 'subj-caie-igcse-esl', 2025, 'Oct/Nov', '2', NULL, 'U', 0, 65, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C1121-11-21-Astar', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'A*', 143, 150, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C1121-11-21-A', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'A', 137, 142, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C1121-11-21-B', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'B', 128, 136, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C1121-11-21-C', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'C', 119, 127, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C1121-11-21-D', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'D', 105, 118, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C1121-11-21-E', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'E', 91, 104, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C1121-11-21-F', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'F', 77, 90, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C1121-11-21-G', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'G', 64, 76, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C1121-11-21-U', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'U', 0, 63, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C112131-11-21-31-Astar', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'A*', 143, 150, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C112131-11-21-31-A', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'A', 137, 142, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C112131-11-21-31-B', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'B', 128, 136, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C112131-11-21-31-C', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'C', 119, 127, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C112131-11-21-31-D', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'D', 105, 118, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C112131-11-21-31-E', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'E', 91, 104, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C112131-11-21-31-F', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'F', 77, 90, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C112131-11-21-31-G', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'G', 64, 76, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C112131-11-21-31-U', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'U', 0, 63, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C112181-11-21-81-Astar', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'A*', 143, 150, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C112181-11-21-81-A', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'A', 137, 142, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C112181-11-21-81-B', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'B', 128, 136, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C112181-11-21-81-C', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'C', 119, 127, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C112181-11-21-81-D', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'D', 105, 118, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C112181-11-21-81-E', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'E', 91, 104, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C112181-11-21-81-F', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'F', 77, 90, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C112181-11-21-81-G', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'G', 64, 76, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C112181-11-21-81-U', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'U', 0, 63, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C112191-11-21-91-Astar', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'A*', 143, 150, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C112191-11-21-91-A', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'A', 137, 142, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C112191-11-21-91-B', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'B', 128, 136, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C112191-11-21-91-C', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'C', 119, 127, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C112191-11-21-91-D', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'D', 105, 118, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C112191-11-21-91-E', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'E', 91, 104, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C112191-11-21-91-F', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'F', 77, 90, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C112191-11-21-91-G', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'G', 64, 76, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C112191-11-21-91-U', 'subj-caie-igcse-esl', 2026, 'May/June', '1', NULL, 'U', 0, 63, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C1222-12-22-Astar', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'A*', 143, 150, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0510-s26-C1222-12-22-A', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'A', 136, 142, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C1222-12-22-B', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'B', 123, 135, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C1222-12-22-C', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'C', 111, 122, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C1222-12-22-D', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'D', 99, 110, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C1222-12-22-E', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'E', 87, 98, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C1222-12-22-F', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'F', 75, 86, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C1222-12-22-G', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'G', 63, 74, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C1222-12-22-U', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'U', 0, 62, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C122232-12-22-32-Astar', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'A*', 143, 150, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C122232-12-22-32-A', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'A', 136, 142, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C122232-12-22-32-B', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'B', 123, 135, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C122232-12-22-32-C', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'C', 111, 122, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C122232-12-22-32-D', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'D', 99, 110, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C122232-12-22-32-E', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'E', 87, 98, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C122232-12-22-32-F', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'F', 75, 86, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C122232-12-22-32-G', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'G', 63, 74, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C122232-12-22-32-U', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'U', 0, 62, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C122282-12-22-82-Astar', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'A*', 143, 150, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C122282-12-22-82-A', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'A', 136, 142, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C122282-12-22-82-B', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'B', 123, 135, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C122282-12-22-82-C', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'C', 111, 122, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C122282-12-22-82-D', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'D', 99, 110, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C122282-12-22-82-E', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'E', 87, 98, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C122282-12-22-82-F', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'F', 75, 86, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C122282-12-22-82-G', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'G', 63, 74, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C122282-12-22-82-U', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'U', 0, 62, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C122292-12-22-92-Astar', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'A*', 143, 150, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C122292-12-22-92-A', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'A', 136, 142, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C122292-12-22-92-B', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'B', 123, 135, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C122292-12-22-92-C', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'C', 111, 122, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C122292-12-22-92-D', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'D', 99, 110, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C122292-12-22-92-E', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'E', 87, 98, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C122292-12-22-92-F', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'F', 75, 86, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C122292-12-22-92-G', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'G', 63, 74, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C122292-12-22-92-U', 'subj-caie-igcse-esl', 2026, 'May/June', '2', NULL, 'U', 0, 62, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C132333-13-23-33-Astar', 'subj-caie-igcse-esl', 2026, 'May/June', '3', NULL, 'A*', 141, 150, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C132333-13-23-33-A', 'subj-caie-igcse-esl', 2026, 'May/June', '3', NULL, 'A', 132, 140, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C132333-13-23-33-B', 'subj-caie-igcse-esl', 2026, 'May/June', '3', NULL, 'B', 122, 131, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C132333-13-23-33-C', 'subj-caie-igcse-esl', 2026, 'May/June', '3', NULL, 'C', 113, 121, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C132333-13-23-33-D', 'subj-caie-igcse-esl', 2026, 'May/June', '3', NULL, 'D', 100, 112, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C132333-13-23-33-E', 'subj-caie-igcse-esl', 2026, 'May/June', '3', NULL, 'E', 87, 99, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C132333-13-23-33-F', 'subj-caie-igcse-esl', 2026, 'May/June', '3', NULL, 'F', 75, 86, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C132333-13-23-33-G', 'subj-caie-igcse-esl', 2026, 'May/June', '3', NULL, 'G', 63, 74, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C132333-13-23-33-U', 'subj-caie-igcse-esl', 2026, 'May/June', '3', NULL, 'U', 0, 62, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C132383-13-23-83-Astar', 'subj-caie-igcse-esl', 2026, 'May/June', '3', NULL, 'A*', 141, 150, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C132383-13-23-83-A', 'subj-caie-igcse-esl', 2026, 'May/June', '3', NULL, 'A', 132, 140, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C132383-13-23-83-B', 'subj-caie-igcse-esl', 2026, 'May/June', '3', NULL, 'B', 122, 131, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C132383-13-23-83-C', 'subj-caie-igcse-esl', 2026, 'May/June', '3', NULL, 'C', 113, 121, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C132383-13-23-83-D', 'subj-caie-igcse-esl', 2026, 'May/June', '3', NULL, 'D', 100, 112, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C132383-13-23-83-E', 'subj-caie-igcse-esl', 2026, 'May/June', '3', NULL, 'E', 87, 99, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C132383-13-23-83-F', 'subj-caie-igcse-esl', 2026, 'May/June', '3', NULL, 'F', 75, 86, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C132383-13-23-83-G', 'subj-caie-igcse-esl', 2026, 'May/June', '3', NULL, 'G', 63, 74, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C132383-13-23-83-U', 'subj-caie-igcse-esl', 2026, 'May/June', '3', NULL, 'U', 0, 62, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C132393-13-23-93-Astar', 'subj-caie-igcse-esl', 2026, 'May/June', '3', NULL, 'A*', 141, 150, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C132393-13-23-93-A', 'subj-caie-igcse-esl', 2026, 'May/June', '3', NULL, 'A', 132, 140, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C132393-13-23-93-B', 'subj-caie-igcse-esl', 2026, 'May/June', '3', NULL, 'B', 122, 131, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C132393-13-23-93-C', 'subj-caie-igcse-esl', 2026, 'May/June', '3', NULL, 'C', 113, 121, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C132393-13-23-93-D', 'subj-caie-igcse-esl', 2026, 'May/June', '3', NULL, 'D', 100, 112, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C132393-13-23-93-E', 'subj-caie-igcse-esl', 2026, 'May/June', '3', NULL, 'E', 87, 99, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C132393-13-23-93-F', 'subj-caie-igcse-esl', 2026, 'May/June', '3', NULL, 'F', 75, 86, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0510-s26-C132393-13-23-93-G', 'subj-caie-igcse-esl', 2026, 'May/June', '3', NULL, 'G', 63, 74, strftime('%s', 'now') * 1000),
+('sgb-0510-s26-C132393-13-23-93-U', 'subj-caie-igcse-esl', 2026, 'May/June', '3', NULL, 'U', 0, 62, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C1222-12-22-Astar', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'A*', 141, 150, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C1222-12-22-A', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'A', 132, 140, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C1222-12-22-B', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'B', 121, 131, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C1222-12-22-C', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'C', 111, 120, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C1222-12-22-D', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'D', 99, 110, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C1222-12-22-E', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'E', 88, 98, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C1222-12-22-F', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'F', 77, 87, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C1222-12-22-G', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'G', 66, 76, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C1222-12-22-U', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'U', 0, 65, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122232-12-22-32-Astar', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'A*', 141, 150, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122232-12-22-32-A', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'A', 132, 140, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122232-12-22-32-B', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'B', 121, 131, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122232-12-22-32-C', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'C', 111, 120, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122232-12-22-32-D', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'D', 99, 110, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122232-12-22-32-E', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'E', 88, 98, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122232-12-22-32-F', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'F', 77, 87, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122232-12-22-32-G', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'G', 66, 76, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122232-12-22-32-U', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'U', 0, 65, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122272-12-22-72-Astar', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'A*', 141, 150, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122272-12-22-72-A', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'A', 132, 140, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122272-12-22-72-B', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'B', 121, 131, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122272-12-22-72-C', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'C', 111, 120, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122272-12-22-72-D', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'D', 99, 110, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122272-12-22-72-E', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'E', 88, 98, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122272-12-22-72-F', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'F', 77, 87, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122272-12-22-72-G', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'G', 66, 76, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122272-12-22-72-U', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'U', 0, 65, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122281-12-22-81-Astar', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'A*', 141, 150, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122281-12-22-81-A', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'A', 132, 140, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122281-12-22-81-B', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'B', 121, 131, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122281-12-22-81-C', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'C', 111, 120, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122281-12-22-81-D', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'D', 99, 110, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122281-12-22-81-E', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'E', 88, 98, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122281-12-22-81-F', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'F', 77, 87, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122281-12-22-81-G', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'G', 66, 76, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122281-12-22-81-U', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'U', 0, 65, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122282-12-22-82-Astar', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'A*', 141, 150, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122282-12-22-82-A', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'A', 132, 140, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122282-12-22-82-B', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'B', 121, 131, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122282-12-22-82-C', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'C', 111, 120, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122282-12-22-82-D', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'D', 99, 110, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122282-12-22-82-E', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'E', 88, 98, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122282-12-22-82-F', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'F', 77, 87, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122282-12-22-82-G', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'G', 66, 76, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122282-12-22-82-U', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'U', 0, 65, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122291-12-22-91-Astar', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'A*', 141, 150, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122291-12-22-91-A', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'A', 132, 140, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122291-12-22-91-B', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'B', 121, 131, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122291-12-22-91-C', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'C', 111, 120, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122291-12-22-91-D', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'D', 99, 110, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122291-12-22-91-E', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'E', 88, 98, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122291-12-22-91-F', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'F', 77, 87, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122291-12-22-91-G', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'G', 66, 76, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122291-12-22-91-U', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'U', 0, 65, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122292-12-22-92-Astar', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'A*', 141, 150, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122292-12-22-92-A', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'A', 132, 140, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122292-12-22-92-B', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'B', 121, 131, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122292-12-22-92-C', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'C', 111, 120, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0510-m26-C122292-12-22-92-D', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'D', 99, 110, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122292-12-22-92-E', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'E', 88, 98, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122292-12-22-92-F', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'F', 77, 87, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122292-12-22-92-G', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'G', 66, 76, strftime('%s', 'now') * 1000),
+('sgb-0510-m26-C122292-12-22-92-U', 'subj-caie-igcse-esl', 2026, 'Feb/March', '2', NULL, 'U', 0, 65, strftime('%s', 'now') * 1000),
 ('sgb-0580-s22-AX-11-31-C', 'subj-caie-igcse-maths', 2022, 'May/June', '1', 'core', 'C', 73, 160, strftime('%s', 'now') * 1000),
 ('sgb-0580-s22-AX-11-31-D', 'subj-caie-igcse-maths', 2022, 'May/June', '1', 'core', 'D', 58, 72, strftime('%s', 'now') * 1000),
 ('sgb-0580-s22-AX-11-31-E', 'subj-caie-igcse-maths', 2022, 'May/June', '1', 'core', 'E', 44, 57, strftime('%s', 'now') * 1000),
@@ -4018,7 +4622,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0580-s22-BZ-23-43-D', 'subj-caie-igcse-maths', 2022, 'May/June', '3', 'extended', 'D', 53, 70, strftime('%s', 'now') * 1000),
 ('sgb-0580-s22-BZ-23-43-E', 'subj-caie-igcse-maths', 2022, 'May/June', '3', 'extended', 'E', 35, 52, strftime('%s', 'now') * 1000),
 ('sgb-0580-s22-BZ-23-43-U', 'subj-caie-igcse-maths', 2022, 'May/June', '3', 'extended', 'U', 0, 34, strftime('%s', 'now') * 1000),
-('sgb-0580-m22-AY-12-32-C', 'subj-caie-igcse-maths', 2022, 'Feb/March', '2', 'core', 'C', 84, 200, strftime('%s', 'now') * 1000),
+('sgb-0580-m22-AY-12-32-C', 'subj-caie-igcse-maths', 2022, 'Feb/March', '2', 'core', 'C', 84, 160, strftime('%s', 'now') * 1000),
 ('sgb-0580-m22-AY-12-32-D', 'subj-caie-igcse-maths', 2022, 'Feb/March', '2', 'core', 'D', 67, 83, strftime('%s', 'now') * 1000),
 ('sgb-0580-m22-AY-12-32-E', 'subj-caie-igcse-maths', 2022, 'Feb/March', '2', 'core', 'E', 51, 66, strftime('%s', 'now') * 1000),
 ('sgb-0580-m22-AY-12-32-F', 'subj-caie-igcse-maths', 2022, 'Feb/March', '2', 'core', 'F', 35, 50, strftime('%s', 'now') * 1000),
@@ -4027,14 +4631,14 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0580-m22-BY-22-42-Astar', 'subj-caie-igcse-maths', 2022, 'Feb/March', '2', 'extended', 'A*', 165, 200, strftime('%s', 'now') * 1000),
 ('sgb-0580-m22-BY-22-42-A', 'subj-caie-igcse-maths', 2022, 'Feb/March', '2', 'extended', 'A', 131, 164, strftime('%s', 'now') * 1000),
 ('sgb-0580-m22-BY-22-42-B', 'subj-caie-igcse-maths', 2022, 'Feb/March', '2', 'extended', 'B', 97, 130, strftime('%s', 'now') * 1000),
-('sgb-0580-m22-BY-22-42-C', 'subj-caie-igcse-maths', 2022, 'Feb/March', '2', 'extended', 'C', 64, 96, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0580-m22-BY-22-42-C', 'subj-caie-igcse-maths', 2022, 'Feb/March', '2', 'extended', 'C', 64, 96, strftime('%s', 'now') * 1000),
 ('sgb-0580-m22-BY-22-42-D', 'subj-caie-igcse-maths', 2022, 'Feb/March', '2', 'extended', 'D', 51, 63, strftime('%s', 'now') * 1000),
 ('sgb-0580-m22-BY-22-42-E', 'subj-caie-igcse-maths', 2022, 'Feb/March', '2', 'extended', 'E', 38, 50, strftime('%s', 'now') * 1000),
 ('sgb-0580-m22-BY-22-42-U', 'subj-caie-igcse-maths', 2022, 'Feb/March', '2', 'extended', 'U', 0, 37, strftime('%s', 'now') * 1000),
 ('sgb-0580-w22-AX-11-31-C', 'subj-caie-igcse-maths', 2022, 'Oct/Nov', '1', 'core', 'C', 82, 160, strftime('%s', 'now') * 1000),
 ('sgb-0580-w22-AX-11-31-D', 'subj-caie-igcse-maths', 2022, 'Oct/Nov', '1', 'core', 'D', 65, 81, strftime('%s', 'now') * 1000),
-('sgb-0580-w22-AX-11-31-E', 'subj-caie-igcse-maths', 2022, 'Oct/Nov', '1', 'core', 'E', 48, 64, strftime('%s', 'now') * 1000),
+('sgb-0580-w22-AX-11-31-E', 'subj-caie-igcse-maths', 2022, 'Oct/Nov', '1', 'core', 'E', 48, 64, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0580-w22-AX-11-31-F', 'subj-caie-igcse-maths', 2022, 'Oct/Nov', '1', 'core', 'F', 32, 47, strftime('%s', 'now') * 1000),
 ('sgb-0580-w22-AX-11-31-G', 'subj-caie-igcse-maths', 2022, 'Oct/Nov', '1', 'core', 'G', 16, 31, strftime('%s', 'now') * 1000),
 ('sgb-0580-w22-AX-11-31-U', 'subj-caie-igcse-maths', 2022, 'Oct/Nov', '1', 'core', 'U', 0, 15, strftime('%s', 'now') * 1000),
@@ -4088,14 +4692,14 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0580-s23-AZ-13-33-E', 'subj-caie-igcse-maths', 2023, 'May/June', '3', 'core', 'E', 56, 69, strftime('%s', 'now') * 1000),
 ('sgb-0580-s23-AZ-13-33-F', 'subj-caie-igcse-maths', 2023, 'May/June', '3', 'core', 'F', 43, 55, strftime('%s', 'now') * 1000),
 ('sgb-0580-s23-AZ-13-33-G', 'subj-caie-igcse-maths', 2023, 'May/June', '3', 'core', 'G', 30, 42, strftime('%s', 'now') * 1000),
-('sgb-0580-s23-AZ-13-33-U', 'subj-caie-igcse-maths', 2023, 'May/June', '3', 'core', 'U', 0, 29, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0580-s23-AZ-13-33-U', 'subj-caie-igcse-maths', 2023, 'May/June', '3', 'core', 'U', 0, 29, strftime('%s', 'now') * 1000),
 ('sgb-0580-s23-BX-21-41-Astar', 'subj-caie-igcse-maths', 2023, 'May/June', '1', 'extended', 'A*', 158, 200, strftime('%s', 'now') * 1000),
 ('sgb-0580-s23-BX-21-41-A', 'subj-caie-igcse-maths', 2023, 'May/June', '1', 'extended', 'A', 132, 157, strftime('%s', 'now') * 1000),
 ('sgb-0580-s23-BX-21-41-B', 'subj-caie-igcse-maths', 2023, 'May/June', '1', 'extended', 'B', 106, 131, strftime('%s', 'now') * 1000),
 ('sgb-0580-s23-BX-21-41-C', 'subj-caie-igcse-maths', 2023, 'May/June', '1', 'extended', 'C', 81, 105, strftime('%s', 'now') * 1000),
 ('sgb-0580-s23-BX-21-41-D', 'subj-caie-igcse-maths', 2023, 'May/June', '1', 'extended', 'D', 62, 80, strftime('%s', 'now') * 1000),
-('sgb-0580-s23-BX-21-41-E', 'subj-caie-igcse-maths', 2023, 'May/June', '1', 'extended', 'E', 44, 61, strftime('%s', 'now') * 1000),
+('sgb-0580-s23-BX-21-41-E', 'subj-caie-igcse-maths', 2023, 'May/June', '1', 'extended', 'E', 44, 61, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0580-s23-BX-21-41-U', 'subj-caie-igcse-maths', 2023, 'May/June', '1', 'extended', 'U', 0, 43, strftime('%s', 'now') * 1000),
 ('sgb-0580-s23-BY-22-42-Astar', 'subj-caie-igcse-maths', 2023, 'May/June', '2', 'extended', 'A*', 174, 200, strftime('%s', 'now') * 1000),
 ('sgb-0580-s23-BY-22-42-A', 'subj-caie-igcse-maths', 2023, 'May/June', '2', 'extended', 'A', 148, 173, strftime('%s', 'now') * 1000),
@@ -4149,14 +4753,14 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0580-w23-BX-21-41-D', 'subj-caie-igcse-maths', 2023, 'Oct/Nov', '1', 'extended', 'D', 74, 90, strftime('%s', 'now') * 1000),
 ('sgb-0580-w23-BX-21-41-E', 'subj-caie-igcse-maths', 2023, 'Oct/Nov', '1', 'extended', 'E', 57, 73, strftime('%s', 'now') * 1000),
 ('sgb-0580-w23-BX-21-41-U', 'subj-caie-igcse-maths', 2023, 'Oct/Nov', '1', 'extended', 'U', 0, 56, strftime('%s', 'now') * 1000),
-('sgb-0580-w23-BY-22-42-Astar', 'subj-caie-igcse-maths', 2023, 'Oct/Nov', '2', 'extended', 'A*', 173, 200, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0580-w23-BY-22-42-Astar', 'subj-caie-igcse-maths', 2023, 'Oct/Nov', '2', 'extended', 'A*', 173, 200, strftime('%s', 'now') * 1000),
 ('sgb-0580-w23-BY-22-42-A', 'subj-caie-igcse-maths', 2023, 'Oct/Nov', '2', 'extended', 'A', 146, 172, strftime('%s', 'now') * 1000),
 ('sgb-0580-w23-BY-22-42-B', 'subj-caie-igcse-maths', 2023, 'Oct/Nov', '2', 'extended', 'B', 118, 145, strftime('%s', 'now') * 1000),
 ('sgb-0580-w23-BY-22-42-C', 'subj-caie-igcse-maths', 2023, 'Oct/Nov', '2', 'extended', 'C', 91, 117, strftime('%s', 'now') * 1000),
 ('sgb-0580-w23-BY-22-42-D', 'subj-caie-igcse-maths', 2023, 'Oct/Nov', '2', 'extended', 'D', 76, 90, strftime('%s', 'now') * 1000),
 ('sgb-0580-w23-BY-22-42-E', 'subj-caie-igcse-maths', 2023, 'Oct/Nov', '2', 'extended', 'E', 62, 75, strftime('%s', 'now') * 1000),
-('sgb-0580-w23-BY-22-42-U', 'subj-caie-igcse-maths', 2023, 'Oct/Nov', '2', 'extended', 'U', 0, 61, strftime('%s', 'now') * 1000),
+('sgb-0580-w23-BY-22-42-U', 'subj-caie-igcse-maths', 2023, 'Oct/Nov', '2', 'extended', 'U', 0, 61, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0580-w23-BZ-23-43-Astar', 'subj-caie-igcse-maths', 2023, 'Oct/Nov', '3', 'extended', 'A*', 171, 200, strftime('%s', 'now') * 1000),
 ('sgb-0580-w23-BZ-23-43-A', 'subj-caie-igcse-maths', 2023, 'Oct/Nov', '3', 'extended', 'A', 143, 170, strftime('%s', 'now') * 1000),
 ('sgb-0580-w23-BZ-23-43-B', 'subj-caie-igcse-maths', 2023, 'Oct/Nov', '3', 'extended', 'B', 112, 142, strftime('%s', 'now') * 1000),
@@ -4210,14 +4814,14 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0580-m24-AY-12-32-G', 'subj-caie-igcse-maths', 2024, 'Feb/March', '2', 'core', 'G', 28, 44, strftime('%s', 'now') * 1000),
 ('sgb-0580-m24-AY-12-32-U', 'subj-caie-igcse-maths', 2024, 'Feb/March', '2', 'core', 'U', 0, 27, strftime('%s', 'now') * 1000),
 ('sgb-0580-m24-BY-22-42-Astar', 'subj-caie-igcse-maths', 2024, 'Feb/March', '2', 'extended', 'A*', 181, 200, strftime('%s', 'now') * 1000),
-('sgb-0580-m24-BY-22-42-A', 'subj-caie-igcse-maths', 2024, 'Feb/March', '2', 'extended', 'A', 162, 180, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0580-m24-BY-22-42-A', 'subj-caie-igcse-maths', 2024, 'Feb/March', '2', 'extended', 'A', 162, 180, strftime('%s', 'now') * 1000),
 ('sgb-0580-m24-BY-22-42-B', 'subj-caie-igcse-maths', 2024, 'Feb/March', '2', 'extended', 'B', 132, 161, strftime('%s', 'now') * 1000),
 ('sgb-0580-m24-BY-22-42-C', 'subj-caie-igcse-maths', 2024, 'Feb/March', '2', 'extended', 'C', 103, 131, strftime('%s', 'now') * 1000),
 ('sgb-0580-m24-BY-22-42-D', 'subj-caie-igcse-maths', 2024, 'Feb/March', '2', 'extended', 'D', 86, 102, strftime('%s', 'now') * 1000),
 ('sgb-0580-m24-BY-22-42-E', 'subj-caie-igcse-maths', 2024, 'Feb/March', '2', 'extended', 'E', 70, 85, strftime('%s', 'now') * 1000),
 ('sgb-0580-m24-BY-22-42-U', 'subj-caie-igcse-maths', 2024, 'Feb/March', '2', 'extended', 'U', 0, 69, strftime('%s', 'now') * 1000),
-('sgb-0580-w24-AX-11-31-C', 'subj-caie-igcse-maths', 2024, 'Oct/Nov', '1', 'core', 'C', 88, 160, strftime('%s', 'now') * 1000),
+('sgb-0580-w24-AX-11-31-C', 'subj-caie-igcse-maths', 2024, 'Oct/Nov', '1', 'core', 'C', 88, 160, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0580-w24-AX-11-31-D', 'subj-caie-igcse-maths', 2024, 'Oct/Nov', '1', 'core', 'D', 70, 87, strftime('%s', 'now') * 1000),
 ('sgb-0580-w24-AX-11-31-E', 'subj-caie-igcse-maths', 2024, 'Oct/Nov', '1', 'core', 'E', 53, 69, strftime('%s', 'now') * 1000),
 ('sgb-0580-w24-AX-11-31-F', 'subj-caie-igcse-maths', 2024, 'Oct/Nov', '1', 'core', 'F', 35, 52, strftime('%s', 'now') * 1000),
@@ -4271,14 +4875,14 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0580-s25-AZ-13-33-C', 'subj-caie-igcse-maths', 2025, 'May/June', '3', 'core', 'C', 92, 160, strftime('%s', 'now') * 1000),
 ('sgb-0580-s25-AZ-13-33-D', 'subj-caie-igcse-maths', 2025, 'May/June', '3', 'core', 'D', 77, 91, strftime('%s', 'now') * 1000),
 ('sgb-0580-s25-AZ-13-33-E', 'subj-caie-igcse-maths', 2025, 'May/June', '3', 'core', 'E', 62, 76, strftime('%s', 'now') * 1000),
-('sgb-0580-s25-AZ-13-33-F', 'subj-caie-igcse-maths', 2025, 'May/June', '3', 'core', 'F', 48, 61, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0580-s25-AZ-13-33-F', 'subj-caie-igcse-maths', 2025, 'May/June', '3', 'core', 'F', 48, 61, strftime('%s', 'now') * 1000),
 ('sgb-0580-s25-AZ-13-33-G', 'subj-caie-igcse-maths', 2025, 'May/June', '3', 'core', 'G', 34, 47, strftime('%s', 'now') * 1000),
 ('sgb-0580-s25-AZ-13-33-U', 'subj-caie-igcse-maths', 2025, 'May/June', '3', 'core', 'U', 0, 33, strftime('%s', 'now') * 1000),
 ('sgb-0580-s25-BX-21-41-Astar', 'subj-caie-igcse-maths', 2025, 'May/June', '1', 'extended', 'A*', 156, 200, strftime('%s', 'now') * 1000),
 ('sgb-0580-s25-BX-21-41-A', 'subj-caie-igcse-maths', 2025, 'May/June', '1', 'extended', 'A', 131, 155, strftime('%s', 'now') * 1000),
 ('sgb-0580-s25-BX-21-41-B', 'subj-caie-igcse-maths', 2025, 'May/June', '1', 'extended', 'B', 106, 130, strftime('%s', 'now') * 1000),
-('sgb-0580-s25-BX-21-41-C', 'subj-caie-igcse-maths', 2025, 'May/June', '1', 'extended', 'C', 81, 105, strftime('%s', 'now') * 1000),
+('sgb-0580-s25-BX-21-41-C', 'subj-caie-igcse-maths', 2025, 'May/June', '1', 'extended', 'C', 81, 105, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0580-s25-BX-21-41-D', 'subj-caie-igcse-maths', 2025, 'May/June', '1', 'extended', 'D', 68, 80, strftime('%s', 'now') * 1000),
 ('sgb-0580-s25-BX-21-41-E', 'subj-caie-igcse-maths', 2025, 'May/June', '1', 'extended', 'E', 55, 67, strftime('%s', 'now') * 1000),
 ('sgb-0580-s25-BX-21-41-U', 'subj-caie-igcse-maths', 2025, 'May/June', '1', 'extended', 'U', 0, 54, strftime('%s', 'now') * 1000),
@@ -4332,14 +4936,14 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0580-w25-BX-21-41-B', 'subj-caie-igcse-maths', 2025, 'Oct/Nov', '1', 'extended', 'B', 114, 143, strftime('%s', 'now') * 1000),
 ('sgb-0580-w25-BX-21-41-C', 'subj-caie-igcse-maths', 2025, 'Oct/Nov', '1', 'extended', 'C', 84, 113, strftime('%s', 'now') * 1000),
 ('sgb-0580-w25-BX-21-41-D', 'subj-caie-igcse-maths', 2025, 'Oct/Nov', '1', 'extended', 'D', 66, 83, strftime('%s', 'now') * 1000),
-('sgb-0580-w25-BX-21-41-E', 'subj-caie-igcse-maths', 2025, 'Oct/Nov', '1', 'extended', 'E', 48, 65, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0580-w25-BX-21-41-E', 'subj-caie-igcse-maths', 2025, 'Oct/Nov', '1', 'extended', 'E', 48, 65, strftime('%s', 'now') * 1000),
 ('sgb-0580-w25-BX-21-41-U', 'subj-caie-igcse-maths', 2025, 'Oct/Nov', '1', 'extended', 'U', 0, 47, strftime('%s', 'now') * 1000),
 ('sgb-0580-w25-BY-22-42-Astar', 'subj-caie-igcse-maths', 2025, 'Oct/Nov', '2', 'extended', 'A*', 169, 200, strftime('%s', 'now') * 1000),
 ('sgb-0580-w25-BY-22-42-A', 'subj-caie-igcse-maths', 2025, 'Oct/Nov', '2', 'extended', 'A', 140, 168, strftime('%s', 'now') * 1000),
 ('sgb-0580-w25-BY-22-42-B', 'subj-caie-igcse-maths', 2025, 'Oct/Nov', '2', 'extended', 'B', 111, 139, strftime('%s', 'now') * 1000),
 ('sgb-0580-w25-BY-22-42-C', 'subj-caie-igcse-maths', 2025, 'Oct/Nov', '2', 'extended', 'C', 82, 110, strftime('%s', 'now') * 1000),
-('sgb-0580-w25-BY-22-42-D', 'subj-caie-igcse-maths', 2025, 'Oct/Nov', '2', 'extended', 'D', 66, 81, strftime('%s', 'now') * 1000),
+('sgb-0580-w25-BY-22-42-D', 'subj-caie-igcse-maths', 2025, 'Oct/Nov', '2', 'extended', 'D', 66, 81, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0580-w25-BY-22-42-E', 'subj-caie-igcse-maths', 2025, 'Oct/Nov', '2', 'extended', 'E', 50, 65, strftime('%s', 'now') * 1000),
 ('sgb-0580-w25-BY-22-42-U', 'subj-caie-igcse-maths', 2025, 'Oct/Nov', '2', 'extended', 'U', 0, 49, strftime('%s', 'now') * 1000),
 ('sgb-0580-w25-BZ-23-43-Astar', 'subj-caie-igcse-maths', 2025, 'Oct/Nov', '3', 'extended', 'A*', 177, 200, strftime('%s', 'now') * 1000),
@@ -4349,6 +4953,59 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0580-w25-BZ-23-43-D', 'subj-caie-igcse-maths', 2025, 'Oct/Nov', '3', 'extended', 'D', 71, 89, strftime('%s', 'now') * 1000),
 ('sgb-0580-w25-BZ-23-43-E', 'subj-caie-igcse-maths', 2025, 'Oct/Nov', '3', 'extended', 'E', 52, 70, strftime('%s', 'now') * 1000),
 ('sgb-0580-w25-BZ-23-43-U', 'subj-caie-igcse-maths', 2025, 'Oct/Nov', '3', 'extended', 'U', 0, 51, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C1131-11-31-C', 'subj-caie-igcse-maths', 2026, 'May/June', '1', 'core', 'C', 82, 160, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C1131-11-31-D', 'subj-caie-igcse-maths', 2026, 'May/June', '1', 'core', 'D', 68, 81, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C1131-11-31-E', 'subj-caie-igcse-maths', 2026, 'May/June', '1', 'core', 'E', 55, 67, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C1131-11-31-F', 'subj-caie-igcse-maths', 2026, 'May/June', '1', 'core', 'F', 42, 54, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C1131-11-31-G', 'subj-caie-igcse-maths', 2026, 'May/June', '1', 'core', 'G', 29, 41, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C1131-11-31-U', 'subj-caie-igcse-maths', 2026, 'May/June', '1', 'core', 'U', 0, 28, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C1232-12-32-C', 'subj-caie-igcse-maths', 2026, 'May/June', '2', 'core', 'C', 83, 160, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C1232-12-32-D', 'subj-caie-igcse-maths', 2026, 'May/June', '2', 'core', 'D', 67, 82, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C1232-12-32-E', 'subj-caie-igcse-maths', 2026, 'May/June', '2', 'core', 'E', 52, 66, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C1232-12-32-F', 'subj-caie-igcse-maths', 2026, 'May/June', '2', 'core', 'F', 37, 51, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C1232-12-32-G', 'subj-caie-igcse-maths', 2026, 'May/June', '2', 'core', 'G', 22, 36, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C1232-12-32-U', 'subj-caie-igcse-maths', 2026, 'May/June', '2', 'core', 'U', 0, 21, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C1333-13-33-C', 'subj-caie-igcse-maths', 2026, 'May/June', '3', 'core', 'C', 83, 160, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C1333-13-33-D', 'subj-caie-igcse-maths', 2026, 'May/June', '3', 'core', 'D', 69, 82, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C1333-13-33-E', 'subj-caie-igcse-maths', 2026, 'May/June', '3', 'core', 'E', 55, 68, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C1333-13-33-F', 'subj-caie-igcse-maths', 2026, 'May/June', '3', 'core', 'F', 42, 54, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C1333-13-33-G', 'subj-caie-igcse-maths', 2026, 'May/June', '3', 'core', 'G', 29, 41, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C1333-13-33-U', 'subj-caie-igcse-maths', 2026, 'May/June', '3', 'core', 'U', 0, 28, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C2141-21-41-Astar', 'subj-caie-igcse-maths', 2026, 'May/June', '1', 'extended', 'A*', 162, 200, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C2141-21-41-A', 'subj-caie-igcse-maths', 2026, 'May/June', '1', 'extended', 'A', 138, 161, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C2141-21-41-B', 'subj-caie-igcse-maths', 2026, 'May/June', '1', 'extended', 'B', 114, 137, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C2141-21-41-C', 'subj-caie-igcse-maths', 2026, 'May/June', '1', 'extended', 'C', 90, 113, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C2141-21-41-D', 'subj-caie-igcse-maths', 2026, 'May/June', '1', 'extended', 'D', 73, 89, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C2141-21-41-E', 'subj-caie-igcse-maths', 2026, 'May/June', '1', 'extended', 'E', 56, 72, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C2141-21-41-U', 'subj-caie-igcse-maths', 2026, 'May/June', '1', 'extended', 'U', 0, 55, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C2242-22-42-Astar', 'subj-caie-igcse-maths', 2026, 'May/June', '2', 'extended', 'A*', 177, 200, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C2242-22-42-A', 'subj-caie-igcse-maths', 2026, 'May/June', '2', 'extended', 'A', 154, 176, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C2242-22-42-B', 'subj-caie-igcse-maths', 2026, 'May/June', '2', 'extended', 'B', 120, 153, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C2242-22-42-C', 'subj-caie-igcse-maths', 2026, 'May/June', '2', 'extended', 'C', 87, 119, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C2242-22-42-D', 'subj-caie-igcse-maths', 2026, 'May/June', '2', 'extended', 'D', 68, 86, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C2242-22-42-E', 'subj-caie-igcse-maths', 2026, 'May/June', '2', 'extended', 'E', 49, 67, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C2242-22-42-U', 'subj-caie-igcse-maths', 2026, 'May/June', '2', 'extended', 'U', 0, 48, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C2343-23-43-Astar', 'subj-caie-igcse-maths', 2026, 'May/June', '3', 'extended', 'A*', 177, 200, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C2343-23-43-A', 'subj-caie-igcse-maths', 2026, 'May/June', '3', 'extended', 'A', 154, 176, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C2343-23-43-B', 'subj-caie-igcse-maths', 2026, 'May/June', '3', 'extended', 'B', 124, 153, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C2343-23-43-C', 'subj-caie-igcse-maths', 2026, 'May/June', '3', 'extended', 'C', 94, 123, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C2343-23-43-D', 'subj-caie-igcse-maths', 2026, 'May/June', '3', 'extended', 'D', 71, 93, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C2343-23-43-E', 'subj-caie-igcse-maths', 2026, 'May/June', '3', 'extended', 'E', 49, 70, strftime('%s', 'now') * 1000),
+('sgb-0580-s26-C2343-23-43-U', 'subj-caie-igcse-maths', 2026, 'May/June', '3', 'extended', 'U', 0, 48, strftime('%s', 'now') * 1000),
+('sgb-0580-m26-C1232-12-32-C', 'subj-caie-igcse-maths', 2026, 'Feb/March', '2', 'core', 'C', 87, 160, strftime('%s', 'now') * 1000),
+('sgb-0580-m26-C1232-12-32-D', 'subj-caie-igcse-maths', 2026, 'Feb/March', '2', 'core', 'D', 71, 86, strftime('%s', 'now') * 1000),
+('sgb-0580-m26-C1232-12-32-E', 'subj-caie-igcse-maths', 2026, 'Feb/March', '2', 'core', 'E', 56, 70, strftime('%s', 'now') * 1000),
+('sgb-0580-m26-C1232-12-32-F', 'subj-caie-igcse-maths', 2026, 'Feb/March', '2', 'core', 'F', 40, 55, strftime('%s', 'now') * 1000),
+('sgb-0580-m26-C1232-12-32-G', 'subj-caie-igcse-maths', 2026, 'Feb/March', '2', 'core', 'G', 24, 39, strftime('%s', 'now') * 1000),
+('sgb-0580-m26-C1232-12-32-U', 'subj-caie-igcse-maths', 2026, 'Feb/March', '2', 'core', 'U', 0, 23, strftime('%s', 'now') * 1000),
+('sgb-0580-m26-C2242-22-42-Astar', 'subj-caie-igcse-maths', 2026, 'Feb/March', '2', 'extended', 'A*', 168, 200, strftime('%s', 'now') * 1000),
+('sgb-0580-m26-C2242-22-42-A', 'subj-caie-igcse-maths', 2026, 'Feb/March', '2', 'extended', 'A', 137, 167, strftime('%s', 'now') * 1000),
+('sgb-0580-m26-C2242-22-42-B', 'subj-caie-igcse-maths', 2026, 'Feb/March', '2', 'extended', 'B', 106, 136, strftime('%s', 'now') * 1000),
+('sgb-0580-m26-C2242-22-42-C', 'subj-caie-igcse-maths', 2026, 'Feb/March', '2', 'extended', 'C', 76, 105, strftime('%s', 'now') * 1000),
+('sgb-0580-m26-C2242-22-42-D', 'subj-caie-igcse-maths', 2026, 'Feb/March', '2', 'extended', 'D', 61, 75, strftime('%s', 'now') * 1000),
+('sgb-0580-m26-C2242-22-42-E', 'subj-caie-igcse-maths', 2026, 'Feb/March', '2', 'extended', 'E', 47, 60, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0580-m26-C2242-22-42-U', 'subj-caie-igcse-maths', 2026, 'Feb/March', '2', 'extended', 'U', 0, 46, strftime('%s', 'now') * 1000),
 ('sgb-0606-s22-AX-11-21-Astar', 'subj-caie-igcse-addmaths', 2022, 'May/June', '1', NULL, 'A*', 133, 160, strftime('%s', 'now') * 1000),
 ('sgb-0606-s22-AX-11-21-A', 'subj-caie-igcse-addmaths', 2022, 'May/June', '1', NULL, 'A', 106, 132, strftime('%s', 'now') * 1000),
 ('sgb-0606-s22-AX-11-21-B', 'subj-caie-igcse-addmaths', 2022, 'May/June', '1', NULL, 'B', 76, 105, strftime('%s', 'now') * 1000),
@@ -4393,8 +5050,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0606-w22-AY-12-22-U', 'subj-caie-igcse-addmaths', 2022, 'Oct/Nov', '2', NULL, 'U', 0, 16, strftime('%s', 'now') * 1000),
 ('sgb-0606-w22-AZ-13-23-Astar', 'subj-caie-igcse-addmaths', 2022, 'Oct/Nov', '3', NULL, 'A*', 136, 160, strftime('%s', 'now') * 1000),
 ('sgb-0606-w22-AZ-13-23-A', 'subj-caie-igcse-addmaths', 2022, 'Oct/Nov', '3', NULL, 'A', 113, 135, strftime('%s', 'now') * 1000),
-('sgb-0606-w22-AZ-13-23-B', 'subj-caie-igcse-addmaths', 2022, 'Oct/Nov', '3', NULL, 'B', 78, 112, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0606-w22-AZ-13-23-B', 'subj-caie-igcse-addmaths', 2022, 'Oct/Nov', '3', NULL, 'B', 78, 112, strftime('%s', 'now') * 1000),
 ('sgb-0606-w22-AZ-13-23-C', 'subj-caie-igcse-addmaths', 2022, 'Oct/Nov', '3', NULL, 'C', 44, 77, strftime('%s', 'now') * 1000),
 ('sgb-0606-w22-AZ-13-23-D', 'subj-caie-igcse-addmaths', 2022, 'Oct/Nov', '3', NULL, 'D', 30, 43, strftime('%s', 'now') * 1000),
 ('sgb-0606-w22-AZ-13-23-E', 'subj-caie-igcse-addmaths', 2022, 'Oct/Nov', '3', NULL, 'E', 17, 29, strftime('%s', 'now') * 1000),
@@ -4408,7 +5064,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0606-s23-AX-11-21-U', 'subj-caie-igcse-addmaths', 2023, 'May/June', '1', NULL, 'U', 0, 18, strftime('%s', 'now') * 1000),
 ('sgb-0606-s23-AY-12-22-Astar', 'subj-caie-igcse-addmaths', 2023, 'May/June', '2', NULL, 'A*', 131, 160, strftime('%s', 'now') * 1000),
 ('sgb-0606-s23-AY-12-22-A', 'subj-caie-igcse-addmaths', 2023, 'May/June', '2', NULL, 'A', 103, 130, strftime('%s', 'now') * 1000),
-('sgb-0606-s23-AY-12-22-B', 'subj-caie-igcse-addmaths', 2023, 'May/June', '2', NULL, 'B', 72, 102, strftime('%s', 'now') * 1000),
+('sgb-0606-s23-AY-12-22-B', 'subj-caie-igcse-addmaths', 2023, 'May/June', '2', NULL, 'B', 72, 102, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0606-s23-AY-12-22-C', 'subj-caie-igcse-addmaths', 2023, 'May/June', '2', NULL, 'C', 41, 71, strftime('%s', 'now') * 1000),
 ('sgb-0606-s23-AY-12-22-D', 'subj-caie-igcse-addmaths', 2023, 'May/June', '2', NULL, 'D', 30, 40, strftime('%s', 'now') * 1000),
 ('sgb-0606-s23-AY-12-22-E', 'subj-caie-igcse-addmaths', 2023, 'May/June', '2', NULL, 'E', 19, 29, strftime('%s', 'now') * 1000),
@@ -4454,8 +5111,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0606-s24-AX-11-21-C', 'subj-caie-igcse-addmaths', 2024, 'May/June', '1', NULL, 'C', 47, 75, strftime('%s', 'now') * 1000),
 ('sgb-0606-s24-AX-11-21-D', 'subj-caie-igcse-addmaths', 2024, 'May/June', '1', NULL, 'D', 35, 46, strftime('%s', 'now') * 1000),
 ('sgb-0606-s24-AX-11-21-E', 'subj-caie-igcse-addmaths', 2024, 'May/June', '1', NULL, 'E', 23, 34, strftime('%s', 'now') * 1000),
-('sgb-0606-s24-AX-11-21-U', 'subj-caie-igcse-addmaths', 2024, 'May/June', '1', NULL, 'U', 0, 22, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0606-s24-AX-11-21-U', 'subj-caie-igcse-addmaths', 2024, 'May/June', '1', NULL, 'U', 0, 22, strftime('%s', 'now') * 1000),
 ('sgb-0606-s24-AY-12-22-Astar', 'subj-caie-igcse-addmaths', 2024, 'May/June', '2', NULL, 'A*', 135, 160, strftime('%s', 'now') * 1000),
 ('sgb-0606-s24-AY-12-22-A', 'subj-caie-igcse-addmaths', 2024, 'May/June', '2', NULL, 'A', 110, 134, strftime('%s', 'now') * 1000),
 ('sgb-0606-s24-AY-12-22-B', 'subj-caie-igcse-addmaths', 2024, 'May/June', '2', NULL, 'B', 83, 109, strftime('%s', 'now') * 1000),
@@ -4469,7 +5125,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0606-s24-AZ-13-23-C', 'subj-caie-igcse-addmaths', 2024, 'May/June', '3', NULL, 'C', 47, 75, strftime('%s', 'now') * 1000),
 ('sgb-0606-s24-AZ-13-23-D', 'subj-caie-igcse-addmaths', 2024, 'May/June', '3', NULL, 'D', 35, 46, strftime('%s', 'now') * 1000),
 ('sgb-0606-s24-AZ-13-23-E', 'subj-caie-igcse-addmaths', 2024, 'May/June', '3', NULL, 'E', 23, 34, strftime('%s', 'now') * 1000),
-('sgb-0606-s24-AZ-13-23-U', 'subj-caie-igcse-addmaths', 2024, 'May/June', '3', NULL, 'U', 0, 22, strftime('%s', 'now') * 1000),
+('sgb-0606-s24-AZ-13-23-U', 'subj-caie-igcse-addmaths', 2024, 'May/June', '3', NULL, 'U', 0, 22, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0606-m24-AY-12-22-Astar', 'subj-caie-igcse-addmaths', 2024, 'Feb/March', '2', NULL, 'A*', 136, 160, strftime('%s', 'now') * 1000),
 ('sgb-0606-m24-AY-12-22-A', 'subj-caie-igcse-addmaths', 2024, 'Feb/March', '2', NULL, 'A', 112, 135, strftime('%s', 'now') * 1000),
 ('sgb-0606-m24-AY-12-22-B', 'subj-caie-igcse-addmaths', 2024, 'Feb/March', '2', NULL, 'B', 87, 111, strftime('%s', 'now') * 1000),
@@ -4515,8 +5172,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0606-s25-AZ-13-23-Astar', 'subj-caie-igcse-addmaths', 2025, 'May/June', '3', NULL, 'A*', 137, 160, strftime('%s', 'now') * 1000),
 ('sgb-0606-s25-AZ-13-23-A', 'subj-caie-igcse-addmaths', 2025, 'May/June', '3', NULL, 'A', 114, 136, strftime('%s', 'now') * 1000),
 ('sgb-0606-s25-AZ-13-23-B', 'subj-caie-igcse-addmaths', 2025, 'May/June', '3', NULL, 'B', 85, 113, strftime('%s', 'now') * 1000),
-('sgb-0606-s25-AZ-13-23-C', 'subj-caie-igcse-addmaths', 2025, 'May/June', '3', NULL, 'C', 56, 84, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0606-s25-AZ-13-23-C', 'subj-caie-igcse-addmaths', 2025, 'May/June', '3', NULL, 'C', 56, 84, strftime('%s', 'now') * 1000),
 ('sgb-0606-s25-AZ-13-23-D', 'subj-caie-igcse-addmaths', 2025, 'May/June', '3', NULL, 'D', 43, 55, strftime('%s', 'now') * 1000),
 ('sgb-0606-s25-AZ-13-23-E', 'subj-caie-igcse-addmaths', 2025, 'May/June', '3', NULL, 'E', 31, 42, strftime('%s', 'now') * 1000),
 ('sgb-0606-s25-AZ-13-23-U', 'subj-caie-igcse-addmaths', 2025, 'May/June', '3', NULL, 'U', 0, 30, strftime('%s', 'now') * 1000),
@@ -4530,7 +5186,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0606-w25-AX-11-21-Astar', 'subj-caie-igcse-addmaths', 2025, 'Oct/Nov', '1', NULL, 'A*', 138, 160, strftime('%s', 'now') * 1000),
 ('sgb-0606-w25-AX-11-21-A', 'subj-caie-igcse-addmaths', 2025, 'Oct/Nov', '1', NULL, 'A', 116, 137, strftime('%s', 'now') * 1000),
 ('sgb-0606-w25-AX-11-21-B', 'subj-caie-igcse-addmaths', 2025, 'Oct/Nov', '1', NULL, 'B', 80, 115, strftime('%s', 'now') * 1000),
-('sgb-0606-w25-AX-11-21-C', 'subj-caie-igcse-addmaths', 2025, 'Oct/Nov', '1', NULL, 'C', 45, 79, strftime('%s', 'now') * 1000),
+('sgb-0606-w25-AX-11-21-C', 'subj-caie-igcse-addmaths', 2025, 'Oct/Nov', '1', NULL, 'C', 45, 79, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0606-w25-AX-11-21-D', 'subj-caie-igcse-addmaths', 2025, 'Oct/Nov', '1', NULL, 'D', 34, 44, strftime('%s', 'now') * 1000),
 ('sgb-0606-w25-AX-11-21-E', 'subj-caie-igcse-addmaths', 2025, 'Oct/Nov', '1', NULL, 'E', 24, 33, strftime('%s', 'now') * 1000),
 ('sgb-0606-w25-AX-11-21-U', 'subj-caie-igcse-addmaths', 2025, 'Oct/Nov', '1', NULL, 'U', 0, 23, strftime('%s', 'now') * 1000),
@@ -4548,6 +5205,34 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0606-w25-AZ-13-23-D', 'subj-caie-igcse-addmaths', 2025, 'Oct/Nov', '3', NULL, 'D', 33, 44, strftime('%s', 'now') * 1000),
 ('sgb-0606-w25-AZ-13-23-E', 'subj-caie-igcse-addmaths', 2025, 'Oct/Nov', '3', NULL, 'E', 21, 32, strftime('%s', 'now') * 1000),
 ('sgb-0606-w25-AZ-13-23-U', 'subj-caie-igcse-addmaths', 2025, 'Oct/Nov', '3', NULL, 'U', 0, 20, strftime('%s', 'now') * 1000),
+('sgb-0606-s26-C1121-11-21-Astar', 'subj-caie-igcse-addmaths', 2026, 'May/June', '1', NULL, 'A*', 141, 160, strftime('%s', 'now') * 1000),
+('sgb-0606-s26-C1121-11-21-A', 'subj-caie-igcse-addmaths', 2026, 'May/June', '1', NULL, 'A', 122, 140, strftime('%s', 'now') * 1000),
+('sgb-0606-s26-C1121-11-21-B', 'subj-caie-igcse-addmaths', 2026, 'May/June', '1', NULL, 'B', 92, 121, strftime('%s', 'now') * 1000),
+('sgb-0606-s26-C1121-11-21-C', 'subj-caie-igcse-addmaths', 2026, 'May/June', '1', NULL, 'C', 62, 91, strftime('%s', 'now') * 1000),
+('sgb-0606-s26-C1121-11-21-D', 'subj-caie-igcse-addmaths', 2026, 'May/June', '1', NULL, 'D', 49, 61, strftime('%s', 'now') * 1000),
+('sgb-0606-s26-C1121-11-21-E', 'subj-caie-igcse-addmaths', 2026, 'May/June', '1', NULL, 'E', 36, 48, strftime('%s', 'now') * 1000),
+('sgb-0606-s26-C1121-11-21-U', 'subj-caie-igcse-addmaths', 2026, 'May/June', '1', NULL, 'U', 0, 35, strftime('%s', 'now') * 1000),
+('sgb-0606-s26-C1222-12-22-Astar', 'subj-caie-igcse-addmaths', 2026, 'May/June', '2', NULL, 'A*', 138, 160, strftime('%s', 'now') * 1000),
+('sgb-0606-s26-C1222-12-22-A', 'subj-caie-igcse-addmaths', 2026, 'May/June', '2', NULL, 'A', 117, 137, strftime('%s', 'now') * 1000),
+('sgb-0606-s26-C1222-12-22-B', 'subj-caie-igcse-addmaths', 2026, 'May/June', '2', NULL, 'B', 88, 116, strftime('%s', 'now') * 1000),
+('sgb-0606-s26-C1222-12-22-C', 'subj-caie-igcse-addmaths', 2026, 'May/June', '2', NULL, 'C', 59, 87, strftime('%s', 'now') * 1000),
+('sgb-0606-s26-C1222-12-22-D', 'subj-caie-igcse-addmaths', 2026, 'May/June', '2', NULL, 'D', 46, 58, strftime('%s', 'now') * 1000),
+('sgb-0606-s26-C1222-12-22-E', 'subj-caie-igcse-addmaths', 2026, 'May/June', '2', NULL, 'E', 33, 45, strftime('%s', 'now') * 1000),
+('sgb-0606-s26-C1222-12-22-U', 'subj-caie-igcse-addmaths', 2026, 'May/June', '2', NULL, 'U', 0, 32, strftime('%s', 'now') * 1000),
+('sgb-0606-s26-C1323-13-23-Astar', 'subj-caie-igcse-addmaths', 2026, 'May/June', '3', NULL, 'A*', 138, 160, strftime('%s', 'now') * 1000),
+('sgb-0606-s26-C1323-13-23-A', 'subj-caie-igcse-addmaths', 2026, 'May/June', '3', NULL, 'A', 117, 137, strftime('%s', 'now') * 1000),
+('sgb-0606-s26-C1323-13-23-B', 'subj-caie-igcse-addmaths', 2026, 'May/June', '3', NULL, 'B', 88, 116, strftime('%s', 'now') * 1000),
+('sgb-0606-s26-C1323-13-23-C', 'subj-caie-igcse-addmaths', 2026, 'May/June', '3', NULL, 'C', 59, 87, strftime('%s', 'now') * 1000),
+('sgb-0606-s26-C1323-13-23-D', 'subj-caie-igcse-addmaths', 2026, 'May/June', '3', NULL, 'D', 46, 58, strftime('%s', 'now') * 1000),
+('sgb-0606-s26-C1323-13-23-E', 'subj-caie-igcse-addmaths', 2026, 'May/June', '3', NULL, 'E', 33, 45, strftime('%s', 'now') * 1000),
+('sgb-0606-s26-C1323-13-23-U', 'subj-caie-igcse-addmaths', 2026, 'May/June', '3', NULL, 'U', 0, 32, strftime('%s', 'now') * 1000),
+('sgb-0606-m26-C1222-12-22-Astar', 'subj-caie-igcse-addmaths', 2026, 'Feb/March', '2', NULL, 'A*', 139, 160, strftime('%s', 'now') * 1000),
+('sgb-0606-m26-C1222-12-22-A', 'subj-caie-igcse-addmaths', 2026, 'Feb/March', '2', NULL, 'A', 119, 138, strftime('%s', 'now') * 1000),
+('sgb-0606-m26-C1222-12-22-B', 'subj-caie-igcse-addmaths', 2026, 'Feb/March', '2', NULL, 'B', 88, 118, strftime('%s', 'now') * 1000),
+('sgb-0606-m26-C1222-12-22-C', 'subj-caie-igcse-addmaths', 2026, 'Feb/March', '2', NULL, 'C', 57, 87, strftime('%s', 'now') * 1000),
+('sgb-0606-m26-C1222-12-22-D', 'subj-caie-igcse-addmaths', 2026, 'Feb/March', '2', NULL, 'D', 43, 56, strftime('%s', 'now') * 1000),
+('sgb-0606-m26-C1222-12-22-E', 'subj-caie-igcse-addmaths', 2026, 'Feb/March', '2', NULL, 'E', 30, 42, strftime('%s', 'now') * 1000),
+('sgb-0606-m26-C1222-12-22-U', 'subj-caie-igcse-addmaths', 2026, 'Feb/March', '2', NULL, 'U', 0, 29, strftime('%s', 'now') * 1000),
 ('sgb-0610-s22-BX-21-41-51-Astar', 'subj-caie-igcse-bio', 2022, 'May/June', '1', 'extended', 'A*', 156, 200, strftime('%s', 'now') * 1000),
 ('sgb-0610-s22-BX-21-41-51-A', 'subj-caie-igcse-bio', 2022, 'May/June', '1', 'extended', 'A', 130, 155, strftime('%s', 'now') * 1000),
 ('sgb-0610-s22-BX-21-41-51-B', 'subj-caie-igcse-bio', 2022, 'May/June', '1', 'extended', 'B', 104, 129, strftime('%s', 'now') * 1000),
@@ -4562,7 +5247,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0610-s22-BY-22-42-52-B', 'subj-caie-igcse-bio', 2022, 'May/June', '2', 'extended', 'B', 107, 131, strftime('%s', 'now') * 1000),
 ('sgb-0610-s22-BY-22-42-52-C', 'subj-caie-igcse-bio', 2022, 'May/June', '2', 'extended', 'C', 83, 106, strftime('%s', 'now') * 1000),
 ('sgb-0610-s22-BY-22-42-52-D', 'subj-caie-igcse-bio', 2022, 'May/June', '2', 'extended', 'D', 68, 82, strftime('%s', 'now') * 1000),
-('sgb-0610-s22-BY-22-42-52-E', 'subj-caie-igcse-bio', 2022, 'May/June', '2', 'extended', 'E', 54, 67, strftime('%s', 'now') * 1000),
+('sgb-0610-s22-BY-22-42-52-E', 'subj-caie-igcse-bio', 2022, 'May/June', '2', 'extended', 'E', 54, 67, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0610-s22-BY-22-42-52-F', 'subj-caie-igcse-bio', 2022, 'May/June', '2', 'extended', 'F', 40, 53, strftime('%s', 'now') * 1000),
 ('sgb-0610-s22-BY-22-42-52-G', 'subj-caie-igcse-bio', 2022, 'May/June', '2', 'extended', 'G', 26, 39, strftime('%s', 'now') * 1000),
 ('sgb-0610-s22-BY-22-42-52-U', 'subj-caie-igcse-bio', 2022, 'May/June', '2', 'extended', 'U', 0, 25, strftime('%s', 'now') * 1000),
@@ -4576,8 +5262,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0610-s22-BZ-23-43-53-G', 'subj-caie-igcse-bio', 2022, 'May/June', '3', 'extended', 'G', 31, 43, strftime('%s', 'now') * 1000),
 ('sgb-0610-s22-BZ-23-43-53-U', 'subj-caie-igcse-bio', 2022, 'May/June', '3', 'extended', 'U', 0, 30, strftime('%s', 'now') * 1000),
 ('sgb-0610-s22-CX-21-41-61-Astar', 'subj-caie-igcse-bio', 2022, 'May/June', '1', 'extended', 'A*', 157, 200, strftime('%s', 'now') * 1000),
-('sgb-0610-s22-CX-21-41-61-A', 'subj-caie-igcse-bio', 2022, 'May/June', '1', 'extended', 'A', 131, 156, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0610-s22-CX-21-41-61-A', 'subj-caie-igcse-bio', 2022, 'May/June', '1', 'extended', 'A', 131, 156, strftime('%s', 'now') * 1000),
 ('sgb-0610-s22-CX-21-41-61-B', 'subj-caie-igcse-bio', 2022, 'May/June', '1', 'extended', 'B', 105, 130, strftime('%s', 'now') * 1000),
 ('sgb-0610-s22-CX-21-41-61-C', 'subj-caie-igcse-bio', 2022, 'May/June', '1', 'extended', 'C', 79, 104, strftime('%s', 'now') * 1000),
 ('sgb-0610-s22-CX-21-41-61-D', 'subj-caie-igcse-bio', 2022, 'May/June', '1', 'extended', 'D', 66, 78, strftime('%s', 'now') * 1000),
@@ -4623,7 +5308,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0610-s22-FZ-13-33-53-U', 'subj-caie-igcse-bio', 2022, 'May/June', '3', 'core', 'U', 0, 52, strftime('%s', 'now') * 1000),
 ('sgb-0610-s22-GX-11-31-61-C', 'subj-caie-igcse-bio', 2022, 'May/June', '1', 'core', 'C', 108, 200, strftime('%s', 'now') * 1000),
 ('sgb-0610-s22-GX-11-31-61-D', 'subj-caie-igcse-bio', 2022, 'May/June', '1', 'core', 'D', 94, 107, strftime('%s', 'now') * 1000),
-('sgb-0610-s22-GX-11-31-61-E', 'subj-caie-igcse-bio', 2022, 'May/June', '1', 'core', 'E', 81, 93, strftime('%s', 'now') * 1000),
+('sgb-0610-s22-GX-11-31-61-E', 'subj-caie-igcse-bio', 2022, 'May/June', '1', 'core', 'E', 81, 93, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0610-s22-GX-11-31-61-F', 'subj-caie-igcse-bio', 2022, 'May/June', '1', 'core', 'F', 68, 80, strftime('%s', 'now') * 1000),
 ('sgb-0610-s22-GX-11-31-61-G', 'subj-caie-igcse-bio', 2022, 'May/June', '1', 'core', 'G', 55, 67, strftime('%s', 'now') * 1000),
 ('sgb-0610-s22-GX-11-31-61-U', 'subj-caie-igcse-bio', 2022, 'May/June', '1', 'core', 'U', 0, 54, strftime('%s', 'now') * 1000),
@@ -4637,8 +5323,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0610-s22-GZ-13-33-63-D', 'subj-caie-igcse-bio', 2022, 'May/June', '3', 'core', 'D', 95, 109, strftime('%s', 'now') * 1000),
 ('sgb-0610-s22-GZ-13-33-63-E', 'subj-caie-igcse-bio', 2022, 'May/June', '3', 'core', 'E', 81, 94, strftime('%s', 'now') * 1000),
 ('sgb-0610-s22-GZ-13-33-63-F', 'subj-caie-igcse-bio', 2022, 'May/June', '3', 'core', 'F', 67, 80, strftime('%s', 'now') * 1000),
-('sgb-0610-s22-GZ-13-33-63-G', 'subj-caie-igcse-bio', 2022, 'May/June', '3', 'core', 'G', 53, 66, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0610-s22-GZ-13-33-63-G', 'subj-caie-igcse-bio', 2022, 'May/June', '3', 'core', 'G', 53, 66, strftime('%s', 'now') * 1000),
 ('sgb-0610-s22-GZ-13-33-63-U', 'subj-caie-igcse-bio', 2022, 'May/June', '3', 'core', 'U', 0, 52, strftime('%s', 'now') * 1000),
 ('sgb-0610-m22-BY-22-42-52-Astar', 'subj-caie-igcse-bio', 2022, 'Feb/March', '2', 'extended', 'A*', 144, 200, strftime('%s', 'now') * 1000),
 ('sgb-0610-m22-BY-22-42-52-A', 'subj-caie-igcse-bio', 2022, 'Feb/March', '2', 'extended', 'A', 125, 143, strftime('%s', 'now') * 1000),
@@ -4684,7 +5369,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0610-w22-BY-22-42-52-B', 'subj-caie-igcse-bio', 2022, 'Oct/Nov', '2', 'extended', 'B', 114, 133, strftime('%s', 'now') * 1000),
 ('sgb-0610-w22-BY-22-42-52-C', 'subj-caie-igcse-bio', 2022, 'Oct/Nov', '2', 'extended', 'C', 94, 113, strftime('%s', 'now') * 1000),
 ('sgb-0610-w22-BY-22-42-52-D', 'subj-caie-igcse-bio', 2022, 'Oct/Nov', '2', 'extended', 'D', 80, 93, strftime('%s', 'now') * 1000),
-('sgb-0610-w22-BY-22-42-52-E', 'subj-caie-igcse-bio', 2022, 'Oct/Nov', '2', 'extended', 'E', 66, 79, strftime('%s', 'now') * 1000),
+('sgb-0610-w22-BY-22-42-52-E', 'subj-caie-igcse-bio', 2022, 'Oct/Nov', '2', 'extended', 'E', 66, 79, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0610-w22-BY-22-42-52-F', 'subj-caie-igcse-bio', 2022, 'Oct/Nov', '2', 'extended', 'F', 52, 65, strftime('%s', 'now') * 1000),
 ('sgb-0610-w22-BY-22-42-52-G', 'subj-caie-igcse-bio', 2022, 'Oct/Nov', '2', 'extended', 'G', 38, 51, strftime('%s', 'now') * 1000),
 ('sgb-0610-w22-BY-22-42-52-U', 'subj-caie-igcse-bio', 2022, 'Oct/Nov', '2', 'extended', 'U', 0, 37, strftime('%s', 'now') * 1000),
@@ -4698,8 +5384,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0610-w22-BZ-23-43-53-G', 'subj-caie-igcse-bio', 2022, 'Oct/Nov', '3', 'extended', 'G', 33, 45, strftime('%s', 'now') * 1000),
 ('sgb-0610-w22-BZ-23-43-53-U', 'subj-caie-igcse-bio', 2022, 'Oct/Nov', '3', 'extended', 'U', 0, 32, strftime('%s', 'now') * 1000),
 ('sgb-0610-w22-CX-21-41-61-Astar', 'subj-caie-igcse-bio', 2022, 'Oct/Nov', '1', 'extended', 'A*', 151, 200, strftime('%s', 'now') * 1000),
-('sgb-0610-w22-CX-21-41-61-A', 'subj-caie-igcse-bio', 2022, 'Oct/Nov', '1', 'extended', 'A', 130, 150, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0610-w22-CX-21-41-61-A', 'subj-caie-igcse-bio', 2022, 'Oct/Nov', '1', 'extended', 'A', 130, 150, strftime('%s', 'now') * 1000),
 ('sgb-0610-w22-CX-21-41-61-B', 'subj-caie-igcse-bio', 2022, 'Oct/Nov', '1', 'extended', 'B', 109, 129, strftime('%s', 'now') * 1000),
 ('sgb-0610-w22-CX-21-41-61-C', 'subj-caie-igcse-bio', 2022, 'Oct/Nov', '1', 'extended', 'C', 88, 108, strftime('%s', 'now') * 1000),
 ('sgb-0610-w22-CX-21-41-61-D', 'subj-caie-igcse-bio', 2022, 'Oct/Nov', '1', 'extended', 'D', 75, 87, strftime('%s', 'now') * 1000),
@@ -4745,7 +5430,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0610-w22-FZ-13-33-53-U', 'subj-caie-igcse-bio', 2022, 'Oct/Nov', '3', 'core', 'U', 0, 54, strftime('%s', 'now') * 1000),
 ('sgb-0610-w22-GX-11-31-61-C', 'subj-caie-igcse-bio', 2022, 'Oct/Nov', '1', 'core', 'C', 114, 200, strftime('%s', 'now') * 1000),
 ('sgb-0610-w22-GX-11-31-61-D', 'subj-caie-igcse-bio', 2022, 'Oct/Nov', '1', 'core', 'D', 99, 113, strftime('%s', 'now') * 1000),
-('sgb-0610-w22-GX-11-31-61-E', 'subj-caie-igcse-bio', 2022, 'Oct/Nov', '1', 'core', 'E', 85, 98, strftime('%s', 'now') * 1000),
+('sgb-0610-w22-GX-11-31-61-E', 'subj-caie-igcse-bio', 2022, 'Oct/Nov', '1', 'core', 'E', 85, 98, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0610-w22-GX-11-31-61-F', 'subj-caie-igcse-bio', 2022, 'Oct/Nov', '1', 'core', 'F', 71, 84, strftime('%s', 'now') * 1000),
 ('sgb-0610-w22-GX-11-31-61-G', 'subj-caie-igcse-bio', 2022, 'Oct/Nov', '1', 'core', 'G', 57, 70, strftime('%s', 'now') * 1000),
 ('sgb-0610-w22-GX-11-31-61-U', 'subj-caie-igcse-bio', 2022, 'Oct/Nov', '1', 'core', 'U', 0, 56, strftime('%s', 'now') * 1000),
@@ -4759,8 +5445,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0610-w22-GZ-13-33-63-D', 'subj-caie-igcse-bio', 2022, 'Oct/Nov', '3', 'core', 'D', 97, 110, strftime('%s', 'now') * 1000),
 ('sgb-0610-w22-GZ-13-33-63-E', 'subj-caie-igcse-bio', 2022, 'Oct/Nov', '3', 'core', 'E', 83, 96, strftime('%s', 'now') * 1000),
 ('sgb-0610-w22-GZ-13-33-63-F', 'subj-caie-igcse-bio', 2022, 'Oct/Nov', '3', 'core', 'F', 69, 82, strftime('%s', 'now') * 1000),
-('sgb-0610-w22-GZ-13-33-63-G', 'subj-caie-igcse-bio', 2022, 'Oct/Nov', '3', 'core', 'G', 55, 68, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0610-w22-GZ-13-33-63-G', 'subj-caie-igcse-bio', 2022, 'Oct/Nov', '3', 'core', 'G', 55, 68, strftime('%s', 'now') * 1000),
 ('sgb-0610-w22-GZ-13-33-63-U', 'subj-caie-igcse-bio', 2022, 'Oct/Nov', '3', 'core', 'U', 0, 54, strftime('%s', 'now') * 1000),
 ('sgb-0610-s23-BX-21-41-51-Astar', 'subj-caie-igcse-bio', 2023, 'May/June', '1', 'extended', 'A*', 165, 200, strftime('%s', 'now') * 1000),
 ('sgb-0610-s23-BX-21-41-51-A', 'subj-caie-igcse-bio', 2023, 'May/June', '1', 'extended', 'A', 137, 164, strftime('%s', 'now') * 1000),
@@ -4806,7 +5491,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0610-s23-CY-22-42-62-E', 'subj-caie-igcse-bio', 2023, 'May/June', '2', 'extended', 'E', 65, 78, strftime('%s', 'now') * 1000),
 ('sgb-0610-s23-CY-22-42-62-F', 'subj-caie-igcse-bio', 2023, 'May/June', '2', 'extended', 'F', 51, 64, strftime('%s', 'now') * 1000),
 ('sgb-0610-s23-CY-22-42-62-G', 'subj-caie-igcse-bio', 2023, 'May/June', '2', 'extended', 'G', 37, 50, strftime('%s', 'now') * 1000),
-('sgb-0610-s23-CY-22-42-62-U', 'subj-caie-igcse-bio', 2023, 'May/June', '2', 'extended', 'U', 0, 36, strftime('%s', 'now') * 1000),
+('sgb-0610-s23-CY-22-42-62-U', 'subj-caie-igcse-bio', 2023, 'May/June', '2', 'extended', 'U', 0, 36, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0610-s23-CZ-23-43-63-Astar', 'subj-caie-igcse-bio', 2023, 'May/June', '3', 'extended', 'A*', 164, 200, strftime('%s', 'now') * 1000),
 ('sgb-0610-s23-CZ-23-43-63-A', 'subj-caie-igcse-bio', 2023, 'May/June', '3', 'extended', 'A', 137, 163, strftime('%s', 'now') * 1000),
 ('sgb-0610-s23-CZ-23-43-63-B', 'subj-caie-igcse-bio', 2023, 'May/June', '3', 'extended', 'B', 110, 136, strftime('%s', 'now') * 1000),
@@ -4820,8 +5506,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0610-s23-FX-11-31-51-D', 'subj-caie-igcse-bio', 2023, 'May/June', '1', 'core', 'D', 105, 122, strftime('%s', 'now') * 1000),
 ('sgb-0610-s23-FX-11-31-51-E', 'subj-caie-igcse-bio', 2023, 'May/June', '1', 'core', 'E', 87, 104, strftime('%s', 'now') * 1000),
 ('sgb-0610-s23-FX-11-31-51-F', 'subj-caie-igcse-bio', 2023, 'May/June', '1', 'core', 'F', 68, 86, strftime('%s', 'now') * 1000),
-('sgb-0610-s23-FX-11-31-51-G', 'subj-caie-igcse-bio', 2023, 'May/June', '1', 'core', 'G', 49, 67, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0610-s23-FX-11-31-51-G', 'subj-caie-igcse-bio', 2023, 'May/June', '1', 'core', 'G', 49, 67, strftime('%s', 'now') * 1000),
 ('sgb-0610-s23-FX-11-31-51-U', 'subj-caie-igcse-bio', 2023, 'May/June', '1', 'core', 'U', 0, 48, strftime('%s', 'now') * 1000),
 ('sgb-0610-s23-FY-12-32-52-C', 'subj-caie-igcse-bio', 2023, 'May/June', '2', 'core', 'C', 112, 200, strftime('%s', 'now') * 1000),
 ('sgb-0610-s23-FY-12-32-52-D', 'subj-caie-igcse-bio', 2023, 'May/June', '2', 'core', 'D', 99, 111, strftime('%s', 'now') * 1000),
@@ -4867,7 +5552,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0610-m23-CY-22-42-62-U', 'subj-caie-igcse-bio', 2023, 'Feb/March', '2', 'extended', 'U', 0, 40, strftime('%s', 'now') * 1000),
 ('sgb-0610-m23-FY-12-32-52-C', 'subj-caie-igcse-bio', 2023, 'Feb/March', '2', 'core', 'C', 113, 200, strftime('%s', 'now') * 1000),
 ('sgb-0610-m23-FY-12-32-52-D', 'subj-caie-igcse-bio', 2023, 'Feb/March', '2', 'core', 'D', 97, 112, strftime('%s', 'now') * 1000),
-('sgb-0610-m23-FY-12-32-52-E', 'subj-caie-igcse-bio', 2023, 'Feb/March', '2', 'core', 'E', 82, 96, strftime('%s', 'now') * 1000),
+('sgb-0610-m23-FY-12-32-52-E', 'subj-caie-igcse-bio', 2023, 'Feb/March', '2', 'core', 'E', 82, 96, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0610-m23-FY-12-32-52-F', 'subj-caie-igcse-bio', 2023, 'Feb/March', '2', 'core', 'F', 68, 81, strftime('%s', 'now') * 1000),
 ('sgb-0610-m23-FY-12-32-52-G', 'subj-caie-igcse-bio', 2023, 'Feb/March', '2', 'core', 'G', 54, 67, strftime('%s', 'now') * 1000),
 ('sgb-0610-m23-FY-12-32-52-U', 'subj-caie-igcse-bio', 2023, 'Feb/March', '2', 'core', 'U', 0, 53, strftime('%s', 'now') * 1000),
@@ -4881,8 +5567,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0610-w23-BX-21-41-51-A', 'subj-caie-igcse-bio', 2023, 'Oct/Nov', '1', 'extended', 'A', 141, 165, strftime('%s', 'now') * 1000),
 ('sgb-0610-w23-BX-21-41-51-B', 'subj-caie-igcse-bio', 2023, 'Oct/Nov', '1', 'extended', 'B', 116, 140, strftime('%s', 'now') * 1000),
 ('sgb-0610-w23-BX-21-41-51-C', 'subj-caie-igcse-bio', 2023, 'Oct/Nov', '1', 'extended', 'C', 91, 115, strftime('%s', 'now') * 1000),
-('sgb-0610-w23-BX-21-41-51-D', 'subj-caie-igcse-bio', 2023, 'Oct/Nov', '1', 'extended', 'D', 77, 90, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0610-w23-BX-21-41-51-D', 'subj-caie-igcse-bio', 2023, 'Oct/Nov', '1', 'extended', 'D', 77, 90, strftime('%s', 'now') * 1000),
 ('sgb-0610-w23-BX-21-41-51-E', 'subj-caie-igcse-bio', 2023, 'Oct/Nov', '1', 'extended', 'E', 63, 76, strftime('%s', 'now') * 1000),
 ('sgb-0610-w23-BX-21-41-51-F', 'subj-caie-igcse-bio', 2023, 'Oct/Nov', '1', 'extended', 'F', 51, 62, strftime('%s', 'now') * 1000),
 ('sgb-0610-w23-BX-21-41-51-G', 'subj-caie-igcse-bio', 2023, 'Oct/Nov', '1', 'extended', 'G', 39, 50, strftime('%s', 'now') * 1000),
@@ -4928,7 +5613,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0610-w23-CZ-23-43-63-B', 'subj-caie-igcse-bio', 2023, 'Oct/Nov', '3', 'extended', 'B', 105, 124, strftime('%s', 'now') * 1000),
 ('sgb-0610-w23-CZ-23-43-63-C', 'subj-caie-igcse-bio', 2023, 'Oct/Nov', '3', 'extended', 'C', 85, 104, strftime('%s', 'now') * 1000),
 ('sgb-0610-w23-CZ-23-43-63-D', 'subj-caie-igcse-bio', 2023, 'Oct/Nov', '3', 'extended', 'D', 71, 84, strftime('%s', 'now') * 1000),
-('sgb-0610-w23-CZ-23-43-63-E', 'subj-caie-igcse-bio', 2023, 'Oct/Nov', '3', 'extended', 'E', 58, 70, strftime('%s', 'now') * 1000),
+('sgb-0610-w23-CZ-23-43-63-E', 'subj-caie-igcse-bio', 2023, 'Oct/Nov', '3', 'extended', 'E', 58, 70, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0610-w23-CZ-23-43-63-F', 'subj-caie-igcse-bio', 2023, 'Oct/Nov', '3', 'extended', 'F', 45, 57, strftime('%s', 'now') * 1000),
 ('sgb-0610-w23-CZ-23-43-63-G', 'subj-caie-igcse-bio', 2023, 'Oct/Nov', '3', 'extended', 'G', 32, 44, strftime('%s', 'now') * 1000),
 ('sgb-0610-w23-CZ-23-43-63-U', 'subj-caie-igcse-bio', 2023, 'Oct/Nov', '3', 'extended', 'U', 0, 31, strftime('%s', 'now') * 1000),
@@ -4942,8 +5628,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0610-w23-FY-12-32-52-D', 'subj-caie-igcse-bio', 2023, 'Oct/Nov', '2', 'core', 'D', 106, 122, strftime('%s', 'now') * 1000),
 ('sgb-0610-w23-FY-12-32-52-E', 'subj-caie-igcse-bio', 2023, 'Oct/Nov', '2', 'core', 'E', 89, 105, strftime('%s', 'now') * 1000),
 ('sgb-0610-w23-FY-12-32-52-F', 'subj-caie-igcse-bio', 2023, 'Oct/Nov', '2', 'core', 'F', 73, 88, strftime('%s', 'now') * 1000),
-('sgb-0610-w23-FY-12-32-52-G', 'subj-caie-igcse-bio', 2023, 'Oct/Nov', '2', 'core', 'G', 57, 72, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0610-w23-FY-12-32-52-G', 'subj-caie-igcse-bio', 2023, 'Oct/Nov', '2', 'core', 'G', 57, 72, strftime('%s', 'now') * 1000),
 ('sgb-0610-w23-FY-12-32-52-U', 'subj-caie-igcse-bio', 2023, 'Oct/Nov', '2', 'core', 'U', 0, 56, strftime('%s', 'now') * 1000),
 ('sgb-0610-w23-FZ-13-33-53-C', 'subj-caie-igcse-bio', 2023, 'Oct/Nov', '3', 'core', 'C', 113, 200, strftime('%s', 'now') * 1000),
 ('sgb-0610-w23-FZ-13-33-53-D', 'subj-caie-igcse-bio', 2023, 'Oct/Nov', '3', 'core', 'D', 97, 112, strftime('%s', 'now') * 1000),
@@ -4989,7 +5674,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0610-s24-BY-22-42-52-U', 'subj-caie-igcse-bio', 2024, 'May/June', '2', 'extended', 'U', 0, 37, strftime('%s', 'now') * 1000),
 ('sgb-0610-s24-BZ-23-43-53-Astar', 'subj-caie-igcse-bio', 2024, 'May/June', '3', 'extended', 'A*', 157, 200, strftime('%s', 'now') * 1000),
 ('sgb-0610-s24-BZ-23-43-53-A', 'subj-caie-igcse-bio', 2024, 'May/June', '3', 'extended', 'A', 132, 156, strftime('%s', 'now') * 1000),
-('sgb-0610-s24-BZ-23-43-53-B', 'subj-caie-igcse-bio', 2024, 'May/June', '3', 'extended', 'B', 107, 131, strftime('%s', 'now') * 1000),
+('sgb-0610-s24-BZ-23-43-53-B', 'subj-caie-igcse-bio', 2024, 'May/June', '3', 'extended', 'B', 107, 131, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0610-s24-BZ-23-43-53-C', 'subj-caie-igcse-bio', 2024, 'May/June', '3', 'extended', 'C', 83, 106, strftime('%s', 'now') * 1000),
 ('sgb-0610-s24-BZ-23-43-53-D', 'subj-caie-igcse-bio', 2024, 'May/June', '3', 'extended', 'D', 72, 82, strftime('%s', 'now') * 1000),
 ('sgb-0610-s24-BZ-23-43-53-E', 'subj-caie-igcse-bio', 2024, 'May/June', '3', 'extended', 'E', 62, 71, strftime('%s', 'now') * 1000),
@@ -5003,8 +5689,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0610-s24-CX-21-41-61-D', 'subj-caie-igcse-bio', 2024, 'May/June', '1', 'extended', 'D', 69, 79, strftime('%s', 'now') * 1000),
 ('sgb-0610-s24-CX-21-41-61-E', 'subj-caie-igcse-bio', 2024, 'May/June', '1', 'extended', 'E', 59, 68, strftime('%s', 'now') * 1000),
 ('sgb-0610-s24-CX-21-41-61-F', 'subj-caie-igcse-bio', 2024, 'May/June', '1', 'extended', 'F', 49, 58, strftime('%s', 'now') * 1000),
-('sgb-0610-s24-CX-21-41-61-G', 'subj-caie-igcse-bio', 2024, 'May/June', '1', 'extended', 'G', 39, 48, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0610-s24-CX-21-41-61-G', 'subj-caie-igcse-bio', 2024, 'May/June', '1', 'extended', 'G', 39, 48, strftime('%s', 'now') * 1000),
 ('sgb-0610-s24-CX-21-41-61-U', 'subj-caie-igcse-bio', 2024, 'May/June', '1', 'extended', 'U', 0, 38, strftime('%s', 'now') * 1000),
 ('sgb-0610-s24-CY-22-42-62-Astar', 'subj-caie-igcse-bio', 2024, 'May/June', '2', 'extended', 'A*', 172, 200, strftime('%s', 'now') * 1000),
 ('sgb-0610-s24-CY-22-42-62-A', 'subj-caie-igcse-bio', 2024, 'May/June', '2', 'extended', 'A', 145, 171, strftime('%s', 'now') * 1000),
@@ -5050,7 +5735,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0610-s24-GY-12-32-62-U', 'subj-caie-igcse-bio', 2024, 'May/June', '2', 'core', 'U', 0, 62, strftime('%s', 'now') * 1000),
 ('sgb-0610-s24-GZ-13-33-63-C', 'subj-caie-igcse-bio', 2024, 'May/June', '3', 'core', 'C', 113, 200, strftime('%s', 'now') * 1000),
 ('sgb-0610-s24-GZ-13-33-63-D', 'subj-caie-igcse-bio', 2024, 'May/June', '3', 'core', 'D', 100, 112, strftime('%s', 'now') * 1000),
-('sgb-0610-s24-GZ-13-33-63-E', 'subj-caie-igcse-bio', 2024, 'May/June', '3', 'core', 'E', 88, 99, strftime('%s', 'now') * 1000),
+('sgb-0610-s24-GZ-13-33-63-E', 'subj-caie-igcse-bio', 2024, 'May/June', '3', 'core', 'E', 88, 99, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0610-s24-GZ-13-33-63-F', 'subj-caie-igcse-bio', 2024, 'May/June', '3', 'core', 'F', 75, 87, strftime('%s', 'now') * 1000),
 ('sgb-0610-s24-GZ-13-33-63-G', 'subj-caie-igcse-bio', 2024, 'May/June', '3', 'core', 'G', 62, 74, strftime('%s', 'now') * 1000),
 ('sgb-0610-s24-GZ-13-33-63-U', 'subj-caie-igcse-bio', 2024, 'May/June', '3', 'core', 'U', 0, 61, strftime('%s', 'now') * 1000),
@@ -5064,8 +5750,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0610-m24-BY-22-42-52-G', 'subj-caie-igcse-bio', 2024, 'Feb/March', '2', 'extended', 'G', 41, 57, strftime('%s', 'now') * 1000),
 ('sgb-0610-m24-BY-22-42-52-U', 'subj-caie-igcse-bio', 2024, 'Feb/March', '2', 'extended', 'U', 0, 40, strftime('%s', 'now') * 1000),
 ('sgb-0610-m24-CY-22-42-62-Astar', 'subj-caie-igcse-bio', 2024, 'Feb/March', '2', 'extended', 'A*', 163, 200, strftime('%s', 'now') * 1000),
-('sgb-0610-m24-CY-22-42-62-A', 'subj-caie-igcse-bio', 2024, 'Feb/March', '2', 'extended', 'A', 144, 162, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0610-m24-CY-22-42-62-A', 'subj-caie-igcse-bio', 2024, 'Feb/March', '2', 'extended', 'A', 144, 162, strftime('%s', 'now') * 1000),
 ('sgb-0610-m24-CY-22-42-62-B', 'subj-caie-igcse-bio', 2024, 'Feb/March', '2', 'extended', 'B', 125, 143, strftime('%s', 'now') * 1000),
 ('sgb-0610-m24-CY-22-42-62-C', 'subj-caie-igcse-bio', 2024, 'Feb/March', '2', 'extended', 'C', 106, 124, strftime('%s', 'now') * 1000),
 ('sgb-0610-m24-CY-22-42-62-D', 'subj-caie-igcse-bio', 2024, 'Feb/March', '2', 'extended', 'D', 90, 105, strftime('%s', 'now') * 1000),
@@ -5111,7 +5796,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0610-w24-BZ-23-43-53-E', 'subj-caie-igcse-bio', 2024, 'Oct/Nov', '3', 'extended', 'E', 67, 77, strftime('%s', 'now') * 1000),
 ('sgb-0610-w24-BZ-23-43-53-F', 'subj-caie-igcse-bio', 2024, 'Oct/Nov', '3', 'extended', 'F', 55, 66, strftime('%s', 'now') * 1000),
 ('sgb-0610-w24-BZ-23-43-53-G', 'subj-caie-igcse-bio', 2024, 'Oct/Nov', '3', 'extended', 'G', 43, 54, strftime('%s', 'now') * 1000),
-('sgb-0610-w24-BZ-23-43-53-U', 'subj-caie-igcse-bio', 2024, 'Oct/Nov', '3', 'extended', 'U', 0, 42, strftime('%s', 'now') * 1000),
+('sgb-0610-w24-BZ-23-43-53-U', 'subj-caie-igcse-bio', 2024, 'Oct/Nov', '3', 'extended', 'U', 0, 42, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0610-w24-CX-21-41-61-Astar', 'subj-caie-igcse-bio', 2024, 'Oct/Nov', '1', 'extended', 'A*', 164, 200, strftime('%s', 'now') * 1000),
 ('sgb-0610-w24-CX-21-41-61-A', 'subj-caie-igcse-bio', 2024, 'Oct/Nov', '1', 'extended', 'A', 141, 163, strftime('%s', 'now') * 1000),
 ('sgb-0610-w24-CX-21-41-61-B', 'subj-caie-igcse-bio', 2024, 'Oct/Nov', '1', 'extended', 'B', 118, 140, strftime('%s', 'now') * 1000),
@@ -5125,8 +5811,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0610-w24-CY-22-42-62-A', 'subj-caie-igcse-bio', 2024, 'Oct/Nov', '2', 'extended', 'A', 148, 171, strftime('%s', 'now') * 1000),
 ('sgb-0610-w24-CY-22-42-62-B', 'subj-caie-igcse-bio', 2024, 'Oct/Nov', '2', 'extended', 'B', 124, 147, strftime('%s', 'now') * 1000),
 ('sgb-0610-w24-CY-22-42-62-C', 'subj-caie-igcse-bio', 2024, 'Oct/Nov', '2', 'extended', 'C', 101, 123, strftime('%s', 'now') * 1000),
-('sgb-0610-w24-CY-22-42-62-D', 'subj-caie-igcse-bio', 2024, 'Oct/Nov', '2', 'extended', 'D', 87, 100, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0610-w24-CY-22-42-62-D', 'subj-caie-igcse-bio', 2024, 'Oct/Nov', '2', 'extended', 'D', 87, 100, strftime('%s', 'now') * 1000),
 ('sgb-0610-w24-CY-22-42-62-E', 'subj-caie-igcse-bio', 2024, 'Oct/Nov', '2', 'extended', 'E', 73, 86, strftime('%s', 'now') * 1000),
 ('sgb-0610-w24-CY-22-42-62-F', 'subj-caie-igcse-bio', 2024, 'Oct/Nov', '2', 'extended', 'F', 60, 72, strftime('%s', 'now') * 1000),
 ('sgb-0610-w24-CY-22-42-62-G', 'subj-caie-igcse-bio', 2024, 'Oct/Nov', '2', 'extended', 'G', 47, 59, strftime('%s', 'now') * 1000),
@@ -5172,7 +5857,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0610-w24-GY-12-32-62-U', 'subj-caie-igcse-bio', 2024, 'Oct/Nov', '2', 'core', 'U', 0, 51, strftime('%s', 'now') * 1000),
 ('sgb-0610-w24-GZ-13-33-63-C', 'subj-caie-igcse-bio', 2024, 'Oct/Nov', '3', 'core', 'C', 110, 200, strftime('%s', 'now') * 1000),
 ('sgb-0610-w24-GZ-13-33-63-D', 'subj-caie-igcse-bio', 2024, 'Oct/Nov', '3', 'core', 'D', 96, 109, strftime('%s', 'now') * 1000),
-('sgb-0610-w24-GZ-13-33-63-E', 'subj-caie-igcse-bio', 2024, 'Oct/Nov', '3', 'core', 'E', 83, 95, strftime('%s', 'now') * 1000),
+('sgb-0610-w24-GZ-13-33-63-E', 'subj-caie-igcse-bio', 2024, 'Oct/Nov', '3', 'core', 'E', 83, 95, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0610-w24-GZ-13-33-63-F', 'subj-caie-igcse-bio', 2024, 'Oct/Nov', '3', 'core', 'F', 68, 82, strftime('%s', 'now') * 1000),
 ('sgb-0610-w24-GZ-13-33-63-G', 'subj-caie-igcse-bio', 2024, 'Oct/Nov', '3', 'core', 'G', 53, 67, strftime('%s', 'now') * 1000),
 ('sgb-0610-w24-GZ-13-33-63-U', 'subj-caie-igcse-bio', 2024, 'Oct/Nov', '3', 'core', 'U', 0, 52, strftime('%s', 'now') * 1000),
@@ -5186,8 +5872,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0610-s25-BX-21-41-51-G', 'subj-caie-igcse-bio', 2025, 'May/June', '1', 'extended', 'G', 38, 46, strftime('%s', 'now') * 1000),
 ('sgb-0610-s25-BX-21-41-51-U', 'subj-caie-igcse-bio', 2025, 'May/June', '1', 'extended', 'U', 0, 37, strftime('%s', 'now') * 1000),
 ('sgb-0610-s25-BY-22-42-52-Astar', 'subj-caie-igcse-bio', 2025, 'May/June', '2', 'extended', 'A*', 173, 200, strftime('%s', 'now') * 1000),
-('sgb-0610-s25-BY-22-42-52-A', 'subj-caie-igcse-bio', 2025, 'May/June', '2', 'extended', 'A', 148, 172, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0610-s25-BY-22-42-52-A', 'subj-caie-igcse-bio', 2025, 'May/June', '2', 'extended', 'A', 148, 172, strftime('%s', 'now') * 1000),
 ('sgb-0610-s25-BY-22-42-52-B', 'subj-caie-igcse-bio', 2025, 'May/June', '2', 'extended', 'B', 123, 147, strftime('%s', 'now') * 1000),
 ('sgb-0610-s25-BY-22-42-52-C', 'subj-caie-igcse-bio', 2025, 'May/June', '2', 'extended', 'C', 99, 122, strftime('%s', 'now') * 1000),
 ('sgb-0610-s25-BY-22-42-52-D', 'subj-caie-igcse-bio', 2025, 'May/June', '2', 'extended', 'D', 85, 98, strftime('%s', 'now') * 1000),
@@ -5233,7 +5918,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0610-s25-CZ-23-43-63-U', 'subj-caie-igcse-bio', 2025, 'May/June', '3', 'extended', 'U', 0, 38, strftime('%s', 'now') * 1000),
 ('sgb-0610-s25-FX-11-31-51-C', 'subj-caie-igcse-bio', 2025, 'May/June', '1', 'core', 'C', 117, 200, strftime('%s', 'now') * 1000),
 ('sgb-0610-s25-FX-11-31-51-D', 'subj-caie-igcse-bio', 2025, 'May/June', '1', 'core', 'D', 101, 116, strftime('%s', 'now') * 1000),
-('sgb-0610-s25-FX-11-31-51-E', 'subj-caie-igcse-bio', 2025, 'May/June', '1', 'core', 'E', 85, 100, strftime('%s', 'now') * 1000),
+('sgb-0610-s25-FX-11-31-51-E', 'subj-caie-igcse-bio', 2025, 'May/June', '1', 'core', 'E', 85, 100, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0610-s25-FX-11-31-51-F', 'subj-caie-igcse-bio', 2025, 'May/June', '1', 'core', 'F', 69, 84, strftime('%s', 'now') * 1000),
 ('sgb-0610-s25-FX-11-31-51-G', 'subj-caie-igcse-bio', 2025, 'May/June', '1', 'core', 'G', 53, 68, strftime('%s', 'now') * 1000),
 ('sgb-0610-s25-FX-11-31-51-U', 'subj-caie-igcse-bio', 2025, 'May/June', '1', 'core', 'U', 0, 52, strftime('%s', 'now') * 1000),
@@ -5247,8 +5933,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0610-s25-FZ-13-33-53-D', 'subj-caie-igcse-bio', 2025, 'May/June', '3', 'core', 'D', 99, 111, strftime('%s', 'now') * 1000),
 ('sgb-0610-s25-FZ-13-33-53-E', 'subj-caie-igcse-bio', 2025, 'May/June', '3', 'core', 'E', 87, 98, strftime('%s', 'now') * 1000),
 ('sgb-0610-s25-FZ-13-33-53-F', 'subj-caie-igcse-bio', 2025, 'May/June', '3', 'core', 'F', 75, 86, strftime('%s', 'now') * 1000),
-('sgb-0610-s25-FZ-13-33-53-G', 'subj-caie-igcse-bio', 2025, 'May/June', '3', 'core', 'G', 63, 74, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0610-s25-FZ-13-33-53-G', 'subj-caie-igcse-bio', 2025, 'May/June', '3', 'core', 'G', 63, 74, strftime('%s', 'now') * 1000),
 ('sgb-0610-s25-FZ-13-33-53-U', 'subj-caie-igcse-bio', 2025, 'May/June', '3', 'core', 'U', 0, 62, strftime('%s', 'now') * 1000),
 ('sgb-0610-s25-GX-11-31-61-C', 'subj-caie-igcse-bio', 2025, 'May/June', '1', 'core', 'C', 118, 200, strftime('%s', 'now') * 1000),
 ('sgb-0610-s25-GX-11-31-61-D', 'subj-caie-igcse-bio', 2025, 'May/June', '1', 'core', 'D', 101, 117, strftime('%s', 'now') * 1000),
@@ -5294,7 +5979,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0610-m25-FY-12-32-52-U', 'subj-caie-igcse-bio', 2025, 'Feb/March', '2', 'core', 'U', 0, 63, strftime('%s', 'now') * 1000),
 ('sgb-0610-m25-GY-12-32-62-C', 'subj-caie-igcse-bio', 2025, 'Feb/March', '2', 'core', 'C', 120, 200, strftime('%s', 'now') * 1000),
 ('sgb-0610-m25-GY-12-32-62-D', 'subj-caie-igcse-bio', 2025, 'Feb/March', '2', 'core', 'D', 105, 119, strftime('%s', 'now') * 1000),
-('sgb-0610-m25-GY-12-32-62-E', 'subj-caie-igcse-bio', 2025, 'Feb/March', '2', 'core', 'E', 90, 104, strftime('%s', 'now') * 1000),
+('sgb-0610-m25-GY-12-32-62-E', 'subj-caie-igcse-bio', 2025, 'Feb/March', '2', 'core', 'E', 90, 104, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0610-m25-GY-12-32-62-F', 'subj-caie-igcse-bio', 2025, 'Feb/March', '2', 'core', 'F', 77, 89, strftime('%s', 'now') * 1000),
 ('sgb-0610-m25-GY-12-32-62-G', 'subj-caie-igcse-bio', 2025, 'Feb/March', '2', 'core', 'G', 64, 76, strftime('%s', 'now') * 1000),
 ('sgb-0610-m25-GY-12-32-62-U', 'subj-caie-igcse-bio', 2025, 'Feb/March', '2', 'core', 'U', 0, 63, strftime('%s', 'now') * 1000),
@@ -5308,8 +5994,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0610-w25-BX-21-41-51-G', 'subj-caie-igcse-bio', 2025, 'Oct/Nov', '1', 'extended', 'G', 45, 56, strftime('%s', 'now') * 1000),
 ('sgb-0610-w25-BX-21-41-51-U', 'subj-caie-igcse-bio', 2025, 'Oct/Nov', '1', 'extended', 'U', 0, 44, strftime('%s', 'now') * 1000),
 ('sgb-0610-w25-BY-22-42-52-Astar', 'subj-caie-igcse-bio', 2025, 'Oct/Nov', '2', 'extended', 'A*', 163, 200, strftime('%s', 'now') * 1000),
-('sgb-0610-w25-BY-22-42-52-A', 'subj-caie-igcse-bio', 2025, 'Oct/Nov', '2', 'extended', 'A', 138, 162, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0610-w25-BY-22-42-52-A', 'subj-caie-igcse-bio', 2025, 'Oct/Nov', '2', 'extended', 'A', 138, 162, strftime('%s', 'now') * 1000),
 ('sgb-0610-w25-BY-22-42-52-B', 'subj-caie-igcse-bio', 2025, 'Oct/Nov', '2', 'extended', 'B', 113, 137, strftime('%s', 'now') * 1000),
 ('sgb-0610-w25-BY-22-42-52-C', 'subj-caie-igcse-bio', 2025, 'Oct/Nov', '2', 'extended', 'C', 89, 112, strftime('%s', 'now') * 1000),
 ('sgb-0610-w25-BY-22-42-52-D', 'subj-caie-igcse-bio', 2025, 'Oct/Nov', '2', 'extended', 'D', 76, 88, strftime('%s', 'now') * 1000),
@@ -5355,7 +6040,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0610-w25-CZ-23-43-63-U', 'subj-caie-igcse-bio', 2025, 'Oct/Nov', '3', 'extended', 'U', 0, 43, strftime('%s', 'now') * 1000),
 ('sgb-0610-w25-FX-11-31-51-C', 'subj-caie-igcse-bio', 2025, 'Oct/Nov', '1', 'core', 'C', 111, 200, strftime('%s', 'now') * 1000),
 ('sgb-0610-w25-FX-11-31-51-D', 'subj-caie-igcse-bio', 2025, 'Oct/Nov', '1', 'core', 'D', 96, 110, strftime('%s', 'now') * 1000),
-('sgb-0610-w25-FX-11-31-51-E', 'subj-caie-igcse-bio', 2025, 'Oct/Nov', '1', 'core', 'E', 81, 95, strftime('%s', 'now') * 1000),
+('sgb-0610-w25-FX-11-31-51-E', 'subj-caie-igcse-bio', 2025, 'Oct/Nov', '1', 'core', 'E', 81, 95, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0610-w25-FX-11-31-51-F', 'subj-caie-igcse-bio', 2025, 'Oct/Nov', '1', 'core', 'F', 65, 80, strftime('%s', 'now') * 1000),
 ('sgb-0610-w25-FX-11-31-51-G', 'subj-caie-igcse-bio', 2025, 'Oct/Nov', '1', 'core', 'G', 49, 64, strftime('%s', 'now') * 1000),
 ('sgb-0610-w25-FX-11-31-51-U', 'subj-caie-igcse-bio', 2025, 'Oct/Nov', '1', 'core', 'U', 0, 48, strftime('%s', 'now') * 1000),
@@ -5369,8 +6055,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0610-w25-FZ-13-33-53-D', 'subj-caie-igcse-bio', 2025, 'Oct/Nov', '3', 'core', 'D', 98, 113, strftime('%s', 'now') * 1000),
 ('sgb-0610-w25-FZ-13-33-53-E', 'subj-caie-igcse-bio', 2025, 'Oct/Nov', '3', 'core', 'E', 83, 97, strftime('%s', 'now') * 1000),
 ('sgb-0610-w25-FZ-13-33-53-F', 'subj-caie-igcse-bio', 2025, 'Oct/Nov', '3', 'core', 'F', 68, 82, strftime('%s', 'now') * 1000),
-('sgb-0610-w25-FZ-13-33-53-G', 'subj-caie-igcse-bio', 2025, 'Oct/Nov', '3', 'core', 'G', 53, 67, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0610-w25-FZ-13-33-53-G', 'subj-caie-igcse-bio', 2025, 'Oct/Nov', '3', 'core', 'G', 53, 67, strftime('%s', 'now') * 1000),
 ('sgb-0610-w25-FZ-13-33-53-U', 'subj-caie-igcse-bio', 2025, 'Oct/Nov', '3', 'core', 'U', 0, 52, strftime('%s', 'now') * 1000),
 ('sgb-0610-w25-GX-11-31-61-C', 'subj-caie-igcse-bio', 2025, 'Oct/Nov', '1', 'core', 'C', 112, 200, strftime('%s', 'now') * 1000),
 ('sgb-0610-w25-GX-11-31-61-D', 'subj-caie-igcse-bio', 2025, 'Oct/Nov', '1', 'core', 'D', 97, 111, strftime('%s', 'now') * 1000),
@@ -5390,6 +6075,159 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0610-w25-GZ-13-33-63-F', 'subj-caie-igcse-bio', 2025, 'Oct/Nov', '3', 'core', 'F', 68, 82, strftime('%s', 'now') * 1000),
 ('sgb-0610-w25-GZ-13-33-63-G', 'subj-caie-igcse-bio', 2025, 'Oct/Nov', '3', 'core', 'G', 53, 67, strftime('%s', 'now') * 1000),
 ('sgb-0610-w25-GZ-13-33-63-U', 'subj-caie-igcse-bio', 2025, 'Oct/Nov', '3', 'core', 'U', 0, 52, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C113151-11-31-51-C', 'subj-caie-igcse-bio', 2026, 'May/June', '1', 'core', 'C', 111, 200, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C113151-11-31-51-D', 'subj-caie-igcse-bio', 2026, 'May/June', '1', 'core', 'D', 95, 110, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C113151-11-31-51-E', 'subj-caie-igcse-bio', 2026, 'May/June', '1', 'core', 'E', 80, 94, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C113151-11-31-51-F', 'subj-caie-igcse-bio', 2026, 'May/June', '1', 'core', 'F', 65, 79, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C113151-11-31-51-G', 'subj-caie-igcse-bio', 2026, 'May/June', '1', 'core', 'G', 50, 64, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C113151-11-31-51-U', 'subj-caie-igcse-bio', 2026, 'May/June', '1', 'core', 'U', 0, 49, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C113161-11-31-61-C', 'subj-caie-igcse-bio', 2026, 'May/June', '1', 'core', 'C', 112, 200, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C113161-11-31-61-D', 'subj-caie-igcse-bio', 2026, 'May/June', '1', 'core', 'D', 96, 111, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C113161-11-31-61-E', 'subj-caie-igcse-bio', 2026, 'May/June', '1', 'core', 'E', 81, 95, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C113161-11-31-61-F', 'subj-caie-igcse-bio', 2026, 'May/June', '1', 'core', 'F', 67, 80, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C113161-11-31-61-G', 'subj-caie-igcse-bio', 2026, 'May/June', '1', 'core', 'G', 53, 66, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C113161-11-31-61-U', 'subj-caie-igcse-bio', 2026, 'May/June', '1', 'core', 'U', 0, 52, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C123252-12-32-52-C', 'subj-caie-igcse-bio', 2026, 'May/June', '2', 'core', 'C', 115, 200, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C123252-12-32-52-D', 'subj-caie-igcse-bio', 2026, 'May/June', '2', 'core', 'D', 101, 114, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C123252-12-32-52-E', 'subj-caie-igcse-bio', 2026, 'May/June', '2', 'core', 'E', 88, 100, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C123252-12-32-52-F', 'subj-caie-igcse-bio', 2026, 'May/June', '2', 'core', 'F', 75, 87, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C123252-12-32-52-G', 'subj-caie-igcse-bio', 2026, 'May/June', '2', 'core', 'G', 62, 74, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C123252-12-32-52-U', 'subj-caie-igcse-bio', 2026, 'May/June', '2', 'core', 'U', 0, 61, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C123262-12-32-62-C', 'subj-caie-igcse-bio', 2026, 'May/June', '2', 'core', 'C', 116, 200, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C123262-12-32-62-D', 'subj-caie-igcse-bio', 2026, 'May/June', '2', 'core', 'D', 102, 115, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C123262-12-32-62-E', 'subj-caie-igcse-bio', 2026, 'May/June', '2', 'core', 'E', 88, 101, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C123262-12-32-62-F', 'subj-caie-igcse-bio', 2026, 'May/June', '2', 'core', 'F', 75, 87, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C123262-12-32-62-G', 'subj-caie-igcse-bio', 2026, 'May/June', '2', 'core', 'G', 62, 74, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C123262-12-32-62-U', 'subj-caie-igcse-bio', 2026, 'May/June', '2', 'core', 'U', 0, 61, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C133353-13-33-53-C', 'subj-caie-igcse-bio', 2026, 'May/June', '3', 'core', 'C', 104, 200, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C133353-13-33-53-D', 'subj-caie-igcse-bio', 2026, 'May/June', '3', 'core', 'D', 91, 103, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C133353-13-33-53-E', 'subj-caie-igcse-bio', 2026, 'May/June', '3', 'core', 'E', 78, 90, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0610-s26-C133353-13-33-53-F', 'subj-caie-igcse-bio', 2026, 'May/June', '3', 'core', 'F', 63, 77, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C133353-13-33-53-G', 'subj-caie-igcse-bio', 2026, 'May/June', '3', 'core', 'G', 48, 62, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C133353-13-33-53-U', 'subj-caie-igcse-bio', 2026, 'May/June', '3', 'core', 'U', 0, 47, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C133363-13-33-63-C', 'subj-caie-igcse-bio', 2026, 'May/June', '3', 'core', 'C', 105, 200, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C133363-13-33-63-D', 'subj-caie-igcse-bio', 2026, 'May/June', '3', 'core', 'D', 91, 104, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C133363-13-33-63-E', 'subj-caie-igcse-bio', 2026, 'May/June', '3', 'core', 'E', 77, 90, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C133363-13-33-63-F', 'subj-caie-igcse-bio', 2026, 'May/June', '3', 'core', 'F', 62, 76, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C133363-13-33-63-G', 'subj-caie-igcse-bio', 2026, 'May/June', '3', 'core', 'G', 47, 61, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C133363-13-33-63-U', 'subj-caie-igcse-bio', 2026, 'May/June', '3', 'core', 'U', 0, 46, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C173151-17-31-51-C', 'subj-caie-igcse-bio', 2026, 'May/June', '7', 'core', 'C', 111, 200, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C173151-17-31-51-D', 'subj-caie-igcse-bio', 2026, 'May/June', '7', 'core', 'D', 95, 110, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C173151-17-31-51-E', 'subj-caie-igcse-bio', 2026, 'May/June', '7', 'core', 'E', 80, 94, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C173151-17-31-51-F', 'subj-caie-igcse-bio', 2026, 'May/June', '7', 'core', 'F', 65, 79, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C173151-17-31-51-G', 'subj-caie-igcse-bio', 2026, 'May/June', '7', 'core', 'G', 50, 64, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C173151-17-31-51-U', 'subj-caie-igcse-bio', 2026, 'May/June', '7', 'core', 'U', 0, 49, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C173161-17-31-61-C', 'subj-caie-igcse-bio', 2026, 'May/June', '7', 'core', 'C', 112, 200, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C173161-17-31-61-D', 'subj-caie-igcse-bio', 2026, 'May/June', '7', 'core', 'D', 96, 111, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C173161-17-31-61-E', 'subj-caie-igcse-bio', 2026, 'May/June', '7', 'core', 'E', 81, 95, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C173161-17-31-61-F', 'subj-caie-igcse-bio', 2026, 'May/June', '7', 'core', 'F', 67, 80, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C173161-17-31-61-G', 'subj-caie-igcse-bio', 2026, 'May/June', '7', 'core', 'G', 53, 66, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C173161-17-31-61-U', 'subj-caie-igcse-bio', 2026, 'May/June', '7', 'core', 'U', 0, 52, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C214151-21-41-51-Astar', 'subj-caie-igcse-bio', 2026, 'May/June', '1', 'extended', 'A*', 165, 200, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C214151-21-41-51-A', 'subj-caie-igcse-bio', 2026, 'May/June', '1', 'extended', 'A', 137, 164, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C214151-21-41-51-B', 'subj-caie-igcse-bio', 2026, 'May/June', '1', 'extended', 'B', 109, 136, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C214151-21-41-51-C', 'subj-caie-igcse-bio', 2026, 'May/June', '1', 'extended', 'C', 82, 108, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C214151-21-41-51-D', 'subj-caie-igcse-bio', 2026, 'May/June', '1', 'extended', 'D', 72, 81, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C214151-21-41-51-E', 'subj-caie-igcse-bio', 2026, 'May/June', '1', 'extended', 'E', 63, 71, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C214151-21-41-51-F', 'subj-caie-igcse-bio', 2026, 'May/June', '1', 'extended', 'F', 53, 62, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C214151-21-41-51-G', 'subj-caie-igcse-bio', 2026, 'May/June', '1', 'extended', 'G', 43, 52, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C214151-21-41-51-U', 'subj-caie-igcse-bio', 2026, 'May/June', '1', 'extended', 'U', 0, 42, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C214161-21-41-61-Astar', 'subj-caie-igcse-bio', 2026, 'May/June', '1', 'extended', 'A*', 166, 200, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C214161-21-41-61-A', 'subj-caie-igcse-bio', 2026, 'May/June', '1', 'extended', 'A', 138, 165, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C214161-21-41-61-B', 'subj-caie-igcse-bio', 2026, 'May/June', '1', 'extended', 'B', 110, 137, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C214161-21-41-61-C', 'subj-caie-igcse-bio', 2026, 'May/June', '1', 'extended', 'C', 83, 109, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C214161-21-41-61-D', 'subj-caie-igcse-bio', 2026, 'May/June', '1', 'extended', 'D', 73, 82, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C214161-21-41-61-E', 'subj-caie-igcse-bio', 2026, 'May/June', '1', 'extended', 'E', 64, 72, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C214161-21-41-61-F', 'subj-caie-igcse-bio', 2026, 'May/June', '1', 'extended', 'F', 55, 63, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C214161-21-41-61-G', 'subj-caie-igcse-bio', 2026, 'May/June', '1', 'extended', 'G', 46, 54, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C214161-21-41-61-U', 'subj-caie-igcse-bio', 2026, 'May/June', '1', 'extended', 'U', 0, 45, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C224252-22-42-52-Astar', 'subj-caie-igcse-bio', 2026, 'May/June', '2', 'extended', 'A*', 167, 200, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C224252-22-42-52-A', 'subj-caie-igcse-bio', 2026, 'May/June', '2', 'extended', 'A', 141, 166, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C224252-22-42-52-B', 'subj-caie-igcse-bio', 2026, 'May/June', '2', 'extended', 'B', 115, 140, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C224252-22-42-52-C', 'subj-caie-igcse-bio', 2026, 'May/June', '2', 'extended', 'C', 89, 114, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C224252-22-42-52-D', 'subj-caie-igcse-bio', 2026, 'May/June', '2', 'extended', 'D', 76, 88, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C224252-22-42-52-E', 'subj-caie-igcse-bio', 2026, 'May/June', '2', 'extended', 'E', 64, 75, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C224252-22-42-52-F', 'subj-caie-igcse-bio', 2026, 'May/June', '2', 'extended', 'F', 53, 63, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C224252-22-42-52-G', 'subj-caie-igcse-bio', 2026, 'May/June', '2', 'extended', 'G', 42, 52, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C224252-22-42-52-U', 'subj-caie-igcse-bio', 2026, 'May/June', '2', 'extended', 'U', 0, 41, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C224262-22-42-62-Astar', 'subj-caie-igcse-bio', 2026, 'May/June', '2', 'extended', 'A*', 167, 200, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C224262-22-42-62-A', 'subj-caie-igcse-bio', 2026, 'May/June', '2', 'extended', 'A', 141, 166, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C224262-22-42-62-B', 'subj-caie-igcse-bio', 2026, 'May/June', '2', 'extended', 'B', 115, 140, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C224262-22-42-62-C', 'subj-caie-igcse-bio', 2026, 'May/June', '2', 'extended', 'C', 90, 114, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C224262-22-42-62-D', 'subj-caie-igcse-bio', 2026, 'May/June', '2', 'extended', 'D', 77, 89, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C224262-22-42-62-E', 'subj-caie-igcse-bio', 2026, 'May/June', '2', 'extended', 'E', 64, 76, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C224262-22-42-62-F', 'subj-caie-igcse-bio', 2026, 'May/June', '2', 'extended', 'F', 53, 63, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C224262-22-42-62-G', 'subj-caie-igcse-bio', 2026, 'May/June', '2', 'extended', 'G', 42, 52, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C224262-22-42-62-U', 'subj-caie-igcse-bio', 2026, 'May/June', '2', 'extended', 'U', 0, 41, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C234353-23-43-53-Astar', 'subj-caie-igcse-bio', 2026, 'May/June', '3', 'extended', 'A*', 171, 200, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C234353-23-43-53-A', 'subj-caie-igcse-bio', 2026, 'May/June', '3', 'extended', 'A', 146, 170, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C234353-23-43-53-B', 'subj-caie-igcse-bio', 2026, 'May/June', '3', 'extended', 'B', 121, 145, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0610-s26-C234353-23-43-53-C', 'subj-caie-igcse-bio', 2026, 'May/June', '3', 'extended', 'C', 96, 120, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C234353-23-43-53-D', 'subj-caie-igcse-bio', 2026, 'May/June', '3', 'extended', 'D', 85, 95, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C234353-23-43-53-E', 'subj-caie-igcse-bio', 2026, 'May/June', '3', 'extended', 'E', 74, 84, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C234353-23-43-53-F', 'subj-caie-igcse-bio', 2026, 'May/June', '3', 'extended', 'F', 63, 73, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C234353-23-43-53-G', 'subj-caie-igcse-bio', 2026, 'May/June', '3', 'extended', 'G', 52, 62, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C234353-23-43-53-U', 'subj-caie-igcse-bio', 2026, 'May/June', '3', 'extended', 'U', 0, 51, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C234363-23-43-63-Astar', 'subj-caie-igcse-bio', 2026, 'May/June', '3', 'extended', 'A*', 169, 200, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C234363-23-43-63-A', 'subj-caie-igcse-bio', 2026, 'May/June', '3', 'extended', 'A', 145, 168, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C234363-23-43-63-B', 'subj-caie-igcse-bio', 2026, 'May/June', '3', 'extended', 'B', 121, 144, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C234363-23-43-63-C', 'subj-caie-igcse-bio', 2026, 'May/June', '3', 'extended', 'C', 97, 120, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C234363-23-43-63-D', 'subj-caie-igcse-bio', 2026, 'May/June', '3', 'extended', 'D', 85, 96, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C234363-23-43-63-E', 'subj-caie-igcse-bio', 2026, 'May/June', '3', 'extended', 'E', 73, 84, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C234363-23-43-63-F', 'subj-caie-igcse-bio', 2026, 'May/June', '3', 'extended', 'F', 62, 72, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C234363-23-43-63-G', 'subj-caie-igcse-bio', 2026, 'May/June', '3', 'extended', 'G', 51, 61, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C234363-23-43-63-U', 'subj-caie-igcse-bio', 2026, 'May/June', '3', 'extended', 'U', 0, 50, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C274151-27-41-51-Astar', 'subj-caie-igcse-bio', 2026, 'May/June', '7', 'extended', 'A*', 165, 200, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C274151-27-41-51-A', 'subj-caie-igcse-bio', 2026, 'May/June', '7', 'extended', 'A', 137, 164, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C274151-27-41-51-B', 'subj-caie-igcse-bio', 2026, 'May/June', '7', 'extended', 'B', 109, 136, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C274151-27-41-51-C', 'subj-caie-igcse-bio', 2026, 'May/June', '7', 'extended', 'C', 82, 108, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C274151-27-41-51-D', 'subj-caie-igcse-bio', 2026, 'May/June', '7', 'extended', 'D', 72, 81, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C274151-27-41-51-E', 'subj-caie-igcse-bio', 2026, 'May/June', '7', 'extended', 'E', 63, 71, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C274151-27-41-51-F', 'subj-caie-igcse-bio', 2026, 'May/June', '7', 'extended', 'F', 53, 62, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C274151-27-41-51-G', 'subj-caie-igcse-bio', 2026, 'May/June', '7', 'extended', 'G', 43, 52, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C274151-27-41-51-U', 'subj-caie-igcse-bio', 2026, 'May/June', '7', 'extended', 'U', 0, 42, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C274161-27-41-61-Astar', 'subj-caie-igcse-bio', 2026, 'May/June', '7', 'extended', 'A*', 166, 200, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C274161-27-41-61-A', 'subj-caie-igcse-bio', 2026, 'May/June', '7', 'extended', 'A', 138, 165, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C274161-27-41-61-B', 'subj-caie-igcse-bio', 2026, 'May/June', '7', 'extended', 'B', 110, 137, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C274161-27-41-61-C', 'subj-caie-igcse-bio', 2026, 'May/June', '7', 'extended', 'C', 83, 109, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C274161-27-41-61-D', 'subj-caie-igcse-bio', 2026, 'May/June', '7', 'extended', 'D', 73, 82, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C274161-27-41-61-E', 'subj-caie-igcse-bio', 2026, 'May/June', '7', 'extended', 'E', 64, 72, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C274161-27-41-61-F', 'subj-caie-igcse-bio', 2026, 'May/June', '7', 'extended', 'F', 55, 63, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C274161-27-41-61-G', 'subj-caie-igcse-bio', 2026, 'May/June', '7', 'extended', 'G', 46, 54, strftime('%s', 'now') * 1000),
+('sgb-0610-s26-C274161-27-41-61-U', 'subj-caie-igcse-bio', 2026, 'May/June', '7', 'extended', 'U', 0, 45, strftime('%s', 'now') * 1000),
+('sgb-0610-m26-C123252-12-32-52-C', 'subj-caie-igcse-bio', 2026, 'Feb/March', '2', 'core', 'C', 122, 200, strftime('%s', 'now') * 1000),
+('sgb-0610-m26-C123252-12-32-52-D', 'subj-caie-igcse-bio', 2026, 'Feb/March', '2', 'core', 'D', 109, 121, strftime('%s', 'now') * 1000),
+('sgb-0610-m26-C123252-12-32-52-E', 'subj-caie-igcse-bio', 2026, 'Feb/March', '2', 'core', 'E', 97, 108, strftime('%s', 'now') * 1000),
+('sgb-0610-m26-C123252-12-32-52-F', 'subj-caie-igcse-bio', 2026, 'Feb/March', '2', 'core', 'F', 83, 96, strftime('%s', 'now') * 1000),
+('sgb-0610-m26-C123252-12-32-52-G', 'subj-caie-igcse-bio', 2026, 'Feb/March', '2', 'core', 'G', 69, 82, strftime('%s', 'now') * 1000),
+('sgb-0610-m26-C123252-12-32-52-U', 'subj-caie-igcse-bio', 2026, 'Feb/March', '2', 'core', 'U', 0, 68, strftime('%s', 'now') * 1000),
+('sgb-0610-m26-C123262-12-32-62-C', 'subj-caie-igcse-bio', 2026, 'Feb/March', '2', 'core', 'C', 122, 200, strftime('%s', 'now') * 1000),
+('sgb-0610-m26-C123262-12-32-62-D', 'subj-caie-igcse-bio', 2026, 'Feb/March', '2', 'core', 'D', 109, 121, strftime('%s', 'now') * 1000),
+('sgb-0610-m26-C123262-12-32-62-E', 'subj-caie-igcse-bio', 2026, 'Feb/March', '2', 'core', 'E', 97, 108, strftime('%s', 'now') * 1000),
+('sgb-0610-m26-C123262-12-32-62-F', 'subj-caie-igcse-bio', 2026, 'Feb/March', '2', 'core', 'F', 83, 96, strftime('%s', 'now') * 1000),
+('sgb-0610-m26-C123262-12-32-62-G', 'subj-caie-igcse-bio', 2026, 'Feb/March', '2', 'core', 'G', 69, 82, strftime('%s', 'now') * 1000),
+('sgb-0610-m26-C123262-12-32-62-U', 'subj-caie-igcse-bio', 2026, 'Feb/March', '2', 'core', 'U', 0, 68, strftime('%s', 'now') * 1000),
+('sgb-0610-m26-C224252-22-42-52-Astar', 'subj-caie-igcse-bio', 2026, 'Feb/March', '2', 'extended', 'A*', 171, 200, strftime('%s', 'now') * 1000),
+('sgb-0610-m26-C224252-22-42-52-A', 'subj-caie-igcse-bio', 2026, 'Feb/March', '2', 'extended', 'A', 150, 170, strftime('%s', 'now') * 1000),
+('sgb-0610-m26-C224252-22-42-52-B', 'subj-caie-igcse-bio', 2026, 'Feb/March', '2', 'extended', 'B', 129, 149, strftime('%s', 'now') * 1000),
+('sgb-0610-m26-C224252-22-42-52-C', 'subj-caie-igcse-bio', 2026, 'Feb/March', '2', 'extended', 'C', 109, 128, strftime('%s', 'now') * 1000),
+('sgb-0610-m26-C224252-22-42-52-D', 'subj-caie-igcse-bio', 2026, 'Feb/March', '2', 'extended', 'D', 94, 108, strftime('%s', 'now') * 1000),
+('sgb-0610-m26-C224252-22-42-52-E', 'subj-caie-igcse-bio', 2026, 'Feb/March', '2', 'extended', 'E', 80, 93, strftime('%s', 'now') * 1000),
+('sgb-0610-m26-C224252-22-42-52-F', 'subj-caie-igcse-bio', 2026, 'Feb/March', '2', 'extended', 'F', 65, 79, strftime('%s', 'now') * 1000),
+('sgb-0610-m26-C224252-22-42-52-G', 'subj-caie-igcse-bio', 2026, 'Feb/March', '2', 'extended', 'G', 50, 64, strftime('%s', 'now') * 1000),
+('sgb-0610-m26-C224252-22-42-52-U', 'subj-caie-igcse-bio', 2026, 'Feb/March', '2', 'extended', 'U', 0, 49, strftime('%s', 'now') * 1000),
+('sgb-0610-m26-C224262-22-42-62-Astar', 'subj-caie-igcse-bio', 2026, 'Feb/March', '2', 'extended', 'A*', 171, 200, strftime('%s', 'now') * 1000),
+('sgb-0610-m26-C224262-22-42-62-A', 'subj-caie-igcse-bio', 2026, 'Feb/March', '2', 'extended', 'A', 150, 170, strftime('%s', 'now') * 1000),
+('sgb-0610-m26-C224262-22-42-62-B', 'subj-caie-igcse-bio', 2026, 'Feb/March', '2', 'extended', 'B', 129, 149, strftime('%s', 'now') * 1000),
+('sgb-0610-m26-C224262-22-42-62-C', 'subj-caie-igcse-bio', 2026, 'Feb/March', '2', 'extended', 'C', 109, 128, strftime('%s', 'now') * 1000),
+('sgb-0610-m26-C224262-22-42-62-D', 'subj-caie-igcse-bio', 2026, 'Feb/March', '2', 'extended', 'D', 94, 108, strftime('%s', 'now') * 1000),
+('sgb-0610-m26-C224262-22-42-62-E', 'subj-caie-igcse-bio', 2026, 'Feb/March', '2', 'extended', 'E', 80, 93, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0610-m26-C224262-22-42-62-F', 'subj-caie-igcse-bio', 2026, 'Feb/March', '2', 'extended', 'F', 65, 79, strftime('%s', 'now') * 1000),
+('sgb-0610-m26-C224262-22-42-62-G', 'subj-caie-igcse-bio', 2026, 'Feb/March', '2', 'extended', 'G', 50, 64, strftime('%s', 'now') * 1000),
+('sgb-0610-m26-C224262-22-42-62-U', 'subj-caie-igcse-bio', 2026, 'Feb/March', '2', 'extended', 'U', 0, 49, strftime('%s', 'now') * 1000),
 ('sgb-0620-s22-BX-21-41-51-Astar', 'subj-caie-igcse-chem', 2022, 'May/June', '1', 'extended', 'A*', 157, 200, strftime('%s', 'now') * 1000),
 ('sgb-0620-s22-BX-21-41-51-A', 'subj-caie-igcse-chem', 2022, 'May/June', '1', 'extended', 'A', 129, 156, strftime('%s', 'now') * 1000),
 ('sgb-0620-s22-BX-21-41-51-B', 'subj-caie-igcse-chem', 2022, 'May/June', '1', 'extended', 'B', 101, 128, strftime('%s', 'now') * 1000),
@@ -5430,8 +6268,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0620-s22-CY-22-42-62-A', 'subj-caie-igcse-chem', 2022, 'May/June', '2', 'extended', 'A', 118, 144, strftime('%s', 'now') * 1000),
 ('sgb-0620-s22-CY-22-42-62-B', 'subj-caie-igcse-chem', 2022, 'May/June', '2', 'extended', 'B', 91, 117, strftime('%s', 'now') * 1000),
 ('sgb-0620-s22-CY-22-42-62-C', 'subj-caie-igcse-chem', 2022, 'May/June', '2', 'extended', 'C', 65, 90, strftime('%s', 'now') * 1000),
-('sgb-0620-s22-CY-22-42-62-D', 'subj-caie-igcse-chem', 2022, 'May/June', '2', 'extended', 'D', 55, 64, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0620-s22-CY-22-42-62-D', 'subj-caie-igcse-chem', 2022, 'May/June', '2', 'extended', 'D', 55, 64, strftime('%s', 'now') * 1000),
 ('sgb-0620-s22-CY-22-42-62-E', 'subj-caie-igcse-chem', 2022, 'May/June', '2', 'extended', 'E', 46, 54, strftime('%s', 'now') * 1000),
 ('sgb-0620-s22-CY-22-42-62-F', 'subj-caie-igcse-chem', 2022, 'May/June', '2', 'extended', 'F', 37, 45, strftime('%s', 'now') * 1000),
 ('sgb-0620-s22-CY-22-42-62-G', 'subj-caie-igcse-chem', 2022, 'May/June', '2', 'extended', 'G', 28, 36, strftime('%s', 'now') * 1000),
@@ -5447,7 +6284,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0620-s22-CZ-23-43-63-U', 'subj-caie-igcse-chem', 2022, 'May/June', '3', 'extended', 'U', 0, 27, strftime('%s', 'now') * 1000),
 ('sgb-0620-s22-FX-11-31-51-C', 'subj-caie-igcse-chem', 2022, 'May/June', '1', 'core', 'C', 107, 200, strftime('%s', 'now') * 1000),
 ('sgb-0620-s22-FX-11-31-51-D', 'subj-caie-igcse-chem', 2022, 'May/June', '1', 'core', 'D', 90, 106, strftime('%s', 'now') * 1000),
-('sgb-0620-s22-FX-11-31-51-E', 'subj-caie-igcse-chem', 2022, 'May/June', '1', 'core', 'E', 73, 89, strftime('%s', 'now') * 1000),
+('sgb-0620-s22-FX-11-31-51-E', 'subj-caie-igcse-chem', 2022, 'May/June', '1', 'core', 'E', 73, 89, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0620-s22-FX-11-31-51-F', 'subj-caie-igcse-chem', 2022, 'May/June', '1', 'core', 'F', 56, 72, strftime('%s', 'now') * 1000),
 ('sgb-0620-s22-FX-11-31-51-G', 'subj-caie-igcse-chem', 2022, 'May/June', '1', 'core', 'G', 39, 55, strftime('%s', 'now') * 1000),
 ('sgb-0620-s22-FX-11-31-51-U', 'subj-caie-igcse-chem', 2022, 'May/June', '1', 'core', 'U', 0, 38, strftime('%s', 'now') * 1000),
@@ -5491,8 +6329,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0620-m22-BY-22-42-52-G', 'subj-caie-igcse-chem', 2022, 'Feb/March', '2', 'extended', 'G', 24, 34, strftime('%s', 'now') * 1000),
 ('sgb-0620-m22-BY-22-42-52-U', 'subj-caie-igcse-chem', 2022, 'Feb/March', '2', 'extended', 'U', 0, 23, strftime('%s', 'now') * 1000),
 ('sgb-0620-m22-CY-22-42-62-Astar', 'subj-caie-igcse-chem', 2022, 'Feb/March', '2', 'extended', 'A*', 143, 200, strftime('%s', 'now') * 1000),
-('sgb-0620-m22-CY-22-42-62-A', 'subj-caie-igcse-chem', 2022, 'Feb/March', '2', 'extended', 'A', 119, 142, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0620-m22-CY-22-42-62-A', 'subj-caie-igcse-chem', 2022, 'Feb/March', '2', 'extended', 'A', 119, 142, strftime('%s', 'now') * 1000),
 ('sgb-0620-m22-CY-22-42-62-B', 'subj-caie-igcse-chem', 2022, 'Feb/March', '2', 'extended', 'B', 95, 118, strftime('%s', 'now') * 1000),
 ('sgb-0620-m22-CY-22-42-62-C', 'subj-caie-igcse-chem', 2022, 'Feb/March', '2', 'extended', 'C', 71, 94, strftime('%s', 'now') * 1000),
 ('sgb-0620-m22-CY-22-42-62-D', 'subj-caie-igcse-chem', 2022, 'Feb/March', '2', 'extended', 'D', 58, 70, strftime('%s', 'now') * 1000),
@@ -5508,7 +6345,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0620-m22-FY-12-32-52-U', 'subj-caie-igcse-chem', 2022, 'Feb/March', '2', 'core', 'U', 0, 28, strftime('%s', 'now') * 1000),
 ('sgb-0620-m22-GY-12-32-62-C', 'subj-caie-igcse-chem', 2022, 'Feb/March', '2', 'core', 'C', 103, 200, strftime('%s', 'now') * 1000),
 ('sgb-0620-m22-GY-12-32-62-D', 'subj-caie-igcse-chem', 2022, 'Feb/March', '2', 'core', 'D', 85, 102, strftime('%s', 'now') * 1000),
-('sgb-0620-m22-GY-12-32-62-E', 'subj-caie-igcse-chem', 2022, 'Feb/March', '2', 'core', 'E', 67, 84, strftime('%s', 'now') * 1000),
+('sgb-0620-m22-GY-12-32-62-E', 'subj-caie-igcse-chem', 2022, 'Feb/March', '2', 'core', 'E', 67, 84, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0620-m22-GY-12-32-62-F', 'subj-caie-igcse-chem', 2022, 'Feb/March', '2', 'core', 'F', 48, 66, strftime('%s', 'now') * 1000),
 ('sgb-0620-m22-GY-12-32-62-G', 'subj-caie-igcse-chem', 2022, 'Feb/March', '2', 'core', 'G', 29, 47, strftime('%s', 'now') * 1000),
 ('sgb-0620-m22-GY-12-32-62-U', 'subj-caie-igcse-chem', 2022, 'Feb/March', '2', 'core', 'U', 0, 28, strftime('%s', 'now') * 1000),
@@ -5552,8 +6390,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0620-w22-CY-22-42-62-A', 'subj-caie-igcse-chem', 2022, 'Oct/Nov', '2', 'extended', 'A', 128, 150, strftime('%s', 'now') * 1000),
 ('sgb-0620-w22-CY-22-42-62-B', 'subj-caie-igcse-chem', 2022, 'Oct/Nov', '2', 'extended', 'B', 105, 127, strftime('%s', 'now') * 1000),
 ('sgb-0620-w22-CY-22-42-62-C', 'subj-caie-igcse-chem', 2022, 'Oct/Nov', '2', 'extended', 'C', 82, 104, strftime('%s', 'now') * 1000),
-('sgb-0620-w22-CY-22-42-62-D', 'subj-caie-igcse-chem', 2022, 'Oct/Nov', '2', 'extended', 'D', 70, 81, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0620-w22-CY-22-42-62-D', 'subj-caie-igcse-chem', 2022, 'Oct/Nov', '2', 'extended', 'D', 70, 81, strftime('%s', 'now') * 1000),
 ('sgb-0620-w22-CY-22-42-62-E', 'subj-caie-igcse-chem', 2022, 'Oct/Nov', '2', 'extended', 'E', 58, 69, strftime('%s', 'now') * 1000),
 ('sgb-0620-w22-CY-22-42-62-F', 'subj-caie-igcse-chem', 2022, 'Oct/Nov', '2', 'extended', 'F', 46, 57, strftime('%s', 'now') * 1000),
 ('sgb-0620-w22-CY-22-42-62-G', 'subj-caie-igcse-chem', 2022, 'Oct/Nov', '2', 'extended', 'G', 34, 45, strftime('%s', 'now') * 1000),
@@ -5569,7 +6406,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0620-w22-CZ-23-43-63-U', 'subj-caie-igcse-chem', 2022, 'Oct/Nov', '3', 'extended', 'U', 0, 35, strftime('%s', 'now') * 1000),
 ('sgb-0620-w22-FY-12-32-52-C', 'subj-caie-igcse-chem', 2022, 'Oct/Nov', '2', 'core', 'C', 108, 200, strftime('%s', 'now') * 1000),
 ('sgb-0620-w22-FY-12-32-52-D', 'subj-caie-igcse-chem', 2022, 'Oct/Nov', '2', 'core', 'D', 93, 107, strftime('%s', 'now') * 1000),
-('sgb-0620-w22-FY-12-32-52-E', 'subj-caie-igcse-chem', 2022, 'Oct/Nov', '2', 'core', 'E', 78, 92, strftime('%s', 'now') * 1000),
+('sgb-0620-w22-FY-12-32-52-E', 'subj-caie-igcse-chem', 2022, 'Oct/Nov', '2', 'core', 'E', 78, 92, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0620-w22-FY-12-32-52-F', 'subj-caie-igcse-chem', 2022, 'Oct/Nov', '2', 'core', 'F', 64, 77, strftime('%s', 'now') * 1000),
 ('sgb-0620-w22-FY-12-32-52-G', 'subj-caie-igcse-chem', 2022, 'Oct/Nov', '2', 'core', 'G', 50, 63, strftime('%s', 'now') * 1000),
 ('sgb-0620-w22-FY-12-32-52-U', 'subj-caie-igcse-chem', 2022, 'Oct/Nov', '2', 'core', 'U', 0, 49, strftime('%s', 'now') * 1000),
@@ -5613,8 +6451,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0620-s23-BY-22-42-52-D', 'subj-caie-igcse-chem', 2023, 'May/June', '2', 'extended', 'D', 58, 66, strftime('%s', 'now') * 1000),
 ('sgb-0620-s23-BY-22-42-52-E', 'subj-caie-igcse-chem', 2023, 'May/June', '2', 'extended', 'E', 49, 57, strftime('%s', 'now') * 1000),
 ('sgb-0620-s23-BY-22-42-52-F', 'subj-caie-igcse-chem', 2023, 'May/June', '2', 'extended', 'F', 41, 48, strftime('%s', 'now') * 1000),
-('sgb-0620-s23-BY-22-42-52-G', 'subj-caie-igcse-chem', 2023, 'May/June', '2', 'extended', 'G', 33, 40, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0620-s23-BY-22-42-52-G', 'subj-caie-igcse-chem', 2023, 'May/June', '2', 'extended', 'G', 33, 40, strftime('%s', 'now') * 1000),
 ('sgb-0620-s23-BY-22-42-52-U', 'subj-caie-igcse-chem', 2023, 'May/June', '2', 'extended', 'U', 0, 32, strftime('%s', 'now') * 1000),
 ('sgb-0620-s23-BZ-23-43-53-Astar', 'subj-caie-igcse-chem', 2023, 'May/June', '3', 'extended', 'A*', 155, 200, strftime('%s', 'now') * 1000),
 ('sgb-0620-s23-BZ-23-43-53-A', 'subj-caie-igcse-chem', 2023, 'May/June', '3', 'extended', 'A', 126, 154, strftime('%s', 'now') * 1000),
@@ -5630,7 +6467,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0620-s23-CX-21-41-61-B', 'subj-caie-igcse-chem', 2023, 'May/June', '1', 'extended', 'B', 101, 130, strftime('%s', 'now') * 1000),
 ('sgb-0620-s23-CX-21-41-61-C', 'subj-caie-igcse-chem', 2023, 'May/June', '1', 'extended', 'C', 72, 100, strftime('%s', 'now') * 1000),
 ('sgb-0620-s23-CX-21-41-61-D', 'subj-caie-igcse-chem', 2023, 'May/June', '1', 'extended', 'D', 61, 71, strftime('%s', 'now') * 1000),
-('sgb-0620-s23-CX-21-41-61-E', 'subj-caie-igcse-chem', 2023, 'May/June', '1', 'extended', 'E', 51, 60, strftime('%s', 'now') * 1000),
+('sgb-0620-s23-CX-21-41-61-E', 'subj-caie-igcse-chem', 2023, 'May/June', '1', 'extended', 'E', 51, 60, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0620-s23-CX-21-41-61-F', 'subj-caie-igcse-chem', 2023, 'May/June', '1', 'extended', 'F', 42, 50, strftime('%s', 'now') * 1000),
 ('sgb-0620-s23-CX-21-41-61-G', 'subj-caie-igcse-chem', 2023, 'May/June', '1', 'extended', 'G', 33, 41, strftime('%s', 'now') * 1000),
 ('sgb-0620-s23-CX-21-41-61-U', 'subj-caie-igcse-chem', 2023, 'May/June', '1', 'extended', 'U', 0, 32, strftime('%s', 'now') * 1000),
@@ -5674,8 +6512,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0620-s23-GY-12-32-62-D', 'subj-caie-igcse-chem', 2023, 'May/June', '2', 'core', 'D', 84, 100, strftime('%s', 'now') * 1000),
 ('sgb-0620-s23-GY-12-32-62-E', 'subj-caie-igcse-chem', 2023, 'May/June', '2', 'core', 'E', 68, 83, strftime('%s', 'now') * 1000),
 ('sgb-0620-s23-GY-12-32-62-F', 'subj-caie-igcse-chem', 2023, 'May/June', '2', 'core', 'F', 53, 67, strftime('%s', 'now') * 1000),
-('sgb-0620-s23-GY-12-32-62-G', 'subj-caie-igcse-chem', 2023, 'May/June', '2', 'core', 'G', 38, 52, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0620-s23-GY-12-32-62-G', 'subj-caie-igcse-chem', 2023, 'May/June', '2', 'core', 'G', 38, 52, strftime('%s', 'now') * 1000),
 ('sgb-0620-s23-GY-12-32-62-U', 'subj-caie-igcse-chem', 2023, 'May/June', '2', 'core', 'U', 0, 37, strftime('%s', 'now') * 1000),
 ('sgb-0620-s23-GZ-13-33-63-C', 'subj-caie-igcse-chem', 2023, 'May/June', '3', 'core', 'C', 101, 200, strftime('%s', 'now') * 1000),
 ('sgb-0620-s23-GZ-13-33-63-D', 'subj-caie-igcse-chem', 2023, 'May/June', '3', 'core', 'D', 84, 100, strftime('%s', 'now') * 1000),
@@ -5691,7 +6528,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0620-m23-BY-22-42-52-E', 'subj-caie-igcse-chem', 2023, 'Feb/March', '2', 'extended', 'E', 60, 73, strftime('%s', 'now') * 1000),
 ('sgb-0620-m23-BY-22-42-52-F', 'subj-caie-igcse-chem', 2023, 'Feb/March', '2', 'extended', 'F', 47, 59, strftime('%s', 'now') * 1000),
 ('sgb-0620-m23-BY-22-42-52-G', 'subj-caie-igcse-chem', 2023, 'Feb/March', '2', 'extended', 'G', 34, 46, strftime('%s', 'now') * 1000),
-('sgb-0620-m23-BY-22-42-52-U', 'subj-caie-igcse-chem', 2023, 'Feb/March', '2', 'extended', 'U', 0, 33, strftime('%s', 'now') * 1000),
+('sgb-0620-m23-BY-22-42-52-U', 'subj-caie-igcse-chem', 2023, 'Feb/March', '2', 'extended', 'U', 0, 33, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0620-m23-CY-22-42-62-Astar', 'subj-caie-igcse-chem', 2023, 'Feb/March', '2', 'extended', 'A*', 157, 200, strftime('%s', 'now') * 1000),
 ('sgb-0620-m23-CY-22-42-62-A', 'subj-caie-igcse-chem', 2023, 'Feb/March', '2', 'extended', 'A', 135, 156, strftime('%s', 'now') * 1000),
 ('sgb-0620-m23-CY-22-42-62-B', 'subj-caie-igcse-chem', 2023, 'Feb/March', '2', 'extended', 'B', 113, 134, strftime('%s', 'now') * 1000),
@@ -5735,8 +6573,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0620-w23-CX-21-41-61-A', 'subj-caie-igcse-chem', 2023, 'Oct/Nov', '1', 'extended', 'A', 128, 152, strftime('%s', 'now') * 1000),
 ('sgb-0620-w23-CX-21-41-61-B', 'subj-caie-igcse-chem', 2023, 'Oct/Nov', '1', 'extended', 'B', 103, 127, strftime('%s', 'now') * 1000),
 ('sgb-0620-w23-CX-21-41-61-C', 'subj-caie-igcse-chem', 2023, 'Oct/Nov', '1', 'extended', 'C', 79, 102, strftime('%s', 'now') * 1000),
-('sgb-0620-w23-CX-21-41-61-D', 'subj-caie-igcse-chem', 2023, 'Oct/Nov', '1', 'extended', 'D', 67, 78, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0620-w23-CX-21-41-61-D', 'subj-caie-igcse-chem', 2023, 'Oct/Nov', '1', 'extended', 'D', 67, 78, strftime('%s', 'now') * 1000),
 ('sgb-0620-w23-CX-21-41-61-E', 'subj-caie-igcse-chem', 2023, 'Oct/Nov', '1', 'extended', 'E', 56, 66, strftime('%s', 'now') * 1000),
 ('sgb-0620-w23-CX-21-41-61-F', 'subj-caie-igcse-chem', 2023, 'Oct/Nov', '1', 'extended', 'F', 45, 55, strftime('%s', 'now') * 1000),
 ('sgb-0620-w23-CX-21-41-61-G', 'subj-caie-igcse-chem', 2023, 'Oct/Nov', '1', 'extended', 'G', 34, 44, strftime('%s', 'now') * 1000),
@@ -5752,7 +6589,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0620-w23-CY-22-42-62-U', 'subj-caie-igcse-chem', 2023, 'Oct/Nov', '2', 'extended', 'U', 0, 33, strftime('%s', 'now') * 1000),
 ('sgb-0620-w23-CZ-23-43-63-Astar', 'subj-caie-igcse-chem', 2023, 'Oct/Nov', '3', 'extended', 'A*', 156, 200, strftime('%s', 'now') * 1000),
 ('sgb-0620-w23-CZ-23-43-63-A', 'subj-caie-igcse-chem', 2023, 'Oct/Nov', '3', 'extended', 'A', 133, 155, strftime('%s', 'now') * 1000),
-('sgb-0620-w23-CZ-23-43-63-B', 'subj-caie-igcse-chem', 2023, 'Oct/Nov', '3', 'extended', 'B', 110, 132, strftime('%s', 'now') * 1000),
+('sgb-0620-w23-CZ-23-43-63-B', 'subj-caie-igcse-chem', 2023, 'Oct/Nov', '3', 'extended', 'B', 110, 132, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0620-w23-CZ-23-43-63-C', 'subj-caie-igcse-chem', 2023, 'Oct/Nov', '3', 'extended', 'C', 88, 109, strftime('%s', 'now') * 1000),
 ('sgb-0620-w23-CZ-23-43-63-D', 'subj-caie-igcse-chem', 2023, 'Oct/Nov', '3', 'extended', 'D', 76, 87, strftime('%s', 'now') * 1000),
 ('sgb-0620-w23-CZ-23-43-63-E', 'subj-caie-igcse-chem', 2023, 'Oct/Nov', '3', 'extended', 'E', 65, 75, strftime('%s', 'now') * 1000),
@@ -5796,8 +6634,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0620-s24-BX-21-41-51-D', 'subj-caie-igcse-chem', 2024, 'May/June', '1', 'extended', 'D', 67, 77, strftime('%s', 'now') * 1000),
 ('sgb-0620-s24-BX-21-41-51-E', 'subj-caie-igcse-chem', 2024, 'May/June', '1', 'extended', 'E', 57, 66, strftime('%s', 'now') * 1000),
 ('sgb-0620-s24-BX-21-41-51-F', 'subj-caie-igcse-chem', 2024, 'May/June', '1', 'extended', 'F', 46, 56, strftime('%s', 'now') * 1000),
-('sgb-0620-s24-BX-21-41-51-G', 'subj-caie-igcse-chem', 2024, 'May/June', '1', 'extended', 'G', 35, 45, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0620-s24-BX-21-41-51-G', 'subj-caie-igcse-chem', 2024, 'May/June', '1', 'extended', 'G', 35, 45, strftime('%s', 'now') * 1000),
 ('sgb-0620-s24-BX-21-41-51-U', 'subj-caie-igcse-chem', 2024, 'May/June', '1', 'extended', 'U', 0, 34, strftime('%s', 'now') * 1000),
 ('sgb-0620-s24-BY-22-42-52-Astar', 'subj-caie-igcse-chem', 2024, 'May/June', '2', 'extended', 'A*', 166, 200, strftime('%s', 'now') * 1000),
 ('sgb-0620-s24-BY-22-42-52-A', 'subj-caie-igcse-chem', 2024, 'May/June', '2', 'extended', 'A', 137, 165, strftime('%s', 'now') * 1000),
@@ -5813,7 +6650,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0620-s24-BZ-23-43-53-B', 'subj-caie-igcse-chem', 2024, 'May/June', '3', 'extended', 'B', 104, 131, strftime('%s', 'now') * 1000),
 ('sgb-0620-s24-BZ-23-43-53-C', 'subj-caie-igcse-chem', 2024, 'May/June', '3', 'extended', 'C', 76, 103, strftime('%s', 'now') * 1000),
 ('sgb-0620-s24-BZ-23-43-53-D', 'subj-caie-igcse-chem', 2024, 'May/June', '3', 'extended', 'D', 67, 75, strftime('%s', 'now') * 1000),
-('sgb-0620-s24-BZ-23-43-53-E', 'subj-caie-igcse-chem', 2024, 'May/June', '3', 'extended', 'E', 58, 66, strftime('%s', 'now') * 1000),
+('sgb-0620-s24-BZ-23-43-53-E', 'subj-caie-igcse-chem', 2024, 'May/June', '3', 'extended', 'E', 58, 66, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0620-s24-BZ-23-43-53-F', 'subj-caie-igcse-chem', 2024, 'May/June', '3', 'extended', 'F', 47, 57, strftime('%s', 'now') * 1000),
 ('sgb-0620-s24-BZ-23-43-53-G', 'subj-caie-igcse-chem', 2024, 'May/June', '3', 'extended', 'G', 36, 46, strftime('%s', 'now') * 1000),
 ('sgb-0620-s24-BZ-23-43-53-U', 'subj-caie-igcse-chem', 2024, 'May/June', '3', 'extended', 'U', 0, 35, strftime('%s', 'now') * 1000),
@@ -5857,8 +6695,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0620-s24-FY-12-32-52-G', 'subj-caie-igcse-chem', 2024, 'May/June', '2', 'core', 'G', 37, 52, strftime('%s', 'now') * 1000),
 ('sgb-0620-s24-FY-12-32-52-U', 'subj-caie-igcse-chem', 2024, 'May/June', '2', 'core', 'U', 0, 36, strftime('%s', 'now') * 1000),
 ('sgb-0620-s24-GX-11-31-61-C', 'subj-caie-igcse-chem', 2024, 'May/June', '1', 'core', 'C', 106, 200, strftime('%s', 'now') * 1000),
-('sgb-0620-s24-GX-11-31-61-D', 'subj-caie-igcse-chem', 2024, 'May/June', '1', 'core', 'D', 89, 105, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0620-s24-GX-11-31-61-D', 'subj-caie-igcse-chem', 2024, 'May/June', '1', 'core', 'D', 89, 105, strftime('%s', 'now') * 1000),
 ('sgb-0620-s24-GX-11-31-61-E', 'subj-caie-igcse-chem', 2024, 'May/June', '1', 'core', 'E', 72, 88, strftime('%s', 'now') * 1000),
 ('sgb-0620-s24-GX-11-31-61-F', 'subj-caie-igcse-chem', 2024, 'May/June', '1', 'core', 'F', 56, 71, strftime('%s', 'now') * 1000),
 ('sgb-0620-s24-GX-11-31-61-G', 'subj-caie-igcse-chem', 2024, 'May/June', '1', 'core', 'G', 40, 55, strftime('%s', 'now') * 1000),
@@ -5874,7 +6711,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0620-s24-GZ-13-33-63-E', 'subj-caie-igcse-chem', 2024, 'May/June', '3', 'core', 'E', 72, 88, strftime('%s', 'now') * 1000),
 ('sgb-0620-s24-GZ-13-33-63-F', 'subj-caie-igcse-chem', 2024, 'May/June', '3', 'core', 'F', 56, 71, strftime('%s', 'now') * 1000),
 ('sgb-0620-s24-GZ-13-33-63-G', 'subj-caie-igcse-chem', 2024, 'May/June', '3', 'core', 'G', 40, 55, strftime('%s', 'now') * 1000),
-('sgb-0620-s24-GZ-13-33-63-U', 'subj-caie-igcse-chem', 2024, 'May/June', '3', 'core', 'U', 0, 39, strftime('%s', 'now') * 1000),
+('sgb-0620-s24-GZ-13-33-63-U', 'subj-caie-igcse-chem', 2024, 'May/June', '3', 'core', 'U', 0, 39, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0620-m24-BY-22-42-52-Astar', 'subj-caie-igcse-chem', 2024, 'Feb/March', '2', 'extended', 'A*', 162, 200, strftime('%s', 'now') * 1000),
 ('sgb-0620-m24-BY-22-42-52-A', 'subj-caie-igcse-chem', 2024, 'Feb/March', '2', 'extended', 'A', 135, 161, strftime('%s', 'now') * 1000),
 ('sgb-0620-m24-BY-22-42-52-B', 'subj-caie-igcse-chem', 2024, 'Feb/March', '2', 'extended', 'B', 108, 134, strftime('%s', 'now') * 1000),
@@ -5918,8 +6756,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0620-w24-BZ-23-43-53-A', 'subj-caie-igcse-chem', 2024, 'Oct/Nov', '3', 'extended', 'A', 131, 154, strftime('%s', 'now') * 1000),
 ('sgb-0620-w24-BZ-23-43-53-B', 'subj-caie-igcse-chem', 2024, 'Oct/Nov', '3', 'extended', 'B', 107, 130, strftime('%s', 'now') * 1000),
 ('sgb-0620-w24-BZ-23-43-53-C', 'subj-caie-igcse-chem', 2024, 'Oct/Nov', '3', 'extended', 'C', 83, 106, strftime('%s', 'now') * 1000),
-('sgb-0620-w24-BZ-23-43-53-D', 'subj-caie-igcse-chem', 2024, 'Oct/Nov', '3', 'extended', 'D', 72, 82, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0620-w24-BZ-23-43-53-D', 'subj-caie-igcse-chem', 2024, 'Oct/Nov', '3', 'extended', 'D', 72, 82, strftime('%s', 'now') * 1000),
 ('sgb-0620-w24-BZ-23-43-53-E', 'subj-caie-igcse-chem', 2024, 'Oct/Nov', '3', 'extended', 'E', 61, 71, strftime('%s', 'now') * 1000),
 ('sgb-0620-w24-BZ-23-43-53-F', 'subj-caie-igcse-chem', 2024, 'Oct/Nov', '3', 'extended', 'F', 51, 60, strftime('%s', 'now') * 1000),
 ('sgb-0620-w24-BZ-23-43-53-G', 'subj-caie-igcse-chem', 2024, 'Oct/Nov', '3', 'extended', 'G', 41, 50, strftime('%s', 'now') * 1000),
@@ -5935,7 +6772,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0620-w24-CX-21-41-61-U', 'subj-caie-igcse-chem', 2024, 'Oct/Nov', '1', 'extended', 'U', 0, 34, strftime('%s', 'now') * 1000),
 ('sgb-0620-w24-CY-22-42-62-Astar', 'subj-caie-igcse-chem', 2024, 'Oct/Nov', '2', 'extended', 'A*', 158, 200, strftime('%s', 'now') * 1000),
 ('sgb-0620-w24-CY-22-42-62-A', 'subj-caie-igcse-chem', 2024, 'Oct/Nov', '2', 'extended', 'A', 133, 157, strftime('%s', 'now') * 1000),
-('sgb-0620-w24-CY-22-42-62-B', 'subj-caie-igcse-chem', 2024, 'Oct/Nov', '2', 'extended', 'B', 108, 132, strftime('%s', 'now') * 1000),
+('sgb-0620-w24-CY-22-42-62-B', 'subj-caie-igcse-chem', 2024, 'Oct/Nov', '2', 'extended', 'B', 108, 132, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0620-w24-CY-22-42-62-C', 'subj-caie-igcse-chem', 2024, 'Oct/Nov', '2', 'extended', 'C', 84, 107, strftime('%s', 'now') * 1000),
 ('sgb-0620-w24-CY-22-42-62-D', 'subj-caie-igcse-chem', 2024, 'Oct/Nov', '2', 'extended', 'D', 71, 83, strftime('%s', 'now') * 1000),
 ('sgb-0620-w24-CY-22-42-62-E', 'subj-caie-igcse-chem', 2024, 'Oct/Nov', '2', 'extended', 'E', 59, 70, strftime('%s', 'now') * 1000),
@@ -5979,8 +6817,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0620-w24-GZ-13-33-63-D', 'subj-caie-igcse-chem', 2024, 'Oct/Nov', '3', 'core', 'D', 93, 108, strftime('%s', 'now') * 1000),
 ('sgb-0620-w24-GZ-13-33-63-E', 'subj-caie-igcse-chem', 2024, 'Oct/Nov', '3', 'core', 'E', 77, 92, strftime('%s', 'now') * 1000),
 ('sgb-0620-w24-GZ-13-33-63-F', 'subj-caie-igcse-chem', 2024, 'Oct/Nov', '3', 'core', 'F', 63, 76, strftime('%s', 'now') * 1000),
-('sgb-0620-w24-GZ-13-33-63-G', 'subj-caie-igcse-chem', 2024, 'Oct/Nov', '3', 'core', 'G', 49, 62, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0620-w24-GZ-13-33-63-G', 'subj-caie-igcse-chem', 2024, 'Oct/Nov', '3', 'core', 'G', 49, 62, strftime('%s', 'now') * 1000),
 ('sgb-0620-w24-GZ-13-33-63-U', 'subj-caie-igcse-chem', 2024, 'Oct/Nov', '3', 'core', 'U', 0, 48, strftime('%s', 'now') * 1000),
 ('sgb-0620-s25-BX-21-41-51-Astar', 'subj-caie-igcse-chem', 2025, 'May/June', '1', 'extended', 'A*', 171, 200, strftime('%s', 'now') * 1000),
 ('sgb-0620-s25-BX-21-41-51-A', 'subj-caie-igcse-chem', 2025, 'May/June', '1', 'extended', 'A', 143, 170, strftime('%s', 'now') * 1000),
@@ -5996,7 +6833,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0620-s25-BY-22-42-52-B', 'subj-caie-igcse-chem', 2025, 'May/June', '2', 'extended', 'B', 116, 144, strftime('%s', 'now') * 1000),
 ('sgb-0620-s25-BY-22-42-52-C', 'subj-caie-igcse-chem', 2025, 'May/June', '2', 'extended', 'C', 88, 115, strftime('%s', 'now') * 1000),
 ('sgb-0620-s25-BY-22-42-52-D', 'subj-caie-igcse-chem', 2025, 'May/June', '2', 'extended', 'D', 77, 87, strftime('%s', 'now') * 1000),
-('sgb-0620-s25-BY-22-42-52-E', 'subj-caie-igcse-chem', 2025, 'May/June', '2', 'extended', 'E', 66, 76, strftime('%s', 'now') * 1000),
+('sgb-0620-s25-BY-22-42-52-E', 'subj-caie-igcse-chem', 2025, 'May/June', '2', 'extended', 'E', 66, 76, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0620-s25-BY-22-42-52-F', 'subj-caie-igcse-chem', 2025, 'May/June', '2', 'extended', 'F', 54, 65, strftime('%s', 'now') * 1000),
 ('sgb-0620-s25-BY-22-42-52-G', 'subj-caie-igcse-chem', 2025, 'May/June', '2', 'extended', 'G', 42, 53, strftime('%s', 'now') * 1000),
 ('sgb-0620-s25-BY-22-42-52-U', 'subj-caie-igcse-chem', 2025, 'May/June', '2', 'extended', 'U', 0, 41, strftime('%s', 'now') * 1000),
@@ -6040,8 +6878,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0620-s25-FX-11-31-51-D', 'subj-caie-igcse-chem', 2025, 'May/June', '1', 'core', 'D', 88, 105, strftime('%s', 'now') * 1000),
 ('sgb-0620-s25-FX-11-31-51-E', 'subj-caie-igcse-chem', 2025, 'May/June', '1', 'core', 'E', 71, 87, strftime('%s', 'now') * 1000),
 ('sgb-0620-s25-FX-11-31-51-F', 'subj-caie-igcse-chem', 2025, 'May/June', '1', 'core', 'F', 53, 70, strftime('%s', 'now') * 1000),
-('sgb-0620-s25-FX-11-31-51-G', 'subj-caie-igcse-chem', 2025, 'May/June', '1', 'core', 'G', 35, 52, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0620-s25-FX-11-31-51-G', 'subj-caie-igcse-chem', 2025, 'May/June', '1', 'core', 'G', 35, 52, strftime('%s', 'now') * 1000),
 ('sgb-0620-s25-FX-11-31-51-U', 'subj-caie-igcse-chem', 2025, 'May/June', '1', 'core', 'U', 0, 34, strftime('%s', 'now') * 1000),
 ('sgb-0620-s25-FY-12-32-52-C', 'subj-caie-igcse-chem', 2025, 'May/June', '2', 'core', 'C', 109, 200, strftime('%s', 'now') * 1000),
 ('sgb-0620-s25-FY-12-32-52-D', 'subj-caie-igcse-chem', 2025, 'May/June', '2', 'core', 'D', 93, 108, strftime('%s', 'now') * 1000),
@@ -6057,7 +6894,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0620-s25-FZ-13-33-53-U', 'subj-caie-igcse-chem', 2025, 'May/June', '3', 'core', 'U', 0, 37, strftime('%s', 'now') * 1000),
 ('sgb-0620-s25-GX-11-31-61-C', 'subj-caie-igcse-chem', 2025, 'May/June', '1', 'core', 'C', 106, 200, strftime('%s', 'now') * 1000),
 ('sgb-0620-s25-GX-11-31-61-D', 'subj-caie-igcse-chem', 2025, 'May/June', '1', 'core', 'D', 88, 105, strftime('%s', 'now') * 1000),
-('sgb-0620-s25-GX-11-31-61-E', 'subj-caie-igcse-chem', 2025, 'May/June', '1', 'core', 'E', 71, 87, strftime('%s', 'now') * 1000),
+('sgb-0620-s25-GX-11-31-61-E', 'subj-caie-igcse-chem', 2025, 'May/June', '1', 'core', 'E', 71, 87, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0620-s25-GX-11-31-61-F', 'subj-caie-igcse-chem', 2025, 'May/June', '1', 'core', 'F', 54, 70, strftime('%s', 'now') * 1000),
 ('sgb-0620-s25-GX-11-31-61-G', 'subj-caie-igcse-chem', 2025, 'May/June', '1', 'core', 'G', 37, 53, strftime('%s', 'now') * 1000),
 ('sgb-0620-s25-GX-11-31-61-U', 'subj-caie-igcse-chem', 2025, 'May/June', '1', 'core', 'U', 0, 36, strftime('%s', 'now') * 1000),
@@ -6101,8 +6939,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0620-m25-GY-12-32-62-D', 'subj-caie-igcse-chem', 2025, 'Feb/March', '2', 'core', 'D', 97, 113, strftime('%s', 'now') * 1000),
 ('sgb-0620-m25-GY-12-32-62-E', 'subj-caie-igcse-chem', 2025, 'Feb/March', '2', 'core', 'E', 81, 96, strftime('%s', 'now') * 1000),
 ('sgb-0620-m25-GY-12-32-62-F', 'subj-caie-igcse-chem', 2025, 'Feb/March', '2', 'core', 'F', 64, 80, strftime('%s', 'now') * 1000),
-('sgb-0620-m25-GY-12-32-62-G', 'subj-caie-igcse-chem', 2025, 'Feb/March', '2', 'core', 'G', 47, 63, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0620-m25-GY-12-32-62-G', 'subj-caie-igcse-chem', 2025, 'Feb/March', '2', 'core', 'G', 47, 63, strftime('%s', 'now') * 1000),
 ('sgb-0620-m25-GY-12-32-62-U', 'subj-caie-igcse-chem', 2025, 'Feb/March', '2', 'core', 'U', 0, 46, strftime('%s', 'now') * 1000),
 ('sgb-0620-w25-BX-21-41-51-Astar', 'subj-caie-igcse-chem', 2025, 'Oct/Nov', '1', 'extended', 'A*', 158, 200, strftime('%s', 'now') * 1000),
 ('sgb-0620-w25-BX-21-41-51-A', 'subj-caie-igcse-chem', 2025, 'Oct/Nov', '1', 'extended', 'A', 132, 157, strftime('%s', 'now') * 1000),
@@ -6118,7 +6955,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0620-w25-BY-22-42-52-B', 'subj-caie-igcse-chem', 2025, 'Oct/Nov', '2', 'extended', 'B', 101, 126, strftime('%s', 'now') * 1000),
 ('sgb-0620-w25-BY-22-42-52-C', 'subj-caie-igcse-chem', 2025, 'Oct/Nov', '2', 'extended', 'C', 76, 100, strftime('%s', 'now') * 1000),
 ('sgb-0620-w25-BY-22-42-52-D', 'subj-caie-igcse-chem', 2025, 'Oct/Nov', '2', 'extended', 'D', 63, 75, strftime('%s', 'now') * 1000),
-('sgb-0620-w25-BY-22-42-52-E', 'subj-caie-igcse-chem', 2025, 'Oct/Nov', '2', 'extended', 'E', 50, 62, strftime('%s', 'now') * 1000),
+('sgb-0620-w25-BY-22-42-52-E', 'subj-caie-igcse-chem', 2025, 'Oct/Nov', '2', 'extended', 'E', 50, 62, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0620-w25-BY-22-42-52-F', 'subj-caie-igcse-chem', 2025, 'Oct/Nov', '2', 'extended', 'F', 39, 49, strftime('%s', 'now') * 1000),
 ('sgb-0620-w25-BY-22-42-52-G', 'subj-caie-igcse-chem', 2025, 'Oct/Nov', '2', 'extended', 'G', 28, 38, strftime('%s', 'now') * 1000),
 ('sgb-0620-w25-BY-22-42-52-U', 'subj-caie-igcse-chem', 2025, 'Oct/Nov', '2', 'extended', 'U', 0, 27, strftime('%s', 'now') * 1000),
@@ -6162,8 +7000,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0620-w25-FY-12-32-52-D', 'subj-caie-igcse-chem', 2025, 'Oct/Nov', '2', 'core', 'D', 84, 99, strftime('%s', 'now') * 1000),
 ('sgb-0620-w25-FY-12-32-52-E', 'subj-caie-igcse-chem', 2025, 'Oct/Nov', '2', 'core', 'E', 69, 83, strftime('%s', 'now') * 1000),
 ('sgb-0620-w25-FY-12-32-52-F', 'subj-caie-igcse-chem', 2025, 'Oct/Nov', '2', 'core', 'F', 53, 68, strftime('%s', 'now') * 1000),
-('sgb-0620-w25-FY-12-32-52-G', 'subj-caie-igcse-chem', 2025, 'Oct/Nov', '2', 'core', 'G', 37, 52, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0620-w25-FY-12-32-52-G', 'subj-caie-igcse-chem', 2025, 'Oct/Nov', '2', 'core', 'G', 37, 52, strftime('%s', 'now') * 1000),
 ('sgb-0620-w25-FY-12-32-52-U', 'subj-caie-igcse-chem', 2025, 'Oct/Nov', '2', 'core', 'U', 0, 36, strftime('%s', 'now') * 1000),
 ('sgb-0620-w25-FZ-13-33-53-C', 'subj-caie-igcse-chem', 2025, 'Oct/Nov', '3', 'core', 'C', 102, 200, strftime('%s', 'now') * 1000),
 ('sgb-0620-w25-FZ-13-33-53-D', 'subj-caie-igcse-chem', 2025, 'Oct/Nov', '3', 'core', 'D', 86, 101, strftime('%s', 'now') * 1000),
@@ -6179,7 +7016,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0620-w25-GX-11-31-61-U', 'subj-caie-igcse-chem', 2025, 'Oct/Nov', '1', 'core', 'U', 0, 42, strftime('%s', 'now') * 1000),
 ('sgb-0620-w25-GY-12-32-62-C', 'subj-caie-igcse-chem', 2025, 'Oct/Nov', '2', 'core', 'C', 100, 200, strftime('%s', 'now') * 1000),
 ('sgb-0620-w25-GY-12-32-62-D', 'subj-caie-igcse-chem', 2025, 'Oct/Nov', '2', 'core', 'D', 85, 99, strftime('%s', 'now') * 1000),
-('sgb-0620-w25-GY-12-32-62-E', 'subj-caie-igcse-chem', 2025, 'Oct/Nov', '2', 'core', 'E', 70, 84, strftime('%s', 'now') * 1000),
+('sgb-0620-w25-GY-12-32-62-E', 'subj-caie-igcse-chem', 2025, 'Oct/Nov', '2', 'core', 'E', 70, 84, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0620-w25-GY-12-32-62-F', 'subj-caie-igcse-chem', 2025, 'Oct/Nov', '2', 'core', 'F', 54, 69, strftime('%s', 'now') * 1000),
 ('sgb-0620-w25-GY-12-32-62-G', 'subj-caie-igcse-chem', 2025, 'Oct/Nov', '2', 'core', 'G', 38, 53, strftime('%s', 'now') * 1000),
 ('sgb-0620-w25-GY-12-32-62-U', 'subj-caie-igcse-chem', 2025, 'Oct/Nov', '2', 'core', 'U', 0, 37, strftime('%s', 'now') * 1000),
@@ -6189,6 +7027,158 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0620-w25-GZ-13-33-63-F', 'subj-caie-igcse-chem', 2025, 'Oct/Nov', '3', 'core', 'F', 57, 71, strftime('%s', 'now') * 1000),
 ('sgb-0620-w25-GZ-13-33-63-G', 'subj-caie-igcse-chem', 2025, 'Oct/Nov', '3', 'core', 'G', 42, 56, strftime('%s', 'now') * 1000),
 ('sgb-0620-w25-GZ-13-33-63-U', 'subj-caie-igcse-chem', 2025, 'Oct/Nov', '3', 'core', 'U', 0, 41, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C113151-11-31-51-C', 'subj-caie-igcse-chem', 2026, 'May/June', '1', 'core', 'C', 105, 200, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C113151-11-31-51-D', 'subj-caie-igcse-chem', 2026, 'May/June', '1', 'core', 'D', 88, 104, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C113151-11-31-51-E', 'subj-caie-igcse-chem', 2026, 'May/June', '1', 'core', 'E', 72, 87, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C113151-11-31-51-F', 'subj-caie-igcse-chem', 2026, 'May/June', '1', 'core', 'F', 55, 71, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C113151-11-31-51-G', 'subj-caie-igcse-chem', 2026, 'May/June', '1', 'core', 'G', 38, 54, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C113151-11-31-51-U', 'subj-caie-igcse-chem', 2026, 'May/June', '1', 'core', 'U', 0, 37, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C113161-11-31-61-C', 'subj-caie-igcse-chem', 2026, 'May/June', '1', 'core', 'C', 107, 200, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C113161-11-31-61-D', 'subj-caie-igcse-chem', 2026, 'May/June', '1', 'core', 'D', 90, 106, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C113161-11-31-61-E', 'subj-caie-igcse-chem', 2026, 'May/June', '1', 'core', 'E', 73, 89, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C113161-11-31-61-F', 'subj-caie-igcse-chem', 2026, 'May/June', '1', 'core', 'F', 56, 72, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C113161-11-31-61-G', 'subj-caie-igcse-chem', 2026, 'May/June', '1', 'core', 'G', 39, 55, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C113161-11-31-61-U', 'subj-caie-igcse-chem', 2026, 'May/June', '1', 'core', 'U', 0, 38, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C123252-12-32-52-C', 'subj-caie-igcse-chem', 2026, 'May/June', '2', 'core', 'C', 107, 200, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C123252-12-32-52-D', 'subj-caie-igcse-chem', 2026, 'May/June', '2', 'core', 'D', 89, 106, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C123252-12-32-52-E', 'subj-caie-igcse-chem', 2026, 'May/June', '2', 'core', 'E', 71, 88, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C123252-12-32-52-F', 'subj-caie-igcse-chem', 2026, 'May/June', '2', 'core', 'F', 53, 70, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C123252-12-32-52-G', 'subj-caie-igcse-chem', 2026, 'May/June', '2', 'core', 'G', 35, 52, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C123252-12-32-52-U', 'subj-caie-igcse-chem', 2026, 'May/June', '2', 'core', 'U', 0, 34, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C123262-12-32-62-C', 'subj-caie-igcse-chem', 2026, 'May/June', '2', 'core', 'C', 108, 200, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C123262-12-32-62-D', 'subj-caie-igcse-chem', 2026, 'May/June', '2', 'core', 'D', 89, 107, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C123262-12-32-62-E', 'subj-caie-igcse-chem', 2026, 'May/June', '2', 'core', 'E', 71, 88, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C123262-12-32-62-F', 'subj-caie-igcse-chem', 2026, 'May/June', '2', 'core', 'F', 53, 70, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C123262-12-32-62-G', 'subj-caie-igcse-chem', 2026, 'May/June', '2', 'core', 'G', 35, 52, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C123262-12-32-62-U', 'subj-caie-igcse-chem', 2026, 'May/June', '2', 'core', 'U', 0, 34, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C133353-13-33-53-C', 'subj-caie-igcse-chem', 2026, 'May/June', '3', 'core', 'C', 106, 200, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C133353-13-33-53-D', 'subj-caie-igcse-chem', 2026, 'May/June', '3', 'core', 'D', 89, 105, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C133353-13-33-53-E', 'subj-caie-igcse-chem', 2026, 'May/June', '3', 'core', 'E', 72, 88, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C133353-13-33-53-F', 'subj-caie-igcse-chem', 2026, 'May/June', '3', 'core', 'F', 56, 71, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C133353-13-33-53-G', 'subj-caie-igcse-chem', 2026, 'May/June', '3', 'core', 'G', 40, 55, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C133353-13-33-53-U', 'subj-caie-igcse-chem', 2026, 'May/June', '3', 'core', 'U', 0, 39, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C133363-13-33-63-C', 'subj-caie-igcse-chem', 2026, 'May/June', '3', 'core', 'C', 107, 200, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C133363-13-33-63-D', 'subj-caie-igcse-chem', 2026, 'May/June', '3', 'core', 'D', 90, 106, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C133363-13-33-63-E', 'subj-caie-igcse-chem', 2026, 'May/June', '3', 'core', 'E', 73, 89, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C133363-13-33-63-F', 'subj-caie-igcse-chem', 2026, 'May/June', '3', 'core', 'F', 57, 72, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C133363-13-33-63-G', 'subj-caie-igcse-chem', 2026, 'May/June', '3', 'core', 'G', 41, 56, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C133363-13-33-63-U', 'subj-caie-igcse-chem', 2026, 'May/June', '3', 'core', 'U', 0, 40, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C173151-17-31-51-C', 'subj-caie-igcse-chem', 2026, 'May/June', '7', 'core', 'C', 105, 200, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C173151-17-31-51-D', 'subj-caie-igcse-chem', 2026, 'May/June', '7', 'core', 'D', 88, 104, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C173151-17-31-51-E', 'subj-caie-igcse-chem', 2026, 'May/June', '7', 'core', 'E', 72, 87, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C173151-17-31-51-F', 'subj-caie-igcse-chem', 2026, 'May/June', '7', 'core', 'F', 55, 71, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C173151-17-31-51-G', 'subj-caie-igcse-chem', 2026, 'May/June', '7', 'core', 'G', 38, 54, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C173151-17-31-51-U', 'subj-caie-igcse-chem', 2026, 'May/June', '7', 'core', 'U', 0, 37, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C173161-17-31-61-C', 'subj-caie-igcse-chem', 2026, 'May/June', '7', 'core', 'C', 107, 200, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C173161-17-31-61-D', 'subj-caie-igcse-chem', 2026, 'May/June', '7', 'core', 'D', 90, 106, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C173161-17-31-61-E', 'subj-caie-igcse-chem', 2026, 'May/June', '7', 'core', 'E', 73, 89, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C173161-17-31-61-F', 'subj-caie-igcse-chem', 2026, 'May/June', '7', 'core', 'F', 56, 72, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C173161-17-31-61-G', 'subj-caie-igcse-chem', 2026, 'May/June', '7', 'core', 'G', 39, 55, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C173161-17-31-61-U', 'subj-caie-igcse-chem', 2026, 'May/June', '7', 'core', 'U', 0, 38, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C214151-21-41-51-Astar', 'subj-caie-igcse-chem', 2026, 'May/June', '1', 'extended', 'A*', 173, 200, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C214151-21-41-51-A', 'subj-caie-igcse-chem', 2026, 'May/June', '1', 'extended', 'A', 147, 172, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C214151-21-41-51-B', 'subj-caie-igcse-chem', 2026, 'May/June', '1', 'extended', 'B', 119, 146, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0620-s26-C214151-21-41-51-C', 'subj-caie-igcse-chem', 2026, 'May/June', '1', 'extended', 'C', 91, 118, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C214151-21-41-51-D', 'subj-caie-igcse-chem', 2026, 'May/June', '1', 'extended', 'D', 78, 90, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C214151-21-41-51-E', 'subj-caie-igcse-chem', 2026, 'May/June', '1', 'extended', 'E', 66, 77, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C214151-21-41-51-F', 'subj-caie-igcse-chem', 2026, 'May/June', '1', 'extended', 'F', 53, 65, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C214151-21-41-51-G', 'subj-caie-igcse-chem', 2026, 'May/June', '1', 'extended', 'G', 40, 52, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C214151-21-41-51-U', 'subj-caie-igcse-chem', 2026, 'May/June', '1', 'extended', 'U', 0, 39, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C214161-21-41-61-Astar', 'subj-caie-igcse-chem', 2026, 'May/June', '1', 'extended', 'A*', 175, 200, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C214161-21-41-61-A', 'subj-caie-igcse-chem', 2026, 'May/June', '1', 'extended', 'A', 150, 174, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C214161-21-41-61-B', 'subj-caie-igcse-chem', 2026, 'May/June', '1', 'extended', 'B', 121, 149, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C214161-21-41-61-C', 'subj-caie-igcse-chem', 2026, 'May/June', '1', 'extended', 'C', 93, 120, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C214161-21-41-61-D', 'subj-caie-igcse-chem', 2026, 'May/June', '1', 'extended', 'D', 80, 92, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C214161-21-41-61-E', 'subj-caie-igcse-chem', 2026, 'May/June', '1', 'extended', 'E', 67, 79, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C214161-21-41-61-F', 'subj-caie-igcse-chem', 2026, 'May/June', '1', 'extended', 'F', 54, 66, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C214161-21-41-61-G', 'subj-caie-igcse-chem', 2026, 'May/June', '1', 'extended', 'G', 41, 53, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C214161-21-41-61-U', 'subj-caie-igcse-chem', 2026, 'May/June', '1', 'extended', 'U', 0, 40, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C224252-22-42-52-Astar', 'subj-caie-igcse-chem', 2026, 'May/June', '2', 'extended', 'A*', 168, 200, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C224252-22-42-52-A', 'subj-caie-igcse-chem', 2026, 'May/June', '2', 'extended', 'A', 138, 167, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C224252-22-42-52-B', 'subj-caie-igcse-chem', 2026, 'May/June', '2', 'extended', 'B', 108, 137, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C224252-22-42-52-C', 'subj-caie-igcse-chem', 2026, 'May/June', '2', 'extended', 'C', 79, 107, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C224252-22-42-52-D', 'subj-caie-igcse-chem', 2026, 'May/June', '2', 'extended', 'D', 68, 78, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C224252-22-42-52-E', 'subj-caie-igcse-chem', 2026, 'May/June', '2', 'extended', 'E', 57, 67, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C224252-22-42-52-F', 'subj-caie-igcse-chem', 2026, 'May/June', '2', 'extended', 'F', 46, 56, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C224252-22-42-52-G', 'subj-caie-igcse-chem', 2026, 'May/June', '2', 'extended', 'G', 35, 45, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C224252-22-42-52-U', 'subj-caie-igcse-chem', 2026, 'May/June', '2', 'extended', 'U', 0, 34, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C224262-22-42-62-Astar', 'subj-caie-igcse-chem', 2026, 'May/June', '2', 'extended', 'A*', 169, 200, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C224262-22-42-62-A', 'subj-caie-igcse-chem', 2026, 'May/June', '2', 'extended', 'A', 139, 168, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C224262-22-42-62-B', 'subj-caie-igcse-chem', 2026, 'May/June', '2', 'extended', 'B', 109, 138, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C224262-22-42-62-C', 'subj-caie-igcse-chem', 2026, 'May/June', '2', 'extended', 'C', 80, 108, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C224262-22-42-62-D', 'subj-caie-igcse-chem', 2026, 'May/June', '2', 'extended', 'D', 68, 79, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C224262-22-42-62-E', 'subj-caie-igcse-chem', 2026, 'May/June', '2', 'extended', 'E', 57, 67, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C224262-22-42-62-F', 'subj-caie-igcse-chem', 2026, 'May/June', '2', 'extended', 'F', 46, 56, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C224262-22-42-62-G', 'subj-caie-igcse-chem', 2026, 'May/June', '2', 'extended', 'G', 35, 45, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C224262-22-42-62-U', 'subj-caie-igcse-chem', 2026, 'May/June', '2', 'extended', 'U', 0, 34, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C234353-23-43-53-Astar', 'subj-caie-igcse-chem', 2026, 'May/June', '3', 'extended', 'A*', 172, 200, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C234353-23-43-53-A', 'subj-caie-igcse-chem', 2026, 'May/June', '3', 'extended', 'A', 144, 171, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C234353-23-43-53-B', 'subj-caie-igcse-chem', 2026, 'May/June', '3', 'extended', 'B', 116, 143, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C234353-23-43-53-C', 'subj-caie-igcse-chem', 2026, 'May/June', '3', 'extended', 'C', 89, 115, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C234353-23-43-53-D', 'subj-caie-igcse-chem', 2026, 'May/June', '3', 'extended', 'D', 76, 88, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C234353-23-43-53-E', 'subj-caie-igcse-chem', 2026, 'May/June', '3', 'extended', 'E', 64, 75, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C234353-23-43-53-F', 'subj-caie-igcse-chem', 2026, 'May/June', '3', 'extended', 'F', 53, 63, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C234353-23-43-53-G', 'subj-caie-igcse-chem', 2026, 'May/June', '3', 'extended', 'G', 42, 52, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C234353-23-43-53-U', 'subj-caie-igcse-chem', 2026, 'May/June', '3', 'extended', 'U', 0, 41, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C234363-23-43-63-Astar', 'subj-caie-igcse-chem', 2026, 'May/June', '3', 'extended', 'A*', 172, 200, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C234363-23-43-63-A', 'subj-caie-igcse-chem', 2026, 'May/June', '3', 'extended', 'A', 145, 171, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C234363-23-43-63-B', 'subj-caie-igcse-chem', 2026, 'May/June', '3', 'extended', 'B', 117, 144, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C234363-23-43-63-C', 'subj-caie-igcse-chem', 2026, 'May/June', '3', 'extended', 'C', 90, 116, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C234363-23-43-63-D', 'subj-caie-igcse-chem', 2026, 'May/June', '3', 'extended', 'D', 77, 89, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C234363-23-43-63-E', 'subj-caie-igcse-chem', 2026, 'May/June', '3', 'extended', 'E', 65, 76, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C234363-23-43-63-F', 'subj-caie-igcse-chem', 2026, 'May/June', '3', 'extended', 'F', 54, 64, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C234363-23-43-63-G', 'subj-caie-igcse-chem', 2026, 'May/June', '3', 'extended', 'G', 43, 53, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C234363-23-43-63-U', 'subj-caie-igcse-chem', 2026, 'May/June', '3', 'extended', 'U', 0, 42, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C274151-27-41-51-Astar', 'subj-caie-igcse-chem', 2026, 'May/June', '7', 'extended', 'A*', 173, 200, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C274151-27-41-51-A', 'subj-caie-igcse-chem', 2026, 'May/June', '7', 'extended', 'A', 147, 172, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C274151-27-41-51-B', 'subj-caie-igcse-chem', 2026, 'May/June', '7', 'extended', 'B', 119, 146, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C274151-27-41-51-C', 'subj-caie-igcse-chem', 2026, 'May/June', '7', 'extended', 'C', 91, 118, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C274151-27-41-51-D', 'subj-caie-igcse-chem', 2026, 'May/June', '7', 'extended', 'D', 78, 90, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C274151-27-41-51-E', 'subj-caie-igcse-chem', 2026, 'May/June', '7', 'extended', 'E', 66, 77, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C274151-27-41-51-F', 'subj-caie-igcse-chem', 2026, 'May/June', '7', 'extended', 'F', 53, 65, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C274151-27-41-51-G', 'subj-caie-igcse-chem', 2026, 'May/June', '7', 'extended', 'G', 40, 52, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C274151-27-41-51-U', 'subj-caie-igcse-chem', 2026, 'May/June', '7', 'extended', 'U', 0, 39, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0620-s26-C274161-27-41-61-Astar', 'subj-caie-igcse-chem', 2026, 'May/June', '7', 'extended', 'A*', 175, 200, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C274161-27-41-61-A', 'subj-caie-igcse-chem', 2026, 'May/June', '7', 'extended', 'A', 150, 174, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C274161-27-41-61-B', 'subj-caie-igcse-chem', 2026, 'May/June', '7', 'extended', 'B', 121, 149, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C274161-27-41-61-C', 'subj-caie-igcse-chem', 2026, 'May/June', '7', 'extended', 'C', 93, 120, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C274161-27-41-61-D', 'subj-caie-igcse-chem', 2026, 'May/June', '7', 'extended', 'D', 80, 92, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C274161-27-41-61-E', 'subj-caie-igcse-chem', 2026, 'May/June', '7', 'extended', 'E', 67, 79, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C274161-27-41-61-F', 'subj-caie-igcse-chem', 2026, 'May/June', '7', 'extended', 'F', 54, 66, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C274161-27-41-61-G', 'subj-caie-igcse-chem', 2026, 'May/June', '7', 'extended', 'G', 41, 53, strftime('%s', 'now') * 1000),
+('sgb-0620-s26-C274161-27-41-61-U', 'subj-caie-igcse-chem', 2026, 'May/June', '7', 'extended', 'U', 0, 40, strftime('%s', 'now') * 1000),
+('sgb-0620-m26-C123252-12-32-52-C', 'subj-caie-igcse-chem', 2026, 'Feb/March', '2', 'core', 'C', 107, 200, strftime('%s', 'now') * 1000),
+('sgb-0620-m26-C123252-12-32-52-D', 'subj-caie-igcse-chem', 2026, 'Feb/March', '2', 'core', 'D', 91, 106, strftime('%s', 'now') * 1000),
+('sgb-0620-m26-C123252-12-32-52-E', 'subj-caie-igcse-chem', 2026, 'Feb/March', '2', 'core', 'E', 75, 90, strftime('%s', 'now') * 1000),
+('sgb-0620-m26-C123252-12-32-52-F', 'subj-caie-igcse-chem', 2026, 'Feb/March', '2', 'core', 'F', 59, 74, strftime('%s', 'now') * 1000),
+('sgb-0620-m26-C123252-12-32-52-G', 'subj-caie-igcse-chem', 2026, 'Feb/March', '2', 'core', 'G', 43, 58, strftime('%s', 'now') * 1000),
+('sgb-0620-m26-C123252-12-32-52-U', 'subj-caie-igcse-chem', 2026, 'Feb/March', '2', 'core', 'U', 0, 42, strftime('%s', 'now') * 1000),
+('sgb-0620-m26-C123262-12-32-62-C', 'subj-caie-igcse-chem', 2026, 'Feb/March', '2', 'core', 'C', 111, 200, strftime('%s', 'now') * 1000),
+('sgb-0620-m26-C123262-12-32-62-D', 'subj-caie-igcse-chem', 2026, 'Feb/March', '2', 'core', 'D', 94, 110, strftime('%s', 'now') * 1000),
+('sgb-0620-m26-C123262-12-32-62-E', 'subj-caie-igcse-chem', 2026, 'Feb/March', '2', 'core', 'E', 78, 93, strftime('%s', 'now') * 1000),
+('sgb-0620-m26-C123262-12-32-62-F', 'subj-caie-igcse-chem', 2026, 'Feb/March', '2', 'core', 'F', 62, 77, strftime('%s', 'now') * 1000),
+('sgb-0620-m26-C123262-12-32-62-G', 'subj-caie-igcse-chem', 2026, 'Feb/March', '2', 'core', 'G', 46, 61, strftime('%s', 'now') * 1000),
+('sgb-0620-m26-C123262-12-32-62-U', 'subj-caie-igcse-chem', 2026, 'Feb/March', '2', 'core', 'U', 0, 45, strftime('%s', 'now') * 1000),
+('sgb-0620-m26-C224252-22-42-52-Astar', 'subj-caie-igcse-chem', 2026, 'Feb/March', '2', 'extended', 'A*', 171, 200, strftime('%s', 'now') * 1000),
+('sgb-0620-m26-C224252-22-42-52-A', 'subj-caie-igcse-chem', 2026, 'Feb/March', '2', 'extended', 'A', 142, 170, strftime('%s', 'now') * 1000),
+('sgb-0620-m26-C224252-22-42-52-B', 'subj-caie-igcse-chem', 2026, 'Feb/March', '2', 'extended', 'B', 113, 141, strftime('%s', 'now') * 1000),
+('sgb-0620-m26-C224252-22-42-52-C', 'subj-caie-igcse-chem', 2026, 'Feb/March', '2', 'extended', 'C', 85, 112, strftime('%s', 'now') * 1000),
+('sgb-0620-m26-C224252-22-42-52-D', 'subj-caie-igcse-chem', 2026, 'Feb/March', '2', 'extended', 'D', 74, 84, strftime('%s', 'now') * 1000),
+('sgb-0620-m26-C224252-22-42-52-E', 'subj-caie-igcse-chem', 2026, 'Feb/March', '2', 'extended', 'E', 63, 73, strftime('%s', 'now') * 1000),
+('sgb-0620-m26-C224252-22-42-52-F', 'subj-caie-igcse-chem', 2026, 'Feb/March', '2', 'extended', 'F', 51, 62, strftime('%s', 'now') * 1000),
+('sgb-0620-m26-C224252-22-42-52-G', 'subj-caie-igcse-chem', 2026, 'Feb/March', '2', 'extended', 'G', 39, 50, strftime('%s', 'now') * 1000),
+('sgb-0620-m26-C224252-22-42-52-U', 'subj-caie-igcse-chem', 2026, 'Feb/March', '2', 'extended', 'U', 0, 38, strftime('%s', 'now') * 1000),
+('sgb-0620-m26-C224262-22-42-62-Astar', 'subj-caie-igcse-chem', 2026, 'Feb/March', '2', 'extended', 'A*', 172, 200, strftime('%s', 'now') * 1000),
+('sgb-0620-m26-C224262-22-42-62-A', 'subj-caie-igcse-chem', 2026, 'Feb/March', '2', 'extended', 'A', 145, 171, strftime('%s', 'now') * 1000),
+('sgb-0620-m26-C224262-22-42-62-B', 'subj-caie-igcse-chem', 2026, 'Feb/March', '2', 'extended', 'B', 117, 144, strftime('%s', 'now') * 1000),
+('sgb-0620-m26-C224262-22-42-62-C', 'subj-caie-igcse-chem', 2026, 'Feb/March', '2', 'extended', 'C', 89, 116, strftime('%s', 'now') * 1000),
+('sgb-0620-m26-C224262-22-42-62-D', 'subj-caie-igcse-chem', 2026, 'Feb/March', '2', 'extended', 'D', 77, 88, strftime('%s', 'now') * 1000),
+('sgb-0620-m26-C224262-22-42-62-E', 'subj-caie-igcse-chem', 2026, 'Feb/March', '2', 'extended', 'E', 66, 76, strftime('%s', 'now') * 1000),
+('sgb-0620-m26-C224262-22-42-62-F', 'subj-caie-igcse-chem', 2026, 'Feb/March', '2', 'extended', 'F', 54, 65, strftime('%s', 'now') * 1000),
+('sgb-0620-m26-C224262-22-42-62-G', 'subj-caie-igcse-chem', 2026, 'Feb/March', '2', 'extended', 'G', 42, 53, strftime('%s', 'now') * 1000),
+('sgb-0620-m26-C224262-22-42-62-U', 'subj-caie-igcse-chem', 2026, 'Feb/March', '2', 'extended', 'U', 0, 41, strftime('%s', 'now') * 1000),
 ('sgb-0625-s22-BX-21-41-51-Astar', 'subj-caie-igcse-phys', 2022, 'May/June', '1', 'extended', 'A*', 123, 200, strftime('%s', 'now') * 1000),
 ('sgb-0625-s22-BX-21-41-51-A', 'subj-caie-igcse-phys', 2022, 'May/June', '1', 'extended', 'A', 102, 122, strftime('%s', 'now') * 1000),
 ('sgb-0625-s22-BX-21-41-51-B', 'subj-caie-igcse-phys', 2022, 'May/June', '1', 'extended', 'B', 81, 101, strftime('%s', 'now') * 1000),
@@ -6209,7 +7199,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0625-s22-BY-22-42-52-U', 'subj-caie-igcse-phys', 2022, 'May/June', '2', 'extended', 'U', 0, 28, strftime('%s', 'now') * 1000),
 ('sgb-0625-s22-BZ-23-43-53-Astar', 'subj-caie-igcse-phys', 2022, 'May/June', '3', 'extended', 'A*', 135, 200, strftime('%s', 'now') * 1000),
 ('sgb-0625-s22-BZ-23-43-53-A', 'subj-caie-igcse-phys', 2022, 'May/June', '3', 'extended', 'A', 116, 134, strftime('%s', 'now') * 1000),
-('sgb-0625-s22-BZ-23-43-53-B', 'subj-caie-igcse-phys', 2022, 'May/June', '3', 'extended', 'B', 97, 115, strftime('%s', 'now') * 1000),
+('sgb-0625-s22-BZ-23-43-53-B', 'subj-caie-igcse-phys', 2022, 'May/June', '3', 'extended', 'B', 97, 115, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0625-s22-BZ-23-43-53-C', 'subj-caie-igcse-phys', 2022, 'May/June', '3', 'extended', 'C', 78, 96, strftime('%s', 'now') * 1000),
 ('sgb-0625-s22-BZ-23-43-53-D', 'subj-caie-igcse-phys', 2022, 'May/June', '3', 'extended', 'D', 67, 77, strftime('%s', 'now') * 1000),
 ('sgb-0625-s22-BZ-23-43-53-E', 'subj-caie-igcse-phys', 2022, 'May/June', '3', 'extended', 'E', 56, 66, strftime('%s', 'now') * 1000),
@@ -6223,8 +7214,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0625-s22-CX-21-41-61-D', 'subj-caie-igcse-phys', 2022, 'May/June', '1', 'extended', 'D', 53, 60, strftime('%s', 'now') * 1000),
 ('sgb-0625-s22-CX-21-41-61-E', 'subj-caie-igcse-phys', 2022, 'May/June', '1', 'extended', 'E', 45, 52, strftime('%s', 'now') * 1000),
 ('sgb-0625-s22-CX-21-41-61-F', 'subj-caie-igcse-phys', 2022, 'May/June', '1', 'extended', 'F', 38, 44, strftime('%s', 'now') * 1000),
-('sgb-0625-s22-CX-21-41-61-G', 'subj-caie-igcse-phys', 2022, 'May/June', '1', 'extended', 'G', 31, 37, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0625-s22-CX-21-41-61-G', 'subj-caie-igcse-phys', 2022, 'May/June', '1', 'extended', 'G', 31, 37, strftime('%s', 'now') * 1000),
 ('sgb-0625-s22-CX-21-41-61-U', 'subj-caie-igcse-phys', 2022, 'May/June', '1', 'extended', 'U', 0, 30, strftime('%s', 'now') * 1000),
 ('sgb-0625-s22-CY-22-42-62-Astar', 'subj-caie-igcse-phys', 2022, 'May/June', '2', 'extended', 'A*', 137, 200, strftime('%s', 'now') * 1000),
 ('sgb-0625-s22-CY-22-42-62-A', 'subj-caie-igcse-phys', 2022, 'May/June', '2', 'extended', 'A', 113, 136, strftime('%s', 'now') * 1000),
@@ -6270,7 +7260,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0625-s22-GX-11-31-61-U', 'subj-caie-igcse-phys', 2022, 'May/June', '1', 'core', 'U', 0, 43, strftime('%s', 'now') * 1000),
 ('sgb-0625-s22-GY-12-32-62-C', 'subj-caie-igcse-phys', 2022, 'May/June', '2', 'core', 'C', 101, 200, strftime('%s', 'now') * 1000),
 ('sgb-0625-s22-GY-12-32-62-D', 'subj-caie-igcse-phys', 2022, 'May/June', '2', 'core', 'D', 85, 100, strftime('%s', 'now') * 1000),
-('sgb-0625-s22-GY-12-32-62-E', 'subj-caie-igcse-phys', 2022, 'May/June', '2', 'core', 'E', 69, 84, strftime('%s', 'now') * 1000),
+('sgb-0625-s22-GY-12-32-62-E', 'subj-caie-igcse-phys', 2022, 'May/June', '2', 'core', 'E', 69, 84, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0625-s22-GY-12-32-62-F', 'subj-caie-igcse-phys', 2022, 'May/June', '2', 'core', 'F', 54, 68, strftime('%s', 'now') * 1000),
 ('sgb-0625-s22-GY-12-32-62-G', 'subj-caie-igcse-phys', 2022, 'May/June', '2', 'core', 'G', 39, 53, strftime('%s', 'now') * 1000),
 ('sgb-0625-s22-GY-12-32-62-U', 'subj-caie-igcse-phys', 2022, 'May/June', '2', 'core', 'U', 0, 38, strftime('%s', 'now') * 1000),
@@ -6284,8 +7275,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0625-m22-BY-22-42-52-A', 'subj-caie-igcse-phys', 2022, 'Feb/March', '2', 'extended', 'A', 105, 123, strftime('%s', 'now') * 1000),
 ('sgb-0625-m22-BY-22-42-52-B', 'subj-caie-igcse-phys', 2022, 'Feb/March', '2', 'extended', 'B', 86, 104, strftime('%s', 'now') * 1000),
 ('sgb-0625-m22-BY-22-42-52-C', 'subj-caie-igcse-phys', 2022, 'Feb/March', '2', 'extended', 'C', 68, 85, strftime('%s', 'now') * 1000),
-('sgb-0625-m22-BY-22-42-52-D', 'subj-caie-igcse-phys', 2022, 'Feb/March', '2', 'extended', 'D', 59, 67, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0625-m22-BY-22-42-52-D', 'subj-caie-igcse-phys', 2022, 'Feb/March', '2', 'extended', 'D', 59, 67, strftime('%s', 'now') * 1000),
 ('sgb-0625-m22-BY-22-42-52-E', 'subj-caie-igcse-phys', 2022, 'Feb/March', '2', 'extended', 'E', 51, 58, strftime('%s', 'now') * 1000),
 ('sgb-0625-m22-BY-22-42-52-F', 'subj-caie-igcse-phys', 2022, 'Feb/March', '2', 'extended', 'F', 42, 50, strftime('%s', 'now') * 1000),
 ('sgb-0625-m22-BY-22-42-52-G', 'subj-caie-igcse-phys', 2022, 'Feb/March', '2', 'extended', 'G', 33, 41, strftime('%s', 'now') * 1000),
@@ -6331,7 +7321,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0625-w22-BY-22-42-52-U', 'subj-caie-igcse-phys', 2022, 'Oct/Nov', '2', 'extended', 'U', 0, 35, strftime('%s', 'now') * 1000),
 ('sgb-0625-w22-BZ-23-43-53-Astar', 'subj-caie-igcse-phys', 2022, 'Oct/Nov', '3', 'extended', 'A*', 133, 200, strftime('%s', 'now') * 1000),
 ('sgb-0625-w22-BZ-23-43-53-A', 'subj-caie-igcse-phys', 2022, 'Oct/Nov', '3', 'extended', 'A', 114, 132, strftime('%s', 'now') * 1000),
-('sgb-0625-w22-BZ-23-43-53-B', 'subj-caie-igcse-phys', 2022, 'Oct/Nov', '3', 'extended', 'B', 95, 113, strftime('%s', 'now') * 1000),
+('sgb-0625-w22-BZ-23-43-53-B', 'subj-caie-igcse-phys', 2022, 'Oct/Nov', '3', 'extended', 'B', 95, 113, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0625-w22-BZ-23-43-53-C', 'subj-caie-igcse-phys', 2022, 'Oct/Nov', '3', 'extended', 'C', 77, 94, strftime('%s', 'now') * 1000),
 ('sgb-0625-w22-BZ-23-43-53-D', 'subj-caie-igcse-phys', 2022, 'Oct/Nov', '3', 'extended', 'D', 65, 76, strftime('%s', 'now') * 1000),
 ('sgb-0625-w22-BZ-23-43-53-E', 'subj-caie-igcse-phys', 2022, 'Oct/Nov', '3', 'extended', 'E', 53, 64, strftime('%s', 'now') * 1000),
@@ -6345,8 +7336,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0625-w22-CX-21-41-61-D', 'subj-caie-igcse-phys', 2022, 'Oct/Nov', '1', 'extended', 'D', 66, 79, strftime('%s', 'now') * 1000),
 ('sgb-0625-w22-CX-21-41-61-E', 'subj-caie-igcse-phys', 2022, 'Oct/Nov', '1', 'extended', 'E', 53, 65, strftime('%s', 'now') * 1000),
 ('sgb-0625-w22-CX-21-41-61-F', 'subj-caie-igcse-phys', 2022, 'Oct/Nov', '1', 'extended', 'F', 41, 52, strftime('%s', 'now') * 1000),
-('sgb-0625-w22-CX-21-41-61-G', 'subj-caie-igcse-phys', 2022, 'Oct/Nov', '1', 'extended', 'G', 29, 40, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0625-w22-CX-21-41-61-G', 'subj-caie-igcse-phys', 2022, 'Oct/Nov', '1', 'extended', 'G', 29, 40, strftime('%s', 'now') * 1000),
 ('sgb-0625-w22-CX-21-41-61-U', 'subj-caie-igcse-phys', 2022, 'Oct/Nov', '1', 'extended', 'U', 0, 28, strftime('%s', 'now') * 1000),
 ('sgb-0625-w22-CY-22-42-62-Astar', 'subj-caie-igcse-phys', 2022, 'Oct/Nov', '2', 'extended', 'A*', 131, 200, strftime('%s', 'now') * 1000),
 ('sgb-0625-w22-CY-22-42-62-A', 'subj-caie-igcse-phys', 2022, 'Oct/Nov', '2', 'extended', 'A', 111, 130, strftime('%s', 'now') * 1000),
@@ -6392,7 +7382,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0625-w22-GX-11-31-61-U', 'subj-caie-igcse-phys', 2022, 'Oct/Nov', '1', 'core', 'U', 0, 47, strftime('%s', 'now') * 1000),
 ('sgb-0625-w22-GY-12-32-62-C', 'subj-caie-igcse-phys', 2022, 'Oct/Nov', '2', 'core', 'C', 109, 200, strftime('%s', 'now') * 1000),
 ('sgb-0625-w22-GY-12-32-62-D', 'subj-caie-igcse-phys', 2022, 'Oct/Nov', '2', 'core', 'D', 92, 108, strftime('%s', 'now') * 1000),
-('sgb-0625-w22-GY-12-32-62-E', 'subj-caie-igcse-phys', 2022, 'Oct/Nov', '2', 'core', 'E', 76, 91, strftime('%s', 'now') * 1000),
+('sgb-0625-w22-GY-12-32-62-E', 'subj-caie-igcse-phys', 2022, 'Oct/Nov', '2', 'core', 'E', 76, 91, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0625-w22-GY-12-32-62-F', 'subj-caie-igcse-phys', 2022, 'Oct/Nov', '2', 'core', 'F', 60, 75, strftime('%s', 'now') * 1000),
 ('sgb-0625-w22-GY-12-32-62-G', 'subj-caie-igcse-phys', 2022, 'Oct/Nov', '2', 'core', 'G', 44, 59, strftime('%s', 'now') * 1000),
 ('sgb-0625-w22-GY-12-32-62-U', 'subj-caie-igcse-phys', 2022, 'Oct/Nov', '2', 'core', 'U', 0, 43, strftime('%s', 'now') * 1000),
@@ -6406,8 +7397,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0625-s23-BX-21-41-51-A', 'subj-caie-igcse-phys', 2023, 'May/June', '1', 'extended', 'A', 106, 127, strftime('%s', 'now') * 1000),
 ('sgb-0625-s23-BX-21-41-51-B', 'subj-caie-igcse-phys', 2023, 'May/June', '1', 'extended', 'B', 84, 105, strftime('%s', 'now') * 1000),
 ('sgb-0625-s23-BX-21-41-51-C', 'subj-caie-igcse-phys', 2023, 'May/June', '1', 'extended', 'C', 63, 83, strftime('%s', 'now') * 1000),
-('sgb-0625-s23-BX-21-41-51-D', 'subj-caie-igcse-phys', 2023, 'May/June', '1', 'extended', 'D', 56, 62, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0625-s23-BX-21-41-51-D', 'subj-caie-igcse-phys', 2023, 'May/June', '1', 'extended', 'D', 56, 62, strftime('%s', 'now') * 1000),
 ('sgb-0625-s23-BX-21-41-51-E', 'subj-caie-igcse-phys', 2023, 'May/June', '1', 'extended', 'E', 50, 55, strftime('%s', 'now') * 1000),
 ('sgb-0625-s23-BX-21-41-51-F', 'subj-caie-igcse-phys', 2023, 'May/June', '1', 'extended', 'F', 44, 49, strftime('%s', 'now') * 1000),
 ('sgb-0625-s23-BX-21-41-51-G', 'subj-caie-igcse-phys', 2023, 'May/June', '1', 'extended', 'G', 38, 43, strftime('%s', 'now') * 1000),
@@ -6453,7 +7443,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0625-s23-CZ-23-43-63-B', 'subj-caie-igcse-phys', 2023, 'May/June', '3', 'extended', 'B', 103, 121, strftime('%s', 'now') * 1000),
 ('sgb-0625-s23-CZ-23-43-63-C', 'subj-caie-igcse-phys', 2023, 'May/June', '3', 'extended', 'C', 84, 102, strftime('%s', 'now') * 1000),
 ('sgb-0625-s23-CZ-23-43-63-D', 'subj-caie-igcse-phys', 2023, 'May/June', '3', 'extended', 'D', 73, 83, strftime('%s', 'now') * 1000),
-('sgb-0625-s23-CZ-23-43-63-E', 'subj-caie-igcse-phys', 2023, 'May/June', '3', 'extended', 'E', 62, 72, strftime('%s', 'now') * 1000),
+('sgb-0625-s23-CZ-23-43-63-E', 'subj-caie-igcse-phys', 2023, 'May/June', '3', 'extended', 'E', 62, 72, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0625-s23-CZ-23-43-63-F', 'subj-caie-igcse-phys', 2023, 'May/June', '3', 'extended', 'F', 51, 61, strftime('%s', 'now') * 1000),
 ('sgb-0625-s23-CZ-23-43-63-G', 'subj-caie-igcse-phys', 2023, 'May/June', '3', 'extended', 'G', 40, 50, strftime('%s', 'now') * 1000),
 ('sgb-0625-s23-CZ-23-43-63-U', 'subj-caie-igcse-phys', 2023, 'May/June', '3', 'extended', 'U', 0, 39, strftime('%s', 'now') * 1000),
@@ -6467,8 +7458,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0625-s23-FY-12-32-52-D', 'subj-caie-igcse-phys', 2023, 'May/June', '2', 'core', 'D', 89, 103, strftime('%s', 'now') * 1000),
 ('sgb-0625-s23-FY-12-32-52-E', 'subj-caie-igcse-phys', 2023, 'May/June', '2', 'core', 'E', 75, 88, strftime('%s', 'now') * 1000),
 ('sgb-0625-s23-FY-12-32-52-F', 'subj-caie-igcse-phys', 2023, 'May/June', '2', 'core', 'F', 59, 74, strftime('%s', 'now') * 1000),
-('sgb-0625-s23-FY-12-32-52-G', 'subj-caie-igcse-phys', 2023, 'May/June', '2', 'core', 'G', 43, 58, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0625-s23-FY-12-32-52-G', 'subj-caie-igcse-phys', 2023, 'May/June', '2', 'core', 'G', 43, 58, strftime('%s', 'now') * 1000),
 ('sgb-0625-s23-FY-12-32-52-U', 'subj-caie-igcse-phys', 2023, 'May/June', '2', 'core', 'U', 0, 42, strftime('%s', 'now') * 1000),
 ('sgb-0625-s23-GX-11-31-61-C', 'subj-caie-igcse-phys', 2023, 'May/June', '1', 'core', 'C', 113, 200, strftime('%s', 'now') * 1000),
 ('sgb-0625-s23-GX-11-31-61-D', 'subj-caie-igcse-phys', 2023, 'May/June', '1', 'core', 'D', 98, 112, strftime('%s', 'now') * 1000),
@@ -6514,7 +7504,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0625-m23-FY-12-32-52-U', 'subj-caie-igcse-phys', 2023, 'Feb/March', '2', 'core', 'U', 0, 44, strftime('%s', 'now') * 1000),
 ('sgb-0625-m23-GY-12-32-62-C', 'subj-caie-igcse-phys', 2023, 'Feb/March', '2', 'core', 'C', 107, 200, strftime('%s', 'now') * 1000),
 ('sgb-0625-m23-GY-12-32-62-D', 'subj-caie-igcse-phys', 2023, 'Feb/March', '2', 'core', 'D', 91, 106, strftime('%s', 'now') * 1000),
-('sgb-0625-m23-GY-12-32-62-E', 'subj-caie-igcse-phys', 2023, 'Feb/March', '2', 'core', 'E', 76, 90, strftime('%s', 'now') * 1000),
+('sgb-0625-m23-GY-12-32-62-E', 'subj-caie-igcse-phys', 2023, 'Feb/March', '2', 'core', 'E', 76, 90, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0625-m23-GY-12-32-62-F', 'subj-caie-igcse-phys', 2023, 'Feb/March', '2', 'core', 'F', 61, 75, strftime('%s', 'now') * 1000),
 ('sgb-0625-m23-GY-12-32-62-G', 'subj-caie-igcse-phys', 2023, 'Feb/March', '2', 'core', 'G', 46, 60, strftime('%s', 'now') * 1000),
 ('sgb-0625-m23-GY-12-32-62-U', 'subj-caie-igcse-phys', 2023, 'Feb/March', '2', 'core', 'U', 0, 45, strftime('%s', 'now') * 1000),
@@ -6528,8 +7519,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0625-w23-BX-21-41-51-G', 'subj-caie-igcse-phys', 2023, 'Oct/Nov', '1', 'extended', 'G', 31, 43, strftime('%s', 'now') * 1000),
 ('sgb-0625-w23-BX-21-41-51-U', 'subj-caie-igcse-phys', 2023, 'Oct/Nov', '1', 'extended', 'U', 0, 30, strftime('%s', 'now') * 1000),
 ('sgb-0625-w23-BY-22-42-52-Astar', 'subj-caie-igcse-phys', 2023, 'Oct/Nov', '2', 'extended', 'A*', 138, 200, strftime('%s', 'now') * 1000),
-('sgb-0625-w23-BY-22-42-52-A', 'subj-caie-igcse-phys', 2023, 'Oct/Nov', '2', 'extended', 'A', 117, 137, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0625-w23-BY-22-42-52-A', 'subj-caie-igcse-phys', 2023, 'Oct/Nov', '2', 'extended', 'A', 117, 137, strftime('%s', 'now') * 1000),
 ('sgb-0625-w23-BY-22-42-52-B', 'subj-caie-igcse-phys', 2023, 'Oct/Nov', '2', 'extended', 'B', 96, 116, strftime('%s', 'now') * 1000),
 ('sgb-0625-w23-BY-22-42-52-C', 'subj-caie-igcse-phys', 2023, 'Oct/Nov', '2', 'extended', 'C', 76, 95, strftime('%s', 'now') * 1000),
 ('sgb-0625-w23-BY-22-42-52-D', 'subj-caie-igcse-phys', 2023, 'Oct/Nov', '2', 'extended', 'D', 66, 75, strftime('%s', 'now') * 1000),
@@ -6575,7 +7565,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0625-w23-CZ-23-43-63-U', 'subj-caie-igcse-phys', 2023, 'Oct/Nov', '3', 'extended', 'U', 0, 38, strftime('%s', 'now') * 1000),
 ('sgb-0625-w23-FX-11-31-51-C', 'subj-caie-igcse-phys', 2023, 'Oct/Nov', '1', 'core', 'C', 114, 200, strftime('%s', 'now') * 1000),
 ('sgb-0625-w23-FX-11-31-51-D', 'subj-caie-igcse-phys', 2023, 'Oct/Nov', '1', 'core', 'D', 99, 113, strftime('%s', 'now') * 1000),
-('sgb-0625-w23-FX-11-31-51-E', 'subj-caie-igcse-phys', 2023, 'Oct/Nov', '1', 'core', 'E', 85, 98, strftime('%s', 'now') * 1000),
+('sgb-0625-w23-FX-11-31-51-E', 'subj-caie-igcse-phys', 2023, 'Oct/Nov', '1', 'core', 'E', 85, 98, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0625-w23-FX-11-31-51-F', 'subj-caie-igcse-phys', 2023, 'Oct/Nov', '1', 'core', 'F', 69, 84, strftime('%s', 'now') * 1000),
 ('sgb-0625-w23-FX-11-31-51-G', 'subj-caie-igcse-phys', 2023, 'Oct/Nov', '1', 'core', 'G', 53, 68, strftime('%s', 'now') * 1000),
 ('sgb-0625-w23-FX-11-31-51-U', 'subj-caie-igcse-phys', 2023, 'Oct/Nov', '1', 'core', 'U', 0, 52, strftime('%s', 'now') * 1000),
@@ -6589,8 +7580,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0625-w23-FZ-13-33-53-D', 'subj-caie-igcse-phys', 2023, 'Oct/Nov', '3', 'core', 'D', 99, 112, strftime('%s', 'now') * 1000),
 ('sgb-0625-w23-FZ-13-33-53-E', 'subj-caie-igcse-phys', 2023, 'Oct/Nov', '3', 'core', 'E', 86, 98, strftime('%s', 'now') * 1000),
 ('sgb-0625-w23-FZ-13-33-53-F', 'subj-caie-igcse-phys', 2023, 'Oct/Nov', '3', 'core', 'F', 72, 85, strftime('%s', 'now') * 1000),
-('sgb-0625-w23-FZ-13-33-53-G', 'subj-caie-igcse-phys', 2023, 'Oct/Nov', '3', 'core', 'G', 58, 71, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0625-w23-FZ-13-33-53-G', 'subj-caie-igcse-phys', 2023, 'Oct/Nov', '3', 'core', 'G', 58, 71, strftime('%s', 'now') * 1000),
 ('sgb-0625-w23-FZ-13-33-53-U', 'subj-caie-igcse-phys', 2023, 'Oct/Nov', '3', 'core', 'U', 0, 57, strftime('%s', 'now') * 1000),
 ('sgb-0625-w23-GX-11-31-61-C', 'subj-caie-igcse-phys', 2023, 'Oct/Nov', '1', 'core', 'C', 113, 200, strftime('%s', 'now') * 1000),
 ('sgb-0625-w23-GX-11-31-61-D', 'subj-caie-igcse-phys', 2023, 'Oct/Nov', '1', 'core', 'D', 99, 112, strftime('%s', 'now') * 1000),
@@ -6636,7 +7626,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0625-s24-BZ-23-43-53-E', 'subj-caie-igcse-phys', 2024, 'May/June', '3', 'extended', 'E', 58, 68, strftime('%s', 'now') * 1000),
 ('sgb-0625-s24-BZ-23-43-53-F', 'subj-caie-igcse-phys', 2024, 'May/June', '3', 'extended', 'F', 47, 57, strftime('%s', 'now') * 1000),
 ('sgb-0625-s24-BZ-23-43-53-G', 'subj-caie-igcse-phys', 2024, 'May/June', '3', 'extended', 'G', 36, 46, strftime('%s', 'now') * 1000),
-('sgb-0625-s24-BZ-23-43-53-U', 'subj-caie-igcse-phys', 2024, 'May/June', '3', 'extended', 'U', 0, 35, strftime('%s', 'now') * 1000),
+('sgb-0625-s24-BZ-23-43-53-U', 'subj-caie-igcse-phys', 2024, 'May/June', '3', 'extended', 'U', 0, 35, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0625-s24-CX-21-41-61-Astar', 'subj-caie-igcse-phys', 2024, 'May/June', '1', 'extended', 'A*', 146, 200, strftime('%s', 'now') * 1000),
 ('sgb-0625-s24-CX-21-41-61-A', 'subj-caie-igcse-phys', 2024, 'May/June', '1', 'extended', 'A', 122, 145, strftime('%s', 'now') * 1000),
 ('sgb-0625-s24-CX-21-41-61-B', 'subj-caie-igcse-phys', 2024, 'May/June', '1', 'extended', 'B', 98, 121, strftime('%s', 'now') * 1000),
@@ -6650,8 +7641,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0625-s24-CY-22-42-62-A', 'subj-caie-igcse-phys', 2024, 'May/June', '2', 'extended', 'A', 124, 148, strftime('%s', 'now') * 1000),
 ('sgb-0625-s24-CY-22-42-62-B', 'subj-caie-igcse-phys', 2024, 'May/June', '2', 'extended', 'B', 99, 123, strftime('%s', 'now') * 1000),
 ('sgb-0625-s24-CY-22-42-62-C', 'subj-caie-igcse-phys', 2024, 'May/June', '2', 'extended', 'C', 74, 98, strftime('%s', 'now') * 1000),
-('sgb-0625-s24-CY-22-42-62-D', 'subj-caie-igcse-phys', 2024, 'May/June', '2', 'extended', 'D', 64, 73, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0625-s24-CY-22-42-62-D', 'subj-caie-igcse-phys', 2024, 'May/June', '2', 'extended', 'D', 64, 73, strftime('%s', 'now') * 1000),
 ('sgb-0625-s24-CY-22-42-62-E', 'subj-caie-igcse-phys', 2024, 'May/June', '2', 'extended', 'E', 54, 63, strftime('%s', 'now') * 1000),
 ('sgb-0625-s24-CY-22-42-62-F', 'subj-caie-igcse-phys', 2024, 'May/June', '2', 'extended', 'F', 44, 53, strftime('%s', 'now') * 1000),
 ('sgb-0625-s24-CY-22-42-62-G', 'subj-caie-igcse-phys', 2024, 'May/June', '2', 'extended', 'G', 34, 43, strftime('%s', 'now') * 1000),
@@ -6697,7 +7687,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0625-s24-GZ-13-33-63-U', 'subj-caie-igcse-phys', 2024, 'May/June', '3', 'core', 'U', 0, 46, strftime('%s', 'now') * 1000),
 ('sgb-0625-m24-BY-22-42-52-Astar', 'subj-caie-igcse-phys', 2024, 'Feb/March', '2', 'extended', 'A*', 147, 200, strftime('%s', 'now') * 1000),
 ('sgb-0625-m24-BY-22-42-52-A', 'subj-caie-igcse-phys', 2024, 'Feb/March', '2', 'extended', 'A', 127, 146, strftime('%s', 'now') * 1000),
-('sgb-0625-m24-BY-22-42-52-B', 'subj-caie-igcse-phys', 2024, 'Feb/March', '2', 'extended', 'B', 107, 126, strftime('%s', 'now') * 1000),
+('sgb-0625-m24-BY-22-42-52-B', 'subj-caie-igcse-phys', 2024, 'Feb/March', '2', 'extended', 'B', 107, 126, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0625-m24-BY-22-42-52-C', 'subj-caie-igcse-phys', 2024, 'Feb/March', '2', 'extended', 'C', 87, 106, strftime('%s', 'now') * 1000),
 ('sgb-0625-m24-BY-22-42-52-D', 'subj-caie-igcse-phys', 2024, 'Feb/March', '2', 'extended', 'D', 75, 86, strftime('%s', 'now') * 1000),
 ('sgb-0625-m24-BY-22-42-52-E', 'subj-caie-igcse-phys', 2024, 'Feb/March', '2', 'extended', 'E', 63, 74, strftime('%s', 'now') * 1000),
@@ -6711,8 +7702,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0625-m24-CY-22-42-62-D', 'subj-caie-igcse-phys', 2024, 'Feb/March', '2', 'extended', 'D', 74, 85, strftime('%s', 'now') * 1000),
 ('sgb-0625-m24-CY-22-42-62-E', 'subj-caie-igcse-phys', 2024, 'Feb/March', '2', 'extended', 'E', 62, 73, strftime('%s', 'now') * 1000),
 ('sgb-0625-m24-CY-22-42-62-F', 'subj-caie-igcse-phys', 2024, 'Feb/March', '2', 'extended', 'F', 51, 61, strftime('%s', 'now') * 1000),
-('sgb-0625-m24-CY-22-42-62-G', 'subj-caie-igcse-phys', 2024, 'Feb/March', '2', 'extended', 'G', 40, 50, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0625-m24-CY-22-42-62-G', 'subj-caie-igcse-phys', 2024, 'Feb/March', '2', 'extended', 'G', 40, 50, strftime('%s', 'now') * 1000),
 ('sgb-0625-m24-CY-22-42-62-U', 'subj-caie-igcse-phys', 2024, 'Feb/March', '2', 'extended', 'U', 0, 39, strftime('%s', 'now') * 1000),
 ('sgb-0625-m24-FY-12-32-52-C', 'subj-caie-igcse-phys', 2024, 'Feb/March', '2', 'core', 'C', 123, 200, strftime('%s', 'now') * 1000),
 ('sgb-0625-m24-FY-12-32-52-D', 'subj-caie-igcse-phys', 2024, 'Feb/March', '2', 'core', 'D', 108, 122, strftime('%s', 'now') * 1000),
@@ -6758,7 +7748,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0625-w24-CX-21-41-61-B', 'subj-caie-igcse-phys', 2024, 'Oct/Nov', '1', 'extended', 'B', 96, 116, strftime('%s', 'now') * 1000),
 ('sgb-0625-w24-CX-21-41-61-C', 'subj-caie-igcse-phys', 2024, 'Oct/Nov', '1', 'extended', 'C', 76, 95, strftime('%s', 'now') * 1000),
 ('sgb-0625-w24-CX-21-41-61-D', 'subj-caie-igcse-phys', 2024, 'Oct/Nov', '1', 'extended', 'D', 65, 75, strftime('%s', 'now') * 1000),
-('sgb-0625-w24-CX-21-41-61-E', 'subj-caie-igcse-phys', 2024, 'Oct/Nov', '1', 'extended', 'E', 54, 64, strftime('%s', 'now') * 1000),
+('sgb-0625-w24-CX-21-41-61-E', 'subj-caie-igcse-phys', 2024, 'Oct/Nov', '1', 'extended', 'E', 54, 64, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0625-w24-CX-21-41-61-F', 'subj-caie-igcse-phys', 2024, 'Oct/Nov', '1', 'extended', 'F', 44, 53, strftime('%s', 'now') * 1000),
 ('sgb-0625-w24-CX-21-41-61-G', 'subj-caie-igcse-phys', 2024, 'Oct/Nov', '1', 'extended', 'G', 34, 43, strftime('%s', 'now') * 1000),
 ('sgb-0625-w24-CX-21-41-61-U', 'subj-caie-igcse-phys', 2024, 'Oct/Nov', '1', 'extended', 'U', 0, 33, strftime('%s', 'now') * 1000),
@@ -6772,8 +7763,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0625-w24-CY-22-42-62-G', 'subj-caie-igcse-phys', 2024, 'Oct/Nov', '2', 'extended', 'G', 38, 48, strftime('%s', 'now') * 1000),
 ('sgb-0625-w24-CY-22-42-62-U', 'subj-caie-igcse-phys', 2024, 'Oct/Nov', '2', 'extended', 'U', 0, 37, strftime('%s', 'now') * 1000),
 ('sgb-0625-w24-CZ-23-43-63-Astar', 'subj-caie-igcse-phys', 2024, 'Oct/Nov', '3', 'extended', 'A*', 142, 200, strftime('%s', 'now') * 1000),
-('sgb-0625-w24-CZ-23-43-63-A', 'subj-caie-igcse-phys', 2024, 'Oct/Nov', '3', 'extended', 'A', 122, 141, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0625-w24-CZ-23-43-63-A', 'subj-caie-igcse-phys', 2024, 'Oct/Nov', '3', 'extended', 'A', 122, 141, strftime('%s', 'now') * 1000),
 ('sgb-0625-w24-CZ-23-43-63-B', 'subj-caie-igcse-phys', 2024, 'Oct/Nov', '3', 'extended', 'B', 102, 121, strftime('%s', 'now') * 1000),
 ('sgb-0625-w24-CZ-23-43-63-C', 'subj-caie-igcse-phys', 2024, 'Oct/Nov', '3', 'extended', 'C', 83, 101, strftime('%s', 'now') * 1000),
 ('sgb-0625-w24-CZ-23-43-63-D', 'subj-caie-igcse-phys', 2024, 'Oct/Nov', '3', 'extended', 'D', 72, 82, strftime('%s', 'now') * 1000),
@@ -6819,7 +7809,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0625-s25-BX-21-41-51-E', 'subj-caie-igcse-phys', 2025, 'May/June', '1', 'extended', 'E', 60, 66, strftime('%s', 'now') * 1000),
 ('sgb-0625-s25-BX-21-41-51-F', 'subj-caie-igcse-phys', 2025, 'May/June', '1', 'extended', 'F', 53, 59, strftime('%s', 'now') * 1000),
 ('sgb-0625-s25-BX-21-41-51-G', 'subj-caie-igcse-phys', 2025, 'May/June', '1', 'extended', 'G', 46, 52, strftime('%s', 'now') * 1000),
-('sgb-0625-s25-BX-21-41-51-U', 'subj-caie-igcse-phys', 2025, 'May/June', '1', 'extended', 'U', 0, 45, strftime('%s', 'now') * 1000),
+('sgb-0625-s25-BX-21-41-51-U', 'subj-caie-igcse-phys', 2025, 'May/June', '1', 'extended', 'U', 0, 45, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0625-s25-BY-22-42-52-Astar', 'subj-caie-igcse-phys', 2025, 'May/June', '2', 'extended', 'A*', 154, 200, strftime('%s', 'now') * 1000),
 ('sgb-0625-s25-BY-22-42-52-A', 'subj-caie-igcse-phys', 2025, 'May/June', '2', 'extended', 'A', 128, 153, strftime('%s', 'now') * 1000),
 ('sgb-0625-s25-BY-22-42-52-B', 'subj-caie-igcse-phys', 2025, 'May/June', '2', 'extended', 'B', 102, 127, strftime('%s', 'now') * 1000),
@@ -6833,8 +7824,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0625-s25-BZ-23-43-53-A', 'subj-caie-igcse-phys', 2025, 'May/June', '3', 'extended', 'A', 122, 142, strftime('%s', 'now') * 1000),
 ('sgb-0625-s25-BZ-23-43-53-B', 'subj-caie-igcse-phys', 2025, 'May/June', '3', 'extended', 'B', 101, 121, strftime('%s', 'now') * 1000),
 ('sgb-0625-s25-BZ-23-43-53-C', 'subj-caie-igcse-phys', 2025, 'May/June', '3', 'extended', 'C', 81, 100, strftime('%s', 'now') * 1000),
-('sgb-0625-s25-BZ-23-43-53-D', 'subj-caie-igcse-phys', 2025, 'May/June', '3', 'extended', 'D', 69, 80, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0625-s25-BZ-23-43-53-D', 'subj-caie-igcse-phys', 2025, 'May/June', '3', 'extended', 'D', 69, 80, strftime('%s', 'now') * 1000),
 ('sgb-0625-s25-BZ-23-43-53-E', 'subj-caie-igcse-phys', 2025, 'May/June', '3', 'extended', 'E', 58, 68, strftime('%s', 'now') * 1000),
 ('sgb-0625-s25-BZ-23-43-53-F', 'subj-caie-igcse-phys', 2025, 'May/June', '3', 'extended', 'F', 48, 57, strftime('%s', 'now') * 1000),
 ('sgb-0625-s25-BZ-23-43-53-G', 'subj-caie-igcse-phys', 2025, 'May/June', '3', 'extended', 'G', 38, 47, strftime('%s', 'now') * 1000),
@@ -6880,7 +7870,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0625-s25-FY-12-32-52-U', 'subj-caie-igcse-phys', 2025, 'May/June', '2', 'core', 'U', 0, 43, strftime('%s', 'now') * 1000),
 ('sgb-0625-s25-FZ-13-33-53-C', 'subj-caie-igcse-phys', 2025, 'May/June', '3', 'core', 'C', 103, 200, strftime('%s', 'now') * 1000),
 ('sgb-0625-s25-FZ-13-33-53-D', 'subj-caie-igcse-phys', 2025, 'May/June', '3', 'core', 'D', 88, 102, strftime('%s', 'now') * 1000),
-('sgb-0625-s25-FZ-13-33-53-E', 'subj-caie-igcse-phys', 2025, 'May/June', '3', 'core', 'E', 74, 87, strftime('%s', 'now') * 1000),
+('sgb-0625-s25-FZ-13-33-53-E', 'subj-caie-igcse-phys', 2025, 'May/June', '3', 'core', 'E', 74, 87, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0625-s25-FZ-13-33-53-F', 'subj-caie-igcse-phys', 2025, 'May/June', '3', 'core', 'F', 58, 73, strftime('%s', 'now') * 1000),
 ('sgb-0625-s25-FZ-13-33-53-G', 'subj-caie-igcse-phys', 2025, 'May/June', '3', 'core', 'G', 42, 57, strftime('%s', 'now') * 1000),
 ('sgb-0625-s25-FZ-13-33-53-U', 'subj-caie-igcse-phys', 2025, 'May/June', '3', 'core', 'U', 0, 41, strftime('%s', 'now') * 1000),
@@ -6894,8 +7885,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0625-s25-GY-12-32-62-D', 'subj-caie-igcse-phys', 2025, 'May/June', '2', 'core', 'D', 92, 107, strftime('%s', 'now') * 1000),
 ('sgb-0625-s25-GY-12-32-62-E', 'subj-caie-igcse-phys', 2025, 'May/June', '2', 'core', 'E', 77, 91, strftime('%s', 'now') * 1000),
 ('sgb-0625-s25-GY-12-32-62-F', 'subj-caie-igcse-phys', 2025, 'May/June', '2', 'core', 'F', 60, 76, strftime('%s', 'now') * 1000),
-('sgb-0625-s25-GY-12-32-62-G', 'subj-caie-igcse-phys', 2025, 'May/June', '2', 'core', 'G', 43, 59, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0625-s25-GY-12-32-62-G', 'subj-caie-igcse-phys', 2025, 'May/June', '2', 'core', 'G', 43, 59, strftime('%s', 'now') * 1000),
 ('sgb-0625-s25-GY-12-32-62-U', 'subj-caie-igcse-phys', 2025, 'May/June', '2', 'core', 'U', 0, 42, strftime('%s', 'now') * 1000),
 ('sgb-0625-s25-GZ-13-33-63-C', 'subj-caie-igcse-phys', 2025, 'May/June', '3', 'core', 'C', 104, 200, strftime('%s', 'now') * 1000),
 ('sgb-0625-s25-GZ-13-33-63-D', 'subj-caie-igcse-phys', 2025, 'May/June', '3', 'core', 'D', 89, 103, strftime('%s', 'now') * 1000),
@@ -6941,7 +7931,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0625-w25-BX-21-41-51-E', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '1', 'extended', 'E', 67, 78, strftime('%s', 'now') * 1000),
 ('sgb-0625-w25-BX-21-41-51-F', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '1', 'extended', 'F', 54, 66, strftime('%s', 'now') * 1000),
 ('sgb-0625-w25-BX-21-41-51-G', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '1', 'extended', 'G', 41, 53, strftime('%s', 'now') * 1000),
-('sgb-0625-w25-BX-21-41-51-U', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '1', 'extended', 'U', 0, 40, strftime('%s', 'now') * 1000),
+('sgb-0625-w25-BX-21-41-51-U', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '1', 'extended', 'U', 0, 40, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0625-w25-BY-22-42-52-Astar', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '2', 'extended', 'A*', 145, 200, strftime('%s', 'now') * 1000),
 ('sgb-0625-w25-BY-22-42-52-A', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '2', 'extended', 'A', 125, 144, strftime('%s', 'now') * 1000),
 ('sgb-0625-w25-BY-22-42-52-B', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '2', 'extended', 'B', 105, 124, strftime('%s', 'now') * 1000),
@@ -6955,8 +7946,7 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0625-w25-BZ-23-43-53-A', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '3', 'extended', 'A', 126, 145, strftime('%s', 'now') * 1000),
 ('sgb-0625-w25-BZ-23-43-53-B', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '3', 'extended', 'B', 106, 125, strftime('%s', 'now') * 1000),
 ('sgb-0625-w25-BZ-23-43-53-C', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '3', 'extended', 'C', 87, 105, strftime('%s', 'now') * 1000),
-('sgb-0625-w25-BZ-23-43-53-D', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '3', 'extended', 'D', 74, 86, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0625-w25-BZ-23-43-53-D', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '3', 'extended', 'D', 74, 86, strftime('%s', 'now') * 1000),
 ('sgb-0625-w25-BZ-23-43-53-E', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '3', 'extended', 'E', 62, 73, strftime('%s', 'now') * 1000),
 ('sgb-0625-w25-BZ-23-43-53-F', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '3', 'extended', 'F', 51, 61, strftime('%s', 'now') * 1000),
 ('sgb-0625-w25-BZ-23-43-53-G', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '3', 'extended', 'G', 40, 50, strftime('%s', 'now') * 1000),
@@ -7002,7 +7992,8 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0625-w25-FY-12-32-52-U', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '2', 'core', 'U', 0, 60, strftime('%s', 'now') * 1000),
 ('sgb-0625-w25-FZ-13-33-53-C', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '3', 'core', 'C', 126, 200, strftime('%s', 'now') * 1000),
 ('sgb-0625-w25-FZ-13-33-53-D', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '3', 'core', 'D', 109, 125, strftime('%s', 'now') * 1000),
-('sgb-0625-w25-FZ-13-33-53-E', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '3', 'core', 'E', 92, 108, strftime('%s', 'now') * 1000),
+('sgb-0625-w25-FZ-13-33-53-E', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '3', 'core', 'E', 92, 108, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
 ('sgb-0625-w25-FZ-13-33-53-F', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '3', 'core', 'F', 76, 91, strftime('%s', 'now') * 1000),
 ('sgb-0625-w25-FZ-13-33-53-G', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '3', 'core', 'G', 60, 75, strftime('%s', 'now') * 1000),
 ('sgb-0625-w25-FZ-13-33-53-U', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '3', 'core', 'U', 0, 59, strftime('%s', 'now') * 1000),
@@ -7016,12 +8007,163 @@ INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, va
 ('sgb-0625-w25-GY-12-32-62-D', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '2', 'core', 'D', 104, 120, strftime('%s', 'now') * 1000),
 ('sgb-0625-w25-GY-12-32-62-E', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '2', 'core', 'E', 88, 103, strftime('%s', 'now') * 1000),
 ('sgb-0625-w25-GY-12-32-62-F', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '2', 'core', 'F', 73, 87, strftime('%s', 'now') * 1000),
-('sgb-0625-w25-GY-12-32-62-G', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '2', 'core', 'G', 58, 72, strftime('%s', 'now') * 1000);
-INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0625-w25-GY-12-32-62-G', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '2', 'core', 'G', 58, 72, strftime('%s', 'now') * 1000),
 ('sgb-0625-w25-GY-12-32-62-U', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '2', 'core', 'U', 0, 57, strftime('%s', 'now') * 1000),
 ('sgb-0625-w25-GZ-13-33-63-C', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '3', 'core', 'C', 122, 200, strftime('%s', 'now') * 1000),
 ('sgb-0625-w25-GZ-13-33-63-D', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '3', 'core', 'D', 105, 121, strftime('%s', 'now') * 1000),
 ('sgb-0625-w25-GZ-13-33-63-E', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '3', 'core', 'E', 89, 104, strftime('%s', 'now') * 1000),
 ('sgb-0625-w25-GZ-13-33-63-F', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '3', 'core', 'F', 73, 88, strftime('%s', 'now') * 1000),
 ('sgb-0625-w25-GZ-13-33-63-G', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '3', 'core', 'G', 57, 72, strftime('%s', 'now') * 1000),
-('sgb-0625-w25-GZ-13-33-63-U', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '3', 'core', 'U', 0, 56, strftime('%s', 'now') * 1000);
+('sgb-0625-w25-GZ-13-33-63-U', 'subj-caie-igcse-phys', 2025, 'Oct/Nov', '3', 'core', 'U', 0, 56, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C113151-11-31-51-C', 'subj-caie-igcse-phys', 2026, 'May/June', '1', 'core', 'C', 105, 200, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C113151-11-31-51-D', 'subj-caie-igcse-phys', 2026, 'May/June', '1', 'core', 'D', 91, 104, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C113151-11-31-51-E', 'subj-caie-igcse-phys', 2026, 'May/June', '1', 'core', 'E', 78, 90, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C113151-11-31-51-F', 'subj-caie-igcse-phys', 2026, 'May/June', '1', 'core', 'F', 64, 77, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C113151-11-31-51-G', 'subj-caie-igcse-phys', 2026, 'May/June', '1', 'core', 'G', 50, 63, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C113151-11-31-51-U', 'subj-caie-igcse-phys', 2026, 'May/June', '1', 'core', 'U', 0, 49, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C113161-11-31-61-C', 'subj-caie-igcse-phys', 2026, 'May/June', '1', 'core', 'C', 107, 200, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C113161-11-31-61-D', 'subj-caie-igcse-phys', 2026, 'May/June', '1', 'core', 'D', 93, 106, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C113161-11-31-61-E', 'subj-caie-igcse-phys', 2026, 'May/June', '1', 'core', 'E', 80, 92, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C113161-11-31-61-F', 'subj-caie-igcse-phys', 2026, 'May/June', '1', 'core', 'F', 65, 79, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C113161-11-31-61-G', 'subj-caie-igcse-phys', 2026, 'May/June', '1', 'core', 'G', 50, 64, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C113161-11-31-61-U', 'subj-caie-igcse-phys', 2026, 'May/June', '1', 'core', 'U', 0, 49, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C123252-12-32-52-C', 'subj-caie-igcse-phys', 2026, 'May/June', '2', 'core', 'C', 114, 200, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C123252-12-32-52-D', 'subj-caie-igcse-phys', 2026, 'May/June', '2', 'core', 'D', 99, 113, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C123252-12-32-52-E', 'subj-caie-igcse-phys', 2026, 'May/June', '2', 'core', 'E', 85, 98, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C123252-12-32-52-F', 'subj-caie-igcse-phys', 2026, 'May/June', '2', 'core', 'F', 70, 84, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C123252-12-32-52-G', 'subj-caie-igcse-phys', 2026, 'May/June', '2', 'core', 'G', 55, 69, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C123252-12-32-52-U', 'subj-caie-igcse-phys', 2026, 'May/June', '2', 'core', 'U', 0, 54, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C123262-12-32-62-C', 'subj-caie-igcse-phys', 2026, 'May/June', '2', 'core', 'C', 114, 200, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C123262-12-32-62-D', 'subj-caie-igcse-phys', 2026, 'May/June', '2', 'core', 'D', 99, 113, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C123262-12-32-62-E', 'subj-caie-igcse-phys', 2026, 'May/June', '2', 'core', 'E', 84, 98, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C123262-12-32-62-F', 'subj-caie-igcse-phys', 2026, 'May/June', '2', 'core', 'F', 68, 83, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C123262-12-32-62-G', 'subj-caie-igcse-phys', 2026, 'May/June', '2', 'core', 'G', 52, 67, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C123262-12-32-62-U', 'subj-caie-igcse-phys', 2026, 'May/June', '2', 'core', 'U', 0, 51, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C133353-13-33-53-C', 'subj-caie-igcse-phys', 2026, 'May/June', '3', 'core', 'C', 114, 200, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C133353-13-33-53-D', 'subj-caie-igcse-phys', 2026, 'May/June', '3', 'core', 'D', 99, 113, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C133353-13-33-53-E', 'subj-caie-igcse-phys', 2026, 'May/June', '3', 'core', 'E', 85, 98, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C133353-13-33-53-F', 'subj-caie-igcse-phys', 2026, 'May/June', '3', 'core', 'F', 70, 84, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C133353-13-33-53-G', 'subj-caie-igcse-phys', 2026, 'May/June', '3', 'core', 'G', 55, 69, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C133353-13-33-53-U', 'subj-caie-igcse-phys', 2026, 'May/June', '3', 'core', 'U', 0, 54, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C133363-13-33-63-C', 'subj-caie-igcse-phys', 2026, 'May/June', '3', 'core', 'C', 113, 200, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C133363-13-33-63-D', 'subj-caie-igcse-phys', 2026, 'May/June', '3', 'core', 'D', 99, 112, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C133363-13-33-63-E', 'subj-caie-igcse-phys', 2026, 'May/June', '3', 'core', 'E', 85, 98, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C133363-13-33-63-F', 'subj-caie-igcse-phys', 2026, 'May/June', '3', 'core', 'F', 69, 84, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C133363-13-33-63-G', 'subj-caie-igcse-phys', 2026, 'May/June', '3', 'core', 'G', 53, 68, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C133363-13-33-63-U', 'subj-caie-igcse-phys', 2026, 'May/June', '3', 'core', 'U', 0, 52, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C173151-17-31-51-C', 'subj-caie-igcse-phys', 2026, 'May/June', '7', 'core', 'C', 105, 200, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C173151-17-31-51-D', 'subj-caie-igcse-phys', 2026, 'May/June', '7', 'core', 'D', 91, 104, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C173151-17-31-51-E', 'subj-caie-igcse-phys', 2026, 'May/June', '7', 'core', 'E', 78, 90, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0625-s26-C173151-17-31-51-F', 'subj-caie-igcse-phys', 2026, 'May/June', '7', 'core', 'F', 64, 77, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C173151-17-31-51-G', 'subj-caie-igcse-phys', 2026, 'May/June', '7', 'core', 'G', 50, 63, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C173151-17-31-51-U', 'subj-caie-igcse-phys', 2026, 'May/June', '7', 'core', 'U', 0, 49, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C173161-17-31-61-C', 'subj-caie-igcse-phys', 2026, 'May/June', '7', 'core', 'C', 107, 200, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C173161-17-31-61-D', 'subj-caie-igcse-phys', 2026, 'May/June', '7', 'core', 'D', 93, 106, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C173161-17-31-61-E', 'subj-caie-igcse-phys', 2026, 'May/June', '7', 'core', 'E', 80, 92, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C173161-17-31-61-F', 'subj-caie-igcse-phys', 2026, 'May/June', '7', 'core', 'F', 65, 79, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C173161-17-31-61-G', 'subj-caie-igcse-phys', 2026, 'May/June', '7', 'core', 'G', 50, 64, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C173161-17-31-61-U', 'subj-caie-igcse-phys', 2026, 'May/June', '7', 'core', 'U', 0, 49, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C214151-21-41-51-Astar', 'subj-caie-igcse-phys', 2026, 'May/June', '1', 'extended', 'A*', 162, 200, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C214151-21-41-51-A', 'subj-caie-igcse-phys', 2026, 'May/June', '1', 'extended', 'A', 137, 161, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C214151-21-41-51-B', 'subj-caie-igcse-phys', 2026, 'May/June', '1', 'extended', 'B', 112, 136, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C214151-21-41-51-C', 'subj-caie-igcse-phys', 2026, 'May/June', '1', 'extended', 'C', 88, 111, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C214151-21-41-51-D', 'subj-caie-igcse-phys', 2026, 'May/June', '1', 'extended', 'D', 77, 87, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C214151-21-41-51-E', 'subj-caie-igcse-phys', 2026, 'May/June', '1', 'extended', 'E', 67, 76, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C214151-21-41-51-F', 'subj-caie-igcse-phys', 2026, 'May/June', '1', 'extended', 'F', 57, 66, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C214151-21-41-51-G', 'subj-caie-igcse-phys', 2026, 'May/June', '1', 'extended', 'G', 47, 56, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C214151-21-41-51-U', 'subj-caie-igcse-phys', 2026, 'May/June', '1', 'extended', 'U', 0, 46, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C214161-21-41-61-Astar', 'subj-caie-igcse-phys', 2026, 'May/June', '1', 'extended', 'A*', 165, 200, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C214161-21-41-61-A', 'subj-caie-igcse-phys', 2026, 'May/June', '1', 'extended', 'A', 140, 164, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C214161-21-41-61-B', 'subj-caie-igcse-phys', 2026, 'May/June', '1', 'extended', 'B', 115, 139, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C214161-21-41-61-C', 'subj-caie-igcse-phys', 2026, 'May/June', '1', 'extended', 'C', 90, 114, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C214161-21-41-61-D', 'subj-caie-igcse-phys', 2026, 'May/June', '1', 'extended', 'D', 79, 89, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C214161-21-41-61-E', 'subj-caie-igcse-phys', 2026, 'May/June', '1', 'extended', 'E', 69, 78, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C214161-21-41-61-F', 'subj-caie-igcse-phys', 2026, 'May/June', '1', 'extended', 'F', 58, 68, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C214161-21-41-61-G', 'subj-caie-igcse-phys', 2026, 'May/June', '1', 'extended', 'G', 47, 57, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C214161-21-41-61-U', 'subj-caie-igcse-phys', 2026, 'May/June', '1', 'extended', 'U', 0, 46, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C224252-22-42-52-Astar', 'subj-caie-igcse-phys', 2026, 'May/June', '2', 'extended', 'A*', 160, 200, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C224252-22-42-52-A', 'subj-caie-igcse-phys', 2026, 'May/June', '2', 'extended', 'A', 133, 159, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C224252-22-42-52-B', 'subj-caie-igcse-phys', 2026, 'May/June', '2', 'extended', 'B', 106, 132, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C224252-22-42-52-C', 'subj-caie-igcse-phys', 2026, 'May/June', '2', 'extended', 'C', 80, 105, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C224252-22-42-52-D', 'subj-caie-igcse-phys', 2026, 'May/June', '2', 'extended', 'D', 71, 79, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C224252-22-42-52-E', 'subj-caie-igcse-phys', 2026, 'May/June', '2', 'extended', 'E', 62, 70, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C224252-22-42-52-F', 'subj-caie-igcse-phys', 2026, 'May/June', '2', 'extended', 'F', 53, 61, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C224252-22-42-52-G', 'subj-caie-igcse-phys', 2026, 'May/June', '2', 'extended', 'G', 44, 52, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C224252-22-42-52-U', 'subj-caie-igcse-phys', 2026, 'May/June', '2', 'extended', 'U', 0, 43, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C224262-22-42-62-Astar', 'subj-caie-igcse-phys', 2026, 'May/June', '2', 'extended', 'A*', 161, 200, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C224262-22-42-62-A', 'subj-caie-igcse-phys', 2026, 'May/June', '2', 'extended', 'A', 134, 160, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C224262-22-42-62-B', 'subj-caie-igcse-phys', 2026, 'May/June', '2', 'extended', 'B', 107, 133, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C224262-22-42-62-C', 'subj-caie-igcse-phys', 2026, 'May/June', '2', 'extended', 'C', 80, 106, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C224262-22-42-62-D', 'subj-caie-igcse-phys', 2026, 'May/June', '2', 'extended', 'D', 70, 79, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C224262-22-42-62-E', 'subj-caie-igcse-phys', 2026, 'May/June', '2', 'extended', 'E', 61, 69, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C224262-22-42-62-F', 'subj-caie-igcse-phys', 2026, 'May/June', '2', 'extended', 'F', 51, 60, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C224262-22-42-62-G', 'subj-caie-igcse-phys', 2026, 'May/June', '2', 'extended', 'G', 41, 50, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C224262-22-42-62-U', 'subj-caie-igcse-phys', 2026, 'May/June', '2', 'extended', 'U', 0, 40, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C234353-23-43-53-Astar', 'subj-caie-igcse-phys', 2026, 'May/June', '3', 'extended', 'A*', 159, 200, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C234353-23-43-53-A', 'subj-caie-igcse-phys', 2026, 'May/June', '3', 'extended', 'A', 135, 158, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C234353-23-43-53-B', 'subj-caie-igcse-phys', 2026, 'May/June', '3', 'extended', 'B', 111, 134, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C234353-23-43-53-C', 'subj-caie-igcse-phys', 2026, 'May/June', '3', 'extended', 'C', 88, 110, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C234353-23-43-53-D', 'subj-caie-igcse-phys', 2026, 'May/June', '3', 'extended', 'D', 78, 87, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C234353-23-43-53-E', 'subj-caie-igcse-phys', 2026, 'May/June', '3', 'extended', 'E', 69, 77, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C234353-23-43-53-F', 'subj-caie-igcse-phys', 2026, 'May/June', '3', 'extended', 'F', 59, 68, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C234353-23-43-53-G', 'subj-caie-igcse-phys', 2026, 'May/June', '3', 'extended', 'G', 49, 58, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C234353-23-43-53-U', 'subj-caie-igcse-phys', 2026, 'May/June', '3', 'extended', 'U', 0, 48, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C234363-23-43-63-Astar', 'subj-caie-igcse-phys', 2026, 'May/June', '3', 'extended', 'A*', 156, 200, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C234363-23-43-63-A', 'subj-caie-igcse-phys', 2026, 'May/June', '3', 'extended', 'A', 133, 155, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C234363-23-43-63-B', 'subj-caie-igcse-phys', 2026, 'May/June', '3', 'extended', 'B', 110, 132, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C234363-23-43-63-C', 'subj-caie-igcse-phys', 2026, 'May/June', '3', 'extended', 'C', 87, 109, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C234363-23-43-63-D', 'subj-caie-igcse-phys', 2026, 'May/June', '3', 'extended', 'D', 78, 86, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C234363-23-43-63-E', 'subj-caie-igcse-phys', 2026, 'May/June', '3', 'extended', 'E', 69, 77, strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO subject_grade_boundaries (id, subject_id, year, series, variant, tier, grade, min_mark, max_mark, created_at) VALUES
+('sgb-0625-s26-C234363-23-43-63-F', 'subj-caie-igcse-phys', 2026, 'May/June', '3', 'extended', 'F', 58, 68, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C234363-23-43-63-G', 'subj-caie-igcse-phys', 2026, 'May/June', '3', 'extended', 'G', 47, 57, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C234363-23-43-63-U', 'subj-caie-igcse-phys', 2026, 'May/June', '3', 'extended', 'U', 0, 46, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C274151-27-41-51-Astar', 'subj-caie-igcse-phys', 2026, 'May/June', '7', 'extended', 'A*', 162, 200, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C274151-27-41-51-A', 'subj-caie-igcse-phys', 2026, 'May/June', '7', 'extended', 'A', 137, 161, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C274151-27-41-51-B', 'subj-caie-igcse-phys', 2026, 'May/June', '7', 'extended', 'B', 112, 136, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C274151-27-41-51-C', 'subj-caie-igcse-phys', 2026, 'May/June', '7', 'extended', 'C', 88, 111, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C274151-27-41-51-D', 'subj-caie-igcse-phys', 2026, 'May/June', '7', 'extended', 'D', 77, 87, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C274151-27-41-51-E', 'subj-caie-igcse-phys', 2026, 'May/June', '7', 'extended', 'E', 67, 76, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C274151-27-41-51-F', 'subj-caie-igcse-phys', 2026, 'May/June', '7', 'extended', 'F', 57, 66, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C274151-27-41-51-G', 'subj-caie-igcse-phys', 2026, 'May/June', '7', 'extended', 'G', 47, 56, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C274151-27-41-51-U', 'subj-caie-igcse-phys', 2026, 'May/June', '7', 'extended', 'U', 0, 46, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C274161-27-41-61-Astar', 'subj-caie-igcse-phys', 2026, 'May/June', '7', 'extended', 'A*', 165, 200, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C274161-27-41-61-A', 'subj-caie-igcse-phys', 2026, 'May/June', '7', 'extended', 'A', 140, 164, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C274161-27-41-61-B', 'subj-caie-igcse-phys', 2026, 'May/June', '7', 'extended', 'B', 115, 139, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C274161-27-41-61-C', 'subj-caie-igcse-phys', 2026, 'May/June', '7', 'extended', 'C', 90, 114, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C274161-27-41-61-D', 'subj-caie-igcse-phys', 2026, 'May/June', '7', 'extended', 'D', 79, 89, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C274161-27-41-61-E', 'subj-caie-igcse-phys', 2026, 'May/June', '7', 'extended', 'E', 69, 78, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C274161-27-41-61-F', 'subj-caie-igcse-phys', 2026, 'May/June', '7', 'extended', 'F', 58, 68, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C274161-27-41-61-G', 'subj-caie-igcse-phys', 2026, 'May/June', '7', 'extended', 'G', 47, 57, strftime('%s', 'now') * 1000),
+('sgb-0625-s26-C274161-27-41-61-U', 'subj-caie-igcse-phys', 2026, 'May/June', '7', 'extended', 'U', 0, 46, strftime('%s', 'now') * 1000),
+('sgb-0625-m26-C123252-12-32-52-C', 'subj-caie-igcse-phys', 2026, 'Feb/March', '2', 'core', 'C', 119, 200, strftime('%s', 'now') * 1000),
+('sgb-0625-m26-C123252-12-32-52-D', 'subj-caie-igcse-phys', 2026, 'Feb/March', '2', 'core', 'D', 103, 118, strftime('%s', 'now') * 1000),
+('sgb-0625-m26-C123252-12-32-52-E', 'subj-caie-igcse-phys', 2026, 'Feb/March', '2', 'core', 'E', 87, 102, strftime('%s', 'now') * 1000),
+('sgb-0625-m26-C123252-12-32-52-F', 'subj-caie-igcse-phys', 2026, 'Feb/March', '2', 'core', 'F', 73, 86, strftime('%s', 'now') * 1000),
+('sgb-0625-m26-C123252-12-32-52-G', 'subj-caie-igcse-phys', 2026, 'Feb/March', '2', 'core', 'G', 59, 72, strftime('%s', 'now') * 1000),
+('sgb-0625-m26-C123252-12-32-52-U', 'subj-caie-igcse-phys', 2026, 'Feb/March', '2', 'core', 'U', 0, 58, strftime('%s', 'now') * 1000),
+('sgb-0625-m26-C123262-12-32-62-C', 'subj-caie-igcse-phys', 2026, 'Feb/March', '2', 'core', 'C', 119, 200, strftime('%s', 'now') * 1000),
+('sgb-0625-m26-C123262-12-32-62-D', 'subj-caie-igcse-phys', 2026, 'Feb/March', '2', 'core', 'D', 103, 118, strftime('%s', 'now') * 1000),
+('sgb-0625-m26-C123262-12-32-62-E', 'subj-caie-igcse-phys', 2026, 'Feb/March', '2', 'core', 'E', 87, 102, strftime('%s', 'now') * 1000),
+('sgb-0625-m26-C123262-12-32-62-F', 'subj-caie-igcse-phys', 2026, 'Feb/March', '2', 'core', 'F', 73, 86, strftime('%s', 'now') * 1000),
+('sgb-0625-m26-C123262-12-32-62-G', 'subj-caie-igcse-phys', 2026, 'Feb/March', '2', 'core', 'G', 59, 72, strftime('%s', 'now') * 1000),
+('sgb-0625-m26-C123262-12-32-62-U', 'subj-caie-igcse-phys', 2026, 'Feb/March', '2', 'core', 'U', 0, 58, strftime('%s', 'now') * 1000),
+('sgb-0625-m26-C224252-22-42-52-Astar', 'subj-caie-igcse-phys', 2026, 'Feb/March', '2', 'extended', 'A*', 157, 200, strftime('%s', 'now') * 1000),
+('sgb-0625-m26-C224252-22-42-52-A', 'subj-caie-igcse-phys', 2026, 'Feb/March', '2', 'extended', 'A', 134, 156, strftime('%s', 'now') * 1000),
+('sgb-0625-m26-C224252-22-42-52-B', 'subj-caie-igcse-phys', 2026, 'Feb/March', '2', 'extended', 'B', 111, 133, strftime('%s', 'now') * 1000),
+('sgb-0625-m26-C224252-22-42-52-C', 'subj-caie-igcse-phys', 2026, 'Feb/March', '2', 'extended', 'C', 89, 110, strftime('%s', 'now') * 1000),
+('sgb-0625-m26-C224252-22-42-52-D', 'subj-caie-igcse-phys', 2026, 'Feb/March', '2', 'extended', 'D', 76, 88, strftime('%s', 'now') * 1000),
+('sgb-0625-m26-C224252-22-42-52-E', 'subj-caie-igcse-phys', 2026, 'Feb/March', '2', 'extended', 'E', 63, 75, strftime('%s', 'now') * 1000),
+('sgb-0625-m26-C224252-22-42-52-F', 'subj-caie-igcse-phys', 2026, 'Feb/March', '2', 'extended', 'F', 50, 62, strftime('%s', 'now') * 1000),
+('sgb-0625-m26-C224252-22-42-52-G', 'subj-caie-igcse-phys', 2026, 'Feb/March', '2', 'extended', 'G', 37, 49, strftime('%s', 'now') * 1000),
+('sgb-0625-m26-C224252-22-42-52-U', 'subj-caie-igcse-phys', 2026, 'Feb/March', '2', 'extended', 'U', 0, 36, strftime('%s', 'now') * 1000),
+('sgb-0625-m26-C224262-22-42-62-Astar', 'subj-caie-igcse-phys', 2026, 'Feb/March', '2', 'extended', 'A*', 158, 200, strftime('%s', 'now') * 1000),
+('sgb-0625-m26-C224262-22-42-62-A', 'subj-caie-igcse-phys', 2026, 'Feb/March', '2', 'extended', 'A', 135, 157, strftime('%s', 'now') * 1000),
+('sgb-0625-m26-C224262-22-42-62-B', 'subj-caie-igcse-phys', 2026, 'Feb/March', '2', 'extended', 'B', 112, 134, strftime('%s', 'now') * 1000),
+('sgb-0625-m26-C224262-22-42-62-C', 'subj-caie-igcse-phys', 2026, 'Feb/March', '2', 'extended', 'C', 89, 111, strftime('%s', 'now') * 1000),
+('sgb-0625-m26-C224262-22-42-62-D', 'subj-caie-igcse-phys', 2026, 'Feb/March', '2', 'extended', 'D', 76, 88, strftime('%s', 'now') * 1000),
+('sgb-0625-m26-C224262-22-42-62-E', 'subj-caie-igcse-phys', 2026, 'Feb/March', '2', 'extended', 'E', 63, 75, strftime('%s', 'now') * 1000),
+('sgb-0625-m26-C224262-22-42-62-F', 'subj-caie-igcse-phys', 2026, 'Feb/March', '2', 'extended', 'F', 50, 62, strftime('%s', 'now') * 1000),
+('sgb-0625-m26-C224262-22-42-62-G', 'subj-caie-igcse-phys', 2026, 'Feb/March', '2', 'extended', 'G', 37, 49, strftime('%s', 'now') * 1000),
+('sgb-0625-m26-C224262-22-42-62-U', 'subj-caie-igcse-phys', 2026, 'Feb/March', '2', 'extended', 'U', 0, 36, strftime('%s', 'now') * 1000);

@@ -42,6 +42,7 @@ SEED_ORDER = [
     "0035_exams_countdown_official.sql",
     "0036_fix_caie_igcse_component_codes.sql",
     "0037_caie_igcse_astar_overall_only.sql",
+    "0038_caie_igcse_2026_subject_composites.sql",
 ]
 
 

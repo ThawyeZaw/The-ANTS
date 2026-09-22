@@ -36,6 +36,11 @@ export interface CompositeGradeResult {
   maxRaw: number;
   totalUms?: number;
   percentage: number;
+  /**
+   * Percentage uniform mark Cambridge prints with the syllabus grade.
+   * Null when the grade is Ungraded or the series has no syllabus thresholds.
+   */
+  uniformMark?: number | null;
   usedCompositeBoundaries: boolean;
   aStarEligible?: boolean;
   aStarNotes?: string[];
