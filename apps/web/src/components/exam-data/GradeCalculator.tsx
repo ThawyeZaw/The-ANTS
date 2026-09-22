@@ -909,14 +909,14 @@ export default function GradeCalculator() {
 
   const calc = useMemo(() => {
     if (!activePreset) {
-      return { totalRaw: 0, maxRaw: 0, totalUms: 0, percentage: 0, grade: '—', anyFilled: false, usedComposite: false, aStarNotes: [] as string[], boundariesMessage: undefined as string | undefined };
+      return { totalRaw: 0, maxRaw: 0, totalUms: 0, percentage: 0, uniformMark: null as number | null, grade: '—', anyFilled: false, usedComposite: false, aStarNotes: [] as string[], boundariesMessage: undefined as string | undefined };
     }
     const filled = paperResults.filter((pr) => pr.filled);
     const anyFilled = filled.length > 0;
     if (!anyFilled) {
-      return { totalRaw: 0, maxRaw: 0, totalUms: 0, percentage: 0, grade: '—', anyFilled: false, usedComposite: false, aStarNotes: [] as string[], boundariesMessage: undefined as string | undefined };
+      return { totalRaw: 0, maxRaw: 0, totalUms: 0, percentage: 0, uniformMark: null as number | null, grade: '—', anyFilled: false, usedComposite: false, aStarNotes: [] as string[], boundariesMessage: undefined as string | undefined };
     }
-    if (boundariesUnavailable && compositeBoundaries.length === 0) {
+    if (boundariesUnavailable && compositeBoundaries.length === 0 && paperPlugin.key !== 'CAIE_IGCSE') {
       const totalRaw = filled.reduce((s, pr) => s + pr.raw, 0);
       const maxRaw = filled.reduce((s, pr) => s + pr.max_mark, 0);
       return {
@@ -924,6 +924,7 @@ export default function GradeCalculator() {
         maxRaw,
         totalUms: 0,
         percentage: maxRaw ? Math.round((totalRaw / maxRaw) * 1000) / 10 : 0,
+        uniformMark: null as number | null,
         grade: '—',
         anyFilled: true,
         usedComposite: false,
@@ -940,6 +941,7 @@ export default function GradeCalculator() {
         maxRaw,
         totalUms,
         percentage: maxRaw ? Math.round((totalRaw / maxRaw) * 1000) / 10 : 0,
+        uniformMark: null as number | null,
         grade: '—',
         anyFilled: true,
         usedComposite: false,
@@ -947,12 +949,12 @@ export default function GradeCalculator() {
         boundariesMessage: suiteSelectors.combinationStatus.message ?? 'Select a valid Pearson cash-in combination for an overall grade.',
       };
     }
-    const sittingForComposite = paperPlugin.key === 'CAIE_IGCSE' ? paperResults : filled;
+    const sittingForComposite = filled;
     const composite = paperPlugin.compositeGrade(
       sittingForComposite.map((pr) => ({
         name: pr.name,
         paperNumber: pr.paper_number || pr.name,
-        variant: pr.variant,
+        variant: pr.activeVariant || pr.variant,
         maxMark: pr.max_mark,
         syllabusCode: activePreset.subject_code || activePreset.syllabus_code,
         boundaries: pr.perBoundaries,
@@ -966,13 +968,16 @@ export default function GradeCalculator() {
       totalRaw: Math.round(composite.totalRaw * 10) / 10,
       maxRaw: composite.maxRaw,
       totalUms: composite.totalUms ?? 0,
-      percentage: composite.percentage,
+      percentage: composite.uniformMark ?? composite.percentage,
+      uniformMark: composite.uniformMark ?? null,
       grade: composite.grade,
       anyFilled: true,
       usedComposite: composite.usedCompositeBoundaries,
       aStarEligible: composite.aStarEligible,
       aStarNotes: composite.aStarNotes ?? [],
-      boundariesMessage: undefined as string | undefined,
+      boundariesMessage: composite.usedCompositeBoundaries
+        ? undefined
+        : 'Syllabus grade boundaries are not loaded for this series, so the final grade and percentage uniform mark cannot be calculated.',
     };
   }, [activePreset, paperResults, paperPlugin, compositeBoundaries, selectedCashIn, boundariesUnavailable, isIAL, ialInputMode, isSuite, suiteSelectors.combinationStatus]);
 
@@ -1484,7 +1489,9 @@ export default function GradeCalculator() {
                   ? isIAL
                     ? `${calc.totalUms} UMS · ${calc.totalRaw} / ${calc.maxRaw} raw`
                     : paperPlugin.key === 'CAIE_IGCSE'
-                      ? `${calc.totalRaw} / ${calc.maxRaw} weighted · ${calc.percentage}%`
+                      ? calc.uniformMark != null
+                        ? `${calc.uniformMark}% · ${calc.totalRaw} / ${calc.maxRaw} weighted`
+                        : `${calc.totalRaw} / ${calc.maxRaw} weighted`
                       : `${calc.totalRaw} / ${calc.maxRaw} · ${calc.percentage}%`
                   : 'Enter marks to see a grade'}
               </p>

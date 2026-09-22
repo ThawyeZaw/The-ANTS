@@ -11,7 +11,6 @@ import {
   caiePaperBase,
   gradeFromRawMarks,
   lookupGrade,
-  percentageOf,
   toCambridgePaperId,
 } from './shared';
 
@@ -81,27 +80,124 @@ function filterByTierAndVariant(
 }
 
 /**
- * Official syllabus weighting as % of the Cambridge *weighted* option total.
- * Component tables in the GB PDFs are raw A–G; A* is overall-only after weighting.
+ * Cambridge component weighting factor as an exact ratio (weighted = raw × num / den).
+ * Syllabus grade thresholds, including A*, are on the sum of those weighted marks.
+ * They are not raw totals and not the 90–100 percentage-uniform-mark band.
+ *
+ * Sources: Cambridge "Syllabus component weighting factors" (June 2021 and
+ * November 2025–June 2026) plus the IGCSE grade-threshold booklets.
+ * `rawMax` selects the syllabus version when the paper total changed.
  */
-const SYLLABUS_WEIGHT_PCT: Record<string, Record<string, number>> = {
-  '0580': { '1': 35, '2': 35, '3': 65, '4': 65 },
-  '0606': { '1': 50, '2': 50 },
-  '0610': { '1': 30, '2': 30, '3': 50, '4': 50, '5': 20, '6': 20 },
-  '0620': { '1': 30, '2': 30, '3': 50, '4': 50, '5': 20, '6': 20 },
-  '0625': { '1': 30, '2': 30, '3': 50, '4': 50, '5': 20, '6': 20 },
-  '0653': { '1': 30, '2': 30, '3': 50, '4': 50, '5': 20, '6': 20 },
-  '0417': { '1': 40, '2': 30, '3': 30 },
-  '0450': { '1': 50, '2': 50 },
-  '0452': { '1': 30, '2': 70 },
-  '0455': { '1': 30, '2': 70 },
-  '0478': { '1': 50, '2': 50 },
-  '0500': { '1': 50, '2': 50, '3': 50 },
-  '0510': { '1': 50, '2': 25, '3': 25 },
+interface WeightRatio {
+  num: number;
+  den: number;
+  rawMax?: number;
+}
+
+const IDENTITY: WeightRatio = { num: 1, den: 1 };
+
+/** Papers whose raw mark is already the weighted mark (factor 1) are omitted. */
+const WEIGHT_RATIOS: Record<string, Record<string, WeightRatio[]>> = {
+  // 2022: P1 100→120 (×1.2), P2/P3 80→90 (×1.125). From 2023: P1 80→112 (×1.4), P2/P3 70→84 (×1.2).
+  '0417': {
+    '1': [
+      { rawMax: 100, num: 6, den: 5 },
+      { rawMax: 80, num: 7, den: 5 },
+    ],
+    '2': [
+      { rawMax: 80, num: 9, den: 8 },
+      { rawMax: 70, num: 6, den: 5 },
+    ],
+    '3': [
+      { rawMax: 80, num: 9, den: 8 },
+      { rawMax: 70, num: 6, den: 5 },
+    ],
+  },
+  // Paper 1: 35 → 43. Paper 2: 100 → 100.
+  '0452': {
+    '1': [{ num: 43, den: 35 }],
+    '2': [IDENTITY],
+  },
+  // Paper 1: 30 → 45. Paper 2: 90 → 105.
+  '0455': {
+    '1': [{ num: 3, den: 2 }],
+    '2': [{ num: 7, den: 6 }],
+  },
+  // MCQ ×1.5, theory ×1.25, practical ×1. Total weighted option mark is 200.
+  '0610': {
+    '1': [{ num: 3, den: 2 }],
+    '2': [{ num: 3, den: 2 }],
+    '3': [{ num: 5, den: 4 }],
+    '4': [{ num: 5, den: 4 }],
+    '5': [IDENTITY],
+    '6': [IDENTITY],
+  },
+  '0620': {
+    '1': [{ num: 3, den: 2 }],
+    '2': [{ num: 3, den: 2 }],
+    '3': [{ num: 5, den: 4 }],
+    '4': [{ num: 5, den: 4 }],
+    '5': [IDENTITY],
+    '6': [IDENTITY],
+  },
+  '0625': {
+    '1': [{ num: 3, den: 2 }],
+    '2': [{ num: 3, den: 2 }],
+    '3': [{ num: 5, den: 4 }],
+    '4': [{ num: 5, den: 4 }],
+    '5': [IDENTITY],
+    '6': [IDENTITY],
+  },
+  '0653': {
+    '1': [{ num: 3, den: 2 }],
+    '2': [{ num: 3, den: 2 }],
+    '3': [{ num: 5, den: 4 }],
+    '4': [{ num: 5, den: 4 }],
+    '5': [IDENTITY],
+    '6': [IDENTITY],
+  },
+  // Speaking & Listening is endorsed (factor 0) and is not part of the syllabus grade.
+  '0500': {
+    '4': [{ num: 0, den: 1 }],
+  },
 };
 
-/** Pre-2024 ESL 0510 count-in speaking was 70 / 15 / 15 on a 200-mark syllabus total. */
-const ESL_LEGACY_WEIGHT_PCT: Record<string, number> = { '1': 70, '2': 15, '3': 15, '5': 15 };
+function eslWeight(base: string, rawMax: number, optionMax: number): WeightRatio {
+  // Through 2023 the weighted total is 200: Reading/Writing 140 + Listening 60. Speaking is endorsed.
+  const legacy = optionMax >= 180;
+  if (legacy) {
+    if (base === '1') return { num: 7, den: 3 }; // 60 → 140
+    if (base === '2') return { num: 7, den: 4 }; // 80 → 140
+    if (base === '3') return { num: 2, den: 1 }; // 30 → 60
+    if (base === '4') return { num: 3, den: 2 }; // 40 → 60
+    return { num: 0, den: 1 };
+  }
+  // From 2024 the weighted total is 150: Paper 1 60→105, Paper 2 40→45. Component 3 is endorsed speaking.
+  if (base === '1') return { num: 7, den: 4 };
+  if (base === '2') return rawMax >= 70 ? { num: 7, den: 4 } : { num: 9, den: 8 };
+  if (base === '3') return rawMax <= 30 ? { num: 2, den: 1 } : { num: 0, den: 1 };
+  if (base === '4') return { num: 3, den: 2 };
+  return { num: 0, den: 1 };
+}
+
+function weightRatioFor(
+  syllabus: string | undefined,
+  base: string,
+  rawMax: number,
+  optionMax: number
+): WeightRatio {
+  if (syllabus === '0510') return eslWeight(base, rawMax, optionMax);
+  const rules = syllabus ? WEIGHT_RATIOS[syllabus]?.[base] : undefined;
+  if (!rules || rules.length === 0) return IDENTITY;
+  const exact = rules.find((r) => r.rawMax == null || r.rawMax === rawMax);
+  if (exact) return exact;
+  return rules[rules.length - 1];
+}
+
+function roundWeighted(raw: number, ratio: WeightRatio): number {
+  if (ratio.num === 0) return 0;
+  return Math.round((raw * ratio.num) / ratio.den);
+}
 
 const OPTION_ID_RE = /^sgb-\d{4}-[msw]\d{2}-[A-Za-z0-9]+-(.+)-(Astar|[A-GU])$/;
 
@@ -168,15 +264,6 @@ function pickMatchingCompositeBoundaries(
   return best;
 }
 
-function weightsForSyllabus(
-  syllabus: string | undefined,
-  optionMax: number
-): Record<string, number> | undefined {
-  if (!syllabus) return undefined;
-  if (syllabus === '0510' && optionMax >= 180) return ESL_LEGACY_WEIGHT_PCT;
-  return SYLLABUS_WEIGHT_PCT[syllabus];
-}
-
 function optionMaxFromBoundaries(rows: GradeBoundary[]): number {
   let max = 0;
   for (const row of rows) {
@@ -185,70 +272,108 @@ function optionMaxFromBoundaries(rows: GradeBoundary[]): number {
   return max;
 }
 
+/** Bottom of the percentage-uniform-mark band Cambridge prints with each IGCSE grade. */
+const PUM_FLOOR: Record<string, number> = {
+  'A*': 90,
+  A: 80,
+  B: 70,
+  C: 60,
+  D: 50,
+  E: 40,
+  F: 30,
+  G: 20,
+};
+
+const PUM_GRADE_ORDER = ['A*', 'A', 'B', 'C', 'D', 'E', 'F', 'G'];
+
+/**
+ * Statement-of-results percentage for a weighted syllabus total.
+ * The grade threshold maps to the bottom of that grade's band (A* = 90).
+ * The next higher threshold, or the maximum mark for A*, maps to the top.
+ * Rounded to an integer. A mark does not round up into the next grade's band.
+ * Ungraded has no percentage uniform mark.
+ */
+function percentageUniformMark(
+  weighted: number,
+  grade: string,
+  boundaries: GradeBoundary[],
+  optionMax: number
+): number | null {
+  const floor = PUM_FLOOR[grade];
+  if (floor == null) return null;
+  const row = boundaries.find((b) => b.grade === grade);
+  if (!row) return null;
+
+  const lower = row.min_mark;
+  const rank = PUM_GRADE_ORDER.indexOf(grade);
+  let upper = optionMax;
+  if (rank > 0) {
+    const next = boundaries.find((b) => b.grade === PUM_GRADE_ORDER[rank - 1]);
+    if (next) upper = next.min_mark;
+    else if (typeof row.max_mark === 'number' && row.max_mark >= lower) upper = row.max_mark + 1;
+  } else if (!(optionMax > lower) && typeof row.max_mark === 'number') {
+    upper = row.max_mark;
+  }
+
+  if (upper <= lower) return floor;
+  const pum = Math.round(floor + ((weighted - lower) / (upper - lower)) * 10);
+  const cap = grade === 'A*' ? 100 : floor + 9;
+  return Math.min(cap, Math.max(floor, pum));
+}
+
 function composite(
   papers: Array<PaperComponent & { rawMark: number }>,
   compositeBoundaries?: GradeBoundary[]
 ): CompositeGradeResult {
   const sitting = papers.filter((p) => Number.isFinite(p.rawMark) && p.maxMark > 0);
-  const totalRaw = sitting.reduce((sum, p) => sum + p.rawMark, 0);
   const maxRaw = sitting.reduce((sum, p) => sum + p.maxMark, 0);
 
-  if (!compositeBoundaries || compositeBoundaries.length === 0) {
+  const syllabus = sitting.find((p) => p.syllabusCode)?.syllabusCode;
+  const optionRows =
+    compositeBoundaries && compositeBoundaries.length > 0
+      ? pickMatchingCompositeBoundaries(compositeBoundaries, sitting)
+      : [];
+  const optionMax = optionMaxFromBoundaries(optionRows);
+
+  const ratios = sitting.map((p) =>
+    weightRatioFor(
+      syllabus,
+      caiePaperBase(toCambridgePaperId(p.paperNumber, p.variant)),
+      p.maxMark,
+      optionMax
+    )
+  );
+  const weightedParts = sitting.map((p, i) => roundWeighted(p.rawMark, ratios[i]));
+  const weightedMax = sitting.reduce((sum, p, i) => sum + roundWeighted(p.maxMark, ratios[i]), 0);
+  const total = weightedParts.reduce((sum, mark) => sum + mark, 0);
+  const cap = optionMax > 0 ? optionMax : weightedMax > 0 ? weightedMax : maxRaw;
+
+  if (optionRows.length === 0) {
     return {
       grade: '—',
-      totalRaw,
-      maxRaw,
-      percentage: percentageOf(totalRaw, maxRaw),
+      totalRaw: total,
+      maxRaw: cap,
+      percentage: 0,
+      uniformMark: null,
       usedCompositeBoundaries: false,
     };
   }
 
-  const optionRows = pickMatchingCompositeBoundaries(compositeBoundaries, sitting);
-  const optionMax = optionMaxFromBoundaries(optionRows);
-  const syllabus = sitting.find((p) => p.syllabusCode)?.syllabusCode;
-  const weightMap = weightsForSyllabus(syllabus, optionMax);
-
-  const sittingWeights = sitting.map((p) => {
-    const base = caiePaperBase(toCambridgePaperId(p.paperNumber, p.variant));
-    return weightMap?.[base] ?? 0;
-  });
-  const weightSum = sittingWeights.reduce((sum, w) => sum + w, 0);
-
-  let total = totalRaw;
-  let cap = maxRaw;
-  const notes: string[] = [];
-
-  if (optionMax > 0 && weightSum > 0) {
-    cap = optionMax;
-    total = 0;
-    for (let i = 0; i < sitting.length; i += 1) {
-      const p = sitting[i];
-      const slice = optionMax * (sittingWeights[i] / weightSum);
-      total += (p.rawMark / p.maxMark) * slice;
-    }
-    total = Math.round(total);
-    const unequal = sitting.some((p, i) => {
-      if (maxRaw <= 0) return false;
-      return Math.abs(p.maxMark / maxRaw - sittingWeights[i] / weightSum) > 0.02;
-    });
-    notes.push(
-      unequal
-        ? 'Overall A* uses Cambridge weighted syllabus marks, not raw paper totals. A* is not awarded on individual papers.'
-        : 'A* is awarded on the overall syllabus total only, not on individual papers.'
-    );
-  } else if (optionMax > 0 && optionMax !== maxRaw) {
-    notes.push(
-      'Overall boundaries are weighted syllabus marks; official component weights were unavailable so raw totals were used.'
-    );
-  }
+  const grade = lookupGrade(total, optionRows);
+  const uniformMark = percentageUniformMark(total, grade, optionRows, cap);
 
   return {
-    grade: lookupGrade(total, optionRows),
+    grade,
     totalRaw: total,
     maxRaw: cap,
-    percentage: percentageOf(total, cap),
+    percentage: uniformMark ?? 0,
+    uniformMark,
     usedCompositeBoundaries: true,
-    aStarNotes: notes,
+    aStarNotes: [
+      uniformMark != null
+        ? `${uniformMark}% is the percentage uniform mark Cambridge prints with grade ${grade}. It comes from the weighted syllabus total, not from the raw marks divided by the paper maximum.`
+        : 'Ungraded has no percentage uniform mark. The total shown is the weighted syllabus mark.',
+    ],
   };
 }
 

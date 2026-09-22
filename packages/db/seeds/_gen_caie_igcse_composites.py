@@ -34,6 +34,17 @@ def main():
                     syllabus = pending[0]
                 if not season_year:
                     season_year = (pending[1], pending[2])
+            # Some 2026 booklets put the weighted option table on the next page
+            # with no syllabus header and no "continued" label.
+            if (
+                not syllabus
+                and pending
+                and "combination of" in text.lower()
+                and "weighted" in text.lower()
+            ):
+                syllabus = pending[0]
+                if not season_year:
+                    season_year = (pending[1], pending[2])
             if not syllabus or syllabus not in mod.SUBJECTS:
                 continue
             if not season_year:

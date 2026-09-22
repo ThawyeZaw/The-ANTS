@@ -298,7 +298,7 @@ def is_component_list(line: str) -> bool:
 def extract_weighting_maxima(text: str) -> tuple[int | None, int | None, int | None]:
     """Return (single_max, extended_max, core_max) from the PDF prose line."""
     m = re.search(
-        r"after weighting has been applied, is (\d+)(?: for the Extended option and (\d+) for the Core option)?",
+        r"after weighting has been applied,\s+is\s+(\d+)(?:\s+for the Extended option\s+and\s+(\d+)\s+for the Core option)?",
         text,
         re.I,
     )
@@ -391,8 +391,64 @@ def extract_option_rows(text: str):
                 rows.append({"code": opt, "max": maxm, "components": comps, "grades": gmap})
                 i = j
                 continue
+        # June 2026+ booklets drop the option code. Each syllabus row is
+        # "11, 31" then the maximum weighted mark, then A*–G.
+        parsed = parse_component_combination_row(lines, i, grade_headers, expected)
+        if parsed is not None:
+            row, i = parsed
+            rows.append(row)
+            continue
         i += 1
     return rows
+
+
+def parse_component_combination_row(
+    lines: list[str],
+    i: int,
+    grade_headers: list[str],
+    expected: int,
+):
+    """Parse a syllabus-threshold row that starts with the component list."""
+    if "," not in lines[i] or not is_component_list(lines[i]):
+        return None
+    comps = [pad_comp(x) for x in re.findall(r"\d+", lines[i])]
+    if len(comps) < 2 or any(c in SKIP_OPTION_COMPONENTS for c in comps):
+        return None
+    if any(len(c) != 2 for c in comps):
+        return None
+    j = i + 1
+    if j >= len(lines):
+        return None
+    maxm = parse_num(lines[j])
+    # Weighted syllabus totals in these booklets are at least 125.
+    if maxm is None or maxm < 100:
+        return None
+    j += 1
+    vals: list[int | None] = []
+    while j < len(lines) and len(vals) < expected:
+        if is_component_list(lines[j]) and "," in lines[j]:
+            break
+        if is_option_code(lines[j]):
+            break
+        if lines[j].startswith(("Note", "Grade", "Learn", "See ", "Percentage", "Cambridge")):
+            break
+        for p in lines[j].split():
+            if len(vals) >= expected:
+                break
+            if p in OPT_GRADES:
+                continue
+            n = parse_num(p)
+            if n is None and not DASH.match(p):
+                continue
+            vals.append(n)
+        j += 1
+    if len(vals) != expected:
+        return None
+    gmap = {g: None for g in OPT_GRADES}
+    for g, v in zip(grade_headers, vals):
+        gmap[g] = v
+    code = "C" + "".join(comps)
+    return {"code": code, "max": maxm, "components": comps, "grades": gmap}, j
 
 
 def derive_astar(comp_code: str, a_mark: int | None, total: int, options: list) -> int | None:
