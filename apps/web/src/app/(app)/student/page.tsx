@@ -21,6 +21,7 @@ import {
   CalendarDays,
   Timer,
   Calculator,
+  Wrench,
   ArrowRight,
   Sparkles,
   Trophy,
@@ -64,6 +65,17 @@ interface StudyToolCard {
 }
 
 const STUDY_TOOLS: StudyToolCard[] = [
+  {
+    id: 'workspace',
+    title: 'My Workspace',
+    description: 'Your personal hub for exam countdowns and enrolled subjects.',
+    href: '/workspace',
+    icon: Wrench,
+    badge: 'Yours',
+    badgeTone: 'primary',
+    highlight: 'Open from the dashboard',
+    color: 'bg-primary/10 text-primary border-primary/20 group-hover:bg-primary group-hover:text-white',
+  },
   {
     id: 'calculator',
     title: 'Grade Calculator',
@@ -211,8 +223,12 @@ export default function StudentDashboard() {
             <p className="text-sm text-primary-foreground/75 max-w-md leading-relaxed">
               Your integrated academic HQ for IGCSE & A-Level mastery.
             </p>
+            <div className="flex items-center gap-2 flex-wrap pt-1">
+              <Link href="/workspace" className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/15 border border-white/20 hover:bg-white/25 transition-colors flex items-center gap-1.5">
+                <Wrench className="w-3.5 h-3.5" /> My Workspace
+              </Link>
             {hasRoleActions && (
-              <div className="flex items-center gap-2 flex-wrap pt-1">
+              <>
                 {isTutor && (
                   <Link href="/settings/profile?tab=role-profile" className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/15 border border-white/20 hover:bg-white/25 transition-colors flex items-center gap-1.5">
                     <GraduationCap className="w-3.5 h-3.5" /> Tutor Profile
@@ -228,8 +244,9 @@ export default function StudentDashboard() {
                     <Shield className="w-3.5 h-3.5" /> Admin
                   </Link>
                 )}
-              </div>
+              </>
             )}
+            </div>
           </div>
 
           <GamificationHeroStrip

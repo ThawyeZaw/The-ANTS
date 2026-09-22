@@ -19,7 +19,7 @@ export default function PublicLayout({
       <Suspense fallback={null}>
         <NavBar />
       </Suspense>
-      <div className="md:pl-[var(--sidebar-width-collapsed)] lg:pl-[var(--sidebar-width)] pb-[calc(var(--bottom-nav-height)+env(safe-area-inset-bottom))] md:pb-0 min-h-screen flex flex-col transition-[padding] duration-200 ease-out motion-reduce:transition-none">
+      <div className="md:pl-[var(--sidebar-width)] pb-[calc(var(--bottom-nav-height)+env(safe-area-inset-bottom))] md:pb-0 min-h-screen flex flex-col transition-[padding] duration-200 ease-out motion-reduce:transition-none">
         <main
           id="main-content"
           className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in"

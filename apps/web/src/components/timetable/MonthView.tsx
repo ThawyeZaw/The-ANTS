@@ -1,180 +1,123 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
+import { Plus } from 'lucide-react';
 import type { TimetableEvent } from '@/types/timetable';
-import { DAY_NAMES_SHORT } from '@/constants/timetable';
-import { formatDateLocal } from '@/hooks/useTimetable';
-import TimeBlock from './TimeBlock';
+import { TaskChip } from './TaskRow';
+import { eventSortTime, formatDateKey, isoWeekNumber, isSameDay } from './task-utils';
 
 interface MonthViewProps {
   currentDate: Date;
   events: TimetableEvent[];
-  zoomLevel?: number;
   onDayClick: (date: Date) => void;
   onEditEvent: (event: TimetableEvent) => void;
-  onDeleteEvent: (eventId: string) => void;
-  onToggleComplete: (eventId: string) => void;
+  onCreateOnDay: (date: Date) => void;
 }
 
-function isSameDay(a: Date, b: Date): boolean {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
-}
+const WEEKDAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
-function isSameMonth(a: Date, b: Date): boolean {
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
-}
-
-/** Build a 6-row calendar grid anchored to the given month */
-function buildCalendarGrid(month: Date): Date[][] {
-  const firstDay = new Date(month.getFullYear(), month.getMonth(), 1);
-  const lastDay = new Date(month.getFullYear(), month.getMonth() + 1, 0);
-
-  // Monday-start: offset 0=Mon, 6=Sun
-  const startOffset = (firstDay.getDay() + 6) % 7;
-  const totalDays = lastDay.getDate();
-  const totalCells = Math.ceil((startOffset + totalDays) / 7) * 7;
-
-  const grid: Date[] = [];
-  for (let i = 0; i < totalCells; i++) {
-    const d = new Date(firstDay);
-    d.setDate(1 - startOffset + i);
-    grid.push(d);
+function buildWeeks(month: Date): Date[][] {
+  const first = new Date(month.getFullYear(), month.getMonth(), 1);
+  const startOffset = (first.getDay() + 6) % 7;
+  const cells: Date[] = [];
+  for (let index = 0; index < 42; index += 1) {
+    const date = new Date(first);
+    date.setDate(1 - startOffset + index);
+    cells.push(date);
   }
-
-  // Group into weeks
   const weeks: Date[][] = [];
-  for (let i = 0; i < grid.length; i += 7) {
-    weeks.push(grid.slice(i, i + 7));
-  }
+  for (let index = 0; index < cells.length; index += 7) weeks.push(cells.slice(index, index + 7));
   return weeks;
 }
-
-const MAX_VISIBLE_EVENTS = 3;
 
 export default function MonthView({
   currentDate,
   events,
-  zoomLevel = 100,
   onDayClick,
   onEditEvent,
-  onDeleteEvent,
-  onToggleComplete,
+  onCreateOnDay,
 }: MonthViewProps) {
   const today = new Date();
-  const weeks = useMemo(() => buildCalendarGrid(currentDate), [currentDate]);
-
-  // Group events by date string
-  const eventsByDate = useMemo(() => {
-    const map: Record<string, TimetableEvent[]> = {};
+  const weeks = useMemo(() => buildWeeks(currentDate), [currentDate]);
+  const byDate = useMemo(() => {
+    const map = new Map<string, TimetableEvent[]>();
     for (const event of events) {
       const anchor = event.start_time || event.end_time;
-      if (!anchor && !event.all_day) continue;
-
-      const d = anchor ? new Date(anchor) : null;
-      const key = d ? formatDateLocal(d) : null;
-      if (key) {
-        if (!map[key]) map[key] = [];
-        map[key].push(event);
-      }
+      if (!anchor) continue;
+      const key = formatDateKey(new Date(anchor));
+      const list = map.get(key) ?? [];
+      list.push(event);
+      map.set(key, list);
     }
+    for (const list of map.values()) list.sort((a, b) => eventSortTime(a) - eventSortTime(b));
     return map;
   }, [events]);
 
-  const scale = zoomLevel / 100;
-  const isZoomed = zoomLevel !== 100;
-
   return (
-    <div className="flex flex-col h-full">
-      {/* Day name headers */}
-      <div className="grid grid-cols-7 border-b shrink-0" style={{ borderColor: 'color-mix(in srgb, var(--border) 70%, transparent)' }}>
-        {DAY_NAMES_SHORT.slice(1).concat(DAY_NAMES_SHORT[0]).map(day => (
-          <div
-            key={day}
-            className="py-2 text-center text-[10px] font-semibold text-foreground-muted uppercase tracking-wider"
-          >
-            {day}
+    <div className="flex h-full min-h-0 flex-col overflow-auto pb-20">
+      <div className="grid shrink-0 grid-cols-7 border-b border-border px-1 sm:px-2">
+        {WEEKDAYS.map((label, index) => (
+          <div key={`${label}-${index}`} className="py-2 text-center text-[11px] font-semibold uppercase tracking-wide text-foreground-muted">
+            {label}
           </div>
         ))}
       </div>
-
-      {/* Calendar grid */}
-      <div
-        className="flex-1 grid"
-        style={{
-          gridTemplateRows: `repeat(${weeks.length}, 1fr)`,
-          transform: isZoomed ? `scale(${scale})` : undefined,
-          transformOrigin: 'top left',
-          width: isZoomed ? `${100 / scale}%` : undefined,
-          height: isZoomed ? `${100 / scale}%` : undefined,
-        }}
-      >
-        {weeks.map((week, wi) => (
-          <div key={wi} className="grid grid-cols-7" style={{ borderBottom: '1px solid color-mix(in srgb, var(--border) 50%, transparent)' }}>
-            {week.map((day, di) => {
-              const dateKey = formatDateLocal(day);
-              const dayEvents = eventsByDate[dateKey] ?? [];
-              const isToday = isSameDay(day, today);
-              const isCurrentMonth = isSameMonth(day, currentDate);
-              const visibleEvents = dayEvents.slice(0, MAX_VISIBLE_EVENTS);
-              const overflow = dayEvents.length - MAX_VISIBLE_EVENTS;
-
+      <div className="grid min-h-0 flex-1 grid-rows-6">
+        {weeks.map((week) => (
+          <div key={formatDateKey(week[0])} className="grid min-h-0 grid-cols-7 border-b border-border/70">
+            {week.map((date, index) => {
+              const key = formatDateKey(date);
+              const inMonth = date.getMonth() === currentDate.getMonth();
+              const items = byDate.get(key) ?? [];
+              const visible = items.slice(0, 3);
+              const extra = items.length - visible.length;
+              const isToday = isSameDay(date, today);
               return (
                 <div
-                  key={di}
-                  id={`month-day-${dateKey}`}
-                  className="relative flex flex-col p-1 cursor-pointer border-r last:border-r-0 transition-colors hover:bg-white/[0.02] group"
-                  style={{
-                    borderColor: 'color-mix(in srgb, var(--border) 50%, transparent)',
-                    minHeight: 64,
-                    backgroundColor: isToday ? 'color-mix(in srgb, var(--primary) 15%, transparent)' : 'transparent',
-                    opacity: isCurrentMonth ? 1 : 0.35,
-                  }}
-                  onClick={() => onDayClick(day)}
+                  key={key}
+                  className="group relative flex min-h-[4.75rem] cursor-pointer flex-col gap-0.5 border-l border-border/50 p-1 sm:min-h-[6.5rem] sm:p-1.5"
+                  onClick={() => onDayClick(date)}
                 >
-                  {/* Day number */}
-                  <div className="flex items-center justify-between mb-1">
-                    <span
-                      className="text-xs font-semibold w-6 h-6 flex items-center justify-center rounded-full transition-colors"
-                      style={{
-                        color: isToday ? 'white' : isCurrentMonth ? 'var(--foreground)' : 'var(--foreground-muted)',
-                        backgroundColor: isToday ? 'var(--primary)' : 'transparent',
-                      }}
-                    >
-                      {day.getDate()}
-                    </span>
-
-                    {/* Hover add button */}
+                  <div className="flex items-center gap-1">
                     <button
-                      className="opacity-0 group-hover:opacity-100 transition-opacity text-foreground-muted hover:text-primary text-xs rounded"
-                      onClick={e => {
-                        e.stopPropagation();
-                        onDayClick(day);
+                      type="button"
+                      onClick={(click) => {
+                        click.stopPropagation();
+                        onDayClick(date);
                       }}
-                      title="Add event"
+                      className="flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold tabular-nums sm:h-7 sm:w-7 sm:text-sm"
+                      style={
+                        isToday
+                          ? { backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' }
+                          : { color: inMonth ? 'var(--foreground)' : 'var(--foreground-muted)' }
+                      }
+                      aria-label={date.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
                     >
-                      +
+                      {date.getDate()}
+                    </button>
+                    {index === 0 && (
+                      <span className="hidden text-[10px] tabular-nums text-foreground-muted lg:inline">
+                        W{isoWeekNumber(date)}
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      aria-label={`Add a task on ${key}`}
+                      onClick={(click) => {
+                        click.stopPropagation();
+                        onCreateOnDay(date);
+                      }}
+                      className="absolute right-1 top-1 hidden h-6 w-6 items-center justify-center rounded-full text-foreground-muted hover:bg-foreground/5 hover:text-foreground sm:group-hover:flex"
+                    >
+                      <Plus size={13} />
                     </button>
                   </div>
-
-                  {/* Event chips */}
-                  <div className="space-y-0.5 overflow-hidden flex-1">
-                    {visibleEvents.map(event => (
-                      <div key={event.id} onClick={e => { e.stopPropagation(); onEditEvent(event); }}>
-                        <TimeBlock
-                          event={event}
-                          compact
-                          onEdit={onEditEvent}
-                          onDelete={onDeleteEvent}
-                          onToggleComplete={onToggleComplete}
-                        />
-                      </div>
+                  <div className="flex min-h-0 flex-col gap-0.5 overflow-hidden">
+                    {visible.map((event) => (
+                      <TaskChip key={event.id} event={event} onOpen={() => onEditEvent(event)} />
                     ))}
-                    {overflow > 0 && (
-                      <p className="text-[10px] text-foreground-muted pl-1">+{overflow} more</p>
+                    {extra > 0 && (
+                      <span className="px-1 text-[10px] font-medium text-foreground-muted">+{extra}</span>
                     )}
                   </div>
                 </div>

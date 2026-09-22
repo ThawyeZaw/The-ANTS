@@ -159,6 +159,8 @@ export const userEnrollments = sqliteTable(
       appliedUnits?: string[];
       variantPreference?: string | null;
       preferRPaper?: boolean;
+      /** Official exam ids this student removed from their countdown. */
+      dismissedExamIds?: string[];
     }>('paper_preferences'),
     /** 'per_subject' | 'per_paper' — copied from qualification plugin */
     countdown_mode: text('countdown_mode'),

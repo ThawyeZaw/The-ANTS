@@ -28,6 +28,8 @@ export interface PaperPreferences {
   variantPreference?: '1' | '2' | '3' | null;
   /** Edexcel IGCSE: prefer R-paper boundaries when equivalent exists. */
   preferRPaper?: boolean;
+  /** Official exam ids this student removed from their own countdown. */
+  dismissedExamIds?: string[];
 }
 
 /** Speaking / endorsement components excluded from past-paper tracker progress. */

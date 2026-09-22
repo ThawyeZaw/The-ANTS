@@ -2,9 +2,9 @@
 
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTS — App Navigation Shell (redesigned)
-// Desktop: collapsible sidebar — expanded (lg) or icon-rail (collapsed/md)
-// Mobile:  bottom bar + slide-up sheets
-// All tools always visible; collapsed mode shows flat icon stack with tooltips.
+// Tablet and desktop: labeled sidebar. Large screens can collapse to an icon rail.
+// Mobile: bottom bar + slide-up sheets.
+// Icon-rail tooltips show on hover and keyboard focus.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
@@ -24,7 +24,6 @@ import {
   GraduationCap,
   UserPlus,
   Building2,
-  Wrench,
   Users,
   Info,
   Sparkles,
@@ -60,13 +59,12 @@ const TOOLS_LINKS: NavItem[] = [
   { label: 'Past Paper Tracker', href: '/past-papers', icon: BookOpen, description: 'Track solved papers & grades' },
   { label: 'Smart Timetable', href: '/timetable', icon: CalendarDays, description: 'Time-blocking & task list' },
   { label: 'Exam Countdown', href: '/countdown', icon: Clock, description: 'Days until your next paper or IELTS' },
-  { label: 'Leaderboard', href: '/leaderboard', icon: Trophy, description: 'Scholar rankings' },
-  { label: 'My Workspace', href: '/workspace', icon: Wrench, description: 'Personal tools & countdowns' },
 ];
 
-const TEAM_LINKS: NavItem[] = [
-  { label: 'Tutors & Contributors', href: '/team', icon: Users },
-  { label: 'About The ANTS', href: '/about', icon: Info },
+const COMMUNITY_LINKS: NavItem[] = [
+  { label: 'Tutors & Contributors', href: '/team', icon: Users, description: 'Find tutors and contributors' },
+  { label: 'Leaderboard', href: '/leaderboard', icon: Trophy, description: 'Scholar rankings' },
+  { label: 'About The ANTS', href: '/about', icon: Info, description: 'Who builds The ANTS' },
 ];
 
 // ── Active detection helpers ──────────────────────────────────────────────────
@@ -75,7 +73,9 @@ function isCurriculumActive(p: string) { return p.startsWith('/curriculum'); }
 function isToolsActive(p: string) {
   return TOOLS_LINKS.some((t) => p === t.href || p.startsWith(`${t.href}/`));
 }
-function isTeamActive(p: string) { return p.startsWith('/team') || p.startsWith('/about'); }
+function isTeamActive(p: string) {
+  return COMMUNITY_LINKS.some((item) => isHrefActive(item.href, p));
+}
 function isHomeActive(p: string) {
   return p === '/' || p.startsWith('/dashboard') || p.startsWith('/student');
 }
@@ -94,7 +94,7 @@ function defaultSectionForPath(pathname: string): SectionKey {
 // ── Tooltip (shown in collapsed icon-rail mode) ───────────────────────────────
 function Tooltip({ label }: { label: string }) {
   return (
-    <span className="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded-lg text-xs font-semibold bg-background-card border border-border text-foreground shadow-lg whitespace-nowrap z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+    <span className="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded-lg text-xs font-semibold bg-background-card border border-border text-foreground shadow-lg whitespace-nowrap z-50 pointer-events-none opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity duration-150">
       {label}
     </span>
   );
@@ -119,7 +119,7 @@ function NavItemLink({
       onClick={onNavigate}
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'nav-item relative flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium',
+        'nav-item relative flex items-center gap-2.5 rounded-xl px-3 py-2 min-h-11 text-sm font-medium',
         'transition-colors duration-200 cursor-pointer',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
         indent && 'ml-1',
@@ -155,7 +155,7 @@ function RailIconLink({
       aria-label={label}
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'group relative flex items-center justify-center p-2.5 rounded-xl transition-colors duration-200 w-full',
+        'group relative flex items-center justify-center min-h-11 min-w-11 p-2.5 rounded-xl transition-colors duration-200 w-full',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
         active
           ? 'bg-primary/10 text-primary'
@@ -191,7 +191,7 @@ function SectionLabel({
       aria-expanded={open}
       aria-controls={controlsId}
       className={cn(
-        'w-full inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold uppercase tracking-wider',
+        'w-full inline-flex items-center gap-2 rounded-xl px-3 py-2 min-h-11 text-xs font-bold uppercase tracking-wider',
         'transition-colors duration-200 cursor-pointer',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
         active || open
@@ -381,18 +381,18 @@ export default function NavBar() {
           'bg-background/95 backdrop-blur-md border-r border-border',
           'transition-[width] duration-200 ease-out motion-reduce:transition-none',
           collapsed
-            ? 'w-[var(--sidebar-width-collapsed)]'
-            : 'w-[var(--sidebar-width-collapsed)] lg:w-[var(--sidebar-width)]'
+            ? 'w-[var(--sidebar-width)] lg:w-[var(--sidebar-width-collapsed)]'
+            : 'w-[var(--sidebar-width)]'
         )}
       >
         {/* ── Logo + Toggle ──────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between px-2 lg:px-3 h-16 shrink-0 border-b border-border/60">
+        <div className="flex items-center justify-between gap-2 px-3 h-16 shrink-0 border-b border-border/60">
           <Link
             href={homeHref}
             className={cn(
               'flex items-center gap-2.5 group min-w-0 rounded-xl',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-              (collapsed) && 'justify-center w-full'
+              collapsed && 'lg:justify-center lg:w-full'
             )}
             title="The ANTS"
           >
@@ -404,11 +404,14 @@ export default function NavBar() {
               className="w-8 h-8 rounded-xl object-contain shrink-0 group-hover:scale-105 transition-transform duration-200"
               priority
             />
-            {!collapsed && (
-              <span className="hidden lg:block font-brand font-black text-lg tracking-tight text-foreground leading-none truncate">
-                The ANTS
-              </span>
-            )}
+            <span
+              className={cn(
+                'font-brand font-black text-lg tracking-tight text-foreground leading-none truncate',
+                collapsed && 'lg:hidden'
+              )}
+            >
+              The ANTS
+            </span>
           </Link>
 
           {/* Toggle button — only visible on lg when not collapsed, or when collapsed */}
@@ -417,7 +420,7 @@ export default function NavBar() {
             onClick={toggleCollapsed}
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             className={cn(
-              'hidden lg:flex items-center justify-center p-1.5 rounded-lg text-foreground-muted hover:text-foreground hover:bg-background-secondary transition-colors shrink-0',
+              'hidden lg:flex items-center justify-center min-h-11 min-w-11 p-1.5 rounded-lg text-foreground-muted hover:text-foreground hover:bg-background-secondary transition-colors shrink-0',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
               collapsed && 'mx-auto'
             )}
@@ -426,10 +429,10 @@ export default function NavBar() {
           </button>
         </div>
 
-        {/* ── Collapsed icon rail (md always, lg when collapsed) ─────────── */}
+        {/* ── Icon rail: large screens only, after the user collapses ──── */}
         <div className={cn(
           'flex-1 overflow-y-auto px-2 py-3 space-y-1',
-          !collapsed && 'lg:hidden'
+          collapsed ? 'hidden lg:block' : 'hidden'
         )}>
           {/* Pinned — Home */}
           <RailIconLink
@@ -456,7 +459,7 @@ export default function NavBar() {
 
           {/* Community */}
           <div className="pt-1 mt-1 border-t border-border/40 space-y-1">
-            {TEAM_LINKS.map((item) => (
+            {COMMUNITY_LINKS.map((item) => (
               <RailIconLink
                 key={item.href}
                 href={item.href}
@@ -480,17 +483,17 @@ export default function NavBar() {
           )}
         </div>
 
-        {/* ── Expanded sidebar (lg only, when not collapsed) ─────────────── */}
+        {/* ── Labeled sidebar: tablet and desktop; hidden when collapsed on lg */}
         <div className={cn(
-          'hidden flex-1 flex-col overflow-y-auto px-3 py-3 space-y-0.5',
-          !collapsed && 'lg:flex'
+          'flex flex-1 flex-col overflow-y-auto px-3 py-3 space-y-0.5 min-h-0',
+          collapsed && 'lg:hidden'
         )}>
           {/* Pinned — Dashboard */}
           <Link
             href={homeHref}
             aria-current={isHomeActive(pathname) ? 'page' : undefined}
             className={cn(
-              'relative flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium',
+              'relative flex items-center gap-2.5 rounded-xl px-3 py-2 min-h-11 text-sm font-medium',
               'transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
               isHomeActive(pathname)
                 ? 'bg-primary/10 text-primary'
@@ -509,7 +512,7 @@ export default function NavBar() {
             href="/curriculum"
             aria-current={isCurriculumActive(pathname) ? 'page' : undefined}
             className={cn(
-              'relative flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium',
+              'relative flex items-center gap-2 rounded-xl px-3 py-2 min-h-11 text-sm font-medium',
               'transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
               isCurriculumActive(pathname)
                 ? 'bg-primary/10 text-primary'
@@ -560,7 +563,7 @@ export default function NavBar() {
             />
             {openSection === 'team' && (
               <div id="nav-section-team" className="mt-1 space-y-0.5 nav-section-enter">
-                {TEAM_LINKS.map((item) => (
+                {COMMUNITY_LINKS.map((item) => (
                   <NavItemLink
                     key={item.href}
                     item={item}
@@ -597,7 +600,7 @@ export default function NavBar() {
         <div className="shrink-0 border-t border-border/60 p-2 lg:p-3 relative" ref={userMenuRef}>
           {mounted && isAuthenticated && user ? (
             <>
-              <div className={cn('flex mb-2 px-0.5', collapsed ? 'justify-center' : 'justify-center lg:justify-start')}>
+              <div className={cn('flex mb-2 px-0.5', collapsed ? 'justify-start lg:justify-center' : 'justify-start')}>
                 <ThemeToggle />
               </div>
               <button
@@ -605,31 +608,27 @@ export default function NavBar() {
                 onClick={() => setOpenPanel((curr) => (curr === 'user' ? null : 'user'))}
                 aria-expanded={openPanel === 'user'}
                 aria-controls="nav-user-menu"
-                title={user.profile.name}
+                aria-label={`Account menu for ${user.profile.name}`}
                 className={cn(
-                  'w-full flex items-center gap-2 p-1.5 rounded-2xl border border-border',
+                  'w-full flex items-center gap-2 p-1.5 min-h-11 rounded-2xl border border-border',
                   'hover:border-primary/40 bg-background-secondary/50 transition-all cursor-pointer',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-                  collapsed ? 'justify-center lg:pr-1.5' : 'justify-center lg:justify-start lg:pr-2.5'
+                  collapsed ? 'justify-start lg:justify-center lg:pr-1.5' : 'justify-start pr-2.5'
                 )}
               >
                 {user.profile.avatar ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={user.profile.avatar} alt={user.profile.name} className="w-8 h-8 rounded-xl object-cover shrink-0 shadow-xs" />
+                  <img src={user.profile.avatar} alt="" className="w-8 h-8 rounded-xl object-cover shrink-0 shadow-xs" />
                 ) : (
-                  <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-xs">
+                  <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-xs" aria-hidden>
                     {getInitials(user.profile.name)}
                   </div>
                 )}
-                {!collapsed && (
-                  <div className="hidden lg:block min-w-0 flex-1 text-left">
-                    <p className="text-sm font-semibold text-foreground truncate">{user.profile.name}</p>
-                    <p className="text-xs text-foreground-muted truncate">@{user.profile.username}</p>
-                  </div>
-                )}
-                {!collapsed && (
-                  <ChevronDown className={cn('hidden lg:block w-3.5 h-3.5 opacity-60 transition-transform duration-200 shrink-0', openPanel === 'user' && 'rotate-180')} />
-                )}
+                <div className={cn('min-w-0 flex-1 text-left', collapsed && 'lg:hidden')}>
+                  <p className="text-sm font-semibold text-foreground truncate">{user.profile.name}</p>
+                  <p className="text-xs text-foreground-muted truncate">@{user.profile.username}</p>
+                </div>
+                <ChevronDown className={cn('w-3.5 h-3.5 opacity-60 transition-transform duration-200 shrink-0', collapsed && 'lg:hidden', openPanel === 'user' && 'rotate-180')} />
               </button>
               {openPanel === 'user' && (
                 <div
@@ -643,25 +642,25 @@ export default function NavBar() {
             </>
           ) : (
             <div className="flex flex-col gap-2">
-              <div className={cn('flex px-0.5', collapsed ? 'justify-center' : 'justify-center lg:justify-start')}>
+              <div className={cn('flex px-0.5', collapsed ? 'justify-start lg:justify-center' : 'justify-start')}>
                 <ThemeToggle />
               </div>
               <Link
                 href="/login"
-                title="Sign In"
-                className="px-2 lg:px-3.5 py-2 rounded-xl text-sm font-semibold text-center text-foreground hover:bg-background-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="flex items-center justify-center gap-2 min-h-11 px-3.5 py-2 rounded-xl text-sm font-semibold text-foreground hover:bg-background-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
-                <UserCircle className="w-5 h-5 mx-auto lg:hidden" />
-                <span className={cn(collapsed ? 'hidden' : 'hidden lg:inline')}>Sign In</span>
+                <UserCircle className={cn('w-5 h-5', collapsed ? 'lg:mx-auto' : 'hidden')} />
+                <span className={cn(collapsed && 'lg:hidden')}>Sign In</span>
               </Link>
-              {!collapsed && (
-                <Link
-                  href="/signup"
-                  className="hidden lg:block px-4 py-2 rounded-xl bg-primary text-white text-sm font-bold text-center shadow-md hover:bg-primary-hover transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                >
-                  Get Started
-                </Link>
-              )}
+              <Link
+                href="/signup"
+                className={cn(
+                  'px-4 py-2 min-h-11 rounded-xl bg-primary text-white text-sm font-bold text-center shadow-md hover:bg-primary-hover transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+                  collapsed && 'lg:hidden'
+                )}
+              >
+                Get Started
+              </Link>
             </div>
           )}
         </div>
@@ -717,7 +716,7 @@ export default function NavBar() {
                   Community
                 </p>
                 <div className="space-y-0.5">
-                  {TEAM_LINKS.map((item) => (
+                  {COMMUNITY_LINKS.map((item) => (
                     <NavItemLink
                       key={item.href}
                       item={item}

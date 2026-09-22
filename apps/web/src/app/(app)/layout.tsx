@@ -25,7 +25,12 @@ function isGuestAllowed(pathname: string): boolean {
 }
 
 function isImmersivePath(pathname: string): boolean {
-  return pathname === '/pomodoro' || pathname.startsWith('/pomodoro/');
+  return (
+    pathname === '/pomodoro' ||
+    pathname.startsWith('/pomodoro/') ||
+    pathname === '/timetable' ||
+    pathname.startsWith('/timetable/')
+  );
 }
 
 function GuestChrome({
@@ -87,14 +92,14 @@ function AuthenticatedShell({
           immersive
             ? [
                 'h-dvh overflow-hidden',
-                'md:pl-[var(--sidebar-width-collapsed)]',
-                collapsed ? 'lg:pl-[var(--sidebar-width-collapsed)]' : 'lg:pl-[var(--sidebar-width)]',
+                'md:pl-[var(--sidebar-width)]',
+                collapsed ? 'lg:pl-[var(--sidebar-width-collapsed)]' : '',
                 'transition-[padding] duration-200 ease-out motion-reduce:transition-none',
               ].join(' ')
             : [
                 'min-h-screen pb-[calc(var(--bottom-nav-height)+env(safe-area-inset-bottom))] md:pb-0',
-                'md:pl-[var(--sidebar-width-collapsed)]',
-                collapsed ? 'lg:pl-[var(--sidebar-width-collapsed)]' : 'lg:pl-[var(--sidebar-width)]',
+                'md:pl-[var(--sidebar-width)]',
+                collapsed ? 'lg:pl-[var(--sidebar-width-collapsed)]' : '',
                 'transition-[padding] duration-200 ease-out motion-reduce:transition-none',
               ].join(' ')
         }
