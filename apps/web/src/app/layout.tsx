@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Quicksand } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
@@ -17,24 +17,78 @@ const quicksand = Quicksand({
   fallback: ["system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
 });
 
-export const metadata: Metadata = {
-  title: "The ANTs — Academic Productivity & Tutoring Platform",
-  icons: [{ rel: "icon", url: "/logo.png" }],
-  description:
-    "The ANTs is a curriculum-aware productivity and tutoring platform for Myanmar students pursuing Cambridge IGCSE, A Levels, Edexcel, IELTS, and Matriculation.",
-  keywords: [
-    "ANTS",
-    "study",
-    "IGCSE",
-    "A Level",
-    "Myanmar",
-    "timetable",
-    "lesson tracker",
-    "tutors",
-    "pomodoro",
-    "exam countdown",
-    "grade calculator",
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f8fafc" },
+    { media: "(prefers-color-scheme: dark)", color: "#090a0f" },
   ],
+  width: "device-width",
+  initialScale: 1,
+};
+
+export const metadata: Metadata = {
+  metadataBase: new URL("https://the-ants.org"),
+  title: {
+    default: "The ANTs — Academic Productivity & Tutoring Platform",
+    template: "%s | The ANTs",
+  },
+  description:
+    "Curriculum-aware productivity and tutoring platform for Myanmar students pursuing Cambridge IGCSE, A Levels, and Pearson Edexcel. Free past paper trackers, timetable, pomodoro, grade calculators, and official exam countdowns.",
+  keywords: [
+    "The ANTS",
+    "Myanmar IGCSE",
+    "Cambridge CAIE",
+    "Pearson Edexcel IAL",
+    "A Level Myanmar",
+    "past paper tracker",
+    "grade calculator",
+    "exam countdown",
+    "study timetable",
+    "pomodoro timer",
+  ],
+  authors: [{ name: "The ANTs Academic Community", url: "https://the-ants.org" }],
+  creator: "The ANTs",
+  publisher: "The ANTs",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
+  manifest: "/manifest.webmanifest",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://the-ants.org",
+    siteName: "The ANTs",
+    title: "The ANTs — Academic Productivity & Tutoring Platform",
+    description:
+      "Curriculum-aware academic productivity and tutoring platform for Myanmar students pursuing Cambridge IGCSE, A Levels, and Pearson Edexcel.",
+    images: [
+      {
+        url: "/logo.png",
+        width: 512,
+        height: 512,
+        alt: "The ANTs Logo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary",
+    title: "The ANTs — Academic Productivity & Tutoring Platform",
+    description:
+      "Curriculum-aware academic productivity and tutoring platform for Myanmar students pursuing Cambridge IGCSE, A Levels, and Pearson Edexcel.",
+    images: ["/logo.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
 };
 
 export default function RootLayout({

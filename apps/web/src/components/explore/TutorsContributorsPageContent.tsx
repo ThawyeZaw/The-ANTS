@@ -83,8 +83,7 @@ function TeamDirectory() {
               Meet the People Behind The ANTS
             </h1>
             <p className="text-sm sm:text-base text-foreground-muted leading-relaxed">
-              Browse verified tutors offering IGCSE sessions, academic contributors who build
-              our curriculum, and the founders who started it all.
+              Learn from verified top-scoring scholars. Browse our founders and tutors offering Cambridge &amp; Edexcel IGCSE &amp; A-Level classes, and academic contributors building our verified curriculum.
             </p>
           </div>
           {/* Decorative blobs */}

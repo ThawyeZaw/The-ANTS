@@ -76,13 +76,18 @@ function calculateTimeLeft(targetDate: string | null): TimeLeft {
 export function useCountdown(userId: string | undefined) {
   const [countdowns, setCountdowns] = useState<CountdownWithTime[]>([]);
   const [availableExams, setAvailableExams] = useState<Exam[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Load initial data
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {
+      setIsLoading(false);
+      return;
+    }
 
     const loadData = async () => {
       try {
+        setIsLoading(true);
         const [cdRows, examRows] = await Promise.all([
           listExamCountdownsForUser(userId),
           listExams(),
@@ -102,6 +107,8 @@ export function useCountdown(userId: string | undefined) {
         setAvailableExams(examRows as unknown as Exam[]);
       } catch (err) {
         console.error('Error loading countdowns:', err);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -233,6 +240,7 @@ export function useCountdown(userId: string | undefined) {
     groupedCountdowns,
     countdowns,
     availableExams,
+    isLoading,
     createCountdown: handleCreateCountdown,
     deleteCountdown: handleDeleteCountdown,
   };

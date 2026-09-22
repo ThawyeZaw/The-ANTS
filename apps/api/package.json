@@ -9,7 +9,7 @@
     "dev:shared": "node --use-system-ca ../../node_modules/wrangler/bin/wrangler.js dev src/index.ts -c wrangler.shared.jsonc --port 8787",
     "promote-admin:local": "node ../../node_modules/wrangler/bin/wrangler.js d1 execute the-ants-db --local -c wrangler.jsonc --file scripts/promote-local-admin.sql",
     "migrate:shared": "node --use-system-ca ../../node_modules/wrangler/bin/wrangler.js d1 migrations apply the-ants-db-dev --remote -c wrangler.shared.jsonc",
-    "deploy": "node ../../node_modules/wrangler/bin/wrangler.js deploy src/index.ts",
+    "deploy": "node --use-system-ca ../../node_modules/wrangler/bin/wrangler.js deploy src/index.ts",
     "build": "node ../../node_modules/wrangler/bin/wrangler.js deploy --dry-run --outdir dist",
     "typecheck": "tsc --noEmit"
   },

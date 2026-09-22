@@ -13,6 +13,7 @@ import { ArrowRight, CheckCircle2, Eye, Home, Rocket, Zap } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { getRoleLandingPath } from '@/lib/utils';
 import HeroVisual from '@/components/homepage/HeroVisual';
+import HowItWorks from '@/components/homepage/HowItWorks';
 import BentoFeatures from '@/components/homepage/BentoFeatures';
 import QualBoards from '@/components/homepage/QualBoards';
 
@@ -226,23 +227,13 @@ export default function HomePage() {
 
             <a
               className="hp-nav-item"
-              href="#features"
+              href="#how-it-works"
               onClick={(e) => {
                 e.preventDefault();
-                document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+                document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
               }}
             >
-              <span className="hp-nav-linktext" data-text="Features">Features</span>
-            </a>
-            <a
-              className="hp-nav-item"
-              href="#qualifications"
-              onClick={(e) => {
-                e.preventDefault();
-                document.getElementById('qualifications')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-            >
-              <span className="hp-nav-linktext" data-text="Boards & Syllabi">Boards & Syllabi</span>
+              <span className="hp-nav-linktext" data-text="How It Works">How It Works</span>
             </a>
             <a
               className="hp-nav-item"
@@ -256,13 +247,23 @@ export default function HomePage() {
             </a>
             <a
               className="hp-nav-item"
-              href="#about"
+              href="#qualifications"
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById('qualifications')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+            >
+              <span className="hp-nav-linktext" data-text="Boards & Syllabi">Boards & Syllabi</span>
+            </a>
+            <a
+              className="hp-nav-item"
+              href="/about"
               onClick={(e) => {
                 e.preventDefault();
                 document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' });
               }}
             >
-              <span className="hp-nav-linktext" data-text="About">About</span>
+              <span className="hp-nav-linktext" data-text="Our Story">Our Story</span>
             </a>
           </div>
 
@@ -520,11 +521,11 @@ export default function HomePage() {
                       />
                     </span>
                     <span style={{ fontWeight: 700, color: 'var(--hp-ink)' }}>
-                      Built by students, for students
+                      Built by Top Scholars for Myanmar International Students
                     </span>
                     <span style={{ color: 'var(--hp-ink-faint)' }}>·</span>
                     <span style={{ fontWeight: 700, color: 'var(--hp-brand)' }}>
-                      Yangon, Mandalay & worldwide
+                      Yangon, Mandalay & Worldwide
                     </span>
                   </div>
                 </div>
@@ -533,7 +534,7 @@ export default function HomePage() {
                   className="hp-reveal"
                   style={{
                     fontFamily: 'var(--hp-font-display)',
-                    fontSize: 'clamp(2.4rem, 5vw, 3.85rem)',
+                    fontSize: 'clamp(1.8rem, 4vw, 3rem)',
                     fontWeight: 560,
                     lineHeight: 1.08,
                     letterSpacing: '-0.01em',
@@ -542,10 +543,9 @@ export default function HomePage() {
                     color: 'var(--hp-ink)',
                   }}
                 >
-                  Ace your exams.
+                  Master Cambridge &amp; Edexcel Exams.
                   <br />
-                  <span className="hp-grad hp-neon-stroke">No stress, just vibes</span>
-                  {' '}& top grades.
+                  <span className="hp-grad hp-neon-stroke">Plan, Focus, and Predict Your Grades.</span>
                 </h1>
 
                 <p
@@ -559,12 +559,11 @@ export default function HomePage() {
                     color: 'var(--hp-ink-muted)',
                   }}
                 >
-                  More than just tutors —{' '}
                   <span className="font-brand" style={{ color: 'var(--hp-ink)', fontWeight: 700 }}>
                     The ANTs
                   </span>{' '}
-                  is your all-in-one cheat code to conquer Cambridge CAIE, Pearson Edexcel, and ace
-                  international boards. Free forever, no credit card required.
+                  is the tutoring &amp; academic productivity hub founded by top Myanmar exam achievers.
+                  Access verified syllabus trackers, official grade predictors, deep-work timers, and expert IGCSE &amp; A-Level classes.
                 </p>
 
                 <div
@@ -603,7 +602,7 @@ export default function HomePage() {
                         (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)';
                       }}
                     >
-                      Start Grinding for Free
+                      Start Studying for Free
                       <Rocket size={16} strokeWidth={2.2} />
                     </button>
                   </Link>
@@ -639,7 +638,7 @@ export default function HomePage() {
                       e.currentTarget.style.borderColor = 'var(--hp-border)';
                     }}
                   >
-                    Peep the Features
+                    Explore Study Tools
                     <Eye size={16} style={{ color: 'var(--hp-violet)' }} strokeWidth={2.2} />
                   </a>
                 </div>
@@ -656,7 +655,7 @@ export default function HomePage() {
                     color: 'var(--hp-ink-muted)',
                   }}
                 >
-                  {['Zero Kyats setup', 'Verified exam syllabi', 'No credit card'].map((label) => (
+                  {['100% Free Study Tools', 'Verified CAIE & Edexcel Syllabi', 'Myanmar Exam Timetables'].map((label) => (
                     <span
                       key={label}
                       style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
@@ -681,6 +680,28 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── How It Works ─────────────────────────────────────────────────── */}
+      <section
+        id="how-it-works"
+        className="hp-grid-card"
+        style={{
+          padding: '100px 28px',
+          background: 'var(--hp-bg-soft)',
+          position: 'relative',
+          scrollMarginTop: 90,
+        }}
+      >
+        <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
+          <SectionHead
+            eyebrow="Clear 3-Step Process"
+            heading="How The ANTS powers your exam success"
+            gradPhrase="exam success"
+            subtext="From your first revision block to the final official mark scheme, our platform provides the structure, focus, and predictive clarity to achieve top grades."
+          />
+          <HowItWorks />
+        </div>
+      </section>
+
       {/* ── Interactive Toolkit / Features ───────────────────────────────── */}
       <section
         id="features"
@@ -690,9 +711,9 @@ export default function HomePage() {
         <div style={{ maxWidth: 'var(--hp-maxw)', margin: '0 auto' }}>
           <SectionHead
             eyebrow="Interactive Toolkit"
-            heading="Everything built to crush syllabus anxiety"
-            gradPhrase="syllabus anxiety"
-            subtext="High-contrast dashboards, verified past paper solutions, and live collaboration suites tailored for Burmese students taking on global qualifications."
+            heading="Everything you need for exam excellence"
+            gradPhrase="exam excellence"
+            subtext="Verified grade calculators, official syllabus trackers, focus timers, and past paper logs engineered for Cambridge and Edexcel candidates."
           />
           <BentoFeatures />
         </div>
@@ -800,14 +821,30 @@ export default function HomePage() {
                     fontSize: 15,
                     color: 'var(--hp-ink-muted)',
                     lineHeight: 1.7,
-                    margin: '0 0 28px',
-                    maxWidth: 480,
+                    margin: '0 0 16px',
+                    maxWidth: 500,
                   }}
                 >
                   <span className="font-brand" style={{ color: 'var(--hp-ink)', fontWeight: 700 }}>The ANTs</span>{' '}
-                  started as a small circle of student volunteers helping peers prep for Cambridge and Edexcel exams in Yangon.
-                  Today, it is a growing non-profit movement spanning Myanmar and the diaspora —
-                  built by students who believe world-class education should be free, accessible, and community-powered.
+                  originally took its name from the initials of its four founding scholars:{' '}
+                  <strong style={{ color: 'var(--hp-ink)' }}>Aung Khant Thaw</strong>,{' '}
+                  <strong style={{ color: 'var(--hp-ink)' }}>Nyi Ye Htut</strong>,{' '}
+                  <strong style={{ color: 'var(--hp-ink)' }}>Thaw Ye Zaw (Throin)</strong>, and{' '}
+                  <strong style={{ color: 'var(--hp-ink)' }}>Sitt Hmue Pyae Sone (Simon)</strong>.
+                  After acing their own international exams, they teamed up to guide fellow Myanmar students to academic excellence.
+                </p>
+                <p
+                  style={{
+                    fontFamily: 'var(--hp-font-body)',
+                    fontSize: 14.5,
+                    color: 'var(--hp-ink-muted)',
+                    lineHeight: 1.65,
+                    margin: '0 0 28px',
+                    maxWidth: 500,
+                  }}
+                >
+                  Today, The ANTS has grown into an active network of top tutors and founders studying across A-Levels, OSSD, Foundation programs, Singapore Polytechnics, and global universities.
+                  We offer high-standard IGCSE &amp; A-Level classes while providing free, world-class study tools to empower every student.
                 </p>
                 <Link href="/about">
                   <button
@@ -835,7 +872,7 @@ export default function HomePage() {
                       (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
                     }}
                   >
-                    Read Our Story & Journey
+                    Read Our Full Story
                     <ArrowRight size={15} strokeWidth={2.2} />
                   </button>
                 </Link>
@@ -851,10 +888,10 @@ export default function HomePage() {
                 }}
               >
                 {[
-                  { value: '100%', label: 'Free Forever', sub: 'No fees, no credit card' },
-                  { value: '4', label: 'Exam Boards', sub: 'Cambridge · Edexcel · AQA · OCR' },
-                  { value: '7+', label: 'Study Tools', sub: 'Built for Myanmar scholars' },
-                  { value: '🌏', label: 'Worldwide Community', sub: 'Yangon, Mandalay & diaspora' },
+                  { value: '100%', label: 'Free Study Tools', sub: 'Calculators, timers & trackers' },
+                  { value: '2', label: 'Flagship Boards', sub: 'Cambridge (CAIE) & Pearson Edexcel' },
+                  { value: '7+', label: 'Productivity Tools', sub: 'Built for Myanmar scholars' },
+                  { value: '🌏', label: 'Global Scholars', sub: 'Myanmar, Singapore & diaspora' },
                 ].map(({ value, label, sub }) => (
                   <div
                     key={label}
@@ -988,7 +1025,7 @@ export default function HomePage() {
                   }}
                 >
                   <Zap size={14} />
-                  Myanmar International Student Alliance
+                  The ANTS Academic Community
                 </div>
                 <h2
                   style={{
@@ -1014,8 +1051,8 @@ export default function HomePage() {
                     lineHeight: 1.6,
                   }}
                 >
-                  Join thousands of students across Yangon, Mandalay, Taunggyi and diaspora scholars
-                  conquering their international exams without burning out.
+                  Join thousands of students across Yangon, Mandalay, Singapore, and diaspora scholars
+                  conquering Cambridge CAIE and Pearson Edexcel exams with confidence.
                 </p>
                 <div
                   style={{
@@ -1045,7 +1082,7 @@ export default function HomePage() {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      Join The ANTs Squad — It&apos;s Free
+                      Join The ANTs — Start Studying Free
                       <Zap size={15} />
                     </button>
                   </Link>
@@ -1066,7 +1103,7 @@ export default function HomePage() {
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    Talk to Student Leaders
+                    Explore Tutors &amp; Classes
                   </Link>
                 </div>
               </div>

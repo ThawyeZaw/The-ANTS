@@ -1,5 +1,7 @@
 # Multi-Agent Guidelines — The ANTS
 
+> **AI Fast Lookup:** Consult [`ARCHITECTURE.md`](./ARCHITECTURE.md) for the 10-second Feature-to-File Matrix (routes, components, server actions, and DB tables) before reading files.
+>
 > **Active redesign.** Two developers work in parallel on separate long-lived branches and merge via PRs into `main`. Read **your** role file before coding.
 
 | Developer | Role | Agent file |
@@ -124,6 +126,7 @@ export default function MyComponent() {
 
 | File | Purpose |
 |---|---|
+| [`ARCHITECTURE.md`](./ARCHITECTURE.md) | **AI Agent fast lookup matrix** (features -> code) |
 | [`AGENTS.md`](./AGENTS.md) | Shared rules (this file) |
 | [`AGENTS.ui.md`](./AGENTS.ui.md) | Zay Lynn Htet — landing & auth |
 | [`AGENTS.features.md`](./AGENTS.features.md) | Thaw Ye Zaw — features & backend |

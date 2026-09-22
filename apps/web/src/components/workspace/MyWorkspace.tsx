@@ -117,7 +117,7 @@ function ExamsTab({
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {allCountdowns.map(c => {
           const daysLeft = c.timeLeft.days;
           const isPast = c.timeLeft.isPast;
@@ -129,60 +129,62 @@ function ExamsTab({
               key={c.id}
               onClick={handleOpenCountdown}
               className={cn(
-                'rounded-2xl border p-4 transition-all cursor-pointer group',
+                'rounded-2xl border p-4 transition-all cursor-pointer group flex flex-col justify-between',
                 isPast
-                  ? 'border-[var(--border)] bg-[var(--background-secondary)] opacity-60 hover:opacity-80'
+                  ? 'border-border bg-background-secondary opacity-60 hover:opacity-80'
                   : isCritical
-                    ? 'border-red-500/30 bg-red-500/5 hover:border-red-500/50 shadow-sm'
+                    ? 'border-red-500/30 bg-red-500/5 hover:border-red-500/50 shadow-xs'
                     : isWarning
-                      ? 'border-amber-500/30 bg-amber-500/5 hover:border-amber-500/50 shadow-sm'
-                      : 'border-[var(--border)] bg-[var(--background-card)] hover:border-[var(--primary)]/30 hover:shadow-sm'
+                      ? 'border-amber-500/30 bg-amber-500/5 hover:border-amber-500/50 shadow-xs'
+                      : 'border-border bg-background-card hover:border-primary/30 hover:shadow-xs'
               )}
               role="article"
               tabIndex={0}
               onKeyDown={e => { if (e.key === 'Enter') handleOpenCountdown(); }}
             >
-              <div className="flex items-center justify-between mb-2">
-                <span className={cn(
-                  'text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full',
-                  c.priority_indicator === 'high'
-                    ? 'bg-red-500/15 text-red-700'
-                    : c.priority_indicator === 'medium'
-                      ? 'bg-amber-500/15 text-amber-700'
-                      : 'bg-[var(--background-secondary)] text-[var(--foreground-muted)]'
-                )}>
-                  {c.priority_indicator ?? 'medium'}
-                </span>
-                <span className="text-[10px] text-[var(--foreground-muted)] font-medium">
-                  {c.qualification_group}
-                </span>
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className={cn(
+                    'text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full',
+                    c.priority_indicator === 'high'
+                      ? 'bg-red-500/15 text-red-600 dark:text-red-400'
+                      : c.priority_indicator === 'medium'
+                        ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                        : 'bg-background-secondary text-foreground-muted'
+                  )}>
+                    {c.priority_indicator ?? 'medium'}
+                  </span>
+                  <span className="text-[10px] text-foreground-muted font-mono font-medium">
+                    {c.qualification_group}
+                  </span>
+                </div>
+
+                <h3 className="text-sm font-bold text-foreground mb-3 line-clamp-2 group-hover:text-primary transition-colors">
+                  {c.custom_title}
+                </h3>
               </div>
 
-              <h3 className="text-sm font-bold text-[var(--foreground)] mb-3 line-clamp-2 group-hover:text-[var(--primary)] transition-colors">
-                {c.custom_title}
-              </h3>
-
               {isPast ? (
-                <p className="text-xs text-[var(--foreground-muted)] italic">
+                <p className="text-xs text-foreground-muted italic mt-2">
                   Exam has passed — {Math.abs(daysLeft)} day{Math.abs(daysLeft) !== 1 ? 's' : ''} ago
                 </p>
               ) : (
-                <>
+                <div className="mt-2">
                   <div className="mb-2">
                     <div className="flex items-center justify-between text-[10px] mb-1">
-                      <span className="text-[var(--foreground-muted)]">Time remaining</span>
+                      <span className="text-foreground-muted">Time remaining</span>
                       <span className={cn(
-                        'font-bold',
-                        isCritical ? 'text-red-500' : isWarning ? 'text-amber-500' : 'text-[var(--foreground)]'
+                        'font-bold font-mono tabular-nums',
+                        isCritical ? 'text-red-500' : isWarning ? 'text-amber-500' : 'text-foreground'
                       )}>
                         {formatTimeLeft(daysLeft)}
                       </span>
                     </div>
-                    <div className="h-1.5 rounded-full bg-[var(--border)] overflow-hidden">
+                    <div className="h-1.5 rounded-full bg-border overflow-hidden">
                       <div
                         className={cn(
                           'h-full rounded-full transition-all duration-500',
-                          isCritical ? 'bg-red-500' : isWarning ? 'bg-amber-500' : 'bg-[var(--primary)]'
+                          isCritical ? 'bg-red-500' : isWarning ? 'bg-amber-500' : 'bg-primary'
                         )}
                         style={{ width: `${Math.min(100, Math.max(0, 100 - (daysLeft / 365) * 100))}%` }}
                       />
@@ -195,18 +197,18 @@ function ExamsTab({
                       { value: c.timeLeft.hours, label: 'Hours' },
                       { value: c.timeLeft.minutes, label: 'Mins' },
                     ].map(({ value, label }) => (
-                      <div key={label} className="text-center bg-[var(--background)] rounded-lg py-2 group-hover:bg-[var(--primary)]/5 transition-colors">
+                      <div key={label} className="text-center bg-background-secondary/70 border border-border/50 rounded-xl py-1.5 px-1 group-hover:bg-primary/5 transition-colors">
                         <p className={cn(
-                          'text-base font-black tabular-nums',
-                          isCritical ? 'text-red-600' : 'text-[var(--foreground)]'
+                          'text-base font-black font-mono tabular-nums leading-none',
+                          isCritical ? 'text-red-600 dark:text-red-400' : 'text-foreground'
                         )}>
                           {String(Math.max(0, value)).padStart(2, '0')}
                         </p>
-                        <p className="text-[9px] text-[var(--foreground-muted)]">{label}</p>
+                        <p className="text-[9px] text-foreground-muted uppercase tracking-wider mt-1">{label}</p>
                       </div>
                     ))}
                   </div>
-                </>
+                </div>
               )}
             </div>
           );

@@ -15,6 +15,7 @@ import {
   Trophy,
   ArrowRight,
   Wrench,
+  GraduationCap,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import Link from 'next/link';
@@ -32,10 +33,137 @@ interface Feature {
 
 const FEATURES: Feature[] = [
   {
-    tag: 'CORE TOOL',
+    tag: 'MOST POPULAR',
+    title: 'Grade Boundary Predictor',
+    description:
+      'Plug in raw component marks from any Cambridge CAIE session or Edexcel UMS unit and instantly see your predicted grade against official thresholds.',
+    Icon: Calculator,
+    accent: 'var(--hp-brand)',
+    href: '/calculator',
+    preview: (
+      <div
+        style={{
+          marginTop: 16,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 8,
+          padding: '10px 12px',
+          borderRadius: 12,
+          background: 'var(--hp-bg-soft)',
+          border: '1px solid var(--hp-border)',
+        }}
+      >
+        <span
+          style={{
+            fontFamily: 'var(--hp-font-mono)',
+            fontSize: 12,
+            color: 'var(--hp-ink-muted)',
+          }}
+        >
+          Raw: 168 / 200
+        </span>
+        <span
+          style={{
+            padding: '3px 8px',
+            borderRadius: 6,
+            background: 'var(--hp-brand)',
+            color: 'var(--hp-btn-text)',
+            fontFamily: 'var(--hp-font-mono)',
+            fontSize: 11,
+            fontWeight: 700,
+          }}
+        >
+          Predicted: A*
+        </span>
+      </div>
+    ),
+  },
+  {
+    tag: 'DEEP WORK',
+    title: 'Pomodoro Focus Timer',
+    description:
+      'Timed deep-work intervals with ambient lo-fi soundscapes. Link focus blocks to your enrolled subjects and build your daily study streaks.',
+    Icon: Timer,
+    accent: 'var(--hp-amber)',
+    href: '/pomodoro',
+    preview: (
+      <div
+        style={{
+          marginTop: 16,
+          padding: '10px 12px',
+          borderRadius: 12,
+          background: 'var(--hp-bg-soft)',
+          border: '1px solid var(--hp-border)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 10,
+        }}
+      >
+        <span
+          style={{
+            fontFamily: 'var(--hp-font-mono)',
+            fontSize: 18,
+            fontWeight: 700,
+            color: 'var(--hp-amber)',
+            letterSpacing: '-0.02em',
+          }}
+        >
+          25:00
+        </span>
+        <span
+          style={{
+            fontFamily: 'var(--hp-font-body)',
+            fontSize: 12.5,
+            color: 'var(--hp-ink-muted)',
+          }}
+        >
+          🎧 Focus Block · +20 XP
+        </span>
+      </div>
+    ),
+  },
+  {
+    tag: 'SYLLABUS MASTERY',
+    title: 'Curriculum & Topic Tracker',
+    description:
+      'Official syllabus breakdowns for Cambridge & Edexcel. Check off subtopics, monitor your percentage mastery, and navigate the modular maths suite with ease.',
+    Icon: GraduationCap,
+    accent: 'var(--hp-violet)',
+    href: '/curriculum',
+    preview: (
+      <div
+        style={{
+          marginTop: 16,
+          padding: '10px 12px',
+          borderRadius: 12,
+          background: 'var(--hp-bg-soft)',
+          border: '1px solid var(--hp-border)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 6,
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontFamily: 'var(--hp-font-body)', fontSize: 12, fontWeight: 600, color: 'var(--hp-ink)' }}>
+            Pure Math 1 (WMA11)
+          </span>
+          <span style={{ fontFamily: 'var(--hp-font-mono)', fontSize: 11, fontWeight: 700, color: 'var(--hp-violet)' }}>
+            82% Done
+          </span>
+        </div>
+        <div style={{ width: '100%', height: 6, borderRadius: 999, background: 'var(--hp-surface-2)', overflow: 'hidden' }}>
+          <div style={{ width: '82%', height: '100%', borderRadius: 999, background: 'var(--hp-violet)' }} />
+        </div>
+      </div>
+    ),
+  },
+  {
+    tag: 'EXAM DRILLS',
     title: 'Past Paper Tracker',
     description:
-      'Excel-style matrix for logging solved exam papers. Track component marks, compare against official grade boundaries, and visualise your progress across sessions.',
+      'Excel-style matrix for recording solved papers. Enter component marks, derive official grades, and review historic session trends.',
     Icon: BookOpen,
     accent: 'var(--hp-brand)',
     href: '/past-papers',
@@ -74,7 +202,7 @@ const FEATURES: Feature[] = [
               whiteSpace: 'nowrap',
             }}
           >
-            Pure Math 1 — May/June 2024
+            Physics 0625 / Paper 4
           </span>
         </span>
         <span
@@ -88,16 +216,16 @@ const FEATURES: Feature[] = [
             color: 'var(--hp-brand-deep)',
           }}
         >
-          A* — 178/200
+          A* — 68/80
         </span>
       </div>
     ),
   },
   {
-    tag: 'SMART SCHEDULE',
-    title: 'Smart Timetable',
+    tag: 'TIME BLOCKING',
+    title: 'Smart Timetable & Tasks',
     description:
-      'Drag, drop, and lock in your study week with color-coded revision blocks. Syncs with your registered exam sessions automatically.',
+      'Time-blocking schedule planner with integrated revision to-do lists. Keep track of class schedules, self-study slots, and assignment deadlines.',
     Icon: CalendarDays,
     accent: 'var(--hp-violet)',
     href: '/timetable',
@@ -145,102 +273,10 @@ const FEATURES: Feature[] = [
     ),
   },
   {
-    tag: 'TRY FREE',
-    title: 'Pomodoro Focus Timer',
-    description:
-      'Deep-work sessions with ambient lo-fi soundscapes. Hit your focus targets and rack up study streaks — no account needed to try it.',
-    Icon: Timer,
-    accent: 'var(--hp-amber)',
-    href: '/pomodoro',
-    preview: (
-      <div
-        style={{
-          marginTop: 16,
-          padding: '10px 12px',
-          borderRadius: 12,
-          background: 'var(--hp-bg-soft)',
-          border: '1px solid var(--hp-border)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 10,
-        }}
-      >
-        <span
-          style={{
-            fontFamily: 'var(--hp-font-mono)',
-            fontSize: 18,
-            fontWeight: 700,
-            color: 'var(--hp-amber)',
-            letterSpacing: '-0.02em',
-          }}
-        >
-          24:37
-        </span>
-        <span
-          style={{
-            fontFamily: 'var(--hp-font-body)',
-            fontSize: 12.5,
-            color: 'var(--hp-ink-muted)',
-          }}
-        >
-          🎧 Streak · Day 4
-        </span>
-      </div>
-    ),
-  },
-  {
-    tag: 'PREDICTIVE',
-    title: 'Grade Boundary Predictor',
-    description:
-      'Plug in raw marks from any Cambridge CAIE or Pearson Edexcel session and instantly see your predicted grade against official A*–U boundaries.',
-    Icon: Calculator,
-    accent: 'var(--hp-brand)',
-    href: '/calculator',
-    preview: (
-      <div
-        style={{
-          marginTop: 16,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 8,
-          padding: '10px 12px',
-          borderRadius: 12,
-          background: 'var(--hp-bg-soft)',
-          border: '1px solid var(--hp-border)',
-        }}
-      >
-        <span
-          style={{
-            fontFamily: 'var(--hp-font-mono)',
-            fontSize: 12,
-            color: 'var(--hp-ink-muted)',
-          }}
-        >
-          Raw: 168 / 200
-        </span>
-        <span
-          style={{
-            padding: '3px 8px',
-            borderRadius: 6,
-            background: 'var(--hp-brand)',
-            color: 'var(--hp-btn-text)',
-            fontFamily: 'var(--hp-font-mono)',
-            fontSize: 11,
-            fontWeight: 700,
-          }}
-        >
-          Predicted: A*
-        </span>
-      </div>
-    ),
-  },
-  {
-    tag: 'ESSENTIAL',
+    tag: 'OFFICIAL & IELTS',
     title: 'Exam Countdown',
     description:
-      'Live precision countdowns to every Cambridge and Edexcel sitting. Never miss a May/June or Oct/Nov session deadline again.',
+      'Live precision countdowns to official Cambridge and Edexcel exam sessions, plus custom countdowns for IELTS, school tests, and university deadlines.',
     Icon: Clock,
     accent: 'var(--hp-ink-muted)',
     href: '/countdown',
@@ -284,50 +320,6 @@ const FEATURES: Feature[] = [
               }}
             >
               {label}
-            </span>
-          </div>
-        ))}
-      </div>
-    ),
-  },
-  {
-    tag: 'RANKINGS',
-    title: 'Scholar Leaderboard',
-    description:
-      'Weekly and all-time scholar rankings by study streaks, XP, and milestone achievements. Compete, climb, and celebrate with your peers.',
-    Icon: Trophy,
-    accent: 'var(--hp-amber)',
-    href: '/leaderboard',
-    preview: (
-      <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {[
-          { rank: '🥇', name: 'Thuta Maung', xp: '2,480 XP' },
-          { rank: '🥈', name: 'Ei Phyu Sin', xp: '2,105 XP' },
-          { rank: '🥉', name: 'Kyaw Zin', xp: '1,960 XP' },
-        ].map(({ rank, name, xp }) => (
-          <div
-            key={name}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '6px 10px',
-              borderRadius: 10,
-              background: 'var(--hp-bg-soft)',
-              border: '1px solid var(--hp-border)',
-            }}
-          >
-            <span style={{ fontFamily: 'var(--hp-font-body)', fontSize: 12, color: 'var(--hp-ink)' }}>
-              {rank} {name}
-            </span>
-            <span
-              style={{
-                fontFamily: 'var(--hp-font-mono)',
-                fontSize: 11,
-                color: 'var(--hp-ink-muted)',
-              }}
-            >
-              {xp}
             </span>
           </div>
         ))}

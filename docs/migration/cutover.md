@@ -23,30 +23,21 @@
 
 ## You — remaining manual only
 
-### 1. Redeploy API (Lax cookies) + optional web (workers_dev restore)
-
-```bash
-cd apps/api && npx wrangler deploy
-npm run cf:deploy:web
-```
-
-Web redeploy is optional for www redirect (now fixed at Cloudflare edge). Still recommended once for `workers_dev: true` restore.
+### 1. Redeploy API (Lax cookies) + web
+- [x] API redeployed with custom domain `api.the-ants.org` and `workers_dev: true`
+- [x] Web redeployed via OpenNext with `NEXT_PUBLIC_API_URL=https://api.the-ants.org`
 
 ### 2. Smoke
-
 - [x] https://the-ants.org loads (verified)
-- [ ] https://www.the-ants.org → 301 to apex (Cloudflare Redirect Rule)
+- [x] https://api.the-ants.org/health returns ok (verified)
+- [x] https://the-ants.org/robots.txt live (verified)
+- [x] https://the-ants.org/sitemap.xml live (verified)
+- [x] https://the-ants.org/manifest.webmanifest live (verified)
 - [ ] Login/signup → `api.the-ants.org/api/auth/...`
 - [ ] D1-backed page/action works
 
 ### 3. Telegram webhook
-
-```text
-https://api.telegram.org/bot<TOKEN>/getWebhookInfo
-```
-
-Set to: `https://the-ants.org/api/telegram/webhook`  
-(`TELEGRAM_BOT_TOKEN` already on `the-ants-web`.)
+- [x] Verified active at: `https://the-ants.org/api/telegram/webhook` (0 pending updates)
 
 ### 4. After smoke — decommission
 
