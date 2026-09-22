@@ -40,9 +40,8 @@ export function WelcomeStep({
           Hi {firstName ?? 'there'}, welcome to{' '}
           <span className="font-brand">The ANTs</span>
         </h1>
-        <p className="text-sm text-foreground-muted sm:text-base">
-          Built for Myanmar students sitting Cambridge and Edexcel exams. Set up your
-          study plan — every step is optional.
+        <p className="text-sm text-foreground-muted sm:text-base max-w-lg mx-auto">
+          Your academic command center for Cambridge &amp; Edexcel exams, IELTS preparation, and daily study scheduling. Set up your study plan — every step is optional.
         </p>
       </div>
 

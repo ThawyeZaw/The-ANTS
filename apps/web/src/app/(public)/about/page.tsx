@@ -20,7 +20,29 @@ import { renderMarkdown } from '@/lib/markdown';
 
 
 
-// ── Mission Section ──────────────────────────────────────────────────────────
+const DEFAULT_MISSION = `
+## The ANTS Story & Mission
+
+**The ANTs** was founded as a dedicated tutoring and academic guidance organization to help students preparing for Cambridge (CAIE) and Pearson Edexcel IGCSE & A-Level examinations achieve academic and extracurricular excellence.
+
+The organization's name originally originated from the initials of its four founding scholars:
+- **A**ung Khant Thaw
+- **N**yi Ye Htut
+- **T**haw Ye Zaw (Throin)
+- **S**itt Hmue Pyae Sone (Simon)
+
+After acing their own international exams, the founders came together to share high-yield study techniques and provide educational equity for students across Myanmar and the global diaspora.
+
+Today, The ANTS has grown into an expanding network of top tutors and mentors currently pursuing their education at Cambridge A-Levels, Ontario OSSD, Foundation programmes, Singapore Polytechnics, and global universities.
+
+---
+
+### What We Deliver
+
+1. **IGCSE & A-Level Classes:** Interactive, high-impact tutoring for Cambridge CIE and Pearson Edexcel syllabi, led by scorers who achieved top grades in the exact same papers.
+2. **Free Digital Study Platform:** The ANTS web application provides verified grade calculators, syllabus topic checklists, past paper matrices, pomodoro timers, and timetables — 100% free with no paywalls.
+3. **Comprehensive Exam Support:** Precision tools for Cambridge & Edexcel, with flexible countdowns and scheduling for IELTS and school exams.
+`;
 
 function MissionSection() {
   const [missionContent, setMissionContent] = useState<string>('');
@@ -37,6 +59,8 @@ function MissionSection() {
     return () => { active = false; };
   }, []);
 
+  const contentToRender = missionContent && missionContent.trim().length > 0 ? missionContent : DEFAULT_MISSION;
+
   return (
     <div className="animate-fade-in space-y-12">
       {/* Headline */}
@@ -46,9 +70,12 @@ function MissionSection() {
           <br />
           <span className="text-primary">Your Bridge to Global Education.</span>
         </h1>
+        <p className="text-foreground-muted text-base max-w-xl mx-auto">
+          Founded by Myanmar scholars for Myanmar scholars. Tutoring, community guidance, and free digital study tools.
+        </p>
       </div>
 
-      {/* Dynamic Mission Content */}
+      {/* Dynamic / Fallback Mission Content */}
       <div className="bg-background-card border border-border rounded-2xl p-8 md:p-10 min-h-[160px] flex flex-col justify-center">
         {loading ? (
           <div className="flex items-center justify-center py-8">
@@ -56,8 +83,8 @@ function MissionSection() {
           </div>
         ) : (
           <div
-            className="[&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-foreground [&_h2]:mb-6 [&_h2]:flex [&_h2]:items-center [&_h2]:gap-3"
-            dangerouslySetInnerHTML={{ __html: renderMarkdown(missionContent) }}
+            className="[&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-foreground [&_h2]:mb-6 [&_h2]:flex [&_h2]:items-center [&_h2]:gap-3 [&_h3]:text-xl [&_h3]:font-bold [&_h3]:text-foreground [&_h3]:mt-6 [&_h3]:mb-3 [&_p]:text-foreground-secondary [&_p]:leading-relaxed [&_p]:mb-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-4 [&_ul]:space-y-2 [&_li]:text-foreground-secondary"
+            dangerouslySetInnerHTML={{ __html: renderMarkdown(contentToRender) }}
           />
         )}
       </div>

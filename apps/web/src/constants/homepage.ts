@@ -7,46 +7,46 @@
 
 /** High-impact stats displayed in the StatsRow component */
 export const HOMEPAGE_STATS = [
-  { endValue: 6, label: 'EXAM BOARDS' },
-  { endValue: 10000, label: 'PAST PAPER MARKS', suffix: '+' },
-  { endValue: 4, label: 'PROGRESSION ROLES' },
-  { endValue: 0, label: '100% FREE ECOSYSTEM', suffix: ' MMK' },
+  { endValue: 2, label: 'FLAGSHIP BOARDS' },
+  { endValue: 10000, label: 'TOPICS & MARKS', suffix: '+' },
+  { endValue: 7, label: 'STUDY TOOLS', suffix: '+' },
+  { endValue: 100, label: 'FREE ECOSYSTEM', suffix: '%' },
 ] as const;
 
 /** Qualification boards actively supported on the platform */
 export const QUALIFICATION_BOARDS = [
   {
-    name: 'Cambridge Assessment',
+    name: 'Cambridge Assessment (CAIE)',
     badge: 'CAIE SPEC 2024-2026',
-    qualifications: ['Pure Math (9709)', 'Physics (0625)', 'Economics (9708)'],
+    qualifications: ['IGCSE Sciences', 'Pure Math (9709)', 'Economics (9708)'],
     color: 'var(--hp-brand)',
     icon: 'GraduationCap' as const,
     description:
-      'IGCSE, O Levels & International A Levels. Full past paper topical indices and examiner reports.',
+      'Cambridge IGCSE & International A Levels. Syllabus breakdowns, topic completion trackers, and official component thresholds.',
     cta: 'Explore Cambridge Syllabi',
-    href: '/library?board=cambridge',
+    href: '/curriculum',
   },
   {
     name: 'Pearson Edexcel',
-    badge: 'EDEXCEL MODULAR',
-    qualifications: ['IAL Chemistry (WCH11)', 'Pure Math 1-4', 'Mechanics M1'],
+    badge: 'EDEXCEL MODULAR & IGCSE',
+    qualifications: ['IAL Modular Sciences', 'Modular Maths Suite (WMA11-SET)', 'IGCSE Series'],
     color: 'var(--hp-amber)',
     icon: 'BookOpen' as const,
     description:
-      'Modular IAL & IGCSE with official unit-by-unit grade conversion algorithms and verified answer banks.',
+      'Modular IAL & IGCSE with official unit-by-unit UMS conversion rules, cash-in combinations, and verified past paper matrices.',
     cta: 'Explore Edexcel Units',
-    href: '/library?board=edexcel',
+    href: '/curriculum',
   },
   {
-    name: 'IELTS Academic 8.0+',
-    badge: 'BRITISH COUNCIL / IDP',
-    qualifications: ['Writing Band 9 Descriptors', 'Speaking Cue Cards'],
+    name: 'IELTS Academic & Tests',
+    badge: 'ENGLISH PROFICIENCY & SCHOOL',
+    qualifications: ['Writing & Speaking Prep', 'Custom Exam Countdowns', 'Study Time-blocking'],
     color: 'var(--hp-violet)',
     icon: 'Mic' as const,
     description:
-      'Targeted writing task 2 frameworks, speaking mock rooms, and listening practice with authentic accents.',
-    cta: 'Explore IELTS Drills',
-    href: '/library?board=ielts',
+      'Custom countdown timers and time-blocking timetable for IELTS tests, school term mocks, and daily language practice.',
+    cta: 'Set IELTS Countdown',
+    href: '/countdown',
   },
 ] as const;
 

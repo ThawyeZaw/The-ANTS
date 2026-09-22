@@ -7,9 +7,14 @@
   "observability": {
     "enabled": true
   },
+  "workers_dev": true,
+  "preview_urls": true,
   "vars": {
     "ENVIRONMENT": "production"
   },
+  "routes": [
+    { "pattern": "api.the-ants.org", "custom_domain": true }
+  ],
   "d1_databases": [
     {
       "binding": "DB",

@@ -31,7 +31,7 @@ import type { LucideIcon } from 'lucide-react';
 import AppIcon from '@/components/ui/AppIcon';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
-import MyWorkspace from '@/components/workspace/MyWorkspace';
+import { DashboardExamCountdown } from '@/components/dashboard/DashboardExamCountdown';
 import { DashboardSubjectsPanel } from '@/components/dashboard/DashboardSubjectsPanel';
 import { useDashboardSync } from '@/hooks/useDashboardSync';
 import { cn } from '@/lib/utils';
@@ -39,6 +39,7 @@ import { getGamificationProfile } from '@/actions/gamification';
 import { BadgeShelf } from '@/components/gamification/BadgeShelf';
 import { GamificationHeroStrip } from '@/components/gamification/GamificationHeroStrip';
 import { RecentActivityFeed } from '@/components/gamification/RecentActivityFeed';
+import { ScholarQuickStartChecklist } from '@/components/dashboard/ScholarQuickStartChecklist';
 
 const statIconMap: Record<string, LucideIcon> = {
   'study-streak': Flame,
@@ -64,6 +65,39 @@ interface StudyToolCard {
 
 const STUDY_TOOLS: StudyToolCard[] = [
   {
+    id: 'calculator',
+    title: 'Grade Calculator',
+    description: 'CAIE raw boundaries and Edexcel IAL UMS grade prediction.',
+    href: '/calculator',
+    icon: Calculator,
+    badge: 'Popular',
+    badgeTone: 'emerald',
+    highlight: 'Context-aware UMS & raw %',
+    color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 group-hover:bg-emerald-500 group-hover:text-white',
+  },
+  {
+    id: 'pomodoro',
+    title: 'Pomodoro Timer',
+    description: 'Ambient soundscapes and timed deep-work focus sessions.',
+    href: '/pomodoro',
+    icon: Timer,
+    badge: 'Deep Work',
+    badgeTone: 'primary',
+    highlight: '+20 XP per 25-min focus block',
+    color: 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20 group-hover:bg-violet-500 group-hover:text-white',
+  },
+  {
+    id: 'curriculum',
+    title: 'Curriculum & Topics',
+    description: 'Syllabus checklists, topic completion, and maths suite selection.',
+    href: '/curriculum',
+    icon: GraduationCap,
+    badge: 'Syllabus',
+    badgeTone: 'primary',
+    highlight: 'CAIE & Edexcel breakdown',
+    color: 'bg-primary/10 text-primary border-primary/20 group-hover:bg-primary group-hover:text-white',
+  },
+  {
     id: 'past-papers',
     title: 'Past Papers',
     description: 'Track solved papers with marks & automated grade boundaries.',
@@ -72,7 +106,7 @@ const STUDY_TOOLS: StudyToolCard[] = [
     badge: 'Core',
     badgeTone: 'emerald',
     highlight: '+30 XP per paper with marks',
-    color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 group-hover:bg-emerald-500 group-hover:text-white',
+    color: 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20 group-hover:bg-teal-500 group-hover:text-white',
   },
   {
     id: 'timetable',
@@ -80,44 +114,24 @@ const STUDY_TOOLS: StudyToolCard[] = [
     description: 'Time-blocking scheduler and integrated todo list.',
     href: '/timetable',
     icon: CalendarDays,
-    badge: 'Redesigned',
-    badgeTone: 'primary',
     highlight: 'Week · Day · Month + Todo',
-    color: 'bg-primary/10 text-primary border-primary/20 group-hover:bg-primary group-hover:text-white',
-  },
-  {
-    id: 'pomodoro',
-    title: 'Pomodoro Timer',
-    description: 'Ambient soundscapes and timed deep-work focus sessions.',
-    href: '/pomodoro',
-    icon: Timer,
-    highlight: '+20 XP per 25-min focus block',
-    color: 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20 group-hover:bg-violet-500 group-hover:text-white',
+    color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 group-hover:bg-blue-500 group-hover:text-white',
   },
   {
     id: 'countdown',
     title: 'Exam Countdown',
-    description: 'Precision countdowns to upcoming official exam papers.',
+    description: 'Precision countdowns for CAIE, Edexcel, and custom IELTS exams.',
     href: '/countdown',
     icon: Clock,
     badge: 'Essential',
     badgeTone: 'amber',
-    highlight: 'Official session dates',
+    highlight: 'Official session & test dates',
     color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 group-hover:bg-amber-500 group-hover:text-white',
-  },
-  {
-    id: 'calculator',
-    title: 'Grade Calculator',
-    description: 'CAIE raw boundaries and Edexcel IAL UMS grade prediction.',
-    href: '/calculator',
-    icon: Calculator,
-    highlight: 'Context-aware UMS & raw %',
-    color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 group-hover:bg-blue-500 group-hover:text-white',
   },
   {
     id: 'leaderboard',
     title: 'Leaderboard',
-    description: 'See how you rank among scholars by XP and activity.',
+    description: 'See how you rank among scholars by XP and study activity.',
     href: '/leaderboard',
     icon: Trophy,
     highlight: 'Scholar rankings',
@@ -228,6 +242,12 @@ export default function StudentDashboard() {
         </div>
       </div>
 
+      {/* ── Scholar Quick-Start Checklist ─────────────────────────────── */}
+      <ScholarQuickStartChecklist
+        userId={user.id}
+        onXpAwarded={(xp) => setGamification((prev) => ({ ...prev, totalXp: xp }))}
+      />
+
       {/* ── Quick Stats Row ─────────────────────────────────────────────── */}
       {stats.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -259,9 +279,9 @@ export default function StudentDashboard() {
           <DashboardSubjectsPanel />
         </div>
 
-        {/* Exam Countdowns Workspace — 1 col */}
-        <div className="rounded-3xl border border-primary/20 bg-background-card p-6 shadow-xs">
-          <MyWorkspace />
+        {/* Exam Countdowns Timetable — 1 col */}
+        <div className="lg:col-span-1">
+          <DashboardExamCountdown />
         </div>
       </div>
 
@@ -311,6 +331,26 @@ export default function StudentDashboard() {
               </div>
             </Link>
           ))}
+        </div>
+
+        {/* ── Coming Soon Resources Strip ─────────────────────────────────── */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl border border-dashed border-border bg-background-secondary/30">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+              <Sparkles className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                In Active Development: Notes, Flashcards &amp; Quizzes
+              </p>
+              <p className="text-xs text-foreground-muted">
+                Our academic contributors are authoring curriculum-verified revision materials from scratch.
+              </p>
+            </div>
+          </div>
+          <span className="shrink-0 text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+            Phase 2 Pipeline
+          </span>
         </div>
       </section>
 

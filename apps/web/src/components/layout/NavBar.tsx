@@ -55,13 +55,13 @@ type PanelKey = 'tools' | 'team' | 'user' | null;
 type SectionKey = 'tools' | 'team' | 'role' | null;
 
 const TOOLS_LINKS: NavItem[] = [
+  { label: 'Grade Calculator', href: '/calculator', icon: Calculator, description: 'CAIE & Edexcel grade boundaries' },
+  { label: 'Pomodoro Timer', href: '/pomodoro', icon: Timer, description: 'Focus sessions with ambient sound' },
   { label: 'Past Paper Tracker', href: '/past-papers', icon: BookOpen, description: 'Track solved papers & grades' },
   { label: 'Smart Timetable', href: '/timetable', icon: CalendarDays, description: 'Time-blocking & task list' },
-  { label: 'Pomodoro Timer', href: '/pomodoro', icon: Timer, description: 'Focus sessions with ambient sound' },
-  { label: 'Exam Countdown', href: '/countdown', icon: Clock, description: 'Days until your next paper' },
-  { label: 'Grade Calculator', href: '/calculator', icon: Calculator, description: 'CAIE & Edexcel grade boundaries' },
+  { label: 'Exam Countdown', href: '/countdown', icon: Clock, description: 'Days until your next paper or IELTS' },
   { label: 'Leaderboard', href: '/leaderboard', icon: Trophy, description: 'Scholar rankings' },
-  { label: 'My Workspace', href: '/workspace', icon: Wrench, description: 'Personal tools & settings' },
+  { label: 'My Workspace', href: '/workspace', icon: Wrench, description: 'Personal tools & countdowns' },
 ];
 
 const TEAM_LINKS: NavItem[] = [
