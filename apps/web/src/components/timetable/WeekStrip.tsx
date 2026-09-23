@@ -23,7 +23,7 @@ export default function WeekStrip({
   });
 
   return (
-    <div className="grid grid-cols-7 gap-1 px-2 pb-2 sm:px-4">
+    <div className="grid grid-cols-7 px-1 pb-1 sm:px-3">
       {days.map((date, index) => {
         const active = isSameDay(date, selected);
         const isToday = isSameDay(date, today);
@@ -33,7 +33,7 @@ export default function WeekStrip({
             key={formatDateKey(date)}
             type="button"
             onClick={() => onSelect(date)}
-            className="flex flex-col items-center gap-1 rounded-2xl py-1"
+            className="flex flex-col items-center gap-0.5 rounded-xl py-0.5"
             aria-label={date.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
             aria-pressed={active}
           >
@@ -41,7 +41,7 @@ export default function WeekStrip({
               {LETTERS[index]}
             </span>
             <span
-              className="flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold tabular-nums"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold tabular-nums"
               style={
                 active
                   ? { backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' }

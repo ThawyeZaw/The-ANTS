@@ -1,21 +1,25 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import type { TimetableEvent } from '@/types/timetable';
-import TimeGrid, { type InlineSlot } from './TimeGrid';
+import TimeGrid, { type GridEditor, type InlineSlot } from './TimeGrid';
 
 interface WeekViewProps {
   weekStart: Date;
   selectedDate: Date;
   events: TimetableEvent[];
   isDragging?: boolean;
+  slotHeight?: number;
   inlineCreate: InlineSlot | null;
   onSlotClick: (date: Date, time: string) => void;
   onEditEvent: (event: TimetableEvent) => void;
   onToggleComplete: (eventId: string) => void;
   onInlineSubmit: (title: string) => void;
   onInlineCancel: () => void;
-  onInlineExpand: () => void;
+  onInlineExpand: (title: string) => void;
   onDayHeaderClick: (date: Date) => void;
+  editor?: GridEditor | null;
+  renderEditor?: () => ReactNode;
 }
 
 export default function WeekView({
@@ -23,6 +27,7 @@ export default function WeekView({
   selectedDate,
   events,
   isDragging,
+  slotHeight,
   inlineCreate,
   onSlotClick,
   onEditEvent,
@@ -31,6 +36,8 @@ export default function WeekView({
   onInlineCancel,
   onInlineExpand,
   onDayHeaderClick,
+  editor,
+  renderEditor,
 }: WeekViewProps) {
   const days = Array.from({ length: 7 }, (_, index) => {
     const date = new Date(weekStart);
@@ -43,6 +50,7 @@ export default function WeekView({
       days={days}
       events={events}
       selectedDate={selectedDate}
+      slotHeight={slotHeight}
       isDragging={isDragging}
       inlineCreate={inlineCreate}
       onSlotClick={onSlotClick}
@@ -52,6 +60,8 @@ export default function WeekView({
       onInlineCancel={onInlineCancel}
       onInlineExpand={onInlineExpand}
       onDayHeaderClick={onDayHeaderClick}
+      editor={editor}
+      renderEditor={renderEditor}
     />
   );
 }

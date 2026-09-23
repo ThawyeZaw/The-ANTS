@@ -1,16 +1,18 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Plus } from 'lucide-react';
-import type { TimetableEvent } from '@/types/timetable';
-import { TaskRow } from './TaskRow';
+import type { TimetableEvent, TimetableEventFormData } from '@/types/timetable';
+import TaskEditor from './TaskEditor';
+import { TaskItem } from './TaskRow';
 import { eventSortTime, representativeTasks, startOfDay } from './task-utils';
 
 interface TaskListViewProps {
   events: TimetableEvent[];
-  onEditEvent: (event: TimetableEvent) => void;
+  composeKey: number;
   onToggleComplete: (eventId: string) => void;
-  onQuickAdd: (title: string) => void;
+  onSave: (event: TimetableEvent | null, data: TimetableEventFormData) => Promise<void>;
+  onDelete: (event: TimetableEvent) => Promise<void>;
 }
 
 function dayKey(event: TimetableEvent): number {
@@ -19,11 +21,22 @@ function dayKey(event: TimetableEvent): number {
 
 export default function TaskListView({
   events,
-  onEditEvent,
+  composeKey,
   onToggleComplete,
-  onQuickAdd,
+  onSave,
+  onDelete,
 }: TaskListViewProps) {
-  const [draft, setDraft] = useState('');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+  const seenCompose = useRef(composeKey);
+
+  useEffect(() => {
+    if (composeKey === seenCompose.current) return;
+    seenCompose.current = composeKey;
+    setExpandedId(null);
+    setCreating(true);
+  }, [composeKey]);
+
   const groups = useMemo(() => {
     const today = startOfDay(new Date()).getTime();
     const tomorrow = today + 86400000;
@@ -62,27 +75,39 @@ export default function TaskListView({
     { id: 'done', label: 'Done', items: groups.done },
   ];
 
+  const openCreate = () => {
+    setExpandedId(null);
+    setCreating(true);
+  };
+
   return (
     <div className="h-full overflow-y-auto px-3 pt-3 pb-24 sm:px-6">
-      <div className="mx-auto flex w-full max-w-2xl flex-col gap-5">
-        <form
-          className="flex items-center gap-2 rounded-2xl border border-border bg-background-card px-3"
-          onSubmit={(formEvent) => {
-            formEvent.preventDefault();
-            const title = draft.trim();
-            if (!title) return;
-            onQuickAdd(title);
-            setDraft('');
-          }}
+      <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
+        <div
+          className={cnGrid(creating)}
         >
-          <Plus size={16} className="text-primary" />
-          <input
-            value={draft}
-            onChange={(input) => setDraft(input.target.value)}
-            placeholder="Add a task for today"
-            className="h-12 min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-foreground-muted"
-          />
-        </form>
+          <div className="min-h-0 overflow-hidden">
+            {creating && (
+              <TaskEditor
+                defaultDate={new Date()}
+                defaultAllDay
+                onSave={(data) => onSave(null, data)}
+                onClose={() => setCreating(false)}
+              />
+            )}
+          </div>
+        </div>
+
+        {!creating && (
+          <button
+            type="button"
+            onClick={openCreate}
+            className="flex h-12 items-center gap-2 rounded-2xl border border-border bg-background-card px-3 text-sm font-medium text-foreground-secondary hover:border-primary/40"
+          >
+            <Plus size={16} className="text-primary" />
+            Add a task
+          </button>
+        )}
 
         <p className="px-1 text-sm text-foreground-muted">{summaryLine(groups)}</p>
 
@@ -94,12 +119,17 @@ export default function TaskListView({
               </h2>
               <div className="flex flex-col">
                 {section.items.map((event) => (
-                  <TaskRow
+                  <TaskItem
                     key={event.id}
                     event={event}
-                    onOpen={() => onEditEvent(event)}
+                    expanded={expandedId === event.id}
+                    onOpen={() => {
+                      setCreating(false);
+                      setExpandedId((current) => (current === event.id ? null : event.id));
+                    }}
                     onToggle={() => onToggleComplete(event.id)}
-                    timeLabel={section.id === 'today' ? undefined : eventDateLabel(event)}
+                    onSave={(data) => onSave(event, data)}
+                    onDelete={() => onDelete(event)}
                   />
                 ))}
               </div>
@@ -107,12 +137,18 @@ export default function TaskListView({
           )
         )}
 
-        {sections.every((section) => section.items.length === 0) && (
+        {sections.every((section) => section.items.length === 0) && !creating && (
           <p className="px-2 text-sm text-foreground-muted">Your list is empty. Add the first task above.</p>
         )}
       </div>
     </div>
   );
+}
+
+function cnGrid(open: boolean): string {
+  return open
+    ? 'grid grid-rows-[1fr] transition-[grid-template-rows] duration-200 ease-out'
+    : 'grid grid-rows-[0fr] transition-[grid-template-rows] duration-200 ease-out';
 }
 
 function summaryLine(groups: { overdue: TimetableEvent[]; today: TimetableEvent[] }): string {
@@ -122,13 +158,4 @@ function summaryLine(groups: { overdue: TimetableEvent[]; today: TimetableEvent[
   if (groups.overdue.length) return `${groups.overdue.length} overdue.`;
   if (groups.today.length) return `${groups.today.length} still open today.`;
   return 'You are clear for today.';
-}
-
-function eventDateLabel(event: TimetableEvent): string {
-  const anchor = event.start_time || event.end_time;
-  if (!anchor) return 'All day';
-  const date = new Date(anchor);
-  const day = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-  if (event.all_day) return day;
-  return `${day} · ${date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`;
 }
