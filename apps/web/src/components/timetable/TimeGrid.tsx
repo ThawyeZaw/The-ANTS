@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import type { TimetableEvent } from '@/types/timetable';
 import { formatHourShort } from '@/constants/timetable';
@@ -9,51 +9,48 @@ import { cn } from '@/lib/utils';
 import TimeBlock from './TimeBlock';
 import { formatDateKey, isSameDay } from './task-utils';
 
-const SLOT = 56;
+export const TIME_GRID_SLOT = 56;
 
 export interface InlineSlot {
   date: string;
   time: string;
 }
 
+export type GridEditor =
+  | { kind: 'create'; date: string; time?: string; allDay: boolean; title?: string }
+  | { kind: 'edit'; event: TimetableEvent };
+
 interface TimeGridProps {
   days: Date[];
   events: TimetableEvent[];
   isDragging?: boolean;
   selectedDate?: Date;
+  slotHeight?: number;
   inlineCreate?: InlineSlot | null;
   onSlotClick: (date: Date, time: string) => void;
   onEditEvent: (event: TimetableEvent) => void;
   onToggleComplete: (eventId: string) => void;
   onInlineSubmit: (title: string) => void;
   onInlineCancel: () => void;
-  onInlineExpand: () => void;
+  onInlineExpand: (title: string) => void;
   onDayHeaderClick?: (date: Date) => void;
+  editor?: GridEditor | null;
+  renderEditor?: () => ReactNode;
 }
 
-function visibleHours(events: TimetableEvent[]): number[] {
-  let start = 7;
-  let end = 21;
-  for (const event of events) {
-    if (event.all_day || !event.start_time) continue;
-    const startHour = new Date(event.start_time).getHours();
-    const endDate = event.end_time ? new Date(event.end_time) : null;
-    const endHour = endDate ? endDate.getHours() + (endDate.getMinutes() > 0 ? 0 : -1) : startHour;
-    start = Math.min(start, startHour);
-    end = Math.max(end, Math.max(startHour, endHour));
-  }
-  start = Math.max(0, start);
-  end = Math.min(23, end);
-  return Array.from({ length: end - start + 1 }, (_, index) => start + index);
-}
+/** Full day stays on the grid. The view opens at 8:00 so 8 AM–8 PM fills the screen. */
+const DAY_HOURS = Array.from({ length: 24 }, (_, hour) => hour);
+const DEFAULT_VIEW_HOUR = 8;
 
 function DroppableHour({
   date,
   hour,
+  height,
   onClick,
 }: {
   date: string;
   hour: number;
+  height: number;
   onClick: () => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({
@@ -67,7 +64,7 @@ function DroppableHour({
       className="absolute inset-x-0 cursor-pointer border-t border-border/70"
       style={{
         top: 0,
-        height: SLOT,
+        height,
         backgroundColor: isOver ? 'color-mix(in srgb, var(--primary) 12%, transparent)' : 'transparent',
       }}
     />
@@ -83,7 +80,7 @@ function SlotComposer({
   time: string;
   onSubmit: (title: string) => void;
   onCancel: () => void;
-  onExpand: () => void;
+  onExpand: (title: string) => void;
 }) {
   const [title, setTitle] = useState('');
   const ref = useRef<HTMLInputElement>(null);
@@ -115,7 +112,7 @@ function SlotComposer({
       />
       <div className="mt-1 flex items-center justify-between text-[11px] text-foreground-muted">
         <span className="tabular-nums">{time}</span>
-        <button type="button" className="font-medium text-primary" onClick={onExpand}>
+        <button type="button" className="font-medium text-primary" onClick={() => onExpand(title)}>
           Details
         </button>
       </div>
@@ -127,6 +124,7 @@ export default function TimeGrid({
   days,
   events,
   selectedDate,
+  slotHeight = TIME_GRID_SLOT,
   inlineCreate,
   onSlotClick,
   onEditEvent,
@@ -135,22 +133,34 @@ export default function TimeGrid({
   onInlineCancel,
   onInlineExpand,
   onDayHeaderClick,
+  editor = null,
+  renderEditor,
 }: TimeGridProps) {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const today = new Date();
-  const hours = useMemo(() => visibleHours(events), [events]);
-  const startHour = hours[0] ?? 7;
+  const hours = DAY_HOURS;
+  const startHour = 0;
   const columns = `3.25rem repeat(${days.length}, minmax(${days.length > 1 ? '5.5rem' : '0px'}, 1fr))`;
 
+  const dayKey = days.map((day) => formatDateKey(day)).join('|');
   useEffect(() => {
     const node = scrollerRef.current;
     if (!node) return;
-    const now = new Date();
-    const hour = now.getHours();
-    if (hour >= startHour) {
-      node.scrollTop = Math.max(0, (hour - startHour) * SLOT - 48);
-    }
-  }, [startHour, days.length]);
+    node.scrollTop = DEFAULT_VIEW_HOUR * slotHeight;
+    // Open on 8:00. Zoom changes hour height without jumping back to 8:00.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dayKey]);
+
+  const editorKey = editor
+    ? editor.kind === 'edit'
+      ? editor.event.id
+      : `new-${editor.date}-${editor.time ?? 'day'}`
+    : '';
+  useEffect(() => {
+    if (!editorKey) return;
+    const anchor = scrollerRef.current?.querySelector('[data-editor-open="true"]');
+    anchor?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [editorKey]);
 
   const byDay = useMemo(() => {
     const map = new Map<string, { allDay: TimetableEvent[]; timed: TimetableEvent[] }>();
@@ -172,10 +182,10 @@ export default function TimeGrid({
       <div style={{ minWidth: days.length > 1 ? 760 : undefined }}>
         {days.length > 1 && (
         <div
-          className="sticky top-0 z-30 grid border-b border-border bg-background/95 backdrop-blur-sm"
+          className="sticky top-0 z-10 grid border-b border-border bg-background"
           style={{ gridTemplateColumns: columns }}
         >
-          <div className="sticky left-0 z-40 bg-background" />
+          <div className="sticky left-0 z-[1] bg-background" />
           {days.map((day) => {
             const active = selectedDate ? isSameDay(day, selectedDate) : false;
             const isToday = isSameDay(day, today);
@@ -208,16 +218,32 @@ export default function TimeGrid({
         )}
 
         <div className="grid border-b border-border" style={{ gridTemplateColumns: columns }}>
-          <div className="sticky left-0 z-20 bg-background px-1 py-2 text-right text-[10px] text-foreground-muted">All day</div>
-          {days.map((day) => {
+          <div className="sticky left-0 z-[1] bg-background px-1 py-2 text-right text-[10px] text-foreground-muted">All day</div>
+          {days.map((day, dayIndex) => {
             const key = formatDateKey(day);
             const items = byDay.get(key)?.allDay ?? [];
+            const align = dayIndex >= Math.ceil(days.length / 2) ? 'end' : 'start';
+            const creatingHere = editor?.kind === 'create' && editor.allDay && editor.date === key;
+            const editingHere = items.some((event) => editor?.kind === 'edit' && editor.event.id === event.id);
             return (
-              <div key={key} className="flex max-h-24 flex-col gap-1 overflow-y-auto border-l border-border/60 p-1">
+              <div
+                key={key}
+                className={cn(
+                  'relative flex flex-col gap-1 border-l border-border/60 p-1',
+                  creatingHere || editingHere ? 'z-30 overflow-visible' : 'max-h-24 overflow-y-auto'
+                )}
+              >
+                {creatingHere && renderEditor && (
+                  <div data-editor-open="true" className="overflow-hidden rounded-2xl border border-border bg-background-card shadow-2xl">
+                    {renderEditor()}
+                  </div>
+                )}
                 {items.map((event) => {
                   const color = event.color_code || '#3b82f6';
+                  const open = editor?.kind === 'edit' && editor.event.id === event.id;
                   return (
-                    <div key={event.id} className="flex items-center gap-0.5">
+                    <div key={event.id} className="relative">
+                    <div className="flex items-center gap-0.5">
                       {event.event_source === 'user' && (
                         <button
                           type="button"
@@ -249,6 +275,18 @@ export default function TimeGrid({
                         {event.title}
                       </button>
                     </div>
+                    {open && renderEditor && (
+                      <div
+                        data-editor-open="true"
+                        className={cn(
+                          'absolute top-full z-50 mt-1 w-[min(22rem,70vw)] overflow-hidden rounded-2xl border border-border bg-background-card shadow-2xl',
+                          align === 'end' ? 'right-0' : 'left-0'
+                        )}
+                      >
+                        {renderEditor()}
+                      </div>
+                    )}
+                    </div>
                   );
                 })}
               </div>
@@ -257,9 +295,9 @@ export default function TimeGrid({
         </div>
 
         <div className="grid" style={{ gridTemplateColumns: columns }}>
-          <div className="sticky left-0 z-20 bg-background">
+          <div className="sticky left-0 z-10 bg-background">
             {hours.map((hour) => (
-              <div key={hour} className="relative border-t border-transparent" style={{ height: SLOT }}>
+              <div key={hour} className="relative border-t border-transparent" style={{ height: slotHeight }}>
                 <span className="absolute right-1.5 top-0 -translate-y-1/2 text-[10px] tabular-nums text-foreground-muted">
                   {formatHourShort(hour)}
                 </span>
@@ -267,39 +305,57 @@ export default function TimeGrid({
             ))}
           </div>
 
-          {days.map((day) => {
+          {days.map((day, dayIndex) => {
             const key = formatDateKey(day);
             const timed = byDay.get(key)?.timed ?? [];
             const laidOut = layoutOverlappingEvents(timed);
             const selected = selectedDate ? isSameDay(day, selectedDate) : isSameDay(day, today);
             const showNow = isSameDay(day, today);
             const now = new Date();
-            const nowTop = ((now.getHours() + now.getMinutes() / 60) - startHour) * SLOT;
+            const nowTop = ((now.getHours() + now.getMinutes() / 60) - startHour) * slotHeight;
             const composerHour = inlineCreate?.date === key ? Number(inlineCreate.time.split(':')[0]) : null;
+            const align = dayIndex >= Math.ceil(days.length / 2) ? 'end' : 'start';
+            const creatingHour = editor?.kind === 'create' && !editor.allDay && editor.date === key && editor.time
+              ? Number(editor.time.split(':')[0])
+              : null;
 
             return (
               <div
                 key={key}
                 className="relative border-l border-border/60"
                 style={{
-                  height: hours.length * SLOT,
+                  height: hours.length * slotHeight,
                   backgroundColor: selected ? 'color-mix(in srgb, var(--primary) 5%, transparent)' : undefined,
                 }}
               >
                 {hours.map((hour, index) => (
-                  <div key={hour} className="absolute inset-x-0" style={{ top: index * SLOT, height: SLOT }}>
+                  <div key={hour} className="absolute inset-x-0" style={{ top: index * slotHeight, height: slotHeight }}>
                     <DroppableHour
                       date={key}
                       hour={hour}
+                      height={slotHeight}
                       onClick={() => onSlotClick(day, `${String(hour).padStart(2, '0')}:00`)}
                     />
-                    {composerHour === hour && inlineCreate && (
+                    {composerHour === hour && inlineCreate && creatingHour !== hour && (
                       <SlotComposer
                         time={inlineCreate.time}
                         onSubmit={onInlineSubmit}
                         onCancel={onInlineCancel}
                         onExpand={onInlineExpand}
                       />
+                    )}
+                    {creatingHour === hour && renderEditor && (
+                      <div
+                        data-editor-open="true"
+                        className={cn(
+                          'absolute top-1 z-50 w-[min(22rem,70vw)] overflow-hidden rounded-2xl border border-border bg-background-card shadow-2xl',
+                          align === 'end' ? 'right-0' : 'left-0'
+                        )}
+                        onPointerDown={(pointer) => pointer.stopPropagation()}
+                        onClick={(click) => click.stopPropagation()}
+                      >
+                        {renderEditor()}
+                      </div>
                     )}
                   </div>
                 ))}
@@ -310,8 +366,9 @@ export default function TimeGrid({
                   const startMins = start.getHours() * 60 + start.getMinutes();
                   const end = event.end_time ? new Date(event.end_time) : new Date(start.getTime() + 60 * 60 * 1000);
                   const durationMins = Math.max(20, (end.getTime() - start.getTime()) / 60000);
-                  const top = ((startMins / 60) - startHour) * SLOT;
-                  const height = (durationMins / 60) * SLOT;
+                  const top = ((startMins / 60) - startHour) * slotHeight;
+                  const height = (durationMins / 60) * slotHeight;
+                  const open = editor?.kind === 'edit' && editor.event.id === event.id;
                   return (
                     <TimeBlock
                       key={event.id}
@@ -323,11 +380,13 @@ export default function TimeGrid({
                       draggable={!event.is_recurring}
                       onEdit={onEditEvent}
                       onToggleComplete={onToggleComplete}
+                      details={open && renderEditor ? renderEditor() : undefined}
+                      detailsAlign={align}
                     />
                   );
                 })}
 
-                {showNow && nowTop >= 0 && nowTop <= hours.length * SLOT && (
+                {showNow && nowTop >= 0 && nowTop <= hours.length * slotHeight && (
                   <div className="pointer-events-none absolute inset-x-0 z-20" style={{ top: nowTop }}>
                     <div className="relative border-t-2 border-red-500">
                       <span className="absolute -left-1 -top-1.5 h-2.5 w-2.5 rounded-full bg-red-500" />
@@ -342,5 +401,3 @@ export default function TimeGrid({
     </div>
   );
 }
-
-export { SLOT as TIME_GRID_SLOT };

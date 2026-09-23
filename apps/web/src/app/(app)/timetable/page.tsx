@@ -4,7 +4,7 @@ import BackButton from '@/components/ui/BackButton';
 
 export const metadata: Metadata = {
   title: 'Timetable — The ANTs',
-  description: 'Plan your day, week, and month. Every block is a task you can check off, including daily habits.',
+  description: 'Plan your day, week, and month. Every block is a task you can check off.',
 };
 
 export default function TimetablePage() {

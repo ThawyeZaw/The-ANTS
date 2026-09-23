@@ -2,7 +2,7 @@ import { headers } from 'next/headers';
 import { getDb, session } from '@/lib/db';
 import { and, eq, gt } from 'drizzle-orm';
 
-const SESSION_COOKIE = 'better-auth.session_token';
+const SESSION_COOKIES = ['better-auth.session_token', '__Secure-better-auth.session_token'];
 
 function parseCookie(cookieHeader: string, name: string): string | null {
   for (const part of cookieHeader.split(';')) {
@@ -13,6 +13,12 @@ function parseCookie(cookieHeader: string, name: string): string | null {
   return null;
 }
 
+/** Better Auth may sign the cookie as `token.signature`. The session row stores `token`. */
+function sessionToken(cookieValue: string): string {
+  const dot = cookieValue.lastIndexOf('.');
+  return dot > 0 ? cookieValue.slice(0, dot) : cookieValue;
+}
+
 export interface SessionUser {
   userId: string;
 }
@@ -20,8 +26,9 @@ export interface SessionUser {
 /** Resolve the signed-in user from the Better Auth session cookie (single D1 read). */
 export async function getSessionUser(): Promise<SessionUser | null> {
   const cookieHeader = (await headers()).get('cookie') ?? '';
-  const token = parseCookie(cookieHeader, SESSION_COOKIE);
-  if (!token) return null;
+  const raw = SESSION_COOKIES.map((name) => parseCookie(cookieHeader, name)).find(Boolean);
+  if (!raw) return null;
+  const token = sessionToken(raw);
 
   const db = getDb();
   const row = await db.query.session.findFirst({

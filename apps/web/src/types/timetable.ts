@@ -70,7 +70,7 @@ export interface TimetableEvent {
   completed_at: string | null;
   /**
    * For an expanded repeating task, the original series start.
-   * Edits keep this anchor so changing one day does not move the habit.
+   * Edits keep this anchor so changing one day does not move the series.
    */
   series_start?: string | null;
   /**

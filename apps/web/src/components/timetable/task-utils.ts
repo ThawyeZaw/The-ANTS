@@ -21,10 +21,6 @@ export function eventBaseId(id: string): string {
   return id.includes('::') ? id.split('::')[0] : id;
 }
 
-export function isDailyHabit(event: TimetableEvent): boolean {
-  return Boolean(event.is_recurring && event.recurrence_rule?.frequency === 'daily');
-}
-
 export function eventSortTime(event: TimetableEvent): number {
   const anchor = event.start_time || event.end_time;
   return anchor ? new Date(anchor).getTime() : 0;
@@ -35,6 +31,18 @@ export function formatClock(iso: string | null | undefined): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '';
   return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+}
+
+/** TickTick-style meta line, e.g. "Sep 24, 16:30". */
+export function taskWhenLabel(event: TimetableEvent): string {
+  const anchor = event.start_time || event.end_time;
+  if (!anchor) return 'All day';
+  const date = new Date(anchor);
+  if (Number.isNaN(date.getTime())) return 'All day';
+  const day = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  if (event.all_day) return day;
+  const time = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false });
+  return `${day}, ${time}`;
 }
 
 export function formatTimeRange(event: TimetableEvent): string {
