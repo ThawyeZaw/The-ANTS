@@ -117,49 +117,61 @@ export function IalUmsCalculator({
           const value = ums[code] ?? '';
           const n = numeric[code];
           const grade = n == null ? '—' : umsUnitGrade(n, max);
+          const inputId = `ums-input-${code}`;
           return (
-            <label
+            <div
               key={code}
-              className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-background-secondary px-4 py-3"
+              className="flex flex-col justify-between gap-2.5 rounded-2xl border border-border bg-background-secondary p-3.5 sm:p-4 transition-colors hover:border-border-hover"
             >
-              <span className="min-w-0">
-                <span className="block text-xs font-bold text-foreground truncate">
-                  {formatIalUnitLabel(code)}
-                </span>
-                <span className="text-[11px] text-foreground-muted font-mono">max {max} UMS</span>
-              </span>
-              <span className="flex items-center gap-2 shrink-0">
-                <input
-                  type="number"
-                  min={0}
-                  max={max}
-                  inputMode="numeric"
-                  value={value}
-                  placeholder="0"
-                  onChange={(e) => {
-                    const raw = e.target.value;
-                    if (raw === '') {
-                      onUmsChange(code, '');
-                      return;
-                    }
-                    const parsed = Number(raw);
-                    if (!Number.isFinite(parsed)) return;
-                    onUmsChange(code, String(Math.min(max, Math.max(0, parsed))));
-                  }}
-                  className="w-20 rounded-xl border border-border bg-background-card px-2 py-2 text-right font-mono text-sm font-bold outline-none focus:border-primary"
-                />
-                <span
-                  className={cn(
-                    'w-9 h-9 rounded-lg flex items-center justify-center text-xs font-extrabold border',
-                    n == null
-                      ? 'bg-background-secondary text-foreground-muted border-border'
-                      : getGradeColor(grade)
-                  )}
+              {/* Row 1: Unit Title */}
+              <div className="flex items-center justify-between gap-2">
+                <label
+                  htmlFor={inputId}
+                  className="text-xs font-bold text-foreground line-clamp-1 leading-snug cursor-pointer select-none"
+                  title={formatIalUnitLabel(code)}
                 >
-                  {grade}
-                </span>
-              </span>
-            </label>
+                  {formatIalUnitLabel(code)}
+                </label>
+              </div>
+
+              {/* Row 2: Marks Info & Input + Grade Badge */}
+              <div className="flex items-center justify-between gap-3 pt-0.5">
+                <span className="text-[11px] text-foreground-muted font-mono">max {max} UMS</span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <input
+                    id={inputId}
+                    type="number"
+                    min={0}
+                    max={max}
+                    inputMode="numeric"
+                    value={value}
+                    placeholder="0"
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      if (raw === '') {
+                        onUmsChange(code, '');
+                        return;
+                      }
+                      const parsed = Number(raw);
+                      if (!Number.isFinite(parsed)) return;
+                      onUmsChange(code, String(Math.min(max, Math.max(0, parsed))));
+                    }}
+                    className="w-20 rounded-xl border border-border bg-background-card px-2.5 py-1.5 text-right font-mono text-base sm:text-sm font-bold text-foreground outline-none focus:border-primary transition-colors"
+                  />
+                  <span
+                    className={cn(
+                      'w-9 h-9 rounded-xl flex items-center justify-center text-xs font-extrabold border transition-colors',
+                      n == null
+                        ? 'bg-background-secondary text-foreground-muted border-border'
+                        : getGradeColor(grade)
+                    )}
+                    aria-label={n != null ? `Grade ${grade}` : 'No grade calculated'}
+                  >
+                    {grade}
+                  </span>
+                </div>
+              </div>
+            </div>
           );
         })}
       </div>
