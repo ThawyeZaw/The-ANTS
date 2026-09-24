@@ -78,17 +78,20 @@ function dateFromKey(key: string): Date {
 
 function blankTask(partial: Partial<TimetableEventFormData> & Pick<TimetableEventFormData, 'title' | 'date' | 'color_code' | 'time_mode'>): TimetableEventFormData {
   return {
-    description: '',
-    event_type: 'study',
-    subject: '',
-    location: '',
-    start_time: '09:00',
-    end_time: '10:00',
-    is_todo: true,
-    is_recurring: false,
-    recurrence_rule: null,
-    reminder_minutes: null,
-    ...partial,
+    title: partial.title,
+    date: partial.date,
+    color_code: partial.color_code,
+    time_mode: partial.time_mode,
+    description: partial.description ?? '',
+    event_type: partial.event_type ?? 'study',
+    subject: partial.subject ?? '',
+    location: partial.location ?? '',
+    start_time: partial.start_time ?? '09:00',
+    end_time: partial.end_time ?? '10:00',
+    is_todo: partial.is_todo ?? true,
+    is_recurring: partial.is_recurring ?? false,
+    recurrence_rule: partial.recurrence_rule ?? null,
+    reminder_minutes: partial.reminder_minutes ?? null,
   };
 }
 
