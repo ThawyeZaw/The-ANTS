@@ -277,50 +277,60 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-5">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <Link
-            href="/dashboard"
-            className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-foreground-muted transition-colors hover:text-foreground"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Dashboard
-          </Link>
-          <span className="hidden h-4 w-px bg-border sm:block" aria-hidden />
-          <h1 className="truncate text-lg font-bold tracking-tight text-foreground">
-            Exam Countdowns
-          </h1>
+      {/* ── Page header ──────────────────────────────────────────────────── */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="space-y-1 min-w-0">
+          <div className="flex items-center gap-3">
+            <Link
+              href="/dashboard"
+              className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-foreground-muted transition-colors hover:text-foreground"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Dashboard
+            </Link>
+            <span className="hidden h-4 w-px bg-border sm:block" aria-hidden />
+            <h1 className="truncate text-xl font-extrabold tracking-tight text-foreground">
+              Exam Countdowns
+            </h1>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-xs text-foreground-muted">
+              Times shown in Myanmar time (MMT). Edits stay on your account.
+            </p>
+            {activeCountdowns.length > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 border border-primary/20 px-2.5 py-0.5 text-[11px] font-bold text-primary">
+                <Timer className="h-3 w-3" />
+                {activeCountdowns.length} active
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           <Link
             href="/curriculum"
-            className="hidden items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-foreground-muted transition-colors hover:bg-background-secondary hover:text-foreground sm:inline-flex"
+            className="hidden items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-foreground-muted transition-colors hover:bg-background-secondary hover:text-foreground sm:inline-flex border border-border/60"
           >
             <BookOpen className="h-3.5 w-3.5" />
             Subjects
           </Link>
           <Link
             href="/past-papers"
-            className="hidden items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-foreground-muted transition-colors hover:bg-background-secondary hover:text-foreground sm:inline-flex"
+            className="hidden items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-foreground-muted transition-colors hover:bg-background-secondary hover:text-foreground sm:inline-flex border border-border/60"
           >
             <BookMarked className="h-3.5 w-3.5" />
             Papers
           </Link>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all hover:shadow-md"
             aria-label="Add a new custom countdown"
           >
             <Plus className="h-3.5 w-3.5" />
-            Add
+            Add Exam
           </button>
         </div>
       </div>
-
-      <p className="-mt-2 text-xs text-foreground-muted">
-        Edits and removals stay on your account. Times are shown in Myanmar time (MMT).
-      </p>
 
       {/* Tabs */}
       <div className="flex gap-1 rounded-xl border border-border bg-background-secondary/60 p-1">
@@ -469,12 +479,12 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
               <div className="flex items-center gap-2.5">
                 <Timer className="h-4 w-4 text-primary" />
                 <h2 className="text-base font-bold text-foreground">Your exams</h2>
-                <span className="rounded-full border border-border bg-background-secondary px-2.5 py-0.5 text-xs font-medium text-foreground-muted">
+                <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">
                   {activeCountdowns.length}
                 </span>
               </div>
 
-              <div className="grid gap-2 [grid-template-columns:repeat(auto-fill,minmax(17.5rem,1fr))]">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {sortedActive.map((countdown) => (
                   <CountdownCard
                     key={countdown.id}
@@ -605,49 +615,80 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
                         Track all {series} papers
                       </button>
                     </div>
-                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 sm:gap-4">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                       {exams.map((exam) => {
                         const tracked = isAlreadyTracked(exam.id);
                         const examDateStr = (exam as any).exam_date || (exam as any).date;
                         const formattedDate = formatExamDateTime(examDateStr);
+                        // Days until this exam
+                        const examMs = examDateStr ? new Date(examDateStr).getTime() - Date.now() : null;
+                        const examDays = examMs != null ? Math.max(0, Math.floor(examMs / 86400000)) : null;
+                        const examIsUrgent = examDays != null && examDays < 7;
+                        const examIsUpcoming = examDays != null && examDays >= 7 && examDays < 30;
 
                         return (
                           <div
                             key={exam.id}
-                            className="flex flex-col justify-between rounded-xl border border-border bg-background-card p-4 transition-all hover:border-primary/40"
+                            className={cn(
+                              'group relative flex flex-col justify-between rounded-2xl border bg-background-card p-4 transition-all hover:-translate-y-0.5 hover:shadow-md overflow-hidden',
+                              examIsUrgent
+                                ? 'border-red-400/50'
+                                : examIsUpcoming
+                                  ? 'border-amber-400/40'
+                                  : 'border-border hover:border-primary/40'
+                            )}
                           >
+                            {/* Urgency stripe */}
+                            <div
+                              className="absolute top-0 left-0 right-0 h-0.5"
+                              style={{
+                                backgroundColor: examIsUrgent ? '#ef4444' : examIsUpcoming ? '#f59e0b' : 'var(--primary)',
+                                opacity: examIsUrgent ? 1 : examIsUpcoming ? 0.7 : 0.3,
+                              }}
+                            />
                             <div>
-                              <div className="mb-1.5 flex items-center justify-between gap-2">
-                                <span className="rounded px-2 py-0.5 text-[11px] font-semibold border border-primary/20 bg-primary/10 text-primary">
+                              <div className="mb-2 flex items-center justify-between gap-2">
+                                <span className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border border-primary/20 bg-primary/10 text-primary">
                                   {exam.exam_board || 'Official'}
                                 </span>
                                 {(exam as any).syllabus_code && (
-                                  <span className="font-mono text-xs text-foreground-muted">
+                                  <span className="font-mono text-[11px] font-semibold text-foreground-muted bg-background-secondary px-1.5 py-0.5 rounded border border-border/60">
                                     {(exam as any).syllabus_code}
                                   </span>
                                 )}
                               </div>
-                              <h4 className="line-clamp-2 text-sm font-bold text-foreground">
+                              <h4 className="line-clamp-2 text-sm font-bold text-foreground group-hover:text-primary transition-colors leading-snug">
                                 {exam.title || (exam as any).subject || 'Exam Paper'}
                               </h4>
-                              <p className="mt-1 flex items-center gap-1.5 text-xs text-foreground-secondary">
-                                <Calendar className="h-3 w-3 text-foreground-muted" />
+                              <p className="mt-1.5 flex items-center gap-1.5 text-[11px] text-foreground-muted">
+                                <Calendar className="h-3 w-3 shrink-0" />
                                 {formattedDate}
                               </p>
                             </div>
 
-                            <div className="mt-3 flex items-center justify-end border-t border-border pt-3">
+                            <div className="mt-3 flex items-center justify-between border-t border-border/60 pt-3 gap-2">
+                              {/* Days remaining */}
+                              {examDays != null && (
+                                <span
+                                  className={cn(
+                                    'font-mono text-sm font-black tabular-nums',
+                                    examIsUrgent ? 'text-red-500' : examIsUpcoming ? 'text-amber-600 dark:text-amber-400' : 'text-foreground-secondary'
+                                  )}
+                                >
+                                  {examDays}<span className="text-[10px] font-bold ml-0.5 opacity-70">d</span>
+                                </span>
+                              )}
                               {tracked ? (
-                                <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                                <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full">
                                   ✓ Tracking
                                 </span>
                               ) : (
                                 <button
                                   onClick={() => handleQuickPinOfficialExam(exam)}
-                                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary underline-offset-2 hover:underline"
+                                  className="inline-flex items-center gap-1 rounded-xl bg-primary/10 border border-primary/20 px-2.5 py-1 text-[11px] font-bold text-primary hover:bg-primary hover:text-white transition-all"
                                 >
-                                  <Plus className="h-3.5 w-3.5" />
-                                  Track countdown
+                                  <Plus className="h-3 w-3" />
+                                  Track
                                 </button>
                               )}
                             </div>

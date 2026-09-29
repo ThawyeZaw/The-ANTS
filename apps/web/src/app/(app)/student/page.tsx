@@ -152,23 +152,26 @@ const STUDY_TOOLS: StudyToolCard[] = [
 ];
 
 // ── Quick stat pill ──────────────────────────────────────────────────────────
-function StatPill({ icon: Icon, label, value, accent }: {
+function StatPill({ icon: Icon, label, value, accent, gradient }: {
   icon: LucideIcon;
   label: string;
   value: string | number;
   accent: string;
+  gradient: string;
 }) {
   return (
     <div className={cn(
-      'flex items-center gap-3 rounded-2xl border bg-background-card p-4 shadow-xs',
-      'transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md'
+      'relative flex items-center gap-3.5 rounded-2xl border bg-background-card p-4 overflow-hidden',
+      'transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md shadow-xs cursor-default'
     )}>
-      <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border', accent)}>
+      {/* Subtle radial glow in corner */}
+      <div className={cn('absolute -top-4 -right-4 h-16 w-16 rounded-full blur-xl opacity-20 pointer-events-none', gradient)} />
+      <div className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border', accent)}>
         <Icon className="h-5 w-5" />
       </div>
       <div className="min-w-0">
-        <p className="text-xl font-bold font-mono tabular-nums text-foreground leading-none">{value}</p>
-        <p className="text-xs text-foreground-muted mt-0.5 truncate">{label}</p>
+        <p className="text-2xl font-black font-mono tabular-nums text-foreground leading-none">{value}</p>
+        <p className="text-[11px] text-foreground-muted mt-0.5 truncate font-medium">{label}</p>
       </div>
     </div>
   );
@@ -206,13 +209,22 @@ export default function StudentDashboard() {
     <div className="space-y-6 pb-16 max-w-7xl mx-auto animate-fade-in">
 
       {/* ── Hero Banner ─────────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary to-accent p-6 sm:p-8 text-primary-foreground shadow-lg">
-        {/* Decorative circles */}
-        <div className="absolute -top-10 -right-10 h-48 w-48 rounded-full bg-white/5 blur-2xl pointer-events-none" />
-        <div className="absolute bottom-0 left-20 h-32 w-32 rounded-full bg-white/5 blur-xl pointer-events-none" />
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary/90 to-amber-400 p-6 sm:p-8 text-primary-foreground shadow-lg">
+        {/* Decorative elements */}
+        <div className="absolute -top-8 -right-8 h-52 w-52 rounded-full bg-white/8 blur-2xl pointer-events-none" />
+        <div className="absolute bottom-0 left-16 h-40 w-40 rounded-full bg-white/5 blur-xl pointer-events-none" />
+        <div className="absolute top-1/2 right-24 h-24 w-24 -translate-y-1/2 rounded-full bg-white/5 blur-lg pointer-events-none" />
+        {/* Dot grid overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.05] pointer-events-none"
+          style={{
+            backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
+            backgroundSize: '28px 28px',
+          }}
+        />
 
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-white/15 border border-white/20 backdrop-blur-sm">
               <Sparkles className="h-3.5 w-3.5" />
               Study Hub
@@ -267,22 +279,36 @@ export default function StudentDashboard() {
 
       {/* ── Quick Stats Row ─────────────────────────────────────────────── */}
       {stats.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {stats.slice(0, 4).map((stat, i) => {
             const Icon = statIconMap[stat.key] || Layers;
-            const accents = [
-              'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
-              'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20',
-              'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
-              'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+            const styleMap = [
+              {
+                accent: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+                gradient: 'bg-amber-400',
+              },
+              {
+                accent: 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20',
+                gradient: 'bg-violet-400',
+              },
+              {
+                accent: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+                gradient: 'bg-emerald-400',
+              },
+              {
+                accent: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+                gradient: 'bg-blue-400',
+              },
             ];
+            const s = styleMap[i % styleMap.length];
             return (
               <StatPill
                 key={stat.key || i}
                 icon={Icon}
                 label={stat.label}
                 value={stat.value}
-                accent={accents[i % accents.length]}
+                accent={s.accent}
+                gradient={s.gradient}
               />
             );
           })}
@@ -314,13 +340,15 @@ export default function StudentDashboard() {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {STUDY_TOOLS.map((tool) => (
             <Link
               key={tool.id}
               href={tool.href}
-              className="group relative flex flex-col justify-between p-5 rounded-2xl border border-border bg-background-card hover:bg-background-secondary/50 hover:border-border-hover hover:shadow-md shadow-xs transition-all duration-200"
+              className="group relative flex flex-col justify-between p-5 rounded-2xl border border-border bg-background-card hover:border-border-hover hover:shadow-lg shadow-xs transition-all duration-200 hover:-translate-y-0.5 overflow-hidden"
             >
+              {/* Subtle corner glow */}
+              <div className="absolute top-0 right-0 h-20 w-20 blur-2xl opacity-0 group-hover:opacity-30 transition-opacity duration-500 rounded-full" style={{ background: 'var(--primary)' }} />
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <div className={cn('w-11 h-11 rounded-xl border flex items-center justify-center transition-all duration-200', tool.color)}>
@@ -332,19 +360,19 @@ export default function StudentDashboard() {
                     </span>
                   )}
                 </div>
-                <h3 className="font-bold text-base text-foreground group-hover:text-primary transition-colors">
+                <h3 className="font-bold text-sm text-foreground group-hover:text-primary transition-colors">
                   {tool.title}
                 </h3>
-                <p className="text-xs text-foreground-muted mt-1 leading-relaxed">
+                <p className="text-[11px] text-foreground-muted mt-1 leading-relaxed">
                   {tool.description}
                 </p>
               </div>
 
               <div className="pt-3 mt-3 border-t border-border/60 flex items-center justify-between">
-                <span className="text-[11px] font-mono font-medium text-foreground-secondary truncate">
+                <span className="text-[10px] font-mono font-semibold text-foreground-secondary truncate">
                   {tool.highlight}
                 </span>
-                <ChevronRight className="w-4 h-4 text-primary shrink-0 group-hover:translate-x-0.5 transition-transform" />
+                <ChevronRight className="w-3.5 h-3.5 text-primary shrink-0 group-hover:translate-x-0.5 transition-transform" />
               </div>
             </Link>
           ))}
