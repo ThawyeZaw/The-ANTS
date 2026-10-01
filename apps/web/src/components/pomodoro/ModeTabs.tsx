@@ -1,15 +1,15 @@
 'use client';
 
-import { Brain, Coffee, BatteryFull, GraduationCap, Settings2 } from 'lucide-react';
-import type { TimerPhase, PomodoroSettings, PastPaperSessionConfig } from '@/constants/pomodoro';
+import { Brain, Coffee, BatteryFull } from 'lucide-react';
+import type { TimerPhase, PomodoroSettings } from '@/constants/pomodoro';
+import FocusDurationDropdown from '@/components/pomodoro/FocusDurationDropdown';
 import { cn } from '@/lib/utils';
 
 interface ModeTabsProps {
   phase: TimerPhase;
   settings: PomodoroSettings;
-  pastPaperConfig?: PastPaperSessionConfig;
   onSwitch: (phase: TimerPhase) => void;
-  onOpenPaperPicker?: () => void;
+  onUpdateSettings?: (partial: Partial<PomodoroSettings>) => void;
   className?: string;
   surface?: 'theme' | 'stage';
 }
@@ -17,9 +17,8 @@ interface ModeTabsProps {
 export default function ModeTabs({
   phase,
   settings,
-  pastPaperConfig,
   onSwitch,
-  onOpenPaperPicker,
+  onUpdateSettings,
   className,
   surface = 'theme',
 }: ModeTabsProps) {
@@ -31,14 +30,10 @@ export default function ModeTabs({
       role="radiogroup"
       aria-label="Timer mode"
     >
-      {/* Focus */}
-      <button
-        type="button"
-        role="radio"
-        aria-checked={phase === 'focus'}
-        onClick={() => phase !== 'focus' && onSwitch('focus')}
+      {/* Focus tab with custom glassmorphic duration dropdown */}
+      <div
         className={cn(
-          'flex min-w-0 items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-all duration-200 focus-ring sm:px-4 sm:py-2',
+          'flex min-w-0 items-center justify-center rounded-full transition-all duration-200',
           phase === 'focus'
             ? onStage
               ? 'bg-amber-500/25 text-amber-300 ring-1 ring-amber-400/40 shadow-sm'
@@ -49,10 +44,41 @@ export default function ModeTabs({
           onStage && 'pomo-read',
         )}
       >
-        <Brain className="h-3.5 w-3.5 shrink-0" />
-        <span>Focus</span>
-        <span className="opacity-70 font-mono text-[11px]">{settings.focusMinutes}m</span>
-      </button>
+        <button
+          type="button"
+          role="radio"
+          aria-checked={phase === 'focus'}
+          onClick={() => phase !== 'focus' && onSwitch('focus')}
+          className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold sm:px-3.5 sm:py-2 focus:outline-none"
+        >
+          <Brain className="h-3.5 w-3.5 shrink-0" />
+          <span>Focus</span>
+        </button>
+
+        {/* Vertical divider */}
+        <span
+          className={cn(
+            'h-3.5 w-[1px] shrink-0 opacity-25',
+            onStage ? 'bg-white' : 'bg-current',
+          )}
+          aria-hidden
+        />
+
+        {/* Custom glassmorphic focus duration dropdown */}
+        <div className="px-1">
+          <FocusDurationDropdown
+            value={settings.focusMinutes}
+            onChange={(mins) => {
+              onUpdateSettings?.({ focusMinutes: mins });
+              if (phase !== 'focus') {
+                onSwitch('focus');
+              }
+            }}
+            surface={surface}
+            variant="inline"
+          />
+        </div>
+      </div>
 
       {/* Short Break */}
       <button
@@ -61,7 +87,7 @@ export default function ModeTabs({
         aria-checked={phase === 'short_break'}
         onClick={() => phase !== 'short_break' && onSwitch('short_break')}
         className={cn(
-          'flex min-w-0 items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-all duration-200 focus-ring sm:px-4 sm:py-2',
+          'flex min-w-0 items-center justify-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold transition-all duration-200 focus-ring sm:px-4 sm:py-2',
           phase === 'short_break'
             ? onStage
               ? 'bg-emerald-500/25 text-emerald-300 ring-1 ring-emerald-400/40 shadow-sm'
@@ -84,7 +110,7 @@ export default function ModeTabs({
         aria-checked={phase === 'long_break'}
         onClick={() => phase !== 'long_break' && onSwitch('long_break')}
         className={cn(
-          'flex min-w-0 items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-all duration-200 focus-ring sm:px-4 sm:py-2',
+          'flex min-w-0 items-center justify-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold transition-all duration-200 focus-ring sm:px-4 sm:py-2',
           phase === 'long_break'
             ? onStage
               ? 'bg-indigo-500/25 text-indigo-300 ring-1 ring-indigo-400/40 shadow-sm'
@@ -99,49 +125,6 @@ export default function ModeTabs({
         <span>Long</span>
         <span className="opacity-70 font-mono text-[11px]">{settings.longBreakMinutes}m</span>
       </button>
-
-      {/* Past Paper Exam Mode */}
-      <div className="flex items-center">
-        <button
-          type="button"
-          role="radio"
-          aria-checked={phase === 'past_paper'}
-          onClick={() => phase !== 'past_paper' && onSwitch('past_paper')}
-          className={cn(
-            'flex min-w-0 items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-all duration-200 focus-ring sm:px-4 sm:py-2',
-            phase === 'past_paper'
-              ? onStage
-                ? 'bg-cyan-500/30 text-cyan-200 ring-1 ring-cyan-400/50 shadow-md shadow-cyan-500/20'
-                : 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 ring-1 ring-cyan-500/40'
-              : onStage
-                ? 'text-cyan-300/80 hover:bg-white/10 hover:text-cyan-200'
-                : 'text-cyan-700 dark:text-cyan-400 hover:bg-cyan-500/10',
-            onStage && 'pomo-read',
-          )}
-        >
-          <GraduationCap className="h-3.5 w-3.5 shrink-0" />
-          <span>Past Paper</span>
-          {pastPaperConfig && (
-            <span className="font-mono text-[11px] opacity-80">
-              {pastPaperConfig.durationMinutes}m
-            </span>
-          )}
-        </button>
-
-        {phase === 'past_paper' && onOpenPaperPicker && (
-          <button
-            type="button"
-            onClick={onOpenPaperPicker}
-            title="Configure exam paper"
-            className={cn(
-              'ml-1 flex h-7 w-7 items-center justify-center rounded-full transition-transform hover:scale-105 focus-ring',
-              onStage ? 'text-white/80 hover:bg-white/15' : 'text-foreground-muted hover:bg-foreground/10',
-            )}
-          >
-            <Settings2 className="h-3.5 w-3.5" />
-          </button>
-        )}
-      </div>
     </div>
   );
 }

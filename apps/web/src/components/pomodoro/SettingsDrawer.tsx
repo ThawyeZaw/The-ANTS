@@ -5,13 +5,21 @@
 // PPP-owned: duration sliders, sound picker, volume, auto-start toggle.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { Settings, X, Volume2 } from 'lucide-react';
+import { Settings, X, Volume2, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
-import type { PomodoroSettings, PomodoroStatsLog } from '@/constants/pomodoro';
+import type { PomodoroSettings, PomodoroStatsLog, ChimeSoundId } from '@/constants/pomodoro';
 import { DURATION_BOUNDS, POMODORO_DEFAULTS } from '@/constants/pomodoro';
 import StatsPanel from '@/components/pomodoro/StatsPanel';
-import { playChime, playExamWarningChime } from '@/lib/pomodoro/audio-engine';
+import FocusDurationDropdown from '@/components/pomodoro/FocusDurationDropdown';
+import { playChime } from '@/lib/pomodoro/audio-engine';
 import { cn } from '@/lib/utils';
+
+const CHIME_OPTIONS: { id: ChimeSoundId; label: string; desc: string }[] = [
+  { id: 'bowl', label: 'Zen Bowl', desc: 'Tibetan 528Hz singing bowl' },
+  { id: 'bell', label: 'Cambridge Bell', desc: 'Collegiate tower bell' },
+  { id: 'marimba', label: 'Marimba', desc: 'Ascending crystal arpeggio' },
+  { id: 'minimal', label: 'Minimal', desc: 'Discreet two-tone cue' },
+];
 
 interface SettingsDrawerProps {
   settings: PomodoroSettings;
@@ -180,15 +188,29 @@ export default function SettingsDrawer({
             </div>
           </section>
 
-          {/* Focus duration */}
-          <DurationSlider
-            label="Focus Duration"
-            value={settings.focusMinutes}
-            min={DURATION_BOUNDS.focus.min}
-            max={DURATION_BOUNDS.focus.max}
-            step={5}
-            onChange={(v) => onUpdate({ focusMinutes: v })}
-          />
+          {/* Focus duration (dropdown only) */}
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between">
+              <label
+                className="text-sm font-medium"
+                style={{ color: 'var(--foreground-secondary)' }}
+              >
+                Focus Duration
+              </label>
+              <span
+                className="text-sm font-semibold tabular-nums"
+                style={{ color: 'var(--foreground)' }}
+              >
+                {settings.focusMinutes}m
+              </span>
+            </div>
+            <FocusDurationDropdown
+              value={settings.focusMinutes}
+              onChange={(m) => onUpdate({ focusMinutes: m })}
+              surface={surface}
+              variant="drawer"
+            />
+          </div>
 
           {/* Short break duration */}
           <DurationSlider
@@ -268,94 +290,93 @@ export default function SettingsDrawer({
             </button>
           </div>
 
-          {/* Completion chime toggle + test */}
-          <div className="flex items-center justify-between py-1">
-            <label
-              className="text-sm font-medium cursor-pointer"
-              style={{ color: 'var(--foreground-secondary)' }}
-              htmlFor="chime-toggle"
-            >
-              Completion sound
-            </label>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  playChime();
-                }}
-                className="p-1.5 rounded-lg transition-colors hover:bg-background-secondary focus-ring"
-                title="Test notification sound"
-                aria-label="Test notification sound"
-                style={{ color: 'var(--foreground-muted)' }}
+          {/* Completion chime toggle + test + picker */}
+          <div className="space-y-3 py-1">
+            <div className="flex items-center justify-between">
+              <label
+                className="text-sm font-medium cursor-pointer"
+                style={{ color: 'var(--foreground-secondary)' }}
+                htmlFor="chime-toggle"
               >
-                <Volume2 size={14} />
-              </button>
-              <button
-                id="chime-toggle"
-                role="switch"
-                aria-checked={settings.notifyChime}
-                onClick={() => onUpdate({ notifyChime: !settings.notifyChime })}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus-ring ${
-                  settings.notifyChime ? 'bg-primary' : ''
-                }`}
-                style={{
-                  background: settings.notifyChime ? 'var(--primary)' : 'var(--border)',
-                }}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
-                    settings.notifyChime ? 'translate-x-6' : 'translate-x-1'
+                Completion sound
+              </label>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    playChime(settings.chimeSound);
+                  }}
+                  className="p-1.5 rounded-lg transition-colors hover:bg-background-secondary focus-ring"
+                  title="Test notification sound"
+                  aria-label="Test notification sound"
+                  style={{ color: 'var(--foreground-muted)' }}
+                >
+                  <Volume2 size={14} />
+                </button>
+                <button
+                  id="chime-toggle"
+                  type="button"
+                  role="switch"
+                  aria-checked={settings.notifyChime}
+                  onClick={() => onUpdate({ notifyChime: !settings.notifyChime })}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus-ring ${
+                    settings.notifyChime ? 'bg-primary' : ''
                   }`}
-                />
-              </button>
+                  style={{
+                    background: settings.notifyChime ? 'var(--primary)' : 'var(--border)',
+                  }}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
+                      settings.notifyChime ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
             </div>
+
+            {/* Chime tone picker */}
+            {settings.notifyChime && (
+              <div className="grid grid-cols-2 gap-1.5 pt-1">
+                {CHIME_OPTIONS.map((opt) => {
+                  const isSelected = (settings.chimeSound ?? 'bowl') === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => {
+                        onUpdate({ chimeSound: opt.id });
+                        playChime(opt.id);
+                      }}
+                      className={cn(
+                        'flex flex-col items-start px-2.5 py-2 rounded-xl text-left transition-all border text-xs',
+                        isSelected
+                          ? 'border-primary/60 bg-primary/10 text-foreground font-semibold shadow-sm'
+                          : 'border-border/60 bg-background/50 hover:bg-background-secondary text-foreground-secondary',
+                      )}
+                      title={opt.desc}
+                    >
+                      <span className="flex items-center gap-1.5 w-full">
+                        <span
+                          className={cn(
+                            'h-1.5 w-1.5 rounded-full shrink-0',
+                            isSelected ? 'bg-primary' : 'bg-transparent',
+                          )}
+                        />
+                        <span className="truncate">{opt.label}</span>
+                      </span>
+                      <span className="text-[10px] text-foreground-muted truncate w-full mt-0.5">
+                        {opt.desc}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
-          {/* Exam Alert Chimes (15m and 5m warning) */}
-          <div className="flex items-center justify-between py-1">
-            <div>
-              <label
-                className="text-sm font-medium cursor-pointer block"
-                style={{ color: 'var(--foreground-secondary)' }}
-                htmlFor="exam-alert-toggle"
-              >
-                Exam milestone alerts
-              </label>
-              <span className="text-[11px]" style={{ color: 'var(--foreground-muted)' }}>
-                15m & 5m remaining alerts
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  playExamWarningChime(5);
-                }}
-                className="p-1.5 rounded-lg transition-colors hover:bg-background-secondary focus-ring"
-                title="Test 5-min exam warning chime"
-                aria-label="Test 5-min exam warning chime"
-                style={{ color: 'var(--foreground-muted)' }}
-              >
-                <Volume2 size={14} />
-              </button>
-              <button
-                id="exam-alert-toggle"
-                role="switch"
-                aria-checked={settings.examAlertChime}
-                onClick={() => onUpdate({ examAlertChime: !settings.examAlertChime })}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus-ring`}
-                style={{
-                  background: settings.examAlertChime ? 'var(--primary)' : 'var(--border)',
-                }}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
-                    settings.examAlertChime ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
-              </button>
-            </div>
-          </div>
+
 
           {/* Volume slider */}
           <div className="flex flex-col gap-1.5">
@@ -398,6 +419,9 @@ export default function SettingsDrawer({
                 volume: POMODORO_DEFAULTS.volume,
                 autoStartNext: POMODORO_DEFAULTS.autoStartNext,
                 notifyChime: POMODORO_DEFAULTS.notifyChime,
+                chimeSound: POMODORO_DEFAULTS.chimeSound,
+                examAlertChime: POMODORO_DEFAULTS.examAlertChime,
+                voiceAlerts: POMODORO_DEFAULTS.voiceAlerts,
               })
             }
             className="w-full py-2.5 text-sm font-medium rounded-xl transition-colors duration-200 focus-ring"
