@@ -207,47 +207,82 @@ function startSynth(key: SynthKey, volume: number): void {
   state.isRunning = true;
 }
 
+const audioBufferCache = new Map<string, AudioBuffer>();
+
+function decodeAudio(ctx: AudioContext, arrayBuf: ArrayBuffer): Promise<AudioBuffer> {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const onSuccess = (buf: AudioBuffer) => {
+      if (!settled) {
+        settled = true;
+        resolve(buf);
+      }
+    };
+    const onError = (err: unknown) => {
+      if (!settled) {
+        settled = true;
+        reject(err);
+      }
+    };
+
+    try {
+      const p = ctx.decodeAudioData(arrayBuf, onSuccess, onError);
+      if (p && typeof p.then === 'function') {
+        p.then(onSuccess, onError);
+      }
+    } catch (e) {
+      onError(e);
+    }
+  });
+}
+
 function startFileLoop(src: string, volume: number, onFail: () => void): void {
   const generation = ++state.generation;
   stopAllNodes();
   stopHtmlAudio();
 
-  const audio = new Audio();
-  audio.preload = 'auto';
-  audio.loop = true;
-  audio.setAttribute('playsinline', 'true');
-  audio.volume = clampVolume(volume);
-  audio.src = src;
-
-  state.htmlAudio = audio;
   state.mode = 'file';
   state.isRunning = true;
 
-  const isCurrent = () => state.generation === generation && state.htmlAudio === audio;
+  const isCurrent = () => state.generation === generation && state.mode === 'file';
 
-  audio.addEventListener(
-    'error',
-    () => {
+  const playBuffer = (ctx: AudioContext, buffer: AudioBuffer) => {
+    if (!isCurrent()) return;
+    if (state.masterGain) {
+      state.masterGain.gain.value = clampVolume(volume);
+    }
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+    source.connect(state.masterGain!);
+    source.start(0);
+    state.sourceNodes.push(source);
+    state.isRunning = true;
+  };
+
+  const ctx = getAudioContext();
+  const cached = audioBufferCache.get(src);
+  if (cached) {
+    playBuffer(ctx, cached);
+    return;
+  }
+
+  fetch(src)
+    .then((res) => {
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.arrayBuffer();
+    })
+    .then((arrayBuf) => decodeAudio(ctx, arrayBuf))
+    .then((buffer) => {
+      audioBufferCache.set(src, buffer);
+      playBuffer(ctx, buffer);
+    })
+    .catch(() => {
       if (!isCurrent()) return;
+      stopAllNodes();
       stopHtmlAudio();
       onFail();
-    },
-    { once: true },
-  );
-
-  void audio.play().then(
-    () => {
-      if (isCurrent()) state.isRunning = true;
-    },
-    (err: unknown) => {
-      if (!isCurrent()) return;
-      const name = err instanceof Error ? err.name : '';
-      // Overlapping play()/pause() throws AbortError — do not swap in synth
-      if (name === 'AbortError' || name === 'NotAllowedError') return;
-      stopHtmlAudio();
-      onFail();
-    },
-  );
+    });
 }
 
 /** Start vibe ambience from /public/pomodoro/vibes/{id}/ambience.mp3. Call from a user gesture. */

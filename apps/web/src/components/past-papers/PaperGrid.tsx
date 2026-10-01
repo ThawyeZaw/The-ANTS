@@ -6,7 +6,7 @@
 // Cell states: not_done (grey), done-no-score (blue ✓), done-scored (green/amber/red)
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useState, useTransition, useRef, useEffect } from 'react';
+import React, { useState, useTransition, useRef, useEffect } from 'react';
 import { Check, X, Loader2, ChevronDown, BookOpen } from 'lucide-react';
 import { upsertPastPaperRecord } from '@/actions/past-papers';
 import { useGamificationFeedback } from '@/components/gamification/GamificationFeedbackProvider';
@@ -243,6 +243,8 @@ function GridCell({
   as?: 'td' | 'div';
 }) {
   const [open, setOpen] = useState(false);
+  const [quickPending, startQuick] = useTransition();
+  const { handleAwardResult } = useGamificationFeedback();
 
   const effectiveCell: PaperGridCell = cell ?? {
     paperId,
@@ -264,8 +266,31 @@ function GridCell({
   
   const displayValue = effectiveCell.isDisabled ? '' : getCellDisplayValue(effectiveCell, displayMode, isIAL);
 
+  // Quick-mark: toggle done/not_done without opening popover
+  const quickMark = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (effectiveCell.isDisabled) return;
+    const newStatus = effectiveCell.status === 'done' ? 'not_done' : 'done';
+    // Optimistic
+    onUpdate(sessionKey, { status: newStatus });
+    startQuick(async () => {
+      try {
+        const res = await upsertPastPaperRecord({
+          userId,
+          pastPaperId: effectiveCell.paperId || paperId,
+          status: newStatus,
+        });
+        if (res.gamification) handleAwardResult(res.gamification);
+      } catch (err) {
+        console.error('[PaperGrid] Quick-mark failed:', err);
+        // Revert
+        onUpdate(sessionKey, { status: effectiveCell.status });
+      }
+    });
+  };
+
   const Wrapper = as;
-  const wrapperClass = as === 'td' ? 'relative p-0.5' : 'relative';
+  const wrapperClass = as === 'td' ? 'relative p-0.5 group/cell' : 'relative group/cell';
 
   return (
     <Wrapper className={wrapperClass}>
@@ -281,12 +306,36 @@ function GridCell({
           effectiveCell.isDisabled 
             ? effectiveCell.disabledReason || 'Not available'
             : effectiveCell.status === 'not_done' 
-              ? 'Click to record past paper score' 
-              : `${effectiveCell.rawScore ?? ''}/${totalMarks ?? '?'}`
+              ? 'Click to record score · Quick-mark ✓ on hover' 
+              : `${effectiveCell.rawScore ?? ''}/${totalMarks ?? '?'} — click to edit`
         }
       >
         <span>{displayValue}</span>
       </button>
+
+      {/* Quick-mark hover overlay — tiny ✓ button in top-right corner */}
+      {!effectiveCell.isDisabled && (
+        <button
+          type="button"
+          onClick={quickMark}
+          disabled={quickPending}
+          title={effectiveCell.status === 'done' ? 'Undo (mark not done)' : 'Quick mark done'}
+          className={cn(
+            'absolute -top-1 -right-1 z-20 w-4 h-4 rounded-full border flex items-center justify-center transition-all duration-150',
+            'opacity-0 group-hover/cell:opacity-100 scale-75 group-hover/cell:scale-100',
+            effectiveCell.status === 'done'
+              ? 'bg-foreground-muted/20 border-foreground-muted/40 text-foreground-muted hover:bg-red-500/20 hover:border-red-400 hover:text-red-500'
+              : 'bg-emerald-500 border-emerald-600 text-white hover:bg-emerald-600 shadow-sm',
+            quickPending && 'animate-pulse'
+          )}
+        >
+          {effectiveCell.status === 'done'
+            ? <X className="w-2 h-2" />
+            : <Check className="w-2 h-2" />
+          }
+        </button>
+      )}
+
       {open && !effectiveCell.isDisabled && (
         <CellPopover
           paperId={effectiveCell.paperId || paperId}
@@ -435,17 +484,46 @@ export function PaperGrid({ userId, data, onRecordChange }: PaperGridProps) {
             </tr>
           </thead>
           <tbody>
-            {gridData.rows.map((row, rowIdx) => (
-              <tr
-                key={`${row.paperNumber}-${row.variant}`}
-                className={cn(
-                  'border-b border-border/40 last:border-0 hover:bg-background-secondary/40 transition-colors',
-                  row.isRequired && 'bg-primary/[0.03]',
-                  !row.isMyanmarDefault && !row.isRequired && 'opacity-80'
-                )}
-              >
-                {/* Frozen paper label */}
-                <td className="sticky left-0 z-10 bg-background-card px-3 py-1.5 whitespace-nowrap border-r border-border/30">
+            {(() => {
+              const PURE_CORE = new Set(['WMA11', 'WMA12', 'WMA13', 'WMA14']);
+              const FURTHER_PURE = new Set(['WFM01', 'WFM02', 'WFM03']);
+              const APPLIED = new Set(['WME01', 'WME02', 'WME03', 'WST01', 'WST02', 'WST03', 'WDM11']);
+              const isCombined = gridData.rows.length > 6 && gridData.rows.some((r) => FURTHER_PURE.has(r.paperNumber));
+              const getGroup = (code: string) =>
+                PURE_CORE.has(code) ? 'pure' : FURTHER_PURE.has(code) ? 'further' : APPLIED.has(code) ? 'applied' : 'other';
+              const GROUP_LABELS: Record<string, string> = {
+                pure: '📐 Pure Core (P1–P4)',
+                applied: '📊 Applied (M · S · D)',
+                further: '∞ Further Pure (FP1–FP3)',
+                other: 'Other',
+              };
+              let lastGroup = '';
+              return gridData.rows.map((row, rowIdx) => {
+                const group = isCombined ? getGroup(row.paperNumber) : '';
+                const showGroupHeader = isCombined && group !== lastGroup;
+                if (showGroupHeader) lastGroup = group;
+                return (
+                <React.Fragment key={`${row.paperNumber}-${row.variant ?? ''}`}>
+                  {showGroupHeader && (
+                    <tr key={`group-header-${group}`} className="bg-background-secondary/70">
+                      <td
+                        colSpan={filteredSessions.length + 1}
+                        className="sticky left-0 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-foreground-muted border-b border-border/50"
+                      >
+                        {GROUP_LABELS[group]}
+                      </td>
+                    </tr>
+                  )}
+                  <tr
+                    key={`${row.paperNumber}-${row.variant}`}
+                    className={cn(
+                      'border-b border-border/40 last:border-0 hover:bg-background-secondary/40 transition-colors',
+                      row.isRequired && 'bg-primary/[0.03]',
+                      !row.isMyanmarDefault && !row.isRequired && 'opacity-80'
+                    )}
+                  >
+                    {/* Frozen paper label */}
+                    <td className="sticky left-0 z-10 bg-background-card px-3 py-1.5 whitespace-nowrap border-r border-border/30">
                   <div className="space-y-0.5">
                     <div className="font-mono font-bold text-foreground text-[12px] leading-tight">
                       {row.displayLabel}
@@ -467,29 +545,31 @@ export function PaperGrid({ userId, data, onRecordChange }: PaperGridProps) {
                 </td>
 
                 {/* Session cells */}
-                {filteredSessions.map((s) => {
-                  const sessionKey = `${s.year}-${s.series}`;
-                  const cell = row.cells[sessionKey];
-                  // Find the actual paperId for this session
-                  const paperId = cell?.paperId ?? row.paperId;
-                  return (
-                    <GridCell
-                      key={sessionKey}
-                      cell={cell}
-                      paperId={paperId}
-                      sessionKey={sessionKey}
-                      totalMarks={row.totalMarks}
-                      displayMode={displayMode}
-                      isIAL={gridData.isIAL}
-                      userId={userId}
-                      qualification={row.qualification}
-                      examBoard={row.examBoard}
-                      onUpdate={(sk, updated) => handleCellUpdate(rowIdx, sk, updated)}
-                    />
-                  );
-                })}
-              </tr>
-            ))}
+                    {filteredSessions.map((s) => {
+                      const sessionKey = `${s.year}-${s.series}`;
+                      const cell = row.cells[sessionKey];
+                      const paperId = cell?.paperId ?? row.paperId;
+                      return (
+                        <GridCell
+                          key={sessionKey}
+                          cell={cell}
+                          paperId={paperId}
+                          sessionKey={sessionKey}
+                          totalMarks={row.totalMarks}
+                          displayMode={displayMode}
+                          isIAL={gridData.isIAL}
+                          userId={userId}
+                          qualification={row.qualification}
+                          examBoard={row.examBoard}
+                          onUpdate={(sk, updated) => handleCellUpdate(rowIdx, sk, updated)}
+                        />
+                      );
+                    })}
+                  </tr>
+                </React.Fragment>
+              );
+            });
+          })()}
           </tbody>
         </table>
       </div>

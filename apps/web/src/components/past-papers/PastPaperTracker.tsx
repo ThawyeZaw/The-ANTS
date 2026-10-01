@@ -113,6 +113,8 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
   const [viewMode, setViewMode] = useState<'grid' | 'cards'>('grid');
   const [gridData, setGridData] = useState<PaperGridData | null>(null);
   const [isOptionalModalOpen, setIsOptionalModalOpen] = useState(false);
+  // Unit-group filter for combined Math+FM grid (Pure Core / Applied / Further Pure)
+  const [unitGroupFilter, setUnitGroupFilter] = useState<'all' | 'pure' | 'applied' | 'further'>('all');
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -124,6 +126,35 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
   const groupedSubjects = useMemo(() => {
     return groupEdexcelIalSubjects(enrolledSubjects);
   }, [enrolledSubjects]);
+
+  // Detect if student is enrolled in both Mathematics AND Further Mathematics
+  const hasMathGroup = useMemo(
+    () => groupedSubjects.some((g) => g.title === 'Mathematics' && g.enrolledUnitsCount > 0),
+    [groupedSubjects]
+  );
+  const hasFmGroup = useMemo(
+    () => groupedSubjects.some((g) => g.title === 'Further Mathematics' && g.enrolledUnitsCount > 0),
+    [groupedSubjects]
+  );
+  const showCombinedMathFm = hasMathGroup && hasFmGroup;
+
+  // Virtual combined entry that appears at the top of the switcher when applicable
+  const combinedMathFmEntry = useMemo(() => {
+    if (!showCombinedMathFm) return null;
+    const mathGrp = groupedSubjects.find((g) => g.title === 'Mathematics')!;
+    const fmGrp = groupedSubjects.find((g) => g.title === 'Further Mathematics')!;
+    return {
+      id: 'subj-edx-ial-math-fm-group',
+      primarySubjectId: 'subj-edx-ial-math-fm-group',
+      title: 'Mathematics & Further Mathematics',
+      code: 'YMA01 + YFM01',
+      isVirtual: true,
+      units: [...mathGrp.units, ...fmGrp.units],
+      curriculum_id: mathGrp.curriculum_id,
+      hasOptionalUnits: false,
+      enrolledUnitsCount: mathGrp.enrolledUnitsCount + fmGrp.enrolledUnitsCount,
+    };
+  }, [showCombinedMathFm, groupedSubjects]);
 
   const activeGroup = useMemo(() => {
     if (groupedSubjects.length === 0) return null;
@@ -228,8 +259,26 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
     isSuite ? currentSubject?.qualification_data : null
   );
 
+  // IAL unit-group filter code sets (for combined Math+FM view)
+  const PURE_CORE_CODES = new Set(['WMA11', 'WMA12', 'WMA13', 'WMA14']);
+  const FURTHER_PURE_CODES = new Set(['WFM01', 'WFM02', 'WFM03']);
+  const APPLIED_CODES = new Set(['WME01', 'WME02', 'WME03', 'WST01', 'WST02', 'WST03', 'WDM11']);
+  const isCombinedMathFm = selectedSubjectId === 'subj-edx-ial-math-fm-group';
+
   const filteredGridData = useMemo(() => {
     if (!gridData) return null;
+
+    // Unit-group filter for combined Math+FM view
+    if (isCombinedMathFm && unitGroupFilter !== 'all') {
+      const allowed = unitGroupFilter === 'pure' ? PURE_CORE_CODES
+        : unitGroupFilter === 'further' ? FURTHER_PURE_CODES
+        : APPLIED_CODES;
+      return {
+        ...gridData,
+        rows: gridData.rows.filter((row) => allowed.has(row.paperNumber)),
+      };
+    }
+
     if (!isSuite || suiteSelectors.activeUnits.size === 0) return gridData;
 
     return {
@@ -239,7 +288,7 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
          return suiteSelectors.activeUnits.has(baseCode) || suiteSelectors.activeUnits.has(row.paperNumber);
       })
     };
-  }, [gridData, isSuite, suiteSelectors.activeUnits]);
+  }, [gridData, isSuite, suiteSelectors.activeUnits, isCombinedMathFm, unitGroupFilter]);
 
   useEffect(() => {
     if (!filteredGridData) {
@@ -417,11 +466,18 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
         <div className="mt-6 pt-6 border-t border-border flex items-center justify-between gap-3 flex-wrap">
           <div className="flex-1 max-w-xs min-w-[200px]">
             <select
-              value={activeGroup?.id ?? selectedSubjectId}
+              value={isCombinedMathFm ? 'subj-edx-ial-math-fm-group' : (activeGroup?.id ?? selectedSubjectId)}
               onChange={(e) => {
-                const grp = groupedSubjects.find((g) => g.id === e.target.value);
+                const val = e.target.value;
+                if (val === 'subj-edx-ial-math-fm-group') {
+                  setSelectedSubjectId('subj-edx-ial-math-fm-group');
+                  setUnitGroupFilter('all');
+                  return;
+                }
+                const grp = groupedSubjects.find((g) => g.id === val);
                 if (grp) {
                   setSelectedSubjectId(grp.primarySubjectId);
+                  setUnitGroupFilter('all');
                   if (typeof window !== 'undefined') {
                     const url = new URL(window.location.href);
                     url.searchParams.set('subject', grp.primarySubjectId);
@@ -433,6 +489,12 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
             >
               {groupedSubjects.length === 0 && (
                 <option value="">No subjects enrolled</option>
+              )}
+              {/* Combined entry at top when both Maths and FM are enrolled */}
+              {combinedMathFmEntry && (
+                <option value="subj-edx-ial-math-fm-group">
+                  ✦ Maths & Further Maths (Combined)
+                </option>
               )}
               {groupedSubjects.map((grp) => (
                 <option key={grp.id} value={grp.id}>
@@ -565,6 +627,33 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
               selectedPairIndex={suiteSelectors.selectedPairIndex}
               setSelectedPairIndex={suiteSelectors.setSelectedPairIndex}
            />
+        </div>
+      )}
+
+      {/* ── Unit-Group Filter Tabs (Combined Maths+FM only) ──────────────── */}
+      {isCombinedMathFm && !loading && gridData && (
+        <div className="flex items-center gap-1.5 rounded-xl border border-border bg-background-card p-1.5 text-xs w-fit">
+          {([
+            { id: 'all', label: 'All Units', count: gridData.rows.length },
+            { id: 'pure', label: 'Pure Core', count: gridData.rows.filter((r) => PURE_CORE_CODES.has(r.paperNumber)).length },
+            { id: 'applied', label: 'Applied', count: gridData.rows.filter((r) => APPLIED_CODES.has(r.paperNumber)).length },
+            { id: 'further', label: 'Further Pure', count: gridData.rows.filter((r) => FURTHER_PURE_CODES.has(r.paperNumber)).length },
+          ] as const).map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setUnitGroupFilter(tab.id as typeof unitGroupFilter)}
+              className={cn(
+                'rounded-lg px-3 py-1.5 font-semibold transition-all cursor-pointer',
+                unitGroupFilter === tab.id
+                  ? 'bg-primary text-white shadow-2xs'
+                  : 'text-foreground-muted hover:text-foreground'
+              )}
+            >
+              {tab.label}
+              <span className="ml-1.5 font-mono text-[10px] opacity-70">({tab.count})</span>
+            </button>
+          ))}
         </div>
       )}
 

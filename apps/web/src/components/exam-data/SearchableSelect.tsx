@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Check, ChevronDown, Search } from 'lucide-react';
+import { Check, ChevronDown, Loader2, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface SearchableOption {
@@ -18,6 +18,8 @@ interface SearchableSelectProps {
   placeholder?: string;
   disabled?: boolean;
   className?: string;
+  loading?: boolean;
+  loadingText?: string;
 }
 
 export function SearchableSelect({
@@ -27,6 +29,8 @@ export function SearchableSelect({
   placeholder = 'Select…',
   disabled,
   className,
+  loading = false,
+  loadingText,
 }: SearchableSelectProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -85,16 +89,21 @@ export function SearchableSelect({
     <div ref={rootRef} className={cn('relative', className)}>
       <button
         type="button"
-        disabled={disabled}
-        onClick={() => !disabled && setOpen((v) => !v)}
+        disabled={disabled || loading}
+        onClick={() => !disabled && !loading && setOpen((v) => !v)}
         className={cn(
           'w-full flex items-center gap-3 rounded-2xl border bg-background-secondary py-3 px-4 text-left transition-colors',
           open ? 'border-primary' : 'border-border hover:border-primary/40',
-          disabled && 'opacity-40 cursor-not-allowed'
+          (disabled || loading) && 'opacity-60 cursor-not-allowed'
         )}
       >
         <span className="min-w-0 flex-1">
-          {selected ? (
+          {loading ? (
+            <span className="inline-flex items-center gap-2 text-xs font-semibold text-foreground-muted">
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-primary shrink-0" />
+              <span className="truncate">{loadingText || placeholder || 'Loading…'}</span>
+            </span>
+          ) : selected ? (
             <>
               <span className="block text-xs font-bold text-foreground truncate">{selected.label}</span>
               {selected.hint && (
@@ -105,7 +114,11 @@ export function SearchableSelect({
             <span className="text-xs font-bold text-foreground-muted">{placeholder}</span>
           )}
         </span>
-        <ChevronDown className={cn('w-4 h-4 text-foreground-muted shrink-0 transition-transform', open && 'rotate-180')} />
+        {loading ? (
+          <Loader2 className="w-4 h-4 text-primary animate-spin shrink-0" />
+        ) : (
+          <ChevronDown className={cn('w-4 h-4 text-foreground-muted shrink-0 transition-transform', open && 'rotate-180')} />
+        )}
       </button>
 
       {open && (
@@ -139,10 +152,15 @@ export function SearchableSelect({
             />
           </div>
           <div className="max-h-72 overflow-y-auto py-1">
-            {filtered.length === 0 && (
+            {loading ? (
+              <div className="flex items-center justify-center gap-2.5 py-6 text-xs font-medium text-foreground-muted">
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                <span>{loadingText || 'Loading options…'}</span>
+              </div>
+            ) : filtered.length === 0 ? (
               <p className="px-4 py-3 text-xs text-foreground-muted">No matches for “{query}”.</p>
-            )}
-            {grouped.map(([group, items]) => (
+            ) : (
+              grouped.map(([group, items]) => (
               <div key={group || 'ungrouped'}>
                 {group && (
                   <p className="px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-foreground-muted">
@@ -178,7 +196,7 @@ export function SearchableSelect({
                   );
                 })}
               </div>
-            ))}
+            )))}
           </div>
         </div>
       )}

@@ -114,6 +114,7 @@ export default function GradeCalculator() {
   const [subjects, setSubjects] = useState<any[]>([]);
   const [presets, setPresets] = useState<CalcPreset[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingPresets, setLoadingPresets] = useState(false);
 
   const searchParams = useSearchParams();
 
@@ -260,16 +261,19 @@ export default function GradeCalculator() {
   useEffect(() => {
     if (presetSubjectIds.length === 0) {
       setPresets([]);
+      setLoadingPresets(false);
       return;
     }
 
     const cacheKey = presetSubjectIds.slice().sort().join(',');
     if (presetCacheRef.current.has(cacheKey)) {
       setPresets(presetCacheRef.current.get(cacheKey)!);
+      setLoadingPresets(false);
       return;
     }
 
     let cancelled = false;
+    setLoadingPresets(true);
     listApprovedCalculatorPresetsForSubjects(presetSubjectIds)
       .then((pData) => {
         if (!cancelled) {
@@ -282,6 +286,11 @@ export default function GradeCalculator() {
         if (!cancelled) {
           console.error('[GradeCalculator] presets load failed:', err);
           setPresets([]);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoadingPresets(false);
         }
       });
     return () => {
@@ -1068,6 +1077,8 @@ export default function GradeCalculator() {
               <SearchableSelect
                 value={selectedCurriculum}
                 placeholder="Select curriculum"
+                loading={loading}
+                loadingText="Loading curriculums…"
                 options={curriculumOptions}
                 onChange={(id) => {
                   setSelectedCurriculum(id);
@@ -1084,8 +1095,10 @@ export default function GradeCalculator() {
               </label>
               <SearchableSelect
                 value={selectedSubject}
-                placeholder="Search or select subject"
+                placeholder={!selectedCurriculum ? "Select curriculum first" : "Search or select subject"}
                 disabled={!selectedCurriculum}
+                loading={loading}
+                loadingText="Loading subjects…"
                 options={subjectOptions}
                 onChange={(id) => {
                   setSelectedSubject(id);
@@ -1214,10 +1227,12 @@ export default function GradeCalculator() {
                 value={selectedSeries}
                 placeholder="Select exam series"
                 className="md:w-1/2"
+                loading={loadingPresets}
+                loadingText="Loading series data…"
                 options={availableSeries.map((s) => ({ value: s, label: s }))}
                 onChange={setSelectedSeries}
               />
-              {availableSeries.length === 0 && (
+              {!loadingPresets && availableSeries.length === 0 && (
                 <p className="text-xs text-foreground-muted mt-1">
                   No official grade-boundary papers are in the database for this subject yet.
                 </p>

@@ -6,15 +6,15 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCountdown } from '@/hooks/useCountdown';
 import { CountdownCard } from './CountdownCard';
 import { EditCountdownModal } from './EditCountdownModal';
-import { groupEdexcelIalSubjects } from '@/lib/edexcel-ial';
 import {
   Plus,
   Timer,
-  BookMarked,
-  BookOpen,
   Calendar,
   ArrowLeft,
   Search,
+  X,
+  ChevronDown,
+  AlertCircle,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useLessonContext, type CatalogCurriculum } from '@/context/LessonContext';
@@ -46,7 +46,10 @@ interface CountdownManagerProps {
   userId: string;
 }
 
-function countdownWasEdited(countdown: CountdownWithTime, exams: { id: string; title?: string | null; exam_date?: string | Date | null; date?: string | null }[]) {
+function countdownWasEdited(
+  countdown: CountdownWithTime,
+  exams: { id: string; title?: string | null; exam_date?: string | Date | null; date?: string | null }[]
+) {
   if (!countdown.exam_id) return false;
   const exam = exams.find((item) => item.id === countdown.exam_id);
   if (!exam) return false;
@@ -59,7 +62,6 @@ function countdownWasEdited(countdown: CountdownWithTime, exams: { id: string; t
 }
 
 type PageTab = 'mine' | 'browse';
-
 
 export function CountdownManager({ userId }: CountdownManagerProps) {
   const searchParams = useSearchParams();
@@ -82,12 +84,53 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
   const { enrolledCurriculums, catalogCurriculums, enrolledSubjectIds: hubEnrolledIds } =
     useLessonContext();
 
-  const [filterCurriculumId, setFilterCurriculumId] = useState(
-    searchParams.get('curriculum') ?? 'all'
-  );
-  const [filterSubjectId, setFilterSubjectId] = useState(searchParams.get('subject') ?? 'all');
   const [selectedBoardFilter, setSelectedBoardFilter] = useState<string>('all');
+  const [selectedSeriesFilter, setSelectedSeriesFilter] = useState<string>(
+    searchParams.get('series') ?? 'all'
+  );
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [pastOpen, setPastOpen] = useState(false);
+
+  // Map exam id -> series string
+  const examSeriesMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const ex of availableExams as any[]) {
+      const s = ex.exam_series || ex.season || ex.series;
+      if (s && ex.id) map.set(ex.id, s);
+    }
+    return map;
+  }, [availableExams]);
+
+  // Extract all distinct exam series available
+  const availableSeries = useMemo(() => {
+    const seriesSet = new Set<string>();
+    for (const ex of availableExams as any[]) {
+      const s = ex.exam_series || ex.season || ex.series;
+      if (s) seriesSet.add(s);
+    }
+    for (const cd of countdowns) {
+      if (cd.exam_id && examSeriesMap.has(cd.exam_id)) {
+        seriesSet.add(examSeriesMap.get(cd.exam_id)!);
+      }
+    }
+    return Array.from(seriesSet).sort((a, b) => {
+      const pa = parseSessionLabel(a);
+      const pb = parseSessionLabel(b);
+      if (!pa && !pb) return a.localeCompare(b);
+      if (!pa) return 1;
+      if (!pb) return -1;
+      if (pa.year !== pb.year) return pa.year - pb.year;
+      const rank = (season: string) =>
+        season === 'Jan'
+          ? 1
+          : season === 'Feb/March'
+            ? 2
+            : season === 'May/June'
+              ? 3
+              : 4;
+      return rank(pa.season) - rank(pb.season);
+    });
+  }, [availableExams, countdowns, examSeriesMap]);
 
   const catalog: CatalogCurriculum[] = useMemo(() => {
     if (catalogCurriculums.length > 0) return catalogCurriculums;
@@ -115,62 +158,105 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
     return [...byId.values()];
   }, [catalogCurriculums, availableExams]);
 
-  const subjectToCurriculum = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const curr of catalog) {
-      for (const subj of curr.subjects) map.set(subj.id, curr.id);
-    }
-    for (const curr of enrolledCurriculums) {
-      for (const subj of curr.subjects) map.set(subj.id, curr.id);
-    }
-    return map;
-  }, [catalog, enrolledCurriculums]);
+  const enrolledSubjectIds = useMemo(() => new Set(hubEnrolledIds), [hubEnrolledIds]);
 
-  const subjectsForFilter = useMemo(() => {
-    if (filterCurriculumId === 'all') return catalog.flatMap((c) => c.subjects);
-    return catalog.find((c) => c.id === filterCurriculumId)?.subjects ?? [];
-  }, [catalog, filterCurriculumId]);
-
-  const groupedSubjectsForFilter = useMemo(
-    () => groupEdexcelIalSubjects(subjectsForFilter),
-    [subjectsForFilter]
-  );
-
-  const writeFilters = (curriculumId: string, subjectId: string, tab: PageTab = pageTab) => {
-    setFilterCurriculumId(curriculumId);
-    setFilterSubjectId(subjectId);
+  const writeFilters = (tab: PageTab = pageTab, series: string = selectedSeriesFilter) => {
     setPageTab(tab);
+    setSelectedSeriesFilter(series);
     const params = new URLSearchParams(searchParams.toString());
-    if (curriculumId === 'all') params.delete('curriculum');
-    else params.set('curriculum', curriculumId);
-    if (subjectId === 'all') params.delete('subject');
-    else params.set('subject', subjectId);
     if (tab === 'mine') params.delete('tab');
     else params.set('tab', tab);
+    if (series === 'all') params.delete('series');
+    else params.set('series', series);
+    params.delete('curriculum');
+    params.delete('subject');
     const qs = params.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   };
 
-  const matchesSubjectFilter = (subjectId?: string | null, examCurriculumId?: string | null) => {
-    if (filterSubjectId !== 'all') return subjectId === filterSubjectId;
-    if (filterCurriculumId === 'all') return true;
-    if (examCurriculumId) return examCurriculumId === filterCurriculumId;
-    if (!subjectId) return false;
-    return subjectToCurriculum.get(subjectId) === filterCurriculumId;
+  // Board matching helper
+  const matchesBoard = (countdown: CountdownWithTime) => {
+    if (selectedBoardFilter === 'all') return true;
+    if (selectedBoardFilter === 'Custom') return Boolean(countdown.is_custom);
+    const board = (countdown.exam_board || countdown.qualification_group || '').toUpperCase();
+    return board.includes(selectedBoardFilter.toUpperCase());
   };
 
-  const enrolledSubjectIds = useMemo(() => new Set(hubEnrolledIds), [hubEnrolledIds]);
+  // Series matching helper
+  const matchesSeries = (countdown: CountdownWithTime) => {
+    if (selectedSeriesFilter === 'all') return true;
+    const series = countdown.exam_id
+      ? examSeriesMap.get(countdown.exam_id)
+      : (countdown as any).exam_series || (countdown as any).season || (countdown as any).series;
+    return series === selectedSeriesFilter;
+  };
+
+  // Text search query matching helper
+  const matchesSearch = (countdown: CountdownWithTime) => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return true;
+    const title = (countdown.custom_title || countdown.title || '').toLowerCase();
+    const paper = (countdown.paper_name || '').toLowerCase();
+    const board = (countdown.exam_board || countdown.qualification_group || '').toLowerCase();
+    return title.includes(q) || paper.includes(q) || board.includes(q);
+  };
+
+  // Filtered active countdowns
+  const activeCountdowns = useMemo(() => {
+    const seen = new Set<string>();
+    return countdowns.filter((countdown) => {
+      if (countdown.timeLeft.isPast) return false;
+      if (!matchesBoard(countdown)) return false;
+      if (!matchesSeries(countdown)) return false;
+      if (!matchesSearch(countdown)) return false;
+      const key = countdown.exam_id || countdown.id;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [countdowns, selectedBoardFilter, selectedSeriesFilter, searchQuery, examSeriesMap]);
+
+  // Chronologically sorted active exams
+  const sortedActive = useMemo(
+    () =>
+      [...activeCountdowns].sort(
+        (a, b) =>
+          new Date(a.exam_date || a.target_date || 0).getTime() -
+          new Date(b.exam_date || b.target_date || 0).getTime()
+      ),
+    [activeCountdowns]
+  );
+
+  // Dynamic board counts
+  const boardCounts = useMemo(() => {
+    const counts = { all: 0, CAIE: 0, Edexcel: 0, Custom: 0 };
+    for (const c of countdowns) {
+      if (c.timeLeft.isPast) continue;
+      counts.all++;
+      const b = (c.exam_board || c.qualification_group || '').toUpperCase();
+      if (b.includes('CAIE') || b.includes('CAMBRIDGE')) counts.CAIE++;
+      else if (b.includes('EDEXCEL') || b.includes('PEARSON')) counts.Edexcel++;
+      else if (c.is_custom) counts.Custom++;
+      else counts.Custom++;
+    }
+    return counts;
+  }, [countdowns]);
 
   const boards = [
-    { id: 'all', label: 'All' },
-    { id: 'CAIE', label: 'Cambridge' },
-    { id: 'Edexcel', label: 'Edexcel' },
-    { id: 'Custom', label: 'Custom' },
+    { id: 'all', label: 'All', count: boardCounts.all },
+    { id: 'CAIE', label: 'Cambridge', count: boardCounts.CAIE },
+    { id: 'Edexcel', label: 'Edexcel', count: boardCounts.Edexcel },
+    { id: 'Custom', label: 'Custom', count: boardCounts.Custom },
   ];
 
+  // Official Timetable filtering
   const filteredOfficialExams = availableExams.filter((exam) => {
-    const curriculumId = (exam as any).curriculum_id || (exam as any).curriculum?.id;
-    if (!matchesSubjectFilter(exam.subject_id, curriculumId)) return false;
+    const series =
+      exam.exam_series ||
+      (exam as any).season ||
+      (exam as any).series ||
+      'Other';
+    if (selectedSeriesFilter !== 'all' && series !== selectedSeriesFilter) return false;
 
     const board = boardFromCurriculumCode(
       (exam as any).curriculum_code ?? (exam as any).curriculum?.code
@@ -184,6 +270,14 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
         })
       )
         return false;
+    }
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      const title = (exam.title || (exam as any).subject || '').toLowerCase();
+      const code = (syllabusCode || '').toLowerCase();
+      const pNum = (paperNumber || '').toLowerCase();
+      if (!title.includes(q) && !code.includes(q) && !pNum.includes(q)) return false;
     }
 
     if (selectedBoardFilter === 'all') return true;
@@ -208,40 +302,9 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
     return groups;
   }, [filteredOfficialExams]);
 
-  const matchesBoard = (countdown: CountdownWithTime) => {
-    if (selectedBoardFilter === 'all') return true;
-    if (selectedBoardFilter === 'Custom') return Boolean(countdown.is_custom);
-    return (countdown.exam_board || '')
-      .toUpperCase()
-      .includes(selectedBoardFilter.toUpperCase());
-  };
-
-  const activeCountdowns = useMemo(() => {
-    const seen = new Set<string>();
-    return countdowns.filter((countdown) => {
-      if (countdown.timeLeft.isPast) return false;
-      if (!matchesSubjectFilter(countdown.subject_id, (countdown as any).curriculum_id)) return false;
-      if (!matchesBoard(countdown)) return false;
-      const key = countdown.exam_id || countdown.id;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-  }, [countdowns, filterSubjectId, filterCurriculumId, selectedBoardFilter, subjectToCurriculum]);
-
-  const sortedActive = useMemo(
-    () =>
-      [...activeCountdowns].sort(
-        (a, b) =>
-          new Date(a.exam_date || a.target_date || 0).getTime() -
-          new Date(b.exam_date || b.target_date || 0).getTime()
-      ),
-    [activeCountdowns]
-  );
-
   const pendingEnrolledSubjects = enrolledCurriculums
     .flatMap((curr) => curr.subjects)
-    .filter((s) => enrolledSubjectIds.has(s.id) && matchesSubjectFilter(s.id))
+    .filter((s) => enrolledSubjectIds.has(s.id))
     .filter(
       (s) =>
         !availableExams.some(
@@ -250,12 +313,8 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
     );
 
   const allPastExams = useMemo(() => {
-    return countdowns.filter(
-      (c) =>
-        c.timeLeft.isPast &&
-        matchesSubjectFilter((c as any).subject_id, (c as any).curriculum_id)
-    );
-  }, [countdowns, filterSubjectId, filterCurriculumId]);
+    return countdowns.filter((c) => c.timeLeft.isPast);
+  }, [countdowns]);
 
   const handleQuickPinOfficialExam = async (exam: any) => {
     const examDate = exam.exam_date || exam.date;
@@ -273,58 +332,67 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
   const isAlreadyTracked = (examId: string) =>
     countdowns.some((c) => (c as any).exam_id === examId);
 
-  const mineEmpty = activeCountdowns.length === 0 && pendingEnrolledSubjects.length === 0;
-
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-5">
-      {/* ── Page header ──────────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="space-y-1 min-w-0">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/dashboard"
-              className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-foreground-muted transition-colors hover:text-foreground"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              Dashboard
-            </Link>
-            <span className="hidden h-4 w-px bg-border sm:block" aria-hidden />
-            <h1 className="truncate text-xl font-extrabold tracking-tight text-foreground">
-              Exam Countdowns
-            </h1>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-xs text-foreground-muted">
-              Times shown in Myanmar time (MMT). Edits stay on your account.
-            </p>
-            {activeCountdowns.length > 0 && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 border border-primary/20 px-2.5 py-0.5 text-[11px] font-bold text-primary">
-                <Timer className="h-3 w-3" />
-                {activeCountdowns.length} active
-              </span>
-            )}
-          </div>
+    <div className="mx-auto w-full max-w-6xl space-y-3.5">
+      {/* ── Compact Header & Tab Switcher (Unified Row) ──────────────── */}
+      <div className="flex flex-wrap items-center justify-between gap-2.5">
+        {/* Left: Back + Title */}
+        <div className="flex items-center gap-2.5">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-foreground-muted hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Dashboard
+          </Link>
+          <span className="h-3.5 w-px bg-border" aria-hidden />
+          <h1 className="text-base sm:text-lg font-extrabold text-foreground tracking-tight">
+            Exam Countdowns
+          </h1>
+          {activeCountdowns.length > 0 && (
+            <span className="rounded-full bg-primary/10 border border-primary/20 px-2 py-0.2 text-[11px] font-bold text-primary font-mono">
+              {activeCountdowns.length}
+            </span>
+          )}
         </div>
 
-        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-          <Link
-            href="/curriculum"
-            className="hidden items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-foreground-muted transition-colors hover:bg-background-secondary hover:text-foreground sm:inline-flex border border-border/60"
-          >
-            <BookOpen className="h-3.5 w-3.5" />
-            Subjects
-          </Link>
-          <Link
-            href="/past-papers"
-            className="hidden items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-foreground-muted transition-colors hover:bg-background-secondary hover:text-foreground sm:inline-flex border border-border/60"
-          >
-            <BookMarked className="h-3.5 w-3.5" />
-            Papers
-          </Link>
+        {/* Right: Inline Tabs + Add Button */}
+        <div className="flex items-center gap-2">
+          {/* Compact tabs */}
+          <div className="flex items-center rounded-xl border border-border bg-background-secondary p-0.5 text-xs">
+            <button
+              type="button"
+              onClick={() => writeFilters('mine')}
+              className={cn(
+                'flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-bold transition-all cursor-pointer',
+                pageTab === 'mine'
+                  ? 'bg-background-card text-foreground shadow-2xs'
+                  : 'text-foreground-muted hover:text-foreground'
+              )}
+            >
+              <Timer className="h-3.5 w-3.5" />
+              <span>My Exams</span>
+              <span className="font-mono text-[10px] opacity-70">({activeCountdowns.length})</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => writeFilters('browse')}
+              className={cn(
+                'flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-bold transition-all cursor-pointer',
+                pageTab === 'browse'
+                  ? 'bg-background-card text-foreground shadow-2xs'
+                  : 'text-foreground-muted hover:text-foreground'
+              )}
+            >
+              <Calendar className="h-3.5 w-3.5" />
+              <span>Browse</span>
+              <span className="font-mono text-[10px] opacity-70">({availableExams.length})</span>
+            </button>
+          </div>
+
           <button
             onClick={() => setIsModalOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all hover:shadow-md"
-            aria-label="Add a new custom countdown"
+            className="inline-flex items-center gap-1 rounded-xl bg-primary px-3 py-1.5 text-xs font-bold text-white shadow-2xs hover:bg-primary-hover transition-colors cursor-pointer"
           >
             <Plus className="h-3.5 w-3.5" />
             Add Exam
@@ -332,200 +400,146 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 rounded-xl border border-border bg-background-secondary/60 p-1">
-        {(
-          [
-            { id: 'mine' as const, label: 'My exams', icon: Timer },
-            { id: 'browse' as const, label: 'Browse timetable', icon: Search },
-          ] as const
-        ).map((tab) => {
-          const Icon = tab.icon;
-          return (
+      {/* ── Compact Filter Toolbar (Single Row with Series Filter) ──── */}
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border/70 bg-background-card px-3 py-2 text-xs">
+        {/* Search Input */}
+        <div className="relative flex-1 min-w-[140px] max-w-xs">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-foreground-muted" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search code or subject..."
+            className="w-full rounded-lg border border-border bg-background-secondary/40 pl-8 pr-7 py-1 text-xs text-foreground placeholder:text-foreground-muted focus:border-primary focus:bg-background-card focus:outline-none"
+          />
+          {searchQuery && (
             <button
-              key={tab.id}
               type="button"
-              onClick={() => writeFilters(filterCurriculumId, filterSubjectId, tab.id)}
-              className={cn(
-                'flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all sm:text-sm',
-                pageTab === tab.id
-                  ? 'bg-background-card text-foreground shadow-sm'
-                  : 'text-foreground-muted hover:text-foreground'
-              )}
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-foreground-muted hover:text-foreground"
             >
-              <Icon className="h-3.5 w-3.5" />
-              {tab.label}
+              <X className="h-3 w-3" />
             </button>
-          );
-        })}
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-col gap-2.5">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <label className="block">
-            <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-foreground-muted">
-              Curriculum
-            </span>
-            <select
-              value={filterCurriculumId}
-              onChange={(e) => {
-                const nextCurriculum = e.target.value;
-                const stillValid =
-                  filterSubjectId !== 'all' &&
-                  catalog
-                    .find((c) => c.id === nextCurriculum)
-                    ?.subjects.some((s) => s.id === filterSubjectId);
-                writeFilters(nextCurriculum, stillValid ? filterSubjectId : 'all');
-              }}
-              className="w-full rounded-xl border border-border bg-background-card px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-            >
-              <option value="all">All curriculums</option>
-              {catalog.map((curr) => (
-                <option key={curr.id} value={curr.id}>
-                  {curr.title}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block">
-            <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-foreground-muted">
-              Subject
-            </span>
-            <select
-              value={filterSubjectId}
-              onChange={(e) => writeFilters(filterCurriculumId, e.target.value)}
-              className="w-full rounded-xl border border-border bg-background-card px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-            >
-              <option value="all">All subjects</option>
-              {groupedSubjectsForFilter.map((group) => {
-                if (!group.isVirtual) {
-                  return (
-                    <option key={group.id} value={group.id}>
-                      {group.title}
-                    </option>
-                  );
-                }
-                return (
-                  <optgroup key={group.id} label={`Edexcel IAL ${group.title}`}>
-                    {group.units.map((unit) => (
-                      <option key={unit.id} value={unit.id}>
-                        {unit.title}
-                      </option>
-                    ))}
-                  </optgroup>
-                );
-              })}
-            </select>
-          </label>
+          )}
         </div>
 
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+        {/* Board Pills */}
+        <div className="flex items-center gap-1">
           {boards.map((b) => (
             <button
               key={b.id}
               onClick={() => setSelectedBoardFilter(b.id)}
               className={cn(
-                'whitespace-nowrap rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition-all',
+                'rounded-lg px-2.5 py-1 font-semibold transition-all cursor-pointer text-xs',
                 selectedBoardFilter === b.id
-                  ? 'border-primary bg-primary text-white shadow-sm'
-                  : 'border-border bg-background-card text-foreground-secondary hover:border-primary/30 hover:text-foreground'
+                  ? 'bg-primary text-white shadow-2xs font-bold'
+                  : 'bg-background-secondary text-foreground-secondary hover:text-foreground'
               )}
             >
-              {b.label}
+              {b.label} <span className="opacity-70 font-mono text-[10px]">({b.count})</span>
             </button>
           ))}
         </div>
+
+        {/* Exam Series Dropdown Filter */}
+        <select
+          value={selectedSeriesFilter}
+          onChange={(e) => writeFilters(pageTab, e.target.value)}
+          className="rounded-lg border border-border bg-background-secondary/40 px-2 py-1 text-xs font-semibold text-foreground focus:outline-none focus:border-primary cursor-pointer max-w-[160px] truncate"
+        >
+          <option value="all">All Series</option>
+          {availableSeries.map((series) => (
+            <option key={series} value={series}>
+              {series} Series
+            </option>
+          ))}
+        </select>
+
+        {(searchQuery || selectedBoardFilter !== 'all' || selectedSeriesFilter !== 'all') && (
+          <button
+            onClick={() => {
+              setSearchQuery('');
+              setSelectedBoardFilter('all');
+              writeFilters(pageTab, 'all');
+            }}
+            className="ml-auto text-[11px] font-bold text-primary hover:underline cursor-pointer"
+          >
+            Reset
+          </button>
+        )}
       </div>
 
-      {/* ── My exams tab ─────────────────────────────────────────────── */}
+      {/* ── My Exams Grid (Directly Focus on Cards) ────────────────────── */}
       {pageTab === 'mine' && (
-        <div className="space-y-5">
-          {mineEmpty ? (
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-background-secondary/50 py-16 text-center">
-              <Timer className="mb-3 h-12 w-12 text-foreground-muted" />
-              <h3 className="mb-1 text-lg font-bold text-foreground">No exam countdowns yet</h3>
-              <p className="mb-5 max-w-sm text-xs text-foreground-secondary">
-                Add papers from the timetable, or enroll a subject in Curriculum to track its sittings.
+        <div className="space-y-4 pt-1">
+          {sortedActive.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border bg-background-card p-10 text-center space-y-2">
+              <AlertCircle className="mx-auto h-7 w-7 text-foreground-muted" />
+              <h3 className="text-sm font-bold text-foreground">
+                {countdowns.length === 0 ? 'No exam countdowns yet' : 'No countdowns match your filter'}
+              </h3>
+              <p className="text-xs text-foreground-muted max-w-xs mx-auto">
+                {countdowns.length === 0
+                  ? 'Add your first exam paper or browse official timetables.'
+                  : 'Try resetting the search or series filter.'}
               </p>
-              <div className="flex flex-wrap justify-center gap-2">
+              <div className="pt-2 flex justify-center gap-2">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition-all hover:bg-primary-hover"
+                  className="rounded-xl bg-primary px-3.5 py-1.5 text-xs font-bold text-white hover:bg-primary-hover transition-colors"
                 >
-                  <Plus className="h-4 w-4" />
-                  Add countdown
+                  Add Countdown
                 </button>
                 <button
                   type="button"
-                  onClick={() => writeFilters(filterCurriculumId, filterSubjectId, 'browse')}
-                  className="inline-flex items-center gap-2 rounded-xl border border-border bg-background-card px-5 py-2.5 text-xs font-semibold text-foreground transition-all hover:border-primary/40"
+                  onClick={() => writeFilters('browse')}
+                  className="rounded-xl border border-border bg-background-secondary px-3.5 py-1.5 text-xs font-semibold text-foreground hover:border-primary/40 transition-colors"
                 >
-                  <Search className="h-4 w-4" />
-                  Browse timetable
+                  Browse Timetable
                 </button>
               </div>
             </div>
-          ) : activeCountdowns.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border bg-background-card/60 p-8 text-center">
-              <p className="text-sm font-semibold text-foreground">No countdowns match this filter</p>
-              <p className="mt-1 text-xs text-foreground-muted">
-                Try another curriculum or subject, or clear the filters.
-              </p>
-            </div>
           ) : (
-            <section className="space-y-4">
-              <div className="flex items-center gap-2.5">
-                <Timer className="h-4 w-4 text-primary" />
-                <h2 className="text-base font-bold text-foreground">Your exams</h2>
-                <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">
-                  {activeCountdowns.length}
-                </span>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {sortedActive.map((countdown) => (
-                  <CountdownCard
-                    key={countdown.id}
-                    countdown={countdown}
-                    edited={countdownWasEdited(countdown, availableExams)}
-                    onEdit={setEditing}
-                    onDelete={(id) => {
-                      setPendingDeleteId(null);
-                      void deleteCountdown(id);
-                    }}
-                    confirmDelete={pendingDeleteId === countdown.id}
-                    onAskDelete={setPendingDeleteId}
-                    onCancelDelete={() => setPendingDeleteId(null)}
-                  />
-                ))}
-              </div>
-
-              {pendingEnrolledSubjects.length > 0 && (
-                <p className="text-xs text-foreground-muted">
-                  Timetable not released yet for{' '}
-                  {pendingEnrolledSubjects.map((subject) => subject.title).join(', ')}.
-                </p>
-              )}
-            </section>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {sortedActive.map((countdown) => (
+                <CountdownCard
+                  key={countdown.id}
+                  countdown={countdown}
+                  edited={countdownWasEdited(countdown, availableExams)}
+                  onEdit={setEditing}
+                  onDelete={(id) => {
+                    setPendingDeleteId(null);
+                    void deleteCountdown(id);
+                  }}
+                  confirmDelete={pendingDeleteId === countdown.id}
+                  onAskDelete={setPendingDeleteId}
+                  onCancelDelete={() => setPendingDeleteId(null)}
+                />
+              ))}
+            </div>
           )}
 
+          {pendingEnrolledSubjects.length > 0 && (
+            <p className="text-xs text-foreground-muted">
+              Timetable not yet announced for: {pendingEnrolledSubjects.map((s) => s.title).join(', ')}.
+            </p>
+          )}
+
+          {/* Past Exams Collapsible */}
           {allPastExams.length > 0 && (
-            <section className="space-y-3 border-t border-border pt-4">
+            <div className="border-t border-border/70 pt-3">
               <button
                 type="button"
                 onClick={() => setPastOpen(!pastOpen)}
-                className="flex w-full items-center gap-2.5 text-left"
+                className="flex items-center gap-1.5 text-xs font-bold text-foreground-muted hover:text-foreground cursor-pointer"
               >
-                <Timer className="h-4 w-4 text-foreground-muted" />
-                <h2 className="text-sm font-bold text-foreground-muted">Past exams</h2>
-                <span className="rounded-full border border-border px-2 py-0.5 text-[11px] text-foreground-muted">
-                  {allPastExams.length}
-                </span>
+                <ChevronDown className={cn('h-3.5 w-3.5 transition-transform', pastOpen && 'rotate-180')} />
+                <span>Past & Concluded Exams ({allPastExams.length})</span>
               </button>
+
               {pastOpen && (
-                <div className="grid gap-2 [grid-template-columns:repeat(auto-fill,minmax(17.5rem,1fr))]">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 pt-2.5">
                   {allPastExams.map((countdown) => (
                     <CountdownCard
                       key={countdown.id}
@@ -543,40 +557,24 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
                   ))}
                 </div>
               )}
-            </section>
+            </div>
           )}
         </div>
       )}
 
-      {/* ── Browse timetable tab ─────────────────────────────────────── */}
+      {/* ── Browse Official Timetable View ─────────────────────────────── */}
       {pageTab === 'browse' && (
-        <section className="space-y-4">
-          <div className="flex items-center gap-2.5">
-            <Calendar className="h-4 w-4 text-amber-500" />
-            <h2 className="text-lg font-bold text-foreground">Official exam timetable</h2>
-            <span className="rounded-full border border-border bg-background-secondary px-2.5 py-0.5 text-xs font-medium text-foreground-muted">
-              {filteredOfficialExams.length} sessions
-            </span>
-          </div>
-
+        <div className="space-y-4 pt-1">
           {availableExams.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border bg-background-card/60 p-8 text-center">
-              <p className="text-sm font-semibold text-foreground">No timetable data loaded</p>
-              <p className="mt-1 text-xs text-foreground-muted">
-                Official dates appear here once the catalog is seeded.
-              </p>
+            <div className="rounded-2xl border border-dashed border-border bg-background-card p-8 text-center text-xs text-foreground-muted">
+              No timetable data loaded.
             </div>
           ) : Object.keys(groupedOfficialExams).length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border bg-background-card/60 p-8 text-center">
-              <p className="text-sm font-semibold text-foreground">
-                No official sessions match this filter
-              </p>
-              <p className="mt-1 text-xs text-foreground-muted">
-                Choose a different curriculum or subject to see timetable dates.
-              </p>
+            <div className="rounded-2xl border border-dashed border-border bg-background-card p-8 text-center text-xs text-foreground-muted">
+              No sessions match this filter.
             </div>
           ) : (
-            <div className="space-y-8">
+            <div className="space-y-6">
               {Object.entries(groupedOfficialExams)
                 .sort(([a], [b]) => {
                   const pa = parseSessionLabel(a);
@@ -596,13 +594,11 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
                   return rank(pa.season) - rank(pb.season);
                 })
                 .map(([series, exams]) => (
-                  <div key={series} className="space-y-4">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-3">
-                        <h3 className="text-sm font-bold tracking-wide text-foreground">
-                          {series}
-                        </h3>
-                        <div className="h-px w-12 bg-border" />
+                  <div key={series} className="space-y-2.5">
+                    <div className="flex items-center justify-between border-b border-border/70 pb-1.5">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-bold text-foreground">{series} Series</h3>
+                        <span className="font-mono text-[10px] text-foreground-muted">({exams.length} papers)</span>
                       </div>
                       <button
                         onClick={() => {
@@ -610,82 +606,61 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
                             if (!isAlreadyTracked(ex.id)) handleQuickPinOfficialExam(ex);
                           });
                         }}
-                        className="text-xs font-semibold text-primary hover:underline"
+                        className="text-xs font-bold text-primary hover:underline cursor-pointer"
                       >
-                        Track all {series} papers
+                        Track all
                       </button>
                     </div>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+
+                    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
                       {exams.map((exam) => {
                         const tracked = isAlreadyTracked(exam.id);
                         const examDateStr = (exam as any).exam_date || (exam as any).date;
                         const formattedDate = formatExamDateTime(examDateStr);
-                        // Days until this exam
                         const examMs = examDateStr ? new Date(examDateStr).getTime() - Date.now() : null;
                         const examDays = examMs != null ? Math.max(0, Math.floor(examMs / 86400000)) : null;
-                        const examIsUrgent = examDays != null && examDays < 7;
-                        const examIsUpcoming = examDays != null && examDays >= 7 && examDays < 30;
 
                         return (
                           <div
                             key={exam.id}
-                            className={cn(
-                              'group relative flex flex-col justify-between rounded-2xl border bg-background-card p-4 transition-all hover:-translate-y-0.5 hover:shadow-md overflow-hidden',
-                              examIsUrgent
-                                ? 'border-red-400/50'
-                                : examIsUpcoming
-                                  ? 'border-amber-400/40'
-                                  : 'border-border hover:border-primary/40'
-                            )}
+                            className="flex flex-col justify-between rounded-xl border border-border bg-background-card p-3 transition-all hover:border-primary/40"
                           >
-                            {/* Urgency stripe */}
-                            <div
-                              className="absolute top-0 left-0 right-0 h-0.5"
-                              style={{
-                                backgroundColor: examIsUrgent ? '#ef4444' : examIsUpcoming ? '#f59e0b' : 'var(--primary)',
-                                opacity: examIsUrgent ? 1 : examIsUpcoming ? 0.7 : 0.3,
-                              }}
-                            />
-                            <div>
-                              <div className="mb-2 flex items-center justify-between gap-2">
-                                <span className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border border-primary/20 bg-primary/10 text-primary">
+                            <div className="space-y-1">
+                              <div className="flex items-center justify-between gap-1.5">
+                                <span className="rounded px-1.5 py-0.2 text-[9px] font-bold uppercase border border-primary/20 bg-primary/10 text-primary">
                                   {exam.exam_board || 'Official'}
                                 </span>
                                 {(exam as any).syllabus_code && (
-                                  <span className="font-mono text-[11px] font-semibold text-foreground-muted bg-background-secondary px-1.5 py-0.5 rounded border border-border/60">
+                                  <span className="font-mono text-[10px] font-semibold text-foreground-muted">
                                     {(exam as any).syllabus_code}
                                   </span>
                                 )}
                               </div>
-                              <h4 className="line-clamp-2 text-sm font-bold text-foreground group-hover:text-primary transition-colors leading-snug">
+
+                              <h4 className="line-clamp-2 text-xs font-bold text-foreground leading-snug">
                                 {exam.title || (exam as any).subject || 'Exam Paper'}
                               </h4>
-                              <p className="mt-1.5 flex items-center gap-1.5 text-[11px] text-foreground-muted">
+
+                              <p className="flex items-center gap-1 text-[10px] text-foreground-muted">
                                 <Calendar className="h-3 w-3 shrink-0" />
-                                {formattedDate}
+                                <span>{formattedDate}</span>
                               </p>
                             </div>
 
-                            <div className="mt-3 flex items-center justify-between border-t border-border/60 pt-3 gap-2">
-                              {/* Days remaining */}
+                            <div className="mt-2.5 flex items-center justify-between border-t border-border/60 pt-2 text-xs">
                               {examDays != null && (
-                                <span
-                                  className={cn(
-                                    'font-mono text-sm font-black tabular-nums',
-                                    examIsUrgent ? 'text-red-500' : examIsUpcoming ? 'text-amber-600 dark:text-amber-400' : 'text-foreground-secondary'
-                                  )}
-                                >
-                                  {examDays}<span className="text-[10px] font-bold ml-0.5 opacity-70">d</span>
+                                <span className="font-mono font-bold text-foreground-secondary text-[11px]">
+                                  {examDays}d left
                                 </span>
                               )}
                               {tracked ? (
-                                <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full">
-                                  ✓ Tracking
+                                <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                                  ✓ Tracked
                                 </span>
                               ) : (
                                 <button
                                   onClick={() => handleQuickPinOfficialExam(exam)}
-                                  className="inline-flex items-center gap-1 rounded-xl bg-primary/10 border border-primary/20 px-2.5 py-1 text-[11px] font-bold text-primary hover:bg-primary hover:text-white transition-all"
+                                  className="inline-flex items-center gap-0.5 rounded-lg bg-primary/10 border border-primary/20 px-2 py-0.5 text-[11px] font-bold text-primary hover:bg-primary hover:text-white transition-colors cursor-pointer"
                                 >
                                   <Plus className="h-3 w-3" />
                                   Track
@@ -700,17 +675,18 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
                 ))}
             </div>
           )}
-        </section>
+        </div>
       )}
 
+      {/* Add / Edit Modals */}
       {isModalOpen && (
         <AddCountdownModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           availableExams={availableExams}
           catalogCurriculums={catalog}
-          initialCurriculumId={filterCurriculumId}
-          initialSubjectId={filterSubjectId}
+          initialCurriculumId="all"
+          initialSubjectId="all"
           onCreate={createCountdown}
         />
       )}
