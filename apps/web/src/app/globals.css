@@ -2557,6 +2557,15 @@ a {
   );
 }
 @media (max-width: 767px) {
+  .pomo-fit-viewport {
+    --pomo-dock: 13rem;
+    --pomo-clock-size: min(
+      14.5rem,
+      calc(100vw - 5.5rem),
+      max(6.5rem, calc(100dvh - var(--pomo-chrome))),
+      36dvh
+    );
+  }
   .pomo-fit-viewport.pomo-fit-auth {
     height: calc(100dvh - var(--bottom-nav-height) - env(safe-area-inset-bottom, 0px));
     max-height: calc(100dvh - var(--bottom-nav-height) - env(safe-area-inset-bottom, 0px));
@@ -2565,9 +2574,10 @@ a {
         var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px) + 0.5rem
     );
     --pomo-clock-size: min(
-      100%,
-      max(7rem, calc(100dvh - var(--pomo-chrome))),
-      30rem
+      14.5rem,
+      calc(100vw - 5.5rem),
+      max(6.5rem, calc(100dvh - var(--pomo-chrome))),
+      36dvh
     );
   }
 }
@@ -2692,7 +2702,7 @@ a {
     );
   }
 }
-@media (min-height: 920px) {
+@media (min-width: 768px) and (min-height: 920px) {
   .pomo-fit-viewport {
     --pomo-clock-size: min(
       100%,
@@ -2711,7 +2721,7 @@ a {
     34rem
   );
 }
-@media (min-height: 820px) {
+@media (min-width: 768px) and (min-height: 820px) {
   .pomo-focus-mode {
     --pomo-clock-size: min(
       100%,
@@ -2746,6 +2756,11 @@ a {
   max-width: 100%;
   max-height: min(100%, var(--pomo-clock-size));
   flex-shrink: 1;
+}
+@media (max-width: 767px) {
+  .pomo-clock {
+    max-width: min(14.5rem, calc(100vw - 5rem));
+  }
 }
 .pomo-clock-digits .pomo-digit {
   font-size: clamp(1.75rem, 22cqmin, 5.75rem);
