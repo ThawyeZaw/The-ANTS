@@ -10,6 +10,7 @@ import {
   pastPapers,
   userPastPaperRecords,
   userEnrollments,
+  userCashInEnrollments,
   curriculums,
   subjects,
   userXpLedger,
@@ -59,23 +60,48 @@ export async function getEnrolledSubjects(userId: string) {
       },
     });
 
-    if (enrollments.length > 0) {
-      const subjectMap = new Map<string, any>();
-      for (const e of enrollments) {
-        if (e.subject && !subjectMap.has(e.subject.id)) {
-          subjectMap.set(e.subject.id, {
-            ...e.subject,
-            curriculum: e.curriculum,
-            target_series: e.target_series,
-            target_grade: e.target_grade,
-            tier: e.tier,
-          });
-        }
+    const subjectMap = new Map<string, any>();
+    for (const e of enrollments) {
+      if (e.subject && !subjectMap.has(e.subject.id)) {
+        subjectMap.set(e.subject.id, {
+          ...e.subject,
+          curriculum: e.curriculum,
+          target_series: e.target_series,
+          target_grade: e.target_grade,
+          tier: e.tier,
+          isEnrolled: true,
+        });
       }
-      return Array.from(subjectMap.values());
     }
 
-    return [];
+    // 2. Also fetch any cash-in enrollments (e.g. YMA01, YFM01, XMA01, XFM01)
+    const cashInRows = await db.query.userCashInEnrollments.findMany({
+      where: eq(userCashInEnrollments.user_id, userId),
+    });
+
+    if (cashInRows.length > 0) {
+      const allSelectedCodes = cashInRows.flatMap((c) =>
+        Array.isArray(c.selected_units) ? (c.selected_units as string[]) : []
+      );
+      if (allSelectedCodes.length > 0) {
+        const cashInSubjects = await db.query.subjects.findMany({
+          where: inArray(subjects.code, allSelectedCodes),
+          with: {
+            curriculum: { columns: { id: true, name: true, code: true } },
+          },
+        });
+        for (const s of cashInSubjects) {
+          if (!subjectMap.has(s.id)) {
+            subjectMap.set(s.id, {
+              ...s,
+              isEnrolled: true,
+            });
+          }
+        }
+      }
+    }
+
+    return Array.from(subjectMap.values());
   } catch (error) {
     console.error('[past-papers] getEnrolledSubjects error:', error);
     return [];

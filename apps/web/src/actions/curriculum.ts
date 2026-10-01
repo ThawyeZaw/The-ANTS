@@ -600,21 +600,94 @@ export async function getPaperGridData(
       let isFurtherMath = false;
       let defaultCashIn = 'YMA01';
 
-      // Short-circuit: combined Math & Further Mathematics uses all 14 suite units
+      // Combined Math & Further Mathematics: Resolve the 12 units selected by user
       if (isCombinedMathFm) {
         ialGroupTitle = 'Mathematics & Further Mathematics';
         const { IAL_MATHS_SUITE_UNIT_ORDER } = await import('@/lib/grading/ial-cash-in');
-        const combinedCodes = [...IAL_MATHS_SUITE_UNIT_ORDER];
         const currId = 'curr-edexcel-ial';
+
+        // 1. Query user's cash-in enrollments for both Mathematics and Further Mathematics
+        const userCashIns = await db.query.userCashInEnrollments.findMany({
+          where: and(
+            eq(userCashInEnrollments.user_id, userId),
+            inArray(userCashInEnrollments.cash_in_code, ['YMA01', 'XMA01', 'YFM01', 'XFM01'])
+          ),
+        });
+
+        const cashInUnits = userCashIns.flatMap((row) =>
+          Array.isArray(row.selected_units) ? (row.selected_units as string[]) : []
+        );
+
+        // 2. Query user's direct unit enrollments in IAL curriculum
+        const userUnitEnrollments = await db.query.userEnrollments.findMany({
+          where: eq(userEnrollments.user_id, userId),
+          with: {
+            subject: {
+              columns: { id: true, code: true, curriculum_id: true },
+            },
+          },
+        });
+
+        const enrolledUnitCodes = userUnitEnrollments
+          .map((e) => e.subject?.code)
+          .filter((code): code is string =>
+            Boolean(code && (IAL_MATHS_SUITE_UNIT_ORDER as readonly string[]).includes(code))
+          );
+
+        // Combine all user selected and enrolled unit codes
+        const userSelectedCodesSet = new Set<string>([...cashInUnits, ...enrolledUnitCodes]);
+
+        // 3. Assemble exactly 12 units for Double Mathematics (Mathematics + Further Mathematics):
+        // Compulsory for A Level Mathematics: WMA11 (P1), WMA12 (P2), WMA13 (P3), WMA14 (P4)
+        // Compulsory for A Level Further Mathematics: WFM01 (FP1)
+        const compulsoryCodes = ['WMA11', 'WMA12', 'WMA13', 'WMA14', 'WFM01'];
+        const chosen12Codes = new Set<string>();
+
+        for (const code of compulsoryCodes) {
+          chosen12Codes.add(code);
+        }
+
+        // Add any other units the user explicitly selected or enrolled in (in spec order)
+        for (const code of IAL_MATHS_SUITE_UNIT_ORDER) {
+          if (chosen12Codes.size >= 12) break;
+          if (userSelectedCodesSet.has(code)) {
+            chosen12Codes.add(code);
+          }
+        }
+
+        // If fewer than 12 units selected, fill remaining slots with standard Double Maths fallback units
+        const standardFallbackOrder = [
+          'WFM02', // FP2
+          'WFM03', // FP3
+          'WME01', // M1
+          'WME02', // M2
+          'WST01', // S1
+          'WST02', // S2
+          'WST03', // S3
+          'WDM11', // D1
+          'WME03', // M3
+        ];
+        for (const code of standardFallbackOrder) {
+          if (chosen12Codes.size >= 12) break;
+          chosen12Codes.add(code);
+        }
+
+        // Order the final 12 units strictly in canonical suite order
+        const target12Codes = IAL_MATHS_SUITE_UNIT_ORDER.filter((code) =>
+          chosen12Codes.has(code)
+        );
+
         const siblingSubjects = await db.query.subjects.findMany({
           where: and(
             eq(subjects.curriculum_id, currId),
-            inArray(subjects.code, combinedCodes)
+            inArray(subjects.code, target12Codes)
           ),
         });
-        sortedSiblings = combinedCodes
+
+        sortedSiblings = target12Codes
           .map((c) => siblingSubjects.find((s) => s.code === c))
           .filter(Boolean) as (typeof subject)[];
+
         for (const s of sortedSiblings) {
           if (s) ialUnitSubjectMap.set(s.id, s);
         }

@@ -10,7 +10,7 @@ import { useState } from 'react';
 import type { PomodoroSettings, PomodoroStatsLog } from '@/constants/pomodoro';
 import { DURATION_BOUNDS, POMODORO_DEFAULTS } from '@/constants/pomodoro';
 import StatsPanel from '@/components/pomodoro/StatsPanel';
-import { playChime } from '@/lib/pomodoro/audio-engine';
+import { playChime, playExamWarningChime } from '@/lib/pomodoro/audio-engine';
 import { cn } from '@/lib/utils';
 
 interface SettingsDrawerProps {
@@ -305,6 +305,52 @@ export default function SettingsDrawer({
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
                     settings.notifyChime ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
+          {/* Exam Alert Chimes (15m and 5m warning) */}
+          <div className="flex items-center justify-between py-1">
+            <div>
+              <label
+                className="text-sm font-medium cursor-pointer block"
+                style={{ color: 'var(--foreground-secondary)' }}
+                htmlFor="exam-alert-toggle"
+              >
+                Exam milestone alerts
+              </label>
+              <span className="text-[11px]" style={{ color: 'var(--foreground-muted)' }}>
+                15m & 5m remaining alerts
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  playExamWarningChime(5);
+                }}
+                className="p-1.5 rounded-lg transition-colors hover:bg-background-secondary focus-ring"
+                title="Test 5-min exam warning chime"
+                aria-label="Test 5-min exam warning chime"
+                style={{ color: 'var(--foreground-muted)' }}
+              >
+                <Volume2 size={14} />
+              </button>
+              <button
+                id="exam-alert-toggle"
+                role="switch"
+                aria-checked={settings.examAlertChime}
+                onClick={() => onUpdate({ examAlertChime: !settings.examAlertChime })}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus-ring`}
+                style={{
+                  background: settings.examAlertChime ? 'var(--primary)' : 'var(--border)',
+                }}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
+                    settings.examAlertChime ? 'translate-x-6' : 'translate-x-1'
                   }`}
                 />
               </button>

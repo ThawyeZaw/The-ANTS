@@ -75,7 +75,6 @@ function CellPopover({
   onSave: (updated: Partial<PaperGridCell>) => void;
   onClose: () => void;
 }) {
-  const [mode, setMode] = useState<'check' | 'score'>(cell.rawScore !== null ? 'score' : 'check');
   const [scoreInput, setScoreInput] = useState(cell.rawScore !== null ? String(cell.rawScore) : '');
   const [isPending, startTransition] = useTransition();
   const { handleAwardResult } = useGamificationFeedback();
@@ -138,79 +137,101 @@ function CellPopover({
     });
   };
 
+  const handleScoreSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const v = parseFloat(scoreInput);
+    if (!isNaN(v)) {
+      save('done', v);
+    }
+  };
+
   return (
     <div
       ref={ref}
-      className="absolute z-50 top-full left-1/2 -translate-x-1/2 mt-1 w-52 rounded-xl border border-border bg-background-card shadow-xl p-3 space-y-3"
-      style={{ minWidth: 200 }}
+      className="absolute z-50 top-full left-1/2 -translate-x-1/2 mt-1.5 w-60 rounded-2xl border border-border bg-background-card shadow-2xl p-3.5 space-y-3 animate-fade-in"
+      style={{ minWidth: 220 }}
     >
-      {/* Mode toggle */}
-      <div className="flex rounded-lg overflow-hidden border border-border text-xs font-medium">
-        <button
-          onClick={() => setMode('check')}
-          className={cn('flex-1 py-1.5 transition-colors', mode === 'check' ? 'bg-primary/15 text-primary' : 'text-foreground-muted hover:bg-background-secondary')}
-        >
-          Mark Done
-        </button>
-        <button
-          onClick={() => setMode('score')}
-          className={cn('flex-1 py-1.5 transition-colors', mode === 'score' ? 'bg-primary/15 text-primary' : 'text-foreground-muted hover:bg-background-secondary')}
-        >
-          Enter Score
-        </button>
-      </div>
-
-      {mode === 'check' ? (
-        <div className="space-y-2">
-          <p className="text-[11px] text-foreground-muted">Mark this paper as done without entering a score.</p>
-          <div className="flex gap-2">
+      {/* 1-Click Status Action */}
+      <div className="space-y-1.5">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-foreground-muted block">
+          Paper Status
+        </span>
+        <div className="flex gap-2">
+          {cell.status !== 'done' ? (
             <button
+              type="button"
               onClick={() => save('done')}
               disabled={isPending}
-              className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+              className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white transition-colors cursor-pointer shadow-xs disabled:opacity-50"
             >
-              {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
-              Done
+              <Check className="h-3.5 w-3.5 stroke-[2.5]" />
+              Mark Done
             </button>
-            {cell.status !== 'not_done' && (
-              <button
-                onClick={() => save('not_done')}
-                disabled={isPending}
-                className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium py-2 rounded-lg border border-border text-foreground-muted hover:text-foreground hover:bg-background-secondary transition-colors disabled:opacity-50"
-              >
-                <X className="h-3.5 w-3.5" />
-                Undo
-              </button>
-            )}
-          </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => save('not_done')}
+              disabled={isPending}
+              className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium py-2 rounded-xl border border-red-500/30 text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer disabled:opacity-50"
+            >
+              <X className="h-3.5 w-3.5" />
+              Mark Not Done
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => save('skipped')}
+            disabled={isPending}
+            className="px-2.5 py-2 text-xs font-medium rounded-xl border border-border text-foreground-muted hover:text-foreground hover:bg-background-secondary transition-colors cursor-pointer disabled:opacity-50"
+            title="Skip paper"
+          >
+            Skip
+          </button>
         </div>
-      ) : (
-        <div className="space-y-2">
-          <label className="text-[11px] text-foreground-muted block">
-            Raw Score{totalMarks ? ` (out of ${totalMarks})` : ''}
-          </label>
+      </div>
+
+      {/* Divider */}
+      <div className="relative flex py-0.5 items-center">
+        <div className="flex-grow border-t border-border/60"></div>
+        <span className="flex-shrink mx-2 text-[10px] font-medium text-foreground-muted uppercase tracking-wider">
+          or record score
+        </span>
+        <div className="flex-grow border-t border-border/60"></div>
+      </div>
+
+      {/* Score Form */}
+      <form onSubmit={handleScoreSubmit} className="space-y-2">
+        <div className="flex items-center justify-between text-[11px] text-foreground-muted">
+          <span>Raw Mark</span>
+          {totalMarks && <span className="font-mono">out of {totalMarks}</span>}
+        </div>
+        <div className="flex gap-2">
           <input
             type="number"
             min={0}
             max={totalMarks ?? undefined}
+            step="0.5"
             value={scoreInput}
             onChange={(e) => setScoreInput(e.target.value)}
-            placeholder="e.g. 65"
-            className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/40 font-mono"
+            placeholder={totalMarks ? `0–${totalMarks}` : 'e.g. 65'}
+            className="flex-1 px-3 py-1.5 text-sm rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/40 font-mono"
+            autoFocus
           />
           <button
-            onClick={() => {
-              const v = parseFloat(scoreInput);
-              if (!isNaN(v)) save('done', v);
-            }}
+            type="submit"
             disabled={isPending || !scoreInput}
-            className="w-full flex items-center justify-center gap-1.5 text-xs font-semibold py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+            className="px-3 py-1.5 text-xs font-bold rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 cursor-pointer"
           >
-            {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
-            Save Score
+            Save
           </button>
         </div>
-      )}
+        {cell.calculatedGrade && (
+          <div className="text-[11px] text-center font-mono text-emerald-600 dark:text-emerald-400 font-semibold pt-1">
+            Current: Grade {cell.calculatedGrade}
+            {cell.calculatedUms !== null && ` · ${cell.calculatedUms} UMS`}
+          </div>
+        )}
+      </form>
     </div>
   );
 }
@@ -266,12 +287,12 @@ function GridCell({
   
   const displayValue = effectiveCell.isDisabled ? '' : getCellDisplayValue(effectiveCell, displayMode, isIAL);
 
-  // Quick-mark: toggle done/not_done without opening popover
+  // Quick-mark: toggle done/not_done with ONE CLICK without opening popover
   const quickMark = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (effectiveCell.isDisabled) return;
     const newStatus = effectiveCell.status === 'done' ? 'not_done' : 'done';
-    // Optimistic
+    // Optimistic instant update
     onUpdate(sessionKey, { status: newStatus });
     startQuick(async () => {
       try {
@@ -283,58 +304,82 @@ function GridCell({
         if (res.gamification) handleAwardResult(res.gamification);
       } catch (err) {
         console.error('[PaperGrid] Quick-mark failed:', err);
-        // Revert
+        // Revert on error
         onUpdate(sessionKey, { status: effectiveCell.status });
       }
     });
   };
 
+  const isDone = effectiveCell.status === 'done';
+  const isSkipped = effectiveCell.status === 'skipped';
   const Wrapper = as;
   const wrapperClass = as === 'td' ? 'relative p-0.5 group/cell' : 'relative group/cell';
 
   return (
     <Wrapper className={wrapperClass}>
-      <button
-        onClick={() => !effectiveCell.isDisabled && setOpen((o) => !o)}
-        disabled={effectiveCell.isDisabled}
+      <div
         className={cn(
-          'relative w-full h-8 rounded-md border text-[11px] font-mono font-semibold transition-all duration-150',
-          !effectiveCell.isDisabled && 'cursor-pointer hover:scale-[1.04] hover:shadow-md hover:ring-1 hover:ring-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary active:scale-[0.98]',
+          'relative w-full h-8 sm:h-9 rounded-lg border flex items-center justify-between px-1.5 transition-all duration-150',
+          !effectiveCell.isDisabled && 'hover:scale-[1.02] hover:shadow-xs focus-within:ring-2 focus-within:ring-primary/40',
           colorClass
         )}
-        title={
-          effectiveCell.isDisabled 
-            ? effectiveCell.disabledReason || 'Not available'
-            : effectiveCell.status === 'not_done' 
-              ? 'Click to record score · Quick-mark ✓ on hover' 
-              : `${effectiveCell.rawScore ?? ''}/${totalMarks ?? '?'} — click to edit`
-        }
       >
-        <span>{displayValue}</span>
-      </button>
+        {/* Left: 1-Click Mark Done Toggle Button */}
+        {!effectiveCell.isDisabled ? (
+          <button
+            type="button"
+            onClick={quickMark}
+            disabled={quickPending}
+            title={isDone ? 'One-click: Mark not done' : 'One-click: Mark paper done'}
+            className={cn(
+              'h-6 w-6 rounded-md flex items-center justify-center transition-all cursor-pointer shrink-0 active:scale-90',
+              isDone
+                ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 hover:bg-red-500/20 hover:text-red-500'
+                : 'text-foreground-muted/40 hover:text-emerald-500 hover:bg-emerald-500/15'
+            )}
+          >
+            {quickPending ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+            ) : isDone ? (
+              <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+            ) : (
+              <span className="w-3.5 h-3.5 rounded-full border border-current flex items-center justify-center opacity-60 hover:opacity-100 hover:border-emerald-500" />
+            )}
+          </button>
+        ) : (
+          <span className="w-6" />
+        )}
 
-      {/* Quick-mark hover overlay — tiny ✓ button in top-right corner */}
-      {!effectiveCell.isDisabled && (
-        <button
-          type="button"
-          onClick={quickMark}
-          disabled={quickPending}
-          title={effectiveCell.status === 'done' ? 'Undo (mark not done)' : 'Quick mark done'}
-          className={cn(
-            'absolute -top-1 -right-1 z-20 w-4 h-4 rounded-full border flex items-center justify-center transition-all duration-150',
-            'opacity-0 group-hover/cell:opacity-100 scale-75 group-hover/cell:scale-100',
-            effectiveCell.status === 'done'
-              ? 'bg-foreground-muted/20 border-foreground-muted/40 text-foreground-muted hover:bg-red-500/20 hover:border-red-400 hover:text-red-500'
-              : 'bg-emerald-500 border-emerald-600 text-white hover:bg-emerald-600 shadow-sm',
-            quickPending && 'animate-pulse'
-          )}
-        >
-          {effectiveCell.status === 'done'
-            ? <X className="w-2 h-2" />
-            : <Check className="w-2 h-2" />
-          }
-        </button>
-      )}
+        {/* Right: Score / Grade Display or Popover Trigger */}
+        {!effectiveCell.isDisabled && (
+          <button
+            type="button"
+            onClick={() => setOpen((o) => !o)}
+            title={
+              effectiveCell.rawScore !== null
+                ? `Score: ${effectiveCell.rawScore}/${totalMarks ?? '?'} — click to edit`
+                : 'Click to enter score & calculate grade'
+            }
+            className="flex-1 text-right pl-1 pr-0.5 text-[11px] font-mono font-bold truncate hover:text-primary transition-colors cursor-pointer select-none"
+          >
+            {effectiveCell.rawScore !== null ? (
+              <span>{displayValue}</span>
+            ) : isDone ? (
+              <span className="text-[10px] text-foreground-muted/70 hover:text-primary font-sans font-medium">
+                +score
+              </span>
+            ) : isSkipped ? (
+              <span className="text-[10px] text-foreground-muted font-sans font-medium">
+                skip
+              </span>
+            ) : (
+              <span className="text-foreground-muted/30 hover:text-foreground-muted text-[10px] font-mono">
+                —
+              </span>
+            )}
+          </button>
+        )}
+      </div>
 
       {open && !effectiveCell.isDisabled && (
         <CellPopover
@@ -406,9 +451,56 @@ export function PaperGrid({ userId, data, onRecordChange }: PaperGridProps) {
           All variants
         </span>
         <span className="text-[10px] text-foreground-muted">MM = Myanmar default</span>
-        {/* Year range filter */}
+        {/* Year range filter with Quick Presets */}
         <div className="flex items-center gap-2 text-xs text-foreground-muted">
           <span className="font-medium">Years:</span>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => {
+                setYearFrom('');
+                setYearTo('');
+              }}
+              className={cn(
+                'px-2 py-0.5 rounded-md text-[11px] font-medium transition-colors cursor-pointer',
+                yearFrom === '' && yearTo === ''
+                  ? 'bg-foreground text-background font-bold'
+                  : 'bg-background-secondary text-foreground-muted hover:text-foreground'
+              )}
+            >
+              All
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setYearFrom(maxYear - 2);
+                setYearTo(maxYear);
+              }}
+              className={cn(
+                'px-2 py-0.5 rounded-md text-[11px] font-medium transition-colors cursor-pointer',
+                yearFrom === maxYear - 2 && yearTo === maxYear
+                  ? 'bg-foreground text-background font-bold'
+                  : 'bg-background-secondary text-foreground-muted hover:text-foreground'
+              )}
+            >
+              Last 3 Yrs
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setYearFrom(maxYear - 4);
+                setYearTo(maxYear);
+              }}
+              className={cn(
+                'px-2 py-0.5 rounded-md text-[11px] font-medium transition-colors cursor-pointer',
+                yearFrom === maxYear - 4 && yearTo === maxYear
+                  ? 'bg-foreground text-background font-bold'
+                  : 'bg-background-secondary text-foreground-muted hover:text-foreground'
+              )}
+            >
+              Last 5 Yrs
+            </button>
+          </div>
           <input
             type="number"
             min={minYear}
@@ -416,7 +508,7 @@ export function PaperGrid({ userId, data, onRecordChange }: PaperGridProps) {
             value={yearFrom}
             onChange={(e) => setYearFrom(e.target.value ? Number(e.target.value) : '')}
             placeholder={String(minYear)}
-            className="w-20 px-2 py-1 rounded-lg border border-border bg-background font-mono text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="w-16 px-2 py-1 rounded-lg border border-border bg-background font-mono text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
           <span>–</span>
           <input
@@ -426,7 +518,7 @@ export function PaperGrid({ userId, data, onRecordChange }: PaperGridProps) {
             value={yearTo}
             onChange={(e) => setYearTo(e.target.value ? Number(e.target.value) : '')}
             placeholder={String(maxYear)}
-            className="w-20 px-2 py-1 rounded-lg border border-border bg-background font-mono text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="w-16 px-2 py-1 rounded-lg border border-border bg-background font-mono text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
         </div>
 
@@ -589,14 +681,14 @@ export function PaperGrid({ userId, data, onRecordChange }: PaperGridProps) {
                 <div className="text-xs font-mono text-foreground-muted">{row.totalMarks} marks</div>
               )}
             </div>
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
               {filteredSessions.map((s) => {
                 const sessionKey = `${s.year}-${s.series}`;
                 const cell = row.cells[sessionKey];
                 const paperId = cell?.paperId ?? row.paperId;
                 return (
-                  <div key={sessionKey} className="flex flex-col gap-1">
-                    <span className="text-[10px] font-mono text-foreground-muted text-center">{s.label}</span>
+                  <div key={sessionKey} className="flex flex-col gap-1.5 p-2 rounded-xl bg-background-secondary/40 border border-border/50">
+                    <span className="text-[11px] font-mono font-semibold text-foreground-muted text-center">{s.label}</span>
                     <GridCell
                       as="div"
                       cell={cell}
