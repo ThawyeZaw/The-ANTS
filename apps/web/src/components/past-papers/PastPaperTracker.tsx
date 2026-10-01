@@ -6,6 +6,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import {
   BookOpen,
@@ -23,19 +24,20 @@ import {
   GraduationCap,
   Table,
   LayoutGrid,
+  Route,
+  ArrowLeft,
+  Calculator,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getEnrolledSubjects, upsertPastPaperRecord } from '@/actions/past-papers';
 import { getGamificationProfile } from '@/actions/gamification';
-import { GamificationHeroStrip } from '@/components/gamification/GamificationHeroStrip';
 import { useGamificationFeedback } from '@/components/gamification/GamificationFeedbackProvider';
 import { getPaperGridData, type PaperGridData } from '@/actions/curriculum';
 import { PaperGrid } from './PaperGrid';
-import { SubjectProgressHeader } from './SubjectProgressHeader';
 import { PaperCard, type UserPaperRecord } from './PaperCard';
 import type { PastPaperData } from './InlineGradeCalc';
 import { useEdexcelSuiteSelectors } from '@/components/exam-data/useEdexcelSuiteSelectors';
-import { EdexcelSuiteSelectors } from '@/components/exam-data/EdexcelSuiteSelectors';
 import { groupEdexcelIalSubjects } from '@/lib/edexcel-ial';
 import { IalOptionalUnitsModal } from '@/components/curriculum/IalOptionalUnitsModal';
 
@@ -113,6 +115,8 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
   const [viewMode, setViewMode] = useState<'grid' | 'cards'>('grid');
   const [gridData, setGridData] = useState<PaperGridData | null>(null);
   const [isOptionalModalOpen, setIsOptionalModalOpen] = useState(false);
+  // Unit-group filter for combined Math+FM grid (Pure Core / Applied / Further Pure)
+  const [unitGroupFilter, setUnitGroupFilter] = useState<'all' | 'pure' | 'applied' | 'further'>('all');
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -125,15 +129,49 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
     return groupEdexcelIalSubjects(enrolledSubjects);
   }, [enrolledSubjects]);
 
+  // Detect if student takes Mathematics and/or Further Mathematics
+  const hasMathGroup = useMemo(
+    () => groupedSubjects.some((g) => g.title === 'Mathematics'),
+    [groupedSubjects]
+  );
+  const hasFmGroup = useMemo(
+    () => groupedSubjects.some((g) => g.title === 'Further Mathematics'),
+    [groupedSubjects]
+  );
+  const bothTaken = hasMathGroup && hasFmGroup;
+  // Always allow combined Math+FM if either Mathematics or Further Math is in enrolled subjects
+  const showCombinedMathFm = hasMathGroup || hasFmGroup;
+
+  // Virtual combined entry that appears at the top of the switcher when applicable
+  const combinedMathFmEntry = useMemo(() => {
+    if (!showCombinedMathFm) return null;
+    const mathGrp = groupedSubjects.find((g) => g.title === 'Mathematics');
+    const fmGrp = groupedSubjects.find((g) => g.title === 'Further Mathematics');
+    return {
+      id: 'subj-edx-ial-math-fm-group',
+      primarySubjectId: 'subj-edx-ial-math-fm-group',
+      title: 'Mathematics & Further Mathematics',
+      code: 'YMA01 + YFM01 (12 Units)',
+      isVirtual: true,
+      units: [...(mathGrp?.units ?? []), ...(fmGrp?.units ?? [])],
+      curriculum_id: mathGrp?.curriculum_id ?? fmGrp?.curriculum_id ?? 'curr-edexcel-ial',
+      hasOptionalUnits: true,
+      enrolledUnitsCount: (mathGrp?.enrolledUnitsCount ?? 0) + (fmGrp?.enrolledUnitsCount ?? 0),
+    };
+  }, [showCombinedMathFm, groupedSubjects]);
+
   const activeGroup = useMemo(() => {
+    if (selectedSubjectId === 'subj-edx-ial-math-fm-group' && combinedMathFmEntry) {
+      return combinedMathFmEntry;
+    }
     if (groupedSubjects.length === 0) return null;
-    if (!selectedSubjectId) return groupedSubjects[0];
+    if (!selectedSubjectId) return combinedMathFmEntry ?? groupedSubjects[0];
     return (
       groupedSubjects.find(
         (g) => g.id === selectedSubjectId || g.units.some((u) => u.id === selectedSubjectId)
-      ) ?? groupedSubjects[0]
+      ) ?? combinedMathFmEntry ?? groupedSubjects[0]
     );
-  }, [groupedSubjects, selectedSubjectId]);
+  }, [groupedSubjects, selectedSubjectId, combinedMathFmEntry]);
 
   // Load enrolled subjects & gamification stats
   const refreshUserData = async () => {
@@ -153,13 +191,34 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
 
       const groups = groupEdexcelIalSubjects(subjs);
       if (groups.length > 0) {
-        if (!selectedSubjectId) {
-          const fromUrl = subjectFromUrl
-            ? groups.find((g) => g.id === subjectFromUrl || g.units.some((u) => u.id === subjectFromUrl))
-            : null;
-          setSelectedSubjectId(fromUrl?.primarySubjectId ?? groups[0].primarySubjectId);
-        } else {
-          // If selectedSubjectId is one of the individual units, find its parent group and ensure we are using the primarySubjectId
+        const hasMath = groups.some((g) => g.title === 'Mathematics');
+        const hasFm = groups.some((g) => g.title === 'Further Mathematics');
+        const isBoth = hasMath && hasFm;
+
+        // Auto-select combined 12-unit view if Maths is taken or on math group, and sync URL
+        if (
+          !selectedSubjectId ||
+          selectedSubjectId === 'subj-edx-ial-math-group' ||
+          selectedSubjectId === 'subj-edx-ial-fmath-group' ||
+          subjectFromUrl === 'subj-edx-ial-math-fm-group'
+        ) {
+          if (subjectFromUrl && subjectFromUrl !== 'subj-edx-ial-math-group' && subjectFromUrl !== 'subj-edx-ial-fmath-group') {
+            const fromUrl = subjectFromUrl === 'subj-edx-ial-math-fm-group'
+              ? { primarySubjectId: 'subj-edx-ial-math-fm-group' }
+              : groups.find((g) => g.id === subjectFromUrl || g.units.some((u) => u.id === subjectFromUrl));
+            setSelectedSubjectId(fromUrl?.primarySubjectId ?? ((hasMath || hasFm) ? 'subj-edx-ial-math-fm-group' : groups[0].primarySubjectId));
+          } else if (hasMath || hasFm) {
+            // Default to combined 12-unit view for Double Mathematics
+            setSelectedSubjectId('subj-edx-ial-math-fm-group');
+            if (typeof window !== 'undefined') {
+              const url = new URL(window.location.href);
+              url.searchParams.set('subject', 'subj-edx-ial-math-fm-group');
+              window.history.replaceState(null, '', url.toString());
+            }
+          } else {
+            setSelectedSubjectId(groups[0].primarySubjectId);
+          }
+        } else if (selectedSubjectId !== 'subj-edx-ial-math-fm-group') {
           const matchingGroup = groups.find((g) => g.units.some((u) => u.id === selectedSubjectId));
           if (matchingGroup && selectedSubjectId !== matchingGroup.primarySubjectId) {
             setSelectedSubjectId(matchingGroup.primarySubjectId);
@@ -228,8 +287,26 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
     isSuite ? currentSubject?.qualification_data : null
   );
 
+  // IAL unit-group filter code sets (for combined Math+FM view)
+  const PURE_CORE_CODES = new Set(['WMA11', 'WMA12', 'WMA13', 'WMA14']);
+  const FURTHER_PURE_CODES = new Set(['WFM01', 'WFM02', 'WFM03']);
+  const APPLIED_CODES = new Set(['WME01', 'WME02', 'WME03', 'WST01', 'WST02', 'WST03', 'WDM11']);
+  const isCombinedMathFm = selectedSubjectId === 'subj-edx-ial-math-fm-group';
+
   const filteredGridData = useMemo(() => {
     if (!gridData) return null;
+
+    // Unit-group filter for combined Math+FM view
+    if (isCombinedMathFm && unitGroupFilter !== 'all') {
+      const allowed = unitGroupFilter === 'pure' ? PURE_CORE_CODES
+        : unitGroupFilter === 'further' ? FURTHER_PURE_CODES
+        : APPLIED_CODES;
+      return {
+        ...gridData,
+        rows: gridData.rows.filter((row) => allowed.has(row.paperNumber)),
+      };
+    }
+
     if (!isSuite || suiteSelectors.activeUnits.size === 0) return gridData;
 
     return {
@@ -239,7 +316,7 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
          return suiteSelectors.activeUnits.has(baseCode) || suiteSelectors.activeUnits.has(row.paperNumber);
       })
     };
-  }, [gridData, isSuite, suiteSelectors.activeUnits]);
+  }, [gridData, isSuite, suiteSelectors.activeUnits, isCombinedMathFm, unitGroupFilter]);
 
   useEffect(() => {
     if (!filteredGridData) {
@@ -375,196 +452,192 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
   }, [papers, records]);
 
   return (
-    <div className="space-y-8 animate-fade-in pb-16 max-w-7xl mx-auto">
-      {/* ── Top Hero & Gamification Ribbon ─────────────────────────────────── */}
-      <div className="rounded-3xl border border-border bg-background-card p-6 sm:p-8 shadow-xs">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          {/* Title & Subject Info */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
-                <BookOpen className="w-3.5 h-3.5" />
-                Past Paper Tracker
+    <div className="space-y-4 animate-fade-in pb-16 max-w-7xl mx-auto">
+      {/* ── Compact Past Paper Tracker Toolbar & Progress Ribbon ─────────── */}
+      <div className="rounded-2xl border border-border bg-background-card p-3 sm:p-4 shadow-2xs space-y-3">
+        {/* Row 1: Subject Selector, Codes, Action buttons & Controls */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          {/* Left: Dropdown, Award Badge & Modal Links */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="min-w-[200px] max-w-xs sm:max-w-md">
+              <select
+                value={isCombinedMathFm ? 'subj-edx-ial-math-fm-group' : (activeGroup?.id ?? selectedSubjectId)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === 'subj-edx-ial-math-fm-group') {
+                    setSelectedSubjectId('subj-edx-ial-math-fm-group');
+                    setUnitGroupFilter('all');
+                    if (typeof window !== 'undefined') {
+                      const url = new URL(window.location.href);
+                      url.searchParams.set('subject', 'subj-edx-ial-math-fm-group');
+                      window.history.replaceState(null, '', url.toString());
+                    }
+                    return;
+                  }
+                  const grp = groupedSubjects.find((g) => g.id === val);
+                  if (grp) {
+                    setSelectedSubjectId(grp.primarySubjectId);
+                    setUnitGroupFilter('all');
+                    if (typeof window !== 'undefined') {
+                      const url = new URL(window.location.href);
+                      url.searchParams.set('subject', grp.primarySubjectId);
+                      window.history.replaceState(null, '', url.toString());
+                    }
+                  }
+                }}
+                className="w-full rounded-xl border border-border bg-background-secondary px-3 py-1.5 text-xs sm:text-sm font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer shadow-2xs"
+              >
+                {groupedSubjects.length === 0 && (
+                  <option value="">No subjects enrolled</option>
+                )}
+                {/* Combined entry at top for Maths / Double Maths */}
+                {combinedMathFmEntry && (
+                  <option value="subj-edx-ial-math-fm-group">
+                    ✦ Mathematics & Further Mathematics (Combined · 12 Units)
+                  </option>
+                )}
+                {groupedSubjects.map((grp) => (
+                  <option key={grp.id} value={grp.id}>
+                    {grp.code ? `${grp.code} — ` : ''}{grp.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-lg text-[11px] font-mono font-bold bg-primary/10 text-primary border border-primary/20">
+              {activeGroup?.code ?? currentSubject?.code ?? 'IAL'}
+            </span>
+
+            {/* Customize Units modal button */}
+            {activeGroup?.hasOptionalUnits && (
+              <button
+                type="button"
+                onClick={() => setIsOptionalModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-foreground-secondary hover:text-foreground bg-background-secondary hover:bg-background-tertiary border border-border transition-colors cursor-pointer shadow-2xs"
+              >
+                <SlidersHorizontal className="w-3.5 h-3.5 text-primary" />
+                <span>Customize Units</span>
+              </button>
+            )}
+
+            {/* Calculator Quick Link */}
+            <Link
+              href="/tools/calculator"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-foreground-secondary hover:text-foreground bg-background-secondary hover:bg-background-tertiary border border-border transition-colors shadow-2xs"
+            >
+              <Calculator className="w-3.5 h-3.5 text-amber-500" />
+              <span className="hidden xs:inline">Calculator</span>
+            </Link>
+          </div>
+
+          {/* Right: Streak & XP Badge + View Switcher */}
+          <div className="flex items-center gap-2">
+            <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-xl bg-background-secondary border border-border text-xs font-semibold text-foreground-secondary">
+              <span className="flex items-center gap-1 text-amber-500">
+                <Flame className="w-3.5 h-3.5" />
+                <span className="font-mono font-bold">{gamification.currentStreak}d</span>
               </span>
-              <span className="text-xs font-semibold text-foreground-muted">
-                {activeGroup?.units?.[0]?.curriculum?.name ??
-                  (activeGroup?.isVirtual ? 'Pearson Edexcel IAL' : currentSubject?.curriculum?.name)}
+              <span className="text-border">|</span>
+              <span className="flex items-center gap-1 text-foreground">
+                <Award className="w-3.5 h-3.5 text-primary" />
+                <span>Lvl {gamification.level}</span>
+                <span className="font-mono text-foreground-muted font-normal text-[11px]">({gamification.totalXp} XP)</span>
               </span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
-              {activeGroup
-                ? `${activeGroup.title} (${activeGroup.code})`
-                : currentSubject
-                ? `${currentSubject.name} (${currentSubject.code})`
-                : 'Select a Subject'}
-            </h1>
-            <p className="text-xs sm:text-sm text-foreground-muted max-w-xl leading-relaxed">
-              Track your solved papers, input raw marks per component, and calculate your exact official grade boundary scores.
-            </p>
-          </div>
-
-          <GamificationHeroStrip
-            level={gamification.level}
-            totalXp={gamification.totalXp}
-            rankTitle={gamification.rankTitle}
-            currentStreak={gamification.currentStreak}
-            longestStreak={gamification.longestStreak}
-          />
-        </div>
-
-        {/* Enrolled Subjects Switcher Bar */}
-        <div className="mt-6 pt-6 border-t border-border flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex-1 max-w-xs min-w-[200px]">
-            <select
-              value={activeGroup?.id ?? selectedSubjectId}
-              onChange={(e) => {
-                const grp = groupedSubjects.find((g) => g.id === e.target.value);
-                if (grp) {
-                  setSelectedSubjectId(grp.primarySubjectId);
-                  if (typeof window !== 'undefined') {
-                    const url = new URL(window.location.href);
-                    url.searchParams.set('subject', grp.primarySubjectId);
-                    window.history.replaceState(null, '', url.toString());
-                  }
-                }
-              }}
-              className="w-full rounded-xl border border-border bg-background-secondary px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
-            >
-              {groupedSubjects.length === 0 && (
-                <option value="">No subjects enrolled</option>
-              )}
-              {groupedSubjects.map((grp) => (
-                <option key={grp.id} value={grp.id}>
-                  {grp.code ? `${grp.code} — ` : ''}{grp.title}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            {/* View Mode Toggle */}
-            <div className="flex items-center gap-1 bg-background-secondary p-1 rounded-xl border border-border">
+            {/* View Mode Switcher */}
+            <div className="flex items-center gap-0.5 bg-background-secondary p-0.5 rounded-xl border border-border">
               <button
                 type="button"
                 onClick={() => setViewMode('grid')}
                 className={cn(
-                  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer',
+                  'flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer',
                   viewMode === 'grid'
-                    ? 'bg-primary text-primary-foreground shadow-xs'
+                    ? 'bg-primary text-primary-foreground shadow-2xs'
                     : 'text-foreground-muted hover:text-foreground'
                 )}
               >
                 <Table className="h-3.5 w-3.5" />
-                Excel Grid
+                <span>Grid</span>
               </button>
               <button
                 type="button"
                 onClick={() => setViewMode('cards')}
                 className={cn(
-                  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer',
+                  'flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer',
                   viewMode === 'cards'
-                    ? 'bg-primary text-primary-foreground shadow-xs'
+                    ? 'bg-primary text-primary-foreground shadow-2xs'
                     : 'text-foreground-muted hover:text-foreground'
                 )}
               >
                 <LayoutGrid className="h-3.5 w-3.5" />
-                Cards
+                <span>Cards</span>
               </button>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* ── Progress Stats Summary ────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        <div className="p-5 rounded-3xl border border-border bg-background-card shadow-xs space-y-1">
-          <span className="text-xs font-medium text-foreground-muted flex items-center gap-1.5">
-            <Layers className="w-3.5 h-3.5 text-primary" />
-            Total Papers
-          </span>
-          <p className="text-2xl font-bold font-mono text-foreground">
-            {stats.total}
-          </p>
-        </div>
+        {/* Row 2: Progress Bar & High-Density Stats Strip */}
+        <div className="pt-2.5 border-t border-border flex flex-wrap items-center justify-between gap-3 text-xs">
+          {/* Progress Counters & Bar */}
+          <div className="flex items-center gap-3 flex-1 min-w-[240px]">
+            <div className="flex items-center gap-1.5 font-semibold text-foreground">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+              <span>{stats.done} / {stats.total} Papers Completed</span>
+              <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                ({stats.percentDone}%)
+              </span>
+            </div>
+            <div className="flex-1 max-w-xs h-1.5 rounded-full bg-background-secondary overflow-hidden border border-border/40">
+              <div
+                className="h-full bg-emerald-500 rounded-full transition-all duration-300"
+                style={{ width: `${Math.min(100, stats.percentDone)}%` }}
+              />
+            </div>
+          </div>
 
-        <div className="p-5 rounded-3xl border border-border bg-background-card shadow-xs space-y-1">
-          <span className="text-xs font-medium text-foreground-muted flex items-center gap-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-            Completed
-          </span>
-          <div className="flex items-baseline gap-2">
-            <p className="text-2xl font-bold font-mono text-foreground">
-              {stats.done}
-            </p>
-            <span className="text-xs font-mono text-emerald-600 dark:text-emerald-400 font-bold">
-              ({stats.percentDone}%)
+          {/* Inline Metrics */}
+          <div className="flex items-center gap-3 font-mono text-[11px] text-foreground-muted shrink-0">
+            <span className="flex items-center gap-1">
+              <BarChart3 className="w-3.5 h-3.5 text-sky-500" />
+              <span>Avg:</span>
+              <strong className="text-foreground">{stats.avgScore !== null ? `${stats.avgScore}%` : '—'}</strong>
+            </span>
+            <span className="text-border">·</span>
+            <span className="flex items-center gap-1">
+              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+              <span>Skipped:</span>
+              <strong className="text-foreground">{stats.skipped}</strong>
             </span>
           </div>
         </div>
-
-        <div className="p-5 rounded-3xl border border-border bg-background-card shadow-xs space-y-1">
-          <span className="text-xs font-medium text-foreground-muted flex items-center gap-1.5">
-            <BarChart3 className="w-3.5 h-3.5 text-sky-500" />
-            Average Score
-          </span>
-          <p className="text-2xl font-bold font-mono text-foreground">
-            {stats.avgScore !== null ? `${stats.avgScore}%` : '—'}
-          </p>
-        </div>
-
-        <div className="p-5 rounded-3xl border border-border bg-background-card shadow-xs space-y-1">
-          <span className="text-xs font-medium text-foreground-muted flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            Skipped
-          </span>
-          <p className="text-2xl font-bold font-mono text-foreground">
-            {stats.skipped}
-          </p>
-        </div>
       </div>
 
-      {/* ── Subject progress header ─────────────────────────────────────────── */}
-      {currentSubject && gridData && !loading && (
-        <SubjectProgressHeader
-          subjectId={activeGroup?.primarySubjectId ?? currentSubject.id}
-          subjectName={activeGroup?.title ?? currentSubject.name}
-          syllabusCode={activeGroup?.code ?? currentSubject.code}
-          curriculumId={activeGroup?.curriculum_id ?? currentSubject.curriculum_id}
-          progress={gridData.progress}
-          awardLevel={gridData.awardLevel}
-          paperPreferences={gridData.paperPreferences}
-          tier={gridData.tier ?? currentSubject.tier}
-          onEditRoute={activeGroup?.hasOptionalUnits ? () => setIsOptionalModalOpen(true) : undefined}
-        />
-      )}
-
-      {isSuite && (
-        <div className="p-4 sm:p-5 rounded-3xl border border-border bg-background-card shadow-xs space-y-4 animate-fade-in">
-           <div className="space-y-1.5">
-             <label className="block text-xs font-bold uppercase tracking-wider text-foreground-secondary">
-               Target Cash-In / Award
-             </label>
-             <select
-               value={suiteSelectors.selectedCashIn}
-               onChange={(e) => suiteSelectors.setSelectedCashIn(e.target.value)}
-               className="w-full md:w-1/2 bg-background-secondary border border-border rounded-2xl py-3 px-4 text-xs font-bold text-foreground outline-none focus:border-primary transition-colors"
-             >
-               {suiteSelectors.availableCashIns.map((q: any) => (
-                 <option key={q.cashInCode} value={q.cashInCode}>
-                   {q.cashInCode} &middot; {q.qualificationTitle}
-                 </option>
-               ))}
-             </select>
-           </div>
-           
-           <EdexcelSuiteSelectors
-              activeQualification={suiteSelectors.activeQualification}
-              selectedElectives={suiteSelectors.selectedElectives}
-              handleElectiveToggle={suiteSelectors.handleElectiveToggle}
-              selectedPairIndex={suiteSelectors.selectedPairIndex}
-              setSelectedPairIndex={suiteSelectors.setSelectedPairIndex}
-           />
+      {/* ── Unit-Group Filter Tabs (Combined Maths+FM only) ──────────────── */}
+      {isCombinedMathFm && !loading && gridData && (
+        <div className="flex flex-wrap items-center gap-1.5 rounded-2xl border border-border bg-background-card p-1.5 text-xs shadow-xs">
+          {([
+            { id: 'all', label: `All ${gridData.rows.length} Units`, icon: '✦', count: gridData.rows.length },
+            { id: 'pure', label: 'Pure Core (P1–P4)', icon: '📐', count: gridData.rows.filter((r) => PURE_CORE_CODES.has(r.paperNumber)).length },
+            { id: 'applied', label: 'Applied (M·S·D)', icon: '📊', count: gridData.rows.filter((r) => APPLIED_CODES.has(r.paperNumber)).length },
+            { id: 'further', label: 'Further Pure (FP1–FP3)', icon: '∞', count: gridData.rows.filter((r) => FURTHER_PURE_CODES.has(r.paperNumber)).length },
+          ] as const).map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setUnitGroupFilter(tab.id as typeof unitGroupFilter)}
+              className={cn(
+                'inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 font-semibold transition-all cursor-pointer',
+                unitGroupFilter === tab.id
+                  ? 'bg-primary text-primary-foreground shadow-2xs font-bold'
+                  : 'text-foreground-muted hover:text-foreground hover:bg-background-secondary'
+              )}
+            >
+              <span>{tab.icon}</span>
+              <span>{tab.label}</span>
+              <span className="font-mono text-[10px] opacity-75">({tab.count})</span>
+            </button>
+          ))}
         </div>
       )}
 

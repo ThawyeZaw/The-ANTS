@@ -287,6 +287,16 @@ export async function logPomodoroSessionAction(
         completed_at: new Date(input.completedAt),
         notes: input.notes ?? null,
       });
+
+      if (input.sessionType === 'past_paper' && input.durationMinutes >= 15) {
+        gamification = await awardXp(
+          userId,
+          POMODORO_XP_AMOUNT,
+          'pomodoro',
+          sessionId,
+          `Completed past paper mock exam (${input.durationMinutes}m)`
+        );
+      }
     }
 
     return { success: true, gamification };

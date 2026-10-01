@@ -588,7 +588,9 @@ export async function getPaperGridData(
     let sortedSiblings: (typeof subject)[] = [];
 
     if (isEdexcelIal) {
-      const workspaceGroupId = resolveIalWorkspaceGroupId(subjectId);
+      // Handle the synthetic combined Math+Further Maths workspace ID
+      const isCombinedMathFm = subjectId === 'subj-edx-ial-math-fm-group';
+      const workspaceGroupId = isCombinedMathFm ? subjectId : resolveIalWorkspaceGroupId(subjectId);
       const idForGrouping = workspaceGroupId ?? subjectId;
       const suffix = idForGrouping.replace('subj-edx-ial-', '');
       const prefixMatch = suffix.match(/^[a-z]+/);
@@ -598,7 +600,100 @@ export async function getPaperGridData(
       let isFurtherMath = false;
       let defaultCashIn = 'YMA01';
 
-      if (prefix === 'mech' || prefix === 'stat') {
+      // Combined Math & Further Mathematics: Resolve the 12 units selected by user
+      if (isCombinedMathFm) {
+        ialGroupTitle = 'Mathematics & Further Mathematics';
+        const { IAL_MATHS_SUITE_UNIT_ORDER } = await import('@/lib/grading/ial-cash-in');
+        const currId = 'curr-edexcel-ial';
+
+        // 1. Query user's cash-in enrollments for both Mathematics and Further Mathematics
+        const userCashIns = await db.query.userCashInEnrollments.findMany({
+          where: and(
+            eq(userCashInEnrollments.user_id, userId),
+            inArray(userCashInEnrollments.cash_in_code, ['YMA01', 'XMA01', 'YFM01', 'XFM01'])
+          ),
+        });
+
+        const cashInUnits = userCashIns.flatMap((row) =>
+          Array.isArray(row.selected_units) ? (row.selected_units as string[]) : []
+        );
+
+        // 2. Query user's direct unit enrollments in IAL curriculum
+        const userUnitEnrollments = await db.query.userEnrollments.findMany({
+          where: eq(userEnrollments.user_id, userId),
+          with: {
+            subject: {
+              columns: { id: true, code: true, curriculum_id: true },
+            },
+          },
+        });
+
+        const enrolledUnitCodes = userUnitEnrollments
+          .map((e) => e.subject?.code)
+          .filter((code): code is string =>
+            Boolean(code && (IAL_MATHS_SUITE_UNIT_ORDER as readonly string[]).includes(code))
+          );
+
+        // Combine all user selected and enrolled unit codes
+        const userSelectedCodesSet = new Set<string>([...cashInUnits, ...enrolledUnitCodes]);
+
+        // 3. Assemble exactly 12 units for Double Mathematics (Mathematics + Further Mathematics):
+        // Compulsory for A Level Mathematics: WMA11 (P1), WMA12 (P2), WMA13 (P3), WMA14 (P4)
+        // Compulsory for A Level Further Mathematics: WFM01 (FP1)
+        const compulsoryCodes = ['WMA11', 'WMA12', 'WMA13', 'WMA14', 'WFM01'];
+        const chosen12Codes = new Set<string>();
+
+        for (const code of compulsoryCodes) {
+          chosen12Codes.add(code);
+        }
+
+        // Add any other units the user explicitly selected or enrolled in (in spec order)
+        for (const code of IAL_MATHS_SUITE_UNIT_ORDER) {
+          if (chosen12Codes.size >= 12) break;
+          if (userSelectedCodesSet.has(code)) {
+            chosen12Codes.add(code);
+          }
+        }
+
+        // If fewer than 12 units selected, fill remaining slots with standard Double Maths fallback units
+        const standardFallbackOrder = [
+          'WFM02', // FP2
+          'WFM03', // FP3
+          'WME01', // M1
+          'WME02', // M2
+          'WST01', // S1
+          'WST02', // S2
+          'WST03', // S3
+          'WDM11', // D1
+          'WME03', // M3
+        ];
+        for (const code of standardFallbackOrder) {
+          if (chosen12Codes.size >= 12) break;
+          chosen12Codes.add(code);
+        }
+
+        // Order the final 12 units strictly in canonical suite order
+        const target12Codes = IAL_MATHS_SUITE_UNIT_ORDER.filter((code) =>
+          chosen12Codes.has(code)
+        );
+
+        const siblingSubjects = await db.query.subjects.findMany({
+          where: and(
+            eq(subjects.curriculum_id, currId),
+            inArray(subjects.code, target12Codes)
+          ),
+        });
+
+        sortedSiblings = target12Codes
+          .map((c) => siblingSubjects.find((s) => s.code === c))
+          .filter(Boolean) as (typeof subject)[];
+
+        for (const s of sortedSiblings) {
+          if (s) ialUnitSubjectMap.set(s.id, s);
+        }
+      }
+
+      if (!isCombinedMathFm && (prefix === 'mech' || prefix === 'stat')) {
         const num = suffix.replace(prefix, '');
         if (num === '1') {
           isMath = true;
@@ -609,15 +704,15 @@ export async function getPaperGridData(
           ialGroupTitle = 'Further Mathematics';
           defaultCashIn = 'YFM01';
         }
-      } else if (prefix === 'pure' || prefix === 'dec' || prefix === 'math') {
+      } else if (!isCombinedMathFm && (prefix === 'pure' || prefix === 'dec' || prefix === 'math')) {
         isMath = true;
         ialGroupTitle = 'Mathematics';
         defaultCashIn = 'YMA01';
-      } else if (prefix === 'fmath') {
+      } else if (!isCombinedMathFm && prefix === 'fmath') {
         isFurtherMath = true;
         ialGroupTitle = 'Further Mathematics';
         defaultCashIn = 'YFM01';
-      } else {
+      } else if (!isCombinedMathFm) {
         const prefixMap: Record<string, { title: string; code: string }> = {
           phys: { title: 'Physics', code: 'YPH11' },
           chem: { title: 'Chemistry', code: 'YCH11' },
@@ -636,85 +731,88 @@ export async function getPaperGridData(
         defaultCashIn = m?.code ?? '';
       }
 
-      const validCashIns = isFurtherMath
-        ? ['YFM01', 'XFM01']
-        : isMath
-        ? ['YMA01', 'XMA01']
-        : defaultCashIn
-        ? [defaultCashIn]
-        : [];
 
-      let targetUnitCodes: string[] = [];
-      if (validCashIns.length > 0) {
-        const userCashIn = await db.query.userCashInEnrollments.findFirst({
-          where: and(
-            eq(userCashInEnrollments.user_id, userId),
-            inArray(userCashInEnrollments.cash_in_code, validCashIns)
-          ),
-        });
-        if (
-          userCashIn?.selected_units &&
-          Array.isArray(userCashIn.selected_units) &&
-          userCashIn.selected_units.length > 0
-        ) {
-          targetUnitCodes = userCashIn.selected_units;
-        }
-      }
+      if (!isCombinedMathFm) {
+        const validCashIns = isFurtherMath
+          ? ['YFM01', 'XFM01']
+          : isMath
+          ? ['YMA01', 'XMA01']
+          : defaultCashIn
+          ? [defaultCashIn]
+          : [];
 
-      if (workspaceGroupId && curriculumId) {
-        const catalog = await db.query.subjects.findMany({
-          where: eq(subjects.curriculum_id, curriculumId),
-          columns: { id: true, code: true },
-        });
-        const groupUnitIds = getIalGroupUnitIds(workspaceGroupId, catalog);
-        if (groupUnitIds.length > 0) {
-          const enrolledRows = await db.query.userEnrollments.findMany({
+        let targetUnitCodes: string[] = [];
+        if (validCashIns.length > 0) {
+          const userCashIn = await db.query.userCashInEnrollments.findFirst({
             where: and(
-              eq(userEnrollments.user_id, userId),
-              inArray(userEnrollments.subject_id, groupUnitIds)
+              eq(userCashInEnrollments.user_id, userId),
+              inArray(userCashInEnrollments.cash_in_code, validCashIns)
             ),
-            columns: { subject_id: true },
           });
-          if (enrolledRows.length > 0) {
-            const codeById = new Map(catalog.map((s) => [s.id, s.code]));
-            targetUnitCodes = enrolledRows
-              .map((r) => codeById.get(r.subject_id))
-              .filter((c): c is string => Boolean(c));
+          if (
+            userCashIn?.selected_units &&
+            Array.isArray(userCashIn.selected_units) &&
+            userCashIn.selected_units.length > 0
+          ) {
+            targetUnitCodes = userCashIn.selected_units;
           }
         }
-      }
 
-      if (targetUnitCodes.length === 0) {
-        if (isMath) {
-          targetUnitCodes = ['WMA11', 'WMA12', 'WMA13', 'WMA14', 'WME01', 'WST01'];
-        } else if (isFurtherMath) {
-          targetUnitCodes = ['WFM01', 'WFM02', 'WFM03', 'WME02', 'WST02', 'WST03'];
-        } else if (defaultCashIn) {
-          const { IAL_CASH_INS } = await import('@/lib/grading/ial-cash-in');
-          const award = IAL_CASH_INS[defaultCashIn as keyof typeof IAL_CASH_INS];
-          if (award) {
-            targetUnitCodes = [...award.compulsory, ...award.optional];
+        if (workspaceGroupId && curriculumId) {
+          const catalog = await db.query.subjects.findMany({
+            where: eq(subjects.curriculum_id, curriculumId),
+            columns: { id: true, code: true },
+          });
+          const groupUnitIds = getIalGroupUnitIds(workspaceGroupId, catalog);
+          if (groupUnitIds.length > 0) {
+            const enrolledRows = await db.query.userEnrollments.findMany({
+              where: and(
+                eq(userEnrollments.user_id, userId),
+                inArray(userEnrollments.subject_id, groupUnitIds)
+              ),
+              columns: { subject_id: true },
+            });
+            if (enrolledRows.length > 0) {
+              const codeById = new Map(catalog.map((s) => [s.id, s.code]));
+              targetUnitCodes = enrolledRows
+                .map((r) => codeById.get(r.subject_id))
+                .filter((c): c is string => Boolean(c));
+            }
           }
         }
-      }
 
-      if (targetUnitCodes.length > 0 && curriculumId) {
-        const siblingSubjects = await db.query.subjects.findMany({
-          where: and(
-            eq(subjects.curriculum_id, curriculumId),
-            inArray(subjects.code, targetUnitCodes)
-          ),
-        });
-
-        sortedSiblings = targetUnitCodes
-          .map((c) => siblingSubjects.find((s) => s.code === c))
-          .filter(Boolean) as (typeof subject)[];
-
-        for (const s of sortedSiblings) {
-          if (s) ialUnitSubjectMap.set(s.id, s);
+        if (targetUnitCodes.length === 0) {
+          if (isMath) {
+            targetUnitCodes = ['WMA11', 'WMA12', 'WMA13', 'WMA14', 'WME01', 'WST01'];
+          } else if (isFurtherMath) {
+            targetUnitCodes = ['WFM01', 'WFM02', 'WFM03', 'WME02', 'WST02', 'WST03'];
+          } else if (defaultCashIn) {
+            const { IAL_CASH_INS } = await import('@/lib/grading/ial-cash-in');
+            const award = IAL_CASH_INS[defaultCashIn as keyof typeof IAL_CASH_INS];
+            if (award) {
+              targetUnitCodes = [...award.compulsory, ...award.optional];
+            }
+          }
         }
-      }
-    }
+
+        if (targetUnitCodes.length > 0 && curriculumId) {
+          const siblingSubjects = await db.query.subjects.findMany({
+            where: and(
+              eq(subjects.curriculum_id, curriculumId),
+              inArray(subjects.code, targetUnitCodes)
+            ),
+          });
+
+          sortedSiblings = targetUnitCodes
+            .map((c) => siblingSubjects.find((s) => s.code === c))
+            .filter(Boolean) as (typeof subject)[];
+
+          for (const s of sortedSiblings) {
+            if (s) ialUnitSubjectMap.set(s.id, s);
+          }
+        }
+      } // end !isCombinedMathFm
+    } // end if (isEdexcelIal)
 
     const targetSubjectIds = isEdexcelIal && sortedSiblings.length > 0
       ? sortedSiblings.map((s) => s!.id)

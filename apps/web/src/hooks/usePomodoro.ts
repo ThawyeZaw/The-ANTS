@@ -2,12 +2,15 @@
 
 // ──────────────────────────────────────────────────────────────────────────────
 // The ANTs — usePomodoro Hook
-// Absolute-timestamp timer. Settings, session, and stats persist in localStorage.
+// Dual-mode: Adaptive Pomodoro + Past Paper Exam Simulator.
+// Absolute-timestamp timer with Web Audio synthesis & Cambridge/Edexcel alerts.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type {
   TimerPhase,
+  TimerMode,
+  PastPaperSessionConfig,
   PomodoroSettings,
   ActiveSessionSnapshot,
   PomodoroDailyEntry,
@@ -32,6 +35,7 @@ import {
   stopSound,
   disposeAudio,
   playChime,
+  playExamWarningChime,
 } from '@/lib/pomodoro/audio-engine';
 
 const PARTIAL_SESSION_MIN_MS = 15_000;
@@ -66,7 +70,14 @@ function daysAgoKey(days: number): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function getPhaseDurationMs(phase: TimerPhase, settings: PomodoroSettings): number {
+export function getTimerDurationMs(
+  phase: TimerPhase,
+  settings: PomodoroSettings,
+  pastPaper?: PastPaperSessionConfig | null,
+): number {
+  if (phase === 'past_paper') {
+    return (pastPaper?.durationMinutes ?? 90) * 60 * 1000;
+  }
   switch (phase) {
     case 'focus':
       return settings.focusMinutes * 60 * 1000;
@@ -77,12 +88,11 @@ function getPhaseDurationMs(phase: TimerPhase, settings: PomodoroSettings): numb
   }
 }
 
-function getElapsedFocusMs(
+function getElapsedMs(
   session: ActiveSessionSnapshot,
   settings: PomodoroSettings,
 ): number {
-  if (session.phase !== 'focus') return 0;
-  const total = getPhaseDurationMs('focus', settings);
+  const total = getTimerDurationMs(session.phase, settings, session.pastPaperConfig);
   const remaining =
     !session.isPaused && session.endsAt !== null
       ? Math.max(0, session.endsAt - Date.now())
@@ -90,13 +100,13 @@ function getElapsedFocusMs(
   return Math.max(0, total - remaining);
 }
 
-function elapsedFocusMinutes(
+function elapsedMinutes(
   session: ActiveSessionSnapshot,
   settings: PomodoroSettings,
 ): number {
-  const elapsedMs = getElapsedFocusMs(session, settings);
-  if (elapsedMs < PARTIAL_SESSION_MIN_MS) return 0;
-  return Math.max(1, Math.round(elapsedMs / 60_000));
+  const elapsed = getElapsedMs(session, settings);
+  if (elapsed < PARTIAL_SESSION_MIN_MS) return 0;
+  return Math.max(1, Math.round(elapsed / 60_000));
 }
 
 function applyLocalFocusLog(
@@ -124,7 +134,10 @@ function applyLocalFocusLog(
 }
 
 function clampDuration(phase: TimerPhase, value: number): number {
-  const map: Record<TimerPhase, 'focus' | 'shortBreak' | 'longBreak'> = {
+  if (phase === 'past_paper') {
+    return Math.max(DURATION_BOUNDS.pastPaper.min, Math.min(DURATION_BOUNDS.pastPaper.max, value));
+  }
+  const map: Record<'focus' | 'short_break' | 'long_break', 'focus' | 'shortBreak' | 'longBreak'> = {
     focus: 'focus',
     short_break: 'shortBreak',
     long_break: 'longBreak',
@@ -181,16 +194,31 @@ function emptyStats(): PomodoroStatsLog {
   return { entries: [], currentStreak: 0, longestStreak: 0, allTimeFocusMinutes: 0 };
 }
 
+const DEFAULT_PAST_PAPER: PastPaperSessionConfig = {
+  board: 'CAIE',
+  curriculumId: 'curr-caie-igcse',
+  subjectCode: '0580',
+  subjectName: 'Mathematics',
+  paperNumber: 'Paper 2',
+  paperName: 'Paper 2 (Extended)',
+  durationMinutes: 90,
+  totalMarks: 70,
+  strictMode: false,
+};
+
 function defaultSession(settings: PomodoroSettings): ActiveSessionSnapshot {
   return {
     phase: 'focus',
+    timerMode: 'pomodoro',
     isPaused: true,
     endsAt: null,
-    remainingMsWhenPaused: getPhaseDurationMs('focus', settings),
+    remainingMsWhenPaused: getTimerDurationMs('focus', settings, null),
     cyclesCompletedToday: 0,
     sessionLabel: null,
     focusStartedAt: null,
     focusToken: null,
+    pastPaperConfig: DEFAULT_PAST_PAPER,
+    warningsTriggered: { fifteenMin: false, fiveMin: false },
   };
 }
 
@@ -200,37 +228,67 @@ function normalizeSession(
 ): ActiveSessionSnapshot {
   if (!stored) return defaultSession(settings);
 
+  const pastPaperConfig = stored.pastPaperConfig ?? DEFAULT_PAST_PAPER;
+  const timerMode = stored.timerMode ?? (stored.phase === 'past_paper' ? 'past_paper' : 'pomodoro');
+  const phase = stored.phase ?? (timerMode === 'past_paper' ? 'past_paper' : 'focus');
+
   if (stored.endsAt !== null && stored.endsAt <= Date.now()) {
-    if (stored.phase === 'focus') {
-      logCompletedFocusStandalone(settings);
+    if (phase === 'focus' || phase === 'past_paper') {
+      const minutes = phase === 'past_paper' ? pastPaperConfig.durationMinutes : settings.focusMinutes;
+      logCompletedStandalone(minutes);
+      if (phase === 'past_paper') {
+        return {
+          phase: 'past_paper',
+          timerMode: 'past_paper',
+          isPaused: true,
+          endsAt: null,
+          remainingMsWhenPaused: getTimerDurationMs('past_paper', settings, pastPaperConfig),
+          cyclesCompletedToday: stored.cyclesCompletedToday + 1,
+          sessionLabel: stored.sessionLabel,
+          focusStartedAt: null,
+          focusToken: null,
+          pastPaperConfig,
+          warningsTriggered: { fifteenMin: false, fiveMin: false },
+        };
+      }
       const newCycle = stored.cyclesCompletedToday + 1;
       const nextPhase =
         newCycle % settings.cyclesBeforeLongBreak === 0 ? 'long_break' : 'short_break';
       return {
         phase: nextPhase,
+        timerMode: 'pomodoro',
         isPaused: true,
         endsAt: null,
-        remainingMsWhenPaused: getPhaseDurationMs(nextPhase, settings),
+        remainingMsWhenPaused: getTimerDurationMs(nextPhase, settings, null),
         cyclesCompletedToday: newCycle,
         sessionLabel: stored.sessionLabel,
         focusStartedAt: null,
         focusToken: null,
+        pastPaperConfig,
+        warningsTriggered: { fifteenMin: false, fiveMin: false },
       };
     }
     return {
       phase: 'focus',
+      timerMode: 'pomodoro',
       isPaused: true,
       endsAt: null,
-      remainingMsWhenPaused: getPhaseDurationMs('focus', settings),
+      remainingMsWhenPaused: getTimerDurationMs('focus', settings, null),
       cyclesCompletedToday: stored.cyclesCompletedToday,
       sessionLabel: stored.sessionLabel,
       focusStartedAt: null,
       focusToken: null,
+      pastPaperConfig,
+      warningsTriggered: { fifteenMin: false, fiveMin: false },
     };
   }
 
   return {
     ...stored,
+    timerMode,
+    phase,
+    pastPaperConfig,
+    warningsTriggered: stored.warningsTriggered ?? { fifteenMin: false, fiveMin: false },
     focusStartedAt: stored.focusStartedAt ?? null,
     focusToken: stored.focusToken ?? null,
     sessionLabel: stored.sessionLabel ?? null,
@@ -239,6 +297,7 @@ function normalizeSession(
 
 export interface UsePomodoroReturn {
   phase: TimerPhase;
+  timerMode: TimerMode;
   remainingMs: number;
   totalMs: number;
   isPaused: boolean;
@@ -247,13 +306,18 @@ export interface UsePomodoroReturn {
   sessionLabel: string | null;
   settings: PomodoroSettings;
   stats: PomodoroStatsLog;
+  pastPaperConfig: PastPaperSessionConfig;
+  activeExamAlert: '15m' | '5m' | null;
   start: () => void;
   pause: () => void;
   resume: () => void;
   reset: () => void;
   switchPhase: (phase: TimerPhase) => void;
+  switchTimerMode: (mode: TimerMode) => void;
+  configurePastPaper: (config: Partial<PastPaperSessionConfig>) => void;
   updateSettings: (partial: Partial<PomodoroSettings>) => void;
   setSessionLabel: (label: string | null) => void;
+  setCustomWallpaper: (url: string | null) => void;
 }
 
 export function usePomodoro(userId?: string | null): UsePomodoroReturn {
@@ -262,12 +326,13 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
     normalizeSettings(safeGetItem(STORAGE_KEYS.settings, POMODORO_DEFAULTS)),
   );
   const [session, setSessionState] = useState<ActiveSessionSnapshot>(() => {
-    const settings = normalizeSettings(safeGetItem(STORAGE_KEYS.settings, POMODORO_DEFAULTS));
-    return normalizeSession(safeGetItem(STORAGE_KEYS.session, null), settings);
+    const s = normalizeSettings(safeGetItem(STORAGE_KEYS.settings, POMODORO_DEFAULTS));
+    return normalizeSession(safeGetItem(STORAGE_KEYS.session, null), s);
   });
   const [stats, setStatsState] = useState<PomodoroStatsLog>(() =>
     safeGetItem(STORAGE_KEYS.stats, emptyStats()),
   );
+  const [activeExamAlert, setActiveExamAlert] = useState<'15m' | '5m' | null>(null);
 
   const sessionRef = useRef(session);
   const settingsRef = useRef(settings);
@@ -303,16 +368,16 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
     }, SETTINGS_SAVE_DEBOUNCE_MS);
   }, []);
 
-  const logFocusSession = useCallback(
-    (focusMinutes: number, sessionSnapshot: ActiveSessionSnapshot) => {
-      if (focusMinutes <= 0) return;
+  const logSessionComplete = useCallback(
+    (durationMinutes: number, sessionSnapshot: ActiveSessionSnapshot) => {
+      if (durationMinutes <= 0) return;
 
-      const elapsedMs = getElapsedFocusMs(sessionSnapshot, settingsRef.current);
+      const elapsedMs = getElapsedMs(sessionSnapshot, settingsRef.current);
       const startedAt =
-        sessionSnapshot.focusStartedAt ?? Date.now() - Math.max(elapsedMs, focusMinutes * 60_000);
+        sessionSnapshot.focusStartedAt ?? Date.now() - Math.max(elapsedMs, durationMinutes * 60_000);
       const completedAt = Date.now();
 
-      const nextStats = applyLocalFocusLog(statsRef.current, focusMinutes);
+      const nextStats = applyLocalFocusLog(statsRef.current, durationMinutes);
       persistStats(nextStats);
       setStatsState(nextStats);
       statsRef.current = nextStats;
@@ -320,26 +385,37 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
       const uid = userIdRef.current;
       if (!uid) return;
 
+      const isExam = sessionSnapshot.phase === 'past_paper';
+      const notes = isExam && sessionSnapshot.pastPaperConfig
+        ? `[${sessionSnapshot.pastPaperConfig.board} ${sessionSnapshot.pastPaperConfig.subjectCode} ${sessionSnapshot.pastPaperConfig.paperNumber}] ${sessionSnapshot.sessionLabel || 'Mock Exam'}`
+        : sessionSnapshot.sessionLabel;
+
       void logPomodoroSessionAction(uid, {
-        durationMinutes: focusMinutes,
-        sessionType: 'focus',
+        durationMinutes,
+        sessionType: sessionSnapshot.phase,
         startedAt: new Date(startedAt).toISOString(),
         completedAt: new Date(completedAt).toISOString(),
-        notes: sessionSnapshot.sessionLabel,
+        notes,
         focusToken: sessionSnapshot.focusToken ?? undefined,
       }).then((res) => {
-        if (res.success) handleAwardResult(res.gamification);
+        if (res.success && res.gamification) {
+          handleAwardResult(res.gamification);
+        }
       });
     },
     [persistStats, handleAwardResult],
   );
 
-  const logPartialFocusIfNeeded = useCallback(
+  const logPartialSessionIfNeeded = useCallback(
     (sessionSnapshot: ActiveSessionSnapshot) => {
-      const minutes = elapsedFocusMinutes(sessionSnapshot, settingsRef.current);
-      logFocusSession(minutes, sessionSnapshot);
+      if (sessionSnapshot.phase === 'focus' || sessionSnapshot.phase === 'past_paper') {
+        const minutes = elapsedMinutes(sessionSnapshot, settingsRef.current);
+        if (minutes >= 5) {
+          logSessionComplete(minutes, sessionSnapshot);
+        }
+      }
     },
-    [logFocusSession],
+    [logSessionComplete],
   );
 
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -361,14 +437,48 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
         clearTick();
         return;
       }
-      if (current.endsAt - Date.now() <= 0) {
+
+      const remaining = current.endsAt - Date.now();
+
+      // Check exam milestone alerts (15m and 5m remaining)
+      if (current.phase === 'past_paper' && settingsRef.current.examAlertChime) {
+        const warnings = current.warningsTriggered ?? { fifteenMin: false, fiveMin: false };
+
+        // 15-minute alert threshold (<= 15 mins and > 14 mins)
+        if (remaining <= 15 * 60 * 1000 && remaining > 5 * 60 * 1000 && !warnings.fifteenMin) {
+          playExamWarningChime(15);
+          setActiveExamAlert('15m');
+          setTimeout(() => setActiveExamAlert(null), 8000);
+          const updated = {
+            ...current,
+            warningsTriggered: { ...warnings, fifteenMin: true },
+          };
+          sessionRef.current = updated;
+          persistSession(updated);
+        }
+
+        // 5-minute alert threshold (<= 5 mins)
+        if (remaining <= 5 * 60 * 1000 && !warnings.fiveMin) {
+          playExamWarningChime(5);
+          setActiveExamAlert('5m');
+          setTimeout(() => setActiveExamAlert(null), 8000);
+          const updated = {
+            ...current,
+            warningsTriggered: { ...warnings, fiveMin: true },
+          };
+          sessionRef.current = updated;
+          persistSession(updated);
+        }
+      }
+
+      if (remaining <= 0) {
         clearTick();
         handlePhaseCompleteRef.current();
       } else {
         setSessionState((prev) => ({ ...prev }));
       }
     }, 200);
-  }, [clearTick]);
+  }, [clearTick, persistSession]);
 
   startTickRef.current = startTick;
 
@@ -378,8 +488,43 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
 
     if (settings.notifyChime) playChime();
 
+    // ── Past Paper Exam Complete ──
+    if (current.phase === 'past_paper') {
+      const duration = current.pastPaperConfig?.durationMinutes ?? 90;
+      logSessionComplete(duration, current);
+
+      if (notificationGrantedRef.current) {
+        try {
+          new Notification('Past Paper Exam Complete!', {
+            body: 'Pens down! You have completed your scheduled paper.',
+            icon: '/icons/icon-192.png',
+          });
+        } catch {
+          /* ignore */
+        }
+      }
+
+      const totalMs = getTimerDurationMs('past_paper', settings, current.pastPaperConfig);
+      const newSession: ActiveSessionSnapshot = {
+        ...current,
+        isPaused: true,
+        endsAt: null,
+        remainingMsWhenPaused: totalMs,
+        cyclesCompletedToday: current.cyclesCompletedToday + 1,
+        focusStartedAt: null,
+        warningsTriggered: { fifteenMin: false, fiveMin: false },
+      };
+      setSessionState(newSession);
+      sessionRef.current = newSession;
+      persistSession(newSession);
+      clearTick();
+      stopSound();
+      return;
+    }
+
+    // ── Pomodoro Focus Complete ──
     if (current.phase === 'focus') {
-      logFocusSession(settings.focusMinutes, current);
+      logSessionComplete(settings.focusMinutes, current);
 
       if (notificationGrantedRef.current) {
         try {
@@ -393,17 +538,17 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
       }
 
       const newCycle = current.cyclesCompletedToday + 1;
-      const nextPhase =
+      const nextPhase: TimerPhase =
         newCycle % settings.cyclesBeforeLongBreak === 0 ? 'long_break' : 'short_break';
       const newSession: ActiveSessionSnapshot = {
+        ...current,
         phase: nextPhase,
         isPaused: !settings.autoStartNext,
-        endsAt: settings.autoStartNext ? Date.now() + getPhaseDurationMs(nextPhase, settings) : null,
+        endsAt: settings.autoStartNext ? Date.now() + getTimerDurationMs(nextPhase, settings, null) : null,
         remainingMsWhenPaused: settings.autoStartNext
           ? null
-          : getPhaseDurationMs(nextPhase, settings),
+          : getTimerDurationMs(nextPhase, settings, null),
         cyclesCompletedToday: newCycle,
-        sessionLabel: current.sessionLabel,
         focusStartedAt: null,
         focusToken: null,
       };
@@ -418,6 +563,7 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
       return;
     }
 
+    // ── Break Complete ──
     if (notificationGrantedRef.current) {
       try {
         new Notification('Break over!', {
@@ -430,14 +576,13 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
     }
 
     const newSession: ActiveSessionSnapshot = {
+      ...current,
       phase: 'focus',
       isPaused: !settings.autoStartNext,
-      endsAt: settings.autoStartNext ? Date.now() + getPhaseDurationMs('focus', settings) : null,
+      endsAt: settings.autoStartNext ? Date.now() + getTimerDurationMs('focus', settings, null) : null,
       remainingMsWhenPaused: settings.autoStartNext
         ? null
-        : getPhaseDurationMs('focus', settings),
-      cyclesCompletedToday: current.cyclesCompletedToday,
-      sessionLabel: current.sessionLabel,
+        : getTimerDurationMs('focus', settings, null),
       focusStartedAt: settings.autoStartNext ? Date.now() : null,
       focusToken: null,
     };
@@ -463,7 +608,7 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
       clearTick();
       stopSound();
     }
-  }, [logFocusSession, persistSession, clearTick]);
+  }, [logSessionComplete, persistSession, clearTick]);
 
   handlePhaseCompleteRef.current = handlePhaseComplete;
 
@@ -473,15 +618,17 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
     const remaining =
       s.isPaused && s.remainingMsWhenPaused !== null
         ? s.remainingMsWhenPaused
-        : getPhaseDurationMs(s.phase, settings);
+        : getTimerDurationMs(s.phase, settings, s.pastPaperConfig);
 
-    const enteringFocus = s.phase === 'focus';
+    const isStartingFocus = s.phase === 'focus';
+    const isStartingExam = s.phase === 'past_paper';
+
     const newSession: ActiveSessionSnapshot = {
       ...s,
       isPaused: false,
       endsAt: Date.now() + remaining,
       remainingMsWhenPaused: null,
-      focusStartedAt: enteringFocus ? s.focusStartedAt ?? Date.now() : s.focusStartedAt,
+      focusStartedAt: isStartingFocus || isStartingExam ? s.focusStartedAt ?? Date.now() : s.focusStartedAt,
     };
 
     setSessionState(newSession);
@@ -489,7 +636,7 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
     persistSession(newSession);
     startTick();
 
-    if (enteringFocus && !newSession.focusToken) {
+    if (isStartingFocus && !newSession.focusToken) {
       const uid = userIdRef.current;
       if (uid) {
         void beginPomodoroFocusAction(uid).then((res) => {
@@ -544,25 +691,60 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
       const s = sessionRef.current;
       const settings = settingsRef.current;
 
-      if (s.phase === 'focus' && newPhase !== 'focus') {
-        logPartialFocusIfNeeded(s);
+      if ((s.phase === 'focus' || s.phase === 'past_paper') && newPhase !== s.phase) {
+        logPartialSessionIfNeeded(s);
       }
 
-      const durationMs = getPhaseDurationMs(newPhase, settings);
+      const durationMs = getTimerDurationMs(newPhase, settings, s.pastPaperConfig);
       const newSession: ActiveSessionSnapshot = {
         ...s,
         phase: newPhase,
+        timerMode: newPhase === 'past_paper' ? 'past_paper' : 'pomodoro',
         isPaused: true,
         endsAt: null,
         remainingMsWhenPaused: durationMs,
         focusStartedAt: null,
         focusToken: null,
+        warningsTriggered: { fifteenMin: false, fiveMin: false },
       };
       setSessionState(newSession);
       sessionRef.current = newSession;
       persistSession(newSession);
     },
-    [clearTick, persistSession, logPartialFocusIfNeeded],
+    [clearTick, persistSession, logPartialSessionIfNeeded],
+  );
+
+  const switchTimerMode = useCallback(
+    (mode: TimerMode) => {
+      if (mode === 'past_paper') {
+        switchPhase('past_paper');
+      } else {
+        switchPhase('focus');
+      }
+    },
+    [switchPhase],
+  );
+
+  const configurePastPaper = useCallback(
+    (partial: Partial<PastPaperSessionConfig>) => {
+      setSessionState((prev) => {
+        const nextConfig: PastPaperSessionConfig = {
+          ...(prev.pastPaperConfig ?? DEFAULT_PAST_PAPER),
+          ...partial,
+        };
+        const durationMs = nextConfig.durationMinutes * 60 * 1000;
+        const next: ActiveSessionSnapshot = {
+          ...prev,
+          pastPaperConfig: nextConfig,
+          remainingMsWhenPaused: prev.isPaused && prev.phase === 'past_paper' ? durationMs : prev.remainingMsWhenPaused,
+          warningsTriggered: { fifteenMin: false, fiveMin: false },
+        };
+        sessionRef.current = next;
+        persistSession(next);
+        return next;
+      });
+    },
+    [persistSession],
   );
 
   const resume = useCallback(() => {
@@ -574,11 +756,11 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
     const s = sessionRef.current;
     const settings = settingsRef.current;
 
-    if (s.phase === 'focus') {
-      logPartialFocusIfNeeded(s);
+    if (s.phase === 'focus' || s.phase === 'past_paper') {
+      logPartialSessionIfNeeded(s);
     }
 
-    const durationMs = getPhaseDurationMs(s.phase, settings);
+    const durationMs = getTimerDurationMs(s.phase, settings, s.pastPaperConfig);
     const newSession: ActiveSessionSnapshot = {
       ...s,
       isPaused: true,
@@ -586,12 +768,13 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
       remainingMsWhenPaused: durationMs,
       focusStartedAt: null,
       focusToken: null,
+      warningsTriggered: { fifteenMin: false, fiveMin: false },
     };
     setSessionState(newSession);
     sessionRef.current = newSession;
     persistSession(newSession);
     stopSound();
-  }, [clearTick, persistSession, logPartialFocusIfNeeded]);
+  }, [clearTick, persistSession, logPartialSessionIfNeeded]);
 
   const updateSettings = useCallback(
     (partial: Partial<PomodoroSettings>) => {
@@ -631,6 +814,13 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
     [persistSettings, scheduleSettingsSave],
   );
 
+  const setCustomWallpaper = useCallback(
+    (url: string | null) => {
+      updateSettings({ customWallpaperUrl: url });
+    },
+    [updateSettings],
+  );
+
   const setSessionLabel = useCallback(
     (label: string | null) => {
       setSessionState((prev) => {
@@ -645,7 +835,7 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
 
   const [displayMs, setDisplayMs] = useState(() => {
     if (session.endsAt !== null) return Math.max(0, session.endsAt - Date.now());
-    return session.remainingMsWhenPaused ?? getPhaseDurationMs(session.phase, settings);
+    return session.remainingMsWhenPaused ?? getTimerDurationMs(session.phase, settings, session.pastPaperConfig);
   });
 
   useEffect(() => {
@@ -655,8 +845,8 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
       }, 200);
       return () => clearInterval(id);
     }
-    setDisplayMs(session.remainingMsWhenPaused ?? getPhaseDurationMs(session.phase, settings));
-  }, [session.isPaused, session.endsAt, session.remainingMsWhenPaused, session.phase, settings]);
+    setDisplayMs(session.remainingMsWhenPaused ?? getTimerDurationMs(session.phase, settings, session.pastPaperConfig));
+  }, [session.isPaused, session.endsAt, session.remainingMsWhenPaused, session.phase, session.pastPaperConfig, settings]);
 
   useEffect(() => {
     if (!userId) {
@@ -698,31 +888,34 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
 
   return {
     phase: session.phase,
+    timerMode: session.timerMode ?? (session.phase === 'past_paper' ? 'past_paper' : 'pomodoro'),
     remainingMs: displayMs,
-    totalMs: getPhaseDurationMs(session.phase, settings),
+    totalMs: getTimerDurationMs(session.phase, settings, session.pastPaperConfig),
     isPaused: session.isPaused,
     isRunning: !session.isPaused && session.endsAt !== null,
     cyclesCompletedToday: session.cyclesCompletedToday,
     sessionLabel: session.sessionLabel,
     settings,
     stats,
+    pastPaperConfig: session.pastPaperConfig ?? DEFAULT_PAST_PAPER,
+    activeExamAlert,
     start,
     pause,
     resume,
     reset,
     switchPhase,
+    switchTimerMode,
+    configurePastPaper,
     updateSettings,
     setSessionLabel,
+    setCustomWallpaper,
   };
 }
 
-function logCompletedFocusStandalone(
-  settings: PomodoroSettings,
-): void {
+function logCompletedStandalone(focusMinutes: number): void {
   try {
     const s = safeGetItem(STORAGE_KEYS.stats, emptyStats());
     const today = todayKey();
-    const focusMinutes = settings.focusMinutes;
     const existingIdx = s.entries.findIndex((e) => e.date === today);
     if (existingIdx >= 0) {
       s.entries[existingIdx].focusMinutes += focusMinutes;

@@ -1,39 +1,32 @@
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTs — Pomodoro Audio Engine
-// File-loop ambience when available; Web Audio synth fallback otherwise.
-// Completion chime stays synthesized.
+// The ANTs — Pomodoro & Exam Audio Engine (Native Web Audio API)
+// 100% self-contained synthesized soundscapes & crystal-clear chimes.
+// Zero buffering, zero broken links, works seamlessly offline.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import type { VibeId } from '@/constants/pomodoro-vibes';
 import { getVibe } from '@/constants/pomodoro-vibes';
 
-type SynthKey = 'rain' | 'brown_noise' | 'cafe' | 'forest';
+export type SynthKey = 'rain' | 'brown_noise' | 'cafe' | 'forest';
 
 type SoundEngineState = {
   ctx: AudioContext | null;
   masterGain: GainNode | null;
   sourceNodes: AudioScheduledSourceNode[];
   lfoNodes: OscillatorNode[];
-  htmlAudio: HTMLAudioElement | null;
-  mode: 'file' | 'synth' | null;
   isRunning: boolean;
   currentVibeId: VibeId | null;
   volume: number;
-  /** Bumps on every start/stop so stale play()/error callbacks cannot start synth */
-  generation: number;
 };
 
-let state: SoundEngineState = {
+const state: SoundEngineState = {
   ctx: null,
   masterGain: null,
   sourceNodes: [],
   lfoNodes: [],
-  htmlAudio: null,
-  mode: null,
   isRunning: false,
   currentVibeId: null,
   volume: 0.4,
-  generation: 0,
 };
 
 function clampVolume(volume: number): number {
@@ -42,7 +35,8 @@ function clampVolume(volume: number): number {
 
 function getAudioContext(): AudioContext {
   if (!state.ctx || state.ctx.state === 'closed') {
-    state.ctx = new AudioContext();
+    const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    state.ctx = new AudioContextClass();
     state.masterGain = state.ctx.createGain();
     state.masterGain.gain.value = state.volume;
     state.masterGain.connect(state.ctx.destination);
@@ -57,6 +51,7 @@ function stopAllNodes(): void {
   for (const src of state.sourceNodes) {
     try {
       src.stop();
+      src.disconnect();
     } catch {
       /* already stopped */
     }
@@ -64,6 +59,7 @@ function stopAllNodes(): void {
   for (const lfo of state.lfoNodes) {
     try {
       lfo.stop();
+      lfo.disconnect();
     } catch {
       /* already stopped */
     }
@@ -72,26 +68,39 @@ function stopAllNodes(): void {
   state.lfoNodes = [];
 }
 
-function stopHtmlAudio(): void {
-  const audio = state.htmlAudio;
-  state.htmlAudio = null;
-  if (!audio) return;
-  try {
-    audio.pause();
-    audio.removeAttribute('src');
-    audio.load();
-  } catch {
-    /* ignore */
-  }
-}
-
-function createNoiseBuffer(ctx: AudioContext, durationSec: number): AudioBuffer {
+/** Generate a continuous pink/brown noise buffer for natural acoustic synthesis */
+function createNoiseBuffer(ctx: AudioContext, durationSec = 4, type: 'pink' | 'white' | 'brown' = 'pink'): AudioBuffer {
   const sampleRate = ctx.sampleRate;
   const length = Math.floor(sampleRate * durationSec);
   const buffer = ctx.createBuffer(1, length, sampleRate);
   const data = buffer.getChannelData(0);
-  for (let i = 0; i < length; i++) {
-    data[i] = Math.random() * 2 - 1;
+
+  if (type === 'white') {
+    for (let i = 0; i < length; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+  } else if (type === 'brown') {
+    let lastOut = 0.0;
+    for (let i = 0; i < length; i++) {
+      const white = Math.random() * 2 - 1;
+      data[i] = (lastOut + 0.02 * white) / 1.02;
+      lastOut = data[i];
+      data[i] *= 3.5; // Gain compensation
+    }
+  } else {
+    // Pink noise approximation (Paul Kellet's filter method)
+    let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+    for (let i = 0; i < length; i++) {
+      const white = Math.random() * 2 - 1;
+      b0 = 0.99886 * b0 + white * 0.0555179;
+      b1 = 0.99332 * b1 + white * 0.0750759;
+      b2 = 0.96900 * b2 + white * 0.1538520;
+      b3 = 0.86650 * b3 + white * 0.3104856;
+      b4 = 0.55000 * b4 + white * 0.5329522;
+      b5 = -0.7616 * b5 - white * 0.0168980;
+      data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.11;
+      b6 = white * 0.115926;
+    }
   }
   return buffer;
 }
@@ -103,154 +112,177 @@ function createLoopingSource(ctx: AudioContext, buffer: AudioBuffer): AudioBuffe
   return source;
 }
 
+/** Deep Focus / Library: Warm acoustic rumble that eliminates external distractions */
 function buildBrownNoise(ctx: AudioContext): void {
-  const buffer = createNoiseBuffer(ctx, 2);
+  const buffer = createNoiseBuffer(ctx, 4, 'brown');
   const source = createLoopingSource(ctx, buffer);
+
   const lowpass = ctx.createBiquadFilter();
   lowpass.type = 'lowpass';
-  lowpass.frequency.value = 400;
-  lowpass.Q.value = 1;
+  lowpass.frequency.value = 280;
+  lowpass.Q.value = 0.7;
+
+  const gain = ctx.createGain();
+  gain.gain.value = 1.1;
+
   source.connect(lowpass);
-  lowpass.connect(state.masterGain!);
+  lowpass.connect(gain);
+  gain.connect(state.masterGain!);
+
   source.start();
   state.sourceNodes.push(source);
 }
 
+/** Monsoon Rain: Layered rainfall with soft distant drizzle and modulated droplet surge */
 function buildRain(ctx: AudioContext): void {
-  const buffer = createNoiseBuffer(ctx, 2);
-  const source = createLoopingSource(ctx, buffer);
-  const bandpass = ctx.createBiquadFilter();
-  bandpass.type = 'bandpass';
-  bandpass.frequency.value = 2000;
-  bandpass.Q.value = 0.5;
-  const lfoGain = ctx.createGain();
-  lfoGain.gain.value = 0.3;
+  // Layer 1: Body of the rain (pink noise lowpass)
+  const rainBodyBuffer = createNoiseBuffer(ctx, 4, 'pink');
+  const rainBodySource = createLoopingSource(ctx, rainBodyBuffer);
+
+  const bodyFilter = ctx.createBiquadFilter();
+  bodyFilter.type = 'lowpass';
+  bodyFilter.frequency.value = 1100;
+  bodyFilter.Q.value = 0.4;
+
+  const bodyGain = ctx.createGain();
+  bodyGain.gain.value = 0.75;
+
+  rainBodySource.connect(bodyFilter);
+  bodyFilter.connect(bodyGain);
+  bodyGain.connect(state.masterGain!);
+  rainBodySource.start();
+  state.sourceNodes.push(rainBodySource);
+
+  // Layer 2: High-frequency droplet patter with subtle LFO surge
+  const rainDropletsBuffer = createNoiseBuffer(ctx, 3, 'white');
+  const rainDropletsSource = createLoopingSource(ctx, rainDropletsBuffer);
+
+  const dropFilter = ctx.createBiquadFilter();
+  dropFilter.type = 'bandpass';
+  dropFilter.frequency.value = 3200;
+  dropFilter.Q.value = 1.2;
+
+  // Gentle wind swell LFO
   const lfo = ctx.createOscillator();
+  const lfoGain = ctx.createGain();
   lfo.type = 'sine';
-  lfo.frequency.value = 3;
+  lfo.frequency.value = 0.2; // slow 5-second breath
+  lfoGain.gain.value = 0.18;
   lfo.connect(lfoGain);
-  lfoGain.connect(bandpass.frequency);
+
+  const dropGain = ctx.createGain();
+  dropGain.gain.value = 0.28;
+  lfoGain.connect(dropGain.gain);
+
+  rainDropletsSource.connect(dropFilter);
+  dropFilter.connect(dropGain);
+  dropGain.connect(state.masterGain!);
+
   lfo.start();
-  source.connect(bandpass);
-  bandpass.connect(state.masterGain!);
-  source.start();
-  state.sourceNodes.push(source);
+  rainDropletsSource.start();
+  state.sourceNodes.push(rainDropletsSource);
   state.lfoNodes.push(lfo);
 }
 
+/** Yangon Teashop / Cafe: Warm mid-range acoustic murmur and pleasant background hum */
 function buildCafe(ctx: AudioContext): void {
-  const buffer = createNoiseBuffer(ctx, 2);
+  const buffer = createNoiseBuffer(ctx, 4, 'pink');
   const source = createLoopingSource(ctx, buffer);
-  const lowpass = ctx.createBiquadFilter();
-  lowpass.type = 'lowpass';
-  lowpass.frequency.value = 350;
-  lowpass.Q.value = 0.8;
-  const lfoGain = ctx.createGain();
-  lfoGain.gain.value = 80;
+
+  // Low vocal rumble simulation
+  const lowFilter = ctx.createBiquadFilter();
+  lowFilter.type = 'bandpass';
+  lowFilter.frequency.value = 320;
+  lowFilter.Q.value = 1.5;
+
+  const lowGain = ctx.createGain();
+  lowGain.gain.value = 0.8;
+
+  // Modulate vocal hum slightly
   const lfo = ctx.createOscillator();
+  const lfoGain = ctx.createGain();
   lfo.type = 'sine';
-  lfo.frequency.value = 0.3;
+  lfo.frequency.value = 0.35;
+  lfoGain.gain.value = 40;
   lfo.connect(lfoGain);
-  lfoGain.connect(lowpass.frequency);
+  lfoGain.connect(lowFilter.frequency);
+
+  source.connect(lowFilter);
+  lowFilter.connect(lowGain);
+  lowGain.connect(state.masterGain!);
+
   lfo.start();
-  source.connect(lowpass);
-  lowpass.connect(state.masterGain!);
   source.start();
   state.sourceNodes.push(source);
   state.lfoNodes.push(lfo);
 }
 
+/** Misty Forest: Ethereal mountain breeze swaying through tall pines */
 function buildForest(ctx: AudioContext): void {
-  const buffer = createNoiseBuffer(ctx, 2);
+  const buffer = createNoiseBuffer(ctx, 4, 'pink');
   const source = createLoopingSource(ctx, buffer);
-  const bandpass = ctx.createBiquadFilter();
-  bandpass.type = 'bandpass';
-  bandpass.frequency.value = 600;
-  bandpass.Q.value = 0.3;
-  const lfoGain = ctx.createGain();
-  lfoGain.gain.value = 400;
-  const lfo = ctx.createOscillator();
-  lfo.type = 'sine';
-  lfo.frequency.value = 0.15;
-  lfo.connect(lfoGain);
-  lfoGain.connect(bandpass.frequency);
-  lfo.start();
-  source.connect(bandpass);
-  bandpass.connect(state.masterGain!);
+
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.value = 650;
+  filter.Q.value = 0.6;
+
+  // Slow natural wind breeze modulation
+  const windLfo = ctx.createOscillator();
+  const windLfoGain = ctx.createGain();
+  windLfo.type = 'sine';
+  windLfo.frequency.value = 0.12; // 8-second slow breeze cycle
+  windLfoGain.gain.value = 260;
+  windLfo.connect(windLfoGain);
+  windLfoGain.connect(filter.frequency);
+
+  const gain = ctx.createGain();
+  gain.gain.value = 0.85;
+
+  source.connect(filter);
+  filter.connect(gain);
+  gain.connect(state.masterGain!);
+
+  windLfo.start();
   source.start();
   state.sourceNodes.push(source);
-  state.lfoNodes.push(lfo);
+  state.lfoNodes.push(windLfo);
 }
 
-function startSynth(key: SynthKey, volume: number): void {
-  const ctx = getAudioContext();
-  stopAllNodes();
-  stopHtmlAudio();
-  if (state.masterGain) {
-    state.masterGain.gain.value = Math.max(0, Math.min(1, volume));
+/** Start synthesizing vibe background ambience directly via Web Audio */
+export function startSynth(key: SynthKey, volume: number): void {
+  try {
+    const ctx = getAudioContext();
+    stopAllNodes();
+
+    if (state.masterGain) {
+      state.masterGain.gain.value = clampVolume(volume);
+    }
+
+    switch (key) {
+      case 'brown_noise':
+        buildBrownNoise(ctx);
+        break;
+      case 'rain':
+        buildRain(ctx);
+        break;
+      case 'cafe':
+        buildCafe(ctx);
+        break;
+      case 'forest':
+        buildForest(ctx);
+        break;
+      default:
+        buildBrownNoise(ctx);
+        break;
+    }
+    state.isRunning = true;
+  } catch (err) {
+    console.warn('[AudioEngine] Could not start synth soundscape:', err);
   }
-  switch (key) {
-    case 'brown_noise':
-      buildBrownNoise(ctx);
-      break;
-    case 'rain':
-      buildRain(ctx);
-      break;
-    case 'cafe':
-      buildCafe(ctx);
-      break;
-    case 'forest':
-      buildForest(ctx);
-      break;
-  }
-  state.mode = 'synth';
-  state.isRunning = true;
 }
 
-function startFileLoop(src: string, volume: number, onFail: () => void): void {
-  const generation = ++state.generation;
-  stopAllNodes();
-  stopHtmlAudio();
-
-  const audio = new Audio();
-  audio.preload = 'auto';
-  audio.loop = true;
-  audio.setAttribute('playsinline', 'true');
-  audio.volume = clampVolume(volume);
-  audio.src = src;
-
-  state.htmlAudio = audio;
-  state.mode = 'file';
-  state.isRunning = true;
-
-  const isCurrent = () => state.generation === generation && state.htmlAudio === audio;
-
-  audio.addEventListener(
-    'error',
-    () => {
-      if (!isCurrent()) return;
-      stopHtmlAudio();
-      onFail();
-    },
-    { once: true },
-  );
-
-  void audio.play().then(
-    () => {
-      if (isCurrent()) state.isRunning = true;
-    },
-    (err: unknown) => {
-      if (!isCurrent()) return;
-      const name = err instanceof Error ? err.name : '';
-      // Overlapping play()/pause() throws AbortError — do not swap in synth
-      if (name === 'AbortError' || name === 'NotAllowedError') return;
-      stopHtmlAudio();
-      onFail();
-    },
-  );
-}
-
-/** Start vibe ambience from /public/pomodoro/vibes/{id}/ambience.mp3. Call from a user gesture. */
+/** Start vibe soundscape (defaults to 100% self-contained native Web Audio synthesis) */
 export function startVibeSound(vibeId: VibeId | null, volume: number): void {
   state.volume = clampVolume(volume);
   if (!vibeId || state.volume <= 0) {
@@ -264,36 +296,28 @@ export function startVibeSound(vibeId: VibeId | null, volume: number): void {
     return;
   }
 
-  state.currentVibeId = vibeId;
-  startFileLoop(vibe.audioSrc, state.volume, () => startSynth(vibe.synthKey, state.volume));
+  state.currentVibeId = vibe.id;
+  startSynth(vibe.synthKey, state.volume);
 }
 
-/** @deprecated Use startVibeSound — kept for transitional imports */
 export function startSound(key: SynthKey | null, volume: number): void {
   if (!key) {
     stopSound();
     return;
   }
   startSynth(key, volume);
-  state.isRunning = true;
 }
 
 export function setVolume(volume: number): void {
   state.volume = clampVolume(volume);
   if (state.masterGain) {
-    state.masterGain.gain.value = state.volume;
-  }
-  if (state.htmlAudio) {
-    state.htmlAudio.volume = state.volume;
+    state.masterGain.gain.setValueAtTime(state.volume, state.ctx?.currentTime ?? 0);
   }
 }
 
 export function stopSound(): void {
-  state.generation += 1;
   stopAllNodes();
-  stopHtmlAudio();
   state.isRunning = false;
-  state.mode = null;
   state.currentVibeId = null;
 }
 
@@ -306,36 +330,87 @@ export function disposeAudio(): void {
   state.masterGain = null;
 }
 
+/** Harmonic Tibetan Singing Bowl / Meditation Chime for session completion */
 export function playChime(): void {
   try {
-    const ctx = new AudioContext();
+    const ctx = getAudioContext();
     const now = ctx.currentTime;
-    const osc1 = ctx.createOscillator();
-    const gain1 = ctx.createGain();
-    osc1.type = 'sine';
-    osc1.frequency.value = 523;
-    gain1.gain.setValueAtTime(0.22, now);
-    gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
-    osc1.connect(gain1);
-    gain1.connect(ctx.destination);
-    osc1.start(now);
-    osc1.stop(now + 0.35);
 
-    const osc2 = ctx.createOscillator();
-    const gain2 = ctx.createGain();
-    osc2.type = 'sine';
-    osc2.frequency.value = 659;
-    gain2.gain.setValueAtTime(0.22, now + 0.12);
-    gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-    osc2.connect(gain2);
-    gain2.connect(ctx.destination);
-    osc2.start(now + 0.12);
-    osc2.stop(now + 0.5);
+    // Harmonic frequencies for a calming singing bowl sound (528 Hz base)
+    const harmonics = [
+      { freq: 528, gain: 0.35, decay: 3.2 },
+      { freq: 1056, gain: 0.16, decay: 2.2 },
+      { freq: 1584, gain: 0.08, decay: 1.5 },
+      { freq: 2112, gain: 0.04, decay: 1.0 },
+    ];
 
-    setTimeout(() => {
-      if (ctx.state !== 'closed') void ctx.close();
-    }, 600);
-  } catch {
-    /* blocked */
+    harmonics.forEach(({ freq, gain, decay }) => {
+      const osc = ctx.createOscillator();
+      const oscGain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now);
+
+      oscGain.gain.setValueAtTime(gain * state.volume, now);
+      oscGain.gain.exponentialRampToValueAtTime(0.0001, now + decay);
+
+      osc.connect(oscGain);
+      oscGain.connect(ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + decay);
+    });
+  } catch (err) {
+    console.warn('[AudioEngine] Chime playback was blocked:', err);
+  }
+}
+
+/** Official Cambridge / Edexcel Style Exam Milestone Alert (15m & 5m warning) */
+export function playExamWarningChime(minutesRemaining: number): void {
+  try {
+    const ctx = getAudioContext();
+    const now = ctx.currentTime;
+
+    // Two-tone clean exam chime: Note 1 (880 Hz / A5), Note 2 (1174.66 Hz / D6)
+    const tones = [
+      { freq: 880, startTime: now, duration: 0.45 },
+      { freq: 1174.66, startTime: now + 0.22, duration: 0.65 },
+    ];
+
+    tones.forEach(({ freq, startTime, duration }) => {
+      const osc = ctx.createOscillator();
+      const oscGain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, startTime);
+
+      oscGain.gain.setValueAtTime(0.28 * Math.max(state.volume, 0.3), startTime);
+      oscGain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+
+      osc.connect(oscGain);
+      oscGain.connect(ctx.destination);
+
+      osc.start(startTime);
+      osc.stop(startTime + duration);
+    });
+
+    // Also speak brief speech cue if available (Five minutes remaining / Fifteen minutes remaining)
+    if ('speechSynthesis' in window) {
+      try {
+        const text = `${minutesRemaining} minutes remaining`;
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.95;
+        utterance.pitch = 1.0;
+        utterance.volume = Math.max(state.volume, 0.4);
+        // Delay slightly after the chime tones
+        setTimeout(() => {
+          window.speechSynthesis.speak(utterance);
+        }, 350);
+      } catch {
+        /* Speech synthesis not supported or muted */
+      }
+    }
+  } catch (err) {
+    console.warn('[AudioEngine] Exam warning chime was blocked:', err);
   }
 }

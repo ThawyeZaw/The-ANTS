@@ -11,6 +11,8 @@ import {
   Award,
   CheckCircle2,
   Circle,
+  Check,
+  X,
   SkipForward,
   Calculator,
   ChevronDown,
@@ -54,11 +56,6 @@ export function PaperCard({ paper, record, onStatusChange }: PaperCardProps) {
 
   const handleSetStatus = async (newStatus: 'not_done' | 'done' | 'skipped') => {
     setStatusMenuOpen(false);
-    if (newStatus === 'done' && !record?.calculated_grade) {
-      // If marking as done and no mark is entered yet, open the grade calculator modal
-      setShowCalcModal(true);
-      return;
-    }
     await onStatusChange(paper.id, newStatus);
   };
 
@@ -141,49 +138,79 @@ export function PaperCard({ paper, record, onStatusChange }: PaperCardProps) {
             </h4>
           </div>
 
-          {/* Status Dropdown Trigger */}
-          <div className="relative">
+          {/* Status & 1-Click Check Action */}
+          <div className="flex items-center gap-2">
+            {/* 1-Click Quick Toggle Button */}
             <button
-              onClick={() => setStatusMenuOpen((v) => !v)}
-              className="focus:outline-none transition-transform active:scale-95"
+              type="button"
+              onClick={() => onStatusChange(paper.id, status === 'done' ? 'not_done' : 'done')}
+              className={cn(
+                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-150 cursor-pointer shadow-2xs active:scale-95',
+                status === 'done'
+                  ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25'
+                  : 'bg-background-secondary border border-border text-foreground-muted hover:border-emerald-500/50 hover:text-emerald-600 hover:bg-emerald-500/10'
+              )}
+              title={status === 'done' ? 'One-click: Mark not done' : 'One-click: Check paper done'}
             >
-              {getStatusBadge()}
+              {status === 'done' ? (
+                <>
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                  <span>Done</span>
+                </>
+              ) : (
+                <>
+                  <Circle className="w-3.5 h-3.5 text-foreground-muted/50 group-hover:text-emerald-500" />
+                  <span>Mark Done</span>
+                </>
+              )}
             </button>
 
-            {statusMenuOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-20"
-                  onClick={() => setStatusMenuOpen(false)}
-                />
-                <div className="absolute right-0 top-full mt-1.5 z-30 w-36 rounded-2xl border border-border bg-background-card p-1.5 shadow-xl space-y-1 animate-fade-in">
-                  <button
-                    type="button"
-                    onClick={() => handleSetStatus('not_done')}
-                    className="w-full text-left px-3 py-1.5 text-xs font-medium rounded-xl hover:bg-background-secondary flex items-center gap-2 text-foreground-secondary"
-                  >
-                    <Circle className="w-3 h-3 text-foreground-muted" />
-                    Not Done
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleSetStatus('done')}
-                    className="w-full text-left px-3 py-1.5 text-xs font-medium rounded-xl hover:bg-emerald-500/10 flex items-center gap-2 text-emerald-600 dark:text-emerald-400"
-                  >
-                    <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                    Mark Done
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleSetStatus('skipped')}
-                    className="w-full text-left px-3 py-1.5 text-xs font-medium rounded-xl hover:bg-amber-500/10 flex items-center gap-2 text-amber-600 dark:text-amber-400"
-                  >
-                    <SkipForward className="w-3 h-3 text-amber-500" />
-                    Skip Paper
-                  </button>
-                </div>
-              </>
-            )}
+            {/* Status Dropdown Trigger for other options (e.g. Skip) */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setStatusMenuOpen((v) => !v)}
+                className="p-1.5 rounded-lg border border-border hover:bg-background-secondary text-foreground-muted hover:text-foreground transition-all cursor-pointer"
+                title="More status options"
+              >
+                <ChevronDown className="w-3.5 h-3.5" />
+              </button>
+
+              {statusMenuOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-20"
+                    onClick={() => setStatusMenuOpen(false)}
+                  />
+                  <div className="absolute right-0 top-full mt-1.5 z-30 w-36 rounded-2xl border border-border bg-background-card p-1.5 shadow-xl space-y-1 animate-fade-in">
+                    <button
+                      type="button"
+                      onClick={() => handleSetStatus('not_done')}
+                      className="w-full text-left px-3 py-1.5 text-xs font-medium rounded-xl hover:bg-background-secondary flex items-center gap-2 text-foreground-secondary cursor-pointer"
+                    >
+                      <Circle className="w-3 h-3 text-foreground-muted" />
+                      Not Done
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSetStatus('done')}
+                      className="w-full text-left px-3 py-1.5 text-xs font-medium rounded-xl hover:bg-emerald-500/10 flex items-center gap-2 text-emerald-600 dark:text-emerald-400 cursor-pointer"
+                    >
+                      <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                      Mark Done
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSetStatus('skipped')}
+                      className="w-full text-left px-3 py-1.5 text-xs font-medium rounded-xl hover:bg-amber-500/10 flex items-center gap-2 text-amber-600 dark:text-amber-400 cursor-pointer"
+                    >
+                      <SkipForward className="w-3 h-3 text-amber-500" />
+                      Skip Paper
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
@@ -229,20 +256,42 @@ export function PaperCard({ paper, record, onStatusChange }: PaperCardProps) {
           <button
             type="button"
             onClick={() => setShowCalcModal(true)}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary-hover transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary-hover transition-colors cursor-pointer"
           >
             <Calculator className="w-3.5 h-3.5" />
             {record?.calculated_grade ? 'Update Grade' : 'Calculate Grade'}
           </button>
 
-          {status !== 'done' && (
+          {status !== 'done' ? (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowCalcModal(true)}
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-border text-foreground-muted hover:text-foreground hover:bg-background-secondary text-xs font-medium transition-all cursor-pointer"
+                title="Enter score and calculate grade"
+              >
+                <Sparkles className="w-3 h-3 text-amber-500" />
+                Score
+              </button>
+              <button
+                type="button"
+                onClick={() => onStatusChange(paper.id, 'done')}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
+                title="Check paper done with 1 click"
+              >
+                <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                1-Click Done
+              </button>
+            </div>
+          ) : (
             <button
               type="button"
-              onClick={() => setShowCalcModal(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 hover:bg-primary text-primary hover:text-white text-xs font-bold transition-all"
+              onClick={() => onStatusChange(paper.id, 'not_done')}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border hover:border-red-500/40 text-foreground-muted hover:text-red-500 text-xs font-medium transition-all cursor-pointer active:scale-95"
+              title="Undo completion status"
             >
-              <Sparkles className="w-3 h-3" />
-              Record Marks
+              <X className="w-3.5 h-3.5" />
+              Undo
             </button>
           )}
         </div>
