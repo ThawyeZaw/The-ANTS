@@ -229,9 +229,10 @@ function normalizeSession(
   if (!stored) return defaultSession(settings);
 
   const pastPaperConfig = stored.pastPaperConfig ?? DEFAULT_PAST_PAPER;
-  const rawPhase = stored.phase ?? 'focus';
-  const phase = rawPhase === 'past_paper' ? 'focus' : rawPhase;
-  const timerMode = 'pomodoro';
+  const timerMode: TimerMode =
+    stored.timerMode ?? (stored.phase === 'past_paper' ? 'past_paper' : 'pomodoro');
+  const phase: TimerPhase =
+    stored.phase ?? (timerMode === 'past_paper' ? 'past_paper' : 'focus');
 
   if (stored.endsAt !== null && stored.endsAt <= Date.now()) {
     if (phase === 'focus' || phase === 'past_paper') {
