@@ -19,6 +19,25 @@ export interface PastPaperSessionConfig {
   strictMode?: boolean;
 }
 
+export type ChimeSoundId = 'bowl' | 'bell' | 'marimba' | 'minimal';
+
+export interface FocusDurationOption {
+  minutes: number;
+  label: string;
+  tag: string;
+}
+
+export const FOCUS_DURATION_OPTIONS: FocusDurationOption[] = [
+  { minutes: 15, label: '15 min', tag: 'Quick Sprint' },
+  { minutes: 20, label: '20 min', tag: 'Short Focus' },
+  { minutes: 25, label: '25 min', tag: 'Standard' },
+  { minutes: 30, label: '30 min', tag: 'Steady Work' },
+  { minutes: 45, label: '45 min', tag: 'Academic' },
+  { minutes: 50, label: '50 min', tag: 'Deep Work' },
+  { minutes: 60, label: '60 min', tag: '1 Hour Block' },
+  { minutes: 90, label: '90 min', tag: 'Extended' },
+];
+
 export interface PomodoroSettings {
   focusMinutes: number;
   shortBreakMinutes: number;
@@ -28,7 +47,9 @@ export interface PomodoroSettings {
   volume: number;
   autoStartNext: boolean;
   notifyChime: boolean;
+  chimeSound: ChimeSoundId;
   examAlertChime: boolean;
+  voiceAlerts: boolean;
   strictExamMode: boolean;
   customWallpaperUrl?: string | null;
 }
@@ -70,7 +91,9 @@ export const POMODORO_DEFAULTS: PomodoroSettings = {
   volume: 0.4,
   autoStartNext: false,
   notifyChime: true,
+  chimeSound: 'bowl',
   examAlertChime: true,
+  voiceAlerts: false,
   strictExamMode: false,
   customWallpaperUrl: null,
 };
@@ -144,8 +167,14 @@ export function normalizeSettings(raw: unknown): PomodoroSettings {
       typeof r.autoStartNext === 'boolean' ? r.autoStartNext : POMODORO_DEFAULTS.autoStartNext,
     notifyChime:
       typeof r.notifyChime === 'boolean' ? r.notifyChime : POMODORO_DEFAULTS.notifyChime,
+    chimeSound:
+      typeof r.chimeSound === 'string' && ['bowl', 'bell', 'marimba', 'minimal'].includes(r.chimeSound)
+        ? (r.chimeSound as ChimeSoundId)
+        : POMODORO_DEFAULTS.chimeSound,
     examAlertChime:
       typeof r.examAlertChime === 'boolean' ? r.examAlertChime : POMODORO_DEFAULTS.examAlertChime,
+    voiceAlerts:
+      typeof r.voiceAlerts === 'boolean' ? r.voiceAlerts : POMODORO_DEFAULTS.voiceAlerts,
     strictExamMode:
       typeof r.strictExamMode === 'boolean' ? r.strictExamMode : POMODORO_DEFAULTS.strictExamMode,
     customWallpaperUrl:

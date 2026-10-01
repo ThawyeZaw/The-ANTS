@@ -56,8 +56,8 @@ export default function VibePicker({ settings, onUpdate, surface = 'theme', comp
               className={cn(
                 'group relative shrink-0 overflow-hidden rounded-xl transition-all duration-300 focus-ring',
                 compact
-                  ? 'h-12 w-[4rem] sm:h-14 sm:w-[5rem]'
-                  : 'h-14 w-[4.5rem] sm:h-16 sm:w-[5.75rem]',
+                  ? 'h-11 w-[3.25rem] min-w-[3rem] sm:h-14 sm:w-[4.75rem]'
+                  : 'h-12 w-[3.75rem] min-w-[3.5rem] sm:h-16 sm:w-[5.25rem]',
                 onStage ? 'ring-1 ring-white/20' : 'ring-1 ring-border shadow-sm',
                 isActive ? 'scale-105 ring-2 shadow-lg' : 'opacity-85 hover:opacity-100 hover:scale-[1.03]',
               )}
@@ -77,7 +77,7 @@ export default function VibePicker({ settings, onUpdate, surface = 'theme', comp
               <span className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" aria-hidden />
               <span
                 className={cn(
-                  'relative z-10 flex h-full items-end justify-center px-1 pb-1.5 text-[10px] font-bold text-white sm:text-[11px] drop-shadow-md',
+                  'relative z-10 flex h-full items-end justify-center px-0.5 pb-1 text-[9px] font-bold text-white sm:text-[11px] sm:pb-1.5 drop-shadow-md truncate max-w-full',
                   compact && 'sm:text-[10px]',
                 )}
               >
@@ -92,10 +92,10 @@ export default function VibePicker({ settings, onUpdate, surface = 'theme', comp
           type="button"
           onClick={() => setShowCustomModal(true)}
           className={cn(
-            'group relative shrink-0 overflow-hidden rounded-xl border border-dashed transition-all duration-300 focus-ring flex flex-col items-center justify-center gap-1',
+            'group relative shrink-0 overflow-hidden rounded-xl border border-dashed transition-all duration-300 focus-ring flex flex-col items-center justify-center gap-0.5 sm:gap-1',
             compact
-              ? 'h-12 w-[3.5rem] sm:h-14 sm:w-[4.25rem]'
-              : 'h-14 w-[3.75rem] sm:h-16 sm:w-[4.5rem]',
+              ? 'h-11 w-[2.75rem] min-w-[2.5rem] sm:h-14 sm:w-[4rem]'
+              : 'h-12 w-[3.25rem] min-w-[3rem] sm:h-16 sm:w-[4.25rem]',
             settings.customWallpaperUrl
               ? 'border-cyan-400 bg-cyan-500/20 text-cyan-300 shadow-md ring-2 ring-cyan-400'
               : onStage

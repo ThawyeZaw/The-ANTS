@@ -1,7 +1,6 @@
 'use client';
 
 import type { TimerPhase } from '@/constants/pomodoro';
-import { AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface DigitalClockProps {
@@ -13,7 +12,6 @@ interface DigitalClockProps {
   accentColor?: string;
   className?: string;
   showPausedLabel?: boolean;
-  activeExamAlert?: '15m' | '5m' | null;
   /** Overlay sits on a vibe photo (Focus Mode + stage) */
   surface?: 'theme' | 'stage';
 }
@@ -54,13 +52,9 @@ export default function DigitalClock({
   accentColor,
   className,
   showPausedLabel = true,
-  activeExamAlert,
   surface = 'theme',
 }: DigitalClockProps) {
-  const isPastPaper = phase === 'past_paper';
-  const isFinalFive = isPastPaper && remainingMs <= 5 * 60 * 1000 && remainingMs > 0;
-
-  const defaultAccent = isFinalFive ? '#ef4444' : PHASE_COLOR[phase];
+  const defaultAccent = PHASE_COLOR[phase] ?? '#f59e0b';
   const accent = accentColor ?? defaultAccent;
 
   const progress = totalMs > 0 ? Math.max(0, Math.min(1, remainingMs / totalMs)) : 1;
@@ -75,26 +69,10 @@ export default function DigitalClock({
 
   return (
     <div className={cn('flex min-h-0 w-full flex-col items-center justify-center', className)}>
-      {/* Exam Alert Banner if within 15m / 5m trigger */}
-      {activeExamAlert && (
-        <div
-          className={cn(
-            'mb-3 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold tracking-wide uppercase transition-all duration-300 animate-bounce',
-            activeExamAlert === '5m'
-              ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 backdrop-blur-md'
-              : 'bg-amber-500/20 text-amber-300 border border-amber-500/40 backdrop-blur-md',
-          )}
-        >
-          <AlertCircle className="h-4 w-4 shrink-0" />
-          <span>{activeExamAlert === '5m' ? '5 Minutes Remaining — Conclude Answers' : '15 Minutes Remaining — Final Review'}</span>
-        </div>
-      )}
-
       <div
         className={cn(
           'pomo-clock flex items-center justify-center',
           isRunning && !isPaused && 'pomo-clock-breathe',
-          isFinalFive && isRunning && 'animate-pulse',
         )}
       >
         <svg
@@ -112,16 +90,6 @@ export default function DigitalClock({
             strokeWidth={4}
           />
 
-          {/* Exam Milestone notches (75%, 50%, 25%, 10%) */}
-          {isPastPaper && (
-            <>
-              <circle cx={140} cy={18} r={2.5} fill={trackStroke} />
-              <circle cx={262} cy={140} r={2.5} fill={trackStroke} />
-              <circle cx={140} cy={262} r={2.5} fill={trackStroke} />
-              <circle cx={18} cy={140} r={2.5} fill={trackStroke} />
-            </>
-          )}
-
           {/* Progress stroke */}
           <circle
             cx={140}
@@ -129,7 +97,7 @@ export default function DigitalClock({
             r={122}
             fill="none"
             stroke={accent}
-            strokeWidth={isFinalFive ? 5 : 4}
+            strokeWidth={4}
             strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={dashOffset}
@@ -152,7 +120,7 @@ export default function DigitalClock({
           aria-live="polite"
           aria-atomic="true"
         >
-          {/* Optional Hours digit for long exams */}
+          {/* Optional Hours digit */}
           {hh !== undefined && (
             <>
               <span className={cn('pomo-digit font-semibold tracking-tight', hh.length > 0 && 'text-[2.2rem] sm:text-[3.2rem]')} style={{ color: digitColor }}>

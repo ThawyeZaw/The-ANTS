@@ -229,8 +229,9 @@ function normalizeSession(
   if (!stored) return defaultSession(settings);
 
   const pastPaperConfig = stored.pastPaperConfig ?? DEFAULT_PAST_PAPER;
-  const timerMode = stored.timerMode ?? (stored.phase === 'past_paper' ? 'past_paper' : 'pomodoro');
-  const phase = stored.phase ?? (timerMode === 'past_paper' ? 'past_paper' : 'focus');
+  const rawPhase = stored.phase ?? 'focus';
+  const phase = rawPhase === 'past_paper' ? 'focus' : rawPhase;
+  const timerMode = 'pomodoro';
 
   if (stored.endsAt !== null && stored.endsAt <= Date.now()) {
     if (phase === 'focus' || phase === 'past_paper') {
@@ -440,36 +441,7 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
 
       const remaining = current.endsAt - Date.now();
 
-      // Check exam milestone alerts (15m and 5m remaining)
-      if (current.phase === 'past_paper' && settingsRef.current.examAlertChime) {
-        const warnings = current.warningsTriggered ?? { fifteenMin: false, fiveMin: false };
 
-        // 15-minute alert threshold (<= 15 mins and > 14 mins)
-        if (remaining <= 15 * 60 * 1000 && remaining > 5 * 60 * 1000 && !warnings.fifteenMin) {
-          playExamWarningChime(15);
-          setActiveExamAlert('15m');
-          setTimeout(() => setActiveExamAlert(null), 8000);
-          const updated = {
-            ...current,
-            warningsTriggered: { ...warnings, fifteenMin: true },
-          };
-          sessionRef.current = updated;
-          persistSession(updated);
-        }
-
-        // 5-minute alert threshold (<= 5 mins)
-        if (remaining <= 5 * 60 * 1000 && !warnings.fiveMin) {
-          playExamWarningChime(5);
-          setActiveExamAlert('5m');
-          setTimeout(() => setActiveExamAlert(null), 8000);
-          const updated = {
-            ...current,
-            warningsTriggered: { ...warnings, fiveMin: true },
-          };
-          sessionRef.current = updated;
-          persistSession(updated);
-        }
-      }
 
       if (remaining <= 0) {
         clearTick();
@@ -486,7 +458,7 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
     const current = sessionRef.current;
     const settings = settingsRef.current;
 
-    if (settings.notifyChime) playChime();
+    if (settings.notifyChime) playChime(settings.chimeSound);
 
     // ── Past Paper Exam Complete ──
     if (current.phase === 'past_paper') {
@@ -782,6 +754,17 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
         const next = { ...prev, ...partial };
         if (partial.focusMinutes !== undefined) {
           next.focusMinutes = clampDuration('focus', partial.focusMinutes);
+          // If currently in focus phase and paused, update remainingMs immediately to match new duration
+          if (sessionRef.current.phase === 'focus' && sessionRef.current.isPaused) {
+            const nextDuration = next.focusMinutes * 60 * 1000;
+            const updated = {
+              ...sessionRef.current,
+              remainingMsWhenPaused: nextDuration,
+            };
+            sessionRef.current = updated;
+            setSessionState(updated);
+            persistSession(updated);
+          }
         }
         if (partial.shortBreakMinutes !== undefined) {
           next.shortBreakMinutes = clampDuration('short_break', partial.shortBreakMinutes);
@@ -794,12 +777,12 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
           setVolume(partial.volume);
           if (next.volume <= 0) {
             stopSound();
-          } else if (wasSilent && next.vibeId) {
+          } else if (wasSilent && next.vibeId && !sessionRef.current.isPaused) {
             startVibeSound(next.vibeId, next.volume);
           }
         }
         if (partial.vibeId !== undefined) {
-          if (partial.vibeId && next.volume > 0) {
+          if (partial.vibeId && next.volume > 0 && !sessionRef.current.isPaused) {
             startVibeSound(partial.vibeId, next.volume);
           } else if (!partial.vibeId) {
             stopSound();

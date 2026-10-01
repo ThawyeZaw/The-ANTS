@@ -1,14 +1,9 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Maximize2,
   Flame,
-  GraduationCap,
-  Sparkles,
-  SlidersHorizontal,
-  Volume2,
-  VolumeX,
 } from 'lucide-react';
 import { usePomodoro } from '@/hooks/usePomodoro';
 import { useAuth } from '@/hooks/useAuth';
@@ -20,33 +15,24 @@ import FocusMode from '@/components/pomodoro/FocusMode';
 import ModeTabs from '@/components/pomodoro/ModeTabs';
 import VibeStage from '@/components/pomodoro/VibeStage';
 import SessionProgress from '@/components/pomodoro/SessionProgress';
-import PastPaperPicker from '@/components/pomodoro/PastPaperPicker';
 import { getVibe } from '@/constants/pomodoro-vibes';
 import { cn } from '@/lib/utils';
 import type { TimerPhase } from '@/constants/pomodoro';
 
-const DEFAULT_TITLE = 'The ANTs — Study & Exam Timer';
+const DEFAULT_TITLE = 'The ANTs — Focus Timer';
 
 const PHASE_ACCENT: Record<TimerPhase, string> = {
   focus: '#f59e0b',
   short_break: '#10b981',
   long_break: '#818cf8',
-  past_paper: '#06b6d4',
+  past_paper: '#f59e0b',
 };
 
-function formatTimerTitle(remainingMs: number, phase: TimerPhase, paperLabel?: string): string {
+function formatTimerTitle(remainingMs: number, phase: TimerPhase): string {
   const totalSeconds = Math.max(0, Math.ceil(remainingMs / 1000));
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
-
-  const timeStr = hours > 0
-    ? `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
-    : `${String(Math.floor(totalSeconds / 60)).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-
-  if (phase === 'past_paper') {
-    return `(${timeStr}) ${paperLabel || 'Mock Exam'} | The ANTs`;
-  }
+  const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
   const label = phase === 'focus' ? 'Focus' : 'Break';
   return `(${timeStr}) ${label} | The ANTs`;
 }
@@ -63,50 +49,32 @@ export default function PomodoroPage() {
     sessionLabel,
     settings,
     stats,
-    pastPaperConfig,
-    activeExamAlert,
     start,
     pause,
     resume,
     reset,
     switchPhase,
-    configurePastPaper,
     updateSettings,
     setSessionLabel,
   } = usePomodoro(user?.id);
 
   const [isFocusMode, setIsFocusMode] = useState(false);
-  const [isPaperPickerOpen, setIsPaperPickerOpen] = useState(false);
-  const [showStrictConfirm, setShowStrictConfirm] = useState(false);
 
   const vibe = getVibe(settings.vibeId);
   const hasCustomWallpaper = Boolean(settings.customWallpaperUrl);
   const onStage = Boolean(vibe) || hasCustomWallpaper;
   const surface = onStage ? 'stage' : 'theme';
 
-  const isExam = phase === 'past_paper';
-  const accent = isExam ? '#06b6d4' : (vibe?.accent ?? PHASE_ACCENT[phase]);
+  const accent = vibe?.accent ?? PHASE_ACCENT[phase];
   const hasStarted = isRunning || remainingMs < totalMs;
 
   // Sync browser document title
   useEffect(() => {
-    const paperName = `${pastPaperConfig.subjectCode} ${pastPaperConfig.paperNumber}`;
-    document.title = isRunning
-      ? formatTimerTitle(remainingMs, phase, paperName)
-      : DEFAULT_TITLE;
+    document.title = isRunning ? formatTimerTitle(remainingMs, phase) : DEFAULT_TITLE;
     return () => {
       document.title = DEFAULT_TITLE;
     };
-  }, [isRunning, remainingMs, phase, pastPaperConfig]);
-
-  // Handle Strict Exam Mode pause confirmation
-  const handlePauseAttempt = useCallback(() => {
-    if (isExam && pastPaperConfig?.strictMode && isRunning && !isPaused) {
-      setShowStrictConfirm(true);
-    } else {
-      pause();
-    }
-  }, [isExam, pastPaperConfig?.strictMode, isRunning, isPaused, pause]);
+  }, [isRunning, remainingMs, phase]);
 
   // Global Keyboard Shortcuts (Space: Play/Pause, R: Reset, F: Fullscreen focus)
   useEffect(() => {
@@ -117,7 +85,7 @@ export default function PomodoroPage() {
       if (e.code === 'Space') {
         e.preventDefault();
         if (isRunning && !isPaused) {
-          handlePauseAttempt();
+          pause();
         } else if (isPaused && hasStarted) {
           resume();
         } else {
@@ -134,7 +102,7 @@ export default function PomodoroPage() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isRunning, isPaused, hasStarted, start, resume, handlePauseAttempt, reset]);
+  }, [isRunning, isPaused, hasStarted, start, resume, pause, reset]);
 
   const muted = onStage ? 'pomo-read text-white/75' : 'text-foreground-muted';
   const fg = onStage ? 'pomo-read text-white' : 'text-foreground';
@@ -163,12 +131,12 @@ export default function PomodoroPage() {
               <span className={cn('text-[10px] font-bold uppercase tracking-[0.2em]', muted)}>
                 The ANTs
               </span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-400 font-semibold border border-cyan-500/20">
-                Study Hub
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-500 dark:text-amber-400 font-semibold border border-amber-500/20">
+                Focus Hub
               </span>
             </div>
             <h1 className={cn('truncate text-base font-extrabold tracking-tight sm:text-xl', fg)}>
-              {isExam ? 'Exam Hall Simulator' : 'Study Timer'}
+              Focus Timer
             </h1>
           </div>
 
@@ -187,22 +155,6 @@ export default function PomodoroPage() {
                 {stats.currentStreak}d
               </span>
             )}
-
-            {/* Past Paper Quick Picker Trigger */}
-            <button
-              type="button"
-              onClick={() => setIsPaperPickerOpen(true)}
-              className={cn(
-                'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition focus-ring',
-                onStage
-                  ? 'bg-white/10 text-white hover:bg-white/20'
-                  : 'bg-foreground/5 text-foreground hover:bg-foreground/10',
-              )}
-              title="Select Past Paper"
-            >
-              <GraduationCap className="h-4 w-4 text-cyan-400" />
-              <span className="hidden sm:inline">Paper Catalog</span>
-            </button>
 
             {/* Settings Drawer */}
             <SettingsDrawer
@@ -232,56 +184,33 @@ export default function PomodoroPage() {
 
         {/* Main Timer Body */}
         <main className="pomo-fit-main relative z-10 mx-auto w-full max-w-lg px-4 my-auto py-2">
-          {/* Top Meta: Mode Selector & Active Syllabus Pill */}
+          {/* Top Meta: Mode Selector & Active Cycle Progress */}
           <div className="pomo-fit-meta w-full flex flex-col items-center gap-2.5">
             <ModeTabs
               phase={phase}
               settings={settings}
-              pastPaperConfig={pastPaperConfig}
               onSwitch={switchPhase}
-              onOpenPaperPicker={() => setIsPaperPickerOpen(true)}
+              onUpdateSettings={updateSettings}
               surface={surface}
               className="w-full shrink-0"
             />
 
-            {/* Past Paper Syllabus Tag Pill */}
-            {isExam ? (
-              <div
-                onClick={() => setIsPaperPickerOpen(true)}
-                className={cn(
-                  'group flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-semibold cursor-pointer transition-all border',
-                  onStage
-                    ? 'bg-black/40 border-cyan-400/40 text-cyan-200 hover:border-cyan-300'
-                    : 'bg-cyan-500/10 border-cyan-500/30 text-cyan-600 dark:text-cyan-400 hover:bg-cyan-500/15',
-                )}
-                title="Click to change paper"
-              >
-                <span className="font-bold uppercase tracking-wider text-[10px]">
-                  {pastPaperConfig.board}
-                </span>
-                <span>•</span>
-                <span className="font-mono font-bold">{pastPaperConfig.subjectCode}</span>
-                <span>{pastPaperConfig.paperName}</span>
-                <SlidersHorizontal className="h-3 w-3 opacity-60 group-hover:opacity-100 transition-opacity" />
-              </div>
-            ) : (
-              <SessionProgress
-                completed={cyclesCompletedToday}
-                total={settings.cyclesBeforeLongBreak}
-                accent={accent}
-                surface={surface}
-                className="shrink-0 justify-center"
-              />
-            )}
+            <SessionProgress
+              completed={cyclesCompletedToday}
+              total={settings.cyclesBeforeLongBreak}
+              accent={accent}
+              surface={surface}
+              className="shrink-0 justify-center"
+            />
 
-            {/* Quick Session Goal or Paper Topic */}
+            {/* Quick Session Goal */}
             <label className="block w-full max-w-sm shrink-0">
               <span className="sr-only">Session objective</span>
               <input
                 type="text"
                 value={sessionLabel ?? ''}
                 onChange={(e) => setSessionLabel(e.target.value || null)}
-                placeholder={isExam ? 'e.g. May/June 2024 Variant 2 Mock' : 'What are you focusing on this block?'}
+                placeholder="What are you focusing on this block?"
                 maxLength={90}
                 className={cn(
                   'w-full border-0 border-b bg-transparent px-2 py-1.5 text-center text-xs sm:text-sm font-medium transition focus:outline-none focus-ring',
@@ -304,7 +233,6 @@ export default function PomodoroPage() {
               accentColor={accent}
               surface={surface}
               showPausedLabel={false}
-              activeExamAlert={activeExamAlert}
             />
           </div>
 
@@ -318,7 +246,7 @@ export default function PomodoroPage() {
               )}
               aria-hidden={!isPaused}
             >
-              {isExam && pastPaperConfig.strictMode ? 'Exam Paused (Strict Mode)' : 'Paused'}
+              Paused
             </p>
 
             <TimerControls
@@ -326,14 +254,14 @@ export default function PomodoroPage() {
               isPaused={isPaused}
               hasStarted={hasStarted}
               onStart={start}
-              onPause={handlePauseAttempt}
+              onPause={pause}
               onResume={resume}
               onReset={reset}
               accentColor={accent}
               surface={surface}
             />
 
-            {/* Vibe Scene Picker with Procedural Web Audio Soundscapes */}
+            {/* Vibe Scene Picker with High-Fidelity Audio Soundscapes */}
             <div className="mt-3 w-full max-w-sm">
               <VibePicker settings={settings} onUpdate={updateSettings} surface={surface} />
             </div>
@@ -354,11 +282,7 @@ export default function PomodoroPage() {
         onToggle={() => setIsFocusMode((v) => !v)}
         settings={settings}
         onUpdateSettings={updateSettings}
-        taskLabel={
-          isExam
-            ? `${pastPaperConfig.board} ${pastPaperConfig.subjectCode} ${pastPaperConfig.paperName}`
-            : sessionLabel
-        }
+        taskLabel={sessionLabel}
         phase={phase}
         isRunning={isRunning && !isPaused}
         isPaused={isPaused}
@@ -368,7 +292,7 @@ export default function PomodoroPage() {
             isPaused={isPaused}
             hasStarted={hasStarted}
             onStart={start}
-            onPause={handlePauseAttempt}
+            onPause={pause}
             onResume={resume}
             onReset={reset}
             accentColor={accent}
@@ -385,58 +309,8 @@ export default function PomodoroPage() {
           accentColor={accent}
           surface="stage"
           showPausedLabel={false}
-          activeExamAlert={activeExamAlert}
         />
       </FocusMode>
-
-      {/* Past Paper Syllabus Selection Modal */}
-      <PastPaperPicker
-        isOpen={isPaperPickerOpen}
-        currentConfig={pastPaperConfig}
-        onClose={() => setIsPaperPickerOpen(false)}
-        onSelect={(newConfig) => {
-          configurePastPaper(newConfig);
-          switchPhase('past_paper');
-        }}
-        surface={surface}
-      />
-
-      {/* Strict Exam Mode Confirmation Dialog */}
-      {showStrictConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="alertdialog">
-          <div
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm"
-            onClick={() => setShowStrictConfirm(false)}
-          />
-          <div className="relative z-10 w-full max-w-md rounded-3xl border border-rose-500/30 bg-card p-6 shadow-2xl text-card-foreground">
-            <h3 className="text-base font-extrabold tracking-tight text-rose-500 mb-2">
-              Strict Exam Mode in Progress
-            </h3>
-            <p className="text-xs text-foreground-muted mb-5 leading-relaxed">
-              Official Cambridge and Pearson Edexcel exams do not permit pausing the clock. Pausing now will break authentic exam timing simulation.
-            </p>
-            <div className="flex items-center justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setShowStrictConfirm(false)}
-                className="rounded-xl px-4 py-2 text-xs font-semibold hover:bg-foreground/10 transition"
-              >
-                Keep Exam Running
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowStrictConfirm(false);
-                  pause();
-                }}
-                className="rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs px-4 py-2 transition"
-              >
-                Pause Anyway
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }
