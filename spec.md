@@ -66,6 +66,17 @@ Multi-role accounts use a JSON text array on D1 (`roles` stored as JSON text, e.
 
 ## 3. Core product pillars & navigation
 
+App shell navigation (features developer — `NavBar.tsx`):
+
+| Group | Destinations |
+|---|---|
+| **Home** | `/dashboard` (signed in) / `/` |
+| **Timetable** | `/timetable` (pinned; mobile bottom “Plan”) |
+| **Study** | Curriculum, Exam Countdown, Pomodoro |
+| **Tools** | Grade Calculator, Past Paper Tracker, Topic Tracker (`/curriculum`) |
+| **Community** | Tutors & Contributors, Leaderboard, About |
+| **Account / More** | Settings & Telegram; contributor hub; **admin-only** exam-data / user / about management |
+
 ### Pillar 1: Curriculum Hub (`/curriculum`) & Resources
 
 - **Curriculum Hub (`/curriculum`):** Unified board selector (Cambridge IGCSE, Cambridge A Level, Pearson Edexcel IGCSE, Pearson Edexcel IAL) leading to:
@@ -88,9 +99,9 @@ Multi-role accounts use a JSON text array on D1 (`roles` stored as JSON text, e.
 ### Pillar 2: Tools (`/tools`)
 
 - **Past Paper Tracker (`/past-papers`):** Cross-subject Excel-style matrix and card view with grade boundary derivation and gamification XP.
-- **Smart Timetable (`/timetable`):** Weekly planner for classes and study sessions.
+- **Smart Timetable (`/timetable`):** Day = task list; Week = time-blocking grid (default); Month = overview; Tasks = master list. Today Focus panel on Week/Tasks. Drag to reschedule, resize blocks, quick-add from empty slots. Exam countdowns sync into the grid and remain editable. Telegram reminders enqueue on create/update/move (per-event override or Settings defaults); drained by API Worker cron every 5 minutes.
 - **Pomodoro (`/pomodoro`):** Work/break intervals with session logging.
-- **Exam Countdown (`/countdown`):** Live counters for target exams.
+- **Exam Countdown (`/countdown`):** Live counters for target exams (also surfaces inside Timetable when “Show exams” is on).
 - **Grade Calculator (`/calculator`):** Weighted composite grades.
 - **Workspace (`/workspace`):** Personal study hub (bookmarks / saved items).
 

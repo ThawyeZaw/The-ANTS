@@ -132,6 +132,7 @@ export default function MyComponent() {
 | [`AGENTS.features.md`](./AGENTS.features.md) | Thaw Ye Zaw — features & backend |
 | [`docs/migration/cloudflare.md`](./docs/migration/cloudflare.md) | **Cloudflare migration phase tracker** (current phase + decisions) |
 | [`docs/migration/handoff-phase-4.md`](./docs/migration/handoff-phase-4.md) | **Paste this prompt** to continue Phase 4 in a new chat |
+| [`docs/timetable-telegram.md`](./docs/timetable-telegram.md) | Timetable views + Telegram reminder enqueue/cron |
 | [`README.md`](./README.md) | Project overview & setup |
 | [`spec.md`](./spec.md) | System specification |
 | [`docs/design/`](./docs/design/README.md) | Stitch light + dark design specs |

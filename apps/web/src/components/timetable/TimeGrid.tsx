@@ -34,6 +34,7 @@ interface TimeGridProps {
   onInlineCancel: () => void;
   onInlineExpand: (title: string) => void;
   onDayHeaderClick?: (date: Date) => void;
+  onResizeEvent?: (event: TimetableEvent, newEndIso: string) => void;
   editor?: GridEditor | null;
   renderEditor?: () => ReactNode;
 }
@@ -133,6 +134,7 @@ export default function TimeGrid({
   onInlineCancel,
   onInlineExpand,
   onDayHeaderClick,
+  onResizeEvent,
   editor = null,
   renderEditor,
 }: TimeGridProps) {
@@ -378,8 +380,10 @@ export default function TimeGrid({
                       leftPct={event.leftPct}
                       widthPct={event.widthPct}
                       draggable={!event.is_recurring}
+                      minutesPerPixel={60 / slotHeight}
                       onEdit={onEditEvent}
                       onToggleComplete={onToggleComplete}
+                      onResize={onResizeEvent}
                       details={open && renderEditor ? renderEditor() : undefined}
                       detailsAlign={align}
                     />

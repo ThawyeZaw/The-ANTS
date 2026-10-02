@@ -18,6 +18,7 @@ interface WeekViewProps {
   onInlineCancel: () => void;
   onInlineExpand: (title: string) => void;
   onDayHeaderClick: (date: Date) => void;
+  onResizeEvent?: (event: TimetableEvent, newEndIso: string) => void;
   editor?: GridEditor | null;
   renderEditor?: () => ReactNode;
 }
@@ -36,6 +37,7 @@ export default function WeekView({
   onInlineCancel,
   onInlineExpand,
   onDayHeaderClick,
+  onResizeEvent,
   editor,
   renderEditor,
 }: WeekViewProps) {
@@ -60,6 +62,7 @@ export default function WeekView({
       onInlineCancel={onInlineCancel}
       onInlineExpand={onInlineExpand}
       onDayHeaderClick={onDayHeaderClick}
+      onResizeEvent={onResizeEvent}
       editor={editor}
       renderEditor={renderEditor}
     />

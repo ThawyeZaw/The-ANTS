@@ -227,7 +227,7 @@ export function TodoPanel({ events, onToggleComplete, onCreateTodo, isLoading }:
       color_code: '#d97706',
       is_recurring: false,
       recurrence_rule: null,
-      reminder_minutes: null,
+      reminder_minutes: 15,
     });
   }, [onCreateTodo]);
 

@@ -1,6 +1,6 @@
 'use client';
 
-import type { CSSProperties, ReactNode } from 'react';
+import { useCallback, useRef, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import { Repeat } from 'lucide-react';
 import { useDraggable } from '@dnd-kit/core';
 import type { TimetableEvent } from '@/types/timetable';
@@ -11,6 +11,7 @@ interface TimeBlockProps {
   event: TimetableEvent;
   onEdit?: (event: TimetableEvent) => void;
   onToggleComplete?: (eventId: string) => void;
+  onResize?: (event: TimetableEvent, newEndIso: string) => void;
   heightPx?: number;
   topPx?: number;
   leftPct?: number;
@@ -18,12 +19,14 @@ interface TimeBlockProps {
   draggable?: boolean;
   details?: ReactNode;
   detailsAlign?: 'start' | 'end';
+  minutesPerPixel?: number;
 }
 
 export default function TimeBlock({
   event,
   onEdit,
   onToggleComplete,
+  onResize,
   heightPx,
   topPx,
   leftPct,
@@ -31,15 +34,19 @@ export default function TimeBlock({
   draggable = false,
   details,
   detailsAlign = 'start',
+  minutesPerPixel = 1,
 }: TimeBlockProps) {
-  const external = event.event_source !== 'user';
+  const editable = event.event_source === 'user' || event.event_source === 'exam_countdown';
+  const isUserTask = event.event_source === 'user';
   const color = event.color_code || '#3b82f6';
   const done = event.is_completed;
   const open = Boolean(details);
+  const resizing = useRef(false);
+
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: event.id,
     data: { event },
-    disabled: !draggable || external || open,
+    disabled: !draggable || !editable || open,
   });
 
   const short = heightPx !== undefined && heightPx < 46;
@@ -60,40 +67,93 @@ export default function TimeBlock({
     transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
   };
 
+  const handleResizePointerDown = useCallback(
+    (pointer: ReactPointerEvent) => {
+      if (!onResize || !event.start_time || !editable) return;
+      pointer.stopPropagation();
+      pointer.preventDefault();
+      resizing.current = true;
+      const startY = pointer.clientY;
+      const startEnd = event.end_time
+        ? new Date(event.end_time).getTime()
+        : new Date(event.start_time).getTime() + 60 * 60 * 1000;
+      const startMs = new Date(event.start_time).getTime();
+
+      const onMove = (move: PointerEvent) => {
+        const deltaMin = Math.round((move.clientY - startY) * minutesPerPixel / 15) * 15;
+        const nextEnd = Math.max(startMs + 15 * 60 * 1000, startEnd + deltaMin * 60 * 1000);
+        const el = (pointer.currentTarget as HTMLElement).parentElement;
+        if (el && heightPx !== undefined) {
+          const nextHeight = Math.max(22, ((nextEnd - startMs) / 60000) / minutesPerPixel);
+          el.style.height = `${nextHeight}px`;
+        }
+      };
+
+      const onUp = (up: PointerEvent) => {
+        resizing.current = false;
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        const deltaMin = Math.round((up.clientY - startY) * minutesPerPixel / 15) * 15;
+        const nextEnd = Math.max(startMs + 15 * 60 * 1000, startEnd + deltaMin * 60 * 1000);
+        onResize(event, new Date(nextEnd).toISOString());
+      };
+
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
+    },
+    [editable, event, heightPx, minutesPerPixel, onResize]
+  );
+
   return (
     <div data-editor-open={open ? 'true' : undefined} className={open ? 'overflow-visible' : undefined} style={frame}>
-    <div
-      ref={setNodeRef}
-      {...listeners}
-      {...attributes}
-      className="cursor-pointer overflow-hidden rounded-lg px-1.5 py-1 text-left shadow-sm"
-      style={style}
-      onClick={() => {
-        if (!isDragging && !external) onEdit?.(event);
-      }}
-    >
-      <div className="flex items-start gap-1">
-        {!external && (
-          <TaskCheck
-            checked={done}
-            color={color}
-            onToggle={() => onToggleComplete?.(event.id)}
-            label={done ? `Mark ${event.title} not done` : `Mark ${event.title} done`}
-            compact
+      <div
+        ref={setNodeRef}
+        {...listeners}
+        {...attributes}
+        className="relative cursor-pointer overflow-hidden rounded-lg px-1.5 py-1 text-left shadow-sm"
+        style={style}
+        onClick={() => {
+          if (!isDragging && !resizing.current && editable) onEdit?.(event);
+        }}
+      >
+        <div className="flex items-start gap-1">
+          {isUserTask && (
+            <TaskCheck
+              checked={done}
+              color={color}
+              onToggle={() => onToggleComplete?.(event.id)}
+              label={done ? `Mark ${event.title} not done` : `Mark ${event.title} done`}
+              compact
+            />
+          )}
+          {!isUserTask && (
+            <span
+              className="mt-0.5 h-2 w-2 shrink-0 rounded-full"
+              style={{ backgroundColor: color }}
+              title="Synced exam"
+            />
+          )}
+          <span className={`min-w-0 flex-1 text-[11px] font-semibold leading-tight sm:text-xs ${done ? 'line-through' : ''} ${short ? 'truncate' : 'break-words'}`}>
+            {event.title}
+          </span>
+          {event.is_recurring && <Repeat size={10} className="mt-0.5 shrink-0 opacity-70" />}
+        </div>
+        {!short && !event.all_day && event.start_time && (
+          <p className={`mt-0.5 text-[10px] tabular-nums opacity-80 ${isUserTask ? 'pl-5' : 'pl-3'}`}>
+            {formatClock(event.start_time)}
+            {event.end_time ? ` – ${formatClock(event.end_time)}` : ''}
+          </p>
+        )}
+        {isUserTask && onResize && heightPx !== undefined && heightPx >= 36 && (
+          <button
+            type="button"
+            aria-label={`Resize ${event.title}`}
+            className="absolute inset-x-1 bottom-0 h-2 cursor-ns-resize rounded-b-md opacity-0 hover:opacity-100 focus-visible:opacity-100"
+            style={{ backgroundColor: `color-mix(in srgb, ${color} 55%, transparent)` }}
+            onPointerDown={handleResizePointerDown}
           />
         )}
-        <span className={`min-w-0 flex-1 text-[11px] font-semibold leading-tight sm:text-xs ${done ? 'line-through' : ''} ${short ? 'truncate' : 'break-words'}`}>
-          {event.title}
-        </span>
-        {event.is_recurring && <Repeat size={10} className="mt-0.5 shrink-0 opacity-70" />}
       </div>
-      {!short && !event.all_day && event.start_time && (
-        <p className="mt-0.5 pl-5 text-[10px] tabular-nums opacity-80">
-          {formatClock(event.start_time)}
-          {event.end_time ? ` – ${formatClock(event.end_time)}` : ''}
-        </p>
-      )}
-    </div>
       {open && (
         <div
           className={`absolute top-full z-50 mt-1 w-[min(22rem,70vw)] overflow-hidden rounded-2xl border border-border bg-background-card shadow-2xl ${detailsAlign === 'end' ? 'right-0' : 'left-0'}`}

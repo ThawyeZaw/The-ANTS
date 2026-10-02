@@ -69,6 +69,11 @@ export interface TimetableEvent {
   /** ISO datetime when is_completed was set to true */
   completed_at: string | null;
   /**
+   * Minutes before start for Telegram reminder.
+   * number = override; null = use Settings defaults; -1 = off for this event.
+   */
+  reminder_minutes?: number | null;
+  /**
    * For an expanded repeating task, the original series start.
    * Edits keep this anchor so changing one day does not move the series.
    */
@@ -114,6 +119,7 @@ export interface TimetableEventFormData {
   is_todo: boolean;
   is_recurring: boolean;
   recurrence_rule: RecurrenceRule | null;
-  /** Minutes before start_time to send a Telegram notification. null = no reminder. */
+  /** Minutes before start_time to send a Telegram notification.
+   * number = override; null = use Settings defaults; -1 = off for this event. */
   reminder_minutes: number | null;
 }
