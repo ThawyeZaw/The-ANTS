@@ -29,9 +29,13 @@ export interface PastPaperFilter {
   series?: string;
 }
 
-/** Get list of subjects the user is enrolled in, or all subjects if none enrolled */
+/** Get list of subjects the user is enrolled in */
 export async function getEnrolledSubjects(userId: string) {
   try {
+    const guard = await requireSessionUser(userId);
+    if (!guard.ok) return [];
+    userId = guard.userId;
+
     const db = getDb();
 
     // 1. Fetch user enrollments
@@ -204,21 +208,10 @@ export async function listPastPapers(filters: PastPaperFilter = {}) {
 export async function getUserPastPaperRecords(userId: string, subjectId?: string) {
   try {
     const db = getDb();
-    const paperIds = subjectId
-      ? (
-          await db
-            .select({ id: pastPapers.id })
-            .from(pastPapers)
-            .where(eq(pastPapers.subject_id, subjectId))
-        ).map((p) => p.id)
-      : null;
-    if (subjectId && paperIds && paperIds.length === 0) return [];
 
-    return await db.query.userPastPaperRecords.findMany({
-      where: and(
-        eq(userPastPaperRecords.user_id, userId),
-        paperIds ? inArray(userPastPaperRecords.past_paper_id, paperIds) : undefined
-      ),
+    // Prefer user-scoped lookup (1 bind + index) over huge IN lists that trip D1's 100-var limit.
+    const rows = await db.query.userPastPaperRecords.findMany({
+      where: eq(userPastPaperRecords.user_id, userId),
       columns: {
         id: true,
         past_paper_id: true,
@@ -236,6 +229,9 @@ export async function getUserPastPaperRecords(userId: string, subjectId?: string
       },
       orderBy: [desc(userPastPaperRecords.updated_at)],
     });
+
+    if (!subjectId) return rows;
+    return rows.filter((r) => r.pastPaper?.subject_id === subjectId);
   } catch (error) {
     console.error('[past-papers] getUserPastPaperRecords error:', error);
     return [];

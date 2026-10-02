@@ -319,6 +319,7 @@ export default function SubjectDetailPage() {
               <PaperGrid
                 userId={user?.id ?? ''}
                 data={paperGridData}
+                workspaceSubjectId={subjectId}
                 onRecordChange={() => {
                   // PaperGrid manages cell score and status optimistically.
                   // Background sync happens silently with zero screen reload.

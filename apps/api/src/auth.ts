@@ -136,38 +136,74 @@ export function getAuth(
       user: {
         create: {
           after: async (createdUser) => {
+            await ensureAuthProfile(db, {
+              id: createdUser.id,
+              email: createdUser.email,
+              name: createdUser.name,
+              image: createdUser.image,
+            });
+          },
+        },
+      },
+      // Heal accounts created before the profile hook (or when create-after failed).
+      session: {
+        create: {
+          after: async (createdSession) => {
             try {
-              const baseUsername = (createdUser.name || createdUser.email.split('@')[0])
-                .toLowerCase()
-                .replace(/[^a-z0-9_]/g, '_')
-                .replace(/_+/g, '_')
-                .replace(/^_|_$/g, '')
-                .slice(0, 24) || 'user';
-              const taken = await db.query.profiles.findFirst({
-                where: eq(schema.profiles.username, baseUsername),
-                columns: { id: true },
+              const authUser = await db.query.user.findFirst({
+                where: eq(schema.user.id, createdSession.userId),
+                columns: { id: true, email: true, name: true, image: true },
               });
-              const username = taken
-                ? `${baseUsername}_${Math.random().toString(36).substring(2, 6)}`
-                : baseUsername;
-              await db
-                .insert(schema.profiles)
-                .values({
-                  id: createdUser.id,
-                  email: createdUser.email,
-                  name: createdUser.name || createdUser.email.split('@')[0],
-                  username,
-                  avatar_url: createdUser.image,
-                  role: 'student',
-                  roles: ['student'],
-                })
-                .onConflictDoNothing();
+              if (authUser) await ensureAuthProfile(db, authUser);
             } catch (err) {
-              console.error('Error auto-creating profile for new user:', err);
+              console.error('Error ensuring profile on session create:', err);
             }
           },
         },
       },
     },
   });
+}
+
+async function ensureAuthProfile(
+  db: Database,
+  authUser: { id: string; email: string; name: string | null; image?: string | null }
+) {
+  try {
+    const existing = await db.query.profiles.findFirst({
+      where: eq(schema.profiles.id, authUser.id),
+      columns: { id: true },
+    });
+    if (existing) return;
+
+    const baseUsername =
+      (authUser.name || authUser.email.split('@')[0])
+        .toLowerCase()
+        .replace(/[^a-z0-9_]/g, '_')
+        .replace(/_+/g, '_')
+        .replace(/^_|_$/g, '')
+        .slice(0, 24) || 'user';
+    const taken = await db.query.profiles.findFirst({
+      where: eq(schema.profiles.username, baseUsername),
+      columns: { id: true },
+    });
+    const username = taken
+      ? `${baseUsername}_${Math.random().toString(36).substring(2, 6)}`
+      : baseUsername;
+
+    await db
+      .insert(schema.profiles)
+      .values({
+        id: authUser.id,
+        email: authUser.email,
+        name: authUser.name || authUser.email.split('@')[0],
+        username,
+        avatar_url: authUser.image,
+        role: 'student',
+        roles: ['student'],
+      })
+      .onConflictDoNothing();
+  } catch (err) {
+    console.error('Error auto-creating profile for user:', authUser.id, err);
+  }
 }

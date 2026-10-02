@@ -1062,8 +1062,8 @@ export default function AdvancedProfileEditor() {
                 <div className="space-y-1">
                   <p className="font-bold">Verified Academic Creator</p>
                   <p className="text-[11px] opacity-90 leading-relaxed">
-                    As an authorized contributor, notes and syllabus summaries you publish appear directly in
-                    The ANTS Resource Library for thousands of students.
+                    Keep your contributor profile current so students can find you on the Tutors &amp;
+                    Contributors directory. Exam data and curriculum tools you edit ship directly to learners.
                   </p>
                 </div>
               </div>

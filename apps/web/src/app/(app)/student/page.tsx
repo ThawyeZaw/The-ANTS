@@ -23,7 +23,6 @@ import {
   Calculator,
   Wrench,
   ArrowRight,
-  Sparkles,
   Trophy,
   Target,
   ChevronRight,
@@ -226,14 +225,13 @@ export default function StudentDashboard() {
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-white/15 border border-white/20 backdrop-blur-sm">
-              <Sparkles className="h-3.5 w-3.5" />
               Study Hub
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight">
-              Welcome back, {firstName} 👋
+              Welcome back, {firstName}
             </h1>
             <p className="text-sm text-primary-foreground/75 max-w-md leading-relaxed">
-              Your integrated academic HQ for IGCSE & A-Level mastery.
+              Track subjects, past papers, and exam countdowns in one place.
             </p>
             <div className="flex items-center gap-2 flex-wrap pt-1">
               <Link href="/workspace" className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/15 border border-white/20 hover:bg-white/25 transition-colors flex items-center gap-1.5">
@@ -247,8 +245,13 @@ export default function StudentDashboard() {
                   </Link>
                 )}
                 {(isContributor || isAdmin) && (
-                  <Link href="/past-papers" className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/15 border border-white/20 hover:bg-white/25 transition-colors flex items-center gap-1.5">
-                    <Pencil className="w-3.5 h-3.5" /> Past Papers
+                  <Link href="/contributor" className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/15 border border-white/20 hover:bg-white/25 transition-colors flex items-center gap-1.5">
+                    <Pencil className="w-3.5 h-3.5" /> Contributor
+                  </Link>
+                )}
+                {(isContributor || isAdmin) && (
+                  <Link href="/admin/exam-data" className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/15 border border-white/20 hover:bg-white/25 transition-colors flex items-center gap-1.5">
+                    <BookOpen className="w-3.5 h-3.5" /> Exam Data
                   </Link>
                 )}
                 {isAdmin && (
@@ -380,21 +383,16 @@ export default function StudentDashboard() {
 
         {/* ── Coming Soon Resources Strip ─────────────────────────────────── */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl border border-dashed border-border bg-background-secondary/30">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
-              <Sparkles className="w-4 h-4" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-foreground">
-                In Active Development: Notes, Flashcards &amp; Quizzes
-              </p>
-              <p className="text-xs text-foreground-muted">
-                Our academic contributors are authoring curriculum-verified revision materials from scratch.
-              </p>
-            </div>
+          <div>
+            <p className="text-sm font-semibold text-foreground">
+              Notes, flashcards &amp; quizzes are being rebuilt
+            </p>
+            <p className="text-xs text-foreground-muted mt-0.5">
+              In-app study materials are coming next — curriculum, past papers, and timers are ready now.
+            </p>
           </div>
           <span className="shrink-0 text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-            Phase 2 Pipeline
+            In development
           </span>
         </div>
       </section>

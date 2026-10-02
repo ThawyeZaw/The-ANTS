@@ -1,12 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import {
   ShieldCheck,
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
   UserPlus,
   ClipboardCheck,
   Building,
@@ -19,23 +15,9 @@ import { WorkspaceToastProvider } from '@/components/workspace/WorkspaceToast';
 import CourseSyncPanel from '@/components/layout/CourseSyncPanel';
 import QuickAccessToolbar from '@/components/layout/QuickAccessToolbar';
 
-const iconMap: Record<string, typeof AlertTriangle> = {
-  'pending-reviews': AlertTriangle,
-  'approved-this-week': CheckCircle,
-  'rejected-this-week': XCircle,
-  'total-reviewed': ShieldCheck,
-};
-
 export default function MainContributorDashboard() {
   const { user } = useAuth();
   const { isAdmin } = useRole();
-
-  const [stats] = useState<any[]>([
-    { id: 'pending-reviews', key: 'pending-reviews', label: 'Pending Reviews', value: 0, color: 'amber' },
-    { id: 'approved-this-week', key: 'approved-this-week', label: 'Approved by You', value: 0, color: 'emerald' },
-    { id: 'rejected-this-week', key: 'rejected-this-week', label: 'Rejected by You', value: 0, color: 'red' },
-    { id: 'total-reviewed', key: 'total-reviewed', label: 'Total Reviewed', value: 0, color: 'violet' },
-  ]);
 
   if (!user || !isAdmin) {
     return (
@@ -82,11 +64,11 @@ export default function MainContributorDashboard() {
               Manage Users
             </Link>
             <Link
-              href="/past-papers"
+              href="/admin/exam-data"
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-background-secondary border border-border text-foreground text-xs font-bold hover:bg-background-secondary/80 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
               <ClipboardCheck className="w-3.5 h-3.5" />
-              Past Paper Catalog
+              Exam Data Admin
             </Link>
             <Link
               href="/org-activities/manage"
@@ -107,22 +89,34 @@ export default function MainContributorDashboard() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {stats.map((stat) => {
-            const Icon = iconMap[stat.id] || ShieldCheck;
-            return (
-              <div
-                key={stat.id}
-                className="p-5 rounded-2xl bg-background-card border border-border flex items-center gap-4 hover:border-border-hover transition-colors"
-              >
-                <AppIcon icon={Icon} size="md" tone="secondary" frame="soft" />
-                <div>
-                  <p className="text-xl font-bold text-foreground">{stat.value}</p>
-                  <p className="text-xs text-foreground-muted">{stat.label}</p>
-                </div>
-              </div>
-            );
-          })}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Link
+            href="/admin/exam-data"
+            className="p-5 rounded-2xl bg-background-card border border-border hover:border-primary/40 transition-colors"
+          >
+            <p className="text-sm font-bold text-foreground">Exam Data Admin</p>
+            <p className="text-xs text-foreground-muted mt-1">
+              Edit papers, grade boundaries, and series data.
+            </p>
+          </Link>
+          <Link
+            href="/main-contributor/add-contributor"
+            className="p-5 rounded-2xl bg-background-card border border-border hover:border-primary/40 transition-colors"
+          >
+            <p className="text-sm font-bold text-foreground">Manage users</p>
+            <p className="text-xs text-foreground-muted mt-1">
+              Assign contributor and staff roles.
+            </p>
+          </Link>
+          <Link
+            href="/curriculum"
+            className="p-5 rounded-2xl bg-background-card border border-border hover:border-primary/40 transition-colors"
+          >
+            <p className="text-sm font-bold text-foreground">Curriculum hub</p>
+            <p className="text-xs text-foreground-muted mt-1">
+              Review enrolled subjects the way students see them.
+            </p>
+          </Link>
         </div>
 
         {/* Workspace */}

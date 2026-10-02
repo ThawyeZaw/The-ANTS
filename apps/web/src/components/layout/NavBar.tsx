@@ -352,10 +352,16 @@ export default function NavBar() {
         </Link>
       )}
       {(isContributor || isAdmin) && (
-        <Link href="/past-papers" onClick={closePanel} className={roleLinkClass}>
-          <ClipboardCheck className="w-4 h-4 text-primary shrink-0" />
-          <span className="truncate">Past Paper Catalog</span>
-        </Link>
+        <>
+          <Link href="/contributor" onClick={closePanel} className={roleLinkClass}>
+            <Pencil className="w-4 h-4 text-primary shrink-0" />
+            <span className="truncate">Contributor Hub</span>
+          </Link>
+          <Link href="/admin/exam-data" onClick={closePanel} className={roleLinkClass}>
+            <ClipboardCheck className="w-4 h-4 text-primary shrink-0" />
+            <span className="truncate">Exam Data Admin</span>
+          </Link>
+        </>
       )}
       {isAdmin && (
         <>
@@ -471,13 +477,19 @@ export default function NavBar() {
           </div>
 
           {/* Staff-only tools */}
-          {mounted && hasStaffRole && (
+          {mounted && (isContributor || isAdmin) && (
             <div className="pt-1 mt-1 border-t border-border/40 space-y-1">
               <RailIconLink
-                href="/past-papers"
-                label="Past Paper Catalog"
+                href="/contributor"
+                label="Contributor Hub"
+                icon={Pencil}
+                active={pathname.startsWith('/contributor')}
+              />
+              <RailIconLink
+                href="/admin/exam-data"
+                label="Exam Data Admin"
                 icon={ClipboardCheck}
-                active={pathname.startsWith('/past-papers') || pathname.startsWith('/main-contributor')}
+                active={pathname.startsWith('/admin/exam-data')}
               />
             </div>
           )}

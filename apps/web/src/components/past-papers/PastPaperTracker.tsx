@@ -11,21 +11,13 @@ import { useSearchParams } from 'next/navigation';
 import {
   BookOpen,
   Search,
-  Filter,
-  Plus,
   Flame,
-  Zap,
   CheckCircle2,
   Award,
   Sparkles,
   BarChart3,
-  Calendar,
-  Layers,
-  GraduationCap,
   Table,
   LayoutGrid,
-  Route,
-  ArrowLeft,
   Calculator,
   SlidersHorizontal,
 } from 'lucide-react';
@@ -38,8 +30,14 @@ import { PaperGrid } from './PaperGrid';
 import { PaperCard, type UserPaperRecord } from './PaperCard';
 import type { PastPaperData } from './InlineGradeCalc';
 import { useEdexcelSuiteSelectors } from '@/components/exam-data/useEdexcelSuiteSelectors';
-import { groupEdexcelIalSubjects } from '@/lib/edexcel-ial';
+import {
+  applyMathFmCombineRule,
+  boardBadgeFromCurriculum,
+  groupEdexcelIalSubjects,
+  IAL_MATH_FM_COMBINED_ID,
+} from '@/lib/edexcel-ial';
 import { IalOptionalUnitsModal } from '@/components/curriculum/IalOptionalUnitsModal';
+import { SubjectSwitcher, type SubjectSwitcherOption } from './SubjectSwitcher';
 
 function flattenGrid(
   grid: PaperGridData,
@@ -114,9 +112,8 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'cards'>('grid');
   const [gridData, setGridData] = useState<PaperGridData | null>(null);
+  const [gridError, setGridError] = useState<string | null>(null);
   const [isOptionalModalOpen, setIsOptionalModalOpen] = useState(false);
-  // Unit-group filter for combined Math+FM grid (Pure Core / Applied / Further Pure)
-  const [unitGroupFilter, setUnitGroupFilter] = useState<'all' | 'pure' | 'applied' | 'further'>('all');
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -124,54 +121,44 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
   const [selectedSeries, setSelectedSeries] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<'all' | 'done' | 'not_done' | 'skipped'>('all');
 
-  // Group enrolled subjects (combines Edexcel IAL units into parent qualifications like Mathematics)
-  const groupedSubjects = useMemo(() => {
-    return groupEdexcelIalSubjects(enrolledSubjects);
+  // Group enrolled subjects; when both Maths + FM are taken, only show the combined entry
+  const { options: switcherGroups, combined: combinedMathFmEntry } = useMemo(() => {
+    return applyMathFmCombineRule(groupEdexcelIalSubjects(enrolledSubjects));
   }, [enrolledSubjects]);
 
-  // Detect if student takes Mathematics and/or Further Mathematics
-  const hasMathGroup = useMemo(
-    () => groupedSubjects.some((g) => g.title === 'Mathematics'),
-    [groupedSubjects]
-  );
-  const hasFmGroup = useMemo(
-    () => groupedSubjects.some((g) => g.title === 'Further Mathematics'),
-    [groupedSubjects]
-  );
-  const bothTaken = hasMathGroup && hasFmGroup;
-  // Always allow combined Math+FM if either Mathematics or Further Math is in enrolled subjects
-  const showCombinedMathFm = hasMathGroup || hasFmGroup;
-
-  // Virtual combined entry that appears at the top of the switcher when applicable
-  const combinedMathFmEntry = useMemo(() => {
-    if (!showCombinedMathFm) return null;
-    const mathGrp = groupedSubjects.find((g) => g.title === 'Mathematics');
-    const fmGrp = groupedSubjects.find((g) => g.title === 'Further Mathematics');
-    return {
-      id: 'subj-edx-ial-math-fm-group',
-      primarySubjectId: 'subj-edx-ial-math-fm-group',
-      title: 'Mathematics & Further Mathematics',
-      code: 'YMA01 + YFM01 (12 Units)',
-      isVirtual: true,
-      units: [...(mathGrp?.units ?? []), ...(fmGrp?.units ?? [])],
-      curriculum_id: mathGrp?.curriculum_id ?? fmGrp?.curriculum_id ?? 'curr-edexcel-ial',
-      hasOptionalUnits: true,
-      enrolledUnitsCount: (mathGrp?.enrolledUnitsCount ?? 0) + (fmGrp?.enrolledUnitsCount ?? 0),
-    };
-  }, [showCombinedMathFm, groupedSubjects]);
-
   const activeGroup = useMemo(() => {
-    if (selectedSubjectId === 'subj-edx-ial-math-fm-group' && combinedMathFmEntry) {
+    if (selectedSubjectId === IAL_MATH_FM_COMBINED_ID && combinedMathFmEntry) {
       return combinedMathFmEntry;
     }
-    if (groupedSubjects.length === 0) return null;
-    if (!selectedSubjectId) return combinedMathFmEntry ?? groupedSubjects[0];
+    if (switcherGroups.length === 0) return null;
+    if (!selectedSubjectId) return switcherGroups[0];
     return (
-      groupedSubjects.find(
+      switcherGroups.find(
         (g) => g.id === selectedSubjectId || g.units.some((u) => u.id === selectedSubjectId)
-      ) ?? combinedMathFmEntry ?? groupedSubjects[0]
+      ) ?? switcherGroups[0]
     );
-  }, [groupedSubjects, selectedSubjectId, combinedMathFmEntry]);
+  }, [switcherGroups, selectedSubjectId, combinedMathFmEntry]);
+
+  const subjectSwitcherOptions: SubjectSwitcherOption[] = useMemo(
+    () =>
+      switcherGroups.map((grp) => {
+        const curriculumCode =
+          grp.units[0]?.curriculum?.code ??
+          grp.curriculum_id ??
+          (grp.id.startsWith('subj-edx-ial') ? 'EDEXCEL_IAL' : undefined);
+        return {
+          value: grp.primarySubjectId || grp.id,
+          label: grp.title,
+          code: grp.code || undefined,
+          boardBadge: boardBadgeFromCurriculum(curriculumCode),
+        };
+      }),
+    [switcherGroups]
+  );
+
+  // Load papers once the enrolled list is ready and the active subject is known.
+  // Avoids a double D1 hit: empty enrollments → subject resolved → fetch again.
+  const [hubReady, setHubReady] = useState(false);
 
   // Load enrolled subjects & gamification stats
   const refreshUserData = async () => {
@@ -189,44 +176,57 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
         longestStreak: stats.longestStreak,
       });
 
-      const groups = groupEdexcelIalSubjects(subjs);
-      if (groups.length > 0) {
-        const hasMath = groups.some((g) => g.title === 'Mathematics');
-        const hasFm = groups.some((g) => g.title === 'Further Mathematics');
-        const isBoth = hasMath && hasFm;
+      const { options: groups, bothTaken: both, combined } = applyMathFmCombineRule(
+        groupEdexcelIalSubjects(subjs)
+      );
+      if (groups.length === 0) return;
 
-        // Auto-select combined 12-unit view if Maths is taken or on math group, and sync URL
-        if (
-          !selectedSubjectId ||
-          selectedSubjectId === 'subj-edx-ial-math-group' ||
-          selectedSubjectId === 'subj-edx-ial-fmath-group' ||
-          subjectFromUrl === 'subj-edx-ial-math-fm-group'
-        ) {
-          if (subjectFromUrl && subjectFromUrl !== 'subj-edx-ial-math-group' && subjectFromUrl !== 'subj-edx-ial-fmath-group') {
-            const fromUrl = subjectFromUrl === 'subj-edx-ial-math-fm-group'
-              ? { primarySubjectId: 'subj-edx-ial-math-fm-group' }
-              : groups.find((g) => g.id === subjectFromUrl || g.units.some((u) => u.id === subjectFromUrl));
-            setSelectedSubjectId(fromUrl?.primarySubjectId ?? ((hasMath || hasFm) ? 'subj-edx-ial-math-fm-group' : groups[0].primarySubjectId));
-          } else if (hasMath || hasFm) {
-            // Default to combined 12-unit view for Double Mathematics
-            setSelectedSubjectId('subj-edx-ial-math-fm-group');
-            if (typeof window !== 'undefined') {
-              const url = new URL(window.location.href);
-              url.searchParams.set('subject', 'subj-edx-ial-math-fm-group');
-              window.history.replaceState(null, '', url.toString());
-            }
-          } else {
-            setSelectedSubjectId(groups[0].primarySubjectId);
-          }
-        } else if (selectedSubjectId !== 'subj-edx-ial-math-fm-group') {
-          const matchingGroup = groups.find((g) => g.units.some((u) => u.id === selectedSubjectId));
-          if (matchingGroup && selectedSubjectId !== matchingGroup.primarySubjectId) {
-            setSelectedSubjectId(matchingGroup.primarySubjectId);
-          }
+      const syncUrl = (id: string) => {
+        if (typeof window === 'undefined') return;
+        const url = new URL(window.location.href);
+        url.searchParams.set('subject', id);
+        window.history.replaceState(null, '', url.toString());
+      };
+
+      // When both Maths + FM are taken, always force the combined workspace
+      if (both && combined) {
+        setSelectedSubjectId(IAL_MATH_FM_COMBINED_ID);
+        syncUrl(IAL_MATH_FM_COMBINED_ID);
+        return;
+      }
+
+      const fromUrl = subjectFromUrl
+        ? groups.find(
+            (g) =>
+              g.id === subjectFromUrl ||
+              g.primarySubjectId === subjectFromUrl ||
+              g.units.some((u) => u.id === subjectFromUrl)
+          )
+        : null;
+
+      if (fromUrl) {
+        setSelectedSubjectId(fromUrl.primarySubjectId);
+      } else if (!selectedSubjectId || selectedSubjectId === IAL_MATH_FM_COMBINED_ID) {
+        setSelectedSubjectId(groups[0].primarySubjectId);
+        syncUrl(groups[0].primarySubjectId);
+      } else {
+        const matchingGroup = groups.find(
+          (g) =>
+            g.primarySubjectId === selectedSubjectId ||
+            g.id === selectedSubjectId ||
+            g.units.some((u) => u.id === selectedSubjectId)
+        );
+        if (matchingGroup) {
+          setSelectedSubjectId(matchingGroup.primarySubjectId);
+        } else {
+          setSelectedSubjectId(groups[0].primarySubjectId);
+          syncUrl(groups[0].primarySubjectId);
         }
       }
     } catch (err) {
       console.error('Failed to load user study data:', err);
+    } finally {
+      setHubReady(true);
     }
   };
 
@@ -234,34 +234,80 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
     refreshUserData();
   }, [userId]);
 
+  const subjectIdToLoad = activeGroup?.primarySubjectId ?? selectedSubjectId;
+  const activeTier =
+    (activeGroup?.units[0]?.tier as 'core' | 'extended' | null | undefined) ??
+    (enrolledSubjects.find((s) => s.id === subjectIdToLoad)?.tier as
+      | 'core'
+      | 'extended'
+      | null
+      | undefined) ??
+    null;
+
+  const reloadPaperGrid = React.useCallback(
+    async (showLoader = true) => {
+      if (!subjectIdToLoad) return;
+      if (showLoader) setLoading(true);
+      try {
+        const grid = await getPaperGridData(
+          userId,
+          subjectIdToLoad,
+          undefined,
+          undefined,
+          activeTier
+        );
+        setGridData(grid);
+        setGridError(grid.error ?? null);
+      } catch (err) {
+        console.error('Failed to load past papers:', err);
+        setGridData(null);
+        setGridError(err instanceof Error ? err.message : 'Failed to load past papers');
+      } finally {
+        if (showLoader) setLoading(false);
+      }
+    },
+    [subjectIdToLoad, userId, activeTier]
+  );
+
   // Load papers & user records when selected subject changes
-  const loadPapersForSubject = React.useCallback(async (showLoader = true) => {
-    const subjectIdToLoad = activeGroup?.primarySubjectId ?? selectedSubjectId;
-    if (!subjectIdToLoad) {
-      setLoading(false);
+  useEffect(() => {
+    if (!hubReady || !subjectIdToLoad) {
+      if (hubReady) setLoading(false);
       return;
     }
-    if (showLoader) setLoading(true);
-    try {
-      const currentSub = activeGroup?.units[0] ?? enrolledSubjects.find((s) => s.id === subjectIdToLoad);
-      const grid = await getPaperGridData(
-        userId,
-        subjectIdToLoad,
-        undefined,
-        undefined,
-        (currentSub?.tier as 'core' | 'extended' | null) ?? null
-      );
-      setGridData(grid);
-    } catch (err) {
-      console.error('Failed to load past papers:', err);
-    } finally {
-      if (showLoader) setLoading(false);
-    }
-  }, [activeGroup, selectedSubjectId, userId, enrolledSubjects]);
 
-  useEffect(() => {
-    loadPapersForSubject(true);
-  }, [loadPapersForSubject]);
+    let cancelled = false;
+    setLoading(true);
+    setGridError(null);
+
+    void (async () => {
+      try {
+        const grid = await getPaperGridData(
+          userId,
+          subjectIdToLoad,
+          undefined,
+          undefined,
+          activeTier
+        );
+        if (!cancelled) {
+          setGridData(grid);
+          setGridError(grid.error ?? null);
+        }
+      } catch (err) {
+        console.error('Failed to load past papers:', err);
+        if (!cancelled) {
+          setGridData(null);
+          setGridError(err instanceof Error ? err.message : 'Failed to load past papers');
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hubReady, subjectIdToLoad, userId, activeTier]);
 
   // Background sync for gamification stats when a cell record is updated in PaperGrid
   const handleGridRecordChange = React.useCallback(async () => {
@@ -287,36 +333,24 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
     isSuite ? currentSubject?.qualification_data : null
   );
 
-  // IAL unit-group filter code sets (for combined Math+FM view)
-  const PURE_CORE_CODES = new Set(['WMA11', 'WMA12', 'WMA13', 'WMA14']);
-  const FURTHER_PURE_CODES = new Set(['WFM01', 'WFM02', 'WFM03']);
-  const APPLIED_CODES = new Set(['WME01', 'WME02', 'WME03', 'WST01', 'WST02', 'WST03', 'WDM11']);
-  const isCombinedMathFm = selectedSubjectId === 'subj-edx-ial-math-fm-group';
+  const isCombinedMathFm = selectedSubjectId === IAL_MATH_FM_COMBINED_ID;
 
   const filteredGridData = useMemo(() => {
     if (!gridData) return null;
-
-    // Unit-group filter for combined Math+FM view
-    if (isCombinedMathFm && unitGroupFilter !== 'all') {
-      const allowed = unitGroupFilter === 'pure' ? PURE_CORE_CODES
-        : unitGroupFilter === 'further' ? FURTHER_PURE_CODES
-        : APPLIED_CODES;
-      return {
-        ...gridData,
-        rows: gridData.rows.filter((row) => allowed.has(row.paperNumber)),
-      };
-    }
 
     if (!isSuite || suiteSelectors.activeUnits.size === 0) return gridData;
 
     return {
       ...gridData,
-      rows: gridData.rows.filter(row => {
-         const baseCode = row.paperNumber.split('/')[0];
-         return suiteSelectors.activeUnits.has(baseCode) || suiteSelectors.activeUnits.has(row.paperNumber);
-      })
+      rows: gridData.rows.filter((row) => {
+        const baseCode = row.paperNumber.split('/')[0];
+        return (
+          suiteSelectors.activeUnits.has(baseCode) ||
+          suiteSelectors.activeUnits.has(row.paperNumber)
+        );
+      }),
     };
-  }, [gridData, isSuite, suiteSelectors.activeUnits, isCombinedMathFm, unitGroupFilter]);
+  }, [gridData, isSuite, suiteSelectors.activeUnits]);
 
   useEffect(() => {
     if (!filteredGridData) {
@@ -362,6 +396,9 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
         calculatedUms: data?.calculated_ums || undefined,
         notes: data?.notes || undefined,
       });
+      if (!res.success) {
+        throw new Error(res.error || 'Failed to save paper record');
+      }
       if (res.gamification) handleAwardResult(res.gamification);
 
       const stats = await getGamificationProfile(userId);
@@ -374,6 +411,8 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
       });
     } catch (err) {
       console.error('Failed to update past paper record:', err);
+      // Roll back optimistic card update by reloading grid-derived records
+      void reloadPaperGrid(false);
     }
   };
 
@@ -424,15 +463,23 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
     });
   }, [papers, searchQuery, selectedYear, selectedSeries, selectedStatus, records]);
 
-  // Progress calculations
+  // Progress: unique papers (not session cells), prefer server required progress when present
   const stats = useMemo(() => {
-    const total = papers.length;
+    const uniqueIds = new Set(papers.map((p) => p.id));
+    const totalFromPapers = uniqueIds.size;
+    const progress = gridData?.progress;
+    const total =
+      progress && progress.requiredTotal > 0 ? progress.requiredTotal : totalFromPapers;
+
     let done = 0;
     let skipped = 0;
     let totalScore = 0;
     let scoredCount = 0;
+    const seen = new Set<string>();
 
     papers.forEach((p) => {
+      if (seen.has(p.id)) return;
+      seen.add(p.id);
       const rec = records[p.id];
       if (rec?.status === 'done') {
         done++;
@@ -445,11 +492,46 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
       }
     });
 
+    if (progress && progress.requiredTotal > 0) {
+      done = progress.requiredDone;
+    }
+
     const percentDone = total > 0 ? Math.round((done / total) * 100) : 0;
     const avgScore = scoredCount > 0 ? Math.round((totalScore / scoredCount) * 10) / 10 : null;
 
     return { total, done, skipped, percentDone, avgScore };
-  }, [papers, records]);
+  }, [papers, records, gridData?.progress]);
+
+  const emptyPapersCopy = gridError
+    ? 'Something went wrong loading past papers. Please try again.'
+    : 'Past papers for this subject are not available yet. Check the curriculum hub or try another subject.';
+
+  const initialAwardCode = useMemo(() => {
+    const isFurther = (activeGroup?.title ?? '').toLowerCase().includes('further');
+    const isAs = gridData?.awardLevel === 'AS';
+    if (isFurther) return isAs ? 'XFM01' : 'YFM01';
+    return isAs ? 'XMA01' : 'YMA01';
+  }, [activeGroup?.title, gridData?.awardLevel]);
+
+  if (hubReady && enrolledSubjects.length === 0) {
+    return (
+      <div className="p-12 text-center rounded-3xl border border-dashed border-border bg-background-card space-y-4 max-w-7xl mx-auto">
+        <BookOpen className="w-12 h-12 text-primary/40 mx-auto" />
+        <div className="space-y-1.5">
+          <h3 className="text-lg font-bold text-foreground">No subjects enrolled</h3>
+          <p className="text-xs text-foreground-muted max-w-md mx-auto leading-relaxed">
+            Enroll in a syllabus from the curriculum hub to track past papers and grades here.
+          </p>
+        </div>
+        <Link
+          href="/curriculum"
+          className="inline-flex items-center justify-center px-4 py-2 rounded-xl text-xs font-bold text-primary-foreground bg-primary hover:bg-primary/90 transition-colors"
+        >
+          Browse curriculum
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 animate-fade-in pb-16 max-w-7xl mx-auto">
@@ -459,54 +541,22 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
         <div className="flex flex-wrap items-center justify-between gap-3">
           {/* Left: Dropdown, Award Badge & Modal Links */}
           <div className="flex items-center gap-2 flex-wrap">
-            <div className="min-w-[200px] max-w-xs sm:max-w-md">
-              <select
-                value={isCombinedMathFm ? 'subj-edx-ial-math-fm-group' : (activeGroup?.id ?? selectedSubjectId)}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (val === 'subj-edx-ial-math-fm-group') {
-                    setSelectedSubjectId('subj-edx-ial-math-fm-group');
-                    setUnitGroupFilter('all');
-                    if (typeof window !== 'undefined') {
-                      const url = new URL(window.location.href);
-                      url.searchParams.set('subject', 'subj-edx-ial-math-fm-group');
-                      window.history.replaceState(null, '', url.toString());
-                    }
-                    return;
-                  }
-                  const grp = groupedSubjects.find((g) => g.id === val);
-                  if (grp) {
-                    setSelectedSubjectId(grp.primarySubjectId);
-                    setUnitGroupFilter('all');
-                    if (typeof window !== 'undefined') {
-                      const url = new URL(window.location.href);
-                      url.searchParams.set('subject', grp.primarySubjectId);
-                      window.history.replaceState(null, '', url.toString());
-                    }
-                  }
-                }}
-                className="w-full rounded-xl border border-border bg-background-secondary px-3 py-1.5 text-xs sm:text-sm font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer shadow-2xs"
-              >
-                {groupedSubjects.length === 0 && (
-                  <option value="">No subjects enrolled</option>
-                )}
-                {/* Combined entry at top for Maths / Double Maths */}
-                {combinedMathFmEntry && (
-                  <option value="subj-edx-ial-math-fm-group">
-                    ✦ Mathematics & Further Mathematics (Combined · 12 Units)
-                  </option>
-                )}
-                {groupedSubjects.map((grp) => (
-                  <option key={grp.id} value={grp.id}>
-                    {grp.code ? `${grp.code} — ` : ''}{grp.title}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-lg text-[11px] font-mono font-bold bg-primary/10 text-primary border border-primary/20">
-              {activeGroup?.code ?? currentSubject?.code ?? 'IAL'}
-            </span>
+            <SubjectSwitcher
+              value={
+                isCombinedMathFm
+                  ? IAL_MATH_FM_COMBINED_ID
+                  : (activeGroup?.primarySubjectId ?? selectedSubjectId)
+              }
+              options={subjectSwitcherOptions}
+              onChange={(val) => {
+                setSelectedSubjectId(val);
+                if (typeof window !== 'undefined') {
+                  const url = new URL(window.location.href);
+                  url.searchParams.set('subject', val);
+                  window.history.replaceState(null, '', url.toString());
+                }
+              }}
+            />
 
             {/* Customize Units modal button */}
             {activeGroup?.hasOptionalUnits && (
@@ -522,7 +572,7 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
 
             {/* Calculator Quick Link */}
             <Link
-              href="/tools/calculator"
+              href="/calculator"
               className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-foreground-secondary hover:text-foreground bg-background-secondary hover:bg-background-tertiary border border-border transition-colors shadow-2xs"
             >
               <Calculator className="w-3.5 h-3.5 text-amber-500" />
@@ -613,34 +663,6 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
         </div>
       </div>
 
-      {/* ── Unit-Group Filter Tabs (Combined Maths+FM only) ──────────────── */}
-      {isCombinedMathFm && !loading && gridData && (
-        <div className="flex flex-wrap items-center gap-1.5 rounded-2xl border border-border bg-background-card p-1.5 text-xs shadow-xs">
-          {([
-            { id: 'all', label: `All ${gridData.rows.length} Units`, icon: '✦', count: gridData.rows.length },
-            { id: 'pure', label: 'Pure Core (P1–P4)', icon: '📐', count: gridData.rows.filter((r) => PURE_CORE_CODES.has(r.paperNumber)).length },
-            { id: 'applied', label: 'Applied (M·S·D)', icon: '📊', count: gridData.rows.filter((r) => APPLIED_CODES.has(r.paperNumber)).length },
-            { id: 'further', label: 'Further Pure (FP1–FP3)', icon: '∞', count: gridData.rows.filter((r) => FURTHER_PURE_CODES.has(r.paperNumber)).length },
-          ] as const).map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setUnitGroupFilter(tab.id as typeof unitGroupFilter)}
-              className={cn(
-                'inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 font-semibold transition-all cursor-pointer',
-                unitGroupFilter === tab.id
-                  ? 'bg-primary text-primary-foreground shadow-2xs font-bold'
-                  : 'text-foreground-muted hover:text-foreground hover:bg-background-secondary'
-              )}
-            >
-              <span>{tab.icon}</span>
-              <span>{tab.label}</span>
-              <span className="font-mono text-[10px] opacity-75">({tab.count})</span>
-            </button>
-          ))}
-        </div>
-      )}
-
       {/* ── Content View: Excel Grid vs Cards ─────────────────────────────── */}
       {viewMode === 'grid' ? (
         loading ? (
@@ -651,6 +673,11 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
           <PaperGrid
             userId={userId}
             data={filteredGridData}
+            workspaceSubjectId={
+              isCombinedMathFm
+                ? IAL_MATH_FM_COMBINED_ID
+                : (activeGroup?.primarySubjectId ?? selectedSubjectId)
+            }
             onRecordChange={handleGridRecordChange}
           />
         ) : (
@@ -661,7 +688,7 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
                 No Past Papers Found
               </h3>
               <p className="text-xs text-foreground-muted max-w-md mx-auto leading-relaxed">
-                No past papers have been seeded for this subject yet. You can seed them via D1 SQL.
+                {emptyPapersCopy}
               </p>
             </div>
           </div>
@@ -809,7 +836,7 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
                 <p className="text-xs text-foreground-muted max-w-md mx-auto leading-relaxed">
                   {searchQuery || selectedYear !== 'all' || selectedSeries !== 'all' || selectedStatus !== 'all'
                     ? 'Try adjusting your filters or search term to see more papers.'
-                    : 'No past papers have been seeded for this subject yet. You can seed them via D1 SQL.'}
+                    : emptyPapersCopy}
                 </p>
               </div>
               {(searchQuery || selectedYear !== 'all' || selectedSeries !== 'all' || selectedStatus !== 'all') && (
@@ -838,7 +865,7 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
           onClose={() => setIsOptionalModalOpen(false)}
           userId={userId}
           subjectTitle={activeGroup.title}
-          initialAwardCode={gridData?.awardLevel === 'AS' ? 'XMA01' : 'YMA01'}
+          initialAwardCode={initialAwardCode}
           availableUnits={activeGroup.units.map((u) => ({
             id: u.id,
             code: u.code || '',
@@ -846,7 +873,7 @@ export function PastPaperTracker({ userId }: PastPaperTrackerProps) {
           }))}
           onSuccess={() => {
             setIsOptionalModalOpen(false);
-            loadPapersForSubject(true);
+            void reloadPaperGrid(true);
           }}
         />
       )}
