@@ -133,7 +133,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   }, [isAuthenticated, isLoading, user, router, guestOk]);
 
+  // Guest-allowed tools (calculator, pomodoro, tools): paint immediately so LCP
+  // is not blocked on session resolution. Auth redirects still run in the effect.
   if (isLoading) {
+    if (guestOk) {
+      return <GuestChrome immersive={immersive}>{children}</GuestChrome>;
+    }
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-4 animate-pulse-soft">

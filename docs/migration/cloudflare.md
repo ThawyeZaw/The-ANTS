@@ -29,7 +29,7 @@
 | D13 | Same Cloudflare account for web + API + D1 + R2 |
 | D14 | Move DNS authority to Cloudflare; keep web on Vercel until Phase 6 |
 | D15 | Telegram webhook currently on Vercel (verify before cutover) |
-| D16 | OAuth not configured yet — set up only with final auth URLs |
+| D16 | Google OAuth wired (better-auth + login/signup UI); set `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` via wrangler secrets |
 
 ## Phase checklist
 

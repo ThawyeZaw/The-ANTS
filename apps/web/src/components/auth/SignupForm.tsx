@@ -31,6 +31,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { isValidEmail, checkPasswordStrength, cn } from '@/lib/utils';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import GoogleSignInButton from './GoogleSignInButton';
 
 export default function SignupForm() {
   const { signup } = useAuth();
@@ -343,6 +344,14 @@ export default function SignupForm() {
               Create Account
             </Button>
           </form>
+
+          <div className="mt-5">
+            <GoogleSignInButton
+              id="signup-google"
+              callbackURL="/dashboard"
+              onError={(message) => setErrors((prev) => ({ ...prev, form: message }))}
+            />
+          </div>
 
           <p className="text-center text-sm text-foreground-muted mt-5">
             Already have an account?{' '}

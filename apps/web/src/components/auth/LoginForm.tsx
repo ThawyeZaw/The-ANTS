@@ -17,6 +17,7 @@ import { isValidEmail } from '@/lib/utils';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import ForgotPasswordPanel from './ForgotPasswordPanel';
+import GoogleSignInButton from './GoogleSignInButton';
 
 const FEATURE_HIGHLIGHTS = [
   { icon: BookOpen, label: 'Lesson Tracker', desc: 'Track every topic across all curricula' },
@@ -199,6 +200,14 @@ export default function LoginForm() {
                 Sign In
               </Button>
             </form>
+
+            <div className="mt-5">
+              <GoogleSignInButton
+                id="login-google"
+                callbackURL={nextUrl.startsWith('/') ? nextUrl : `/${nextUrl}`}
+                onError={(message) => setErrors({ form: message })}
+              />
+            </div>
 
             {/* Footer */}
             <p className="text-center text-sm text-foreground-muted mt-6">

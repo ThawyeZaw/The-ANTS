@@ -156,6 +156,7 @@ interface AuthContextValue {
   switchRole: (newRole: UserRole) => void;
   hasRole: (role: UserRole) => boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  loginWithGoogle: (callbackURL?: string) => Promise<{ success: boolean; error?: string }>;
   signup: (
     email: string,
     password: string,
@@ -474,6 +475,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [syncProfile]
   );
 
+  // ── Google OAuth ───────────────────────────────────────────────────────
+  const loginWithGoogle = useCallback(async (callbackURL?: string) => {
+    try {
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      let target = callbackURL || `${origin}/dashboard`;
+      if (target.startsWith('/')) {
+        target = `${origin}${target}`;
+      }
+      const { error } = await authClient.signIn.social({
+        provider: 'google',
+        callbackURL: target,
+      });
+      if (error) {
+        return {
+          success: false,
+          error: humanizeAuthError(error.message || 'Google sign-in failed. Please try again.'),
+        };
+      }
+      // Redirect to Google / callback — session loads on return via getSession.
+      return { success: true };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unable to start Google sign-in.';
+      return { success: false, error: humanizeAuthError(message) };
+    }
+  }, []);
+
   // ── Logout ─────────────────────────────────────────────────────────────
   const logout = useCallback(async () => {
     try {
@@ -620,6 +647,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         switchRole,
         hasRole,
         login,
+        loginWithGoogle,
         signup,
         logout,
         updateProfile,

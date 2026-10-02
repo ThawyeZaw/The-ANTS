@@ -71,8 +71,9 @@ export async function listCurriculums() {
   return setInCache('curriculums', result, 15 * 60 * 1000);
 }
 
+/** Lean catalog for calculator selects — omits fat `qualification_data` blobs. */
 export async function listSubjects() {
-  const cached = getFromCache<ReturnType<typeof asTitle>[]>('subjects:v2');
+  const cached = getFromCache<ReturnType<typeof asTitle>[]>('subjects:v3-lean');
   if (cached) return cached;
 
   const db = getDb();
@@ -83,12 +84,36 @@ export async function listSubjects() {
       code: subjects.code,
       curriculum_id: subjects.curriculum_id,
       subject_type: subjects.subject_type,
-      qualification_data: subjects.qualification_data,
     })
     .from(subjects)
     .orderBy(asc(subjects.name));
   const result = rows.map(asTitle);
-  return setInCache('subjects:v2', result, 15 * 60 * 1000);
+  return setInCache('subjects:v3-lean', result, 15 * 60 * 1000);
+}
+
+/** On-demand qualification blobs for IAL suite / cash-in UI (by subject id). */
+export async function getSubjectsQualificationData(subjectIds: string[]) {
+  const unique = [...new Set(subjectIds.filter(Boolean))];
+  if (unique.length === 0) return {} as Record<string, unknown>;
+
+  const cacheKey = `qual:${unique.slice().sort().join(',')}`;
+  const cached = getFromCache<Record<string, unknown>>(cacheKey);
+  if (cached) return cached;
+
+  const db = getDb();
+  const rows = await db
+    .select({
+      id: subjects.id,
+      qualification_data: subjects.qualification_data,
+    })
+    .from(subjects)
+    .where(inArray(subjects.id, unique));
+
+  const result: Record<string, unknown> = {};
+  for (const row of rows) {
+    result[row.id] = row.qualification_data ?? null;
+  }
+  return setInCache(cacheKey, result, 15 * 60 * 1000);
 }
 
 /** Upcoming catalog by default. Pass `{ all: true }` only for a full history list. */
