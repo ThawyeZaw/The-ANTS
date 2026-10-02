@@ -15,11 +15,13 @@ import {
   userCurriculums,
   userEnrollments,
   pastPapers,
+  paperGradeBoundaries,
   userPastPaperRecords,
   examCountdowns,
   subjectGradeBoundaries,
   userComponentSelections,
   userCashInEnrollments,
+  chunkList,
 } from '@/lib/db';
 import { eq, and, asc, inArray, count } from 'drizzle-orm';
 import {
@@ -51,6 +53,7 @@ import {
   isIalCombinedWorkspaceId,
   resolveIalWorkspaceGroupId,
 } from '@/lib/edexcel-ial';
+import { ensureUserProfile } from '@/lib/ensure-profile';
 import type { SubjectTier } from '@/lib/grading/types';
 import type { EdexcelIALQualificationSpecification } from '@/lib/grading/ial-structure';
 import {
@@ -196,6 +199,8 @@ export interface PaperGridData {
   paperPreferences?: PaperPreferences | null;
   tier?: SubjectTier | null;
   groupTitle?: string;
+  /** Set when the grid query fails — UI should surface this instead of an empty seed state. */
+  error?: string;
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -206,7 +211,7 @@ export async function getCurriculums(userId?: string | null): Promise<Curriculum
   try {
     const db = getDb();
 
-    const [allCurriculums, subjectCountRows, enrolledCurriculumIds] = await Promise.all([
+    const [allCurriculums, allSubjects, enrolledCurriculumIds] = await Promise.all([
       db.query.curriculums.findMany({
         columns: {
           id: true,
@@ -218,10 +223,15 @@ export async function getCurriculums(userId?: string | null): Promise<Curriculum
         },
         orderBy: [asc(curriculums.name)],
       }),
-      db
-        .select({ curriculumId: subjects.curriculum_id, n: count() })
-        .from(subjects)
-        .groupBy(subjects.curriculum_id),
+      // Need id/name/code for IAL grouping — raw COUNT(*) overcounts modular units (63 vs ~13).
+      db.query.subjects.findMany({
+        columns: {
+          id: true,
+          name: true,
+          code: true,
+          curriculum_id: true,
+        },
+      }),
       userId
         ? db.query.userCurriculums
             .findMany({ where: eq(userCurriculums.user_id, userId), columns: { curriculum_id: true } })
@@ -229,20 +239,32 @@ export async function getCurriculums(userId?: string | null): Promise<Curriculum
         : Promise.resolve(new Set<string>()),
     ]);
 
-    const subjectCountMap = new Map(
-      subjectCountRows.map((row) => [row.curriculumId, Number(row.n)])
-    );
+    const subjectsByCurriculum = new Map<string, typeof allSubjects>();
+    for (const s of allSubjects) {
+      if (!s.curriculum_id) continue;
+      const list = subjectsByCurriculum.get(s.curriculum_id) ?? [];
+      list.push(s);
+      subjectsByCurriculum.set(s.curriculum_id, list);
+    }
 
-    return allCurriculums.map((c) => ({
-      id: c.id,
-      name: c.name,
-      code: c.code,
-      description: c.description,
-      icon_url: c.icon_url,
-      created_at: c.created_at,
-      subjectCount: subjectCountMap.get(c.id) ?? 0,
-      isEnrolled: enrolledCurriculumIds.has(c.id),
-    }));
+    return allCurriculums.map((c) => {
+      const boardSubjects = subjectsByCurriculum.get(c.id) ?? [];
+      const subjectCount =
+        c.code === 'EDEXCEL_IAL'
+          ? groupEdexcelIalSubjects(boardSubjects).length
+          : boardSubjects.length;
+
+      return {
+        id: c.id,
+        name: c.name,
+        code: c.code,
+        description: c.description,
+        icon_url: c.icon_url,
+        created_at: c.created_at,
+        subjectCount,
+        isEnrolled: enrolledCurriculumIds.has(c.id),
+      };
+    });
   } catch (err) {
     console.error('[curriculum] getCurriculums error:', err);
     return [];
@@ -268,44 +290,76 @@ async function subjectStatCounts(
 
   const db = getDb();
   const [topicRows, topicDoneRows, paperRows, paperDoneRows] = await Promise.all([
-    db
-      .select({ subjectId: topics.subject_id, n: count() })
-      .from(topics)
-      .where(inArray(topics.subject_id, subjectIds))
-      .groupBy(topics.subject_id),
+    (async () => {
+      const rows: { subjectId: string | null; n: number }[] = [];
+      for (const chunk of chunkList(subjectIds)) {
+        rows.push(
+          ...(await db
+            .select({ subjectId: topics.subject_id, n: count() })
+            .from(topics)
+            .where(inArray(topics.subject_id, chunk))
+            .groupBy(topics.subject_id))
+        );
+      }
+      return rows;
+    })(),
     userId
-      ? db
-          .select({ subjectId: topics.subject_id, n: count() })
-          .from(topicProgress)
-          .innerJoin(topics, eq(topicProgress.topic_id, topics.id))
-          .where(
-            and(
-              eq(topicProgress.user_id, userId),
-              eq(topicProgress.status, 'completed'),
-              inArray(topics.subject_id, subjectIds)
-            )
-          )
-          .groupBy(topics.subject_id)
-      : Promise.resolve([]),
-    db
-      .select({ subjectId: pastPapers.subject_id, n: count() })
-      .from(pastPapers)
-      .where(inArray(pastPapers.subject_id, subjectIds))
-      .groupBy(pastPapers.subject_id),
+      ? (async () => {
+          const rows: { subjectId: string | null; n: number }[] = [];
+          for (const chunk of chunkList(subjectIds)) {
+            rows.push(
+              ...(await db
+                .select({ subjectId: topics.subject_id, n: count() })
+                .from(topicProgress)
+                .innerJoin(topics, eq(topicProgress.topic_id, topics.id))
+                .where(
+                  and(
+                    eq(topicProgress.user_id, userId),
+                    eq(topicProgress.status, 'completed'),
+                    inArray(topics.subject_id, chunk)
+                  )
+                )
+                .groupBy(topics.subject_id))
+            );
+          }
+          return rows;
+        })()
+      : Promise.resolve([] as { subjectId: string | null; n: number }[]),
+    (async () => {
+      const rows: { subjectId: string | null; n: number }[] = [];
+      for (const chunk of chunkList(subjectIds)) {
+        rows.push(
+          ...(await db
+            .select({ subjectId: pastPapers.subject_id, n: count() })
+            .from(pastPapers)
+            .where(inArray(pastPapers.subject_id, chunk))
+            .groupBy(pastPapers.subject_id))
+        );
+      }
+      return rows;
+    })(),
     userId
-      ? db
-          .select({ subjectId: pastPapers.subject_id, n: count() })
-          .from(userPastPaperRecords)
-          .innerJoin(pastPapers, eq(userPastPaperRecords.past_paper_id, pastPapers.id))
-          .where(
-            and(
-              eq(userPastPaperRecords.user_id, userId),
-              eq(userPastPaperRecords.status, 'done'),
-              inArray(pastPapers.subject_id, subjectIds)
-            )
-          )
-          .groupBy(pastPapers.subject_id)
-      : Promise.resolve([]),
+      ? (async () => {
+          const rows: { subjectId: string | null; n: number }[] = [];
+          for (const chunk of chunkList(subjectIds)) {
+            rows.push(
+              ...(await db
+                .select({ subjectId: pastPapers.subject_id, n: count() })
+                .from(userPastPaperRecords)
+                .innerJoin(pastPapers, eq(userPastPaperRecords.past_paper_id, pastPapers.id))
+                .where(
+                  and(
+                    eq(userPastPaperRecords.user_id, userId),
+                    eq(userPastPaperRecords.status, 'done'),
+                    inArray(pastPapers.subject_id, chunk)
+                  )
+                )
+                .groupBy(pastPapers.subject_id))
+            );
+          }
+          return rows;
+        })()
+      : Promise.resolve([] as { subjectId: string | null; n: number }[]),
   ]);
 
   const toMap = (rows: { subjectId: string | null; n: number }[]) => {
@@ -647,32 +701,14 @@ export async function getPaperGridData(
           chosen12Codes.add(code);
         }
 
-        // Add any other units the user explicitly selected or enrolled in (in spec order)
+        // Add only units the user explicitly selected or enrolled in (canonical order).
+        // Do not pad with unselected fallback units — that misrepresents enrollment.
         for (const code of IAL_MATHS_SUITE_UNIT_ORDER) {
-          if (chosen12Codes.size >= 12) break;
           if (userSelectedCodesSet.has(code)) {
             chosen12Codes.add(code);
           }
         }
 
-        // If fewer than 12 units selected, fill remaining slots with standard Double Maths fallback units
-        const standardFallbackOrder = [
-          'WFM02', // FP2
-          'WFM03', // FP3
-          'WME01', // M1
-          'WME02', // M2
-          'WST01', // S1
-          'WST02', // S2
-          'WST03', // S3
-          'WDM11', // D1
-          'WME03', // M3
-        ];
-        for (const code of standardFallbackOrder) {
-          if (chosen12Codes.size >= 12) break;
-          chosen12Codes.add(code);
-        }
-
-        // Order the final 12 units strictly in canonical suite order
         const target12Codes = IAL_MATHS_SUITE_UNIT_ORDER.filter((code) =>
           chosen12Codes.has(code)
         );
@@ -834,11 +870,41 @@ export async function getPaperGridData(
     const awardLevel = (enroll?.award_level as AwardLevel | null) ?? null;
     const routePrefs = (enroll?.paper_preferences as PaperPreferences | null) ?? null;
 
-    const allPapersRaw = await db.query.pastPapers.findMany({
-      where: inArray(pastPapers.subject_id, targetSubjectIds),
-      with: { gradeBoundaries: true },
-      orderBy: [asc(pastPapers.paper_number), asc(pastPapers.variant)],
-    });
+    type PaperGridPaperRow = {
+      id: string;
+      subject_id: string | null;
+      exam_board: string;
+      qualification: string;
+      year: number;
+      series: string;
+      paper_number: string;
+      variant: string | null;
+      title: string | null;
+      total_marks: number | null;
+      duration_minutes: number | null;
+    };
+
+    const allPapersRaw: PaperGridPaperRow[] = [];
+    for (const subjectChunk of chunkList(targetSubjectIds)) {
+      const rows = await db.query.pastPapers.findMany({
+        where: inArray(pastPapers.subject_id, subjectChunk),
+        columns: {
+          id: true,
+          subject_id: true,
+          exam_board: true,
+          qualification: true,
+          year: true,
+          series: true,
+          paper_number: true,
+          variant: true,
+          title: true,
+          total_marks: true,
+          duration_minutes: true,
+        },
+        orderBy: [asc(pastPapers.paper_number), asc(pastPapers.variant)],
+      });
+      allPapersRaw.push(...rows);
+    }
 
     let allPapers = allPapersRaw.filter((p) => !isEndorsementPaper(subjectCode, p.paper_number));
     if (!isEdexcelIal && board && subjectCode) {
@@ -862,19 +928,67 @@ export async function getPaperGridData(
       );
     }
 
-    // Fetch user records for those papers
-    const paperIds = allPapers.map((p) => p.id);
+    // User progress — query by user_id only (1 bind) then filter. Avoids D1's
+    // 100-variable limit when Math+FM grids pass 150+ paper ids in IN (...).
+    const paperIdSet = new Set(allPapers.map((p) => p.id));
     const userRecords =
-      paperIds.length > 0
-        ? await db.query.userPastPaperRecords.findMany({
-            where: and(
-              eq(userPastPaperRecords.user_id, userId),
-              inArray(userPastPaperRecords.past_paper_id, paperIds)
-            ),
-          })
-        : [];
+      paperIdSet.size === 0
+        ? []
+        : (
+            await db.query.userPastPaperRecords.findMany({
+              where: eq(userPastPaperRecords.user_id, userId),
+              columns: {
+                id: true,
+                past_paper_id: true,
+                status: true,
+                raw_score: true,
+                max_score: true,
+                percentage: true,
+                calculated_grade: true,
+                calculated_ums: true,
+              },
+            })
+          ).filter((r) => paperIdSet.has(r.past_paper_id));
 
     const recordMap = new Map(userRecords.map((r) => [r.past_paper_id, r]));
+
+    // Grade boundaries — separate chunked queries (cheaper than relational `with` over 150 papers)
+    const boundariesByPaper = new Map<
+      string,
+      {
+        grade: string;
+        min_mark: number | null;
+        max_mark: number | null;
+        ums_min: number | null;
+        ums_max: number | null;
+      }[]
+    >();
+    if (paperIdSet.size > 0) {
+      for (const idChunk of chunkList([...paperIdSet])) {
+        const bounds = await db.query.paperGradeBoundaries.findMany({
+          where: inArray(paperGradeBoundaries.past_paper_id, idChunk),
+          columns: {
+            past_paper_id: true,
+            grade: true,
+            min_mark: true,
+            max_mark: true,
+            ums_min: true,
+            ums_max: true,
+          },
+        });
+        for (const b of bounds) {
+          const list = boundariesByPaper.get(b.past_paper_id) ?? [];
+          list.push({
+            grade: b.grade,
+            min_mark: b.min_mark,
+            max_mark: b.max_mark,
+            ums_min: b.ums_min,
+            ums_max: b.ums_max,
+          });
+          boundariesByPaper.set(b.past_paper_id, list);
+        }
+      }
+    }
 
     // Detect IAL (Edexcel modular with UMS)
     const isIAL = isEdexcelIal || allPapers.some((p) => p.qualification === 'IAL');
@@ -1003,9 +1117,9 @@ export async function getPaperGridData(
         percentage: record?.percentage ?? null,
         calculatedGrade: record?.calculated_grade ?? null,
         calculatedUms: record?.calculated_ums ?? null,
-        gradeBoundaries: (p.gradeBoundaries ?? []).map((b) => ({
+        gradeBoundaries: (boundariesByPaper.get(p.id) ?? []).map((b) => ({
           grade: b.grade,
-          min_mark: b.min_mark,
+          min_mark: b.min_mark ?? 0,
           max_mark: b.max_mark,
           ums_min: b.ums_min,
           ums_max: b.ums_max,
@@ -1143,7 +1257,8 @@ export async function getPaperGridData(
     };
   } catch (err) {
     console.error('[curriculum] getPaperGridData error:', err);
-    return { sessions: [], rows: [], isIAL: false };
+    const message = err instanceof Error ? err.message : 'Failed to load past papers';
+    return { sessions: [], rows: [], isIAL: false, error: message };
   }
 }
 
@@ -1176,7 +1291,16 @@ export async function enrollInSubject(
   options?: EnrollmentSettingsPatch
 ) {
   try {
+    const guard = await requireSessionUser(userId);
+    if (!guard.ok) return { success: false, error: guard.error };
+    userId = guard.userId;
+
     const db = getDb();
+    const hasProfile = await ensureUserProfile(userId);
+    if (!hasProfile) {
+      return { success: false, error: 'Account profile is missing. Please sign out and sign in again.' };
+    }
+
     const curriculum = await db.query.curriculums.findFirst({
       where: eq(curriculums.id, curriculumId),
     });
@@ -1253,6 +1377,10 @@ export async function enrollInSubject(
 
 export async function unenrollFromSubject(userId: string, subjectId: string) {
   try {
+    const guard = await requireSessionUser(userId);
+    if (!guard.ok) return { success: false, error: guard.error };
+    userId = guard.userId;
+
     const db = getDb();
     await removeAutoCountdownsForSubject(userId, subjectId);
     await db
@@ -1319,8 +1447,13 @@ export async function enrollSubjectUnits(
   options?: EnrollmentSettingsPatch
 ) {
   try {
+    const guard = await requireSessionUser(userId);
+    if (!guard.ok) return { success: false, error: guard.error };
+    userId = guard.userId;
+
     for (const sid of subjectIds) {
-      await enrollInSubject(userId, curriculumId, sid, options);
+      const result = await enrollInSubject(userId, curriculumId, sid, options);
+      if (!result.success) return result;
     }
     return { success: true };
   } catch (err: any) {
@@ -1331,8 +1464,13 @@ export async function enrollSubjectUnits(
 
 export async function unenrollSubjectUnits(userId: string, subjectIds: string[]) {
   try {
+    const guard = await requireSessionUser(userId);
+    if (!guard.ok) return { success: false, error: guard.error };
+    userId = guard.userId;
+
     for (const sid of subjectIds) {
-      await unenrollFromSubject(userId, sid);
+      const result = await unenrollFromSubject(userId, sid);
+      if (!result.success) return result;
     }
     return { success: true };
   } catch (err: any) {
@@ -1347,6 +1485,10 @@ export async function updateEnrollmentSettings(
   patch: EnrollmentSettingsPatch
 ) {
   try {
+    const guard = await requireSessionUser(userId);
+    if (!guard.ok) return { success: false, error: guard.error };
+    userId = guard.userId;
+
     const db = getDb();
     const existing = await db.query.userEnrollments.findFirst({
       where: and(eq(userEnrollments.user_id, userId), eq(userEnrollments.subject_id, subjectId)),
@@ -1431,6 +1573,10 @@ export interface UserCashInEnrollmentRow {
 
 export async function getUserCashInEnrollments(userId: string): Promise<UserCashInEnrollmentRow[]> {
   try {
+    const guard = await requireSessionUser(userId);
+    if (!guard.ok) return [];
+    userId = guard.userId;
+
     const db = getDb();
     const rows = await db.query.userCashInEnrollments.findMany({
       where: eq(userCashInEnrollments.user_id, userId),
@@ -1462,7 +1608,16 @@ export async function enrollCashInAward(
   selectedUnits: string[]
 ) {
   try {
+    const guard = await requireSessionUser(userId);
+    if (!guard.ok) return { success: false, error: guard.error };
+    userId = guard.userId;
+
     const db = getDb();
+    const hasProfile = await ensureUserProfile(userId);
+    if (!hasProfile) {
+      return { success: false, error: 'Account profile is missing. Please sign out and sign in again.' };
+    }
+
     const { IAL_CASH_INS, requiredOptionalCount } = await import('@/lib/grading/ial-cash-in');
     const award = IAL_CASH_INS[cashInCode as keyof typeof IAL_CASH_INS];
     if (!award) return { success: false, error: 'Unknown cash-in code' };
@@ -1549,6 +1704,10 @@ export async function enrollCashInAward(
 
 export async function unenrollCashInAward(userId: string, cashInCode: string) {
   try {
+    const guard = await requireSessionUser(userId);
+    if (!guard.ok) return { success: false, error: guard.error };
+    userId = guard.userId;
+
     const db = getDb();
     const existing = await db.query.userCashInEnrollments.findFirst({
       where: and(

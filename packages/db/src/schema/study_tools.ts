@@ -455,3 +455,25 @@ export const userStreaks = sqliteTable('user_streaks', {
   updated_at: tsNow('updated_at'),
 });
 
+// ── Exam data admin audit (past papers / grade boundaries) ───────────────────
+
+export const examDataAuditLog = sqliteTable(
+  'exam_data_audit_log',
+  {
+    id: idText('id'),
+    actor_user_id: textId('actor_user_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    actor_name: text('actor_name').notNull(),
+    action: text('action').notNull(), // 'create' | 'update' | 'delete'
+    entity_type: text('entity_type').notNull(), // 'past_paper' | 'paper_grade_boundary' | 'subject_grade_boundary'
+    entity_id: text('entity_id').notNull(),
+    summary: text('summary'),
+    created_at: tsNow('created_at'),
+  },
+  (table) => [
+    index('idx_exam_data_audit_created').on(table.created_at),
+    index('idx_exam_data_audit_entity').on(table.entity_type, table.entity_id),
+  ]
+);
+

@@ -1,8 +1,8 @@
 'use client';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// The ANTS — CourseSyncPanel
-// Dashboard section showing enrolled courses and their synced exams/countdowns.
+// The ANTS — CurriculumSyncPanel
+// Dashboard section showing enrolled syllabi and study links.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import Link from 'next/link';
@@ -12,9 +12,7 @@ import {
   BookOpen,
   ArrowRight,
   Plus,
-  Sparkles,
 } from 'lucide-react';
-import { slugify } from '@/lib/utils';
 import { useCourseSync } from '@/hooks/useCourseSync';
 
 export default function CourseSyncPanel() {
@@ -28,20 +26,20 @@ export default function CourseSyncPanel() {
             <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
               <GraduationCap className="h-4 w-4 text-primary" />
             </span>
-            My Courses
+            My Subjects
           </h2>
         </div>
         <div className="flex flex-col items-center justify-center text-center rounded-xl border border-dashed border-border bg-background-secondary/40 px-6 py-10">
           <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-background-card border border-border mb-3">
             <BookOpen className="h-5 w-5 text-foreground-muted" />
           </span>
-          <p className="text-sm font-semibold text-foreground">No courses enrolled yet</p>
+          <p className="text-sm font-semibold text-foreground">No subjects enrolled yet</p>
           <p className="text-xs text-foreground-muted mt-1.5 max-w-xs leading-relaxed">
-            Browse the library and enrol in courses to see your synced resources here.
+            Enroll from the curriculum hub to track topics, past papers, and exam countdowns here.
           </p>
-          <Link href="/courses" className="dash-cta mt-5 focus-ring">
+          <Link href="/curriculum" className="dash-cta mt-5 focus-ring">
             <Plus className="h-3.5 w-3.5" />
-            Browse Courses
+            Browse curriculum
           </Link>
         </div>
       </div>
@@ -56,18 +54,15 @@ export default function CourseSyncPanel() {
             <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 shrink-0">
               <GraduationCap className="h-4 w-4 text-primary" />
             </span>
-            My Courses
+            My Subjects
           </h2>
           <p className="text-xs text-foreground-muted mt-1 pl-10">
-            {syncedCourses.length} course{syncedCourses.length !== 1 ? 's' : ''}
+            {syncedCourses.length} board{syncedCourses.length !== 1 ? 's' : ''}
             {' · '}
-            {totalResources} synced resource{totalResources !== 1 ? 's' : ''}
+            {totalResources} linked item{totalResources !== 1 ? 's' : ''}
           </p>
         </div>
-        <Link
-          href="/courses"
-          className="dash-action-btn shrink-0 focus-ring"
-        >
+        <Link href="/curriculum" className="dash-action-btn shrink-0 focus-ring">
           <Plus className="h-3.5 w-3.5" />
           Manage
         </Link>
@@ -96,7 +91,7 @@ export default function CourseSyncPanel() {
             <div className="divide-y divide-border">
               {course.subjects.map((subject) => {
                 const resourceTotal = subject.exams.length + subject.countdowns.length;
-                const lessonHref = `/lessons/${slugify(course.curriculumTitle)}/${slugify(subject.subjectTitle)}`;
+                const subjectHref = `/curriculum/${course.curriculumId}/${subject.subjectId}`;
 
                 return (
                   <div
@@ -109,7 +104,7 @@ export default function CourseSyncPanel() {
                       </p>
                       <div className="flex items-center gap-3 mt-1 flex-wrap">
                         <Link
-                          href={lessonHref}
+                          href={subjectHref}
                           className="inline-flex items-center gap-1 text-[11px] text-foreground-muted hover:text-primary transition-colors"
                         >
                           <BookOpen className="h-3 w-3" />
@@ -124,20 +119,21 @@ export default function CourseSyncPanel() {
                         )}
                         {subject.countdowns.length > 0 && (
                           <span className="inline-flex items-center gap-1 text-[11px] text-sky-500">
-                            <Sparkles className="h-3 w-3" />
-                            {subject.countdowns.length}
+                            <Clock className="h-3 w-3" />
+                            {subject.countdowns.length} countdown
+                            {subject.countdowns.length !== 1 ? 's' : ''}
                           </span>
                         )}
 
                         {resourceTotal === 0 && (
                           <span className="text-[11px] text-foreground-muted">
-                            No synced resources yet
+                            No linked exams yet
                           </span>
                         )}
                       </div>
                     </div>
 
-                    <Link href={lessonHref} className="dash-study-link shrink-0 ml-3 focus-ring">
+                    <Link href={subjectHref} className="dash-study-link shrink-0 ml-3 focus-ring">
                       Study
                       <ArrowRight className="h-3 w-3" />
                     </Link>

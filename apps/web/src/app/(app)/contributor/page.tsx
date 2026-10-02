@@ -58,20 +58,27 @@ export default function ContributorDashboard() {
               Contributor Dashboard
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
-              Welcome, {firstName}! ✍️
+              Welcome, {firstName}
             </h1>
             <p className="text-xs sm:text-sm text-foreground-muted mt-1">
-              Your notes and curriculum guides are empowering students across Myanmar.
+              Manage exam data and curriculum content that students use to revise.
             </p>
           </div>
 
           <div className="flex items-center gap-2">
             <Link
-              href="/past-papers"
+              href="/admin/exam-data"
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-violet-500 text-white text-xs font-bold shadow-md hover:bg-violet-600 transition-all"
             >
               <Pencil className="w-3.5 h-3.5" />
-              Past Paper Catalog
+              Exam Data Admin
+            </Link>
+            <Link
+              href="/past-papers"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-border bg-background-card text-xs font-bold hover:bg-background-secondary transition-all"
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              Past Papers
             </Link>
           </div>
         </div>

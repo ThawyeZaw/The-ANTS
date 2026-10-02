@@ -97,8 +97,8 @@ function ExamsTab({
         icon={Clock}
         title="No exam countdowns yet"
         description="Add official exam dates or create custom countdowns. Track days remaining and study with purpose."
-        cta="Browse Exams"
-        ctaHref="/library?tab=exams"
+        cta="Browse past papers"
+        ctaHref="/past-papers"
       />
     );
   }
@@ -244,16 +244,16 @@ export default function MyWorkspace() {
             </h1>
           </div>
           <p className="text-sm text-[var(--foreground-secondary)]">
-            Your personal study hub — exam countdowns and enrolled courses in one place.
+            Your personal study hub — exam countdowns and enrolled subjects in one place.
           </p>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
           <Link
-            href="/library?tab=courses"
+            href="/curriculum"
             className="flex items-center gap-1.5 rounded-xl border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--foreground-secondary)] hover:text-[var(--foreground)] hover:bg-[var(--background-secondary)] transition-all"
           >
-            <BookMarked size={13} /> Library
+            <BookMarked size={13} /> Curriculum
           </Link>
           <Link
             href="/countdown"
@@ -275,12 +275,12 @@ export default function MyWorkspace() {
           <span className="text-[10px] text-[var(--foreground-muted)] mt-0.5">Exams</span>
         </div>
         <Link
-          href="/library?tab=courses"
+          href="/curriculum"
           className="flex flex-col items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--background-card)] p-2.5 hover:border-[var(--primary)]/20 transition-all"
         >
           <BookOpen className="h-4 w-4 mb-1 text-emerald-500" />
           <span className="text-lg font-black text-[var(--foreground)] tabular-nums">→</span>
-          <span className="text-[10px] text-[var(--foreground-muted)] mt-0.5">Courses</span>
+          <span className="text-[10px] text-[var(--foreground-muted)] mt-0.5">Subjects</span>
         </Link>
       </div>
 

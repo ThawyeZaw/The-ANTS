@@ -15,10 +15,10 @@ import { Mail, MessageCircle, ArrowUpRight } from 'lucide-react';
 // ── Column data ──────────────────────────────────────────────────────────────
 
 const QUICK_LINKS = [
-  { label: 'Library', href: '/library' },
+  { label: 'Curriculum', href: '/curriculum' },
+  { label: 'Past Papers', href: '/past-papers' },
   { label: 'Study Tools', href: '/tools' },
   { label: 'Tutors & Contributors', href: '/team' },
-  { label: 'Smart Timetable', href: '/timetable' },
 ];
 
 const ACCOUNT_LINKS = [

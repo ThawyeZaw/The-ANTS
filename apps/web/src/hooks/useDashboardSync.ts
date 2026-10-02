@@ -56,16 +56,9 @@ export function useDashboardSync() {
 
     s.push({
       key: 'enrolled-courses',
-      label: 'Enrolled Courses',
+      label: 'Enrolled Subjects',
       value: syncedCourses.length,
       color: 'emerald',
-    });
-
-    s.push({
-      key: 'synced-resources',
-      label: 'Synced Resources',
-      value: totalResources,
-      color: 'amber',
     });
 
     const nextExam = allCountdowns.find((c) => !c.timeLeft.isPast);
@@ -84,7 +77,7 @@ export function useDashboardSync() {
     });
 
     return s;
-  }, [syncedCourses, totalResources, allCountdowns]);
+  }, [syncedCourses, allCountdowns]);
 
   const isLoading = coursesLoading;
 

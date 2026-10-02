@@ -6,6 +6,7 @@ import { withD1Retries } from './d1-retry';
 
 export * from './schema';
 export { isTransientD1Error, withD1Retries } from './d1-retry';
+export { chunkList, D1_MAX_BIND_PARAMS, D1_SAFE_IN_CHUNK } from './d1-batch';
 
 export type AppSchema = typeof schema;
 export type Database = DrizzleD1Database<AppSchema>;

@@ -51,7 +51,8 @@ import {
   gradeFromUms,
   umsCapFromBoundaries,
 } from '@/lib/grading';
-import { groupEdexcelIalSubjects, IAL_CALCULATOR_ONLY_IDS, IAL_MATHS_SUITE_ID } from '@/lib/edexcel-ial';
+import { groupEdexcelIalSubjects, IAL_CALCULATOR_ONLY_IDS, IAL_MATHS_SUITE_ID, IAL_MATH_FM_COMBINED_ID, hasEnrolledMathAndFm } from '@/lib/edexcel-ial';
+import { getEnrolledSubjects } from '@/actions/past-papers';
 import { useEdexcelSuiteSelectors } from './useEdexcelSuiteSelectors';
 import {
   IAL_CASH_INS,
@@ -151,11 +152,28 @@ export default function GradeCalculator() {
   const [mathsRoute, setMathsRoute] = useState<'42' | '52'>('42');
   const [boundariesUnavailable, setBoundariesUnavailable] = useState(false);
   const [ialInputMode, setIalInputMode] = useState<'raw' | 'ums'>('raw');
+  const [enrolledIalBothMathFm, setEnrolledIalBothMathFm] = useState(false);
 
   // Client-side cache to avoid redundant D1 row queries when toggling subjects
   const presetCacheRef = useRef<Map<string, CalcPreset[]>>(new Map());
   const compositeCacheRef = useRef<Map<string, GradeBoundary[]>>(new Map());
   const qualFetchedRef = useRef(new Set<string>());
+
+  useEffect(() => {
+    if (!user?.id) {
+      setEnrolledIalBothMathFm(false);
+      return;
+    }
+    let cancelled = false;
+    getEnrolledSubjects(user.id).then((enrolled) => {
+      if (cancelled) return;
+      const grouped = groupEdexcelIalSubjects(enrolled);
+      setEnrolledIalBothMathFm(hasEnrolledMathAndFm(grouped));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
 
   const selectedCurriculumRow = useMemo(
     () => curriculums.find((c) => c.id === selectedCurriculum),
@@ -414,11 +432,29 @@ export default function GradeCalculator() {
       const rest = groupedIalSubjects.filter(
         (g) => g.title !== 'Mathematics' && g.title !== 'Further Mathematics'
       );
+      // When student takes both Maths + FM, only expose the combined entry (same suite).
+      if (enrolledIalBothMathFm) {
+        return [
+          {
+            value: IAL_MATH_FM_COMBINED_ID,
+            label: 'Mathematics & Further Mathematics',
+            hint: 'YMA01 + YFM01',
+            group: 'Mathematics suite',
+          },
+          { value: 'subj-edx-ial-pure-group', label: 'Pure Mathematics', hint: 'XPM01 / YPM01', group: 'Mathematics suite' },
+          ...rest.map((g) => ({
+            value: g.id,
+            label: g.title,
+            hint: g.code,
+            group: 'Other IAL',
+          })),
+        ];
+      }
       return [
         { value: 'subj-edx-ial-math-group', label: 'Mathematics', hint: 'XMA01 / YMA01', group: 'Mathematics suite' },
         { value: 'subj-edx-ial-pure-group', label: 'Pure Mathematics', hint: 'XPM01 / YPM01', group: 'Mathematics suite' },
         {
-          value: 'subj-edx-ial-math-fm-group',
+          value: IAL_MATH_FM_COMBINED_ID,
           label: 'Mathematics & Further Mathematics',
           hint: '12 different units',
           group: 'Mathematics suite',
@@ -437,7 +473,19 @@ export default function GradeCalculator() {
       label: (s.title || s.name) as string,
       hint: (s.code || '') as string,
     }));
-  }, [isEdexcelIal, groupedIalSubjects, filteredSubjects]);
+  }, [isEdexcelIal, groupedIalSubjects, filteredSubjects, enrolledIalBothMathFm]);
+
+  // Force combined Maths+FM when both are enrolled
+  useEffect(() => {
+    if (!isEdexcelIal || !enrolledIalBothMathFm) return;
+    if (
+      selectedSubject === 'subj-edx-ial-math-group' ||
+      selectedSubject === 'subj-edx-ial-fmath-group' ||
+      !selectedSubject
+    ) {
+      setSelectedSubject(IAL_MATH_FM_COMBINED_ID);
+    }
+  }, [isEdexcelIal, enrolledIalBothMathFm, selectedSubject]);
 
   const matchingPresets = useMemo(() => {
     let list = selectedCashIn ? cashInPresets : presets;

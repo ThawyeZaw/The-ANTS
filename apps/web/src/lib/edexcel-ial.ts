@@ -60,12 +60,82 @@ export interface GroupedSubject<T extends BaseSubject> {
 export const EDEXCEL_IAL_PREFIX = 'subj-edx-ial-';
 export const IAL_GROUP_SUFFIX = '-group';
 export const IAL_MATHS_SUITE_ID = 'subj-edx-ial-maths-suite';
+/** Virtual combined Mathematics + Further Mathematics workspace (same IAL maths suite). */
+export const IAL_MATH_FM_COMBINED_ID = 'subj-edx-ial-math-fm-group';
 
 /** Calculator-only synthetic IDs — not DB rows or catalog groups. */
 export const IAL_CALCULATOR_ONLY_IDS = new Set([
   'subj-edx-ial-pure-group',
-  'subj-edx-ial-math-fm-group',
+  IAL_MATH_FM_COMBINED_ID,
 ]);
+
+/** True when the student has both IAL Mathematics and Further Mathematics enrolled. */
+export function hasEnrolledMathAndFm<T extends BaseSubject>(grouped: GroupedSubject<T>[]): boolean {
+  const hasMath = grouped.some((g) => g.title === 'Mathematics' && (g.isEnrolled || g.enrolledUnitsCount > 0));
+  const hasFm = grouped.some(
+    (g) => g.title === 'Further Mathematics' && (g.isEnrolled || g.enrolledUnitsCount > 0)
+  );
+  return hasMath && hasFm;
+}
+
+/**
+ * When both Maths and FM are taken, expose a single combined entry and hide the separate groups.
+ * Otherwise leave the list unchanged (no combined entry).
+ */
+export function applyMathFmCombineRule<T extends BaseSubject>(
+  grouped: GroupedSubject<T>[]
+): { options: GroupedSubject<T>[]; bothTaken: boolean; combined: GroupedSubject<T> | null } {
+  const math = grouped.find((g) => g.title === 'Mathematics');
+  const fm = grouped.find((g) => g.title === 'Further Mathematics');
+  const bothTaken = Boolean(
+    math && fm && (math.isEnrolled || math.enrolledUnitsCount > 0) && (fm.isEnrolled || fm.enrolledUnitsCount > 0)
+  );
+
+  if (!bothTaken || !math || !fm) {
+    return { options: grouped, bothTaken: false, combined: null };
+  }
+
+  const combined: GroupedSubject<T> = {
+    id: IAL_MATH_FM_COMBINED_ID,
+    primarySubjectId: IAL_MATH_FM_COMBINED_ID,
+    title: 'Mathematics & Further Mathematics',
+    code: 'YMA01 + YFM01',
+    isVirtual: true,
+    units: [...math.units, ...fm.units],
+    curriculum_id: math.curriculum_id ?? fm.curriculum_id,
+    hasOptionalUnits: true,
+    color_code: math.color_code ?? fm.color_code ?? '#f59e0b',
+    description: 'Combined Double Mathematics workspace (12 units)',
+    topicCount: (math.topicCount ?? 0) + (fm.topicCount ?? 0),
+    completedTopics: (math.completedTopics ?? 0) + (fm.completedTopics ?? 0),
+    paperCount: (math.paperCount ?? 0) + (fm.paperCount ?? 0),
+    completedPapers: (math.completedPapers ?? 0) + (fm.completedPapers ?? 0),
+    isEnrolled: true,
+    enrolledUnitsCount: (math.enrolledUnitsCount ?? 0) + (fm.enrolledUnitsCount ?? 0),
+    qualification_data: math.qualification_data ?? fm.qualification_data,
+  };
+
+  const options = [
+    combined,
+    ...grouped.filter((g) => g.title !== 'Mathematics' && g.title !== 'Further Mathematics'),
+  ];
+
+  return { options, bothTaken: true, combined };
+}
+
+/** Short board badge for subject switcher chips. */
+export function boardBadgeFromCurriculum(codeOrId?: string | null): string {
+  const c = (codeOrId ?? '').toUpperCase();
+  if (c.includes('CAIE') && (c.includes('ALEVEL') || c.includes('A_LEVEL') || c.includes('-AL') || c.endsWith('_AL'))) {
+    return 'CAIE A Level';
+  }
+  if (c.includes('CAIE') && c.includes('IGCSE')) return 'CAIE IGCSE';
+  if (c.includes('EDEXCEL') && c.includes('IAL')) return 'Edexcel IAL';
+  if (c.includes('EDEXCEL') && c.includes('IGCSE')) return 'Edexcel IGCSE';
+  if (c.includes('CAIE')) return 'CAIE';
+  if (c.includes('EDEXCEL')) return 'Edexcel';
+  return 'Board';
+}
 
 /** Virtual group IDs (e.g. subj-edx-ial-phys-group) — not DB rows. */
 export function isIalVirtualGroupId(id: string): boolean {
