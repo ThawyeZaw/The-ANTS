@@ -21,6 +21,11 @@ import {
   actionDeleteTimetableEvent,
   actionToggleTimetableEventComplete,
 } from '@/actions/timetable';
+import {
+  listExamCountdownsForUser,
+  updateExamCountdown,
+  deleteExamCountdown,
+} from '@/actions/exam-data';
 import { expandRecurringEvents } from '@/lib/timetable/recurrence';
 import type { AwardXpResult } from '@/lib/gamification/types';
 
@@ -101,7 +106,51 @@ function toSnapshot(e: TimetableEvent): EventSnapshot {
     is_todo: e.is_todo,
     is_completed: e.is_completed,
     completed_at: e.completed_at,
-    reminder_minutes: ((e.metadata as any)?.reminder_minutes as number) ?? null,
+    reminder_minutes: e.reminder_minutes ?? ((e.metadata as any)?.reminder_minutes as number) ?? null,
+  };
+}
+
+function examCountdownToEvent(exam: {
+  id: string;
+  user_id: string;
+  title: string;
+  exam_date: string;
+  color_code?: string | null;
+  paper_name?: string | null;
+  exam_board?: string | null;
+  is_mock?: boolean;
+  created_at?: string;
+}): TimetableEvent {
+  const start = new Date(exam.exam_date);
+  const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
+  return {
+    id: `exam-${exam.id}`,
+    user_id: exam.user_id,
+    title: exam.paper_name ? `${exam.title} (${exam.paper_name})` : exam.title,
+    description: exam.exam_board ? `${exam.exam_board} exam` : 'Exam countdown',
+    event_type: 'exam',
+    subject: exam.paper_name ?? null,
+    location: null,
+    start_time: start.toISOString(),
+    end_time: end.toISOString(),
+    all_day: false,
+    is_recurring: false,
+    recurrence_rule: null,
+    color_code: exam.color_code || '#EF4444',
+    is_todo: false,
+    is_completed: false,
+    completed_at: null,
+    event_source: 'exam_countdown',
+    source_id: exam.id,
+    reminder_minutes: null,
+    metadata: {
+      exam_board: exam.exam_board,
+      paper_name: exam.paper_name,
+      is_mock: exam.is_mock,
+      event_source: 'exam_countdown',
+      source_id: exam.id,
+    },
+    created_at: exam.created_at || new Date().toISOString(),
   };
 }
 
@@ -140,10 +189,11 @@ export interface UseTimetableReturn {
 }
 
 export function useTimetable(userId: string): UseTimetableReturn {
-  const [view, setViewState] = useState<TimetableView>('day');
+  const [view, setViewState] = useState<TimetableView>('week');
   const [currentDate, setCurrentDate] = useState<Date>(() => new Date());
   const [filters, setFilters] = useState<TimetableFilters>(DEFAULT_TIMETABLE_FILTERS);
   const [allEvents, setAllEvents] = useState<TimetableEvent[]>([]);
+  const [examCount, setExamCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -199,20 +249,46 @@ export function useTimetable(userId: string): UseTimetableReturn {
 
     (async () => {
       try {
-        const data = await actionGetTimetableEvents(userId);
-        if (!cancelled) {
-          const expandedEvents: TimetableEvent[] = [];
-          for (const ev of data) {
-            const instances = expandRecurringEvents(ev, rangeStart, rangeEnd);
-            expandedEvents.push(...instances);
-          }
-          setAllEvents(expandedEvents);
-          setIsLoading(false);
+        const [data, exams] = await Promise.all([
+          actionGetTimetableEvents(userId),
+          listExamCountdownsForUser(userId).catch(() => []),
+        ]);
+        if (cancelled) return;
+
+        const expandedEvents: TimetableEvent[] = [];
+        for (const ev of data) {
+          const instances = expandRecurringEvents(ev, rangeStart, rangeEnd);
+          expandedEvents.push(...instances);
         }
+
+        const examEvents = (exams || [])
+          .filter((exam) => {
+            if (!exam.exam_date) return false;
+            const t = new Date(exam.exam_date).getTime();
+            return t >= rangeStart.getTime() - 7 * 86400000 && t <= rangeEnd.getTime() + 7 * 86400000;
+          })
+          .map((exam) =>
+            examCountdownToEvent({
+              id: exam.id as string,
+              user_id: exam.user_id as string,
+              title: (exam.title as string) || 'Exam',
+              exam_date: exam.exam_date as string,
+              color_code: (exam.color_code as string | null) ?? null,
+              paper_name: (exam.paper_name as string | null) ?? null,
+              exam_board: (exam.exam_board as string | null) ?? null,
+              is_mock: Boolean(exam.is_mock),
+              created_at: exam.created_at as string | undefined,
+            })
+          );
+
+        setExamCount(examEvents.length);
+        setAllEvents([...expandedEvents, ...examEvents]);
+        setIsLoading(false);
       } catch (err) {
         if (!cancelled) {
           console.error('Failed to load timetable events:', err);
           setAllEvents([]);
+          setExamCount(0);
           setIsLoading(false);
         }
       }
@@ -289,6 +365,7 @@ export function useTimetable(userId: string): UseTimetableReturn {
     return allEvents.filter((e) => {
       if (!filters.eventTypes.includes(e.event_type)) return false;
       if (!filters.showCompleted && e.is_completed) return false;
+      if (!filters.showExternalEvents && e.event_source !== 'user') return false;
       return true;
     });
   }, [allEvents, filters]);
@@ -389,6 +466,27 @@ export function useTimetable(userId: string): UseTimetableReturn {
   const updateEvent = useCallback(
     async (eventId: string, data: TimetableEventFormData): Promise<{ success: boolean; error?: string }> => {
       try {
+        const baseId = eventId.includes('::') ? eventId.split('::')[0] : eventId;
+        const existing = allEvents.find((e) => e.id === eventId || e.id === baseId || e.id === `exam-${baseId}`);
+
+        if (existing?.event_source === 'exam_countdown' && existing.source_id) {
+          const startIso =
+            data.time_mode === 'all_day'
+              ? new Date(`${data.date}T09:00:00`).toISOString()
+              : combineDateTime(data.date, data.time_mode === 'deadline' ? data.end_time : data.start_time);
+          const res = await updateExamCountdown({
+            userId,
+            countdownId: existing.source_id,
+            title: data.title,
+            examDate: startIso,
+          });
+          if (res.success) {
+            refresh();
+            return { success: true };
+          }
+          return { success: false, error: res.error || 'Failed to update exam' };
+        }
+
         const { time_mode, date, start_time, end_time, recurrence_rule, reminder_minutes, ...rest } = data;
         let startIso: string = new Date().toISOString();
         let endIso: string = new Date(Date.now() + 3600000).toISOString();
@@ -406,7 +504,6 @@ export function useTimetable(userId: string): UseTimetableReturn {
           startIso = endIso;
         }
 
-        const baseId = eventId.includes('::') ? eventId.split('::')[0] : eventId;
         const res = await actionUpdateTimetableEvent(userId, baseId, {
           title: rest.title,
           event_type: rest.event_type,
@@ -435,12 +532,23 @@ export function useTimetable(userId: string): UseTimetableReturn {
         return { success: false, error: String(err) };
       }
     },
-    [userId, refresh]
+    [userId, refresh, allEvents]
   );
 
   const deleteEvent = useCallback(
     async (id: string): Promise<{ success: boolean; error?: string }> => {
       const baseId = id.includes('::') ? id.split('::')[0] : id;
+      const existing = allEvents.find((e) => e.id === id || e.id === baseId);
+
+      if (existing?.event_source === 'exam_countdown' && existing.source_id) {
+        const res = await deleteExamCountdown(userId, existing.source_id);
+        if (res.success) {
+          refresh();
+          return { success: true };
+        }
+        return { success: false, error: (res as { error?: string }).error || 'Failed to remove exam' };
+      }
+
       const res = await actionDeleteTimetableEvent(userId, baseId);
       if (res.success) {
         refresh();
@@ -448,7 +556,7 @@ export function useTimetable(userId: string): UseTimetableReturn {
       }
       return { success: false, error: res.error || 'Failed to delete event' };
     },
-    [userId, refresh]
+    [userId, refresh, allEvents]
   );
 
   const toggleComplete = useCallback(
@@ -475,8 +583,21 @@ export function useTimetable(userId: string): UseTimetableReturn {
   const moveEvent = useCallback(
     async (id: string, newStart: string, newEnd: string | null): Promise<{ success: boolean; error?: string }> => {
       const baseId = id.includes('::') ? id.split('::')[0] : id;
-      const ev = allEvents.find((e) => e.id === baseId);
+      const ev = allEvents.find((e) => e.id === baseId || e.id === id);
       if (!ev) return { success: false, error: 'Event not found' };
+
+      if (ev.event_source === 'exam_countdown' && ev.source_id) {
+        const res = await updateExamCountdown({
+          userId,
+          countdownId: ev.source_id,
+          examDate: newStart,
+        });
+        if (res.success) {
+          refresh();
+          return { success: true };
+        }
+        return { success: false, error: res.error || 'Failed to move exam' };
+      }
 
       const res = await actionUpdateTimetableEvent(userId, baseId, {
         start_time: newStart,
@@ -527,6 +648,6 @@ export function useTimetable(userId: string): UseTimetableReturn {
     redo,
     canUndo,
     canRedo,
-    integrationCounts: { exams: 0, assignments: 0, clubEvents: 0, milestones: 0 },
+    integrationCounts: { exams: examCount, assignments: 0, clubEvents: 0, milestones: 0 },
   };
 }

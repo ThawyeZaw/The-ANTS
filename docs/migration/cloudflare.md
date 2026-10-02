@@ -47,8 +47,10 @@
 
 | Path | Status |
 |---|---|
-| Cloudflare Worker cron `* * * * *` → `processNotificationQueue` | **Canonical** |
+| Cloudflare Worker cron `*/5 * * * *` → `processNotificationQueue` | **Canonical** |
 | Worker `POST /api/cron/process-queue` | Keep (manual / local nudge) |
+| Timetable create/update/move → `actionEnqueueTimetableReminders` | **Wired** (per-event override or Settings defaults) |
+| Exam countdown create/update → `actionEnqueueExamCountdownReminders` | Wired |
 | QStash → Vercel | **Removed in Phase 1** |
 | GitHub Actions → Vercel `/api/cron/process-notifications` | **Removed in Phase 1** |
 | Next.js enqueue server actions | Keep: insert into `notification_queue` only |

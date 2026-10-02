@@ -9,6 +9,12 @@ import { getDb, timetableEvents } from '@/lib/db';
 import { eq, and, gte, lte } from 'drizzle-orm';
 import { awardXp, XP_AMOUNTS, type AwardXpResult } from '@/lib/gamification/award';
 import { requireSessionUser } from '@/lib/auth-session';
+import {
+  actionClearSourceQueue,
+  actionEnqueueTimetableReminders,
+} from '@/actions/notifications';
+
+const DEFAULT_REMINDER_MINUTES = 15;
 
 function combineDateTime(dateStr: string, timeStr: string): string {
   return new Date(`${dateStr}T${timeStr}:00`).toISOString();
@@ -16,6 +22,9 @@ function combineDateTime(dateStr: string, timeStr: string): string {
 
 function formatDbEvent(e: any): TimetableEvent {
   const meta = (e.metadata as Record<string, any>) ?? {};
+  const reminderRaw = meta.reminder_minutes;
+  const reminder_minutes =
+    typeof reminderRaw === 'number' ? reminderRaw : null;
   return {
     id: e.id,
     user_id: e.user_id,
@@ -35,9 +44,18 @@ function formatDbEvent(e: any): TimetableEvent {
     completed_at: meta.completed_at ?? null,
     event_source: (meta.event_source as any) ?? 'user',
     source_id: meta.source_id ?? null,
+    reminder_minutes,
     metadata: meta,
     created_at: e.created_at ? (e.created_at instanceof Date ? e.created_at.toISOString() : new Date(e.created_at).toISOString()) : new Date().toISOString(),
   };
+}
+
+async function syncTimetableReminders(event: TimetableEvent, userId: string): Promise<void> {
+  try {
+    await actionEnqueueTimetableReminders(event, userId);
+  } catch (err) {
+    console.error('[timetable] Failed to enqueue Telegram reminders:', err);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -133,7 +151,10 @@ export async function createEventAction(
           description: rest.description,
           location: rest.location,
           subject: rest.subject,
-          reminder_minutes: rest.reminder_minutes,
+          reminder_minutes:
+            typeof rest.reminder_minutes === 'number'
+              ? rest.reminder_minutes
+              : DEFAULT_REMINDER_MINUTES,
           is_todo: rest.is_todo ?? false,
           is_completed: false,
           completed_at: null,
@@ -143,7 +164,9 @@ export async function createEventAction(
       })
       .returning();
 
-    return { success: true, event: formatDbEvent(newEvent) };
+    const event = formatDbEvent(newEvent);
+    await syncTimetableReminders(event, userId);
+    return { success: true, event };
   } catch (err) {
     return { success: false, error: `Failed to create event: ${String(err)}` };
   }
@@ -175,6 +198,10 @@ export async function actionCreateTimetableEvent(
           description: data.description || (data.metadata?.description as string) || null,
           subject: data.subject || (data.metadata?.subject as string) || null,
           location: data.location || (data.metadata?.location as string) || null,
+          reminder_minutes:
+            typeof data.metadata?.reminder_minutes === 'number'
+              ? data.metadata.reminder_minutes
+              : DEFAULT_REMINDER_MINUTES,
           is_todo: true,
           is_completed: false,
           completed_at: null,
@@ -184,7 +211,9 @@ export async function actionCreateTimetableEvent(
       })
       .returning();
 
-    return { success: true, event: formatDbEvent(newEvent) };
+    const event = formatDbEvent(newEvent);
+    await syncTimetableReminders(event, userId);
+    return { success: true, event };
   } catch (err) {
     return { success: false, error: `Failed to create event: ${String(err)}` };
   }
@@ -246,7 +275,9 @@ export async function updateEventAction(
 
     if (!updated) return { success: false, error: 'Could not save this task' };
 
-    return { success: true, event: formatDbEvent(updated) };
+    const event = formatDbEvent(updated);
+    await syncTimetableReminders(event, userId);
+    return { success: true, event };
   } catch (err) {
     return { success: false, error: `Failed to update event: ${String(err)}` };
   }
@@ -294,7 +325,9 @@ export async function actionUpdateTimetableEvent(
 
     if (!updated) return { success: false, error: 'Could not save this task' };
 
-    return { success: true, event: formatDbEvent(updated) };
+    const event = formatDbEvent(updated);
+    await syncTimetableReminders(event, userId);
+    return { success: true, event };
   } catch (err) {
     return { success: false, error: `Failed to update event: ${String(err)}` };
   }
@@ -314,6 +347,11 @@ export async function deleteEventAction(
     await db
       .delete(timetableEvents)
       .where(and(eq(timetableEvents.id, baseId), eq(timetableEvents.user_id, userId)));
+    try {
+      await actionClearSourceQueue('timetable_event', baseId);
+    } catch (err) {
+      console.error('[timetable] Failed to clear reminder queue:', err);
+    }
     return { success: true };
   } catch (err) {
     return { success: false, error: `Failed to delete event: ${String(err)}` };
@@ -473,7 +511,9 @@ export async function moveEventAction(
 
     if (!updated) return { success: false, error: 'Event not found' };
 
-    return { success: true, event: formatDbEvent(updated) };
+    const event = formatDbEvent(updated);
+    await syncTimetableReminders(event, userId);
+    return { success: true, event };
   } catch (err) {
     return { success: false, error: `Failed to move event: ${String(err)}` };
   }

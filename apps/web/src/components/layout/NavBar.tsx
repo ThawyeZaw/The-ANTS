@@ -35,6 +35,8 @@ import {
   Trophy,
   PanelLeftClose,
   PanelLeftOpen,
+  ListChecks,
+  Wrench,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
@@ -50,15 +52,21 @@ interface NavItem {
   description?: string;
 }
 
-type PanelKey = 'tools' | 'team' | 'user' | null;
-type SectionKey = 'tools' | 'team' | 'role' | null;
+type PanelKey = 'study' | 'tools' | 'team' | 'user' | null;
+type SectionKey = 'study' | 'tools' | 'team' | 'role' | null;
 
+/** Study hub — curriculum + focus rituals */
+const STUDY_LINKS: NavItem[] = [
+  { label: 'Curriculum', href: '/curriculum', icon: GraduationCap, description: 'Syllabi, subjects, and lessons' },
+  { label: 'Exam Countdown', href: '/countdown', icon: Clock, description: 'Days until your next paper' },
+  { label: 'Pomodoro Timer', href: '/pomodoro', icon: Timer, description: 'Focus sessions with ambient sound' },
+];
+
+/** Utility tools — calculators and trackers */
 const TOOLS_LINKS: NavItem[] = [
   { label: 'Grade Calculator', href: '/calculator', icon: Calculator, description: 'CAIE & Edexcel grade boundaries' },
-  { label: 'Pomodoro Timer', href: '/pomodoro', icon: Timer, description: 'Focus sessions with ambient sound' },
   { label: 'Past Paper Tracker', href: '/past-papers', icon: BookOpen, description: 'Track solved papers & grades' },
-  { label: 'Smart Timetable', href: '/timetable', icon: CalendarDays, description: 'Time-blocking & task list' },
-  { label: 'Exam Countdown', href: '/countdown', icon: Clock, description: 'Days until your next paper or IELTS' },
+  { label: 'Topic Tracker', href: '/curriculum', icon: ListChecks, description: 'Mark topic mastery as you revise' },
 ];
 
 const COMMUNITY_LINKS: NavItem[] = [
@@ -70,8 +78,17 @@ const COMMUNITY_LINKS: NavItem[] = [
 // ── Active detection helpers ──────────────────────────────────────────────────
 
 function isCurriculumActive(p: string) { return p.startsWith('/curriculum'); }
+function isStudyActive(p: string) {
+  return STUDY_LINKS.some((t) => p === t.href || p.startsWith(`${t.href}/`));
+}
 function isToolsActive(p: string) {
-  return TOOLS_LINKS.some((t) => p === t.href || p.startsWith(`${t.href}/`));
+  // Topic Tracker shares /curriculum with Study — treat curriculum as Study, not Tools.
+  return TOOLS_LINKS.some(
+    (t) => t.href !== '/curriculum' && (p === t.href || p.startsWith(`${t.href}/`))
+  );
+}
+function isTimetableActive(p: string) {
+  return p === '/timetable' || p.startsWith('/timetable/');
 }
 function isTeamActive(p: string) {
   return COMMUNITY_LINKS.some((item) => isHrefActive(item.href, p));
@@ -86,6 +103,7 @@ function isHrefActive(href: string, pathname: string): boolean {
   return pathname === path || pathname.startsWith(`${path}/`);
 }
 function defaultSectionForPath(pathname: string): SectionKey {
+  if (isStudyActive(pathname)) return 'study';
   if (isToolsActive(pathname)) return 'tools';
   if (isTeamActive(pathname)) return 'team';
   return null;
@@ -352,19 +370,17 @@ export default function NavBar() {
         </Link>
       )}
       {(isContributor || isAdmin) && (
+        <Link href="/contributor" onClick={closePanel} className={roleLinkClass}>
+          <Pencil className="w-4 h-4 text-primary shrink-0" />
+          <span className="truncate">Contributor Hub</span>
+        </Link>
+      )}
+      {isAdmin && (
         <>
-          <Link href="/contributor" onClick={closePanel} className={roleLinkClass}>
-            <Pencil className="w-4 h-4 text-primary shrink-0" />
-            <span className="truncate">Contributor Hub</span>
-          </Link>
           <Link href="/admin/exam-data" onClick={closePanel} className={roleLinkClass}>
             <ClipboardCheck className="w-4 h-4 text-primary shrink-0" />
             <span className="truncate">Exam Data Admin</span>
           </Link>
-        </>
-      )}
-      {isAdmin && (
-        <>
           <Link href="/main-contributor/add-contributor" onClick={closePanel} className={roleLinkClass}>
             <UserPlus className="w-4 h-4 text-primary shrink-0" />
             <span className="truncate">Manage Users</span>
@@ -440,19 +456,33 @@ export default function NavBar() {
           'flex-1 overflow-y-auto px-2 py-3 space-y-1',
           collapsed ? 'hidden lg:block' : 'hidden'
         )}>
-          {/* Pinned — Home */}
           <RailIconLink
             href={homeHref}
             label={mounted && isAuthenticated ? 'Dashboard' : 'Home'}
             icon={mounted && isAuthenticated ? LayoutDashboard : Home}
             active={isHomeActive(pathname)}
           />
-          {/* Pinned — Curriculum */}
-          <RailIconLink href="/curriculum" label="Curriculum" icon={GraduationCap} active={isCurriculumActive(pathname)} />
+          <RailIconLink
+            href="/timetable"
+            label="Timetable"
+            icon={CalendarDays}
+            active={isTimetableActive(pathname)}
+          />
 
-          {/* Study Tools — flat icon stack (all visible, no popover) */}
           <div className="pt-1 mt-1 border-t border-border/40 space-y-1">
-            {TOOLS_LINKS.map((item) => (
+            {STUDY_LINKS.map((item) => (
+              <RailIconLink
+                key={`study-${item.href}-${item.label}`}
+                href={item.href}
+                label={item.label}
+                icon={item.icon}
+                active={isHrefActive(item.href, pathname)}
+              />
+            ))}
+          </div>
+
+          <div className="pt-1 mt-1 border-t border-border/40 space-y-1">
+            {TOOLS_LINKS.filter((item) => item.href !== '/curriculum').map((item) => (
               <RailIconLink
                 key={item.href}
                 href={item.href}
@@ -463,7 +493,6 @@ export default function NavBar() {
             ))}
           </div>
 
-          {/* Community */}
           <div className="pt-1 mt-1 border-t border-border/40 space-y-1">
             {COMMUNITY_LINKS.map((item) => (
               <RailIconLink
@@ -476,7 +505,6 @@ export default function NavBar() {
             ))}
           </div>
 
-          {/* Staff-only tools */}
           {mounted && (isContributor || isAdmin) && (
             <div className="pt-1 mt-1 border-t border-border/40 space-y-1">
               <RailIconLink
@@ -485,12 +513,14 @@ export default function NavBar() {
                 icon={Pencil}
                 active={pathname.startsWith('/contributor')}
               />
-              <RailIconLink
-                href="/admin/exam-data"
-                label="Exam Data Admin"
-                icon={ClipboardCheck}
-                active={pathname.startsWith('/admin/exam-data')}
-              />
+              {isAdmin && (
+                <RailIconLink
+                  href="/admin/exam-data"
+                  label="Exam Data Admin"
+                  icon={ClipboardCheck}
+                  active={pathname.startsWith('/admin/exam-data')}
+                />
+              )}
             </div>
           )}
         </div>
@@ -500,7 +530,6 @@ export default function NavBar() {
           'flex flex-1 flex-col overflow-y-auto px-3 py-3 space-y-0.5 min-h-0',
           collapsed && 'lg:hidden'
         )}>
-          {/* Pinned — Dashboard */}
           <Link
             href={homeHref}
             aria-current={isHomeActive(pathname) ? 'page' : undefined}
@@ -519,40 +548,38 @@ export default function NavBar() {
             <span className="truncate">{mounted && isAuthenticated ? 'Dashboard' : 'Home'}</span>
           </Link>
 
-          {/* Pinned — Curriculum */}
           <Link
-            href="/curriculum"
-            aria-current={isCurriculumActive(pathname) ? 'page' : undefined}
+            href="/timetable"
+            aria-current={isTimetableActive(pathname) ? 'page' : undefined}
             className={cn(
-              'relative flex items-center gap-2 rounded-xl px-3 py-2 min-h-11 text-sm font-medium',
+              'relative flex items-center gap-2.5 rounded-xl px-3 py-2 min-h-11 text-sm font-medium',
               'transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-              isCurriculumActive(pathname)
+              isTimetableActive(pathname)
                 ? 'bg-primary/10 text-primary'
                 : 'text-foreground-secondary hover:text-foreground hover:bg-background-secondary'
             )}
           >
-            {isCurriculumActive(pathname) && (
+            {isTimetableActive(pathname) && (
               <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full bg-primary" />
             )}
-            <GraduationCap className="w-4 h-4 shrink-0" />
-            <span className="truncate">Curriculum</span>
+            <CalendarDays className="w-4 h-4 shrink-0" />
+            <span className="truncate">Timetable</span>
           </Link>
 
-          {/* Study Tools accordion — open by default */}
           <div className="pt-1 mt-1 border-t border-border/40">
             <SectionLabel
-              title="Study Tools"
-              icon={Sparkles}
-              open={openSection === 'tools'}
-              active={isToolsActive(pathname)}
-              onToggle={() => toggleSection('tools')}
-              controlsId="nav-section-tools"
+              title="Study"
+              icon={GraduationCap}
+              open={openSection === 'study'}
+              active={isStudyActive(pathname)}
+              onToggle={() => toggleSection('study')}
+              controlsId="nav-section-study"
             />
-            {openSection === 'tools' && (
-              <div id="nav-section-tools" className="mt-1 space-y-0.5 nav-section-enter">
-                {TOOLS_LINKS.map((item) => (
+            {openSection === 'study' && (
+              <div id="nav-section-study" className="mt-1 space-y-0.5 nav-section-enter">
+                {STUDY_LINKS.map((item) => (
                   <NavItemLink
-                    key={item.href}
+                    key={`study-${item.href}-${item.label}`}
                     item={item}
                     active={isHrefActive(item.href, pathname)}
                     onNavigate={closePanel}
@@ -563,7 +590,30 @@ export default function NavBar() {
             )}
           </div>
 
-          {/* Community accordion */}
+          <div>
+            <SectionLabel
+              title="Tools"
+              icon={Wrench}
+              open={openSection === 'tools'}
+              active={isToolsActive(pathname)}
+              onToggle={() => toggleSection('tools')}
+              controlsId="nav-section-tools"
+            />
+            {openSection === 'tools' && (
+              <div id="nav-section-tools" className="mt-1 space-y-0.5 nav-section-enter">
+                {TOOLS_LINKS.map((item) => (
+                  <NavItemLink
+                    key={`tools-${item.href}-${item.label}`}
+                    item={item}
+                    active={item.href === '/curriculum' ? isCurriculumActive(pathname) : isHrefActive(item.href, pathname)}
+                    onNavigate={closePanel}
+                    indent
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
           <div>
             <SectionLabel
               title="Community"
@@ -588,7 +638,6 @@ export default function NavBar() {
             )}
           </div>
 
-          {/* Staff-only Workspace Tools */}
           {mounted && hasStaffRole && (
             <div className="pt-2 mt-1 border-t border-border/40">
               <SectionLabel
@@ -695,7 +744,8 @@ export default function NavBar() {
             role="dialog"
             aria-modal="true"
             aria-label={
-              openPanel === 'tools' ? 'Study Tools'
+              openPanel === 'study' ? 'Study'
+              : openPanel === 'tools' ? 'Tools'
               : openPanel === 'team' ? 'Community'
               : 'Account'
             }
@@ -705,15 +755,15 @@ export default function NavBar() {
               <span className="w-10 h-1 rounded-full bg-border" aria-hidden />
             </div>
 
-            {openPanel === 'tools' && (
+            {openPanel === 'study' && (
               <div className="px-2 pb-3">
                 <p className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-foreground-muted">
-                  Study Tools
+                  Study
                 </p>
                 <div className="space-y-0.5">
-                  {TOOLS_LINKS.map((item) => (
+                  {STUDY_LINKS.map((item) => (
                     <NavItemLink
-                      key={item.href}
+                      key={`study-sheet-${item.href}-${item.label}`}
                       item={item}
                       active={isHrefActive(item.href, pathname)}
                       onNavigate={closePanel}
@@ -722,17 +772,17 @@ export default function NavBar() {
                 </div>
               </div>
             )}
-            {openPanel === 'team' && (
+            {openPanel === 'tools' && (
               <div className="px-2 pb-3">
                 <p className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-foreground-muted">
-                  Community
+                  Tools
                 </p>
                 <div className="space-y-0.5">
-                  {COMMUNITY_LINKS.map((item) => (
+                  {TOOLS_LINKS.map((item) => (
                     <NavItemLink
-                      key={item.href}
+                      key={`tools-sheet-${item.href}-${item.label}`}
                       item={item}
-                      active={isHrefActive(item.href, pathname)}
+                      active={item.href === '/curriculum' ? isCurriculumActive(pathname) : isHrefActive(item.href, pathname)}
                       onNavigate={closePanel}
                     />
                   ))}
@@ -741,6 +791,21 @@ export default function NavBar() {
             )}
             {openPanel === 'user' && (
               <div className="px-2 pb-3">
+                <div className="mb-2 pb-2 border-b border-border/60">
+                  <p className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-foreground-muted">
+                    Community
+                  </p>
+                  <div className="space-y-0.5">
+                    {COMMUNITY_LINKS.map((item) => (
+                      <NavItemLink
+                        key={`more-${item.href}`}
+                        item={item}
+                        active={isHrefActive(item.href, pathname)}
+                        onNavigate={closePanel}
+                      />
+                    ))}
+                  </div>
+                </div>
                 {mounted && hasStaffRole && (
                   <div className="mb-2 pb-2 border-b border-border/60">
                     <p className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-foreground-muted">
@@ -768,31 +833,31 @@ export default function NavBar() {
               href={homeHref}
             />
             <MobileTab
-              label="Curriculum"
+              label="Study"
               icon={GraduationCap}
-              active={isCurriculumActive(pathname) && !openPanel}
-              href="/curriculum"
+              active={isStudyActive(pathname) || openPanel === 'study'}
+              onClick={() => setOpenPanel((curr) => (curr === 'study' ? null : 'study'))}
+              expanded={openPanel === 'study'}
+              controlsId="nav-sheet"
             />
             <MobileTab
-              label="Study Tools"
-              icon={Sparkles}
+              label="Plan"
+              icon={CalendarDays}
+              active={isTimetableActive(pathname) && !openPanel}
+              href="/timetable"
+            />
+            <MobileTab
+              label="Tools"
+              icon={Wrench}
               active={isToolsActive(pathname) || openPanel === 'tools'}
               onClick={() => setOpenPanel((curr) => (curr === 'tools' ? null : 'tools'))}
               expanded={openPanel === 'tools'}
               controlsId="nav-sheet"
             />
             <MobileTab
-              label="Community"
-              icon={Users}
-              active={isTeamActive(pathname) || openPanel === 'team'}
-              onClick={() => setOpenPanel((curr) => (curr === 'team' ? null : 'team'))}
-              expanded={openPanel === 'team'}
-              controlsId="nav-sheet"
-            />
-            <MobileTab
-              label={mounted && isAuthenticated ? 'Account' : 'More'}
+              label={mounted && isAuthenticated ? 'More' : 'More'}
               icon={mounted && isAuthenticated ? UserCircle : MoreHorizontal}
-              active={openPanel === 'user'}
+              active={openPanel === 'user' || openPanel === 'team' || isTeamActive(pathname)}
               onClick={() => setOpenPanel((curr) => (curr === 'user' ? null : 'user'))}
               expanded={openPanel === 'user'}
               controlsId="nav-sheet"

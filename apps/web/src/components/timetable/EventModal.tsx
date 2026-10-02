@@ -36,7 +36,7 @@ const DEFAULT_FORM: TimetableEventFormData = {
   is_todo: false,
   is_recurring: false,
   recurrence_rule: null,
-  reminder_minutes: null,
+  reminder_minutes: 15,
 };
 
 function isoToLocalTime(iso: string): string {
@@ -540,13 +540,19 @@ export default function EventModal({
               <select
                 id="event-reminder"
                 value={form.reminder_minutes ?? ''}
-                onChange={e => update('reminder_minutes', e.target.value ? Number(e.target.value) : null)}
+                onChange={e => {
+                  const v = e.target.value;
+                  if (v === '') update('reminder_minutes', null);
+                  else update('reminder_minutes', Number(v));
+                }}
                 className="px-3 py-2 rounded-lg text-sm border outline-none w-40"
                 style={{ color: 'var(--foreground)', backgroundColor: 'color-mix(in srgb, var(--border) 50%, transparent)', borderColor: 'var(--border)' }}
               >
-                <option value="">No reminder</option>
+                <option value="">Account default</option>
+                <option value="-1">Off for this event</option>
                 <option value="0">On time</option>
                 <option value="10">10 minutes early</option>
+                <option value="15">15 minutes early</option>
                 <option value="30">30 minutes early</option>
                 <option value="60">1 hour early</option>
                 <option value="1440">1 day early</option>
@@ -555,7 +561,7 @@ export default function EventModal({
               </select>
             </div>
 
-            {form.reminder_minutes !== null && !isTelegramConnected && (
+            {form.reminder_minutes !== null && form.reminder_minutes !== -1 && !isTelegramConnected && (
               <div className="p-3 rounded-xl border border-amber-500/30 bg-amber-500/10 flex items-start gap-2.5 animate-in fade-in duration-200">
                 <AlertCircle size={16} className="text-amber-500 shrink-0 mt-0.5" />
                 <div className="flex-1 text-xs">

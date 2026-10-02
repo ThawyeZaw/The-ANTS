@@ -60,19 +60,21 @@ Cloudflare migration (current phase): [`docs/migration/cloudflare.md`](./docs/mi
             ┌─────────────────────────────┼─────────────────────────────┐
             ▼                             ▼                             ▼
    ┌─────────────────┐           ┌─────────────────┐           ┌─────────────────┐
-   │    1. Library   │           │    2. Tools     │           │  3. Explore &   │
-   │                 │           │                 │           │     Tutors      │
+   │   1. Study      │           │   2. Plan &     │           │  3. Community   │
+   │                 │           │     Tools       │           │                 │
    ├─────────────────┤           ├─────────────────┤           ├─────────────────┤
-   │ • Courses       │           │ • Smart         │           │ • Tutor         │
-   │ • Notes         │           │   Timetable     │           │   Directory     │
-   │ • Flashcards    │           │ • Pomodoro      │           │ • Weekly Slot   │
-   │   (SRS)         │           │ • Exam          │           │   Schedule      │
-   │ • Past Exams    │           │   Countdown     │           │ • Telegram      │
-   │ • Quizzes       │           │ • Calculator    │           │   Inquiry & QR  │
-   │   (rebuild)     │           │ • Workspace     │           │ • Contributors  │
-   │                 │           │                 │           │ • Public CV     │
+   │ • Curriculum    │           │ • Smart         │           │ • Tutors &      │
+   │ • Topic Tracker │           │   Timetable     │           │   Contributors  │
+   │ • Pomodoro      │           │   (day tasks /  │           │ • Leaderboard   │
+   │ • Exam          │           │    week blocks) │           │ • About         │
+   │   Countdown     │           │ • Past Papers   │           │ • Telegram      │
+   │                 │           │ • Calculator    │           │   inquiry & QR  │
+   │                 │           │ • Telegram      │           │                 │
+   │                 │           │   reminders     │           │                 │
    └─────────────────┘           └─────────────────┘           └─────────────────┘
 ```
+
+App nav (signed-in shell): **Home · Timetable · Study · Tools · Community · Account** (role tools: contributor hub for contributors; admin tools for admins only).
 
 Notes, flashcards, and quizzes are being **rebuilt in-app from scratch** (not a Notion-only pipeline).
 
@@ -137,7 +139,7 @@ CRON_SECRET=dev-secret
 
 Workers use **D1** via wrangler binding `DB` (not a Neon `DATABASE_URL`). Production / CF preview clients should use `NEXT_PUBLIC_API_URL=https://api.the-ants.org`.
 
-Telegram notification queue is drained by the **API Worker cron** (`apps/api`), not QStash or GitHub Actions.
+Telegram **test** messages send immediately from Settings. **Timetable / exam reminders** insert into D1 `notification_queue` on create/update (and clear on delete); the **API Worker cron** (`*/5 * * * *` in `apps/api`) drains due rows via Telegram Bot API. Per-event reminder overrides Settings defaults; `null` uses account defaults (15 min). Not QStash or GitHub Actions.
 
 ### 3. Run development servers
 ```bash

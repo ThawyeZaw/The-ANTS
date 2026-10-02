@@ -89,6 +89,7 @@ async function upsertQueueItems(
       user_id: item.user_id,
       channel: 'telegram',
       payload: {
+        chat_id: item.telegram_chat_id,
         telegram_chat_id: item.telegram_chat_id,
         message: item.message_text,
         source_type: item.source_type,
@@ -123,6 +124,26 @@ async function nudgeWorkerQueueProcessor(): Promise<void> {
 
 // ── Enqueue: Timetable Reminders ─────────────────────────────────────────────
 
+function resolveTimetableReminderOffsets(
+  event: TimetableEvent,
+  prefs: NotificationPrefs['timetable']
+): number[] | null {
+  // Per-event: -1 = off; number (incl. 0) = override; null/undefined = settings default.
+  const fromEvent =
+    typeof (event as { reminder_minutes?: number | null }).reminder_minutes === 'number'
+      ? (event as { reminder_minutes: number }).reminder_minutes
+      : typeof event.metadata?.reminder_minutes === 'number'
+        ? (event.metadata.reminder_minutes as number)
+        : null;
+
+  if (fromEvent === -1) return null;
+  if (typeof fromEvent === 'number' && fromEvent >= 0) return [fromEvent];
+
+  if (prefs && prefs.enabled === false) return null;
+  if (prefs?.reminders && prefs.reminders.length > 0) return prefs.reminders;
+  return [15];
+}
+
 export async function actionEnqueueTimetableReminders(
   event: TimetableEvent,
   userId: string
@@ -131,18 +152,19 @@ export async function actionEnqueueTimetableReminders(
   if (!profile?.telegram_chat_id) return;
 
   const prefs = profile.notification_preferences?.timetable;
-  if (prefs && prefs.enabled === false) return;
-
-  const reminderMinutes: number[] =
-    (prefs?.reminders && prefs.reminders.length > 0)
-      ? prefs.reminders
-      : [15];
+  const reminderMinutes = resolveTimetableReminderOffsets(event, prefs);
+  if (!reminderMinutes || reminderMinutes.length === 0) {
+    await actionClearSourceQueue('timetable_event', event.id);
+    return;
+  }
 
   const now = Date.now();
   const queueItems: QueueItem[] = [];
+  const baseId = event.id.includes('::') ? event.id.split('::')[0] : event.id;
 
   const timeInstances: Date[] = [];
   if (event.is_recurring && event.recurrence_rule) {
+    // 14-day horizon keeps queue small while covering two cron weeks of repeats.
     const horizonEnd = new Date(now + 14 * 24 * 60 * 60 * 1000);
     const expanded = expandRecurringEvents(
       event,
@@ -178,13 +200,18 @@ export async function actionEnqueueTimetableReminders(
         message_text: text,
         scheduled_for: new Date(scheduledMs).toISOString(),
         source_type: 'timetable_event',
-        source_id: event.id,
+        source_id: baseId,
         user_id: userId,
       });
     }
   }
 
-  await upsertQueueItems('timetable_event', event.id, queueItems);
+  if (queueItems.length === 0) {
+    await actionClearSourceQueue('timetable_event', baseId);
+    return;
+  }
+
+  await upsertQueueItems('timetable_event', baseId, queueItems);
   await nudgeWorkerQueueProcessor();
 }
 

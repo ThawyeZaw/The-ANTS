@@ -36,14 +36,15 @@ import MonthView from './MonthView';
 import TaskListView from './TaskListView';
 import TaskEditor from './TaskEditor';
 import WeekStrip from './WeekStrip';
+import TodayFocusPanel from './TodayFocusPanel';
 import { TIME_GRID_SLOT, type GridEditor, type InlineSlot } from './TimeGrid';
 import { TASK_COLOURS, addMinutes, formatDateKey } from './task-utils';
 
 const VIEW_OPTIONS: { id: TimetableView; label: string; icon: typeof CalendarDays }[] = [
-  { id: 'day', label: 'Day', icon: CalendarDays },
-  { id: 'week', label: 'Week', icon: CalendarRange },
-  { id: 'month', label: 'Month', icon: LayoutGrid },
   { id: 'list', label: 'Tasks', icon: ListChecks },
+  { id: 'week', label: 'Week', icon: CalendarRange },
+  { id: 'day', label: 'Day', icon: CalendarDays },
+  { id: 'month', label: 'Month', icon: LayoutGrid },
 ];
 
 const ZOOM_MIN = 70;
@@ -91,7 +92,7 @@ function blankTask(partial: Partial<TimetableEventFormData> & Pick<TimetableEven
     is_todo: partial.is_todo ?? true,
     is_recurring: partial.is_recurring ?? false,
     recurrence_rule: partial.recurrence_rule ?? null,
-    reminder_minutes: partial.reminder_minutes ?? null,
+    reminder_minutes: partial.reminder_minutes ?? 15,
   };
 }
 
@@ -152,7 +153,7 @@ export default function TimetableManager({ userId: userIdProp }: { userId?: stri
   const label = dateLabel(view, currentDate, weekStart);
   const activeView = VIEW_OPTIONS.find((option) => option.id === view) ?? VIEW_OPTIONS[0];
   const ActiveViewIcon = activeView.icon;
-  const showZoom = view === 'day' || view === 'week';
+  const showZoom = view === 'week';
   const dayEvents = getEventsForDay(currentDate);
   const weekEvents = getEventsForWeek(weekStart);
   const markedDates = useMemo(() => {
@@ -166,7 +167,7 @@ export default function TimetableManager({ userId: userIdProp }: { userId?: stri
   const nextColor = TASK_COLOURS[events.length % TASK_COLOURS.length];
 
   const openEdit = useCallback((event: TimetableEvent) => {
-    if (event.event_source !== 'user') return;
+    if (event.event_source !== 'user' && event.event_source !== 'exam_countdown') return;
     setInlineCreate(null);
     setGridEditor((current) => (
       current?.kind === 'edit' && current.event.id === event.id ? null : { kind: 'edit', event }
@@ -234,7 +235,8 @@ export default function TimetableManager({ userId: userIdProp }: { userId?: stri
     const dragged = active.data.current?.event as TimetableEvent | undefined;
     const drop = over.data.current as { date?: string; hour?: number } | undefined;
     if (!dragged?.start_time || !drop?.date || drop.hour === undefined) return;
-    if (dragged.is_recurring || dragged.event_source !== 'user') return;
+    if (dragged.is_recurring) return;
+    if (dragged.event_source !== 'user' && dragged.event_source !== 'exam_countdown') return;
 
     const draggedStart = new Date(dragged.start_time);
     const draggedEnd = dragged.end_time ? new Date(dragged.end_time) : null;
@@ -389,6 +391,18 @@ export default function TimetableManager({ userId: userIdProp }: { userId?: stri
                   </button>
                   <button
                     type="button"
+                    className="flex h-9 w-full items-center justify-between gap-4 whitespace-nowrap px-3 text-left text-sm font-medium hover:bg-foreground/5"
+                    onClick={() => setFilters({ ...filters, showExternalEvents: !filters.showExternalEvents })}
+                  >
+                    <span>Show exams</span>
+                    <span
+                      className={cn('flex h-5 w-5 items-center justify-center rounded-md border', filters.showExternalEvents ? 'border-primary bg-primary text-primary-foreground' : 'border-border')}
+                    >
+                      {filters.showExternalEvents ? <Check size={12} strokeWidth={3} /> : null}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
                     className="flex h-9 w-full items-center whitespace-nowrap px-3 text-left text-sm font-medium hover:bg-foreground/5"
                     onClick={() => {
                       goToToday();
@@ -424,35 +438,35 @@ export default function TimetableManager({ userId: userIdProp }: { userId?: stri
       )}
 
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div className={cn('min-h-0 flex-1', gridEditor && 'relative z-30')}>
+        <div className={cn('flex min-h-0 flex-1 flex-col lg:flex-row', gridEditor && 'relative z-30')}>
+          {(view === 'week' || view === 'list') && (
+            <TodayFocusPanel
+              events={events}
+              className="border-b lg:w-64 lg:shrink-0 lg:border-b-0 lg:border-r"
+              onSelectDay={() => {
+                goToToday();
+                setView('day');
+              }}
+              onToggleComplete={(id) => void onToggle(id)}
+              onOpenEvent={(event) => {
+                if (view === 'week') openEdit(event);
+                else {
+                  goToDate(new Date(event.start_time || event.end_time || Date.now()));
+                  setView('day');
+                }
+              }}
+            />
+          )}
+
+          <div className="min-h-0 min-w-0 flex-1">
           {view === 'day' && (
             <DayView
               currentDate={currentDate}
               events={dayEvents}
-              slotHeight={slotHeight}
-              isDragging={Boolean(activeDrag)}
-              inlineCreate={inlineCreate}
-              onSlotClick={(date, time) => {
-                setGridEditor(null);
-                setInlineCreate({ date: formatDateLocal(date), time });
-              }}
-              onEditEvent={openEdit}
+              composeKey={composeKey}
               onToggleComplete={(id) => void onToggle(id)}
-              onInlineSubmit={(titleText) => void submitInline(titleText)}
-              onInlineCancel={() => setInlineCreate(null)}
-              onInlineExpand={(titleText) => {
-                if (!inlineCreate) return;
-                setGridEditor({
-                  kind: 'create',
-                  date: inlineCreate.date,
-                  time: inlineCreate.time,
-                  allDay: false,
-                  title: titleText,
-                });
-                setInlineCreate(null);
-              }}
-              editor={gridEditor}
-              renderEditor={renderEditor}
+              onSave={saveTask}
+              onDelete={removeTask}
             />
           )}
           {view === 'week' && (
@@ -486,6 +500,10 @@ export default function TimetableManager({ userId: userIdProp }: { userId?: stri
                 goToDate(date);
                 setView('day');
               }}
+              onResizeEvent={(event, newEndIso) => {
+                if (!event.start_time) return;
+                void moveEvent(event.id, event.start_time, newEndIso);
+              }}
               editor={gridEditor}
               renderEditor={renderEditor}
             />
@@ -510,6 +528,7 @@ export default function TimetableManager({ userId: userIdProp }: { userId?: stri
               onDelete={removeTask}
             />
           )}
+          </div>
         </div>
         <DragOverlay dropAnimation={null}>
           {activeDrag ? (
