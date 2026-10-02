@@ -27,12 +27,25 @@ export function resolveAuthBaseURL(requestOrigin?: string, envBaseUrl?: string):
   return CANONICAL_API_URL;
 }
 
+export type OAuthProviderEnv = {
+  googleClientId?: string;
+  googleClientSecret?: string;
+  githubClientId?: string;
+  githubClientSecret?: string;
+};
+
 export function getAuth(
   db: Database,
   requestOrigin?: string,
   secret?: string,
-  envBaseUrl?: string
+  envBaseUrl?: string,
+  oauth?: OAuthProviderEnv
 ) {
+  const googleClientId = oauth?.googleClientId || process.env.GOOGLE_CLIENT_ID || '';
+  const googleClientSecret = oauth?.googleClientSecret || process.env.GOOGLE_CLIENT_SECRET || '';
+  const githubClientId = oauth?.githubClientId || process.env.GITHUB_CLIENT_ID || '';
+  const githubClientSecret = oauth?.githubClientSecret || process.env.GITHUB_CLIENT_SECRET || '';
+
   return betterAuth({
     baseURL: resolveAuthBaseURL(requestOrigin, envBaseUrl || process.env.BETTER_AUTH_URL),
     secret: secret || process.env.BETTER_AUTH_SECRET || process.env.CRON_SECRET || 'the-ants-auth-secret-production-2026',
@@ -97,20 +110,26 @@ export function getAuth(
         },
       },
     },
+    account: {
+      accountLinking: {
+        enabled: true,
+        trustedProviders: ['google'],
+      },
+    },
     emailAndPassword: {
       enabled: true,
       autoSignIn: true,
     },
     socialProviders: {
       google: {
-        clientId: process.env.GOOGLE_CLIENT_ID || '',
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-        enabled: !!process.env.GOOGLE_CLIENT_ID,
+        clientId: googleClientId,
+        clientSecret: googleClientSecret,
+        enabled: !!googleClientId,
       },
       github: {
-        clientId: process.env.GITHUB_CLIENT_ID || '',
-        clientSecret: process.env.GITHUB_CLIENT_SECRET || '',
-        enabled: !!process.env.GITHUB_CLIENT_ID,
+        clientId: githubClientId,
+        clientSecret: githubClientSecret,
+        enabled: !!githubClientId,
       },
     },
     databaseHooks: {

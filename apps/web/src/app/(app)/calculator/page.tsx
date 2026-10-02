@@ -1,8 +1,32 @@
 'use client';
 
-import React, { Suspense } from 'react';
-import GradeCalculator from '@/components/exam-data/GradeCalculator';
+import React from 'react';
+import dynamic from 'next/dynamic';
 import BackButton from '@/components/ui/BackButton';
+
+const GradeCalculator = dynamic(
+  () => import('@/components/exam-data/GradeCalculator'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="rounded-3xl border border-border bg-background-card p-4 sm:p-6 md:p-8 shadow-xs space-y-6 max-w-5xl mx-auto animate-pulse">
+        <div className="space-y-3 border-b border-border pb-6">
+          <div className="h-5 w-40 rounded-full bg-background-secondary" />
+          <div className="h-7 w-72 max-w-full rounded-lg bg-background-secondary" />
+          <div className="h-4 w-96 max-w-full rounded bg-background-secondary" />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="h-16 rounded-2xl bg-background-secondary" />
+          <div className="h-16 rounded-2xl bg-background-secondary" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="h-12 rounded-xl bg-background-secondary" />
+          <div className="h-12 rounded-xl bg-background-secondary" />
+        </div>
+      </div>
+    ),
+  },
+);
 
 export default function CalculatorPage() {
   return (
@@ -21,9 +45,7 @@ export default function CalculatorPage() {
         <div className="mb-6">
           <BackButton href="/dashboard" label="Back to Dashboard" />
         </div>
-        <Suspense fallback={<div className="h-64 animate-pulse rounded-3xl border border-border bg-background-card" />}>
-          <GradeCalculator />
-        </Suspense>
+        <GradeCalculator />
       </div>
     </div>
   );

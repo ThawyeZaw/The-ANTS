@@ -7,6 +7,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import {
@@ -30,6 +31,7 @@ import {
   listApprovedCalculatorPresetsForSubjects,
   listCurriculums,
   listSubjects,
+  getSubjectsQualificationData,
 } from '@/actions/exam-data';
 import { getSubjectCalculatorContext, listSubjectCompositeBoundaries } from '@/actions/curriculum';
 import { useAuth } from '@/hooks/useAuth';
@@ -49,10 +51,8 @@ import {
   gradeFromUms,
   umsCapFromBoundaries,
 } from '@/lib/grading';
-import { groupEdexcelIalSubjects, IAL_CALCULATOR_ONLY_IDS } from '@/lib/edexcel-ial';
+import { groupEdexcelIalSubjects, IAL_CALCULATOR_ONLY_IDS, IAL_MATHS_SUITE_ID } from '@/lib/edexcel-ial';
 import { useEdexcelSuiteSelectors } from './useEdexcelSuiteSelectors';
-import { EdexcelSuiteSelectors } from './EdexcelSuiteSelectors';
-import { IalUmsCalculator } from './IalUmsCalculator';
 import {
   IAL_CASH_INS,
   cashInsForUnit,
@@ -69,6 +69,21 @@ import {
   type MathsSuiteMode,
 } from '@/lib/grading/ial-cash-in';
 import { SearchableSelect } from './SearchableSelect';
+
+const IalUmsCalculator = dynamic(
+  () => import('./IalUmsCalculator').then((m) => m.IalUmsCalculator),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-48 animate-pulse rounded-2xl border border-border bg-background-secondary" />
+    ),
+  },
+);
+
+const EdexcelSuiteSelectors = dynamic(
+  () => import('./EdexcelSuiteSelectors').then((m) => m.EdexcelSuiteSelectors),
+  { ssr: false },
+);
 
 interface PresetBoundary {
   grade: string;
@@ -140,6 +155,7 @@ export default function GradeCalculator() {
   // Client-side cache to avoid redundant D1 row queries when toggling subjects
   const presetCacheRef = useRef<Map<string, CalcPreset[]>>(new Map());
   const compositeCacheRef = useRef<Map<string, GradeBoundary[]>>(new Map());
+  const qualFetchedRef = useRef(new Set<string>());
 
   const selectedCurriculumRow = useMemo(
     () => curriculums.find((c) => c.id === selectedCurriculum),
@@ -257,6 +273,37 @@ export default function GradeCalculator() {
     }
     fetchCatalog();
   }, []);
+
+  // Suite / IAL maths needs qualification_data — fetch only when that path is active
+  useEffect(() => {
+    if (!isSuite) return;
+
+    const targetIds = [IAL_MATHS_SUITE_ID];
+    if (selectedSubjectRow?.id) targetIds.push(selectedSubjectRow.id);
+    const missing = targetIds.filter((id) => !qualFetchedRef.current.has(id));
+    if (missing.length === 0) return;
+
+    let cancelled = false;
+    getSubjectsQualificationData(missing)
+      .then((map) => {
+        if (cancelled) return;
+        for (const id of missing) qualFetchedRef.current.add(id);
+        setSubjects((prev) =>
+          prev.map((s) =>
+            Object.prototype.hasOwnProperty.call(map, s.id)
+              ? { ...s, qualification_data: map[s.id] }
+              : s,
+          ),
+        );
+      })
+      .catch((err) => {
+        console.error('[GradeCalculator] qualification_data load failed:', err);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isSuite, selectedSubjectRow?.id]);
 
   useEffect(() => {
     if (presetSubjectIds.length === 0) {

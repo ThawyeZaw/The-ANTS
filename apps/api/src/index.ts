@@ -144,6 +144,15 @@ app.get('/health', (c) => {
 // Better Auth with rate limiting (60 requests/minute per IP)
 app.use('/api/auth/*', rateLimiter(60, 60 * 1000));
 app.use('/api/auth', rateLimiter(60, 60 * 1000));
+function oauthEnvFromBindings(env?: Bindings) {
+  return {
+    googleClientId: env?.GOOGLE_CLIENT_ID,
+    googleClientSecret: env?.GOOGLE_CLIENT_SECRET,
+    githubClientId: env?.GITHUB_CLIENT_ID,
+    githubClientSecret: env?.GITHUB_CLIENT_SECRET,
+  };
+}
+
 app.all('/api/auth/*', async (c) => {
   try {
     const db = getDatabase(c);
@@ -152,7 +161,8 @@ app.all('/api/auth/*', async (c) => {
       db,
       origin,
       c.env?.BETTER_AUTH_SECRET || c.env?.CRON_SECRET,
-      c.env?.BETTER_AUTH_URL
+      c.env?.BETTER_AUTH_URL,
+      oauthEnvFromBindings(c.env)
     );
     const res = await auth.handler(c.req.raw);
     return await rewriteAuthDbFailure(res);
@@ -178,7 +188,8 @@ app.all('/api/auth', async (c) => {
       db,
       origin,
       c.env?.BETTER_AUTH_SECRET || c.env?.CRON_SECRET,
-      c.env?.BETTER_AUTH_URL
+      c.env?.BETTER_AUTH_URL,
+      oauthEnvFromBindings(c.env)
     );
     const res = await auth.handler(c.req.raw);
     return await rewriteAuthDbFailure(res);
