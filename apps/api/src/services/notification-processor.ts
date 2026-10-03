@@ -141,6 +141,18 @@ export async function processNotificationQueue(
         })
         .where(eq(notificationQueue.id, item.id));
 
+      if (payload?.source_type === 'daily_reminder') {
+        const baseTime = item.scheduled_for ? new Date(item.scheduled_for).getTime() : Date.now();
+        const nextScheduled = new Date(baseTime + 24 * 60 * 60 * 1000);
+        await db.insert(notificationQueue).values({
+          user_id: item.user_id,
+          channel: 'telegram',
+          payload: item.payload,
+          scheduled_for: nextScheduled,
+          status: 'pending',
+        });
+      }
+
       successCount++;
     } catch (err: any) {
       failCount++;

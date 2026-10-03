@@ -12,6 +12,7 @@ import { requireSessionUser } from '@/lib/auth-session';
 import {
   actionClearSourceQueue,
   actionEnqueueTimetableReminders,
+  actionEnqueueDailyStudyReminders,
 } from '@/actions/notifications';
 
 const DEFAULT_REMINDER_MINUTES = 15;
@@ -53,6 +54,7 @@ function formatDbEvent(e: any): TimetableEvent {
 async function syncTimetableReminders(event: TimetableEvent, userId: string): Promise<void> {
   try {
     await actionEnqueueTimetableReminders(event, userId);
+    void actionEnqueueDailyStudyReminders(userId);
   } catch (err) {
     console.error('[timetable] Failed to enqueue Telegram reminders:', err);
   }
