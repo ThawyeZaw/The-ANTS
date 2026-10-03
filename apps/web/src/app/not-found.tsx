@@ -1,12 +1,13 @@
 import Link from 'next/link';
 import { Compass, Home, LayoutDashboard, Calculator, Clock, BookOpen, CalendarDays } from 'lucide-react';
+import { loginNextPath, signupNextPath } from '@/lib/app-paths';
 
 export default function NotFound() {
   const quickLinks = [
     { label: 'Grade Calculator', href: '/calculator', icon: Calculator, desc: 'Official CAIE & Edexcel boundaries' },
-    { label: 'Exam Countdown', href: '/countdown', icon: Clock, desc: 'Live sitting timetable timers' },
-    { label: 'Past Paper Tracker', href: '/past-papers', icon: BookOpen, desc: 'Score matrices & components' },
-    { label: 'Smart Timetable', href: '/timetable', icon: CalendarDays, desc: 'Time-blocking weekly planner' },
+    { label: 'Exam Countdown', href: signupNextPath('/countdown'), icon: Clock, desc: 'Live sitting timetable timers' },
+    { label: 'Past Paper Tracker', href: signupNextPath('/past-papers'), icon: BookOpen, desc: 'Score matrices & components' },
+    { label: 'Smart Timetable', href: signupNextPath('/timetable'), icon: CalendarDays, desc: 'Time-blocking weekly planner' },
   ];
 
   return (
@@ -56,11 +57,11 @@ export default function NotFound() {
           </Link>
 
           <Link
-            href="/student"
+            href={loginNextPath('/student')}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-background-card border border-border text-foreground font-semibold text-sm hover:bg-background-secondary transition-colors cursor-pointer"
           >
             <LayoutDashboard className="w-4 h-4 text-foreground-secondary" />
-            Student Dashboard
+            Sign in to Study Hub
           </Link>
         </div>
 

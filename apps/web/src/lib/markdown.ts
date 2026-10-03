@@ -1,3 +1,11 @@
+function sanitizeHref(url: string): string {
+  const trimmed = url.trim();
+  if (/^(https?:|\/|mailto:)/i.test(trimmed)) {
+    return trimmed;
+  }
+  return '#';
+}
+
 /** Simple markdown-to-HTML renderer (supports headings, bold, italic, links, lists, paragraphs) */
 export function renderMarkdown(md: string): string {
   let html = md
@@ -13,8 +21,11 @@ export function renderMarkdown(md: string): string {
     .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    // Links
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-primary underline" target="_blank" rel="noopener noreferrer">$1</a>')
+    // Links (sanitized against javascript: / data: schemes)
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_m, text, url) => {
+      const safeHref = sanitizeHref(url);
+      return `<a href="${safeHref}" class="text-primary underline" target="_blank" rel="noopener noreferrer">${text}</a>`;
+    })
     // Unordered lists
     .replace(/^- (.+)$/gm, '<li class="ml-4 list-disc text-foreground-secondary">$1</li>')
     // Line breaks

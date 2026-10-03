@@ -7,6 +7,8 @@
 
 import { getDb, profiles, timetableEvents, examCountdowns, notificationQueue, notificationPreferences } from '@/lib/db';
 import { eq, and, gte, lte, asc } from 'drizzle-orm';
+import { getSessionUser } from '@/lib/auth-session';
+import { mintTelegramLinkStartArg } from '@/lib/telegram/link-token';
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
@@ -102,9 +104,9 @@ export async function actionSendWelcomeMessage(telegramChatId: string, userId: s
       where: eq(profiles.id, userId as any),
     });
 
-    if (!profile) {
-      console.error('[telegram] User profile not found for welcome message:', userId);
-      return { success: false, error: 'User profile not found' };
+    if (!profile || profile.telegram_chat_id !== telegramChatId) {
+      console.error('[telegram] Profile not found or chat ID mismatch for welcome message:', userId);
+      return { success: false, error: 'User profile not found or unlinked' };
     }
 
     const displayName = profile.name || profile.username || 'there';
@@ -168,9 +170,9 @@ export async function actionSendWelcomeMessage(telegramChatId: string, userId: s
       deadlinesSection +
       `\n\n` +
       `🚀 <b>Getting started</b>:\n` +
-      `• Set your curricula in Courses → Enrol\n` +
-      `• Create your timetable in Dashboard → Timetable\n` +
-      `• Configure alert preferences in Settings → Telegram Alerts\n\n` +
+      `• Enroll subjects in Curriculum\n` +
+      `• Plan study blocks in Timetable\n` +
+      `• Tune alerts in Settings → Telegram\n\n` +
       `Need help? Visit the ANTs dashboard or contact support.`;
 
     const result = await sendTelegramMessage(telegramChatId, message);
@@ -178,5 +180,30 @@ export async function actionSendWelcomeMessage(telegramChatId: string, userId: s
     return { success: true, data: result };
   } catch (err: any) {
     return { success: false, error: err.message || 'Failed to send welcome message' };
+  }
+}
+
+export async function actionGetTelegramLinkStartArg(): Promise<
+  { success: true; startArg: string } | { success: false; error: string }
+> {
+  const session = await getSessionUser();
+  if (!session?.userId) {
+    return { success: false, error: 'Sign in to link Telegram.' };
+  }
+
+  const db = getDb();
+  const profile = await db.query.profiles.findFirst({
+    where: eq(profiles.id, session.userId as any),
+    columns: { username: true },
+  });
+
+  if (!profile?.username) {
+    return { success: false, error: 'Set your username in Settings before linking Telegram.' };
+  }
+
+  try {
+    return { success: true, startArg: mintTelegramLinkStartArg(profile.username) };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Could not create link token' };
   }
 }

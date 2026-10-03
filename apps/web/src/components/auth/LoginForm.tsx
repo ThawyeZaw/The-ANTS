@@ -30,7 +30,7 @@ export default function LoginForm() {
   const { login } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextUrl = searchParams.get('next') || '/dashboard';
+  const nextUrl = searchParams.get('next') || '/student';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

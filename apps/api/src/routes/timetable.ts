@@ -7,22 +7,28 @@ import {
   examCountdowns,
 } from '@the-ants/db';
 import type { TimetableEventDTO } from '@the-ants/shared-types';
+import { createAuthMiddleware } from '../middleware/session';
 
-export function createTimetableRoutes(getDb: () => ReturnType<typeof createDb>) {
+export function createTimetableRoutes(getDb: (c?: any) => ReturnType<typeof createDb>) {
   const router = new Hono();
+  const requireAuth = createAuthMiddleware((c) => getDb(c));
 
   // 1. Get user timetable events
-  router.get('/events', async (c) => {
-    const db = getDb();
-    const userId = c.req.query('userId');
+  router.get('/events', requireAuth, async (c) => {
+    const db = getDb(c);
+    const sessionUser = c.get('sessionUser');
+    const requestedUserId = c.req.query('userId');
     const startDate = c.req.query('startDate');
     const endDate = c.req.query('endDate');
 
-    if (!userId) {
-      return c.json({ error: 'userId is required' }, 400);
+    if (requestedUserId && requestedUserId !== sessionUser.id && !sessionUser.roles.includes('admin')) {
+      return c.json({ error: 'Forbidden: Cannot access another user\'s timetable' }, 403);
     }
 
-    const conditions = [eq(timetableEvents.user_id, userId)];
+    const effectiveUserId =
+      sessionUser.roles.includes('admin') && requestedUserId ? requestedUserId : sessionUser.id;
+
+    const conditions = [eq(timetableEvents.user_id, effectiveUserId)];
     if (startDate) {
       conditions.push(gte(timetableEvents.start_time, new Date(startDate)));
     }
@@ -39,15 +45,19 @@ export function createTimetableRoutes(getDb: () => ReturnType<typeof createDb>) 
   });
 
   // 2. Integrated Timetable (Joins personal events + exam countdowns)
-  router.get('/integrated', async (c) => {
-    const db = getDb();
-    const userId = c.req.query('userId');
+  router.get('/integrated', requireAuth, async (c) => {
+    const db = getDb(c);
+    const sessionUser = c.get('sessionUser');
+    const requestedUserId = c.req.query('userId');
     const startDateStr = c.req.query('startDate');
     const endDateStr = c.req.query('endDate');
 
-    if (!userId) {
-      return c.json({ error: 'userId is required' }, 400);
+    if (requestedUserId && requestedUserId !== sessionUser.id && !sessionUser.roles.includes('admin')) {
+      return c.json({ error: 'Forbidden: Cannot access another user\'s timetable' }, 403);
     }
+
+    const effectiveUserId =
+      sessionUser.roles.includes('admin') && requestedUserId ? requestedUserId : sessionUser.id;
 
     const startDate = startDateStr ? new Date(startDateStr) : new Date(Date.now() - 30 * 86400000);
     const endDate = endDateStr ? new Date(endDateStr) : new Date(Date.now() + 90 * 86400000);
@@ -55,7 +65,7 @@ export function createTimetableRoutes(getDb: () => ReturnType<typeof createDb>) 
     // Stream 1: User personal timetable events
     const personalEvents = await db.query.timetableEvents.findMany({
       where: and(
-        eq(timetableEvents.user_id, userId),
+        eq(timetableEvents.user_id, effectiveUserId),
         gte(timetableEvents.start_time, startDate),
         lte(timetableEvents.start_time, endDate)
       ),
@@ -64,7 +74,7 @@ export function createTimetableRoutes(getDb: () => ReturnType<typeof createDb>) 
     // Stream 2: Exam countdowns
     const examsList = await db.query.examCountdowns.findMany({
       where: and(
-        eq(examCountdowns.user_id, userId),
+        eq(examCountdowns.user_id, effectiveUserId),
         gte(examCountdowns.exam_date, startDate),
         lte(examCountdowns.exam_date, endDate)
       ),
@@ -110,12 +120,13 @@ export function createTimetableRoutes(getDb: () => ReturnType<typeof createDb>) 
   });
 
   // 3. Create timetable event
-  router.post('/events', async (c) => {
-    const db = getDb();
+  router.post('/events', requireAuth, async (c) => {
+    const db = getDb(c);
+    const sessionUser = c.get('sessionUser');
     const body = await c.req.json();
 
     const CreateSchema = z.object({
-      userId: z.string().uuid(),
+      userId: z.string().uuid().optional(),
       title: z.string().min(1),
       eventType: z.string().default('study'),
       startTime: z.string(),
@@ -133,7 +144,7 @@ export function createTimetableRoutes(getDb: () => ReturnType<typeof createDb>) 
     }
 
     const {
-      userId,
+      userId: requestedUserId,
       title,
       eventType,
       startTime,
@@ -145,10 +156,13 @@ export function createTimetableRoutes(getDb: () => ReturnType<typeof createDb>) 
       metadata,
     } = parsed.data;
 
+    const effectiveUserId =
+      sessionUser.roles.includes('admin') && requestedUserId ? requestedUserId : sessionUser.id;
+
     const [newEvent] = await db
       .insert(timetableEvents)
       .values({
-        user_id: userId,
+        user_id: effectiveUserId,
         title,
         event_type: eventType,
         start_time: new Date(startTime),
@@ -165,13 +179,15 @@ export function createTimetableRoutes(getDb: () => ReturnType<typeof createDb>) 
   });
 
   // 4. Update timetable event
-  router.put('/events/:id', async (c) => {
-    const db = getDb();
+  router.put('/events/:id', requireAuth, async (c) => {
+    const db = getDb(c);
+    const sessionUser = c.get('sessionUser');
     const eventId = c.req.param('id');
+    if (!eventId) return c.json({ error: 'Event ID is required' }, 400);
     const body = await c.req.json();
 
     const UpdateSchema = z.object({
-      userId: z.string().uuid(),
+      userId: z.string().uuid().optional(),
       title: z.string().min(1).optional(),
       eventType: z.string().optional(),
       startTime: z.string().optional(),
@@ -189,7 +205,6 @@ export function createTimetableRoutes(getDb: () => ReturnType<typeof createDb>) 
     }
 
     const {
-      userId,
       title,
       eventType,
       startTime,
@@ -201,13 +216,17 @@ export function createTimetableRoutes(getDb: () => ReturnType<typeof createDb>) 
       metadata,
     } = parsed.data;
 
-    // Check ownership
+    // Check ownership or admin
     const existing = await db.query.timetableEvents.findFirst({
-      where: and(eq(timetableEvents.id, eventId), eq(timetableEvents.user_id, userId)),
+      where: eq(timetableEvents.id, eventId),
     });
 
     if (!existing) {
-      return c.json({ error: 'Event not found or unauthorized' }, 404);
+      return c.json({ error: 'Event not found' }, 404);
+    }
+
+    if (existing.user_id !== sessionUser.id && !sessionUser.roles.includes('admin')) {
+      return c.json({ error: 'Forbidden: Cannot edit another user\'s event' }, 403);
     }
 
     const updateData: any = {};
@@ -231,21 +250,22 @@ export function createTimetableRoutes(getDb: () => ReturnType<typeof createDb>) 
   });
 
   // 5. Delete timetable event
-  router.delete('/events/:id', async (c) => {
-    const db = getDb();
+  router.delete('/events/:id', requireAuth, async (c) => {
+    const db = getDb(c);
+    const sessionUser = c.get('sessionUser');
     const eventId = c.req.param('id');
-    const userId = c.req.query('userId');
-
-    if (!userId) {
-      return c.json({ error: 'userId query parameter is required' }, 400);
-    }
+    if (!eventId) return c.json({ error: 'Event ID is required' }, 400);
 
     const existing = await db.query.timetableEvents.findFirst({
-      where: and(eq(timetableEvents.id, eventId), eq(timetableEvents.user_id, userId)),
+      where: eq(timetableEvents.id, eventId),
     });
 
     if (!existing) {
-      return c.json({ error: 'Event not found or unauthorized' }, 404);
+      return c.json({ error: 'Event not found' }, 404);
+    }
+
+    if (existing.user_id !== sessionUser.id && !sessionUser.roles.includes('admin')) {
+      return c.json({ error: 'Forbidden: Cannot delete another user\'s event' }, 403);
     }
 
     await db.delete(timetableEvents).where(eq(timetableEvents.id, eventId));

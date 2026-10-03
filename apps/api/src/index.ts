@@ -38,6 +38,7 @@ const ALLOWED_ORIGINS = [
   'https://www.the-ants.org',
   'https://the-ants.vercel.app',
   'https://the-ants-web.thawyezaw.workers.dev',
+  'https://api.the-ants.org',
   'http://localhost:3000',
   'http://localhost:3005',
   'http://127.0.0.1:3000',
@@ -52,8 +53,8 @@ app.use(
       if (
         ALLOWED_ORIGINS.includes(origin) ||
         origin.endsWith('.the-ants.org') ||
-        origin.endsWith('.the-ants.vercel.app') ||
-        origin.endsWith('.thawyezaw.workers.dev')
+        origin === 'https://the-ants.vercel.app' ||
+        /^https:\/\/the-ants(-[a-z0-9-]+)?\.vercel\.app$/.test(origin)
       ) {
         return origin;
       }
@@ -160,7 +161,7 @@ app.all('/api/auth/*', async (c) => {
     const auth = getAuth(
       db,
       origin,
-      c.env?.BETTER_AUTH_SECRET || c.env?.CRON_SECRET,
+      c.env?.BETTER_AUTH_SECRET,
       c.env?.BETTER_AUTH_URL,
       oauthEnvFromBindings(c.env)
     );
@@ -177,7 +178,7 @@ app.all('/api/auth/*', async (c) => {
         503
       );
     }
-    return c.json({ error: err?.message || 'Auth internal error', stack: err?.stack }, 500);
+    return c.json({ error: err?.message || 'Auth internal error' }, 500);
   }
 });
 app.all('/api/auth', async (c) => {
@@ -187,7 +188,7 @@ app.all('/api/auth', async (c) => {
     const auth = getAuth(
       db,
       origin,
-      c.env?.BETTER_AUTH_SECRET || c.env?.CRON_SECRET,
+      c.env?.BETTER_AUTH_SECRET,
       c.env?.BETTER_AUTH_URL,
       oauthEnvFromBindings(c.env)
     );
@@ -204,17 +205,17 @@ app.all('/api/auth', async (c) => {
         503
       );
     }
-    return c.json({ error: err?.message || 'Auth internal error', stack: err?.stack }, 500);
+    return c.json({ error: err?.message || 'Auth internal error' }, 500);
   }
 });
 
 // Domain Routes
-app.route('/api/role-upgrade', createRoleUpgradeRoutes(() => getDatabase()));
-app.route('/api/timetable', createTimetableRoutes(() => getDatabase()));
-app.route('/api/exams', createExamRoutes(() => getDatabase()));
-app.route('/api/curriculum', createCurriculumRoutes(() => getDatabase()));
-app.route('/api/editor', createEditorRoutes(() => getDatabase()));
-app.route('/api/storage', createStorageRoutes());
+app.route('/api/role-upgrade', createRoleUpgradeRoutes((c: any) => getDatabase(c)));
+app.route('/api/timetable', createTimetableRoutes((c: any) => getDatabase(c)));
+app.route('/api/exams', createExamRoutes((c: any) => getDatabase(c)));
+app.route('/api/curriculum', createCurriculumRoutes((c: any) => getDatabase(c)));
+app.route('/api/editor', createEditorRoutes((c: any) => getDatabase(c)));
+app.route('/api/storage', createStorageRoutes((c: any) => getDatabase(c)));
 app.route('/api/cron', createCronRoutes(() => getDatabase()));
 app.route('/api/profile', createProfileRoutes((c: any) => getDatabase(c)));
 

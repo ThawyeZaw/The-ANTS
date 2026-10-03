@@ -46,9 +46,15 @@ export function getAuth(
   const githubClientId = oauth?.githubClientId || process.env.GITHUB_CLIENT_ID || '';
   const githubClientSecret = oauth?.githubClientSecret || process.env.GITHUB_CLIENT_SECRET || '';
 
+  const authSecret = secret || process.env.BETTER_AUTH_SECRET;
+  const isLocal = requestOrigin ? isLocalDevOrigin(requestOrigin) : false;
+  if (!authSecret && !isLocal) {
+    throw new Error('[auth] FATAL: BETTER_AUTH_SECRET is missing. Cannot initialize auth in production.');
+  }
+
   return betterAuth({
     baseURL: resolveAuthBaseURL(requestOrigin, envBaseUrl || process.env.BETTER_AUTH_URL),
-    secret: secret || process.env.BETTER_AUTH_SECRET || process.env.CRON_SECRET || 'the-ants-auth-secret-production-2026',
+    secret: authSecret || 'dev-only-insecure-secret-local',
     trustedOrigins: [
       'http://localhost:3000',
       'http://localhost:3005',

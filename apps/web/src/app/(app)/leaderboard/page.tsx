@@ -41,7 +41,7 @@ export default function LeaderboardPage() {
 
   return (
     <div className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8 space-y-8 max-w-5xl mx-auto animate-fade-in pb-16">
-      <BackButton href="/dashboard" label="Back to Dashboard" />
+      <BackButton href="/student" label="Back to Student Hub" />
 
       <div className="rounded-3xl border border-border bg-background-card p-6 sm:p-8 shadow-xs relative overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
@@ -214,8 +214,10 @@ export default function LeaderboardPage() {
         </div>
 
         {loading ? (
-          <div className="p-12 text-center text-xs text-foreground-muted animate-pulse">
-            Loading scholar rankings...
+          <div className="p-6 space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="h-10 rounded-xl bg-background-secondary animate-pulse" />
+            ))}
           </div>
         ) : entries.length > 0 ? (
           <div className="overflow-x-auto">

@@ -23,6 +23,8 @@ export const XP_AMOUNTS = {
   pomodoro: 20,
   lesson: 10,
   timetable: 10,
+  onboardingStep: 20,
+  onboardingComplete: 50,
 } as const;
 
 const ALLOWED_AMOUNTS = new Set<number>(Object.values(XP_AMOUNTS));

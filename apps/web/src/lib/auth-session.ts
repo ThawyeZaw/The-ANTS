@@ -1,5 +1,5 @@
 import { headers } from 'next/headers';
-import { getDb, session } from '@/lib/db';
+import { getDb, session, profiles } from '@/lib/db';
 import { and, eq, gt } from 'drizzle-orm';
 
 const SESSION_COOKIES = ['better-auth.session_token', '__Secure-better-auth.session_token'];
@@ -55,5 +55,26 @@ export async function requireSessionUser(
   if (requestedUserId && requestedUserId !== sessionUser.userId) {
     return { ok: false, error: 'Forbidden' };
   }
+  return { ok: true, userId: sessionUser.userId };
+}
+
+/**
+ * Ensure the caller is authenticated with an admin role.
+ */
+export async function requireAdminSession(): Promise<SessionGuardResult> {
+  const sessionUser = await getSessionUser();
+  if (!sessionUser) return { ok: false, error: 'Unauthorized' };
+
+  const db = getDb();
+  const profile = await db.query.profiles.findFirst({
+    where: eq(profiles.id, sessionUser.userId as any),
+    columns: { role: true, roles: true },
+  });
+
+  const roles = (profile?.roles as string[] | null) || [profile?.role || 'student'];
+  if (!roles.includes('admin')) {
+    return { ok: false, error: 'Forbidden: Admin access required' };
+  }
+
   return { ok: true, userId: sessionUser.userId };
 }

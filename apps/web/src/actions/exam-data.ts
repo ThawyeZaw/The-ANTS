@@ -28,6 +28,7 @@ import {
   actionClearSourceQueue,
   actionEnqueueExamCountdownReminders,
 } from '@/actions/notifications';
+import { requireSessionUser } from '@/lib/auth-session';
 
 function asTitle<T extends { name: string; id: string }>(row: T) {
   return { ...row, title: row.name };
@@ -427,6 +428,9 @@ export async function createExamCountdown(input: {
   isPinned?: boolean;
   isCustom?: boolean;
 }) {
+  const guard = await requireSessionUser(input.userId);
+  if (!guard.ok) return { success: false as const, error: guard.error };
+
   const db = getDb();
   let subjectId = input.subjectId ?? undefined;
   let examBoard = input.examBoard ?? undefined;
@@ -529,6 +533,9 @@ export async function updateExamCountdown(input: {
   examBoard?: string | null;
   restoreOfficial?: boolean;
 }) {
+  const guard = await requireSessionUser(input.userId);
+  if (!guard.ok) return { success: false as const, error: guard.error };
+
   const db = getDb();
   const existing = await db.query.examCountdowns.findFirst({
     where: and(eq(examCountdowns.id, input.countdownId), eq(examCountdowns.user_id, input.userId as any)),
@@ -593,6 +600,9 @@ export async function updateExamCountdown(input: {
 }
 
 export async function deleteExamCountdown(userId: string, countdownId: string) {
+  const guard = await requireSessionUser(userId);
+  if (!guard.ok) return { success: false as const, error: guard.error };
+
   const db = getDb();
   const existing = await db.query.examCountdowns.findFirst({
     where: and(eq(examCountdowns.id, countdownId), eq(examCountdowns.user_id, userId as any)),
@@ -620,6 +630,9 @@ export async function switchExamCountdownSession(input: {
   oldExamId: string;
   newExamId: string;
 }) {
+  const guard = await requireSessionUser(input.userId);
+  if (!guard.ok) return { success: false as const, error: guard.error };
+
   const db = getDb();
   const newExam = await db.query.exams.findFirst({
     where: eq(exams.id, input.newExamId),

@@ -78,6 +78,7 @@ export function useCountdown(userId: string | undefined) {
   const [countdowns, setCountdowns] = useState<CountdownWithTime[]>([]);
   const [availableExams, setAvailableExams] = useState<Exam[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Load initial data
   useEffect(() => {
@@ -108,6 +109,7 @@ export function useCountdown(userId: string | undefined) {
         setAvailableExams(examRows as unknown as Exam[]);
       } catch (err) {
         console.error('Error loading countdowns:', err);
+        setLoadError('Could not load exam countdowns. Check your connection and try again.');
       } finally {
         setIsLoading(false);
       }
@@ -285,11 +287,43 @@ export function useCountdown(userId: string | undefined) {
     {} as GroupedCountdowns
   );
 
+  const reload = useCallback(() => {
+    if (!userId) return;
+    setLoadError(null);
+    setIsLoading(true);
+    void (async () => {
+      try {
+        const [cdRows, examRows] = await Promise.all([
+          listExamCountdownsForUser(userId),
+          listExams(),
+        ]);
+        setCountdowns(
+          sortCountdowns(
+            cdRows.map((c) => ({
+              ...c,
+              custom_title: c.custom_title ?? (c.title as string | null) ?? null,
+              target_date: (c.exam_date || c.target_date) as string | null,
+              qualification_group: deriveQualificationGroup(c),
+              timeLeft: calculateTimeLeft((c.exam_date || c.target_date) as string | null),
+            })) as CountdownWithTime[]
+          )
+        );
+        setAvailableExams(examRows as unknown as Exam[]);
+      } catch {
+        setLoadError('Could not load exam countdowns. Check your connection and try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, [userId]);
+
   return {
     groupedCountdowns,
     countdowns,
     availableExams,
     isLoading,
+    loadError,
+    reload,
     createCountdown: handleCreateCountdown,
     updateCountdown: handleUpdateCountdown,
     deleteCountdown: handleDeleteCountdown,

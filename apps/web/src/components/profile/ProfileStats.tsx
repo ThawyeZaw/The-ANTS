@@ -66,7 +66,7 @@ interface ProfileStatsProps {
     total_views: number;
   } | null;
   certificationCount?: number;
-  clubMembershipCount?: number;
+  projectCount?: number;
   activityCount?: number;
   memberSince: string;
 }
@@ -75,7 +75,7 @@ export default function ProfileStats({
   role,
   contributorStats,
   certificationCount = 0,
-  clubMembershipCount = 0,
+  projectCount = 0,
   activityCount = 0,
   memberSince,
 }: ProfileStatsProps) {
@@ -90,7 +90,7 @@ export default function ProfileStats({
 
   const studentConfig = [
     { label: 'Certifications', value: certificationCount, icon: Award },
-    { label: 'Club Memberships', value: clubMembershipCount, icon: Users },
+    { label: 'Projects', value: projectCount, icon: Users },
     { label: 'Activities', value: activityCount, icon: Activity },
     { label: 'Member Since', value: memberSince, isDate: true as const, icon: CalendarDays },
   ];

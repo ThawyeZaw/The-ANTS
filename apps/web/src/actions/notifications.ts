@@ -8,6 +8,11 @@ import { getDb, notificationQueue, profiles } from '@/lib/db';
 import { eq, and, sql } from 'drizzle-orm';
 import { expandRecurringEvents } from '@/lib/timetable/recurrence';
 import type { TimetableEvent } from '@/types/timetable';
+import {
+  examReminderKeyboard,
+  timetableReminderKeyboard,
+} from '@/lib/telegram/reminder-keyboard';
+import { requireSessionUser, getSessionUser } from '@/lib/auth-session';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -18,6 +23,7 @@ interface QueueItem {
   source_type: 'timetable_event' | 'assignment' | 'exam_countdown' | 'quiz' | 'role_upgrade';
   source_id: string;
   user_id: string;
+  reply_markup?: Record<string, unknown>;
 }
 
 interface NotificationPrefs {
@@ -94,6 +100,7 @@ async function upsertQueueItems(
         message: item.message_text,
         source_type: item.source_type,
         source_id: item.source_id,
+        ...(item.reply_markup ? { reply_markup: item.reply_markup } : {}),
       },
       scheduled_for: new Date(item.scheduled_for),
       status: 'pending',
@@ -148,6 +155,9 @@ export async function actionEnqueueTimetableReminders(
   event: TimetableEvent,
   userId: string
 ): Promise<void> {
+  const guard = await requireSessionUser(userId);
+  if (!guard.ok) return;
+
   const profile = await getProfileForUser(userId);
   if (!profile?.telegram_chat_id) return;
 
@@ -202,6 +212,7 @@ export async function actionEnqueueTimetableReminders(
         source_type: 'timetable_event',
         source_id: baseId,
         user_id: userId,
+        reply_markup: timetableReminderKeyboard(baseId),
       });
     }
   }
@@ -224,6 +235,9 @@ export async function actionEnqueueExamCountdownReminders(
   examDate: Date,
   isMock = false
 ): Promise<void> {
+  const guard = await requireSessionUser(userId);
+  if (!guard.ok) return;
+
   const profile = await getProfileForUser(userId);
   if (!profile?.telegram_chat_id) return;
 
@@ -257,6 +271,7 @@ export async function actionEnqueueExamCountdownReminders(
       source_type: 'exam_countdown',
       source_id: examCountdownId,
       user_id: userId,
+      reply_markup: examReminderKeyboard(examCountdownId),
     });
   }
 
@@ -270,19 +285,22 @@ export const actionEnqueueExamReminders = actionEnqueueExamCountdownReminders;
 
 export async function actionClearSourceQueue(
   sourceType: QueueItem['source_type'],
-  sourceId: string
+  sourceId: string,
+  userId?: string
 ): Promise<void> {
+  const session = await getSessionUser();
+  const effectiveUserId = userId || session?.userId;
   try {
     const db = getDb();
-    await db
-      .delete(notificationQueue)
-      .where(
-        and(
-          eq(notificationQueue.status, 'pending'),
-          sql`json_extract(${notificationQueue.payload}, '$.source_id') = ${sourceId}`,
-          sql`json_extract(${notificationQueue.payload}, '$.source_type') = ${sourceType}`
-        )
-      );
+    const conditions = [
+      eq(notificationQueue.status, 'pending'),
+      sql`json_extract(${notificationQueue.payload}, '$.source_id') = ${sourceId}`,
+      sql`json_extract(${notificationQueue.payload}, '$.source_type') = ${sourceType}`,
+    ];
+    if (effectiveUserId) {
+      conditions.push(eq(notificationQueue.user_id, effectiveUserId as any));
+    }
+    await db.delete(notificationQueue).where(and(...conditions));
   } catch (err) {
     console.error(`[notifications] Error clearing queue for ${sourceType} ${sourceId}:`, err);
   }

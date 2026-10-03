@@ -164,6 +164,8 @@ export interface UseTimetableReturn {
   filters: TimetableFilters;
   events: TimetableEvent[];
   isLoading: boolean;
+  loadError: string | null;
+  refresh: () => void;
   weekStart: Date;
   monthStart: Date;
   monthEnd: Date;
@@ -195,6 +197,7 @@ export function useTimetable(userId: string): UseTimetableReturn {
   const [allEvents, setAllEvents] = useState<TimetableEvent[]>([]);
   const [examCount, setExamCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -246,6 +249,7 @@ export function useTimetable(userId: string): UseTimetableReturn {
     if (!userId) return;
     let cancelled = false;
     setIsLoading(true);
+    setLoadError(null);
 
     (async () => {
       try {
@@ -289,6 +293,7 @@ export function useTimetable(userId: string): UseTimetableReturn {
           console.error('Failed to load timetable events:', err);
           setAllEvents([]);
           setExamCount(0);
+          setLoadError('Could not load your timetable. Try again.');
           setIsLoading(false);
         }
       }
@@ -627,6 +632,8 @@ export function useTimetable(userId: string): UseTimetableReturn {
     filters,
     events,
     isLoading,
+    loadError,
+    refresh,
     weekStart,
     monthStart,
     monthEnd,

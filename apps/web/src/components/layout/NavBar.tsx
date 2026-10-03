@@ -288,7 +288,7 @@ export default function NavBar() {
   }, []);
 
   const hasStaffRole = isTutor || isContributor || isAdmin;
-  const homeHref = mounted && isAuthenticated ? '/dashboard' : '/';
+  const homeHref = mounted && isAuthenticated ? '/student' : '/';
   const closePanel = useCallback(() => setOpenPanel(null), []);
 
   // ── User menu links ──────────────────────────────────────────────────────────

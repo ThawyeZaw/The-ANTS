@@ -1,10 +1,11 @@
 import type { MetadataRoute } from 'next';
+import { actionGetAllTeamProfiles } from '@/actions/org';
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://the-ants.org';
   const now = new Date();
 
-  return [
+  const staticRoutes: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
       lastModified: now,
@@ -66,6 +67,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
+      url: `${baseUrl}/terms`,
+      lastModified: now,
+      changeFrequency: 'yearly',
+      priority: 0.3,
+    },
+    {
+      url: `${baseUrl}/privacy`,
+      lastModified: now,
+      changeFrequency: 'yearly',
+      priority: 0.3,
+    },
+    {
       url: `${baseUrl}/signup`,
       lastModified: now,
       changeFrequency: 'monthly',
@@ -78,4 +91,22 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.5,
     },
   ];
+
+  try {
+    const profiles = await actionGetAllTeamProfiles();
+    const profileRoutes: MetadataRoute.Sitemap = profiles
+      .filter((p) => p.username && p.username !== 'me')
+      .map((p) => ({
+        url: `${baseUrl}/profile/${encodeURIComponent(p.username)}`,
+        lastModified: now,
+        changeFrequency: 'weekly' as const,
+        priority: 0.7,
+      }));
+
+    return [...staticRoutes, ...profileRoutes];
+  } catch (err) {
+    console.error('[sitemap] Failed to load dynamic profile routes:', err);
+    return staticRoutes;
+  }
 }
+

@@ -9,13 +9,14 @@
 
 import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
-import { ArrowRight, CheckCircle2, Eye, Home, Rocket, Zap } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Eye, Home, Rocket, Zap, Menu, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { getRoleLandingPath } from '@/lib/utils';
 import HeroVisual from '@/components/homepage/HeroVisual';
 import HowItWorks from '@/components/homepage/HowItWorks';
 import BentoFeatures from '@/components/homepage/BentoFeatures';
 import QualBoards from '@/components/homepage/QualBoards';
+import StatsRow from '@/components/homepage/StatsRow';
 
 import RoleLadder from '@/components/homepage/RoleLadder';
 import RevealSection from '@/components/homepage/RevealSection';
@@ -122,6 +123,7 @@ export default function HomePage() {
   const { isAuthenticated, user } = useAuth();
   // Auth seeds from localStorage on the client only — gate until mount to match SSR HTML.
   const [mounted, setMounted] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -255,22 +257,47 @@ export default function HomePage() {
             >
               <span className="hp-nav-linktext" data-text="Boards & Syllabi">Boards & Syllabi</span>
             </a>
-            <a
+            <Link
               className="hp-nav-item"
               href="/about"
-              onClick={(e) => {
-                e.preventDefault();
-                document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' });
-              }}
             >
               <span className="hp-nav-linktext" data-text="Our Story">Our Story</span>
-            </a>
+            </Link>
+            <Link
+              className="hp-nav-item"
+              href="/team"
+            >
+              <span className="hp-nav-linktext" data-text="Tutors & Team">Tutors & Team</span>
+            </Link>
           </div>
 
+          <style>{`
+            .hp-mobile-toggle { display: none !important; }
+            @media (max-width: 820px) {
+              .hp-mobile-toggle { display: inline-flex !important; align-items: center; justify-content: center; }
+            }
+          `}</style>
 
           {mounted && isAuthenticated && user ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
               <ThemeToggle onHomepage className="rounded-full" />
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen((v) => !v)}
+                aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+                aria-expanded={mobileMenuOpen}
+                className="hp-mobile-toggle"
+                style={{
+                  background: 'transparent',
+                  border: '1px solid var(--hp-border-strong)',
+                  borderRadius: 999,
+                  padding: '7px',
+                  color: 'var(--hp-ink)',
+                  cursor: 'pointer',
+                }}
+              >
+                {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+              </button>
               <Link href={getRoleLandingPath(user.profile.role)}>
                 <button
                   style={{
@@ -304,6 +331,23 @@ export default function HomePage() {
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
               <ThemeToggle onHomepage className="rounded-full" />
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen((v) => !v)}
+                aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+                aria-expanded={mobileMenuOpen}
+                className="hp-mobile-toggle"
+                style={{
+                  background: 'transparent',
+                  border: '1px solid var(--hp-border-strong)',
+                  borderRadius: 999,
+                  padding: '7px',
+                  color: 'var(--hp-ink)',
+                  cursor: 'pointer',
+                }}
+              >
+                {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+              </button>
               <Link href="/login">
                 <button
                   style={{
@@ -356,9 +400,80 @@ export default function HomePage() {
             </div>
           )}
         </nav>
+
+        {/* ── Mobile Dropdown Menu Sheet ───────────────────────────────── */}
+        {mobileMenuOpen && (
+          <div
+            style={{
+              marginTop: 10,
+              padding: 14,
+              borderRadius: 20,
+              background: 'var(--hp-surface)',
+              border: '1px solid var(--hp-border-strong)',
+              backdropFilter: 'blur(24px)',
+              WebkitBackdropFilter: 'blur(24px)',
+              boxShadow: '0 16px 36px -12px rgba(0,0,0,0.18)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 4,
+            }}
+          >
+            {[
+              { label: 'How It Works', href: '#how-it-works', isAnchor: true },
+              { label: 'Study Tools', href: '#features', isAnchor: true },
+              { label: 'Boards & Syllabi', href: '#qualifications', isAnchor: true },
+              { label: 'Our Story', href: '/about' },
+              { label: 'Tutors & Contributors', href: '/team' },
+              { label: 'Grade Calculator', href: '/calculator' },
+              { label: 'Exam Countdown', href: '/countdown' },
+            ].map((item) =>
+              item.isAnchor ? (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setMobileMenuOpen(false);
+                    document.querySelector(item.href)?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  style={{
+                    padding: '9px 14px',
+                    borderRadius: 12,
+                    color: 'var(--hp-ink)',
+                    textDecoration: 'none',
+                    fontFamily: 'var(--hp-font-body)',
+                    fontSize: 14,
+                    fontWeight: 600,
+                  }}
+                >
+                  {item.label}
+                </a>
+              ) : (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  style={{
+                    padding: '9px 14px',
+                    borderRadius: 12,
+                    color: 'var(--hp-ink)',
+                    textDecoration: 'none',
+                    fontFamily: 'var(--hp-font-body)',
+                    fontSize: 14,
+                    fontWeight: 600,
+                  }}
+                >
+                  {item.label}
+                </Link>
+              )
+            )}
+          </div>
+        )}
       </header>
 
-      {/* ── Hero ────────────────────────────────────────────────────────── */}
+      {/* ── Main Landmark for Accessibility & Skip Link ────────────────── */}
+      <main id="main-content">
+        {/* ── Hero ────────────────────────────────────────────────────────── */}
       <section
         className="hp-grid-bg"
         style={{
@@ -679,6 +794,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ── High-Impact Stats Row ─────────────────────────────────────────── */}
+      <StatsRow />
 
       {/* ── How It Works ─────────────────────────────────────────────────── */}
       <section
@@ -1051,7 +1169,7 @@ export default function HomePage() {
                     lineHeight: 1.6,
                   }}
                 >
-                  Join thousands of students across Yangon, Mandalay, Singapore, and diaspora scholars
+                  Join ambitious students across Yangon, Mandalay, Singapore, and diaspora scholars
                   conquering Cambridge CAIE and Pearson Edexcel exams with confidence.
                 </p>
                 <div
@@ -1111,6 +1229,7 @@ export default function HomePage() {
           </RevealSection>
         </div>
       </section>
+      </main>
 
       {/* ── Footer ───────────────────────────────────────────────────────── */}
       <section style={{ position: 'relative' }}>

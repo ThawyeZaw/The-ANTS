@@ -4,6 +4,7 @@ import { eq, and, desc, gte, type SQL } from 'drizzle-orm';
 import { createDb, exams, examCountdowns, gradeEntries, subjects, curriculums } from '@the-ants/db';
 import { remember } from '../lib/memory-cache';
 import { examRowMatchesMyanmar } from '@the-ants/shared-types';
+import { createAuthMiddleware } from '../middleware/session';
 
 function toIso(value: Date | number | string | null | undefined): string | null {
   if (value == null || value === '') return null;
@@ -61,8 +62,9 @@ function serializeCountdown(row: Record<string, unknown>) {
   };
 }
 
-export function createExamRoutes(getDb: () => ReturnType<typeof createDb>) {
+export function createExamRoutes(getDb: (c?: any) => ReturnType<typeof createDb>) {
   const router = new Hono();
+  const requireAuth = createAuthMiddleware((c) => getDb(c));
 
   // Upcoming catalog by default. Pass all=1 only when a full history list is required.
   router.get('/', async (c) => {
@@ -139,18 +141,22 @@ export function createExamRoutes(getDb: () => ReturnType<typeof createDb>) {
   });
 
   // 2. Get user exam countdowns
-  router.get('/countdowns', async (c) => {
+  router.get('/countdowns', requireAuth, async (c) => {
     try {
-      const db = getDb();
-      const userId = c.req.query('userId');
+      const db = getDb(c);
+      const sessionUser = c.get('sessionUser');
+      const requestedUserId = c.req.query('userId');
       const subjectId = c.req.query('subjectId');
       const curriculumId = c.req.query('curriculumId');
 
-      if (!userId) {
-        return c.json({ error: 'userId is required' }, 400);
+      if (requestedUserId && requestedUserId !== sessionUser.id && !sessionUser.roles.includes('admin')) {
+        return c.json({ error: 'Forbidden: Cannot access another user\'s countdowns' }, 403);
       }
 
-      const conditions: SQL[] = [eq(examCountdowns.user_id, userId)];
+      const effectiveUserId =
+        sessionUser.roles.includes('admin') && requestedUserId ? requestedUserId : sessionUser.id;
+
+      const conditions: SQL[] = [eq(examCountdowns.user_id, effectiveUserId)];
       if (subjectId) conditions.push(eq(examCountdowns.subject_id, subjectId));
       if (curriculumId) conditions.push(eq(subjects.curriculum_id, curriculumId));
 
@@ -190,9 +196,10 @@ export function createExamRoutes(getDb: () => ReturnType<typeof createDb>) {
   });
 
   // 3. Create countdown
-  router.post('/countdowns', async (c) => {
+  router.post('/countdowns', requireAuth, async (c) => {
     try {
-      const db = getDb();
+      const db = getDb(c);
+      const sessionUser = c.get('sessionUser');
       const raw = await c.req.json();
       const body = {
         ...raw,
@@ -211,7 +218,7 @@ export function createExamRoutes(getDb: () => ReturnType<typeof createDb>) {
       };
 
       const CountdownSchema = z.object({
-        userId: z.string().min(1),
+        userId: z.string().optional(),
         title: z.string().min(1),
         examDate: z.string().min(1),
         examId: z.string().nullish(),
@@ -231,6 +238,9 @@ export function createExamRoutes(getDb: () => ReturnType<typeof createDb>) {
       }
 
       const data = parsed.data;
+      const effectiveUserId =
+        sessionUser.roles.includes('admin') && data.userId ? data.userId : sessionUser.id;
+
       let subjectId = data.subjectId;
       let examBoard = data.examBoard;
       let paperName = data.paperName;
@@ -273,7 +283,7 @@ export function createExamRoutes(getDb: () => ReturnType<typeof createDb>) {
 
       if (data.examId) {
         const existing = await db.query.examCountdowns.findFirst({
-          where: and(eq(examCountdowns.user_id, data.userId), eq(examCountdowns.exam_id, data.examId)),
+          where: and(eq(examCountdowns.user_id, effectiveUserId), eq(examCountdowns.exam_id, data.examId)),
         });
         if (existing) {
           return c.json(
@@ -286,7 +296,7 @@ export function createExamRoutes(getDb: () => ReturnType<typeof createDb>) {
       const [newCountdown] = await db
         .insert(examCountdowns)
         .values({
-          user_id: data.userId,
+          user_id: effectiveUserId,
           title,
           exam_date: new Date(examDate),
           exam_id: data.examId,
@@ -309,18 +319,22 @@ export function createExamRoutes(getDb: () => ReturnType<typeof createDb>) {
   });
 
   // 4. Update a user's own countdown. Does not change the shared exam timetable.
-  router.patch('/countdowns/:id', async (c) => {
+  router.patch('/countdowns/:id', requireAuth, async (c) => {
     try {
-      const db = getDb();
+      const db = getDb(c);
+      const sessionUser = c.get('sessionUser');
       const id = c.req.param('id');
+      if (!id) return c.json({ error: 'Countdown ID is required' }, 400);
       const raw = await c.req.json();
-      const userId = raw.userId ?? raw.user_id;
-      if (!userId) return c.json({ error: 'userId is required' }, 400);
 
       const existing = await db.query.examCountdowns.findFirst({
-        where: and(eq(examCountdowns.id, id), eq(examCountdowns.user_id, userId)),
+        where: eq(examCountdowns.id, id),
       });
-      if (!existing) return c.json({ error: 'Countdown not found or unauthorized' }, 404);
+      if (!existing) return c.json({ error: 'Countdown not found' }, 404);
+
+      if (existing.user_id !== sessionUser.id && !sessionUser.roles.includes('admin')) {
+        return c.json({ error: 'Forbidden: Cannot update another user\'s countdown' }, 403);
+      }
 
       const title = String(raw.title ?? raw.custom_title ?? existing.title).trim();
       const examDateRaw = raw.examDate ?? raw.exam_date ?? raw.target_date;
@@ -352,22 +366,23 @@ export function createExamRoutes(getDb: () => ReturnType<typeof createDb>) {
   });
 
   // 5. Delete countdown
-  router.delete('/countdowns/:id', async (c) => {
+  router.delete('/countdowns/:id', requireAuth, async (c) => {
     try {
-      const db = getDb();
+      const db = getDb(c);
+      const sessionUser = c.get('sessionUser');
       const id = c.req.param('id');
-      const userId = c.req.query('userId');
-
-      if (!userId) {
-        return c.json({ error: 'userId is required' }, 400);
-      }
+      if (!id) return c.json({ error: 'Countdown ID is required' }, 400);
 
       const existing = await db.query.examCountdowns.findFirst({
-        where: and(eq(examCountdowns.id, id), eq(examCountdowns.user_id, userId)),
+        where: eq(examCountdowns.id, id),
       });
 
       if (!existing) {
-        return c.json({ error: 'Countdown not found or unauthorized' }, 404);
+        return c.json({ error: 'Countdown not found' }, 404);
+      }
+
+      if (existing.user_id !== sessionUser.id && !sessionUser.roles.includes('admin')) {
+        return c.json({ error: 'Forbidden: Cannot delete another user\'s countdown' }, 403);
       }
 
       await db.delete(examCountdowns).where(eq(examCountdowns.id, id));
@@ -379,18 +394,22 @@ export function createExamRoutes(getDb: () => ReturnType<typeof createDb>) {
     }
   });
 
-  // 5. User Grade Entries
-  router.get('/grades', async (c) => {
+  // 6. User Grade Entries
+  router.get('/grades', requireAuth, async (c) => {
     try {
-      const db = getDb();
-      const userId = c.req.query('userId');
+      const db = getDb(c);
+      const sessionUser = c.get('sessionUser');
+      const requestedUserId = c.req.query('userId');
 
-      if (!userId) {
-        return c.json({ error: 'userId is required' }, 400);
+      if (requestedUserId && requestedUserId !== sessionUser.id && !sessionUser.roles.includes('admin')) {
+        return c.json({ error: 'Forbidden: Cannot access another user\'s grades' }, 403);
       }
 
+      const effectiveUserId =
+        sessionUser.roles.includes('admin') && requestedUserId ? requestedUserId : sessionUser.id;
+
       const entries = await db.query.gradeEntries.findMany({
-        where: eq(gradeEntries.user_id, userId),
+        where: eq(gradeEntries.user_id, effectiveUserId),
         orderBy: [desc(gradeEntries.exam_date)],
       });
 
@@ -401,14 +420,15 @@ export function createExamRoutes(getDb: () => ReturnType<typeof createDb>) {
     }
   });
 
-  // 6. Record Grade Entry
-  router.post('/grades', async (c) => {
+  // 7. Record Grade Entry
+  router.post('/grades', requireAuth, async (c) => {
     try {
-      const db = getDb();
+      const db = getDb(c);
+      const sessionUser = c.get('sessionUser');
       const body = await c.req.json();
 
       const GradeSchema = z.object({
-        userId: z.string().min(1),
+        userId: z.string().optional(),
         subjectId: z.string().min(1),
         examId: z.string().optional(),
         score: z.number(),
@@ -423,13 +443,15 @@ export function createExamRoutes(getDb: () => ReturnType<typeof createDb>) {
         return c.json({ error: parsed.error.format() }, 400);
       }
 
-      const { userId, subjectId, examId, score, maxScore, grade, examDate, notes } = parsed.data;
+      const { userId: requestedUserId, subjectId, examId, score, maxScore, grade, examDate, notes } = parsed.data;
+      const effectiveUserId =
+        sessionUser.roles.includes('admin') && requestedUserId ? requestedUserId : sessionUser.id;
       const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0;
 
       const [newEntry] = await db
         .insert(gradeEntries)
         .values({
-          user_id: userId,
+          user_id: effectiveUserId,
           subject_id: subjectId,
           exam_id: examId,
           score,

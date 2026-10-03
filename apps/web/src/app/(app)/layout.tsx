@@ -15,6 +15,7 @@ import { SidebarProvider, useSidebar } from '@/context/SidebarContext';
 import NavBar from '@/components/layout/NavBar';
 import { WorkspaceToastProvider } from '@/components/workspace/WorkspaceToast';
 import { GamificationFeedbackProvider } from '@/components/gamification/GamificationFeedbackProvider';
+import { loginNextPath, signupNextPath } from '@/lib/app-paths';
 
 const GUEST_ALLOWLIST = ['/pomodoro', '/calculator', '/tools'] as const;
 
@@ -36,9 +37,11 @@ function isImmersivePath(pathname: string): boolean {
 function GuestChrome({
   children,
   immersive = false,
+  pathname = '/student',
 }: {
   children: React.ReactNode;
   immersive?: boolean;
+  pathname?: string;
 }) {
   return (
     <div className="min-h-screen bg-background">
@@ -50,13 +53,13 @@ function GuestChrome({
           </Link>
           <div className="flex items-center gap-2">
             <Link
-              href="/login"
+              href={loginNextPath(pathname)}
               className="rounded-xl px-3 py-1.5 text-sm font-medium text-foreground-secondary hover:text-foreground focus-ring"
             >
               Log in
             </Link>
             <Link
-              href="/signup"
+              href={signupNextPath(pathname)}
               className="rounded-xl bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground shadow-sm hover:opacity-90 focus-ring"
             >
               Sign up
@@ -125,19 +128,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (isLoading) return;
     if (!isAuthenticated && !guestOk) {
-      router.push('/login');
+      router.push(loginNextPath(pathname));
       return;
     }
     if (isAuthenticated && user?.profile?.onboardingCompleted === false) {
       router.push('/onboarding');
     }
-  }, [isAuthenticated, isLoading, user, router, guestOk]);
+  }, [isAuthenticated, isLoading, user, router, guestOk, pathname]);
 
   // Guest-allowed tools (calculator, pomodoro, tools): paint immediately so LCP
   // is not blocked on session resolution. Auth redirects still run in the effect.
   if (isLoading) {
     if (guestOk) {
-      return <GuestChrome immersive={immersive}>{children}</GuestChrome>;
+      return <GuestChrome immersive={immersive} pathname={pathname}>{children}</GuestChrome>;
     }
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -151,7 +154,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (!isAuthenticated) {
     if (!guestOk) return null;
-    return <GuestChrome immersive={immersive}>{children}</GuestChrome>;
+    return <GuestChrome immersive={immersive} pathname={pathname}>{children}</GuestChrome>;
   }
 
   return (

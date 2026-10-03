@@ -49,6 +49,12 @@ Cloudflare migration (current phase): [`docs/migration/cloudflare.md`](./docs/mi
 
 **Infra note:** Production web remains on Vercel until Phase 6. Preview the OpenNext Worker with `npm run cf:preview:web` / `npm run cf:deploy:web` (root directory **`apps/web`** — never monorepo root). See [`docs/migration/opennext-web.md`](./docs/migration/opennext-web.md). API + R2 + notification cron stay on Cloudflare Workers.
 
+### Launch checklist (operators)
+
+- Web: `TELEGRAM_BOT_TOKEN`, `CRON_SECRET`, `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME`, D1 via Wrangler — see [`docs/timetable-telegram.md`](./docs/timetable-telegram.md).
+- Telegram webhook: `GET /api/telegram/webhook?action=set` with `x-cron-secret` after deploy; supports signed link + `/today` / `/next` / `/exams`.
+- Do not commit local `brag-output-*` folders (gitignored).
+
 ---
 
 ## Core product architecture (3 pillars)

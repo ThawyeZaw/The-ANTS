@@ -25,7 +25,7 @@ export default function PastPapersPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <BackButton href="/dashboard" label="Back to Dashboard" />
+      <BackButton href="/student" label="Back to Student Hub" />
       <Suspense fallback={<div className="h-40 animate-pulse rounded-2xl border border-border bg-background-card" />}>
         <PastPaperTracker userId={user.id} />
       </Suspense>

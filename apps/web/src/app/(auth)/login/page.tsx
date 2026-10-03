@@ -3,7 +3,7 @@ import LoginForm from '@/components/auth/LoginForm';
 
 export const metadata = {
   title: 'Sign In — The ANTs',
-  description: 'Sign in to your ANTS account to access your study tools, classrooms, and more.',
+  description: 'Sign in to The ANTs to access your study hub, timetable, curriculum, and tools.',
 };
 
 // LoginForm uses useSearchParams() which requires a Suspense boundary in

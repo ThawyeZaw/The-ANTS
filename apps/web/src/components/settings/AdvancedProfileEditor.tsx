@@ -712,7 +712,7 @@ export default function AdvancedProfileEditor() {
                     </div>
                     <p className="text-[11px] text-foreground-muted mt-0.5">
                       {formData.isPublic !== false
-                        ? 'Your profile is public. It can be found in explore directories and viewed at your profile URL.'
+                        ? 'Your profile is public. It can be found in Tutors & Contributors directory (/team) and viewed at your profile URL.'
                         : 'Your profile is private. Only you can view it when signed in. External visitors see a private profile message.'}
                     </p>
                   </div>

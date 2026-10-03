@@ -16,10 +16,14 @@ import {
   ArrowRight,
   Wrench,
   GraduationCap,
+  type LucideIcon,
 } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import RevealSection from './RevealSection';
+import { useAuth } from '@/hooks/useAuth';
+import { signupNextPath } from '@/lib/app-paths';
+
+const GUEST_ALLOWED_ROUTES = ['/calculator', '/pomodoro', '/tools'];
 
 interface Feature {
   tag: string;
@@ -426,11 +430,14 @@ function BentoCard({ feature, index }: { feature: Feature; index: number }) {
       </div>
     </div>
   );
+  const { isAuthenticated } = useAuth();
+  const effectiveHref =
+    isAuthenticated || GUEST_ALLOWED_ROUTES.includes(href) ? href : signupNextPath(href);
 
   return (
     <RevealSection delayMs={index * 50}>
       <Link
-        href={href}
+        href={effectiveHref}
         className="block h-full no-underline focus-ring rounded-[var(--hp-radius-lg)] group"
         style={{ textDecoration: 'none' }}
       >

@@ -10,11 +10,13 @@ import {
   topicProgress,
 } from '@the-ants/db';
 import { remember } from '../lib/memory-cache';
+import { createAuthMiddleware } from '../middleware/session';
 
 const CATALOG_TTL_MS = 60_000;
 
-export function createCurriculumRoutes(getDb: () => ReturnType<typeof createDb>) {
+export function createCurriculumRoutes(getDb: (c?: any) => ReturnType<typeof createDb>) {
   const router = new Hono();
+  const requireAuth = createAuthMiddleware((c) => getDb(c));
 
   // Catalog only (no topics). Pass includeTopics=1 only for lesson trackers.
   router.get('/', async (c) => {
@@ -81,13 +83,17 @@ export function createCurriculumRoutes(getDb: () => ReturnType<typeof createDb>)
   });
 
   // Enrollment rows only — do not nest every subject in the board
-  router.get('/user-curriculums', async (c) => {
-    const db = getDb();
-    const userId = c.req.query('userId');
+  router.get('/user-curriculums', requireAuth, async (c) => {
+    const db = getDb(c);
+    const sessionUser = c.get('sessionUser');
+    const requestedUserId = c.req.query('userId');
 
-    if (!userId) {
-      return c.json({ error: 'userId is required' }, 400);
+    if (requestedUserId && requestedUserId !== sessionUser.id && !sessionUser.roles.includes('admin')) {
+      return c.json({ error: 'Forbidden: Cannot access another user\'s enrollments' }, 403);
     }
+
+    const effectiveUserId =
+      sessionUser.roles.includes('admin') && requestedUserId ? requestedUserId : sessionUser.id;
 
     const enrolled = await db
       .select({
@@ -97,18 +103,19 @@ export function createCurriculumRoutes(getDb: () => ReturnType<typeof createDb>)
         created_at: userCurriculums.created_at,
       })
       .from(userCurriculums)
-      .where(eq(userCurriculums.user_id, userId));
+      .where(eq(userCurriculums.user_id, effectiveUserId));
 
     return c.json({ success: true, userCurriculums: enrolled });
   });
 
   // 3. Enroll user in curriculum
-  router.post('/enroll', async (c) => {
-    const db = getDb();
+  router.post('/enroll', requireAuth, async (c) => {
+    const db = getDb(c);
+    const sessionUser = c.get('sessionUser');
     const body = await c.req.json();
 
     const EnrollSchema = z.object({
-      userId: z.string().uuid(),
+      userId: z.string().uuid().optional(),
       curriculumId: z.string().uuid(),
     });
 
@@ -117,11 +124,13 @@ export function createCurriculumRoutes(getDb: () => ReturnType<typeof createDb>)
       return c.json({ error: parsed.error.format() }, 400);
     }
 
-    const { userId, curriculumId } = parsed.data;
+    const { userId: requestedUserId, curriculumId } = parsed.data;
+    const effectiveUserId =
+      sessionUser.roles.includes('admin') && requestedUserId ? requestedUserId : sessionUser.id;
 
     const existing = await db.query.userCurriculums.findFirst({
       where: and(
-        eq(userCurriculums.user_id, userId),
+        eq(userCurriculums.user_id, effectiveUserId),
         eq(userCurriculums.curriculum_id, curriculumId)
       ),
     });
@@ -133,7 +142,7 @@ export function createCurriculumRoutes(getDb: () => ReturnType<typeof createDb>)
     const [enrollment] = await db
       .insert(userCurriculums)
       .values({
-        user_id: userId,
+        user_id: effectiveUserId,
         curriculum_id: curriculumId,
       })
       .returning();
@@ -142,17 +151,20 @@ export function createCurriculumRoutes(getDb: () => ReturnType<typeof createDb>)
   });
 
   // 4. Get topic progress
-  // RLS replacement: topic_progress_owner_all
-  router.get('/progress', async (c) => {
-    const db = getDb();
-    const userId = c.req.query('userId');
+  router.get('/progress', requireAuth, async (c) => {
+    const db = getDb(c);
+    const sessionUser = c.get('sessionUser');
+    const requestedUserId = c.req.query('userId');
 
-    if (!userId) {
-      return c.json({ error: 'userId is required' }, 400);
+    if (requestedUserId && requestedUserId !== sessionUser.id && !sessionUser.roles.includes('admin')) {
+      return c.json({ error: 'Forbidden: Cannot access another user\'s progress' }, 403);
     }
 
+    const effectiveUserId =
+      sessionUser.roles.includes('admin') && requestedUserId ? requestedUserId : sessionUser.id;
+
     const progress = await db.query.topicProgress.findMany({
-      where: eq(topicProgress.user_id, userId),
+      where: eq(topicProgress.user_id, effectiveUserId),
       columns: {
         id: true,
         topic_id: true,
@@ -167,12 +179,13 @@ export function createCurriculumRoutes(getDb: () => ReturnType<typeof createDb>)
   });
 
   // 5. Update topic progress
-  router.post('/progress', async (c) => {
-    const db = getDb();
+  router.post('/progress', requireAuth, async (c) => {
+    const db = getDb(c);
+    const sessionUser = c.get('sessionUser');
     const body = await c.req.json();
 
     const ProgressSchema = z.object({
-      userId: z.string().uuid(),
+      userId: z.string().uuid().optional(),
       topicId: z.string().uuid(),
       status: z.enum(['not_started', 'in_progress', 'completed']),
       notes: z.string().optional(),
@@ -183,10 +196,12 @@ export function createCurriculumRoutes(getDb: () => ReturnType<typeof createDb>)
       return c.json({ error: parsed.error.format() }, 400);
     }
 
-    const { userId, topicId, status, notes } = parsed.data;
+    const { userId: requestedUserId, topicId, status, notes } = parsed.data;
+    const effectiveUserId =
+      sessionUser.roles.includes('admin') && requestedUserId ? requestedUserId : sessionUser.id;
 
     const existing = await db.query.topicProgress.findFirst({
-      where: and(eq(topicProgress.user_id, userId), eq(topicProgress.topic_id, topicId)),
+      where: and(eq(topicProgress.user_id, effectiveUserId), eq(topicProgress.topic_id, topicId)),
     });
 
     if (existing) {
@@ -207,7 +222,7 @@ export function createCurriculumRoutes(getDb: () => ReturnType<typeof createDb>)
     const [created] = await db
       .insert(topicProgress)
       .values({
-        user_id: userId,
+        user_id: effectiveUserId,
         topic_id: topicId,
         status,
         notes,

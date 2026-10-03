@@ -26,6 +26,7 @@ import {
   type PaperPreferences,
 } from '@/lib/exam-papers/myanmar-papers';
 import type { SubjectTier } from '@/lib/grading/types';
+import { requireSessionUser } from '@/lib/auth-session';
 
 async function deleteAutoCountdowns(userId: string, subjectId: string) {
   const db = getDb();
@@ -54,6 +55,9 @@ export async function getDefaultExamSession(userId: string): Promise<string> {
 }
 
 export async function setDefaultExamSession(userId: string, series: string) {
+  const guard = await requireSessionUser(userId);
+  if (!guard.ok) return { success: false as const, error: guard.error };
+
   const db = getDb();
   const existing = await db.query.studentProfiles.findFirst({
     where: eq(studentProfiles.id, userId),
@@ -82,6 +86,9 @@ export async function syncEnrollmentCountdowns(input: {
   awardLevel?: AwardLevel | null;
   paperPreferences?: PaperPreferences | null;
 }) {
+  const guard = await requireSessionUser(input.userId);
+  if (!guard.ok) return { success: false as const, error: guard.error };
+
   const db = getDb();
   const [subject, curriculum] = await Promise.all([
     db.query.subjects.findFirst({ where: eq(subjects.id, input.subjectId) }),
@@ -198,11 +205,17 @@ export async function syncEnrollmentCountdowns(input: {
 }
 
 export async function removeAutoCountdownsForSubject(userId: string, subjectId: string) {
+  const guard = await requireSessionUser(userId);
+  if (!guard.ok) return { success: false as const, error: guard.error };
+
   await deleteAutoCountdowns(userId, subjectId);
   return { success: true as const };
 }
 
 export async function applyExamSessionToAll(userId: string, series: string) {
+  const guard = await requireSessionUser(userId);
+  if (!guard.ok) return { success: false as const, error: guard.error };
+
   const db = getDb();
   await setDefaultExamSession(userId, series);
 
@@ -236,6 +249,9 @@ export async function applyExamSessionToAll(userId: string, series: string) {
 
 /** Rebuild auto paper rows when enrollment mode is stale (e.g. old per_subject) or missing. */
 export async function healEnrollmentCountdowns(userId: string) {
+  const guard = await requireSessionUser(userId);
+  if (!guard.ok) return { success: false as const, error: guard.error };
+
   const db = getDb();
   const enrollments = await db.query.userEnrollments.findMany({
     where: eq(userEnrollments.user_id, userId),

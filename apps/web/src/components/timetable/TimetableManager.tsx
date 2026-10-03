@@ -117,6 +117,9 @@ export default function TimetableManager({ userId: userIdProp }: { userId?: stri
     deleteEvent,
     toggleComplete,
     moveEvent,
+    isLoading,
+    loadError,
+    refresh,
   } = useTimetable(userId);
 
   const { handleAwardResult } = useGamificationFeedback();
@@ -429,6 +432,21 @@ export default function TimetableManager({ userId: userIdProp }: { userId?: stri
           />
         )}
       </header>
+
+      {isLoading && events.length === 0 && (
+        <div className="border-b border-border bg-background-secondary/60 px-4 py-3 text-sm text-foreground-muted animate-pulse">
+          Loading your timetable…
+        </div>
+      )}
+
+      {loadError && (
+        <div className="flex items-center justify-between gap-3 border-b border-border bg-red-500/10 px-4 py-2 text-sm text-red-600">
+          <span>{loadError}</span>
+          <button type="button" onClick={() => refresh()} className="font-semibold underline">
+            Retry
+          </button>
+        </div>
+      )}
 
       {notice && (
         <div className="flex items-center justify-between gap-3 border-b border-border bg-red-500/10 px-4 py-2 text-sm text-red-600">

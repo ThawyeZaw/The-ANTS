@@ -8,6 +8,7 @@
 import { getDb, orgMission, orgTeamMembers, orgTimelineItems, profiles } from '@/lib/db';
 import { asc, desc, eq } from 'drizzle-orm';
 import { canHavePublicProfile, normalizeProfileRoles } from '@the-ants/shared-types';
+import { requireAdminSession } from '@/lib/auth-session';
 import type { UserRole } from '@/types';
 import type {
   OrgMission,
@@ -48,6 +49,9 @@ export async function getOrgMissionAction(): Promise<OrgMission> {
 export async function updateOrgMissionAction(
   content: string
 ): Promise<{ success: boolean; mission?: OrgMission; error?: string }> {
+  const guard = await requireAdminSession();
+  if (!guard.ok) return { success: false, error: guard.error };
+
   try {
     const db = getDb();
     const [row] = await db
@@ -99,6 +103,9 @@ export async function getOrgTeamMembersAction(): Promise<OrgTeamMember[]> {
 export async function addOrgTeamMemberAction(
   formData: OrgTeamMemberFormData
 ): Promise<{ success: boolean; member?: OrgTeamMember; error?: string }> {
+  const guard = await requireAdminSession();
+  if (!guard.ok) return { success: false, error: guard.error };
+
   try {
     const db = getDb();
     const existing = await db.select({ id: orgTeamMembers.id }).from(orgTeamMembers);
@@ -127,6 +134,9 @@ export async function updateOrgTeamMemberAction(
   id: string,
   formData: OrgTeamMemberFormData
 ): Promise<{ success: boolean; member?: OrgTeamMember; error?: string }> {
+  const guard = await requireAdminSession();
+  if (!guard.ok) return { success: false, error: guard.error };
+
   try {
     const db = getDb();
     const [row] = await db
@@ -150,6 +160,9 @@ export async function updateOrgTeamMemberAction(
 }
 
 export async function deleteOrgTeamMemberAction(id: string): Promise<{ success: boolean; error?: string }> {
+  const guard = await requireAdminSession();
+  if (!guard.ok) return { success: false, error: guard.error };
+
   try {
     const db = getDb();
     await db.delete(orgTeamMembers).where(eq(orgTeamMembers.id, id as any));
@@ -162,6 +175,9 @@ export async function deleteOrgTeamMemberAction(id: string): Promise<{ success: 
 export async function reorderOrgTeamMembersAction(
   orderedIds: string[]
 ): Promise<{ success: boolean; error?: string }> {
+  const guard = await requireAdminSession();
+  if (!guard.ok) return { success: false, error: guard.error };
+
   try {
     const db = getDb();
     await Promise.all(
@@ -224,6 +240,9 @@ export const getOrgTimelineItemsAction = getOrgTimelineAction;
 export async function addOrgTimelineItemAction(
   formData: OrgTimelineItemFormData
 ): Promise<{ success: boolean; item?: OrgTimelineItem; error?: string }> {
+  const guard = await requireAdminSession();
+  if (!guard.ok) return { success: false, error: guard.error };
+
   try {
     const db = getDb();
     const existing = await db.select({ id: orgTimelineItems.id }).from(orgTimelineItems);
@@ -252,6 +271,9 @@ export async function updateOrgTimelineItemAction(
   id: string,
   formData: OrgTimelineItemFormData
 ): Promise<{ success: boolean; item?: OrgTimelineItem; error?: string }> {
+  const guard = await requireAdminSession();
+  if (!guard.ok) return { success: false, error: guard.error };
+
   try {
     const db = getDb();
     const [row] = await db
@@ -276,6 +298,9 @@ export async function updateOrgTimelineItemAction(
 }
 
 export async function deleteOrgTimelineItemAction(id: string): Promise<{ success: boolean; error?: string }> {
+  const guard = await requireAdminSession();
+  if (!guard.ok) return { success: false, error: guard.error };
+
   try {
     const db = getDb();
     await db.delete(orgTimelineItems).where(eq(orgTimelineItems.id, id as any));
@@ -296,6 +321,9 @@ export async function actionSetFounderType(
   userId: string,
   founderType: 'founder' | 'co_founder' | null
 ): Promise<{ success: boolean; error?: string }> {
+  const guard = await requireAdminSession();
+  if (!guard.ok) return { success: false, error: guard.error };
+
   try {
     const db = getDb();
     await db
@@ -355,6 +383,6 @@ export async function actionGetAllTeamProfiles(): Promise<
       }));
   } catch (err) {
     console.error('[actionGetAllTeamProfiles]', err);
-    return [];
+    throw new Error('Failed to load team directory. Please try again.');
   }
 }
