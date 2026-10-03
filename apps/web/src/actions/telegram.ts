@@ -9,6 +9,7 @@ import { getDb, profiles, timetableEvents, examCountdowns, notificationQueue, no
 import { eq, and, gte, lte, asc } from 'drizzle-orm';
 import { getSessionUser } from '@/lib/auth-session';
 import { mintTelegramLinkStartArg } from '@/lib/telegram/link-token';
+import { actionEnqueueDailyStudyReminders } from '@/actions/notifications';
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
@@ -176,6 +177,7 @@ export async function actionSendWelcomeMessage(telegramChatId: string, userId: s
       `Need help? Visit the ANTs dashboard or contact support.`;
 
     const result = await sendTelegramMessage(telegramChatId, message);
+    void actionEnqueueDailyStudyReminders(userId);
 
     return { success: true, data: result };
   } catch (err: any) {

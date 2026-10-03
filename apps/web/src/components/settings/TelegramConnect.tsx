@@ -225,6 +225,24 @@ export default function TelegramConnect({
             {/* Preferences Panel */}
             {showPrefs && (
               <div className="space-y-4 pt-2">
+                {/* Daily Study Routine */}
+                <div className="p-4 rounded-xl border border-border bg-background-secondary/50">
+                  <div className="flex items-center justify-between mb-1">
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Daily Study Briefings</p>
+                      <p className="text-xs text-foreground-muted">
+                        Morning agenda (8:30 AM) &amp; evening streak check-in (9:00 PM)
+                      </p>
+                    </div>
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                      <Check className="h-3 w-3" /> Auto
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-foreground-muted mt-1.5">
+                    Delivered automatically to your Telegram in your local timezone to build unbroken study habits.
+                  </p>
+                </div>
+
                 {NOTIFICATION_TYPES.map((nt) => {
                   const section = notificationPreferences?.[nt.key];
                   const isEnabled = section?.enabled ?? false;

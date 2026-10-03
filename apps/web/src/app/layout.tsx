@@ -6,6 +6,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { PersonaProvider } from "@/context/PersonaContext";
 import QueryProvider from "@/components/QueryProvider";
 import { validateEnv } from "@/lib/validateEnv";
+import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 
 validateEnv();
 
@@ -153,6 +154,7 @@ export default function RootLayout({
               <QueryProvider>{children}</QueryProvider>
             </PersonaProvider>
           </AuthProvider>
+          <ServiceWorkerRegister />
         </ThemeProvider>
       </body>
     </html>

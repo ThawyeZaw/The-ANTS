@@ -5,8 +5,8 @@
 // PPP-owned: duration sliders, sound picker, volume, auto-start toggle.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { Settings, X, Volume2, ChevronDown } from 'lucide-react';
-import { useState } from 'react';
+import { Settings, X, Volume2, ChevronDown, Bell, Check } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import type { PomodoroSettings, PomodoroStatsLog, ChimeSoundId } from '@/constants/pomodoro';
 import { DURATION_BOUNDS, POMODORO_DEFAULTS } from '@/constants/pomodoro';
 import StatsPanel from '@/components/pomodoro/StatsPanel';
@@ -26,6 +26,9 @@ interface SettingsDrawerProps {
   onUpdate: (partial: Partial<PomodoroSettings>) => void;
   stats: PomodoroStatsLog;
   surface?: 'theme' | 'stage';
+  notificationPermission?: NotificationPermission | 'unsupported';
+  onRequestNotificationPermission?: () => Promise<NotificationPermission | 'unsupported'>;
+  onSendTestNotification?: () => void;
 }
 
 function todayFocusMinutes(stats: PomodoroStatsLog): number {
@@ -90,8 +93,52 @@ export default function SettingsDrawer({
   onUpdate,
   stats,
   surface = 'theme',
+  notificationPermission: propPerm,
+  onRequestNotificationPermission,
+  onSendTestNotification,
 }: SettingsDrawerProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [localPerm, setLocalPerm] = useState<NotificationPermission | 'unsupported'>('default');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      setLocalPerm(Notification.permission);
+    } else {
+      setLocalPerm('unsupported');
+    }
+  }, [isOpen]);
+
+  const activePerm = propPerm ?? localPerm;
+
+  const handleRequestPermission = async () => {
+    if (onRequestNotificationPermission) {
+      const res = await onRequestNotificationPermission();
+      setLocalPerm(res);
+      return;
+    }
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      const res = await Notification.requestPermission();
+      setLocalPerm(res);
+    }
+  };
+
+  const handleTestAlert = () => {
+    if (onSendTestNotification) {
+      onSendTestNotification();
+      return;
+    }
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+      try {
+        new Notification('🔔 Notification Test Successful!', {
+          body: 'The ANTs study notifications are working on this device.',
+          icon: '/logo.png',
+        });
+      } catch {
+        /* ignore */
+      }
+    }
+  };
+
   const onStage = surface === 'stage';
   const todayMinutes = todayFocusMinutes(stats);
   const todaySessionCount = todaySessions(stats);
@@ -376,9 +423,62 @@ export default function SettingsDrawer({
             )}
           </div>
 
-
-
-          {/* Volume slider */}
+          {/* PWA & System Notifications */}
+          <div
+            className="rounded-xl border p-4 space-y-3"
+            style={{
+              borderColor: 'var(--border)',
+              background: 'var(--background-secondary)',
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Bell className="h-4 w-4 text-primary" />
+                <span className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>
+                  PWA / Desktop Alerts
+                </span>
+              </div>
+              {activePerm === 'granted' ? (
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                  <Check className="h-3 w-3" /> Enabled
+                </span>
+              ) : activePerm === 'denied' ? (
+                <span className="text-[11px] font-medium text-rose-500 bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20">
+                  Blocked
+                </span>
+              ) : (
+                <span className="text-[11px] font-medium text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                  Not enabled
+                </span>
+              )}
+            </div>
+            <p className="text-xs" style={{ color: 'var(--foreground-muted)' }}>
+              Receive instant alerts when focus sessions and breaks finish, even when using other apps or tabs.
+            </p>
+            <div className="flex items-center gap-2 pt-1">
+              {activePerm === 'granted' ? (
+                <button
+                  type="button"
+                  onClick={handleTestAlert}
+                  className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-border/80 hover:bg-background transition text-foreground-secondary hover:text-foreground"
+                >
+                  Send Test Alert
+                </button>
+              ) : activePerm === 'denied' ? (
+                <p className="text-[11px] text-foreground-muted">
+                  Alerts are blocked in browser permissions. Click the lock/settings icon in your address bar to allow.
+                </p>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleRequestPermission}
+                  className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition shadow-sm"
+                >
+                  Enable PWA Alerts
+                </button>
+              )}
+            </div>
+          </div>
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
               <label className="text-sm font-medium" style={{ color: 'var(--foreground-secondary)' }}>

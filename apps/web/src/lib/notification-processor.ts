@@ -38,7 +38,8 @@ function sleep(ms: number): Promise<void> {
 
 async function sendTelegramMessage(
   chatId: string,
-  text: string
+  text: string,
+  replyMarkup?: Record<string, unknown>
 ): Promise<{ ok: boolean; retryAfter?: number; errorText?: string }> {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token) {
@@ -49,7 +50,12 @@ async function sendTelegramMessage(
     const res = await fetch(`${TELEGRAM_API_BASE}${token}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' }),
+      body: JSON.stringify({
+        chat_id: chatId,
+        text,
+        parse_mode: 'HTML',
+        ...(replyMarkup ? { reply_markup: replyMarkup } : {}),
+      }),
     });
 
     if (res.status === 429) {
@@ -161,7 +167,7 @@ export async function processNotificationQueue(
       continue;
     }
 
-    const res = await sendTelegramMessage(chatId, text);
+    const res = await sendTelegramMessage(chatId, text, payload?.reply_markup);
 
     if (res.ok) {
       sent++;
@@ -169,6 +175,18 @@ export async function processNotificationQueue(
         .update(notificationQueue)
         .set({ status: 'sent', sent_at: new Date(), updated_at: new Date() })
         .where(eq(notificationQueue.id, item.id));
+
+      if (payload?.source_type === 'daily_reminder') {
+        const baseTime = item.scheduled_for ? new Date(item.scheduled_for).getTime() : Date.now();
+        const nextScheduled = new Date(baseTime + 24 * 60 * 60 * 1000);
+        await db.insert(notificationQueue).values({
+          user_id: item.user_id,
+          channel: 'telegram',
+          payload: item.payload,
+          scheduled_for: nextScheduled,
+          status: 'pending',
+        });
+      }
     } else if (res.retryAfter) {
       // Rate limited — reschedule after Telegram's retry_after window.
       // This is transient, so don't burn a retry attempt.

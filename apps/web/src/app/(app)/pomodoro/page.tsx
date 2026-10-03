@@ -49,6 +49,9 @@ export default function PomodoroPage() {
     sessionLabel,
     settings,
     stats,
+    notificationPermission,
+    requestNotificationPermission,
+    sendTestNotification,
     start,
     pause,
     resume,
@@ -150,6 +153,9 @@ export default function PomodoroPage() {
               onUpdate={updateSettings}
               stats={stats}
               surface={surface}
+              notificationPermission={notificationPermission}
+              onRequestNotificationPermission={requestNotificationPermission}
+              onSendTestNotification={sendTestNotification}
             />
 
             {/* Immersive Focus Mode Button */}

@@ -41,6 +41,39 @@ import {
 const PARTIAL_SESSION_MIN_MS = 15_000;
 const SETTINGS_SAVE_DEBOUNCE_MS = 800;
 
+async function sendPomodoroNotification(
+  title: string,
+  options?: NotificationOptions & { data?: Record<string, unknown> }
+): Promise<void> {
+  if (typeof window === 'undefined' || !('Notification' in window)) return;
+  if (Notification.permission !== 'granted') return;
+
+  const defaultOptions: NotificationOptions & { renotify?: boolean } = {
+    icon: '/logo.png',
+    badge: '/logo.png',
+    tag: 'pomodoro-timer',
+    renotify: true,
+    ...options,
+  };
+
+  try {
+    if ('serviceWorker' in navigator) {
+      const reg = await navigator.serviceWorker.ready;
+      if (reg && 'showNotification' in reg) {
+        await reg.showNotification(title, defaultOptions);
+        return;
+      }
+    }
+    new Notification(title, defaultOptions);
+  } catch {
+    try {
+      new Notification(title, defaultOptions);
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
 function safeGetItem<T>(key: string, fallback: T): T {
   try {
     const raw = localStorage.getItem(key);
@@ -310,6 +343,9 @@ export interface UsePomodoroReturn {
   stats: PomodoroStatsLog;
   pastPaperConfig: PastPaperSessionConfig;
   activeExamAlert: '15m' | '5m' | null;
+  notificationPermission: NotificationPermission | 'unsupported';
+  requestNotificationPermission: () => Promise<NotificationPermission | 'unsupported'>;
+  sendTestNotification: () => void;
   start: () => void;
   pause: () => void;
   resume: () => void;
@@ -335,6 +371,7 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
     safeGetItem(STORAGE_KEYS.stats, emptyStats()),
   );
   const [activeExamAlert, setActiveExamAlert] = useState<'15m' | '5m' | null>(null);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | 'unsupported'>('default');
 
   const sessionRef = useRef(session);
   const settingsRef = useRef(settings);
@@ -343,6 +380,38 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
   const userIdRef = useRef(userId);
   const settingsSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const remoteLoadedRef = useRef(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      setNotificationPermission(Notification.permission);
+      notificationGrantedRef.current = Notification.permission === 'granted';
+    } else {
+      setNotificationPermission('unsupported');
+    }
+  }, []);
+
+  const requestNotificationPermission = useCallback(async () => {
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      setNotificationPermission('unsupported');
+      return 'unsupported' as const;
+    }
+    try {
+      const res = await Notification.requestPermission();
+      setNotificationPermission(res);
+      notificationGrantedRef.current = res === 'granted';
+      return res;
+    } catch {
+      setNotificationPermission('denied');
+      return 'denied' as const;
+    }
+  }, []);
+
+  const sendTestNotification = useCallback(() => {
+    void sendPomodoroNotification('🔔 Notification Test Successful!', {
+      body: 'The ANTs study notifications are working on this device.',
+      data: { url: '/pomodoro' },
+    });
+  }, []);
 
   userIdRef.current = userId;
   sessionRef.current = session;
@@ -442,7 +511,33 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
 
       const remaining = current.endsAt - Date.now();
 
-
+      // Exam alerts (15m and 5m remaining)
+      if (current.phase === 'past_paper') {
+        const warnings = current.warningsTriggered ?? { fifteenMin: false, fiveMin: false };
+        if (remaining <= 15 * 60 * 1000 && remaining > 5 * 60 * 1000 && !warnings.fifteenMin) {
+          warnings.fifteenMin = true;
+          sessionRef.current = { ...current, warningsTriggered: warnings };
+          setActiveExamAlert('15m');
+          if (settingsRef.current.examAlertChime) {
+            playExamWarningChime(15, settingsRef.current.voiceAlerts, settingsRef.current.chimeSound);
+          }
+          void sendPomodoroNotification('15 minutes remaining', {
+            body: 'Check your progress and pace yourself for the final questions.',
+            data: { url: '/pomodoro' },
+          });
+        } else if (remaining <= 5 * 60 * 1000 && remaining > 0 && !warnings.fiveMin) {
+          warnings.fiveMin = true;
+          sessionRef.current = { ...current, warningsTriggered: warnings };
+          setActiveExamAlert('5m');
+          if (settingsRef.current.examAlertChime) {
+            playExamWarningChime(5, settingsRef.current.voiceAlerts, settingsRef.current.chimeSound);
+          }
+          void sendPomodoroNotification('5 minutes remaining', {
+            body: 'Wrap up your answers and check your working.',
+            data: { url: '/pomodoro' },
+          });
+        }
+      }
 
       if (remaining <= 0) {
         clearTick();
@@ -466,16 +561,10 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
       const duration = current.pastPaperConfig?.durationMinutes ?? 90;
       logSessionComplete(duration, current);
 
-      if (notificationGrantedRef.current) {
-        try {
-          new Notification('Past Paper Exam Complete!', {
-            body: 'Pens down! You have completed your scheduled paper.',
-            icon: '/icons/icon-192.png',
-          });
-        } catch {
-          /* ignore */
-        }
-      }
+      void sendPomodoroNotification('Past Paper Exam Complete!', {
+        body: 'Pens down! You have completed your scheduled paper.',
+        data: { url: '/pomodoro' },
+      });
 
       const totalMs = getTimerDurationMs('past_paper', settings, current.pastPaperConfig);
       const newSession: ActiveSessionSnapshot = {
@@ -499,16 +588,10 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
     if (current.phase === 'focus') {
       logSessionComplete(settings.focusMinutes, current);
 
-      if (notificationGrantedRef.current) {
-        try {
-          new Notification('Focus session complete!', {
-            body: 'Great work. Time for a break.',
-            icon: '/icons/icon-192.png',
-          });
-        } catch {
-          /* ignore */
-        }
-      }
+      void sendPomodoroNotification('Focus session complete!', {
+        body: 'Great work. Time for a break.',
+        data: { url: '/pomodoro' },
+      });
 
       const newCycle = current.cyclesCompletedToday + 1;
       const nextPhase: TimerPhase =
@@ -537,16 +620,10 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
     }
 
     // ── Break Complete ──
-    if (notificationGrantedRef.current) {
-      try {
-        new Notification('Break over!', {
-          body: 'Ready to focus again?',
-          icon: '/icons/icon-192.png',
-        });
-      } catch {
-        /* ignore */
-      }
-    }
+    void sendPomodoroNotification('Break over!', {
+      body: 'Ready to focus again?',
+      data: { url: '/pomodoro' },
+    });
 
     const newSession: ActiveSessionSnapshot = {
       ...current,
@@ -632,6 +709,7 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
     ) {
       void Notification.requestPermission().then((perm) => {
         notificationGrantedRef.current = perm === 'granted';
+        setNotificationPermission(perm);
       });
     }
 
@@ -883,6 +961,9 @@ export function usePomodoro(userId?: string | null): UsePomodoroReturn {
     stats,
     pastPaperConfig: session.pastPaperConfig ?? DEFAULT_PAST_PAPER,
     activeExamAlert,
+    notificationPermission,
+    requestNotificationPermission,
+    sendTestNotification,
     start,
     pause,
     resume,

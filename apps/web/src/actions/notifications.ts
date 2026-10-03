@@ -4,8 +4,8 @@
 // The ANTs — Notification Enqueue Server Actions (D1 / Drizzle)
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { getDb, notificationQueue, profiles } from '@/lib/db';
-import { eq, and, sql } from 'drizzle-orm';
+import { getDb, notificationQueue, profiles, timetableEvents, examCountdowns } from '@/lib/db';
+import { eq, and, sql, gte, lte, asc } from 'drizzle-orm';
 import { expandRecurringEvents } from '@/lib/timetable/recurrence';
 import type { TimetableEvent } from '@/types/timetable';
 import {
@@ -20,7 +20,7 @@ interface QueueItem {
   telegram_chat_id: string;
   message_text: string;
   scheduled_for: string; // ISO timestamp
-  source_type: 'timetable_event' | 'assignment' | 'exam_countdown' | 'quiz' | 'role_upgrade';
+  source_type: 'timetable_event' | 'assignment' | 'exam_countdown' | 'quiz' | 'role_upgrade' | 'daily_reminder';
   source_id: string;
   user_id: string;
   reply_markup?: Record<string, unknown>;
@@ -277,9 +277,176 @@ export async function actionEnqueueExamCountdownReminders(
 
   await upsertQueueItems('exam_countdown', examCountdownId, queueItems);
   await nudgeWorkerQueueProcessor();
+  void actionEnqueueDailyStudyReminders(userId);
 }
 
 export const actionEnqueueExamReminders = actionEnqueueExamCountdownReminders;
+
+// ── Enqueue: Daily Study Reminders (8:30 AM & 9:00 PM) ─────────────────────────
+
+function getNextDailyReminderUtc(
+  targetHour: number,
+  targetMinute: number,
+  timeZone = 'Asia/Yangon'
+): Date {
+  const now = new Date();
+
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
+    hour12: false,
+  }).formatToParts(now);
+
+  const partMap: Record<string, number> = {};
+  for (const p of parts) {
+    if (p.type !== 'literal') {
+      partMap[p.type] = parseInt(p.value, 10);
+    }
+  }
+
+  const tzYear = partMap.year;
+  const tzMonth = partMap.month;
+  const tzDay = partMap.day;
+  const tzHour = partMap.hour === 24 ? 0 : partMap.hour;
+  const tzMinute = partMap.minute;
+
+  const isPast = tzHour > targetHour || (tzHour === targetHour && tzMinute >= targetMinute);
+  const targetDay = tzDay + (isPast ? 1 : 0);
+
+  const targetDateLocal = new Date(Date.UTC(tzYear, tzMonth - 1, targetDay, targetHour, targetMinute, 0));
+
+  const targetParts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
+    hour12: false,
+  }).formatToParts(targetDateLocal);
+
+  const tMap: Record<string, number> = {};
+  for (const p of targetParts) {
+    if (p.type !== 'literal') tMap[p.type] = parseInt(p.value, 10);
+  }
+  const formattedHour = tMap.hour === 24 ? 0 : tMap.hour;
+  const diffMinutes = (formattedHour * 60 + (tMap.minute || 0)) - (targetHour * 60 + targetMinute);
+
+  return new Date(targetDateLocal.getTime() - diffMinutes * 60 * 1000);
+}
+
+const WEB_ORIGIN = process.env.NEXT_PUBLIC_APP_URL ?? 'https://the-ants.org';
+
+export async function actionEnqueueDailyStudyReminders(userId: string): Promise<void> {
+  const profile = await getProfileForUser(userId);
+  if (!profile?.telegram_chat_id) return;
+
+  const tz = profile.timezone || 'Asia/Yangon';
+  const db = getDb();
+
+  const now = new Date();
+  const next48h = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+
+  const [upcomingEvents, nextExam] = await Promise.all([
+    db.query.timetableEvents.findMany({
+      where: and(
+        eq(timetableEvents.user_id, userId),
+        gte(timetableEvents.start_time, now),
+        lte(timetableEvents.start_time, next48h)
+      ),
+      orderBy: [asc(timetableEvents.start_time)],
+      limit: 6,
+    }),
+    db.query.examCountdowns.findFirst({
+      where: and(
+        eq(examCountdowns.user_id, userId),
+        gte(examCountdowns.exam_date, now)
+      ),
+      orderBy: [asc(examCountdowns.exam_date)],
+    }),
+  ]);
+
+  const nextMorningUtc = getNextDailyReminderUtc(8, 30, tz);
+  const nextEveningUtc = getNextDailyReminderUtc(21, 0, tz);
+
+  // 1. Build Morning Briefing Message (8:30 AM)
+  let morningExamLine = '';
+  if (nextExam) {
+    const days = Math.max(0, Math.ceil((new Date(nextExam.exam_date as any).getTime() - now.getTime()) / 86400000));
+    morningExamLine = `\n🎯 <b>Upcoming Exam:</b> ${nextExam.title || 'Exam'} in <b>${days} day${days === 1 ? '' : 's'}</b>\n`;
+  }
+
+  const morningEventsList = upcomingEvents.length > 0
+    ? upcomingEvents.slice(0, 3).map((e) => {
+        const st = new Date(e.start_time);
+        const { timeStr } = formatTime(st, tz);
+        return `• <b>${timeStr}</b> — ${e.title}`;
+      }).join('\n')
+    : '• No events scheduled on your timetable today. Add a study block!';
+
+  const morningMessage =
+    `🌅 <b>DAILY STUDY BRIEFING (8:30 AM)</b>\n\n` +
+    `Good morning! Here is your study plan for today:\n\n` +
+    `${morningEventsList}\n` +
+    morningExamLine +
+    `\n<i>"Small daily improvements over time lead to stunning results."</i> 🌟`;
+
+  const morningKeyboard = {
+    inline_keyboard: [
+      [
+        { text: '📅 Timetable', url: `${WEB_ORIGIN}/timetable` },
+        { text: '🍅 Focus Timer', url: `${WEB_ORIGIN}/pomodoro` },
+      ],
+    ],
+  };
+
+  // 2. Build Evening Recap Message (9:00 PM)
+  const eveningMessage =
+    `🌙 <b>EVENING STUDY CHECK-IN (9:00 PM)</b>\n\n` +
+    `Time to wind down! Review your completed tasks and set up for tomorrow.\n\n` +
+    `💡 <i>Tip: Taking 5 minutes to plan tomorrow night reduces morning friction.</i>\n\n` +
+    `Rest well tonight! ✨`;
+
+  const eveningKeyboard = {
+    inline_keyboard: [
+      [
+        { text: '🚀 Plan Tomorrow', url: `${WEB_ORIGIN}/timetable` },
+        { text: '📊 Dashboard', url: `${WEB_ORIGIN}/student` },
+      ],
+    ],
+  };
+
+  const items: QueueItem[] = [
+    {
+      telegram_chat_id: profile.telegram_chat_id,
+      message_text: morningMessage,
+      scheduled_for: nextMorningUtc.toISOString(),
+      source_type: 'daily_reminder',
+      source_id: 'daily_reminder_morning',
+      user_id: userId,
+      reply_markup: morningKeyboard,
+    },
+    {
+      telegram_chat_id: profile.telegram_chat_id,
+      message_text: eveningMessage,
+      scheduled_for: nextEveningUtc.toISOString(),
+      source_type: 'daily_reminder',
+      source_id: 'daily_reminder_evening',
+      user_id: userId,
+      reply_markup: eveningKeyboard,
+    },
+  ];
+
+  await upsertQueueItems('daily_reminder', 'daily_reminder_morning', [items[0]]);
+  await upsertQueueItems('daily_reminder', 'daily_reminder_evening', [items[1]]);
+  await nudgeWorkerQueueProcessor();
+}
 
 // ── Clear Queue for a Source ─────────────────────────────────────────────────
 
