@@ -7,6 +7,7 @@
 import { getDb, profiles } from '@/lib/db';
 import { eq, desc } from 'drizzle-orm';
 import type { UserRole } from '@/types';
+import { requireAdminSession } from '@/lib/auth-session';
 
 export interface RoleUpgradeRequest {
   id: string;
@@ -33,6 +34,8 @@ export async function approveRoleUpgrade(
   requestId: string,
   reviewerId: string
 ): Promise<{ success: boolean; error?: string }> {
+  const guard = await requireAdminSession();
+  if (!guard.ok) return { success: false, error: guard.error };
   return { success: true };
 }
 
@@ -41,14 +44,20 @@ export async function rejectRoleUpgrade(
   reviewerId: string,
   feedback?: string
 ): Promise<{ success: boolean; error?: string }> {
+  const guard = await requireAdminSession();
+  if (!guard.ok) return { success: false, error: guard.error };
   return { success: true };
 }
 
 export async function getPendingUpgradeRequests(): Promise<RoleUpgradeRequest[]> {
+  const guard = await requireAdminSession();
+  if (!guard.ok) return [];
   return [];
 }
 
 export async function getUserUpgradeRequests(userId?: string): Promise<RoleUpgradeRequest[]> {
+  const guard = await requireAdminSession();
+  if (!guard.ok) return [];
   return [];
 }
 
@@ -59,6 +68,9 @@ export async function actionUpdateUserRoles(
   userId: string,
   roles: UserRole[]
 ): Promise<{ success: boolean; error?: string }> {
+  const guard = await requireAdminSession();
+  if (!guard.ok) return { success: false, error: guard.error };
+
   try {
     const db = getDb();
     const primaryRole = roles[0] ?? 'student';
@@ -90,6 +102,9 @@ export async function changeUserRole(
 export async function actionPromoteUserToAdminByEmail(
   email: string
 ): Promise<{ success: boolean; userId?: string; error?: string }> {
+  const guard = await requireAdminSession();
+  if (!guard.ok) return { success: false, error: guard.error };
+
   const normalized = email.trim().toLowerCase();
   if (!normalized) {
     return { success: false, error: 'Email is required.' };
@@ -124,9 +139,14 @@ export async function actionPromoteUserToAdminByEmail(
 }
 
 /**
- * Fetches all user profiles from DB.
+ * Fetches all user profiles from DB (admin only).
  */
 export async function getAllUsers() {
+  const guard = await requireAdminSession();
+  if (!guard.ok) {
+    return [];
+  }
+
   try {
     const db = getDb();
     const rows = await db

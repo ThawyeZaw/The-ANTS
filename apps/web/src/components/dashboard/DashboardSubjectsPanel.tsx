@@ -165,13 +165,25 @@ export function DashboardSubjectsPanel() {
   const { user } = useAuth();
   const [subjects, setSubjects] = useState<HubSubject[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  const loadSubjects = () => {
+    if (!user) return;
+    setLoading(true);
+    setLoadError(null);
+    getMySubjectsHub(user.id)
+      .then((res) => {
+        setSubjects(res.subjects);
+      })
+      .catch(() => {
+        setLoadError('Could not load your subjects. Check your connection and try again.');
+        setSubjects([]);
+      })
+      .finally(() => setLoading(false));
+  };
 
   useEffect(() => {
-    if (!user) return;
-    getMySubjectsHub(user.id).then((res) => {
-      setSubjects(res.subjects);
-      setLoading(false);
-    });
+    loadSubjects();
   }, [user]);
 
   if (loading) {
@@ -181,6 +193,21 @@ export function DashboardSubjectsPanel() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {[1, 2, 3, 4].map((i) => <div key={i} className="h-32 bg-background-secondary rounded-2xl" />)}
         </div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="rounded-3xl border border-destructive/30 bg-background-card p-6 shadow-xs text-center space-y-3">
+        <p className="text-sm text-foreground">{loadError}</p>
+        <button
+          type="button"
+          onClick={loadSubjects}
+          className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground hover:bg-primary-hover"
+        >
+          Retry
+        </button>
       </div>
     );
   }

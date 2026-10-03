@@ -1,10 +1,16 @@
+import { Suspense } from 'react';
 import SignupForm from '@/components/auth/SignupForm';
 
 export const metadata = {
   title: 'Sign Up — The ANTs',
-  description: 'Create your ANTS account and choose your role — Student, Teacher, Contributor, or Main Contributor.',
+  description: 'Create your free student account on The ANTs — curriculum hub, timetable, and study tools for Myanmar learners.',
 };
 
 export default function SignupPage() {
-  return <SignupForm />;
+  return (
+    <Suspense>
+      <SignupForm />
+    </Suspense>
+  );
 }
+

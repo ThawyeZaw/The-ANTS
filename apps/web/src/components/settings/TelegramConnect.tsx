@@ -5,7 +5,8 @@
 // Lets users link their Telegram account and choose which notifications to receive.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { actionGetTelegramLinkStartArg } from '@/actions/telegram';
 import { Send, Check, ExternalLink, Bell, BellOff, Copy, CheckCheck, MessageSquareCheck, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -68,14 +69,23 @@ export default function TelegramConnect({
   const [copied, setCopied] = useState(false);
   const [testState, setTestState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [testError, setTestError] = useState<string | null>(null);
+  const [secureStartArg, setSecureStartArg] = useState<string | null>(null);
 
   const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'TheANTS_bot';
   const isConnected = !!telegramChatId;
 
-  const startCommand = `/start ${username ?? 'your_username'}`;
+  useEffect(() => {
+    if (!username || isConnected) return;
+    void actionGetTelegramLinkStartArg().then((result) => {
+      if (result.success) setSecureStartArg(result.startArg);
+    });
+  }, [username, isConnected]);
+
+  const startPayload = secureStartArg ?? username ?? 'your_username';
+  const startCommand = `/start ${startPayload}`;
 
   const deepLink = username
-    ? `https://t.me/${botUsername}?start=${encodeURIComponent(username)}`
+    ? `https://t.me/${botUsername}?start=${encodeURIComponent(startPayload)}`
     : `https://t.me/${botUsername}`;
 
   const handleConnect = () => {

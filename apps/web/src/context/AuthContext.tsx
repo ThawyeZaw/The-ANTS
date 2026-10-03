@@ -314,19 +314,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch {}
 
-      if (typeof window !== 'undefined') {
-        try {
-          const cached = localStorage.getItem(AUTH_CACHE_KEY);
-          if (cached) {
-            const parsed = JSON.parse(cached) as AuthUser;
-            if (parsed?.id === userId && parsed.profile.roles?.includes('admin')) {
-              setUser(parsed);
-              return parsed;
-            }
-          }
-        } catch {}
-      }
-
       const defaultUser: AuthUser = {
         id: userId,
         email,
@@ -479,7 +466,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginWithGoogle = useCallback(async (callbackURL?: string) => {
     try {
       const origin = typeof window !== 'undefined' ? window.location.origin : '';
-      let target = callbackURL || `${origin}/dashboard`;
+      let target = callbackURL || `${origin}/student`;
       if (target.startsWith('/')) {
         target = `${origin}${target}`;
       }

@@ -9,6 +9,10 @@ import { ArrowRight, BookOpen, GraduationCap, Mic } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { QUALIFICATION_BOARDS, UPCOMING_BOARDS } from '@/constants/homepage';
 import RevealSection from './RevealSection';
+import { useAuth } from '@/hooks/useAuth';
+import { signupNextPath } from '@/lib/app-paths';
+
+const GUEST_ALLOWED_ROUTES = ['/calculator', '/pomodoro', '/tools'];
 
 const ICON_MAP: Record<string, LucideIcon> = {
   GraduationCap,
@@ -17,6 +21,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
 };
 
 export default function QualBoards() {
+  const { isAuthenticated } = useAuth();
   return (
     <RevealSection>
       <div
@@ -127,7 +132,11 @@ export default function QualBoards() {
               </div>
 
               <Link
-                href={board.href}
+                href={
+                  isAuthenticated || GUEST_ALLOWED_ROUTES.includes(board.href)
+                    ? board.href
+                    : signupNextPath(board.href)
+                }
                 style={{
                   marginTop: 22,
                   display: 'inline-flex',

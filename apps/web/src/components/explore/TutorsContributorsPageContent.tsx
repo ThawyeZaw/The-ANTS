@@ -6,8 +6,8 @@
 // Replaces the old /explore directory concept. Route: /team
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { useState, useMemo, useEffect, Suspense } from 'react';
-import { Search, Users, GraduationCap, Pencil, Star, Loader2 } from 'lucide-react';
+import { useState, useMemo, useEffect, useCallback, Suspense } from 'react';
+import { Search, Users, GraduationCap, Pencil, Star, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { actionGetAllTeamProfiles } from '@/actions/org';
 import TutorsContributorsCard, { type TeamProfile } from './TutorsContributorsCard';
@@ -49,16 +49,27 @@ function matchesSearch(profile: TeamProfile, q: string): boolean {
 function TeamDirectory() {
   const [profiles, setProfiles] = useState<TeamProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<FilterKey>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
+  const fetchProfiles = useCallback(() => {
     setIsLoading(true);
+    setError(null);
     actionGetAllTeamProfiles()
-      .then((data) => setProfiles(data as TeamProfile[]))
-      .catch((err) => console.error('[TutorsContributorsPageContent]', err))
+      .then((data) => {
+        setProfiles(data as TeamProfile[]);
+      })
+      .catch((err) => {
+        console.error('[TutorsContributorsPageContent]', err);
+        setError('Unable to load directory profiles. Please check your connection and try again.');
+      })
       .finally(() => setIsLoading(false));
   }, []);
+
+  useEffect(() => {
+    fetchProfiles();
+  }, [fetchProfiles]);
 
   const filtered = useMemo(
     () =>
@@ -138,8 +149,25 @@ function TeamDirectory() {
           </div>
         )}
 
+        {/* ── Error Banner ── */}
+        {!isLoading && error && (
+          <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-8 text-center space-y-3">
+            <AlertCircle className="w-10 h-10 text-destructive mx-auto" />
+            <h3 className="text-base font-semibold text-foreground">Failed to load directory</h3>
+            <p className="text-sm text-foreground-muted max-w-md mx-auto">{error}</p>
+            <button
+              type="button"
+              onClick={fetchProfiles}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary-hover transition-all cursor-pointer shadow-xs"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Try again
+            </button>
+          </div>
+        )}
+
         {/* ── Profile grid ── */}
-        {!isLoading && (
+        {!isLoading && !error && (
           <>
             {filtered.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -67,7 +67,7 @@ export const EVENT_TYPE_CONFIG: Record<TimetableEventType, EventTypeConfig> = {
     icon: 'AlertCircle',
   },
   club_event: {
-    label: 'Club Event',
+    label: 'Extracurricular / Activity',
     color: '#ec4899',
     bgColor: 'rgba(236,72,153,0.15)',
     textColor: 'text-pink-400',

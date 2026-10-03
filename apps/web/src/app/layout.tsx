@@ -64,19 +64,19 @@ export const metadata: Metadata = {
       "Curriculum-aware academic productivity and tutoring platform for Myanmar students pursuing Cambridge IGCSE, A Levels, and Pearson Edexcel.",
     images: [
       {
-        url: "/logo.png",
-        width: 512,
-        height: 512,
-        alt: "The ANTs Logo",
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "The ANTs — Academic Productivity & Tutoring Platform",
       },
     ],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "The ANTs — Academic Productivity & Tutoring Platform",
     description:
       "Curriculum-aware academic productivity and tutoring platform for Myanmar students pursuing Cambridge IGCSE, A Levels, and Pearson Edexcel.",
-    images: ["/logo.png"],
+    images: ["/og-image.png"],
   },
   robots: {
     index: true,
@@ -89,6 +89,31 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+};
+
+const JSON_LD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "EducationalOrganization",
+      "@id": "https://the-ants.org/#organization",
+      name: "The ANTs",
+      url: "https://the-ants.org",
+      logo: "https://the-ants.org/logo.png",
+      description:
+        "Curriculum-aware academic productivity and tutoring platform for Myanmar students pursuing Cambridge IGCSE, A Levels, and Pearson Edexcel.",
+      sameAs: ["https://github.com/ThawyeZaw/The-ANTS"],
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://the-ants.org/#website",
+      url: "https://the-ants.org",
+      name: "The ANTs",
+      publisher: {
+        "@id": "https://the-ants.org/#organization",
+      },
+    },
+  ],
 };
 
 export default function RootLayout({
@@ -107,6 +132,10 @@ export default function RootLayout({
         className="min-h-full flex flex-col antialiased"
         suppressHydrationWarning
       >
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
+        />
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:bg-background-card focus:px-4 focus:py-2 focus:rounded-lg"

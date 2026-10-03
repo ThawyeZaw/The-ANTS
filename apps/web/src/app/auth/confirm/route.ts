@@ -6,10 +6,19 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { getDb, verification, user } from '@/lib/db';
 import { eq, and, gte } from 'drizzle-orm';
 
+function sanitizeRedirect(target: string | null): string {
+  if (!target) return '/login?verified=true';
+  // Allow only valid relative same-origin paths, rejecting // or backslashes
+  if (target.startsWith('/') && !target.startsWith('//') && !target.includes('\\')) {
+    return target;
+  }
+  return '/login?verified=true';
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const token = searchParams.get('token') || searchParams.get('token_hash');
-  const next = searchParams.get('next') ?? '/login?verified=true';
+  const next = sanitizeRedirect(searchParams.get('next'));
 
   if (!token) {
     return NextResponse.redirect(new URL('/login?error=invalid_confirmation_link', request.url));

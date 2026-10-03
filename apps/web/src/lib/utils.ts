@@ -23,8 +23,8 @@ export function getRoleDisplayName(role: UserRole): string {
 /**
  * Get the URL path for a role's landing page.
  */
-export function getRoleLandingPath(role: UserRole): string {
-  return '/dashboard';
+export function getRoleLandingPath(_role: UserRole): string {
+  return '/student';
 }
 
 /**

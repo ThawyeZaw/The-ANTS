@@ -7,35 +7,16 @@ import {
   versionHistory,
   profiles,
 } from '@the-ants/db';
+import { createAuthMiddleware, createModeratorMiddleware } from '../middleware/session';
 
-export function createEditorRoutes(getDb: () => ReturnType<typeof createDb>) {
+export function createEditorRoutes(getDb: (c?: any) => ReturnType<typeof createDb>) {
   const router = new Hono();
-
-  // Spec §2: Admin has everything Contributor/Main Contributor gets, including
-  // the full moderation review queue. Guard accepts main_contributor OR admin.
-  const hasModeratorAccess = (profile: { role: string | null; roles: string[] | null } | undefined) => {
-    if (!profile) return false;
-    const roles = profile.roles && profile.roles.length > 0 ? profile.roles : [profile.role];
-    return roles.includes('main_contributor') || roles.includes('admin');
-  };
+  const requireAuth = createAuthMiddleware((c) => getDb(c));
+  const requireModerator = createModeratorMiddleware((c) => getDb(c));
 
   // 1. Get review queue (Guarded: Main Contributor / Admin only)
-  // RLS replacement: review_queue_main_contributor_all
-  router.get('/review-queue', async (c) => {
-    const db = getDb();
-    const userId = c.req.query('userId');
-
-    if (!userId) {
-      return c.json({ error: 'userId is required' }, 400);
-    }
-
-    const userProfile = await db.query.profiles.findFirst({
-      where: eq(profiles.id, userId),
-    });
-
-    if (!hasModeratorAccess(userProfile)) {
-      return c.json({ error: 'Unauthorized: Only main_contributors or admins can access the review queue' }, 403);
-    }
+  router.get('/review-queue', requireModerator, async (c) => {
+    const db = getDb(c);
 
     const queue = await db.query.reviewQueue.findMany({
       orderBy: [desc(reviewQueue.submitted_at)],
@@ -47,14 +28,14 @@ export function createEditorRoutes(getDb: () => ReturnType<typeof createDb>) {
     return c.json({ success: true, queue });
   });
 
-  // 2. Submit content proposal
-  // RLS replacement: review_queue_contributor_insert
-  router.post('/submit', async (c) => {
-    const db = getDb();
+  // 2. Submit content proposal (Guarded: Authenticated users)
+  router.post('/submit', requireAuth, async (c) => {
+    const db = getDb(c);
+    const sessionUser = c.get('sessionUser');
     const body = await c.req.json();
 
     const SubmitSchema = z.object({
-      contributorId: z.string().uuid(),
+      contributorId: z.string().uuid().optional(),
       submissionType: z.enum(['curriculum', 'exam', 'subject', 'topic', 'calculator', 'countdown']),
       entityId: z.string().uuid(),
       submittedData: z.record(z.string(), z.any()),
@@ -67,13 +48,16 @@ export function createEditorRoutes(getDb: () => ReturnType<typeof createDb>) {
       return c.json({ error: parsed.error.format() }, 400);
     }
 
-    const { contributorId, submissionType, entityId, submittedData, isUpdate, publishedEntityId } =
+    const { contributorId: requestedContributorId, submissionType, entityId, submittedData, isUpdate, publishedEntityId } =
       parsed.data;
+
+    const effectiveContributorId =
+      sessionUser.roles.includes('admin') && requestedContributorId ? requestedContributorId : sessionUser.id;
 
     const [item] = await db
       .insert(reviewQueue)
       .values({
-        contributor_id: contributorId,
+        contributor_id: effectiveContributorId,
         submission_type: submissionType,
         entity_id: entityId,
         submitted_data: submittedData,
@@ -86,13 +70,14 @@ export function createEditorRoutes(getDb: () => ReturnType<typeof createDb>) {
     return c.json({ success: true, item }, 201);
   });
 
-  // 3. Review submission (Approve / Reject)
-  router.post('/review', async (c) => {
-    const db = getDb();
+  // 3. Review submission (Approve / Reject) (Guarded: Main Contributor / Admin only)
+  router.post('/review', requireModerator, async (c) => {
+    const db = getDb(c);
+    const sessionUser = c.get('sessionUser');
+    const reviewerId = sessionUser.id;
     const body = await c.req.json();
 
     const ReviewSchema = z.object({
-      reviewerId: z.string().uuid(),
       queueId: z.string().uuid(),
       action: z.enum(['approve', 'reject']),
       feedback: z.record(z.string(), z.any()).optional(),
@@ -103,15 +88,7 @@ export function createEditorRoutes(getDb: () => ReturnType<typeof createDb>) {
       return c.json({ error: parsed.error.format() }, 400);
     }
 
-    const { reviewerId, queueId, action, feedback } = parsed.data;
-
-    const reviewer = await db.query.profiles.findFirst({
-      where: eq(profiles.id, reviewerId),
-    });
-
-    if (!hasModeratorAccess(reviewer)) {
-      return c.json({ error: 'Unauthorized: Only main_contributors or admins can review items' }, 403);
-    }
+    const { queueId, action, feedback } = parsed.data;
 
     const item = await db.query.reviewQueue.findFirst({
       where: eq(reviewQueue.id, queueId),

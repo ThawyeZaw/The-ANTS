@@ -28,7 +28,7 @@ interface BackButtonProps {
   noFallback?: boolean;
 }
 
-export default function BackButton({ href = '/dashboard', label = 'Back', className, useHistory = false, noFallback }: BackButtonProps) {
+export default function BackButton({ href = '/student', label = 'Back', className, useHistory = false, noFallback }: BackButtonProps) {
   const router = useRouter();
 
   const handleClick = () => {

@@ -21,6 +21,7 @@ import type { LucideIcon } from 'lucide-react';
 import AppIcon from '@/components/ui/AppIcon';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
+import { signupNextPath } from '@/lib/app-paths';
 
 interface ToolItem {
   id: string;
@@ -72,6 +73,8 @@ const TOOLS: ToolItem[] = [
     description: 'Predict, calculate, and target your subject grades with ease.',
     href: '/calculator',
     icon: Calculator,
+    badge: 'Try free',
+    guestOk: true,
   },
   {
     id: 'timetable',
@@ -99,7 +102,7 @@ export default function ToolsHubPage() {
           <p className="text-sm text-foreground-muted leading-relaxed">
             {isAuthenticated
               ? 'Essential interactive tools designed to keep your revision structured and maximize daily focus.'
-              : 'Try the Pomodoro focus timer without an account. Sign in for the full toolkit.'}
+              : 'Try the Pomodoro focus timer and Grade Calculator without an account. Sign in for the full toolkit.'}
           </p>
         </div>
       </div>
@@ -107,7 +110,7 @@ export default function ToolsHubPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {TOOLS.map((tool) => {
           const locked = !isAuthenticated && !tool.guestOk;
-          const href = locked ? '/login' : tool.href;
+          const href = locked ? signupNextPath(tool.href) : tool.href;
 
           return (
             <Link

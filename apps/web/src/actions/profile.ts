@@ -25,6 +25,8 @@ import {
   type ProfileUnavailableReason,
 } from '@the-ants/shared-types';
 import type { Profile, ProjectEntry, UserRole } from '@/types';
+import { requireSessionUser } from '@/lib/auth-session';
+import { hashPassword } from 'better-auth/crypto';
 
 /** Case-insensitive equality for D1/SQLite (Postgres ILIKE is unsupported). */
 function iEqual(column: AnyColumn, value: string): SQL {
@@ -219,9 +221,11 @@ export async function actionGetFullProfile(
         : Promise.resolve([]),
     ]);
 
+    const isOwner = Boolean(viewerUserId && viewerUserId === profileRow.id);
+
     const profile: Profile = {
       id: profileRow.id,
-      email: profileRow.email ?? '',
+      email: isOwner ? (profileRow.email ?? '') : '',
       name: profileRow.name ?? '',
       username: profileRow.username ?? '',
       avatar: profileRow.avatar_url ?? '',
@@ -317,6 +321,9 @@ export async function actionSyncCertifications(
     order_no?: number | null;
   }>
 ): Promise<{ success: boolean; error?: string }> {
+  const guard = await requireSessionUser(userId);
+  if (!guard.ok) return { success: false, error: guard.error };
+
   try {
     const db = getDb();
     const existing = await db.query.certifications.findMany({
@@ -379,6 +386,9 @@ export async function actionUpdateProfile(
   userId: string,
   data: Partial<Profile>
 ): Promise<{ success: boolean; error?: string }> {
+  const guard = await requireSessionUser(userId);
+  if (!guard.ok) return { success: false, error: guard.error };
+
   try {
     const db = getDb();
 
@@ -483,6 +493,9 @@ export async function actionUpdateContributorProfile(
     contributor_level?: string;
   }
 ): Promise<{ success: boolean; error?: string }> {
+  const guard = await requireSessionUser(userId);
+  if (!guard.ok) return { success: false, error: guard.error };
+
   try {
     const db = getDb();
 
@@ -565,7 +578,7 @@ export async function actionGetPublicProfiles(roles?: UserRole[]): Promise<Profi
       })
       .map((profileRow) => ({
         id: profileRow.id,
-        email: profileRow.email ?? '',
+        email: '', // Never expose user email in public DTOs
         name: profileRow.name ?? '',
         username: profileRow.username ?? '',
         avatar: profileRow.avatar_url ?? '',
@@ -643,6 +656,9 @@ export async function actionUpdateUsername(
   userId: string,
   newUsername: string
 ): Promise<{ success: boolean; newUsername?: string; error?: string }> {
+  const guard = await requireSessionUser(userId);
+  if (!guard.ok) return { success: false, error: guard.error };
+
   const cleanUsername = newUsername.trim().toLowerCase();
   const check = await actionCheckUsernameAvailable(cleanUsername, userId);
   if (!check.available) {
@@ -670,6 +686,9 @@ export async function actionUpdateDisplayName(
   userId: string,
   newName: string
 ): Promise<{ success: boolean; newName?: string; error?: string }> {
+  const guard = await requireSessionUser(userId);
+  if (!guard.ok) return { success: false, error: guard.error };
+
   const cleanName = newName.trim();
   if (!cleanName) return { success: false, error: 'Display name cannot be empty.' };
 
@@ -713,11 +732,17 @@ export async function actionRequestPasswordReset(
     });
 
     if (!profile) {
-      return { success: false, error: 'No account found matching that email or username.' };
+      // Do not disclose whether an account exists
+      return {
+        success: true,
+        message: 'If an account exists, a 6-digit verification code has been dispatched.',
+      };
     }
 
-    // Generate secure 6-digit numeric OTP code
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    // Generate secure 6-digit numeric OTP code using crypto
+    const randomArray = new Uint32Array(1);
+    crypto.getRandomValues(randomArray);
+    const code = (100000 + (randomArray[0] % 900000)).toString();
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes validity
 
     // Store in verification table
@@ -826,11 +851,12 @@ export async function actionResetPasswordWithCode(
       return { success: false, error: 'Invalid or expired verification code.' };
     }
 
-    // Update password in account table
+    // Update password in account table with secure hash
     try {
+      const hashedPassword = await hashPassword(newPassword);
       await db
         .update(account)
-        .set({ password: newPassword, updatedAt: new Date() })
+        .set({ password: hashedPassword, updatedAt: new Date() })
         .where(eq(account.userId, profile.id));
     } catch {}
 

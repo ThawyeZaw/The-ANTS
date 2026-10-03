@@ -1,251 +1,34 @@
-'use client';
+import type { Metadata } from 'next';
+import AboutView from '@/components/about/AboutView';
 
-import {
-  useEffect, useState,
-} from 'react';
-import Link from 'next/link';
-import BackButton from '@/components/ui/BackButton';
-import {
-  Target,
-  Clock,
-  Loader2,
-} from 'lucide-react';
-import {
-  getOrgMissionAction,
-  getOrgTimelineItemsAction,
-} from '@/actions/org';
-import OrgTimeline from '@/components/about/OrgTimeline';
-import type { OrgTimelineItem } from '@/types';
-import { renderMarkdown } from '@/lib/markdown';
-
-
-
-const DEFAULT_MISSION = `
-## The ANTS Story & Mission
-
-**The ANTs** was founded as a dedicated tutoring and academic guidance organization to help students preparing for Cambridge (CAIE) and Pearson Edexcel IGCSE & A-Level examinations achieve academic and extracurricular excellence.
-
-The organization's name originally originated from the initials of its four founding scholars:
-- **A**ung Khant Thaw
-- **N**yi Ye Htut
-- **T**haw Ye Zaw (Throin)
-- **S**itt Hmue Pyae Sone (Simon)
-
-After acing their own international exams, the founders came together to share high-yield study techniques and provide educational equity for students across Myanmar and the global diaspora.
-
-Today, The ANTS has grown into an expanding network of top tutors and mentors currently pursuing their education at Cambridge A-Levels, Ontario OSSD, Foundation programmes, Singapore Polytechnics, and global universities.
-
----
-
-### What We Deliver
-
-1. **IGCSE & A-Level Classes:** Interactive, high-impact tutoring for Cambridge CIE and Pearson Edexcel syllabi, led by scorers who achieved top grades in the exact same papers.
-2. **Free Digital Study Platform:** The ANTS web application provides verified grade calculators, syllabus topic checklists, past paper matrices, pomodoro timers, and timetables — 100% free with no paywalls.
-3. **Comprehensive Exam Support:** Precision tools for Cambridge & Edexcel, with flexible countdowns and scheduling for IELTS and school exams.
-`;
-
-function MissionSection() {
-  const [missionContent, setMissionContent] = useState<string>('');
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let active = true;
-    getOrgMissionAction().then((m) => {
-      if (active) {
-        setMissionContent(m?.content || '');
-        setLoading(false);
-      }
-    });
-    return () => { active = false; };
-  }, []);
-
-  const contentToRender = missionContent && missionContent.trim().length > 0 ? missionContent : DEFAULT_MISSION;
-
-  return (
-    <div className="animate-fade-in space-y-12">
-      {/* Headline */}
-      <div className="text-center max-w-3xl mx-auto">
-        <h1 className="text-3xl md:text-4xl font-extrabold text-foreground mb-4">
-          More Than Tutors.
-          <br />
-          <span className="text-primary">Your Bridge to Global Education.</span>
-        </h1>
-        <p className="text-foreground-muted text-base max-w-xl mx-auto">
-          Founded by Myanmar scholars for Myanmar scholars. Tutoring, community guidance, and free digital study tools.
-        </p>
-      </div>
-
-      {/* Dynamic / Fallback Mission Content */}
-      <div className="bg-background-card border border-border rounded-2xl p-8 md:p-10 min-h-[160px] flex flex-col justify-center">
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 text-primary animate-spin" />
-          </div>
-        ) : (
-          <div
-            className="[&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-foreground [&_h2]:mb-6 [&_h2]:flex [&_h2]:items-center [&_h2]:gap-3 [&_h3]:text-xl [&_h3]:font-bold [&_h3]:text-foreground [&_h3]:mt-6 [&_h3]:mb-3 [&_p]:text-foreground-secondary [&_p]:leading-relaxed [&_p]:mb-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-4 [&_ul]:space-y-2 [&_li]:text-foreground-secondary"
-            dangerouslySetInnerHTML={{ __html: renderMarkdown(contentToRender) }}
-          />
-        )}
-      </div>
-
-      {/* CTA */}
-      <div className="text-center">
-        <Link
-          href="/login"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground hover:bg-primary-hover rounded-xl text-sm font-semibold transition-all"
-        >
-          Join <span className="font-brand">The ANTs</span> Today
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-// ── History Section ──────────────────────────────────────────────────────────
-
-function HistorySection() {
-  const [milestones, setMilestones] = useState<OrgTimelineItem[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let active = true;
-    getOrgTimelineItemsAction().then((data) => {
-      if (active) {
-        // Filter and sort from latest to oldest (descending order)
-        const visible = data.filter((item) => item.showOnTimeline);
-        visible.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        setMilestones(visible);
-        setLoading(false);
-      }
-    });
-    return () => { active = false; };
-  }, []);
-
-  return (
-    <div className="animate-fade-in space-y-8">
-      <div className="text-center max-w-2xl mx-auto">
-        <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
-          Our Journey
-        </h2>
-        <p className="text-foreground-secondary">
-          From a small group of volunteer tutors to a growing ecosystem —
-          here is how <span className="font-brand">The ANTs</span> has evolved.
-        </p>
-      </div>
-
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-6 w-6 text-primary animate-spin" />
-        </div>
-      ) : (
-        <OrgTimeline items={milestones} />
-      )}
-    </div>
-  );
-}
-
-// ── Page ─────────────────────────────────────────────────────────────────────
+export const metadata: Metadata = {
+  title: 'About The ANTS — Academic Productivity & Guidance',
+  description:
+    'Founded by Myanmar scholars for Myanmar scholars. Learn our story, explore our mission, and discover free Cambridge CAIE & Pearson Edexcel study tools.',
+  openGraph: {
+    title: 'About The ANTS — Academic Productivity & Guidance',
+    description:
+      'Founded by Myanmar scholars for Myanmar scholars. Learn our story, explore our mission, and discover free Cambridge CAIE & Pearson Edexcel study tools.',
+    url: 'https://the-ants.org/about',
+    siteName: 'The ANTs',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'About The ANTS',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'About The ANTS — Academic Productivity & Guidance',
+    description:
+      'Founded by Myanmar scholars for Myanmar scholars. Free Cambridge CAIE & Pearson Edexcel study tools.',
+    images: ['/og-image.png'],
+  },
+};
 
 export default function AboutPage() {
-
-  return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* ── Brand accent glows (CSS-rendered, warm gold/amber) ──── */}
-      <style>{`
-        .about-neon-accent {
-          position: absolute;
-          pointer-events: none;
-          z-index: 0;
-          border-radius: 50%;
-          filter: blur(60px);
-          opacity: 0.22;
-          transition: opacity 0.5s ease, filter 0.5s ease;
-        }
-        /* Gold glow — left side: warm gold glow */
-        .about-neon-gold {
-          width: clamp(200px, 22vw, 360px);
-          height: clamp(200px, 22vw, 360px);
-          left: -4%;
-          top: 45%;
-          transform: translateY(-50%);
-          background: radial-gradient(
-            circle at 50% 50%,
-            color-mix(in srgb, var(--primary) 45%, transparent) 0%,
-            color-mix(in srgb, var(--accent) 22%, transparent) 30%,
-            color-mix(in srgb, var(--primary) 6%, transparent) 60%,
-            transparent 100%
-          );
-          box-shadow:
-            0 0 60px color-mix(in srgb, var(--primary) 20%, transparent),
-            0 0 120px color-mix(in srgb, var(--accent) 10%, transparent);
-          animation: aboutNeonPulseGold 4s ease-in-out infinite;
-        }
-        /* Amber glow — right side: soft amber highlight */
-        .about-neon-amber {
-          width: clamp(200px, 22vw, 360px);
-          height: clamp(200px, 22vw, 360px);
-          right: -4%;
-          top: 40%;
-          transform: translateY(-50%);
-          background: radial-gradient(
-            circle at 50% 50%,
-            color-mix(in srgb, var(--accent) 40%, transparent) 0%,
-            color-mix(in srgb, var(--primary) 20%, transparent) 30%,
-            color-mix(in srgb, var(--accent) 5%, transparent) 60%,
-            transparent 100%
-          );
-          box-shadow:
-            0 0 60px color-mix(in srgb, var(--accent) 18%, transparent),
-            0 0 120px color-mix(in srgb, var(--primary) 8%, transparent);
-          animation: aboutNeonPulseAmber 4.5s ease-in-out infinite;
-        }
-        /* Keyframes: subtle breathing glow */
-        @keyframes aboutNeonPulseGold {
-          0%, 100% { opacity: 0.20; transform: translateY(-50%) scale(1); }
-          50%      { opacity: 0.28; transform: translateY(-50%) scale(1.06); }
-        }
-        @keyframes aboutNeonPulseAmber {
-          0%, 100% { opacity: 0.18; transform: translateY(-50%) scale(1); }
-          50%      { opacity: 0.26; transform: translateY(-50%) scale(1.05); }
-        }
-        /* Responsive: smaller on tablet, hidden on mobile */
-        @media (max-width: 900px) {
-          .about-neon-gold,
-          .about-neon-amber {
-            width: clamp(140px, 16vw, 220px);
-            height: clamp(140px, 16vw, 220px);
-            opacity: 0.14;
-          }
-        }
-        @media (max-width: 640px) {
-          .about-neon-accent { display: none; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .about-neon-gold,
-          .about-neon-amber { animation: none; }
-        }
-      `}</style>
-
-      {/* Gold glow — left side */}
-      <div className="about-neon-accent about-neon-gold" aria-hidden="true" />
-
-      {/* Amber glow — right side */}
-      <div className="about-neon-accent about-neon-amber" aria-hidden="true" />
-
-      <div className="relative z-10 max-w-6xl mx-auto px-4 py-8 pb-20">
-        {/* Back button */}
-        <BackButton href="/" label="Back to Home" />
-
-        {/* Content */}
-        <div className="space-y-24">
-          <MissionSection />
-          
-          <div className="border-t border-border/50 max-w-4xl mx-auto" />
-          
-          <HistorySection />
-        </div>
-      </div>
-    </div>
-  );
+  return <AboutView />;
 }

@@ -1,8 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import BackButton from '@/components/ui/BackButton';
+import { useAuth } from '@/hooks/useAuth';
+import { markScholarCalculatorTry } from '@/actions/scholar-checklist';
+import { APP_HOME_PATH } from '@/lib/app-paths';
 
 const GradeCalculator = dynamic(
   () => import('@/components/exam-data/GradeCalculator'),
@@ -29,6 +32,12 @@ const GradeCalculator = dynamic(
 );
 
 export default function CalculatorPage() {
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user?.id) void markScholarCalculatorTry();
+  }, [user?.id]);
+
   return (
     <div className="min-h-screen bg-[var(--background)] transition-colors duration-300 font-sans relative">
       <div
@@ -43,7 +52,7 @@ export default function CalculatorPage() {
 
       <div className="relative z-10 w-full px-4 py-6 md:px-6 max-w-[1600px] mx-auto">
         <div className="mb-6">
-          <BackButton href="/dashboard" label="Back to Dashboard" />
+          <BackButton href={APP_HOME_PATH} label="Back to Study Hub" />
         </div>
         <GradeCalculator />
       </div>

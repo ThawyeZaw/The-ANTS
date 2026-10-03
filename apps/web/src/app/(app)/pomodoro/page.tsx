@@ -82,19 +82,7 @@ export default function PomodoroPage() {
       const tag = (e.target as HTMLElement).tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
 
-      if (e.code === 'Space') {
-        e.preventDefault();
-        if (isRunning && !isPaused) {
-          pause();
-        } else if (isPaused && hasStarted) {
-          resume();
-        } else {
-          start();
-        }
-      } else if (e.code === 'KeyR' && !e.ctrlKey && !e.metaKey) {
-        e.preventDefault();
-        reset();
-      } else if (e.code === 'KeyF' && !e.ctrlKey && !e.metaKey) {
+      if (e.code === 'KeyF' && !e.ctrlKey && !e.metaKey) {
         e.preventDefault();
         setIsFocusMode((prev) => !prev);
       }
@@ -102,7 +90,7 @@ export default function PomodoroPage() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isRunning, isPaused, hasStarted, start, resume, pause, reset]);
+  }, []);
 
   const muted = onStage ? 'pomo-read text-white/75' : 'text-foreground-muted';
   const fg = onStage ? 'pomo-read text-white' : 'text-foreground';

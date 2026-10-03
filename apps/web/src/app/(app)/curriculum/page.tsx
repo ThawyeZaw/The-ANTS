@@ -11,6 +11,8 @@ import {
   CheckCircle2,
   Search,
   SlidersHorizontal,
+  AlertCircle,
+  RefreshCw,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -66,10 +68,12 @@ export default function CurriculumPage() {
   const [hubSubjects, setHubSubjects] = useState<HubSubject[]>([]);
   const [curriculums, setCurriculums] = useState<CurriculumWithStats[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
 
   const reload = async () => {
     setLoading(true);
+    setError(null);
     try {
       const [hub, boards] = await Promise.all([
         user
@@ -79,6 +83,9 @@ export default function CurriculumPage() {
       ]);
       setHubSubjects(hub.subjects);
       setCurriculums(boards);
+    } catch (err) {
+      console.error('[CurriculumPage]', err);
+      setError('Unable to load curriculum subjects. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -220,6 +227,19 @@ export default function CurriculumPage() {
                 {Array.from({ length: 4 }).map((_, i) => (
                   <div key={i} className="h-72 rounded-2xl border border-border animate-pulse bg-background-card" />
                 ))}
+              </div>
+            ) : error ? (
+              <div className="rounded-3xl border border-destructive/30 bg-destructive/10 p-10 text-center space-y-3">
+                <AlertCircle className="w-10 h-10 text-destructive mx-auto" />
+                <p className="font-bold text-foreground">Failed to load subjects</p>
+                <p className="text-sm text-foreground-muted max-w-md mx-auto">{error}</p>
+                <button
+                  type="button"
+                  onClick={() => void reload()}
+                  className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground hover:opacity-90 transition-opacity"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" /> Try Again
+                </button>
               </div>
             ) : filteredGroups.length === 0 ? (
               hubSubjects.length === 0 ? (

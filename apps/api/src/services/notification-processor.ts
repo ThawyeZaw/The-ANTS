@@ -105,6 +105,7 @@ export async function processNotificationQueue(
           chat_id: chatId,
           text,
           parse_mode: 'HTML',
+          ...(payload?.reply_markup ? { reply_markup: payload.reply_markup } : {}),
         }),
       });
 

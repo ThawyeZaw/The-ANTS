@@ -70,6 +70,9 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
   const {
     countdowns,
     availableExams,
+    isLoading,
+    loadError,
+    reload,
     createCountdown,
     updateCountdown,
     deleteCountdown,
@@ -332,6 +335,35 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
   const isAlreadyTracked = (examId: string) =>
     countdowns.some((c) => (c as any).exam_id === examId);
 
+  if (isLoading && countdowns.length === 0 && !loadError) {
+    return (
+      <div className="mx-auto w-full max-w-6xl space-y-4 animate-pulse py-8">
+        <div className="h-8 w-48 rounded-lg bg-background-secondary" />
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-36 rounded-2xl bg-background-secondary" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError && countdowns.length === 0) {
+    return (
+      <div className="mx-auto w-full max-w-lg py-16 text-center space-y-4">
+        <AlertCircle className="mx-auto h-8 w-8 text-destructive" />
+        <p className="text-sm text-foreground">{loadError}</p>
+        <button
+          type="button"
+          onClick={() => reload()}
+          className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto w-full max-w-6xl space-y-3.5">
       {/* ── Compact Header & Tab Switcher (Unified Row) ──────────────── */}
@@ -339,11 +371,11 @@ export function CountdownManager({ userId }: CountdownManagerProps) {
         {/* Left: Back + Title */}
         <div className="flex items-center gap-2.5">
           <Link
-            href="/dashboard"
+            href="/student"
             className="inline-flex items-center gap-1 text-xs font-semibold text-foreground-muted hover:text-foreground transition-colors"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            Dashboard
+            Study Hub
           </Link>
           <span className="h-3.5 w-px bg-border" aria-hidden />
           <h1 className="text-base sm:text-lg font-extrabold text-foreground tracking-tight">

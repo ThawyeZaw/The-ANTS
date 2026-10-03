@@ -112,6 +112,9 @@ export async function createEventAction(
   userId: string,
   data: TimetableEventFormData
 ): Promise<{ success: true; event: TimetableEvent } | { success: false; error: string }> {
+  const guard = await requireSessionUser(userId);
+  if (!guard.ok) return { success: false, error: guard.error };
+
   try {
     const db = getDb();
     const { time_mode, date, start_time, end_time, ...rest } = data;
@@ -176,6 +179,9 @@ export async function actionCreateTimetableEvent(
   userId: string,
   data: Partial<TimetableEvent> & { metadata?: any }
 ): Promise<{ success: boolean; event?: TimetableEvent; error?: string }> {
+  const guard = await requireSessionUser(userId);
+  if (!guard.ok) return { success: false, error: guard.error };
+
   try {
     const db = getDb();
     const startDate = data.start_time ? new Date(data.start_time) : new Date();
@@ -228,6 +234,9 @@ export async function updateEventAction(
   userId: string,
   data: TimetableEventFormData
 ): Promise<{ success: true; event: TimetableEvent } | { success: false; error: string }> {
+  const guard = await requireSessionUser(userId);
+  if (!guard.ok) return { success: false, error: guard.error };
+
   try {
     const db = getDb();
     const { time_mode, date, start_time, end_time, ...rest } = data;
@@ -288,6 +297,9 @@ export async function actionUpdateTimetableEvent(
   eventId: string,
   data: Partial<TimetableEvent> & { metadata?: any }
 ): Promise<{ success: boolean; event?: TimetableEvent; error?: string }> {
+  const guard = await requireSessionUser(userId);
+  if (!guard.ok) return { success: false, error: guard.error };
+
   try {
     const db = getDb();
     const baseId = eventId.includes('::') ? eventId.split('::')[0] : eventId;
@@ -341,6 +353,9 @@ export async function deleteEventAction(
   eventId: string,
   userId: string
 ): Promise<{ success: true } | { success: false; error: string }> {
+  const guard = await requireSessionUser(userId);
+  if (!guard.ok) return { success: false, error: guard.error };
+
   try {
     const db = getDb();
     const baseId = eventId.includes('::') ? eventId.split('::')[0] : eventId;
@@ -373,6 +388,9 @@ export async function toggleEventCompleteAction(
   eventId: string,
   userId: string
 ): Promise<{ success: true; event: TimetableEvent } | { success: false; error: string }> {
+  const guard = await requireSessionUser(userId);
+  if (!guard.ok) return { success: false, error: guard.error };
+
   try {
     const db = getDb();
     const baseId = eventId.includes('::') ? eventId.split('::')[0] : eventId;
@@ -412,12 +430,10 @@ export async function actionToggleTimetableEventComplete(
 ): Promise<{ success: boolean; event?: TimetableEvent; gamification?: AwardXpResult; error?: string }> {
   try {
     const guard = await requireSessionUser(userId);
-    // Sign-in cookie is set on the API origin, so this Next action often has no
-    // session cookie in local dev. The write stays scoped to the event owner.
-    if (!guard.ok && guard.error !== 'Unauthorized') {
+    if (!guard.ok) {
       return { success: false, error: guard.error };
     }
-    const actorId = guard.ok ? guard.userId : userId;
+    const actorId = guard.userId;
 
     const db = getDb();
     const baseId = eventId.includes('::') ? eventId.split('::')[0] : eventId;
@@ -497,6 +513,9 @@ export async function moveEventAction(
   newStartTime: string,
   newEndTime: string | null
 ): Promise<{ success: true; event: TimetableEvent } | { success: false; error: string }> {
+  const guard = await requireSessionUser(userId);
+  if (!guard.ok) return { success: false, error: guard.error };
+
   try {
     const db = getDb();
     const baseId = eventId.includes('::') ? eventId.split('::')[0] : eventId;

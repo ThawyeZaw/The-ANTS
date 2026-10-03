@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, profiles } from '@/lib/db';
 import { eq } from 'drizzle-orm';
+import { getSessionUser } from '@/lib/auth-session';
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
@@ -28,6 +29,21 @@ export async function POST(req: NextRequest) {
       { success: false, error: 'Missing chatId in request body' },
       { status: 400 }
     );
+  }
+
+  const session = await getSessionUser();
+  if (!session?.userId) {
+    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const db = getDb();
+  const profile = await db.query.profiles.findFirst({
+    where: eq(profiles.id, session.userId as any),
+    columns: { telegram_chat_id: true },
+  });
+
+  if (!profile?.telegram_chat_id || profile.telegram_chat_id !== body.chatId) {
+    return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
   }
 
   try {

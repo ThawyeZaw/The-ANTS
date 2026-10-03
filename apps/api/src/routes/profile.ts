@@ -8,6 +8,7 @@ import {
   canViewPublicProfile,
   normalizeProfileRoles,
 } from '@the-ants/shared-types';
+import { createAuthMiddleware } from '../middleware/session';
 
 /** Case-insensitive equality for D1/SQLite (Postgres ILIKE is unsupported). */
 function iEqual(column: AnyColumn, value: string): SQL {
@@ -16,30 +17,18 @@ function iEqual(column: AnyColumn, value: string): SQL {
 
 export function createProfileRoutes(getDb: (c?: unknown) => ReturnType<typeof createDb>) {
   const router = new Hono();
+  const requireAuth = createAuthMiddleware((c) => getDb(c));
 
-  // 1. Get profile for a user
-  router.get('/me', async (c) => {
+  // 1. Get profile for authenticated user
+  router.get('/me', requireAuth, async (c) => {
     const db = getDb(c);
-    const userId = c.req.query('userId');
-    const email = c.req.query('email');
-
-    if (!userId && !email) {
-      return c.json({ error: 'Missing userId or email parameter' }, 400);
-    }
+    const sessionUser = c.get('sessionUser');
+    const userId = sessionUser.id;
 
     try {
       const profile = await db.query.profiles.findFirst({
-        where: userId
-          ? eq(profiles.id, userId as any)
-          : eq(profiles.email, email as string),
+        where: eq(profiles.id, userId as any),
       });
-
-      if (!profile && userId && email) {
-        const byEmail = await db.query.profiles.findFirst({
-          where: eq(profiles.email, email),
-        });
-        if (byEmail) return c.json({ profile: byEmail });
-      }
 
       if (!profile) {
         return c.json({ profile: null }, 404);
@@ -52,14 +41,16 @@ export function createProfileRoutes(getDb: (c?: unknown) => ReturnType<typeof cr
   });
 
   // 2. Update profile
-  router.put('/me', async (c) => {
+  router.put('/me', requireAuth, async (c) => {
     const db = getDb(c);
+    const sessionUser = c.get('sessionUser');
+    const effectiveUserId = sessionUser.id;
 
     // Permissive schema: preserves the camelCase/snake_case alias contract while
     // validating types and stripping unknown fields (prevents mass-assignment).
     const UpdateSchema = z
       .object({
-        userId: z.string().uuid(),
+        userId: z.string().optional(),
         name: z.string().optional(),
         title: z.string().nullable().optional(),
         bio: z.string().nullable().optional(),
@@ -105,7 +96,7 @@ export function createProfileRoutes(getDb: (c?: unknown) => ReturnType<typeof cr
       return c.json({ error: parsed.error.format() }, 400);
     }
 
-    const { userId, ...updates } = parsed.data;
+    const { userId: _clientUserId, ...updates } = parsed.data;
 
     try {
       const setPayload: Record<string, any> = {
@@ -166,10 +157,10 @@ export function createProfileRoutes(getDb: (c?: unknown) => ReturnType<typeof cr
       await db
         .update(profiles)
         .set(setPayload)
-        .where(eq(profiles.id, userId as any));
+        .where(eq(profiles.id, effectiveUserId as any));
 
       const updated = await db.query.profiles.findFirst({
-        where: eq(profiles.id, userId as any),
+        where: eq(profiles.id, effectiveUserId as any),
       });
 
       return c.json({ profile: updated });

@@ -11,7 +11,7 @@
 import { useState, type FormEvent } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Mail,
   Lock,
@@ -36,6 +36,8 @@ import GoogleSignInButton from './GoogleSignInButton';
 export default function SignupForm() {
   const { signup } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextUrl = searchParams.get('next') || '/student';
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -103,8 +105,8 @@ export default function SignupForm() {
       return;
     }
 
-    // Auto sign-in succeeds -> route to dashboard
-    router.push('/dashboard');
+    // Auto sign-in succeeds -> route to next destination or default student hub
+    router.push(nextUrl);
   };
 
   const handleResend = async () => {
@@ -348,7 +350,7 @@ export default function SignupForm() {
           <div className="mt-5">
             <GoogleSignInButton
               id="signup-google"
-              callbackURL="/dashboard"
+              callbackURL="/student"
               onError={(message) => setErrors((prev) => ({ ...prev, form: message }))}
             />
           </div>
@@ -362,8 +364,14 @@ export default function SignupForm() {
 
           <p className="text-center text-xs text-foreground-muted mt-3">
             By creating an account you agree to our{' '}
-            <span className="text-foreground-secondary">Terms of Service</span> and{' '}
-            <span className="text-foreground-secondary">Privacy Policy</span>.
+            <Link href="/terms" className="text-primary hover:underline">
+              Terms of Service
+            </Link>{' '}
+            and{' '}
+            <Link href="/privacy" className="text-primary hover:underline">
+              Privacy Policy
+            </Link>
+            .
           </p>
         </div>
       </div>

@@ -59,7 +59,7 @@ const EVENT_TYPE_LABELS: Record<string, string> = {
   exam: 'Exam',
   break: 'Break',
   deadline: 'Deadline',
-  club_event: 'Club Event',
+  club_event: 'Extracurricular / Activity',
 };
 
 export default function EventModal({

@@ -1,5 +1,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
+import { createDb } from '@the-ants/db';
+import { createAuthMiddleware } from '../middleware/session';
 
 const ALLOWED_BUCKETS = ['avatars', 'certificates', 'resources', 'attachments', 'timeline-images'] as const;
 const MAX_SIZE_BYTES = 50 * 1024 * 1024; // 50MB
@@ -30,11 +32,12 @@ function buildPublicUrl(c: { req: { url: string } }, env: StorageBindings, bucke
   return `${origin}/api/storage/file/${bucket}/${fileName}`;
 }
 
-export function createStorageRoutes() {
+export function createStorageRoutes(getDb: (c?: any) => ReturnType<typeof createDb>) {
   const router = new Hono<StorageEnv>();
+  const requireAuth = createAuthMiddleware((c) => getDb(c));
 
-  // Presigned upload URL generator for Cloudflare R2
-  router.post('/presigned-url', async (c) => {
+  // Presigned upload URL generator for Cloudflare R2 (Guarded: Authenticated users only)
+  router.post('/presigned-url', requireAuth, async (c) => {
     const body = await c.req.json();
 
     const PresignedSchema = z.object({
@@ -63,9 +66,9 @@ export function createStorageRoutes() {
     });
   });
 
-  // Binary upload endpoint — streams the file into the R2 ASSETS_BUCKET binding.
+  // Binary upload endpoint — streams the file into the R2 ASSETS_BUCKET binding (Guarded: Authenticated users only)
   // Contract: POST /api/storage/upload/:bucket/:fileName with the raw file as body.
-  router.post('/upload/:bucket/:fileName', async (c) => {
+  router.post('/upload/:bucket/:fileName', requireAuth, async (c) => {
     const bucket = c.req.param('bucket') as (typeof ALLOWED_BUCKETS)[number];
     const fileNameParam = c.req.param('fileName');
 

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { eq, desc } from 'drizzle-orm';
 import { createDb, profiles, user, roleUpgradeRequests } from '@the-ants/db';
 import type { UserRole } from '@the-ants/shared-types';
+import { createAdminMiddleware, createModeratorMiddleware } from '../middleware/session';
 
 export const ROLE_HIERARCHY: Record<UserRole, number> = {
   student: 0,
@@ -13,8 +14,10 @@ export const ROLE_HIERARCHY: Record<UserRole, number> = {
   admin: 4,
 };
 
-export function createRoleUpgradeRoutes(getDb: () => ReturnType<typeof createDb>) {
+export function createRoleUpgradeRoutes(getDb: (c?: any) => ReturnType<typeof createDb>) {
   const router = new Hono();
+  const requireAdmin = createAdminMiddleware((c) => getDb(c));
+  const requireModerator = createModeratorMiddleware((c) => getDb(c));
 
   // 1. Submit a role upgrade application (Deprecated — Role assignments are managed by Admins)
   router.post('/apply', async (c) => {
@@ -27,13 +30,14 @@ export function createRoleUpgradeRoutes(getDb: () => ReturnType<typeof createDb>
     );
   });
 
-  // 2. Review role upgrade application (Guarded: Main Contributor only)
-  router.post('/review', async (c) => {
-    const db = getDb();
+  // 2. Review role upgrade application (Guarded: Main Contributor / Admin only)
+  router.post('/review', requireModerator, async (c) => {
+    const db = getDb(c);
+    const sessionUser = c.get('sessionUser');
+    const reviewerId = sessionUser.id;
     const body = await c.req.json();
 
     const ReviewSchema = z.object({
-      reviewerId: z.string().uuid(),
       requestId: z.string().uuid(),
       action: z.enum(['approve', 'reject']),
       reviewerNotes: z.string().optional(),
@@ -44,16 +48,7 @@ export function createRoleUpgradeRoutes(getDb: () => ReturnType<typeof createDb>
       return c.json({ error: parsed.error.format() }, 400);
     }
 
-    const { reviewerId, requestId, action, reviewerNotes } = parsed.data;
-
-    // Verify reviewer is main_contributor / admin
-    const reviewerProfile = await db.query.profiles.findFirst({
-      where: eq(profiles.id, reviewerId),
-    });
-
-    if (!reviewerProfile || (reviewerProfile.role !== 'main_contributor' && reviewerProfile.role !== 'admin')) {
-      return c.json({ error: 'Unauthorized: Only main_contributors/admins can review role upgrade requests' }, 403);
-    }
+    const { requestId, action, reviewerNotes } = parsed.data;
 
     // Find request
     const request = await db.query.roleUpgradeRequests.findFirst({
@@ -116,13 +111,14 @@ export function createRoleUpgradeRoutes(getDb: () => ReturnType<typeof createDb>
     });
   });
 
-  // 3. Direct user promotion (Guarded: Main Contributor only)
-  router.post('/promote', async (c) => {
-    const db = getDb();
+  // 3. Direct user promotion (Guarded: Main Contributor / Admin only)
+  router.post('/promote', requireModerator, async (c) => {
+    const db = getDb(c);
+    const sessionUser = c.get('sessionUser');
+    const promoterId = sessionUser.id;
     const body = await c.req.json();
 
     const PromoteSchema = z.object({
-      promoterId: z.string().uuid(),
       targetUserId: z.string().uuid(),
       newRole: z.enum(['teacher', 'contributor', 'main_contributor']),
     });
@@ -132,16 +128,7 @@ export function createRoleUpgradeRoutes(getDb: () => ReturnType<typeof createDb>
       return c.json({ error: parsed.error.format() }, 400);
     }
 
-    const { promoterId, targetUserId, newRole } = parsed.data;
-
-    // Verify promoter is main_contributor / admin
-    const promoterProfile = await db.query.profiles.findFirst({
-      where: eq(profiles.id, promoterId),
-    });
-
-    if (!promoterProfile || (promoterProfile.role !== 'main_contributor' && promoterProfile.role !== 'admin')) {
-      return c.json({ error: 'Unauthorized: Only main_contributors/admins can directly promote users' }, 403);
-    }
+    const { targetUserId, newRole } = parsed.data;
 
     const targetProfile = await db.query.profiles.findFirst({
       where: eq(profiles.id, targetUserId),
@@ -188,8 +175,8 @@ export function createRoleUpgradeRoutes(getDb: () => ReturnType<typeof createDb>
     });
   });
 
-  router.get('/users', async (c) => {
-    const db = getDb();
+  router.get('/users', requireAdmin, async (c) => {
+    const db = getDb(c);
     try {
       const rows = await db
         .select({
@@ -217,8 +204,8 @@ export function createRoleUpgradeRoutes(getDb: () => ReturnType<typeof createDb>
     }
   });
 
-  router.put('/roles', async (c) => {
-    const db = getDb();
+  router.put('/roles', requireAdmin, async (c) => {
+    const db = getDb(c);
     const body = await c.req.json();
     const parsed = z
       .object({

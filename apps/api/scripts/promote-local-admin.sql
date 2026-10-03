@@ -1,7 +1,8 @@
--- Promote thawyezaw@gmail.com to admin in local D1 (run via npm run promote-admin:local)
+-- Promote local user to admin in local D1 (run via npm run promote-admin:local)
+-- Set ADMIN_EMAIL before executing, default: admin@the-ants.local
 UPDATE user
 SET role = 'admin', updated_at = CAST(unixepoch() * 1000 AS INTEGER)
-WHERE lower(email) = 'thawyezaw@gmail.com';
+WHERE lower(email) = 'admin@the-ants.local';
 
 INSERT INTO profiles (
   id,
@@ -20,7 +21,7 @@ SELECT
   u.id,
   u.email,
   u.name,
-  'thawyezaw',
+  'admin_local',
   CAST(unixepoch() * 1000 AS INTEGER),
   CAST(unixepoch() * 1000 AS INTEGER),
   'admin',
@@ -29,7 +30,7 @@ SELECT
   1,
   'UTC'
 FROM user u
-WHERE lower(u.email) = 'thawyezaw@gmail.com'
+WHERE lower(u.email) = 'admin@the-ants.local'
   AND NOT EXISTS (SELECT 1 FROM profiles p WHERE p.id = u.id);
 
 UPDATE profiles
@@ -38,4 +39,4 @@ SET
   roles = '["admin"]',
   is_public = 1,
   updated_at = CAST(unixepoch() * 1000 AS INTEGER)
-WHERE lower(email) = 'thawyezaw@gmail.com';
+WHERE lower(email) = 'admin@the-ants.local';

@@ -186,6 +186,9 @@ export async function savePomodoroSettingsAction(
   settings: PomodoroSettings,
 ): Promise<{ success: true } | { success: false; error: string }> {
   try {
+    const guard = await requireSessionUser(userId);
+    if (!guard.ok) return { success: false, error: guard.error };
+
     const db = getDb();
     await db
       .insert(pomodoroUserSettings)

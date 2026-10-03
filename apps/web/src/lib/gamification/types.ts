@@ -1,6 +1,6 @@
 import type { BadgeDefinition } from './badges';
 
-export type XpSource = 'past_paper' | 'pomodoro' | 'lesson' | 'timetable';
+export type XpSource = 'past_paper' | 'pomodoro' | 'lesson' | 'timetable' | 'onboarding';
 
 export interface AwardXpResult {
   success: boolean;
