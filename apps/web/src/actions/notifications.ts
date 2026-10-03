@@ -284,7 +284,7 @@ export const actionEnqueueExamReminders = actionEnqueueExamCountdownReminders;
 
 // ── Enqueue: Daily Study Reminders (8:30 AM & 9:00 PM) ─────────────────────────
 
-export function getNextDailyReminderUtc(
+function getNextDailyReminderUtc(
   targetHour: number,
   targetMinute: number,
   timeZone = 'Asia/Yangon'
