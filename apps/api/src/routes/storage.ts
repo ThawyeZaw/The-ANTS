@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { createDb } from '@the-ants/db';
 import { createAuthMiddleware } from '../middleware/session';
 
-const ALLOWED_BUCKETS = ['avatars', 'certificates', 'resources', 'attachments', 'timeline-images'] as const;
+const ALLOWED_BUCKETS = ['avatars', 'certificates', 'resources', 'attachments', 'timeline-images', 'syllabuses'] as const;
 const MAX_SIZE_BYTES = 50 * 1024 * 1024; // 50MB
 
 type StorageBindings = {
@@ -41,7 +41,7 @@ export function createStorageRoutes(getDb: (c?: any) => ReturnType<typeof create
     const body = await c.req.json();
 
     const PresignedSchema = z.object({
-      bucket: z.enum(['avatars', 'certificates', 'resources', 'attachments', 'timeline-images']),
+      bucket: z.enum(['avatars', 'certificates', 'resources', 'attachments', 'timeline-images', 'syllabuses']),
       fileName: z.string().min(1),
       contentType: z.string().min(1),
       sizeBytes: z.number().max(50 * 1024 * 1024), // 50MB max
@@ -66,10 +66,21 @@ export function createStorageRoutes(getDb: (c?: any) => ReturnType<typeof create
     });
   });
 
-  // Binary upload endpoint — streams the file into the R2 ASSETS_BUCKET binding (Guarded: Authenticated users only)
+  // Binary upload endpoint — streams the file into the R2 ASSETS_BUCKET binding
+  // Guarded: Authenticated users OR Bearer CRON_SECRET internal token
   // Contract: POST /api/storage/upload/:bucket/:fileName with the raw file as body.
-  router.post('/upload/:bucket/:fileName', requireAuth, async (c) => {
-    const bucket = c.req.param('bucket') as (typeof ALLOWED_BUCKETS)[number];
+  router.post(
+    '/upload/:bucket/:fileName',
+    async (c, next) => {
+      const authHeader = c.req.header('Authorization');
+      const cronSecret = (c.env as any)?.CRON_SECRET || process.env.CRON_SECRET;
+      if (cronSecret && authHeader === `Bearer ${cronSecret}`) {
+        return next();
+      }
+      return requireAuth(c, next);
+    },
+    async (c) => {
+      const bucket = c.req.param('bucket') as (typeof ALLOWED_BUCKETS)[number];
     const fileNameParam = c.req.param('fileName');
 
     if (!ALLOWED_BUCKETS.includes(bucket)) {

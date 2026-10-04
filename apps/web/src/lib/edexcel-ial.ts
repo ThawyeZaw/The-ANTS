@@ -55,6 +55,8 @@ export interface GroupedSubject<T extends BaseSubject> {
   enrolledUnitsCount: number;
   /** Optional qualification data (from maths suite parent) */
   qualification_data?: any;
+  /** Direct syllabus / specification URL */
+  syllabus_url?: string | null;
 }
 
 export const EDEXCEL_IAL_PREFIX = 'subj-edx-ial-';
@@ -113,6 +115,7 @@ export function applyMathFmCombineRule<T extends BaseSubject>(
     isEnrolled: true,
     enrolledUnitsCount: (math.enrolledUnitsCount ?? 0) + (fm.enrolledUnitsCount ?? 0),
     qualification_data: math.qualification_data ?? fm.qualification_data,
+    syllabus_url: math.syllabus_url ?? fm.syllabus_url ?? null,
   };
 
   const options = [
@@ -256,6 +259,7 @@ export function groupEdexcelIalSubjects<T extends BaseSubject>(subjects: T[]): G
         isEnrolled: Boolean(subject.isEnrolled),
         enrolledUnitsCount: subject.isEnrolled ? 1 : 0,
         qualification_data: subject.qualification_data,
+        syllabus_url: subject.syllabus_url ?? null,
       });
       continue;
     }
@@ -331,6 +335,7 @@ export function groupEdexcelIalSubjects<T extends BaseSubject>(subjects: T[]): G
         isEnrolled: false,
         enrolledUnitsCount: 0,
         qualification_data: null,
+        syllabus_url: subject.syllabus_url ?? null,
       };
       ialGroups.set(finalGroupId, group);
     }
@@ -354,6 +359,9 @@ export function groupEdexcelIalSubjects<T extends BaseSubject>(subjects: T[]): G
     if (group.title === 'Mathematics' && mathsSuiteParent) {
       group.qualification_data = mathsSuiteParent.qualification_data;
       group.primarySubjectId = group.id;
+      if (mathsSuiteParent.syllabus_url) {
+        group.syllabus_url = mathsSuiteParent.syllabus_url;
+      }
       if (mathsSuiteParent.description) {
         group.description = mathsSuiteParent.description;
       }

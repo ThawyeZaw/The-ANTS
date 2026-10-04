@@ -20,6 +20,7 @@ import {
   Eye,
   EyeOff,
   X,
+  FileText,
 } from 'lucide-react';
 import { type TopicWithProgress, updateTopicProgress, toggleSubtopicProgress } from '@/actions/curriculum';
 import {
@@ -37,6 +38,8 @@ interface TopicTrackerProps {
   subjectId: string;
   userId: string;
   initialTopics: TopicWithProgress[];
+  syllabusUrl?: string | null;
+  onViewSyllabus?: () => void;
   onTopicChange?: () => void;
 }
 
@@ -85,6 +88,8 @@ export function TopicTracker({
   subjectId,
   userId,
   initialTopics,
+  syllabusUrl: _syllabusUrl,
+  onViewSyllabus,
   onTopicChange,
 }: TopicTrackerProps) {
   const [topics, setTopics] = useState<TopicWithProgress[]>(initialTopics);
@@ -567,6 +572,19 @@ export function TopicTracker({
                 </button>
               ))}
             </div>
+
+            {/* Quick Syllabus Specification Reference Button */}
+            {onViewSyllabus && (
+              <button
+                type="button"
+                onClick={onViewSyllabus}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background-secondary px-2.5 py-1 text-xs font-semibold text-foreground-secondary hover:text-foreground hover:border-primary/40 transition-colors cursor-pointer"
+                title="View Official Syllabus Specification"
+              >
+                <FileText className="h-3.5 w-3.5 text-primary" />
+                <span>Syllabus</span>
+              </button>
+            )}
 
             {/* Modular Units Dropdown (like PaperGrid's Rows button) */}
             {availableUnits.length > 1 && (
