@@ -161,30 +161,60 @@ function IalGroupCard({ group }: { group: ReturnType<typeof groupEdexcelIalSubje
 }
 
 // ── Main panel ────────────────────────────────────────────────────────────────
-export function DashboardSubjectsPanel() {
-  const { user } = useAuth();
-  const [subjects, setSubjects] = useState<HubSubject[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+export interface DashboardSubjectsPanelProps {
+  subjects?: HubSubject[];
+  loading?: boolean;
+  loadError?: string | null;
+  onRetry?: () => void;
+}
+
+export function DashboardSubjectsPanel({
+  subjects: propSubjects,
+  loading: propLoading,
+  loadError: propError,
+  onRetry: propRetry,
+}: DashboardSubjectsPanelProps = {}) {
+  const { user, isLoading: authLoading } = useAuth();
+  const [internalSubjects, setInternalSubjects] = useState<HubSubject[]>([]);
+  const [internalLoading, setInternalLoading] = useState(true);
+  const [internalError, setInternalError] = useState<string | null>(null);
+
+  const isControlled = propSubjects !== undefined;
+  const subjects = isControlled ? propSubjects : internalSubjects;
+  const loading = isControlled ? Boolean(propLoading) : internalLoading;
+  const loadError = isControlled ? (propError ?? null) : internalError;
 
   const loadSubjects = () => {
-    if (!user) return;
-    setLoading(true);
-    setLoadError(null);
+    if (propRetry) {
+      propRetry();
+      return;
+    }
+    if (!user) {
+      if (!authLoading) {
+        setInternalSubjects([]);
+        setInternalLoading(false);
+      }
+      return;
+    }
+    setInternalLoading(true);
+    setInternalError(null);
     getMySubjectsHub(user.id)
       .then((res) => {
-        setSubjects(res.subjects);
+        setInternalSubjects(res.subjects ?? []);
       })
-      .catch(() => {
-        setLoadError('Could not load your subjects. Check your connection and try again.');
-        setSubjects([]);
+      .catch((err) => {
+        console.error('[DashboardSubjectsPanel] getMySubjectsHub error:', err);
+        setInternalError('Could not load your subjects. Check your connection and try again.');
+        setInternalSubjects([]);
       })
-      .finally(() => setLoading(false));
+      .finally(() => setInternalLoading(false));
   };
 
   useEffect(() => {
-    loadSubjects();
-  }, [user]);
+    if (!isControlled && !authLoading) {
+      loadSubjects();
+    }
+  }, [isControlled, authLoading, user?.id]);
 
   if (loading) {
     return (

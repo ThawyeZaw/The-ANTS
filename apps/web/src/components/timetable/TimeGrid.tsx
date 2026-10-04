@@ -26,6 +26,8 @@ interface TimeGridProps {
   isDragging?: boolean;
   selectedDate?: Date;
   slotHeight?: number;
+  colWidth?: number;
+  onPinchZoom?: (delta: number) => void;
   inlineCreate?: InlineSlot | null;
   onSlotClick: (date: Date, time: string) => void;
   onEditEvent: (event: TimetableEvent) => void;
@@ -126,6 +128,8 @@ export default function TimeGrid({
   events,
   selectedDate,
   slotHeight = TIME_GRID_SLOT,
+  colWidth,
+  onPinchZoom,
   inlineCreate,
   onSlotClick,
   onEditEvent,
@@ -142,16 +146,50 @@ export default function TimeGrid({
   const today = new Date();
   const hours = DAY_HOURS;
   const startHour = 0;
-  const columns = `3.25rem repeat(${days.length}, minmax(${days.length > 1 ? '5.5rem' : '0px'}, 1fr))`;
+  const minCol = colWidth ? `${colWidth}px` : (days.length > 1 ? '5.5rem' : '0px');
+  const columns = `3.25rem repeat(${days.length}, minmax(${minCol}, 1fr))`;
+  const gridMinWidth = days.length > 1 ? (colWidth ? (colWidth * days.length + 56) : 760) : undefined;
 
   const dayKey = days.map((day) => formatDateKey(day)).join('|');
   useEffect(() => {
     const node = scrollerRef.current;
     if (!node) return;
-    node.scrollTop = DEFAULT_VIEW_HOUR * slotHeight;
-    // Open on 8:00. Zoom changes hour height without jumping back to 8:00.
+    const currentHour = new Date().getHours();
+    const targetHour = Math.max(0, currentHour - 1);
+    node.scrollTop = targetHour * slotHeight;
+    // Auto-scroll near current time.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dayKey]);
+
+  // Touch pinch gesture handler
+  const touchDistRef = useRef<number | null>(null);
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && onPinchZoom) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      touchDistRef.current = dist;
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && touchDistRef.current !== null && onPinchZoom) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const delta = dist - touchDistRef.current;
+      if (Math.abs(delta) > 15) {
+        onPinchZoom(delta > 0 ? 10 : -10);
+        touchDistRef.current = dist;
+      }
+    }
+  };
+
+  const handleTouchEnd = () => {
+    touchDistRef.current = null;
+  };
 
   const editorKey = editor
     ? editor.kind === 'edit'
@@ -180,8 +218,14 @@ export default function TimeGrid({
   }, [days, events]);
 
   return (
-    <div ref={scrollerRef} className="h-full overflow-auto pb-24">
-      <div style={{ minWidth: days.length > 1 ? 760 : undefined }}>
+    <div
+      ref={scrollerRef}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      className="h-full overflow-auto pb-24 touch-pan-x touch-pan-y"
+    >
+      <div style={{ minWidth: gridMinWidth }}>
         {days.length > 1 && (
         <div
           className="sticky top-0 z-10 grid border-b border-border bg-background"

@@ -132,6 +132,23 @@ export function ScholarQuickStartChecklist({ userId, onXpAwarded }: ScholarQuick
     void refresh();
   }, [isLoaded, dismissed, refresh]);
 
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      return localStorage.getItem(`ants_checklist_collapsed_${userId}`) === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleCollapse = () => {
+    const next = !collapsed;
+    setCollapsed(next);
+    try {
+      localStorage.setItem(`ants_checklist_collapsed_${userId}`, String(next));
+    } catch {}
+  };
+
   const handleDismiss = () => {
     setDismissed(true);
     try {
@@ -147,6 +164,43 @@ export function ScholarQuickStartChecklist({ userId, onXpAwarded }: ScholarQuick
   const totalTasks = TASKS.length;
   const progressPercent = Math.round((completedCount / totalTasks) * 100);
   const allDone = completedCount === totalTasks;
+
+  // Auto-hide once all tasks are complete
+  if (allDone) return null;
+
+  if (collapsed) {
+    return (
+      <div className="flex items-center justify-between rounded-2xl border border-primary/20 bg-background-card px-4 py-2.5 shadow-xs">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <Sparkles className="h-4 w-4 text-primary shrink-0" />
+          <p className="text-xs font-semibold text-foreground truncate">
+            Quick-Start Checklist: <span className="font-normal text-foreground-muted">{completedCount}/{totalTasks} done</span>
+          </p>
+          <span className="text-[10px] font-mono font-bold text-primary px-1.5 py-0.5 rounded bg-primary/10 shrink-0">
+            {progressPercent}%
+          </span>
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            type="button"
+            onClick={toggleCollapse}
+            className="text-xs font-semibold text-primary hover:underline px-2 py-1"
+          >
+            Show
+          </button>
+          <button
+            type="button"
+            onClick={handleDismiss}
+            title="Dismiss checklist"
+            aria-label="Dismiss checklist"
+            className="p-1 rounded-lg text-foreground-muted hover:text-foreground"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative overflow-hidden rounded-3xl border border-primary/25 bg-background-card p-5 sm:p-6 shadow-xs transition-all duration-200">
@@ -171,15 +225,24 @@ export function ScholarQuickStartChecklist({ userId, onXpAwarded }: ScholarQuick
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={handleDismiss}
-            title="Dismiss checklist"
-            aria-label="Dismiss checklist"
-            className="p-1.5 rounded-xl text-foreground-muted hover:text-foreground hover:bg-background-secondary transition-colors"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              type="button"
+              onClick={toggleCollapse}
+              className="text-xs font-semibold text-foreground-muted hover:text-foreground px-2 py-1 rounded-lg hover:bg-background-secondary transition-colors"
+            >
+              Minimize
+            </button>
+            <button
+              type="button"
+              onClick={handleDismiss}
+              title="Dismiss checklist"
+              aria-label="Dismiss checklist"
+              className="p-1.5 rounded-xl text-foreground-muted hover:text-foreground hover:bg-background-secondary transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         <div className="space-y-1.5 pt-1">
