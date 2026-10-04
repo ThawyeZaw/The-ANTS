@@ -43,6 +43,7 @@ SEED_ORDER = [
     "0036_fix_caie_igcse_component_codes.sql",
     "0037_caie_igcse_astar_overall_only.sql",
     "0038_caie_igcse_2026_subject_composites.sql",
+    "0039_complete_all_topics_and_subtopics.sql",
 ]
 
 

@@ -98,6 +98,7 @@ export interface SubjectWithProgress {
   subject_type: string | null;
   /** JSON string or parsed object — only present for modular_maths_suite parents */
   qualification_data: string | Record<string, any> | null;
+  syllabus_url: string | null;
   topicCount: number;
   completedTopics: number;
   paperCount: number;
@@ -403,6 +404,7 @@ export async function getSubjectsByCurriculum(
           created_at: true,
           subject_type: true,
           qualification_data: true,
+          syllabus_url: true,
         },
         orderBy: [asc(subjects.name)],
       }),
@@ -446,6 +448,7 @@ export async function getSubjectsByCurriculum(
         isEnrolled: Boolean(enroll),
         subject_type: s.subject_type ?? null,
         qualification_data: (s.qualification_data as Record<string, any> | string) ?? null,
+        syllabus_url: s.syllabus_url ?? null,
         target_series: enroll?.target_series ?? null,
         target_grade: enroll?.target_grade ?? null,
         tier: enroll?.tier ?? null,
@@ -1862,6 +1865,7 @@ export async function getMySubjectsHub(userId: string): Promise<{
               color_code: true,
               subject_type: true,
               qualification_data: true,
+              syllabus_url: true,
               created_at: true,
             },
           },
@@ -1925,6 +1929,7 @@ export async function getMySubjectsHub(userId: string): Promise<{
         isEnrolled: true,
         subject_type: subj?.subject_type ?? null,
         qualification_data: (subj?.qualification_data as Record<string, any> | string) ?? null,
+        syllabus_url: subj?.syllabus_url ?? null,
         target_series: e.target_series ?? defaultExamSeries,
         target_grade: e.target_grade ?? null,
         tier: e.tier ?? null,

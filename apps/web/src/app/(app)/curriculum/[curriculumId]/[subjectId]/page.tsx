@@ -9,7 +9,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { BookOpen, GraduationCap, ArrowLeft, Calculator, Timer } from 'lucide-react';
+import { BookOpen, GraduationCap, ArrowLeft, Calculator, Timer, FileText } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import {
   getSubjectsByCurriculum,
@@ -18,6 +18,7 @@ import {
   type TopicWithProgress,
 } from '@/actions/curriculum';
 import { TopicTracker } from '@/components/curriculum/TopicTracker';
+import { SyllabusSpecTab } from '@/components/curriculum/SyllabusSpecTab';
 import { groupEdexcelIalSubjects, isIalVirtualGroupId, applyMathFmCombineRule, IAL_MATH_FM_COMBINED_ID } from '@/lib/edexcel-ial';
 
 const CURRICULUM_LABELS: Record<string, string> = {
@@ -38,6 +39,7 @@ export default function SubjectDetailPage() {
   const [subjectNotFound, setSubjectNotFound] = useState(false);
   const [topics, setTopics] = useState<TopicWithProgress[]>([]);
   const [loadingTopics, setLoadingTopics] = useState(true);
+  const [activeTab, setActiveTab] = useState<'topics' | 'syllabus'>('topics');
 
   // Load subject metadata & topics (initial mount only)
   const loadSubjectData = useCallback(async (showLoader = true) => {
@@ -89,6 +91,7 @@ export default function SubjectDetailPage() {
                 ? 'modular_maths_suite'
                 : null,
             qualification_data: group.qualification_data,
+            syllabus_url: group.syllabus_url ?? null,
             topicCount: group.topicCount,
             completedTopics: group.completedTopics,
             paperCount: group.paperCount,
@@ -213,6 +216,19 @@ export default function SubjectDetailPage() {
           </div>
           {subject && (
             <div className="hidden sm:flex items-center gap-1.5 shrink-0">
+              {subject.syllabus_url && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('syllabus')}
+                  className={`inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-xs font-semibold transition-colors shadow-2xs cursor-pointer ${
+                    activeTab === 'syllabus'
+                      ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold'
+                      : 'border-border bg-background-secondary/50 hover:border-primary/40 text-foreground'
+                  }`}
+                >
+                  <FileText className="h-3.5 w-3.5 text-emerald-500" /> Syllabus PDF
+                </button>
+              )}
               <Link
                 href={`/past-papers?subject=${subject.id}`}
                 className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background-secondary/50 px-2.5 py-1.5 text-xs font-semibold hover:border-primary/40 text-foreground transition-colors shadow-2xs"
@@ -238,6 +254,19 @@ export default function SubjectDetailPage() {
         {/* Mobile quick action buttons */}
         {subject && (
           <div className="flex sm:hidden flex-wrap gap-1.5 -mt-3">
+            {subject.syllabus_url && (
+              <button
+                type="button"
+                onClick={() => setActiveTab('syllabus')}
+                className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-semibold transition-colors cursor-pointer ${
+                  activeTab === 'syllabus'
+                    ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                    : 'border-border bg-background-secondary/50 hover:border-primary/40 text-foreground'
+                }`}
+              >
+                <FileText className="h-3 w-3 text-emerald-500" /> Syllabus
+              </button>
+            )}
             <Link
               href={`/past-papers?subject=${subject.id}`}
               className="inline-flex items-center gap-1 rounded-lg border border-border bg-background-secondary/50 px-2 py-1 text-[11px] font-semibold hover:border-primary/40 text-foreground transition-colors"
@@ -259,25 +288,76 @@ export default function SubjectDetailPage() {
           </div>
         )}
 
-        {/* Topic Tracker */}
-        <div>
-          {loadingTopics ? (
-            <div className="flex items-center justify-center py-16">
-              <div className="h-8 w-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-            </div>
-          ) : (
-            <TopicTracker
-              curriculumId={curriculumId}
-              subjectId={subjectId}
-              userId={user?.id ?? ''}
-              initialTopics={topics}
-              onTopicChange={() => {
-                // TopicTracker already manages topic status optimistically.
-                // Background sync happens silently with zero screen reload.
-              }}
-            />
-          )}
+        {/* Workspace Navigation Tabs */}
+        <div className="flex items-center gap-2 border-b border-border pb-px">
+          <button
+            type="button"
+            onClick={() => setActiveTab('topics')}
+            className={`inline-flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-semibold border-b-2 transition-all cursor-pointer ${
+              activeTab === 'topics'
+                ? 'border-primary text-primary font-bold'
+                : 'border-transparent text-foreground-muted hover:text-foreground'
+            }`}
+          >
+            <BookOpen className="h-4 w-4" />
+            <span>Topic Tracker</span>
+            {topics.length > 0 && (
+              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-background-secondary border border-border text-foreground-muted">
+                {topics.length}
+              </span>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('syllabus')}
+            className={`inline-flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-semibold border-b-2 transition-all cursor-pointer ${
+              activeTab === 'syllabus'
+                ? 'border-primary text-primary font-bold'
+                : 'border-transparent text-foreground-muted hover:text-foreground'
+            }`}
+          >
+            <FileText className="h-4 w-4 text-emerald-500" />
+            <span>Syllabus & Specification</span>
+            {subject?.syllabus_url && (
+              <span className="text-[10px] font-semibold font-mono px-1.5 py-0.2 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                OFFICIAL
+              </span>
+            )}
+          </button>
         </div>
+
+        {/* Tab Content */}
+        {activeTab === 'syllabus' ? (
+          <SyllabusSpecTab
+            subjectName={subject?.name ?? 'Subject'}
+            subjectCode={subject?.code ?? ''}
+            curriculumLabel={curriculumLabel}
+            syllabusUrl={subject?.syllabus_url}
+            colorCode={subject?.color_code}
+            onSwitchToTracker={() => setActiveTab('topics')}
+          />
+        ) : (
+          <div>
+            {loadingTopics ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="h-8 w-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+              </div>
+            ) : (
+              <TopicTracker
+                curriculumId={curriculumId}
+                subjectId={subjectId}
+                userId={user?.id ?? ''}
+                initialTopics={topics}
+                syllabusUrl={subject?.syllabus_url}
+                onViewSyllabus={() => setActiveTab('syllabus')}
+                onTopicChange={() => {
+                  // TopicTracker already manages topic status optimistically.
+                  // Background sync happens silently with zero screen reload.
+                }}
+              />
+            )}
+          </div>
+        )}
           </>
         )}
       </div>
