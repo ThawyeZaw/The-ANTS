@@ -8,7 +8,7 @@ import { listExamCountdownsForUser } from '@/actions/exam-data';
 import { awardXp, XP_AMOUNTS } from '@/lib/gamification/award';
 import type { AwardXpResult } from '@/lib/gamification/types';
 
-export const SCHOLAR_CHECKLIST_TASK_IDS = [
+const SCHOLAR_CHECKLIST_TASK_IDS = [
   'enroll-subjects',
   'try-calculator',
   'try-pomodoro',
