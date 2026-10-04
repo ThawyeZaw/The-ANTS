@@ -385,13 +385,29 @@ function serializeCountdown<T extends Record<string, unknown>>(row: T) {
 }
 
 export async function listExamCountdownsForUser(userId: string) {
-  await healEnrollmentCountdowns(userId);
   const db = getDb();
-  const rows = await db
+  let rows = await db
     .select()
     .from(examCountdowns)
     .where(eq(examCountdowns.user_id, userId as any))
     .orderBy(asc(examCountdowns.exam_date));
+
+  // Only attempt healing if user has no countdowns at all
+  if (rows.length === 0) {
+    try {
+      const res = await healEnrollmentCountdowns(userId);
+      if (res.success && res.healed > 0) {
+        rows = await db
+          .select()
+          .from(examCountdowns)
+          .where(eq(examCountdowns.user_id, userId as any))
+          .orderBy(asc(examCountdowns.exam_date));
+      }
+    } catch (err) {
+      console.error('[exam-data] healing countdowns failed:', err);
+    }
+  }
+
   return rows.map((row) => serializeCountdown(row as Record<string, unknown>));
 }
 

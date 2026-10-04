@@ -13,6 +13,7 @@ interface TaskListViewProps {
   onToggleComplete: (eventId: string) => void;
   onSave: (event: TimetableEvent | null, data: TimetableEventFormData) => Promise<void>;
   onDelete: (event: TimetableEvent) => Promise<void>;
+  onEditingChange?: (isEditing: boolean) => void;
 }
 
 function dayKey(event: TimetableEvent): number {
@@ -25,10 +26,15 @@ export default function TaskListView({
   onToggleComplete,
   onSave,
   onDelete,
+  onEditingChange,
 }: TaskListViewProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const seenCompose = useRef(composeKey);
+
+  useEffect(() => {
+    onEditingChange?.(creating || expandedId !== null);
+  }, [creating, expandedId, onEditingChange]);
 
   useEffect(() => {
     if (composeKey === seenCompose.current) return;

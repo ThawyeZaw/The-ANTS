@@ -15,6 +15,7 @@ interface DayViewProps {
   onSave: (event: TimetableEvent | null, data: TimetableEventFormData) => Promise<void>;
   onDelete: (event: TimetableEvent) => Promise<void>;
   composeKey?: number;
+  onEditingChange?: (isEditing: boolean) => void;
 }
 
 export default function DayView({
@@ -24,10 +25,15 @@ export default function DayView({
   onSave,
   onDelete,
   composeKey = 0,
+  onEditingChange,
 }: DayViewProps) {
   const [creating, setCreating] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [seenCompose, setSeenCompose] = useState(composeKey);
+
+  useEffect(() => {
+    onEditingChange?.(creating || expandedId !== null);
+  }, [creating, expandedId, onEditingChange]);
 
   useEffect(() => {
     if (composeKey === seenCompose) return;

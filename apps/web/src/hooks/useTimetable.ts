@@ -191,7 +191,18 @@ export interface UseTimetableReturn {
 }
 
 export function useTimetable(userId: string): UseTimetableReturn {
-  const [view, setViewState] = useState<TimetableView>('week');
+  const [view, setViewState] = useState<TimetableView>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = window.localStorage.getItem('ants-timetable-view');
+        if (saved === 'month' || saved === 'week' || saved === 'day' || saved === 'list') {
+          return saved as TimetableView;
+        }
+      } catch {}
+    }
+    return 'month';
+  });
+
   const [currentDate, setCurrentDate] = useState<Date>(() => new Date());
   const [filters, setFilters] = useState<TimetableFilters>(DEFAULT_TIMETABLE_FILTERS);
   const [allEvents, setAllEvents] = useState<TimetableEvent[]>([]);

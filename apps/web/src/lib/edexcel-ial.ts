@@ -151,6 +151,12 @@ export function ialGroupPrefixFromId(groupId: string): string | null {
 
 /** Unit subject IDs belonging to a virtual IAL group. */
 export function getIalGroupUnitIds(groupId: string, catalogSubjects: BaseSubject[]): string[] {
+  if (groupId === IAL_MATH_FM_COMBINED_ID) {
+    const grouped = groupEdexcelIalSubjects(catalogSubjects);
+    const math = grouped.find((g) => g.title === 'Mathematics');
+    const fm = grouped.find((g) => g.title === 'Further Mathematics');
+    return [...(math?.units.map((u) => u.id) ?? []), ...(fm?.units.map((u) => u.id) ?? [])];
+  }
   const group = groupEdexcelIalSubjects(catalogSubjects).find((g) => g.id === groupId);
   return group?.units.map((u) => u.id) ?? [];
 }

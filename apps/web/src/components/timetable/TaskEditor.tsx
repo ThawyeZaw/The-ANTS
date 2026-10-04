@@ -378,9 +378,16 @@ export default function TaskEditor({
         )}
         <button
           type="button"
+          onClick={onClose}
+          className="ml-auto h-9 rounded-xl border border-border px-3 text-sm font-medium text-foreground-muted hover:bg-background-secondary hover:text-foreground transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
           onClick={() => void save()}
           disabled={saving}
-          className="ml-auto h-9 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+          className="h-9 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60 hover:opacity-95 transition-opacity"
         >
           {saving ? 'Saving…' : 'Save'}
         </button>

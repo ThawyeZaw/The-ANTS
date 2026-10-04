@@ -131,6 +131,11 @@ export default function TimetableManager({ userId: userIdProp }: { userId?: stri
   const [zoom, setZoom] = useState(100);
   const [notice, setNotice] = useState<string | null>(null);
   const [activeDrag, setActiveDrag] = useState<TimetableEvent | null>(null);
+  const [isChildEditing, setIsChildEditing] = useState(false);
+
+  useEffect(() => {
+    setIsChildEditing(false);
+  }, [view]);
 
   useEffect(() => {
     try {
@@ -153,6 +158,7 @@ export default function TimetableManager({ userId: userIdProp }: { userId?: stri
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
   const slotHeight = Math.round(TIME_GRID_SLOT * (zoom / 100));
+  const colWidth = Math.round(88 * (zoom / 100));
   const label = dateLabel(view, currentDate, weekStart);
   const activeView = VIEW_OPTIONS.find((option) => option.id === view) ?? VIEW_OPTIONS[0];
   const ActiveViewIcon = activeView.icon;
@@ -485,6 +491,7 @@ export default function TimetableManager({ userId: userIdProp }: { userId?: stri
               onToggleComplete={(id) => void onToggle(id)}
               onSave={saveTask}
               onDelete={removeTask}
+              onEditingChange={setIsChildEditing}
             />
           )}
           {view === 'week' && (
@@ -493,6 +500,8 @@ export default function TimetableManager({ userId: userIdProp }: { userId?: stri
               selectedDate={currentDate}
               events={weekEvents}
               slotHeight={slotHeight}
+              colWidth={colWidth}
+              onPinchZoom={(delta) => changeZoom(zoom + delta)}
               isDragging={Boolean(activeDrag)}
               inlineCreate={inlineCreate}
               onSlotClick={(date, time) => {
@@ -535,6 +544,7 @@ export default function TimetableManager({ userId: userIdProp }: { userId?: stri
               onToggleComplete={(id) => void onToggle(id)}
               onSave={saveTask}
               onDelete={removeTask}
+              onEditingChange={setIsChildEditing}
             />
           )}
           {view === 'list' && (
@@ -544,6 +554,7 @@ export default function TimetableManager({ userId: userIdProp }: { userId?: stri
               onToggleComplete={(id) => void onToggle(id)}
               onSave={saveTask}
               onDelete={removeTask}
+              onEditingChange={setIsChildEditing}
             />
           )}
           </div>
@@ -557,21 +568,23 @@ export default function TimetableManager({ userId: userIdProp }: { userId?: stri
         </DragOverlay>
       </DndContext>
 
-      <button
-        type="button"
-        onClick={() => {
-          if (view === 'day' || view === 'week') {
-            setInlineCreate(null);
-            setGridEditor({ kind: 'create', date: formatDateLocal(currentDate), allDay: true });
-            return;
-          }
-          setComposeKey((key) => key + 1);
-        }}
-        className="absolute right-4 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:opacity-90 bottom-[calc(var(--bottom-nav-height)+env(safe-area-inset-bottom)+0.75rem)] md:bottom-6 md:right-6"
-        aria-label="Add a task"
-      >
-        <Plus size={26} />
-      </button>
+      {!(gridEditor || inlineCreate || isChildEditing) && (
+        <button
+          type="button"
+          onClick={() => {
+            if (view === 'day' || view === 'week') {
+              setInlineCreate(null);
+              setGridEditor({ kind: 'create', date: formatDateLocal(currentDate), allDay: true });
+              return;
+            }
+            setComposeKey((key) => key + 1);
+          }}
+          className="absolute right-4 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:opacity-90 bottom-[calc(var(--bottom-nav-height)+env(safe-area-inset-bottom)+0.75rem)] md:bottom-6 md:right-6 transition-transform active:scale-95"
+          aria-label="Add a task"
+        >
+          <Plus size={26} />
+        </button>
+      )}
     </div>
   );
 }

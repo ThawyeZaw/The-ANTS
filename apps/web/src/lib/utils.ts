@@ -205,6 +205,9 @@ export function humanizeAuthError(error?: string): string {
   }
 
   // Config / env
+  if (msg.includes('provider not found')) {
+    return 'Google Sign-In is not configured in this environment. Please configure GOOGLE_CLIENT_ID in apps/api/.dev.vars or sign in with email and password.';
+  }
   if (msg.includes('not configured') || msg.includes('missing env')) {
     return 'Authentication is temporarily unavailable. Please try again later.';
   }

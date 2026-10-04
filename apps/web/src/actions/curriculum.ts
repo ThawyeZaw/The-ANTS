@@ -850,9 +850,13 @@ export async function getPaperGridData(
       } // end !isCombinedMathFm
     } // end if (isEdexcelIal)
 
-    const targetSubjectIds = isEdexcelIal && sortedSiblings.length > 0
-      ? sortedSiblings.map((s) => s!.id)
-      : [subjectId];
+    const targetSubjectIds = Array.from(
+      new Set(
+        isEdexcelIal && sortedSiblings.length > 0
+          ? sortedSiblings.map((s) => s!.id)
+          : [subjectId]
+      )
+    );
 
     const enrollLookupIds =
       isEdexcelIal && sortedSiblings.length > 0
@@ -1149,7 +1153,7 @@ export async function getPaperGridData(
         } else {
           // Unseeded paper
           row.cells[sessionKey] = {
-            paperId: row.paperId,
+            paperId: `unseeded-${row.rowKey ?? row.paperNumber}-${sessionKey}`,
             recordId: null,
             status: 'not_done',
             rawScore: null,
@@ -1886,11 +1890,18 @@ export async function getMySubjectsHub(userId: string): Promise<{
     const now = Date.now();
     for (const cd of countdownRows) {
       if (!cd.subject_id || !cd.exam_date) continue;
-      const t = new Date(cd.exam_date).getTime();
+      const rawDate = cd.exam_date as unknown;
+      const parsed = rawDate instanceof Date
+        ? rawDate
+        : new Date(typeof rawDate === 'string' && rawDate.includes(' ') && !rawDate.includes('T')
+            ? rawDate.replace(' ', 'T')
+            : (rawDate as string | number));
+      if (Number.isNaN(parsed.getTime())) continue;
+      const t = parsed.getTime();
       if (t < now) continue;
       const existing = nextBySubject.get(cd.subject_id);
       if (!existing || t < existing.date.getTime()) {
-        nextBySubject.set(cd.subject_id, { date: new Date(cd.exam_date), title: cd.title });
+        nextBySubject.set(cd.subject_id, { date: parsed, title: cd.title });
       }
     }
 

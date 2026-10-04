@@ -16,6 +16,7 @@ interface MonthViewProps {
   onToggleComplete: (eventId: string) => void;
   onSave: (event: TimetableEvent | null, data: TimetableEventFormData) => Promise<void>;
   onDelete: (event: TimetableEvent) => Promise<void>;
+  onEditingChange?: (isEditing: boolean) => void;
 }
 
 const WEEKDAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
@@ -40,6 +41,7 @@ export default function MonthView({
   onToggleComplete,
   onSave,
   onDelete,
+  onEditingChange,
 }: MonthViewProps) {
   const today = new Date();
   const cells = useMemo(() => buildCells(currentDate), [currentDate]);
@@ -48,6 +50,10 @@ export default function MonthView({
   const seenCompose = useRef(composeKey);
 
   const selectedKey = formatDateKey(currentDate);
+
+  useEffect(() => {
+    onEditingChange?.(creating || expandedId !== null);
+  }, [creating, expandedId, onEditingChange]);
 
   useEffect(() => {
     setExpandedId(null);

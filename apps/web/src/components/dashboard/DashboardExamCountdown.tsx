@@ -166,11 +166,24 @@ function TimetableRow({ item, onClick }: TimetableItemProps) {
   );
 }
 
-export function DashboardExamCountdown() {
+export function DashboardExamCountdown({
+  enrolledSubjectIds: propSubjectIds,
+  countdowns: propCountdowns,
+  isLoading: propLoading,
+  compact = false,
+}: {
+  enrolledSubjectIds?: string[];
+  countdowns?: CountdownWithTime[];
+  isLoading?: boolean;
+  compact?: boolean;
+} = {}) {
   const router = useRouter();
   const { user } = useAuth();
-  const { countdowns, isLoading: countdownsLoading } = useCountdown(user?.id);
-  const { enrolledSubjectIds, isLoading: contextLoading } = useLessonContext();
+  const fallbackCountdown = useCountdown(propCountdowns ? undefined : user?.id);
+  const countdowns = propCountdowns ?? fallbackCountdown.countdowns;
+  const countdownsLoading = propLoading !== undefined ? propLoading : fallbackCountdown.isLoading;
+  const { enrolledSubjectIds: contextSubjectIds, isLoading: contextLoading } = useLessonContext();
+  const enrolledSubjectIds = propSubjectIds ?? contextSubjectIds;
 
   const [activeTab, setActiveTab] = useState<'enrolled' | 'all'>('enrolled');
 
@@ -213,10 +226,15 @@ export function DashboardExamCountdown() {
 
   // Imminent Next Exam (first item in display list)
   const nextExam = displayList.length > 0 ? displayList[0] : null;
-  const subsequentExams = displayList.length > 1 ? displayList.slice(1, 5) : [];
+  const subsequentExams = displayList.length > 1 ? displayList.slice(1, compact ? 3 : 5) : [];
 
   return (
-    <div className="rounded-3xl border border-border bg-background-card p-5 sm:p-6 shadow-xs flex flex-col h-full">
+    <div
+      className={cn(
+        'rounded-3xl border border-border bg-background-card shadow-xs flex flex-col',
+        compact ? 'p-4 sm:p-5' : 'p-5 sm:p-6 h-full'
+      )}
+    >
       {/* ── Widget Header ────────────────────────────────────────────── */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2.5">

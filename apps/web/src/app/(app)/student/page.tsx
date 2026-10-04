@@ -33,6 +33,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
 import { DashboardExamCountdown } from '@/components/dashboard/DashboardExamCountdown';
 import { DashboardSubjectsPanel } from '@/components/dashboard/DashboardSubjectsPanel';
+import { DashboardTodayTasks } from '@/components/dashboard/DashboardTodayTasks';
 import { useDashboardSync } from '@/hooks/useDashboardSync';
 import { cn } from '@/lib/utils';
 import { getGamificationProfile } from '@/actions/gamification';
@@ -179,7 +180,15 @@ function StatPill({ icon: Icon, label, value, accent, gradient }: {
 export default function StudentDashboard() {
   const { user } = useAuth();
   const { isTutor, isContributor, isAdmin } = useRole();
-  const { stats } = useDashboardSync();
+  const {
+    subjects,
+    subjectsLoading,
+    subjectsError,
+    refetchSubjects,
+    stats,
+    allCountdowns,
+    isLoading: dashboardLoading,
+  } = useDashboardSync();
 
   const [gamification, setGamification] = useState({
     totalXp: 0,
@@ -207,70 +216,61 @@ export default function StudentDashboard() {
   return (
     <div className="space-y-6 pb-16 max-w-7xl mx-auto animate-fade-in">
 
-      {/* ── Hero Banner ─────────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary/90 to-amber-400 p-6 sm:p-8 text-primary-foreground shadow-lg">
-        {/* Decorative elements */}
-        <div className="absolute -top-8 -right-8 h-52 w-52 rounded-full bg-white/8 blur-2xl pointer-events-none" />
-        <div className="absolute bottom-0 left-16 h-40 w-40 rounded-full bg-white/5 blur-xl pointer-events-none" />
-        <div className="absolute top-1/2 right-24 h-24 w-24 -translate-y-1/2 rounded-full bg-white/5 blur-lg pointer-events-none" />
-        {/* Dot grid overlay */}
-        <div
-          className="absolute inset-0 opacity-[0.05] pointer-events-none"
-          style={{
-            backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
-            backgroundSize: '28px 28px',
-          }}
-        />
+      {/* ── Compact Welcome & Gamification Banner ────────────────────────── */}
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-primary via-primary/95 to-amber-500 p-4 sm:p-6 text-primary-foreground shadow-sm">
+        {/* Subtle glow elements */}
+        <div className="absolute -top-8 -right-8 h-40 w-40 rounded-full bg-white/10 blur-xl pointer-events-none" />
+        <div className="absolute bottom-0 left-12 h-32 w-32 rounded-full bg-white/5 blur-lg pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-white/15 border border-white/20 backdrop-blur-sm">
-              Study Hub
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="min-w-0 space-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-white/15 border border-white/20">
+                Study Hub
+              </span>
+              <span className="text-xs text-primary-foreground/80 font-medium">
+                Academic Command Centre
+              </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight">
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight leading-tight truncate">
               Welcome back, {firstName}
             </h1>
-            <p className="text-sm text-primary-foreground/75 max-w-md leading-relaxed">
-              Track subjects, past papers, and exam countdowns in one place.
-            </p>
-            <div className="flex items-center gap-2 flex-wrap pt-1">
-              <Link href="/workspace" className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/15 border border-white/20 hover:bg-white/25 transition-colors flex items-center gap-1.5">
-                <Wrench className="w-3.5 h-3.5" /> My Workspace
+            <div className="flex items-center gap-2 flex-wrap pt-0.5">
+              <Link href="/workspace" className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-white/15 border border-white/20 hover:bg-white/25 transition-colors flex items-center gap-1.5">
+                <Wrench className="w-3.5 h-3.5" /> Workspace
               </Link>
-            {hasRoleActions && (
-              <>
-                {isTutor && (
-                  <Link href="/settings/profile?tab=role-profile" className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/15 border border-white/20 hover:bg-white/25 transition-colors flex items-center gap-1.5">
-                    <GraduationCap className="w-3.5 h-3.5" /> Tutor Profile
-                  </Link>
-                )}
-                {(isContributor || isAdmin) && (
-                  <Link href="/contributor" className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/15 border border-white/20 hover:bg-white/25 transition-colors flex items-center gap-1.5">
-                    <Pencil className="w-3.5 h-3.5" /> Contributor
-                  </Link>
-                )}
-                {(isContributor || isAdmin) && (
-                  <Link href="/admin/exam-data" className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/15 border border-white/20 hover:bg-white/25 transition-colors flex items-center gap-1.5">
-                    <BookOpen className="w-3.5 h-3.5" /> Exam Data
-                  </Link>
-                )}
-                {isAdmin && (
-                  <Link href="/main-contributor/add-contributor" className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/15 border border-white/20 hover:bg-white/25 transition-colors flex items-center gap-1.5">
-                    <Shield className="w-3.5 h-3.5" /> Admin
-                  </Link>
-                )}
-              </>
-            )}
+              {hasRoleActions && (
+                <>
+                  {isTutor && (
+                    <Link href="/settings/profile?tab=role-profile" className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-white/15 border border-white/20 hover:bg-white/25 transition-colors flex items-center gap-1.5">
+                      <GraduationCap className="w-3.5 h-3.5" /> Tutor
+                    </Link>
+                  )}
+                  {(isContributor || isAdmin) && (
+                    <Link href="/contributor" className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-white/15 border border-white/20 hover:bg-white/25 transition-colors flex items-center gap-1.5">
+                      <Pencil className="w-3.5 h-3.5" /> Contributor
+                    </Link>
+                  )}
+                  {isAdmin && (
+                    <Link href="/main-contributor/add-contributor" className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-white/15 border border-white/20 hover:bg-white/25 transition-colors flex items-center gap-1.5">
+                      <Shield className="w-3.5 h-3.5" /> Admin
+                    </Link>
+                  )}
+                </>
+              )}
             </div>
           </div>
 
-          <GamificationHeroStrip
-            level={gamification.level}
-            totalXp={gamification.totalXp}
-            rankTitle={gamification.rankTitle}
-            currentStreak={gamification.currentStreak}
-            longestStreak={gamification.longestStreak}
-          />
+          <div className="shrink-0">
+            <GamificationHeroStrip
+              level={gamification.level}
+              totalXp={gamification.totalXp}
+              rankTitle={gamification.rankTitle}
+              currentStreak={gamification.currentStreak}
+              longestStreak={gamification.longestStreak}
+              className="py-2.5 px-3.5 sm:p-4 bg-black/20 border-white/15 text-primary-foreground backdrop-blur-sm"
+            />
+          </div>
         </div>
       </div>
 
@@ -318,65 +318,67 @@ export default function StudentDashboard() {
         </div>
       )}
 
-      {/* ── Main Grid: Subjects + Workspace ─────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* My Subjects — takes 2 cols */}
-        <div className="lg:col-span-2">
-          <DashboardSubjectsPanel />
+      {/* ── Main Grid: Subjects + Today's Tasks + Countdowns ─────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Left 2 Cols: My Subjects & Today's Schedule */}
+        <div className="lg:col-span-2 space-y-5">
+          <DashboardSubjectsPanel
+            subjects={subjects}
+            loading={subjectsLoading}
+            loadError={subjectsError}
+            onRetry={refetchSubjects}
+          />
+          <DashboardTodayTasks />
         </div>
 
-        {/* Exam Countdowns Timetable — 1 col */}
+        {/* Right 1 Col: Compact Exam Countdowns */}
         <div className="lg:col-span-1">
-          <DashboardExamCountdown />
+          <DashboardExamCountdown
+            compact
+            enrolledSubjectIds={subjects.map((s) => s.id)}
+            countdowns={allCountdowns}
+            isLoading={dashboardLoading}
+          />
         </div>
       </div>
 
-      {/* ── Study Tools Grid ────────────────────────────────────────────── */}
-      <section className="space-y-4">
+      {/* ── Study Tools: Compact Horizontal App Dock ─────────────────────────── */}
+      <section className="space-y-3 pt-1">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-foreground flex items-center gap-2">
+          <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
             <Target className="w-4 h-4 text-primary" />
-            Academic Study Suite
+            Productivity Suite
           </h2>
-          <span className="text-xs text-foreground-muted font-medium">
-            {STUDY_TOOLS.length} Productivity Tools
+          <span className="text-[11px] text-foreground-muted font-medium">
+            {STUDY_TOOLS.length} Tools
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x -mx-1 px-1">
           {STUDY_TOOLS.map((tool) => (
             <Link
               key={tool.id}
               href={tool.href}
-              className="group relative flex flex-col justify-between p-5 rounded-2xl border border-border bg-background-card hover:border-border-hover hover:shadow-lg shadow-xs transition-all duration-200 hover:-translate-y-0.5 overflow-hidden"
+              className="group shrink-0 snap-start w-40 sm:w-44 p-3.5 rounded-2xl border border-border bg-background-card hover:border-primary/40 hover:shadow-md transition-all duration-200 flex flex-col justify-between"
             >
-              {/* Subtle corner glow */}
-              <div className="absolute top-0 right-0 h-20 w-20 blur-2xl opacity-0 group-hover:opacity-30 transition-opacity duration-500 rounded-full" style={{ background: 'var(--primary)' }} />
               <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className={cn('w-11 h-11 rounded-xl border flex items-center justify-center transition-all duration-200', tool.color)}>
-                    <tool.icon className="w-5 h-5" />
+                <div className="flex items-center justify-between mb-2">
+                  <div className={cn('w-9 h-9 rounded-xl border flex items-center justify-center transition-all duration-200', tool.color)}>
+                    <tool.icon className="w-4 h-4" />
                   </div>
                   {tool.badge && (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
+                    <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
                       {tool.badge}
                     </span>
                   )}
                 </div>
-                <h3 className="font-bold text-sm text-foreground group-hover:text-primary transition-colors">
+                <h3 className="text-xs font-bold text-foreground group-hover:text-primary transition-colors leading-snug">
                   {tool.title}
                 </h3>
-                <p className="text-[11px] text-foreground-muted mt-1 leading-relaxed">
-                  {tool.description}
-                </p>
               </div>
-
-              <div className="pt-3 mt-3 border-t border-border/60 flex items-center justify-between">
-                <span className="text-[10px] font-mono font-semibold text-foreground-secondary truncate">
-                  {tool.highlight}
-                </span>
-                <ChevronRight className="w-3.5 h-3.5 text-primary shrink-0 group-hover:translate-x-0.5 transition-transform" />
-              </div>
+              <p className="text-[10px] text-foreground-muted mt-1.5 truncate">
+                {tool.highlight}
+              </p>
             </Link>
           ))}
         </div>

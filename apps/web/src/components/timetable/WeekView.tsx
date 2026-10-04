@@ -10,6 +10,8 @@ interface WeekViewProps {
   events: TimetableEvent[];
   isDragging?: boolean;
   slotHeight?: number;
+  colWidth?: number;
+  onPinchZoom?: (delta: number) => void;
   inlineCreate: InlineSlot | null;
   onSlotClick: (date: Date, time: string) => void;
   onEditEvent: (event: TimetableEvent) => void;
@@ -29,6 +31,8 @@ export default function WeekView({
   events,
   isDragging,
   slotHeight,
+  colWidth,
+  onPinchZoom,
   inlineCreate,
   onSlotClick,
   onEditEvent,
@@ -53,6 +57,8 @@ export default function WeekView({
       events={events}
       selectedDate={selectedDate}
       slotHeight={slotHeight}
+      colWidth={colWidth}
+      onPinchZoom={onPinchZoom}
       isDragging={isDragging}
       inlineCreate={inlineCreate}
       onSlotClick={onSlotClick}
